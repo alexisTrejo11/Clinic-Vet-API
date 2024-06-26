@@ -11,11 +11,11 @@ import (
 
 var db *pgx.Conn
 
-func InitDb() {
+func InitDb() *pgx.Conn {
 	var err error
 
 	// Establish connection to the database
-	db, err = pgx.Connect(context.Background(), "host=localhost port=5431 user=postgres dbname=vet_database password=vladilena sslmode=disable")
+	db, err = pgx.Connect(context.Background(), "host=localhost port=5431 user=postgres password=root dbname=vet_database sslmode=disable")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
 		os.Exit(1)
@@ -28,4 +28,6 @@ func InitDb() {
 	}
 
 	fmt.Println("Connected to the database successfully")
+
+	return db
 }
