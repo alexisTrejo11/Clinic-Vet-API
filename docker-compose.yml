@@ -4,7 +4,7 @@ services:
     image: postgres:12-alpine
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_PASSWORD: root
       POSTGRES_DB: vet_database
     ports:
       - "5431:5432"
@@ -21,7 +21,7 @@ services:
     ports:
       - "8000:8000"
     environment:
-      DATABASE_URL: postgres://postgres:vladilena@postgres12:5432/vet_database?sslmode=disable
+      DATABASE_URL: postgres://postgres:root@postgres12:5432/vet_database?sslmode=disable
     depends_on:
       - postgres12
     networks:
