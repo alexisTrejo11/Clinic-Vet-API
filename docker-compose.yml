@@ -1,0 +1,34 @@
+services:
+  postgres12:
+    container_name: postgres12
+    image: postgres:12-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: vet_database
+    ports:
+      - "5431:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - vet_network
+
+  api:
+    container_name: clinical_vet_api
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgres://postgres:vladilena@postgres12:5432/vet_database?sslmode=disable
+    depends_on:
+      - postgres12
+    networks:
+      - vet_network
+
+networks:
+  vet_network:
+
+volumes:
+  pgdata:
