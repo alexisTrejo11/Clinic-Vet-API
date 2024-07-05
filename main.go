@@ -22,14 +22,22 @@ func main() {
 
 	dbConn := db.InitDb()
 
-	// Owner
+	// Database
 	queries := sqlc.New(dbConn)
+
+	// Owner
 	ownerRepository := repository.NewOwnerRepository(queries)
 	ownerServices := services.NewOwnerRepository(ownerRepository)
 	ownerController := controller.NewOwnerRepository(ownerServices)
 
+	// Pet
+	petRepository := repository.NewPetRepository(queries)
+	petServices := services.NewPetService(petRepository)
+	petController := controller.NewPetController(petServices)
+
 	// Routes
 	routes.OwnerRoutes(app, ownerController)
+	routes.PetsRoutes(app, petController)
 
 	port := ":8080"
 

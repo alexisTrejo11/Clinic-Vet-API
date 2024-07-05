@@ -13,6 +13,20 @@ services:
     networks:
       - vet_network
 
+  postgres12_test:
+    container_name: postgres12_test
+    image: postgres:12-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: vet_database_test
+    ports:
+      - "5430:5432"
+    volumes:
+      - pgdata_test:/var/lib/postgresql/data
+    networks:
+      - vet_network
+
   api:
     container_name: clinical_vet_api
     build:
@@ -32,3 +46,4 @@ networks:
 
 volumes:
   pgdata:
+  pgdata_test:
