@@ -15,6 +15,13 @@ type OwnerReturnDTO struct {
 	Phone string `json:"phone"`
 }
 
+type OwnerUpdateDTO struct {
+	Id    int32  `json:"id" validate:"required"`
+	Photo string `json:"photo"`
+	Name  string `json:"name"`
+	Phone string `json:"phone"`
+}
+
 func (ord *OwnerReturnDTO) ModelToDTO(owner sqlc.Owner) {
 	ord.Id = owner.ID
 	ord.Name = owner.Name

@@ -4,3 +4,5 @@ TablesMigration:
 CreateTablesMigrationTest:
 	migrate -path db/migration/test/ -database "postgresql://postgres:root@localhost:5430/vet_database_test?sslmode=disable" -verbose up
 
+InitSwagger:
+	swag init

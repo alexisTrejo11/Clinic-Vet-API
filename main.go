@@ -5,13 +5,25 @@ import (
 
 	"example.com/at/backend/api-vet/controller"
 	"example.com/at/backend/api-vet/db"
+	_ "example.com/at/backend/api-vet/docs"
 	"example.com/at/backend/api-vet/repository"
 	"example.com/at/backend/api-vet/routes"
 	"example.com/at/backend/api-vet/services"
 	"example.com/at/backend/api-vet/sqlc"
 	"github.com/gofiber/fiber/v2"
+	fiberSwagger "github.com/swaggo/fiber-swagger"
 )
 
+// @title Vet API
+// @version 1.0
+// @description This is a sample server for a vet clinic.
+// @termsOfService http://example.com/terms/
+// @contact.name API Support
+// @contact.email support@example.com
+// @license.name MIT
+// @license.url http://opensource.org/licenses/MIT
+// @host localhost:8080
+// @BasePath /
 func main() {
 	// Server
 	app := fiber.New()
@@ -20,15 +32,18 @@ func main() {
 		return c.SendString("¡Home!")
 	})
 
+	// Serve Swagger UI
+	app.Get("/swagger/*", fiberSwagger.WrapHandler)
+
 	dbConn := db.InitDb()
 
 	// Database
 	queries := sqlc.New(dbConn)
 
 	// Owner
-	ownerRepository := repository.NewOwnerRepository(queries)
-	ownerServices := services.NewOwnerRepository(ownerRepository)
-	ownerController := controller.NewOwnerRepository(ownerServices)
+	ownerRepository := repository.NewOwnerRepositoryImpl(queries)
+	ownerServices := services.NewOwnerService(ownerRepository)
+	ownerController := controller.NewOwnerController(ownerServices)
 
 	// Pet
 	petRepository := repository.NewPetRepository(queries)
@@ -39,7 +54,7 @@ func main() {
 	routes.OwnerRoutes(app, ownerController)
 	routes.PetsRoutes(app, petController)
 
-	port := ":8080"
+	port := ":8000"
 
 	log.Fatal(app.Listen(port))
 }
