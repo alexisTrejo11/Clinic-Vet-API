@@ -14,8 +14,17 @@ var db *pgx.Conn
 func InitDb() *pgx.Conn {
 	var err error
 
+	// Read environment variables for database connection details
+	dbHost := "postgres12"
+	dbPort := "5432"
+	dbUser := "postgres"
+	dbPassword := "root"
+	dbName := "vet_database"
+
 	// Establish connection to the database
-	db, err = pgx.Connect(context.Background(), "host=localhost port=5431 user=postgres password=root dbname=vet_database sslmode=disable")
+	connString := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
+		dbHost, dbPort, dbUser, dbPassword, dbName)
+	db, err = pgx.Connect(context.Background(), connString)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
 		os.Exit(1)

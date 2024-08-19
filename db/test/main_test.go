@@ -17,7 +17,7 @@ func InitTestDb() {
 	var err error
 	ctx := context.Background()
 
-	testDB, err = pgx.Connect(ctx, "host=localhost port=5430 user=postgres password=root dbname=vet_database_test sslmode=disable")
+	testDB, err = pgx.Connect(ctx, "host=postgres12 port=5432 user=postgres password=root dbname=vet_database_test sslmode=disable")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Unable to connect to test database: %v\n", err)
 		os.Exit(1)

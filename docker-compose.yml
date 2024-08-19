@@ -34,10 +34,9 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8000:8000"
-    environment:
-      DATABASE_URL: postgres://postgres:root@postgres12:5432/vet_database?sslmode=disable
     depends_on:
       - postgres12
+      - postgres12_test
     networks:
       - vet_network
 
