@@ -28,8 +28,8 @@ func main() {
 	// Server
 	app := fiber.New()
 
-	app.Get("/", func(c *fiber.Ctx) error {
-		return c.SendString("¡Home!")
+	app.Get("/home", func(c *fiber.Ctx) error {
+		return c.SendString("¡Welcome to Vet API!")
 	})
 
 	// Serve Swagger UI
@@ -50,9 +50,15 @@ func main() {
 	petServices := services.NewPetService(petRepository)
 	petController := controller.NewPetController(petServices)
 
+	// Vet
+	vetRepository := repository.NewVeterinarianRepository(queries)
+	vetServices := services.NewVeterinarianService(vetRepository)
+	vetController := controller.NewVeterinarianController(vetServices)
+
 	// Routes
 	routes.OwnerRoutes(app, ownerController)
 	routes.PetsRoutes(app, petController)
+	routes.VeterinarianRoutes(app, vetController)
 
 	port := ":8000"
 
