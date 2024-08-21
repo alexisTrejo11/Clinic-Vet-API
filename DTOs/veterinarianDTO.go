@@ -1,4 +1,4 @@
-package dtos
+package DTOs
 
 type VetInsertDTO struct {
 	Name      string `json:"name" validate:"required"`

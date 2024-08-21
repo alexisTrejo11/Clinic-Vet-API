@@ -3,7 +3,7 @@ package services
 import (
 	"context"
 
-	dtos "example.com/at/backend/api-vet/DTOs"
+	"example.com/at/backend/api-vet/DTOs"
 	"example.com/at/backend/api-vet/mappers"
 	"example.com/at/backend/api-vet/repository"
 	"example.com/at/backend/api-vet/sqlc"
@@ -11,10 +11,10 @@ import (
 )
 
 type OwnerService interface {
-	CreateOwner(ownerInsertDTO *dtos.OwnerInsertDTO) error
-	GetOwnerById(ownerID int32) (*dtos.OwnerReturnDTO, error)
+	CreateOwner(ownerInsertDTO *DTOs.OwnerInsertDTO) error
+	GetOwnerById(ownerID int32) (*DTOs.OwnerReturnDTO, error)
 	ValidateExistingOwner(ownerId int32) bool
-	UpdateOwner(ownerUpdateDTO *dtos.OwnerUpdateDTO) error
+	UpdateOwner(ownerUpdateDTO *DTOs.OwnerUpdateDTO) error
 	DeleteOwner(ownerID int32) error
 }
 
@@ -28,16 +28,11 @@ func NewOwnerService(ownerRepository repository.OwnerRepository) OwnerService {
 	}
 }
 
-func (os OwnerServiceImpl) CreateOwner(ownerInsertDTO *dtos.OwnerInsertDTO) error {
-	phone := pgtype.Text{}
-	err := phone.Scan(ownerInsertDTO.Phone)
-	if err != nil {
-		return err
-	}
+func (os OwnerServiceImpl) CreateOwner(ownerInsertDTO *DTOs.OwnerInsertDTO) error {
 
-	_, err = os.ownerRepository.CreateOwner(context.Background(), sqlc.CreateOwnerParams{
+	_, err := os.ownerRepository.CreateOwner(sqlc.CreateOwnerParams{
+		Photo: pgtype.Text{String: ownerInsertDTO.Photo, Valid: false},
 		Name:  ownerInsertDTO.Name,
-		Phone: phone,
 	})
 	if err != nil {
 		return err
@@ -46,19 +41,19 @@ func (os OwnerServiceImpl) CreateOwner(ownerInsertDTO *dtos.OwnerInsertDTO) erro
 	return nil
 }
 
-func (os OwnerServiceImpl) GetOwnerById(ownerID int32) (*dtos.OwnerReturnDTO, error) {
+func (os OwnerServiceImpl) GetOwnerById(ownerID int32) (*DTOs.OwnerReturnDTO, error) {
 	owner, err := os.ownerRepository.GetOwnerByID(context.Background(), ownerID)
 	if err != nil {
 		return nil, err
 	}
 
-	var owneReturnDTO dtos.OwnerReturnDTO
+	var owneReturnDTO DTOs.OwnerReturnDTO
 	owneReturnDTO.ModelToDTO(owner)
 
 	return &owneReturnDTO, nil
 }
 
-func (os OwnerServiceImpl) UpdateOwner(ownerUpdateDTO *dtos.OwnerUpdateDTO) error {
+func (os OwnerServiceImpl) UpdateOwner(ownerUpdateDTO *DTOs.OwnerUpdateDTO) error {
 	owner, _ := os.ownerRepository.GetOwnerByID(context.Background(), ownerUpdateDTO.Id)
 
 	params := mappers.MapOwnerUpdateDtoToEntity(ownerUpdateDTO, owner)

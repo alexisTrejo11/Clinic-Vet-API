@@ -2,7 +2,6 @@ CREATE TABLE IF NOT EXISTS owners (
     id SERIAL PRIMARY KEY,
     photo TEXT,
     name TEXT NOT NULL,
-    phone TEXT,
     user_id INT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -24,7 +23,6 @@ CREATE TABLE IF NOT EXISTS veterinarians (
     id SERIAL PRIMARY KEY,
     name TEXT NOT NULL,
     photo TEXT,
-    email TEXT NOT NULL UNIQUE,
     specialty TEXT,
     user_id INT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -72,15 +70,15 @@ CREATE TABLE IF NOT EXISTS reminders (
 CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
     name TEXT NOT NULL,
-    email TEXT NOT NULL UNIQUE,
+    email TEXT NOT NULL UNIQUE,    
+    phone_number TEXT NOT NULL UNIQUE,
     password TEXT NOT NULL,
-    user_id INT,
     role TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Añadir relaciones
+-- Add Relations
 ALTER TABLE pets
 ADD CONSTRAINT fk_owner
 FOREIGN KEY (owner_id) REFERENCES owners(id);

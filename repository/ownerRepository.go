@@ -7,7 +7,7 @@ import (
 )
 
 type OwnerRepository interface {
-	CreateOwner(ctx context.Context, arg sqlc.CreateOwnerParams) (sqlc.Owner, error)
+	CreateOwner(arg sqlc.CreateOwnerParams) (sqlc.Owner, error)
 	GetOwnerByID(ctx context.Context, id int32) (sqlc.Owner, error)
 	UpdateOwner(ctx context.Context, arg sqlc.UpdateOwnerParams) error
 	DeleteOwner(ctx context.Context, id int32) error
@@ -24,8 +24,8 @@ func NewOwnerRepositoryImpl(queries *sqlc.Queries) OwnerRepository {
 	return &OwnerRepositoryImpl{queries: queries}
 }
 
-func (r *OwnerRepositoryImpl) CreateOwner(ctx context.Context, arg sqlc.CreateOwnerParams) (sqlc.Owner, error) {
-	owner, err := r.queries.CreateOwner(ctx, arg)
+func (r *OwnerRepositoryImpl) CreateOwner(arg sqlc.CreateOwnerParams) (sqlc.Owner, error) {
+	owner, err := r.queries.CreateOwner(context.Background(), arg)
 	if err != nil {
 		return sqlc.Owner{}, err
 	}

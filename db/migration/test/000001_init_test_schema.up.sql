@@ -74,13 +74,12 @@ CREATE TABLE IF NOT EXISTS users (
     name TEXT NOT NULL,
     email TEXT NOT NULL UNIQUE,
     password TEXT NOT NULL,
-    user_id INT,
     role TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Añadir relaciones
+-- Add Relations
 ALTER TABLE pets
 ADD CONSTRAINT fk_owner
 FOREIGN KEY (owner_id) REFERENCES owners(id);

@@ -1,12 +1,12 @@
 package mappers
 
 import (
-	dtos "example.com/at/backend/api-vet/DTOs"
+	"example.com/at/backend/api-vet/DTOs"
 	"example.com/at/backend/api-vet/sqlc"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-func MapPetInsertDTOToCreatePetParams(petInsertDTO dtos.PetInsertDTO) sqlc.CreatePetParams {
+func MapPetInsertDTOToCreatePetParams(petInsertDTO DTOs.PetInsertDTO) sqlc.CreatePetParams {
 	return sqlc.CreatePetParams{
 		Name:    petInsertDTO.Name,
 		Photo:   pgtype.Text{String: petInsertDTO.Photo, Valid: true},
@@ -17,8 +17,8 @@ func MapPetInsertDTOToCreatePetParams(petInsertDTO dtos.PetInsertDTO) sqlc.Creat
 	}
 }
 
-func MapPetToPetDTO(pet sqlc.Pet) dtos.PetDTO {
-	return dtos.PetDTO{
+func MapPetToPetDTO(pet sqlc.Pet) DTOs.PetDTO {
+	return DTOs.PetDTO{
 		Id:      pet.ID,
 		Name:    pet.Name,
 		Photo:   pet.Photo.String,
@@ -29,7 +29,7 @@ func MapPetToPetDTO(pet sqlc.Pet) dtos.PetDTO {
 	}
 }
 
-func MapPetToPetUpdateDTO(petUpdateDTO dtos.PetUpdateDTO) sqlc.UpdatePetParams {
+func MapPetToPetUpdateDTO(petUpdateDTO DTOs.PetUpdateDTO) sqlc.UpdatePetParams {
 	return sqlc.UpdatePetParams{
 		ID:      petUpdateDTO.Id,
 		Name:    petUpdateDTO.Name,

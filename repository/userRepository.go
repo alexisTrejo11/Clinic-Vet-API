@@ -7,11 +7,13 @@ import (
 )
 
 type UserRepository interface {
-	CreateUser(arg sqlc.CreateUserParams) error
+	CreateUser(arg sqlc.CreateUserParams) (*sqlc.CreateUserRow, error)
 	GetUser(userId int32) (*sqlc.User, error)
 	UpdateUser(arg sqlc.UpdateUserParams) error
+	UpdateUserLastLogin(userId int32) error
 	DeleteUser(userId int32) error
 	CheckEmailExists(email string) bool
+	CheckPhoneNumberExists(phone_number string) bool
 }
 
 type UserRepositoryImpl struct {
@@ -24,13 +26,13 @@ func NewUserRepository(queries *sqlc.Queries) UserRepository {
 	}
 }
 
-func (ur UserRepositoryImpl) CreateUser(arg sqlc.CreateUserParams) error {
-	_, err := ur.queries.CreateUser(context.Background(), arg)
+func (ur UserRepositoryImpl) CreateUser(arg sqlc.CreateUserParams) (*sqlc.CreateUserRow, error) {
+	user, err := ur.queries.CreateUser(context.Background(), arg)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return &user, nil
 }
 
 func (ur UserRepositoryImpl) GetUser(userId int32) (*sqlc.User, error) {
@@ -62,4 +64,14 @@ func (ur UserRepositoryImpl) DeleteUser(userId int32) error {
 func (ur UserRepositoryImpl) CheckEmailExists(email string) bool {
 	isEmailExisting, _ := ur.queries.CheckEmailExists(context.Background(), email)
 	return isEmailExisting
+}
+
+func (ur UserRepositoryImpl) CheckPhoneNumberExists(phone_number string) bool {
+	isPhoneExisting, _ := ur.queries.CheckPhoneNumberExists(context.Background(), phone_number)
+	return isPhoneExisting
+}
+
+func (ur UserRepositoryImpl) UpdateUserLastLogin(userId int32) error {
+	err := ur.queries.UpdateLastLogin(context.Background(), userId)
+	return err
 }
