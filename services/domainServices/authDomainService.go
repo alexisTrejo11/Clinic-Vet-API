@@ -9,7 +9,6 @@ import (
 	"example.com/at/backend/api-vet/repository"
 	"example.com/at/backend/api-vet/sqlc"
 	"example.com/at/backend/api-vet/utils"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type AuthDomainService interface {
@@ -68,13 +67,12 @@ func (ads AuthDomainServiceImpl) CreateJWT(userId int32, role string) (string, e
 }
 
 func (ads AuthDomainServiceImpl) CreateOwner(userData sqlc.CreateUserRow, userSignUpDTO DTOs.UserSignUpDTO) error {
-	ownerCreateArgs := sqlc.CreateOwnerParams{
-		Photo:  pgtype.Text{String: userSignUpDTO.Phone, Valid: false},
-		Name:   userData.Name,
-		UserID: pgtype.Int4{Int32: userData.ID, Valid: true},
+	ownerCreateParams, err := mappers.MapSignUpDataToCreateOwnerParams(userData.ID, userSignUpDTO)
+	if err != nil {
+		return err
 	}
 
-	if _, err := ads.ownerRepository.CreateOwner(ownerCreateArgs); err != nil {
+	if _, err := ads.ownerRepository.CreateOwner(*ownerCreateParams); err != nil {
 		return errors.New("can't create owner")
 	}
 

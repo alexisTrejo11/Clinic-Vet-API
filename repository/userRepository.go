@@ -8,7 +8,9 @@ import (
 
 type UserRepository interface {
 	CreateUser(arg sqlc.CreateUserParams) (*sqlc.CreateUserRow, error)
-	GetUser(userId int32) (*sqlc.User, error)
+	GetUserByID(userId int32) (*sqlc.User, error)
+	GetUserByEmail(email string) (*sqlc.User, error)
+	GetUserByPhoneNumber(phone string) (*sqlc.User, error)
 	UpdateUser(arg sqlc.UpdateUserParams) error
 	UpdateUserLastLogin(userId int32) error
 	DeleteUser(userId int32) error
@@ -35,8 +37,26 @@ func (ur UserRepositoryImpl) CreateUser(arg sqlc.CreateUserParams) (*sqlc.Create
 	return &user, nil
 }
 
-func (ur UserRepositoryImpl) GetUser(userId int32) (*sqlc.User, error) {
+func (ur UserRepositoryImpl) GetUserByID(userId int32) (*sqlc.User, error) {
 	user, err := ur.queries.GetUserByID(context.Background(), userId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}
+
+func (ur UserRepositoryImpl) GetUserByEmail(email string) (*sqlc.User, error) {
+	user, err := ur.queries.GetUserByEmail(context.Background(), email)
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}
+
+func (ur UserRepositoryImpl) GetUserByPhoneNumber(phone string) (*sqlc.User, error) {
+	user, err := ur.queries.GetUserByPhoneNumber(context.Background(), phone)
 	if err != nil {
 		return nil, err
 	}

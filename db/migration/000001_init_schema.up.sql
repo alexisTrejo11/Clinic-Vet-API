@@ -2,10 +2,14 @@ CREATE TABLE IF NOT EXISTS owners (
     id SERIAL PRIMARY KEY,
     photo TEXT,
     name TEXT NOT NULL,
+    last_name TEXT NOT NULL,
     user_id INT,
+    birthday DATE,
+    genre TEXT CHECK (genre IN ('male', 'female', 'other')),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
 
 CREATE TABLE IF NOT EXISTS pets (
     id SERIAL PRIMARY KEY,

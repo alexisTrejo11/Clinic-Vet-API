@@ -55,10 +55,16 @@ func main() {
 	vetServices := services.NewVeterinarianService(vetRepository)
 	vetController := controller.NewVeterinarianController(vetServices)
 
+	// Auth
+	userRepository := repository.NewUserRepository(queries)
+	authService := services.NewAuthService(userRepository, ownerRepository)
+	authController := controller.NewAuthClientController(authService)
+
 	// Routes
 	routes.OwnerRoutes(app, ownerController)
 	routes.PetsRoutes(app, petController)
 	routes.VeterinarianRoutes(app, vetController)
+	routes.AuthRoutes(app, authController)
 
 	port := ":8000"
 

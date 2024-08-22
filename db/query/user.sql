@@ -36,3 +36,13 @@ SELECT EXISTS (
 UPDATE users
 SET updated_at = CURRENT_TIMESTAMP
 WHERE id = $1;
+
+-- name: GetUserByEmail :one
+SELECT id, name, email, phone_number, password, role, created_at, updated_at
+FROM users
+WHERE email = $1;
+
+-- name: GetUserByPhoneNumber :one
+SELECT id, name, email, phone_number, password, role, created_at, updated_at
+FROM users
+WHERE phone_number = $1;

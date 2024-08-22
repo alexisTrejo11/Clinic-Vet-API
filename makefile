@@ -6,3 +6,6 @@ CreateTablesMigrationTest:
 
 InitSwagger:
 	swag init
+
+SQLC:
+	sqlc init

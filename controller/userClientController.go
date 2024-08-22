@@ -49,7 +49,7 @@ func (usc AuthClientController) ClientSignUp() fiber.Handler {
 			})
 		}
 
-		JWT, err := usc.authService.ProcessSignUp(userSignUpDTO)
+		JWT, err := usc.authService.CompleteSignUp(userSignUpDTO)
 		if err != nil {
 			return c.Status(fiber.StatusBadRequest).JSON(responses.ErrorResponse{
 				Message: "Internal Server Error",
@@ -87,7 +87,13 @@ func (usc AuthClientController) ClientLogin() fiber.Handler {
 			})
 		}
 
-		JWT, err := usc.authService.ProcessLogin(userDTO)
+		JWT, err := usc.authService.CompleteLogin(*userDTO)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(responses.ErrorResponse{
+				Message: "Internal Server Erro",
+				Error:   err.Error(),
+			})
+		}
 
 		return c.Status(fiber.StatusAccepted).JSON(responses.SuccessResponse{
 			Message: JWT,

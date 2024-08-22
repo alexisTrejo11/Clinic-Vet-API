@@ -2,18 +2,21 @@ package services
 
 import (
 	"errors"
+	"fmt"
 
 	"example.com/at/backend/api-vet/DTOs"
+	"example.com/at/backend/api-vet/mappers"
 	"example.com/at/backend/api-vet/repository"
 	"example.com/at/backend/api-vet/services/domainServices"
+	"example.com/at/backend/api-vet/sqlc"
 	"example.com/at/backend/api-vet/utils"
 )
 
 type AuthService interface {
 	ValidateUniqueFields(userSignUpDTO DTOs.UserSignUpDTO) error
-	ProcessSignUp(userSignUpDTO DTOs.UserSignUpDTO) (string, error)
-	ProcessLogin(userDTO DTOs.UserDTO) (string, error)
-	FindUser(userLoginDTO DTOs.UserLoginDTO) (DTOs.UserDTO, error)
+	CompleteSignUp(userSignUpDTO DTOs.UserSignUpDTO) (string, error)
+	CompleteLogin(userDTO DTOs.UserDTO) (string, error)
+	FindUser(userLoginDTO DTOs.UserLoginDTO) (*DTOs.UserDTO, error)
 	CheckPassword(hashPassword, givenPassword string) error
 }
 
@@ -22,17 +25,17 @@ type AuthServiceImpl struct {
 	userRepository    repository.UserRepository
 }
 
-func NewUserService(userRepository repository.UserRepository, ownerRepository repository.OwnerRepository) AuthServiceImpl {
+func NewAuthService(userRepository repository.UserRepository, ownerRepository repository.OwnerRepository) AuthService {
 	// Initializing the domain service internally
 	authDomainService := domainServices.NewAuthDomainService(userRepository, ownerRepository)
-	return AuthServiceImpl{
+	return &AuthServiceImpl{
 		authDomainService: authDomainService,
 		userRepository:    userRepository,
 	}
 }
 
 func (as *AuthServiceImpl) ValidateUniqueFields(userSignUpDTO DTOs.UserSignUpDTO) error {
-	if userSignUpDTO.Email == "" && userSignUpDTO.Phone == "" {
+	if userSignUpDTO.Email == "" && userSignUpDTO.PhoneNumber == "" {
 		return errors.New("no credentials provided to create user")
 	}
 
@@ -43,9 +46,9 @@ func (as *AuthServiceImpl) ValidateUniqueFields(userSignUpDTO DTOs.UserSignUpDTO
 		}
 	}
 
-	if userSignUpDTO.Phone != "" {
-		isPhoneTaken := as.userRepository.CheckPhoneNumberExists(userSignUpDTO.Phone)
-		if isPhoneTaken {
+	if userSignUpDTO.PhoneNumber != "" {
+		isPhoneNumberTaken := as.userRepository.CheckPhoneNumberExists(userSignUpDTO.PhoneNumber)
+		if isPhoneNumberTaken {
 			return errors.New("phone number is already taken")
 		}
 	}
@@ -86,4 +89,29 @@ func (as *AuthServiceImpl) CompleteLogin(userDTO DTOs.UserDTO) (string, error) {
 	}
 
 	return JWT, nil
+}
+
+func (as *AuthServiceImpl) FindUser(userLoginDTO DTOs.UserLoginDTO) (*DTOs.UserDTO, error) {
+	var user *sqlc.User
+	var err error
+
+	if userLoginDTO.Email != "" {
+		// Find user by email
+		user, err = as.userRepository.GetUserByEmail(userLoginDTO.Email)
+		if err != nil {
+			return nil, fmt.Errorf("error finding user by email: %w", err)
+		}
+	} else if userLoginDTO.Phone != "" {
+		// Find user by phone number
+		user, err = as.userRepository.GetUserByPhoneNumber(userLoginDTO.Phone)
+		if err != nil {
+			return nil, fmt.Errorf("error finding user by phone number: %w", err)
+		}
+	} else {
+		return nil, fmt.Errorf("email or phone number must be provided")
+	}
+
+	// Map the found user to DTO
+	userDTO := mappers.MapUserSqlcToDTO(user)
+	return &userDTO, nil
 }

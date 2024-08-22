@@ -1,16 +1,18 @@
 package DTOs
 
-import "time"
+import (
+	"time"
+)
 
 type UserSignUpDTO struct {
-	Email    string    `json:"email" validate:"required"`
-	Phone    string    `json:"phone" validate:"required"`
-	Name     string    `json:"name" validate:"required"`
-	LastName string    `json:"last_name" validate:"required"`
-	Password string    `json:"password" validate:"required"`
-	Photo    string    `json:"photo"`
-	BirthDay time.Time `json:"birthday" validate:"required"`
-	Genre    string    `json:"genre"`
+	Name        string `json:"name" validate:"required"`
+	LastName    string `json:"last_name" validate:"required"`
+	Email       string `json:"email" validate:"required,email"`
+	PhoneNumber string `json:"phone_number" validate:"required,e164"`
+	Password    string `json:"password" validate:"required,min=8"`
+	Birthday    string `json:"birthday"`
+	Photo       string
+	Genre       Genre `json:"genre" validate:"required,oneof=male female other"`
 }
 
 type UserLoginDTO struct {
@@ -21,7 +23,7 @@ type UserLoginDTO struct {
 
 type UserAddressInsertDTO struct {
 	Street       string    `json:"street" validate:"required"`
-	Number       string    `json:"number" validate:"required"`
+	PhoneNumber  string    `json:"phone_number" validate:"required,e164"`
 	Neighborhood string    `json:"neighborhood" validate:"required"`
 	City         string    `json:"city" validate:"required"`
 	Country      string    `json:"country" validate:"required"`
@@ -29,9 +31,18 @@ type UserAddressInsertDTO struct {
 }
 
 type UserDTO struct {
-	Id             int32  `json:"id"`
-	Email          string `json:"email"`
-	HashedPassword string `json:"hashed_password"`
-	Phone          string `json:"phone"`
-	Role           string `json:"role"`
+	Id       int32  `json:"id"`
+	Name     string `json:"name"`
+	LastName string `json:"last_name"`
+	Email    string `json:"email"`
+	Phone    string `json:"phone"`
+	Role     string `json:"role"`
 }
+
+type Genre string
+
+const (
+	Male   Genre = "male"
+	Female Genre = "female"
+	Other  Genre = "other"
+)
