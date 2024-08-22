@@ -62,6 +62,10 @@ func (as *AuthServiceImpl) CompleteSignUp(userSignUpDTO DTOs.UserSignUpDTO) (str
 		return "", errors.New("can't create user")
 	}
 
+	if err := as.authDomainService.CreateOwner(*newUser, userSignUpDTO); err != nil {
+		return "", errors.New("can't create owner")
+	}
+
 	JWT, err := as.authDomainService.CreateJWT(newUser.ID, newUser.Role)
 	if err != nil {
 		return "", errors.New("can't create jwt token")
@@ -101,9 +105,9 @@ func (as *AuthServiceImpl) FindUser(userLoginDTO DTOs.UserLoginDTO) (*DTOs.UserD
 		if err != nil {
 			return nil, fmt.Errorf("error finding user by email: %w", err)
 		}
-	} else if userLoginDTO.Phone != "" {
+	} else if userLoginDTO.PhoneNumber != "" {
 		// Find user by phone number
-		user, err = as.userRepository.GetUserByPhoneNumber(userLoginDTO.Phone)
+		user, err = as.userRepository.GetUserByPhoneNumber(userLoginDTO.PhoneNumber)
 		if err != nil {
 			return nil, fmt.Errorf("error finding user by phone number: %w", err)
 		}

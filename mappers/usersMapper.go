@@ -11,9 +11,10 @@ import (
 
 func MapSignUpDTOToParams(userSignUpDTO DTOs.UserSignUpDTO) sqlc.CreateUserParams {
 	return sqlc.CreateUserParams{
-		Name:  userSignUpDTO.Name + " " + userSignUpDTO.LastName,
-		Email: userSignUpDTO.Email,
-		Role:  "Common-Owner",
+		Name:        userSignUpDTO.Name + " " + userSignUpDTO.LastName,
+		Email:       userSignUpDTO.Email,
+		PhoneNumber: userSignUpDTO.PhoneNumber,
+		Role:        "Common-Owner",
 	}
 }
 
@@ -23,10 +24,14 @@ func MapSignUpDataToCreateOwnerParams(userId int32, userSignUpDTO DTOs.UserSignU
 		return nil, fmt.Errorf("invalid birthday format: %v", err)
 	}
 
+	genre := userSignUpDTO.Genre
+	genreStr := string(genre)
+
 	ownerCreateArgs := sqlc.CreateOwnerParams{
-		Photo:    pgtype.Text{String: userSignUpDTO.Photo, Valid: userSignUpDTO.Photo != ""}, // NULL if empty
+		Photo:    pgtype.Text{String: userSignUpDTO.Photo, Valid: userSignUpDTO.Photo != ""},
 		Name:     userSignUpDTO.Name,
 		LastName: userSignUpDTO.LastName,
+		Genre:    pgtype.Text{String: genreStr, Valid: userSignUpDTO.Genre != ""},
 		Birthday: pgtype.Date{Time: birthday, Valid: true},
 		UserID:   pgtype.Int4{Int32: int32(userId), Valid: true},
 	}

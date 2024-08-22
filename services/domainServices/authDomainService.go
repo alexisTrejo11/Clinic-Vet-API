@@ -1,7 +1,6 @@
 package domainServices
 
 import (
-	"errors"
 	"strconv"
 
 	"example.com/at/backend/api-vet/DTOs"
@@ -15,6 +14,7 @@ type AuthDomainService interface {
 	ProcessUserCreation(userSignUpDTO DTOs.UserSignUpDTO) (*sqlc.CreateUserRow, error)
 	CreateJWT(userId int32, role string) (string, error)
 	ProcessUserLogin(UserDTO DTOs.UserDTO) error
+	CreateOwner(userData sqlc.CreateUserRow, userSignUpDTO DTOs.UserSignUpDTO) error
 }
 
 type AuthDomainServiceImpl struct {
@@ -73,7 +73,7 @@ func (ads AuthDomainServiceImpl) CreateOwner(userData sqlc.CreateUserRow, userSi
 	}
 
 	if _, err := ads.ownerRepository.CreateOwner(*ownerCreateParams); err != nil {
-		return errors.New("can't create owner")
+		return err
 	}
 
 	return nil

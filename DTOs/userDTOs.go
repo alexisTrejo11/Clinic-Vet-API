@@ -11,14 +11,14 @@ type UserSignUpDTO struct {
 	PhoneNumber string `json:"phone_number" validate:"required,e164"`
 	Password    string `json:"password" validate:"required,min=8"`
 	Birthday    string `json:"birthday"`
-	Photo       string
-	Genre       Genre `json:"genre" validate:"required,oneof=male female other"`
+	Photo       string `json:"photo"`
+	Genre       Genre  `json:"genre" validate:"required,oneof=male female other"`
 }
 
 type UserLoginDTO struct {
-	Email    string `json:"email"`
-	Password string `json:"password" validate:"required"`
-	Phone    string `json:"phone"`
+	Email       string `json:"email"`
+	PhoneNumber string `json:"phone_number"`
+	Password    string `json:"password" validate:"required"`
 }
 
 type UserAddressInsertDTO struct {
