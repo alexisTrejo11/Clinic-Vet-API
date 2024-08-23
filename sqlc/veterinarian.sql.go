@@ -133,3 +133,19 @@ func (q *Queries) UpdateVeterinarian(ctx context.Context, arg UpdateVeterinarian
 	)
 	return err
 }
+
+const updateVeterinarianUserID = `-- name: UpdateVeterinarianUserID :exec
+UPDATE veterinarians
+SET user_id = $2, updated_at = CURRENT_TIMESTAMP
+WHERE id = $1
+`
+
+type UpdateVeterinarianUserIDParams struct {
+	ID     int32
+	UserID pgtype.Int4
+}
+
+func (q *Queries) UpdateVeterinarianUserID(ctx context.Context, arg UpdateVeterinarianUserIDParams) error {
+	_, err := q.db.Exec(ctx, updateVeterinarianUserID, arg.ID, arg.UserID)
+	return err
+}

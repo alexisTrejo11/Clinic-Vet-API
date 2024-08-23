@@ -57,14 +57,17 @@ func main() {
 
 	// Auth
 	userRepository := repository.NewUserRepository(queries)
-	authService := services.NewAuthService(userRepository, ownerRepository)
-	authController := controller.NewAuthClientController(authService)
+	authCommonService := services.NewCommonAuthService(userRepository, ownerRepository)
+	clientAuthService := services.NewClientAuthService(userRepository, ownerRepository)
+	employeeAuthService := services.NewAuthEmployeeService(userRepository, ownerRepository)
+	authClientController := controller.NewAuthClientController(clientAuthService, authCommonService)
+	authEmployeeController := controller.NewAuthEmployeeController(employeeAuthService, authCommonService)
 
 	// Routes
 	routes.OwnerRoutes(app, ownerController)
 	routes.PetsRoutes(app, petController)
 	routes.VeterinarianRoutes(app, vetController)
-	routes.AuthRoutes(app, authController)
+	routes.AuthRoutes(app, authClientController, authEmployeeController)
 
 	port := ":8000"
 

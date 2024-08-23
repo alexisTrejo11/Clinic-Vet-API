@@ -10,16 +10,18 @@ import (
 )
 
 type AuthClientController struct {
-	authService services.AuthService
-	validator   *validator.Validate
-	logger      *logrus.Logger
+	authClientService services.AuthClientService
+	authCommonService services.AuthCommonService
+	validator         *validator.Validate
+	logger            *logrus.Logger
 }
 
-func NewAuthClientController(authService services.AuthService) *AuthClientController {
+func NewAuthClientController(authClientService services.AuthClientService, authCommonService services.AuthCommonService) *AuthClientController {
 	return &AuthClientController{
-		authService: authService,
-		validator:   validator.New(),
-		logger:      logrus.New(),
+		authClientService: authClientService,
+		authCommonService: authCommonService,
+		validator:         validator.New(),
+		logger:            logrus.New(),
 	}
 }
 
@@ -52,7 +54,7 @@ func (usc AuthClientController) ClientSignUp() fiber.Handler {
 			})
 		}
 
-		if err := usc.authService.ValidateUniqueFields(userSignUpDTO); err != nil {
+		if err := usc.authCommonService.ValidateUniqueFields(userSignUpDTO.Email, userSignUpDTO.PhoneNumber); err != nil {
 			usc.logger.WithFields(logrus.Fields{"error": err.Error()}).Error("Unique field validation failed for signup")
 			return c.Status(fiber.StatusBadRequest).JSON(responses.ErrorResponse{
 				Message: "Invalid Given Credentials",
@@ -60,7 +62,7 @@ func (usc AuthClientController) ClientSignUp() fiber.Handler {
 			})
 		}
 
-		JWT, err := usc.authService.CompleteSignUp(userSignUpDTO)
+		JWT, err := usc.authClientService.CompleteSignUp(userSignUpDTO)
 		if err != nil {
 			usc.logger.WithFields(logrus.Fields{"error": err.Error()}).Error("Failed to complete signup process")
 			return c.Status(fiber.StatusInternalServerError).JSON(responses.ErrorResponse{
@@ -107,7 +109,7 @@ func (usc AuthClientController) ClientLogin() fiber.Handler {
 			})
 		}
 
-		userDTO, err := usc.authService.FindUser(userLoginDTO)
+		userDTO, err := usc.authCommonService.FindUserByEmailOrPhone(userLoginDTO.Email, userLoginDTO.PhoneNumber)
 		if err != nil {
 			usc.logger.WithFields(logrus.Fields{"user": userLoginDTO.Email, "error": err.Error()}).Warn("User not found during login")
 			return c.Status(fiber.StatusNotFound).JSON(responses.ErrorResponse{
@@ -116,7 +118,7 @@ func (usc AuthClientController) ClientLogin() fiber.Handler {
 			})
 		}
 
-		JWT, err := usc.authService.CompleteLogin(*userDTO)
+		JWT, err := usc.authCommonService.CompleteLogin(*userDTO)
 		if err != nil {
 			usc.logger.WithFields(logrus.Fields{"user": userLoginDTO.Email, "error": err.Error()}).Error("Failed to complete login process")
 			return c.Status(fiber.StatusInternalServerError).JSON(responses.ErrorResponse{

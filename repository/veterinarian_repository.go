@@ -4,12 +4,14 @@ import (
 	"context"
 
 	"example.com/at/backend/api-vet/sqlc"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type VeterinarianRepository interface {
 	CreateVeterinarian(ctx context.Context, arg sqlc.CreateVeterinarianParams) (sqlc.Veterinarian, error)
 	GetVeterinarianByID(ctx context.Context, id int32) (sqlc.Veterinarian, error)
 	UpdateVeterinarian(ctx context.Context, arg sqlc.UpdateVeterinarianParams) error
+	AddUserIdToExisitngVet(veterinarianId, userId int32)
 	DeleteVeterinarian(ctx context.Context, id int32) error
 	ValidateExistingVeterinarian(ctx context.Context, VeterinarianId int32) bool
 }
@@ -61,4 +63,13 @@ func (r *VeterinarianRepositoryImpl) GetAppointmentsByVeterinarian(ctx context.C
 func (r *VeterinarianRepositoryImpl) ValidateExistingVeterinarian(ctx context.Context, VeterinarianId int32) bool {
 	_, err := r.queries.GetVeterinarianByID(ctx, VeterinarianId)
 	return err == nil
+}
+
+func (r *VeterinarianRepositoryImpl) AddUserIdToExisitngVet(veterinarianId, userId int32) {
+	args := sqlc.UpdateVeterinarianUserIDParams{
+		ID:     veterinarianId,
+		UserID: pgtype.Int4{Int32: userId, Valid: true},
+	}
+
+	r.queries.UpdateVeterinarianUserID(context.Background(), args)
 }

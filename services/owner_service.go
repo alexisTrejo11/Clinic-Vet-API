@@ -20,6 +20,7 @@ type OwnerService interface {
 
 type OwnerServiceImpl struct {
 	ownerRepository repository.OwnerRepository
+	ownerMappers    mappers.OwnerMapper
 }
 
 func NewOwnerService(ownerRepository repository.OwnerRepository) OwnerService {
@@ -56,7 +57,7 @@ func (os OwnerServiceImpl) GetOwnerById(ownerID int32) (*DTOs.OwnerReturnDTO, er
 func (os OwnerServiceImpl) UpdateOwner(ownerUpdateDTO *DTOs.OwnerUpdateDTO) error {
 	owner, _ := os.ownerRepository.GetOwnerByID(context.Background(), ownerUpdateDTO.Id)
 
-	params := mappers.MapOwnerUpdateDtoToEntity(ownerUpdateDTO, owner)
+	params := os.ownerMappers.MapOwnerUpdateDtoToEntity(ownerUpdateDTO, owner)
 
 	if err := os.ownerRepository.UpdateOwner(context.Background(), params); err != nil {
 		return err

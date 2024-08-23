@@ -46,3 +46,17 @@ const (
 	Female Genre = "female"
 	Other  Genre = "other"
 )
+
+type UserEmployeeSignUpDTO struct {
+	Email          string `json:"email" validate:"required,email"`
+	PhoneNumber    string `json:"phone_number" validate:"required,e164"`
+	Password       string `json:"password" validate:"required,min=8"`
+	VeterinarianId int32  `json:"veterinarian_id" validate:"required"`
+}
+
+type UserEmployeeLoginDTO struct {
+	VeterinarianId *int32 `json:"veterinarian_id"`
+	Email          string `json:"email"`
+	PhoneNumber    string `json:"phone_number"`
+	Password       string `json:"password" validate:"required"`
+}

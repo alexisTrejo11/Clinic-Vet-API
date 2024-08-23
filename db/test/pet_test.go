@@ -36,7 +36,7 @@ func createDummyPet(t *testing.T) sqlc.Pet {
 
 }
 
-func TestCreateAccount(t *testing.T) {
+func TestCreatePet(t *testing.T) {
 	createDummyPet(t)
 }
 

@@ -11,15 +11,19 @@ import (
 )
 
 type AuthDomainService interface {
-	ProcessUserCreation(userSignUpDTO DTOs.UserSignUpDTO) (*sqlc.CreateUserRow, error)
+	ProcessClientUserCreation(userSignUpDTO DTOs.UserSignUpDTO) (*sqlc.CreateUserRow, error)
+	ProcessClientEmployeeUserCreation(userSignUpDTO DTOs.UserEmployeeSignUpDTO, vetDTO DTOs.VetDTO) (*sqlc.CreateUserRow, error)
 	CreateJWT(userId int32, role string) (string, error)
 	ProcessUserLogin(UserDTO DTOs.UserDTO) error
 	CreateOwner(userData sqlc.CreateUserRow, userSignUpDTO DTOs.UserSignUpDTO) error
 }
 
 type AuthDomainServiceImpl struct {
+	userMappers     mappers.UserMappers
+	ownerMappers    mappers.OwnerMapper
 	userRepository  repository.UserRepository
 	ownerRepository repository.OwnerRepository
+	vetRepository   repository.VeterinarianRepository
 }
 
 func NewAuthDomainService(userRepository repository.UserRepository, ownerRepository repository.OwnerRepository) AuthDomainService {
@@ -29,12 +33,12 @@ func NewAuthDomainService(userRepository repository.UserRepository, ownerReposit
 	}
 }
 
-func (ads AuthDomainServiceImpl) ProcessUserCreation(userSignUpDTO DTOs.UserSignUpDTO) (*sqlc.CreateUserRow, error) {
+func (ads AuthDomainServiceImpl) ProcessClientUserCreation(userSignUpDTO DTOs.UserSignUpDTO) (*sqlc.CreateUserRow, error) {
 	passwordHashed, err := utils.HashPassword(userSignUpDTO.Password)
 	if err != nil {
 		return nil, err
 	}
-	params := mappers.MapSignUpDTOToParams(userSignUpDTO)
+	params := ads.userMappers.MapSignUpDTOToCreateParams(userSignUpDTO.Name, userSignUpDTO.LastName, userSignUpDTO.Email, userSignUpDTO.PhoneNumber, "Common-Owner")
 	params.Password = passwordHashed
 
 	newUser, err := ads.userRepository.CreateUser(params)
@@ -67,7 +71,7 @@ func (ads AuthDomainServiceImpl) CreateJWT(userId int32, role string) (string, e
 }
 
 func (ads AuthDomainServiceImpl) CreateOwner(userData sqlc.CreateUserRow, userSignUpDTO DTOs.UserSignUpDTO) error {
-	ownerCreateParams, err := mappers.MapSignUpDataToCreateOwnerParams(userData.ID, userSignUpDTO)
+	ownerCreateParams, err := ads.ownerMappers.MapSignUpDataToCreateParams(userData.ID, userSignUpDTO)
 	if err != nil {
 		return err
 	}
@@ -81,4 +85,22 @@ func (ads AuthDomainServiceImpl) CreateOwner(userData sqlc.CreateUserRow, userSi
 
 func Int32ToString(n int32) string {
 	return strconv.FormatInt(int64(n), 10)
+}
+
+func (ads AuthDomainServiceImpl) ProcessClientEmployeeUserCreation(userSignUpDTO DTOs.UserEmployeeSignUpDTO, vetDTO DTOs.VetDTO) (*sqlc.CreateUserRow, error) {
+	passwordHashed, err := utils.HashPassword(userSignUpDTO.Password)
+	if err != nil {
+		return nil, err
+	}
+	params := ads.userMappers.MapSignUpDTOToCreateParams(vetDTO.Name, vetDTO.LastName, userSignUpDTO.Email, userSignUpDTO.PhoneNumber, "Veterinarian")
+	params.Password = passwordHashed
+
+	newUser, err := ads.userRepository.CreateUser(params)
+	if err != nil {
+		return nil, err
+	}
+
+	ads.vetRepository.AddUserIdToExisitngVet(vetDTO.Id, newUser.ID)
+
+	return newUser, nil
 }

@@ -10,6 +10,7 @@ type VetInsertDTO struct {
 type VetDTO struct {
 	Id        int32  `json:"id" validate:"required"`
 	Name      string `json:"name" validate:"required"`
+	LastName  string `json:"last_name" validate:"required"`
 	Photo     string `json:"photo"`
 	Email     string `json:"email" validate:"required"`
 	Specialty string `json:"specialty" validate:"required"`

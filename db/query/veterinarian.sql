@@ -18,6 +18,11 @@ UPDATE veterinarians
 SET name = $2, photo = $3, specialty = $4, user_id = $5, updated_at = CURRENT_TIMESTAMP
 WHERE id = $1;
 
+-- name: UpdateVeterinarianUserID :exec
+UPDATE veterinarians
+SET user_id = $2, updated_at = CURRENT_TIMESTAMP
+WHERE id = $1;
+
 -- name: DeleteVeterinarian :exec
 DELETE FROM veterinarians
 WHERE id = $1;
