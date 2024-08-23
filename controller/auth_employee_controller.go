@@ -17,25 +17,18 @@ type AuthEmployeeController struct {
 	logger              *logrus.Logger
 }
 
-func NewAuthEmployeeController(authEmployeeService services.AuthEmployeeService, authCommonService services.AuthCommonService) *AuthEmployeeController {
+func NewAuthEmployeeController(authEmployeeService services.AuthEmployeeService,
+	authCommonService services.AuthCommonService,
+	veterinarianService services.VeterinarianService) *AuthEmployeeController {
 	return &AuthEmployeeController{
 		authEmployeeService: authEmployeeService,
 		authCommonService:   authCommonService,
+		veterinarianService: veterinarianService,
 		validator:           validator.New(),
 		logger:              logrus.New(),
 	}
 }
 
-// EmployeeSignUp godoc
-// @Summary Register a new Employee
-// @Description Register a new Employee with the provided details
-// @Tags auth
-// @Accept  json
-// @Produce  json
-// @Param user body DTOs.UserEmployeeSignUpDTO true "User registration details"
-// @Success 201 {object} responses.SuccessResponse
-// @Failure 400 {object} responses.ErrorResponse
-// @Router /auth/signup [post]
 func (usc AuthEmployeeController) EmployeeSignUp() fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		var userEmployeeSignUpDTO DTOs.UserEmployeeSignUpDTO
@@ -60,7 +53,7 @@ func (usc AuthEmployeeController) EmployeeSignUp() fiber.Handler {
 		if err != nil {
 			return c.Status(fiber.StatusConflict).JSON(responses.ErrorResponse{
 				Message: "Employee validation failed",
-				Error:   "Employee is not registred",
+				Error:   "Employee is not registered",
 			})
 		}
 
@@ -82,24 +75,11 @@ func (usc AuthEmployeeController) EmployeeSignUp() fiber.Handler {
 		}
 
 		usc.logger.WithFields(logrus.Fields{"user": userEmployeeSignUpDTO.Email}).Info("User signed up successfully")
-		return c.Status(fiber.StatusCreated).JSON(responses.SuccessResponse{
-			Message: JWT,
-		})
+		return c.Status(fiber.StatusCreated).JSON(JWT)
+
 	}
 }
 
-// EmployeeLogin godoc
-// @Summary Log in an existing Employee
-// @Description Log in an existing Employee with the provided credentials
-// @Tags auth
-// @Accept  json
-// @Produce  json
-// @Param user body DTOs.UserLoginDTO true "User login credentials"
-// @Success 202 {object} responses.SuccessResponse
-// @Failure 400 {object} responses.ErrorResponse
-// @Failure 404 {object} responses.ErrorResponse
-// @Failure 500 {object} responses.ErrorResponse
-// @Router /auth/login [post]
 func (usc AuthEmployeeController) EmployeeLogin() fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		var userLoginDTO DTOs.UserEmployeeLoginDTO
@@ -115,15 +95,6 @@ func (usc AuthEmployeeController) EmployeeLogin() fiber.Handler {
 			usc.logger.WithFields(logrus.Fields{"error": err.Error()}).Error("Validation failed for login")
 			return c.Status(fiber.StatusBadRequest).JSON(responses.ErrorResponse{
 				Message: "Validation failed",
-				Error:   err.Error(),
-			})
-		}
-
-		// TODO: Handle this
-		if userLoginDTO.VeterinarianId != nil {
-			_, err := usc.veterinarianService.GetVeterinarianById(*userLoginDTO.VeterinarianId)
-			return c.Status(fiber.StatusNotFound).JSON(responses.ErrorResponse{
-				Message: "Employee Not Found With Given Id",
 				Error:   err.Error(),
 			})
 		}

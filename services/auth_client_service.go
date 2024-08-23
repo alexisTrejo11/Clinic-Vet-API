@@ -15,13 +15,15 @@ type AuthClientService interface {
 type authClientServiceImpl struct {
 	authDomainService domainServices.AuthDomainService
 	userRepository    repository.UserRepository
+	vetRepository     repository.VeterinarianRepository
 }
 
-func NewClientAuthService(userRepository repository.UserRepository, ownerRepository repository.OwnerRepository) AuthClientService {
+func NewClientAuthService(userRepository repository.UserRepository, ownerRepository repository.OwnerRepository, vetRepository repository.VeterinarianRepository) AuthClientService {
 	// Initializing the domain service internally
-	authDomainService := domainServices.NewAuthDomainService(userRepository, ownerRepository)
+	authDomainService := domainServices.NewAuthDomainService(userRepository, ownerRepository, vetRepository)
 	return &authClientServiceImpl{
 		authDomainService: authDomainService,
+		vetRepository:     vetRepository,
 		userRepository:    userRepository,
 	}
 }

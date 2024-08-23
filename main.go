@@ -57,11 +57,11 @@ func main() {
 
 	// Auth
 	userRepository := repository.NewUserRepository(queries)
-	authCommonService := services.NewCommonAuthService(userRepository, ownerRepository)
-	clientAuthService := services.NewClientAuthService(userRepository, ownerRepository)
-	employeeAuthService := services.NewAuthEmployeeService(userRepository, ownerRepository)
+	authCommonService := services.NewCommonAuthService(userRepository, ownerRepository, vetRepository)
+	clientAuthService := services.NewClientAuthService(userRepository, ownerRepository, vetRepository)
+	employeeAuthService := services.NewAuthEmployeeService(userRepository, ownerRepository, vetRepository)
 	authClientController := controller.NewAuthClientController(clientAuthService, authCommonService)
-	authEmployeeController := controller.NewAuthEmployeeController(employeeAuthService, authCommonService)
+	authEmployeeController := controller.NewAuthEmployeeController(employeeAuthService, authCommonService, vetServices)
 
 	// Routes
 	routes.OwnerRoutes(app, ownerController)

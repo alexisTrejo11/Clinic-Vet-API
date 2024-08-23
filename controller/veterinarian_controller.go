@@ -1,7 +1,7 @@
 package controller
 
 import (
-	dtos "example.com/at/backend/api-vet/DTOs"
+	"example.com/at/backend/api-vet/DTOs"
 	"example.com/at/backend/api-vet/services"
 	"example.com/at/backend/api-vet/utils"
 	"example.com/at/backend/api-vet/utils/responses"
@@ -30,14 +30,14 @@ func NewVeterinarianController(vetService services.VeterinarianService) *Veterin
 // @Tags veterinarians
 // @Accept  json
 // @Produce  json
-// @Param vet body dtos.VetInsertDTO true "Veterinarian to create"
+// @Param vet body DTOs.VetInsertDTO true "Veterinarian to create"
 // @Success 201 {object} responses.SuccessResponse
 // @Failure 400 {object} responses.ErrorResponse
 // @Failure 500 {object} responses.ErrorResponse
 // @Router /veterinarians [post]
 func (vc VeterinarianController) CreateVeterinarian() fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		var veterinarianInsertDTO dtos.VetInsertDTO
+		var veterinarianInsertDTO DTOs.VetInsertDTO
 
 		if err := c.BodyParser(&veterinarianInsertDTO); err != nil {
 			vc.logger.WithFields(logrus.Fields{"error": err.Error()}).Error("Failed to parse request body")
@@ -75,7 +75,7 @@ func (vc VeterinarianController) CreateVeterinarian() fiber.Handler {
 // @Accept  json
 // @Produce  json
 // @Param id path int true "Veterinarian ID"
-// @Success 200 {object} dtos.VetReturnDTO
+// @Success 200 {object} DTOs.VetReturnDTO
 // @Failure 400 {object} responses.ErrorResponse
 // @Failure 404 {object} responses.ErrorResponse
 // @Router /veterinarians/{id} [get]
@@ -108,7 +108,7 @@ func (vc VeterinarianController) GetVeterinarianById() fiber.Handler {
 // @Tags veterinarians
 // @Accept  json
 // @Produce  json
-// @Param vet body dtos.VetUpdateDTO true "Veterinarian to update"
+// @Param vet body DTOs.VetUpdateDTO true "Veterinarian to update"
 // @Success 200 {object} responses.SuccessResponse
 // @Failure 400 {object} responses.ErrorResponse
 // @Failure 404 {object} responses.ErrorResponse
@@ -116,7 +116,7 @@ func (vc VeterinarianController) GetVeterinarianById() fiber.Handler {
 // @Router /veterinarians [put]
 func (vc VeterinarianController) UpdateVeterinarian() fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		var veterinarianUpdateDTO dtos.VetUpdateDTO
+		var veterinarianUpdateDTO DTOs.VetUpdateDTO
 
 		if err := c.BodyParser(&veterinarianUpdateDTO); err != nil {
 			vc.logger.WithFields(logrus.Fields{"error": err.Error()}).Error("Failed to parse request body for update")

@@ -23,14 +23,16 @@ type authCommonServiceImpl struct {
 	authDomainService domainServices.AuthDomainService
 	userRepository    repository.UserRepository
 	userMappers       mappers.UserMappers
+	vetRepository     repository.VeterinarianRepository
 }
 
-func NewCommonAuthService(userRepository repository.UserRepository, ownerRepository repository.OwnerRepository) AuthCommonService {
+func NewCommonAuthService(userRepository repository.UserRepository, ownerRepository repository.OwnerRepository, vetRepository repository.VeterinarianRepository) AuthCommonService {
 	// Initializing the domain service internally
-	authDomainService := domainServices.NewAuthDomainService(userRepository, ownerRepository)
+	authDomainService := domainServices.NewAuthDomainService(userRepository, ownerRepository, vetRepository)
 	return &authCommonServiceImpl{
 		authDomainService: authDomainService,
 		userRepository:    userRepository,
+		vetRepository:     vetRepository,
 	}
 }
 

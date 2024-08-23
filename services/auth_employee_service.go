@@ -15,19 +15,21 @@ type AuthEmployeeService interface {
 type authEmployeeServiceImpl struct {
 	authDomainService domainServices.AuthDomainService
 	userRepository    repository.UserRepository
+	vetRepository     repository.VeterinarianRepository
 }
 
-func NewAuthEmployeeService(userRepository repository.UserRepository, ownerRepository repository.OwnerRepository) AuthEmployeeService {
+func NewAuthEmployeeService(userRepository repository.UserRepository, ownerRepository repository.OwnerRepository, vetRepository repository.VeterinarianRepository) AuthEmployeeService {
 	// Initializing the domain service internally
-	authDomainService := domainServices.NewAuthDomainService(userRepository, ownerRepository)
+	authDomainService := domainServices.NewAuthDomainService(userRepository, ownerRepository, vetRepository)
 	return &authEmployeeServiceImpl{
 		userRepository:    userRepository,
 		authDomainService: authDomainService,
+		vetRepository:     vetRepository,
 	}
 }
 
 func (as *authEmployeeServiceImpl) CompleteSignUp(userSignUpDTO DTOs.UserEmployeeSignUpDTO, vetDTO DTOs.VetDTO) (string, error) {
-	newUser, err := as.authDomainService.ProcessClientEmployeeUserCreation(userSignUpDTO, vetDTO)
+	newUser, err := as.authDomainService.ProcessEmployeeUserCreation(userSignUpDTO, vetDTO)
 	if err != nil {
 		return "", errors.New("can't create user")
 	}

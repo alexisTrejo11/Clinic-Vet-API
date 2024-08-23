@@ -12,7 +12,7 @@ import (
 
 type AuthDomainService interface {
 	ProcessClientUserCreation(userSignUpDTO DTOs.UserSignUpDTO) (*sqlc.CreateUserRow, error)
-	ProcessClientEmployeeUserCreation(userSignUpDTO DTOs.UserEmployeeSignUpDTO, vetDTO DTOs.VetDTO) (*sqlc.CreateUserRow, error)
+	ProcessEmployeeUserCreation(userSignUpDTO DTOs.UserEmployeeSignUpDTO, vetDTO DTOs.VetDTO) (*sqlc.CreateUserRow, error)
 	CreateJWT(userId int32, role string) (string, error)
 	ProcessUserLogin(UserDTO DTOs.UserDTO) error
 	CreateOwner(userData sqlc.CreateUserRow, userSignUpDTO DTOs.UserSignUpDTO) error
@@ -26,9 +26,10 @@ type AuthDomainServiceImpl struct {
 	vetRepository   repository.VeterinarianRepository
 }
 
-func NewAuthDomainService(userRepository repository.UserRepository, ownerRepository repository.OwnerRepository) AuthDomainService {
+func NewAuthDomainService(userRepository repository.UserRepository, ownerRepository repository.OwnerRepository, vetRepository repository.VeterinarianRepository) AuthDomainService {
 	return &AuthDomainServiceImpl{
 		userRepository:  userRepository,
+		vetRepository:   vetRepository,
 		ownerRepository: ownerRepository,
 	}
 }
@@ -87,12 +88,12 @@ func Int32ToString(n int32) string {
 	return strconv.FormatInt(int64(n), 10)
 }
 
-func (ads AuthDomainServiceImpl) ProcessClientEmployeeUserCreation(userSignUpDTO DTOs.UserEmployeeSignUpDTO, vetDTO DTOs.VetDTO) (*sqlc.CreateUserRow, error) {
+func (ads AuthDomainServiceImpl) ProcessEmployeeUserCreation(userSignUpDTO DTOs.UserEmployeeSignUpDTO, vetDTO DTOs.VetDTO) (*sqlc.CreateUserRow, error) {
 	passwordHashed, err := utils.HashPassword(userSignUpDTO.Password)
 	if err != nil {
 		return nil, err
 	}
-	params := ads.userMappers.MapSignUpDTOToCreateParams(vetDTO.Name, vetDTO.LastName, userSignUpDTO.Email, userSignUpDTO.PhoneNumber, "Veterinarian")
+	params := ads.userMappers.MapSignUpDTOToCreateParams(vetDTO.Name, "", userSignUpDTO.Email, userSignUpDTO.PhoneNumber, "Veterinarian")
 	params.Password = passwordHashed
 
 	newUser, err := ads.userRepository.CreateUser(params)

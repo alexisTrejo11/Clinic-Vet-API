@@ -3,17 +3,15 @@ package DTOs
 type VetInsertDTO struct {
 	Name      string `json:"name" validate:"required"`
 	Photo     string `json:"photo"`
-	Email     string `json:"email" validate:"required"`
 	Specialty string `json:"specialty" validate:"required"`
 }
 
 type VetDTO struct {
-	Id        int32  `json:"id" validate:"required"`
-	Name      string `json:"name" validate:"required"`
-	LastName  string `json:"last_name" validate:"required"`
+	Id        int32  `json:"id"`
+	Name      string `json:"name"`
 	Photo     string `json:"photo"`
-	Email     string `json:"email" validate:"required"`
-	Specialty string `json:"specialty" validate:"required"`
+	Email     string `json:"email"`
+	Specialty string `json:"specialty"`
 }
 
 type VetUpdateDTO struct {
