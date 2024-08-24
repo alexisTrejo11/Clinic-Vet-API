@@ -75,6 +75,27 @@ func (q *Queries) GetVeterinarianByID(ctx context.Context, id int32) (Veterinari
 	return i, err
 }
 
+const getVeterinarianByUserID = `-- name: GetVeterinarianByUserID :one
+SELECT id, name, photo, specialty, user_id, created_at, updated_at
+FROM veterinarians
+WHERE user_id = $1
+`
+
+func (q *Queries) GetVeterinarianByUserID(ctx context.Context, userID pgtype.Int4) (Veterinarian, error) {
+	row := q.db.QueryRow(ctx, getVeterinarianByUserID, userID)
+	var i Veterinarian
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Photo,
+		&i.Specialty,
+		&i.UserID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const listVeterinarians = `-- name: ListVeterinarians :many
 SELECT id, name, photo, specialty, user_id, created_at, updated_at
 FROM veterinarians

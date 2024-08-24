@@ -3,11 +3,11 @@ package services
 import (
 	"errors"
 	"fmt"
+	"strconv"
 
 	"example.com/at/backend/api-vet/DTOs"
 	"example.com/at/backend/api-vet/mappers"
 	"example.com/at/backend/api-vet/repository"
-	"example.com/at/backend/api-vet/services/domainServices"
 	"example.com/at/backend/api-vet/sqlc"
 	"example.com/at/backend/api-vet/utils"
 )
@@ -17,22 +17,19 @@ type AuthCommonService interface {
 	CheckPassword(hashPassword, givenPassword string) error
 	FindUserByEmailOrPhone(email, phoneNumber string) (*DTOs.UserDTO, error)
 	CompleteLogin(userDTO DTOs.UserDTO) (string, error)
+	CreateJWT(userId int32, role string) (string, error)
 }
 
 type authCommonServiceImpl struct {
-	authDomainService domainServices.AuthDomainService
-	userRepository    repository.UserRepository
-	userMappers       mappers.UserMappers
-	vetRepository     repository.VeterinarianRepository
+	userRepository repository.UserRepository
+	userMappers    mappers.UserMappers
+	vetRepository  repository.VeterinarianRepository
 }
 
 func NewCommonAuthService(userRepository repository.UserRepository, ownerRepository repository.OwnerRepository, vetRepository repository.VeterinarianRepository) AuthCommonService {
-	// Initializing the domain service internally
-	authDomainService := domainServices.NewAuthDomainService(userRepository, ownerRepository, vetRepository)
 	return &authCommonServiceImpl{
-		authDomainService: authDomainService,
-		userRepository:    userRepository,
-		vetRepository:     vetRepository,
+		userRepository: userRepository,
+		vetRepository:  vetRepository,
 	}
 }
 
@@ -92,14 +89,31 @@ func (as *authCommonServiceImpl) FindUserByEmailOrPhone(email, phoneNumber strin
 }
 
 func (as *authCommonServiceImpl) CompleteLogin(userDTO DTOs.UserDTO) (string, error) {
-	if err := as.authDomainService.ProcessUserLogin(userDTO); err != nil {
+	if err := as.userRepository.UpdateUserLastLogin(userDTO.Id); err != nil {
 		return "", err
 	}
 
-	JWT, err := as.authDomainService.CreateJWT(userDTO.Id, userDTO.Role)
+	JWT, err := as.CreateJWT(userDTO.Id, userDTO.Role)
 	if err != nil {
 		return "", errors.New("can't create jwt token")
 	}
 
 	return JWT, nil
+}
+
+func (as *authCommonServiceImpl) CreateJWT(userId int32, role string) (string, error) {
+	var roles []string
+	roles = append(roles, role)
+	userIdStr := Int32ToString(userId)
+
+	JWT, err := utils.GenerateJWT(userIdStr, roles)
+	if err != nil {
+		return "", err
+	}
+
+	return JWT, nil
+}
+
+func Int32ToString(n int32) string {
+	return strconv.FormatInt(int64(n), 10)
 }

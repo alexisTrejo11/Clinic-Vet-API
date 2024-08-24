@@ -8,6 +8,7 @@ type VetInsertDTO struct {
 
 type VetDTO struct {
 	Id        int32  `json:"id"`
+	UserId    *int32 `json:"user_id"`
 	Name      string `json:"name"`
 	Photo     string `json:"photo"`
 	Email     string `json:"email"`

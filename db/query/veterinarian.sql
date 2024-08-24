@@ -8,6 +8,12 @@ SELECT id, name, photo, specialty, user_id, created_at, updated_at
 FROM veterinarians
 WHERE id = $1;
 
+-- name: GetVeterinarianByUserID :one
+SELECT id, name, photo, specialty, user_id, created_at, updated_at
+FROM veterinarians
+WHERE user_id = $1;
+
+
 -- name: ListVeterinarians :many
 SELECT id, name, photo, specialty, user_id, created_at, updated_at
 FROM veterinarians

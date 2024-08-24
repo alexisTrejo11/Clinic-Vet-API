@@ -55,13 +55,17 @@ func main() {
 	vetServices := services.NewVeterinarianService(vetRepository)
 	vetController := controller.NewVeterinarianController(vetServices)
 
-	// Auth
+	// Users
 	userRepository := repository.NewUserRepository(queries)
 	authCommonService := services.NewCommonAuthService(userRepository, ownerRepository, vetRepository)
-	clientAuthService := services.NewClientAuthService(userRepository, ownerRepository, vetRepository)
-	employeeAuthService := services.NewAuthEmployeeService(userRepository, ownerRepository, vetRepository)
-	authClientController := controller.NewAuthClientController(clientAuthService, authCommonService)
-	authEmployeeController := controller.NewAuthEmployeeController(employeeAuthService, authCommonService, vetServices)
+
+	// Auth-Client
+	authClientService := services.NewClientAuthService(authCommonService, userRepository, ownerRepository, vetRepository)
+	authClientController := controller.NewAuthClientController(authClientService, authCommonService)
+
+	// Auth-Employees
+	authEmployeeService := services.NewAuthEmployeeService(userRepository, vetRepository, authCommonService)
+	authEmployeeController := controller.NewAuthEmployeeController(authEmployeeService, authCommonService, vetServices)
 
 	// Routes
 	routes.OwnerRoutes(app, ownerController)

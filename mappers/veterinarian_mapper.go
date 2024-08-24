@@ -17,6 +17,7 @@ func MapVetInsertDtoToVetInsertParams(vetInsertDTO DTOs.VetInsertDTO) sqlc.Creat
 func MapSqlcEntityToDTO(veterinarian sqlc.Veterinarian) DTOs.VetDTO {
 	return DTOs.VetDTO{
 		Id:        veterinarian.ID,
+		UserId:    &veterinarian.UserID.Int32,
 		Name:      veterinarian.Name,
 		Photo:     veterinarian.Photo.String,
 		Specialty: veterinarian.Specialty.String,

@@ -17,13 +17,11 @@ type AuthEmployeeController struct {
 	logger              *logrus.Logger
 }
 
-func NewAuthEmployeeController(authEmployeeService services.AuthEmployeeService,
-	authCommonService services.AuthCommonService,
-	veterinarianService services.VeterinarianService) *AuthEmployeeController {
+func NewAuthEmployeeController(authEmployeeService services.AuthEmployeeService, authCommonService services.AuthCommonService, veterinarianService services.VeterinarianService) *AuthEmployeeController {
 	return &AuthEmployeeController{
 		authEmployeeService: authEmployeeService,
-		authCommonService:   authCommonService,
 		veterinarianService: veterinarianService,
+		authCommonService:   authCommonService,
 		validator:           validator.New(),
 		logger:              logrus.New(),
 	}
@@ -54,6 +52,12 @@ func (usc AuthEmployeeController) EmployeeSignUp() fiber.Handler {
 			return c.Status(fiber.StatusConflict).JSON(responses.ErrorResponse{
 				Message: "Employee validation failed",
 				Error:   "Employee is not registered",
+			})
+		}
+
+		if *existingVet.UserId != 0 {
+			return c.Status(fiber.StatusConflict).JSON(responses.ErrorResponse{
+				Error: "Employee already has an account.",
 			})
 		}
 

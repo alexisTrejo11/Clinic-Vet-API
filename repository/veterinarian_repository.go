@@ -14,6 +14,7 @@ type VeterinarianRepository interface {
 	AddUserIdToExisitngVet(veterinarianId, userId int32)
 	DeleteVeterinarian(ctx context.Context, id int32) error
 	ValidateExistingVeterinarian(ctx context.Context, VeterinarianId int32) bool
+	GetVeterinarianByUserID(userId int32) (*sqlc.Veterinarian, error)
 }
 
 type VeterinarianRepositoryImpl struct {
@@ -38,6 +39,15 @@ func (r *VeterinarianRepositoryImpl) GetVeterinarianByID(ctx context.Context, Ve
 		return sqlc.Veterinarian{}, err
 	}
 	return veterinarian, nil
+}
+
+func (r *VeterinarianRepositoryImpl) GetVeterinarianByUserID(userId int32) (*sqlc.Veterinarian, error) {
+	userIdPgType := pgtype.Int4{Int32: userId, Valid: true}
+	veterinarian, err := r.queries.GetVeterinarianByUserID(context.Background(), userIdPgType)
+	if err != nil {
+		return nil, err
+	}
+	return &veterinarian, nil
 }
 
 func (r *VeterinarianRepositoryImpl) UpdateVeterinarian(ctx context.Context, arg sqlc.UpdateVeterinarianParams) error {
