@@ -6,49 +6,58 @@ import (
 	"example.com/at/backend/api-vet/sqlc"
 )
 
-type PetRepositoryInterface interface {
-	CreatePet(ctx context.Context, args sqlc.CreatePetParams) (sqlc.Pet, error)
-	GetPetById(ctx context.Context, petId int32) (sqlc.Pet, error)
-	UpdatePetById(ctx context.Context, params sqlc.UpdatePetParams) error
-	DeletePetById(ctx context.Context, petId int32) error
+type PetRepository interface {
+	CreatePet(args sqlc.CreatePetParams) (*sqlc.Pet, error)
+	GetPetById(petId int32) (*sqlc.Pet, error)
+	GetPetByOwnerID(petId int32) ([]sqlc.Pet, error)
+	UpdatePetById(params sqlc.UpdatePetParams) error
+	DeletePetById(petId int32) error
 }
 
-type PetRepository struct {
+type petRepositoryImpl struct {
 	queries *sqlc.Queries
 }
 
-func NewPetRepository(queries *sqlc.Queries) *PetRepository {
-	return &PetRepository{
+func NewPetRepository(queries *sqlc.Queries) PetRepository {
+	return &petRepositoryImpl{
 		queries: queries,
 	}
 }
 
-func (r *PetRepository) CreatePet(ctx context.Context, args sqlc.CreatePetParams) (sqlc.Pet, error) {
-	pet, err := r.queries.CreatePet(ctx, args)
+func (r *petRepositoryImpl) CreatePet(args sqlc.CreatePetParams) (*sqlc.Pet, error) {
+	pet, err := r.queries.CreatePet(context.Background(), args)
 	if err != nil {
-		return sqlc.Pet{}, err
+		return nil, err
 	}
-	return pet, nil
+	return &pet, nil
 }
 
-func (r *PetRepository) GetPetById(ctx context.Context, petId int32) (sqlc.Pet, error) {
-	pet, err := r.queries.GetPetByID(ctx, petId)
+func (r *petRepositoryImpl) GetPetById(petId int32) (*sqlc.Pet, error) {
+	pet, err := r.queries.GetPetByID(context.Background(), petId)
 	if err != nil {
-		return sqlc.Pet{}, err
+		return nil, err
 	}
-	return pet, nil
+	return &pet, nil
 }
 
-func (r *PetRepository) UpdatePetById(ctx context.Context, params sqlc.UpdatePetParams) error {
-	err := r.queries.UpdatePet(ctx, params)
+func (r *petRepositoryImpl) GetPetByOwnerID(petId int32) ([]sqlc.Pet, error) {
+	pets, err := r.queries.ListPetsByOwnerByID(context.Background(), petId)
+	if err != nil {
+		return nil, err
+	}
+	return pets, nil
+}
+
+func (r *petRepositoryImpl) UpdatePetById(params sqlc.UpdatePetParams) error {
+	err := r.queries.UpdatePet(context.Background(), params)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (r *PetRepository) DeletePetById(ctx context.Context, petId int32) error {
-	err := r.queries.DeletePet(ctx, petId)
+func (r *petRepositoryImpl) DeletePetById(petId int32) error {
+	err := r.queries.DeletePet(context.Background(), petId)
 	if err != nil {
 		return err
 	}

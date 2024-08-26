@@ -8,6 +8,11 @@ SELECT id, photo, name, last_name, user_id, birthday, genre, created_at, updated
 FROM owners
 WHERE id = $1;
 
+-- name: GetOwnerByUserID :one
+SELECT id, photo, name, last_name, user_id, birthday, genre, created_at, updated_at
+FROM owners
+WHERE user_id = $1;
+
 -- name: ListOwners :many
 SELECT id, photo, name, last_name, user_id, birthday, genre, created_at, updated_at
 FROM owners

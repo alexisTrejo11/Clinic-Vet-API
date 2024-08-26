@@ -13,6 +13,11 @@ SELECT id, name, photo, species, breed, age, owner_id, created_at, updated_at
 FROM pets
 ORDER BY id;
 
+-- name: ListPetsByOwnerByID :many
+SELECT id, name, photo, species, breed, age, owner_id, created_at, updated_at
+FROM pets
+WHERE owner_id = $1;
+
 -- name: UpdatePet :exec
 UPDATE pets
 SET name = $2, photo = $3, species = $4, breed = $5, age = $6, owner_id = $7, updated_at = CURRENT_TIMESTAMP

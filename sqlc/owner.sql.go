@@ -83,6 +83,29 @@ func (q *Queries) GetOwnerByID(ctx context.Context, id int32) (Owner, error) {
 	return i, err
 }
 
+const getOwnerByUserID = `-- name: GetOwnerByUserID :one
+SELECT id, photo, name, last_name, user_id, birthday, genre, created_at, updated_at
+FROM owners
+WHERE user_id = $1
+`
+
+func (q *Queries) GetOwnerByUserID(ctx context.Context, userID pgtype.Int4) (Owner, error) {
+	row := q.db.QueryRow(ctx, getOwnerByUserID, userID)
+	var i Owner
+	err := row.Scan(
+		&i.ID,
+		&i.Photo,
+		&i.Name,
+		&i.LastName,
+		&i.UserID,
+		&i.Birthday,
+		&i.Genre,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const listOwners = `-- name: ListOwners :many
 SELECT id, photo, name, last_name, user_id, birthday, genre, created_at, updated_at
 FROM owners

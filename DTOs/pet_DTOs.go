@@ -6,7 +6,6 @@ type PetInsertDTO struct {
 	Species string `json:"species" validate:"required"`
 	Breed   string `json:"breed" validate:"required"`
 	Age     int32  `json:"age" validate:"required"`
-	OwnerID int32  `json:"owner_id" validate:"required"`
 }
 
 type PetDTO struct {
@@ -21,10 +20,9 @@ type PetDTO struct {
 
 type PetUpdateDTO struct {
 	Id      int32  `json:"id" validate:"required"`
-	Name    string `json:"name" validate:"required"`
-	Photo   string `json:"photo" validate:"required"`
-	Species string `json:"species" validate:"required"`
-	Breed   string `json:"breed" validate:"required"`
-	Age     int32  `json:"age" validate:"required"`
-	OwnerID int32  `json:"owner_id" validate:"required"`
+	Name    string `json:"name"`
+	Photo   string `json:"photo"`
+	Species string `json:"species"`
+	Breed   string `json:"breed"`
+	Age     int32  `json:"age"`
 }

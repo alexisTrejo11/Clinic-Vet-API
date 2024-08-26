@@ -13,6 +13,12 @@ SELECT id, pet_id, vet_id, service, date, created_at, updated_at
 FROM appointments
 ORDER BY id;
 
+-- name: ListAppointmentsPetID :many
+SELECT id, pet_id, vet_id, service, date, created_at, updated_at
+FROM appointments
+ORDER BY pet_id;
+
+
 -- name: UpdateAppointment :exec
 UPDATE appointments
 SET pet_id = $2, vet_id = $3, service = $4, date = $5, updated_at = CURRENT_TIMESTAMP

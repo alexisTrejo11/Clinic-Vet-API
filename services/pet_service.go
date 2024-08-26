@@ -1,27 +1,25 @@
 package services
 
 import (
-	"context"
-
-	dtos "example.com/at/backend/api-vet/DTOs"
+	"example.com/at/backend/api-vet/DTOs"
 	"example.com/at/backend/api-vet/mappers"
 	"example.com/at/backend/api-vet/repository"
 )
 
 type PetService struct {
-	petRepository repository.PetRepositoryInterface
+	petRepository repository.PetRepository
 }
 
-func NewPetService(petRepository repository.PetRepositoryInterface) *PetService {
+func NewPetService(petRepository repository.PetRepository) *PetService {
 	return &PetService{
 		petRepository: petRepository,
 	}
 }
 
-func (ps *PetService) CreatePet(petInsertDTO dtos.PetInsertDTO) error {
-	params := mappers.MapPetInsertDTOToCreatePetParams(petInsertDTO)
+func (ps *PetService) CreatePet(petInsertDTO DTOs.PetInsertDTO, ownerId int32) error {
+	params := mappers.MapPetInsertDTOToCreatePetParams(petInsertDTO, ownerId)
 
-	_, err := ps.petRepository.CreatePet(context.Background(), params)
+	_, err := ps.petRepository.CreatePet(params)
 	if err != nil {
 		return err
 	}
@@ -29,21 +27,36 @@ func (ps *PetService) CreatePet(petInsertDTO dtos.PetInsertDTO) error {
 	return nil
 }
 
-func (ps *PetService) GetPetById(petID int32) (*dtos.PetDTO, error) {
-	pet, err := ps.petRepository.GetPetById(context.Background(), petID)
+func (ps *PetService) GetPetById(petID int32) (*DTOs.PetDTO, error) {
+	pet, err := ps.petRepository.GetPetById(petID)
 	if err != nil {
 		return nil, err
 	}
 
-	petDTO := mappers.MapPetToPetDTO(pet)
+	petDTO := mappers.MapPetToPetDTO(*pet)
 
 	return &petDTO, nil
 }
 
-func (ps *PetService) UpdatePet(petUpdateDTO dtos.PetUpdateDTO) error {
-	params := mappers.MapPetToPetUpdateDTO(petUpdateDTO)
+func (ps *PetService) GetPetByOwnerID(ownerID int32) ([]DTOs.PetDTO, error) {
+	petList, err := ps.petRepository.GetPetByOwnerID(ownerID)
+	if err != nil {
+		return nil, err
+	}
 
-	err := ps.petRepository.UpdatePetById(context.Background(), params)
+	var petListDTO []DTOs.PetDTO
+	for _, pet := range petList {
+		petDTO := mappers.MapPetToPetDTO(pet)
+		petListDTO = append(petListDTO, petDTO)
+	}
+
+	return petListDTO, nil
+}
+
+func (ps *PetService) UpdatePet(petUpdateDTO DTOs.PetUpdateDTO, ownerID int32) error {
+	params := mappers.MapPetToPetUpdateDTO(petUpdateDTO, ownerID)
+
+	err := ps.petRepository.UpdatePetById(params)
 	if err != nil {
 		return err
 	}
@@ -52,7 +65,7 @@ func (ps *PetService) UpdatePet(petUpdateDTO dtos.PetUpdateDTO) error {
 }
 
 func (ps *PetService) DeletePetbyId(petID int32) error {
-	err := ps.petRepository.DeletePetById(context.Background(), petID)
+	err := ps.petRepository.DeletePetById(petID)
 	if err != nil {
 		return err
 	}

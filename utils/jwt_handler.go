@@ -2,8 +2,11 @@ package utils
 
 import (
 	"errors"
+	"strconv"
+	"strings"
 	"time"
 
+	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
 )
 
@@ -50,4 +53,40 @@ func ValidateJWT(tokenString string) (*Claims, error) {
 	}
 
 	return claims, nil
+}
+
+func ExtractTokenFromHeader(c *fiber.Ctx) (string, error) {
+	// Obtener el valor del encabezado Authorization
+	authHeader := c.Get("Authorization")
+
+	// Verificar si el encabezado Authorization está presente
+	if authHeader == "" {
+		return "", errors.New("missing Authorization header")
+	}
+
+	// Eliminar el prefijo "Bearer " para obtener solo el token
+	parts := strings.Split(authHeader, " ")
+	if len(parts) != 2 || parts[0] != "Bearer" {
+		return "", errors.New("invalid Authorization header format")
+	}
+
+	return parts[1], nil
+}
+
+func GetUserIDFromRequest(c *fiber.Ctx) (int, error) {
+	tokenString, err := ExtractTokenFromHeader(c)
+	if err != nil {
+		return 0, err
+	}
+
+	claims, err := ValidateJWT(tokenString)
+	if err != nil {
+		return 0, err
+	}
+
+	userID, err := strconv.Atoi(claims.UserID)
+	if err != nil {
+		return 0, fiber.NewError(fiber.StatusBadRequest, "Can't Process Id")
+	}
+	return userID, nil
 }

@@ -119,6 +119,42 @@ func (q *Queries) ListPets(ctx context.Context) ([]Pet, error) {
 	return items, nil
 }
 
+const listPetsByOwnerByID = `-- name: ListPetsByOwnerByID :many
+SELECT id, name, photo, species, breed, age, owner_id, created_at, updated_at
+FROM pets
+WHERE owner_id = $1
+`
+
+func (q *Queries) ListPetsByOwnerByID(ctx context.Context, ownerID int32) ([]Pet, error) {
+	rows, err := q.db.Query(ctx, listPetsByOwnerByID, ownerID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Pet
+	for rows.Next() {
+		var i Pet
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Photo,
+			&i.Species,
+			&i.Breed,
+			&i.Age,
+			&i.OwnerID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const updatePet = `-- name: UpdatePet :exec
 UPDATE pets
 SET name = $2, photo = $3, species = $4, breed = $5, age = $6, owner_id = $7, updated_at = CURRENT_TIMESTAMP

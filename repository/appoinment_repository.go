@@ -7,7 +7,7 @@ import (
 )
 
 type AppointmentRepository interface {
-	CreateAppointment(params sqlc.CreateAppointmentParams) error
+	CreateAppointment(params sqlc.CreateAppointmentParams) (*sqlc.Appointment, error)
 	GetAppointmentByID(appointmentId int32) (*sqlc.Appointment, error)
 	UpdateAppointment(updateParams sqlc.UpdateAppointmentParams) error
 	DeleteAppointment(appointmentId int32) error
@@ -23,12 +23,13 @@ func NewAppointmentRepository(queries *sqlc.Queries) AppointmentRepository {
 	}
 }
 
-func (ar appointmentRepositoryImpl) CreateAppointment(params sqlc.CreateAppointmentParams) error {
-	if _, err := ar.queries.CreateAppointment(context.Background(), params); err != nil {
-		return err
+func (ar appointmentRepositoryImpl) CreateAppointment(params sqlc.CreateAppointmentParams) (*sqlc.Appointment, error) {
+	appointment, err := ar.queries.CreateAppointment(context.Background(), params)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil
+	return &appointment, nil
 }
 
 func (ar appointmentRepositoryImpl) GetAppointmentByID(appointmentId int32) (*sqlc.Appointment, error) {

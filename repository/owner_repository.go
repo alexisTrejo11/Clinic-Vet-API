@@ -4,11 +4,13 @@ import (
 	"context"
 
 	"example.com/at/backend/api-vet/sqlc"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type OwnerRepository interface {
 	CreateOwner(arg sqlc.CreateOwnerParams) (sqlc.Owner, error)
 	GetOwnerByID(ctx context.Context, id int32) (sqlc.Owner, error)
+	GetOwnerByUserID(ownerId int32) (*sqlc.Owner, error)
 	UpdateOwner(ctx context.Context, arg sqlc.UpdateOwnerParams) error
 	DeleteOwner(ctx context.Context, id int32) error
 	ValidateExistingOwner(ctx context.Context, ownerId int32) bool
@@ -38,6 +40,14 @@ func (r *OwnerRepositoryImpl) GetOwnerByID(ctx context.Context, ownerId int32) (
 		return sqlc.Owner{}, err
 	}
 	return owner, nil
+}
+
+func (r *OwnerRepositoryImpl) GetOwnerByUserID(ownerId int32) (*sqlc.Owner, error) {
+	owner, err := r.queries.GetOwnerByUserID(context.Background(), pgtype.Int4{Int32: ownerId, Valid: true})
+	if err != nil {
+		return nil, err
+	}
+	return &owner, nil
 }
 
 func (r *OwnerRepositoryImpl) UpdateOwner(ctx context.Context, arg sqlc.UpdateOwnerParams) error {

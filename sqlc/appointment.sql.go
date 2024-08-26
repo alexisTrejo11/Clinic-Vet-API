@@ -109,6 +109,40 @@ func (q *Queries) ListAppointments(ctx context.Context) ([]Appointment, error) {
 	return items, nil
 }
 
+const listAppointmentsPetID = `-- name: ListAppointmentsPetID :many
+SELECT id, pet_id, vet_id, service, date, created_at, updated_at
+FROM appointments
+ORDER BY pet_id
+`
+
+func (q *Queries) ListAppointmentsPetID(ctx context.Context) ([]Appointment, error) {
+	rows, err := q.db.Query(ctx, listAppointmentsPetID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Appointment
+	for rows.Next() {
+		var i Appointment
+		if err := rows.Scan(
+			&i.ID,
+			&i.PetID,
+			&i.VetID,
+			&i.Service,
+			&i.Date,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const updateAppointment = `-- name: UpdateAppointment :exec
 UPDATE appointments
 SET pet_id = $2, vet_id = $3, service = $4, date = $5, updated_at = CURRENT_TIMESTAMP

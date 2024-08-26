@@ -50,7 +50,7 @@ func (pc *PetController) CreatePet() fiber.Handler {
 			})
 		}
 
-		if err := pc.petService.CreatePet(newPet); err != nil {
+		if err := pc.petService.CreatePet(newPet, 1); err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 				serverError: err.Error(),
 			})
@@ -115,7 +115,7 @@ func (pc *PetController) UpdatePet() fiber.Handler {
 
 		}
 
-		if err := pc.petService.UpdatePet(petUpdateDTO); err != nil {
+		if err := pc.petService.UpdatePet(petUpdateDTO, 1); err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 				serverError: err.Error(),
 			})

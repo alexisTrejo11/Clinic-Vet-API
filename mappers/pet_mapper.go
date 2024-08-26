@@ -6,14 +6,14 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-func MapPetInsertDTOToCreatePetParams(petInsertDTO DTOs.PetInsertDTO) sqlc.CreatePetParams {
+func MapPetInsertDTOToCreatePetParams(petInsertDTO DTOs.PetInsertDTO, ownerId int32) sqlc.CreatePetParams {
 	return sqlc.CreatePetParams{
 		Name:    petInsertDTO.Name,
 		Photo:   pgtype.Text{String: petInsertDTO.Photo, Valid: true},
 		Species: petInsertDTO.Species,
 		Breed:   pgtype.Text{String: petInsertDTO.Breed, Valid: true},
 		Age:     pgtype.Int4{Int32: petInsertDTO.Age, Valid: true},
-		OwnerID: petInsertDTO.OwnerID,
+		OwnerID: ownerId,
 	}
 }
 
@@ -29,7 +29,7 @@ func MapPetToPetDTO(pet sqlc.Pet) DTOs.PetDTO {
 	}
 }
 
-func MapPetToPetUpdateDTO(petUpdateDTO DTOs.PetUpdateDTO) sqlc.UpdatePetParams {
+func MapPetToPetUpdateDTO(petUpdateDTO DTOs.PetUpdateDTO, ownerID int32) sqlc.UpdatePetParams {
 	return sqlc.UpdatePetParams{
 		ID:      petUpdateDTO.Id,
 		Name:    petUpdateDTO.Name,
@@ -37,6 +37,6 @@ func MapPetToPetUpdateDTO(petUpdateDTO DTOs.PetUpdateDTO) sqlc.UpdatePetParams {
 		Species: petUpdateDTO.Species,
 		Breed:   pgtype.Text{String: petUpdateDTO.Breed, Valid: true},
 		Age:     pgtype.Int4{Int32: petUpdateDTO.Age, Valid: true},
-		OwnerID: petUpdateDTO.OwnerID,
+		OwnerID: ownerID,
 	}
 }
