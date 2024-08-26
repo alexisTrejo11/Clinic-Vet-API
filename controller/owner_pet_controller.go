@@ -54,7 +54,7 @@ func (opc OwnerPetController) AddPet() fiber.Handler {
 		}
 
 		return c.Status(fiber.StatusCreated).JSON(responses.SuccessResponse{
-			Message: "Pet Succesfully Created.",
+			Message: "Pet Successfully Created.",
 		})
 	}
 }
@@ -130,7 +130,7 @@ func (opc OwnerPetController) UpdatePet() fiber.Handler {
 		}
 
 		return c.Status(fiber.StatusOK).JSON(responses.SuccessResponse{
-			Message: "Pet Succesfully Updated.",
+			Message: "Pet Successfully Updated.",
 		})
 	}
 }
@@ -178,7 +178,7 @@ func (opc OwnerPetController) DeletePet() fiber.Handler {
 			})
 		}
 		return c.Status(fiber.StatusOK).JSON(responses.SuccessResponse{
-			Message: "Pet Succesfully Deleted.",
+			Message: "Pet Successfully Deleted.",
 		})
 	}
 }

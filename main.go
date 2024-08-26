@@ -50,6 +50,14 @@ func main() {
 	petServices := services.NewPetService(petRepository)
 	petController := controller.NewPetController(petServices)
 
+	// Owner-Pet
+	ownerPetController := controller.NewOwnerPetController(ownerServices, *petServices)
+
+	// Owner-Appointment
+	appointmentRepository := repository.NewAppointmentRepository(queries)
+	appointmentService := services.NewAppointmentService(appointmentRepository)
+	ownerAppController := controller.NewOwnerAppointmentController(appointmentService, ownerServices)
+
 	// Vet
 	vetRepository := repository.NewVeterinarianRepository(queries)
 	vetServices := services.NewVeterinarianService(vetRepository)
@@ -72,6 +80,8 @@ func main() {
 	routes.PetsRoutes(app, petController)
 	routes.VeterinarianRoutes(app, vetController)
 	routes.AuthRoutes(app, authClientController, authEmployeeController)
+	routes.OwnerPetRoutes(app, ownerPetController)
+	routes.OwnerAppointmentRoutes(app, ownerAppController)
 
 	port := ":8000"
 

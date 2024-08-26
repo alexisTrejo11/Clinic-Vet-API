@@ -8,10 +8,11 @@ import (
 
 type AppointmentMappers struct{}
 
-func (AppointmentMappers) MapInsertDTOToInsertParams(appointmentInsertDTO DTOs.AppointmentInsertDTO) sqlc.CreateAppointmentParams {
+func (AppointmentMappers) MapInsertDTOToInsertParams(appointmentInsertDTO DTOs.AppointmentInsertDTO, ownerID int32) sqlc.CreateAppointmentParams {
 	return sqlc.CreateAppointmentParams{
 		PetID:   appointmentInsertDTO.PetID,
 		VetID:   appointmentInsertDTO.VetID,
+		OwnerID: ownerID,
 		Service: appointmentInsertDTO.Service,
 		Date:    pgtype.Timestamp{Time: appointmentInsertDTO.Date, Valid: true},
 	}
@@ -23,16 +24,18 @@ func (AppointmentMappers) MapSqlcEntityToToDTO(appointment sqlc.Appointment) DTO
 		PetID:   appointment.PetID,
 		VetID:   appointment.VetID,
 		Service: appointment.Service,
+		OwnerID: appointment.OwnerID,
 		Date:    appointment.CreatedAt.Time,
 	}
 }
 
-func (AppointmentMappers) MapUpdateDTOToUpdateParams(appointmentUpdateDTO DTOs.AppointmentUpdateDTO) sqlc.UpdateAppointmentParams {
+func (AppointmentMappers) MapUpdateDTOToUpdateParams(appointmentUpdateDTO DTOs.AppointmentUpdateDTO, ownerID int32) sqlc.UpdateAppointmentParams {
 	return sqlc.UpdateAppointmentParams{
 		ID:      appointmentUpdateDTO.Id,
 		PetID:   appointmentUpdateDTO.PetID,
 		VetID:   appointmentUpdateDTO.VetID,
 		Service: appointmentUpdateDTO.Service,
+		OwnerID: ownerID,
 		Date:    pgtype.Timestamp{Time: appointmentUpdateDTO.Date, Valid: true},
 	}
 }

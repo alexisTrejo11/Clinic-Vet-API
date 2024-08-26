@@ -40,7 +40,21 @@ func (cac OwnerAppointmentController) RequestAnAppointment() fiber.Handler {
 			})
 		}
 
-		appointmentDTO, err := cac.appointmentService.RequestAnAppointment(appointmentInsertDTO)
+		userID, err := utils.GetUserIDFromRequest(c)
+		if err != nil {
+			return c.Status(fiber.StatusUnauthorized).JSON(responses.ErrorResponse{
+				Message: err.Error(),
+			})
+		}
+
+		ownerDTO, err := cac.ownerService.GetOwnerByUserID(int32(userID))
+		if err != nil {
+			return c.Status(fiber.StatusNotFound).JSON(responses.ErrorResponse{
+				Message: "Owner Not Found",
+			})
+		}
+
+		appointmentDTO, err := cac.appointmentService.RequestAnAppointment(appointmentInsertDTO, ownerDTO.Id)
 		if err != nil {
 			return c.Status(fiber.StatusBadRequest).JSON(responses.ErrorResponse{
 				Error: err.Error(),
@@ -67,7 +81,7 @@ func (cac OwnerAppointmentController) GetMyAppointments() fiber.Handler {
 			})
 		}
 
-		appointments, err := cac.appointmentService.GetAppointmentByOnwerId(ownerDTO.Id)
+		appointments, err := cac.appointmentService.GetAppointmentByOwnerId(ownerDTO.Id)
 		if err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(responses.ErrorResponse{
 				Message: err.Error(),
@@ -95,14 +109,30 @@ func (cac OwnerAppointmentController) UpdateAnAppointment() fiber.Handler {
 			})
 		}
 
-		appointmentUpdatedDTO, err := cac.appointmentService.UpdateAppointment(appointmentUpdateDTO)
+		userID, err := utils.GetUserIDFromRequest(c)
+		if err != nil {
+			return c.Status(fiber.StatusUnauthorized).JSON(responses.ErrorResponse{
+				Message: err.Error(),
+			})
+		}
+
+		ownerDTO, err := cac.ownerService.GetOwnerByUserID(int32(userID))
+		if err != nil {
+			return c.Status(fiber.StatusNotFound).JSON(responses.ErrorResponse{
+				Message: "Owner Not Found",
+			})
+		}
+
+		err = cac.appointmentService.UpdateAppointment(appointmentUpdateDTO, ownerDTO.Id)
 		if err != nil {
 			return c.Status(fiber.StatusBadRequest).JSON(responses.ErrorResponse{
 				Message: "Can't Update Appointment",
 			})
 		}
 
-		return c.Status(fiber.StatusOK).JSON(appointmentUpdatedDTO)
+		return c.Status(fiber.StatusOK).JSON(responses.SuccessResponse{
+			Message: "Appointment Successfully Updated.",
+		})
 	}
 }
 
@@ -129,10 +159,19 @@ func (cac OwnerAppointmentController) CancelAnAppointment() fiber.Handler {
 			})
 		}
 
-		if err := cac.appointmentService.ValidAppointmentDeleted(appointmentID, ownerDTO.Id); err != nil {
-			return c.Status(fiber.StatusUnauthorized).JSON(responses.ErrorResponse{
-				Message: err.Error(),
+		appointmentDTO, err := cac.appointmentService.GetAppointmentById(appointmentID)
+		if err != nil {
+			return c.Status(fiber.StatusNotFound).JSON(responses.ErrorResponse{
+				Message: "Appointment Not Found",
 			})
+		}
+
+		if appointmentDTO.OwnerID != ownerDTO.Id {
+			if err != nil {
+				return c.Status(fiber.StatusUnauthorized).JSON(responses.ErrorResponse{
+					Message: "Cancellation Not Allowed",
+				})
+			}
 		}
 
 		if err := cac.appointmentService.CancelAppointmentById(appointmentID); err != nil {
@@ -142,7 +181,7 @@ func (cac OwnerAppointmentController) CancelAnAppointment() fiber.Handler {
 		}
 
 		return c.Status(fiber.StatusOK).JSON(responses.SuccessResponse{
-			Message: "Appointment Succesfully Deleted.",
+			Message: "Appointment Successfully Deleted.",
 		})
 	}
 }

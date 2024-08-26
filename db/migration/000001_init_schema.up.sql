@@ -10,7 +10,6 @@ CREATE TABLE IF NOT EXISTS owners (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-
 CREATE TABLE IF NOT EXISTS pets (
     id SERIAL PRIMARY KEY,
     name TEXT NOT NULL,
@@ -37,8 +36,10 @@ CREATE TABLE IF NOT EXISTS appointments (
     id SERIAL PRIMARY KEY,
     pet_id INT NOT NULL,
     vet_id INT NOT NULL,
+    owner_id INT NOT NULL,
     service TEXT NOT NULL,
     date TIMESTAMP NOT NULL,
+    status TEXT CHECK (status IN ('pending', 'cancelled', 'completed', 'rescheduled', 'no_show')),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -89,13 +90,21 @@ FOREIGN KEY (owner_id) REFERENCES owners(id);
 
 ALTER TABLE appointments
 ADD CONSTRAINT fk_pet
-FOREIGN KEY (pet_id) REFERENCES pets(id),
+FOREIGN KEY (pet_id) REFERENCES pets(id);
+
+ALTER TABLE appointments
 ADD CONSTRAINT fk_vet
 FOREIGN KEY (vet_id) REFERENCES veterinarians(id);
 
+ALTER TABLE appointments
+ADD CONSTRAINT fk_owner
+FOREIGN KEY (owner_id) REFERENCES owners(id);
+
 ALTER TABLE medical_histories
 ADD CONSTRAINT fk_pet
-FOREIGN KEY (pet_id) REFERENCES pets(id),
+FOREIGN KEY (pet_id) REFERENCES pets(id);
+
+ALTER TABLE medical_histories
 ADD CONSTRAINT fk_vet
 FOREIGN KEY (vet_id) REFERENCES veterinarians(id);
 
