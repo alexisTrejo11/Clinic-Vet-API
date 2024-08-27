@@ -47,7 +47,14 @@ func (opc OwnerPetController) AddPet() fiber.Handler {
 			})
 		}
 
-		if err := opc.petService.CreatePet(petInsertDTO, int32(userID)); err != nil {
+		ownerDTO, err := opc.ownerService.GetOwnerByUserID(int32(userID))
+		if err != nil {
+			return c.Status(fiber.StatusNotFound).JSON(responses.ErrorResponse{
+				Message: "Owner Not Found",
+			})
+		}
+
+		if err := opc.petService.CreatePet(petInsertDTO, ownerDTO.Id); err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(responses.ErrorResponse{
 				Error: err.Error(),
 			})

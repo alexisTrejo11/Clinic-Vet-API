@@ -1,8 +1,6 @@
 package services
 
 import (
-	"errors"
-
 	"example.com/at/backend/api-vet/DTOs"
 	"example.com/at/backend/api-vet/mappers"
 	"example.com/at/backend/api-vet/repository"
@@ -35,16 +33,16 @@ func NewClientAuthService(authCommonService AuthCommonService, userRepository re
 func (as *authClientServiceImpl) CompleteSignUp(userSignUpDTO DTOs.UserSignUpDTO) (string, error) {
 	newUser, err := as.ProcessClientUserCreation(userSignUpDTO)
 	if err != nil {
-		return "", errors.New("can't create user")
+		return "", err
 	}
 
 	if err := as.CreateOwner(*newUser, userSignUpDTO); err != nil {
-		return "", errors.New("can't create owner")
+		return "", err
 	}
 
 	JWT, err := as.authCommonService.CreateJWT(newUser.ID, newUser.Role)
 	if err != nil {
-		return "", errors.New("can't create jwt token")
+		return "", err
 	}
 
 	return JWT, nil

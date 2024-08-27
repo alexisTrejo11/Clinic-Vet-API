@@ -2,7 +2,7 @@ package DTOs
 
 type PetInsertDTO struct {
 	Name    string `json:"name" validate:"required"`
-	Photo   string `json:"photo" validate:"required"`
+	Photo   string `json:"photo"`
 	Species string `json:"species" validate:"required"`
 	Breed   string `json:"breed" validate:"required"`
 	Age     int32  `json:"age" validate:"required"`

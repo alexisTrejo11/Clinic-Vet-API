@@ -61,7 +61,7 @@ func (cac OwnerAppointmentController) RequestAnAppointment() fiber.Handler {
 			})
 		}
 
-		return c.Status(fiber.StatusBadRequest).JSON(appointmentDTO)
+		return c.Status(fiber.StatusCreated).JSON(appointmentDTO)
 	}
 }
 
@@ -88,7 +88,7 @@ func (cac OwnerAppointmentController) GetMyAppointments() fiber.Handler {
 			})
 		}
 
-		return c.Status(fiber.StatusBadRequest).JSON(appointments)
+		return c.Status(fiber.StatusOK).JSON(appointments)
 	}
 }
 

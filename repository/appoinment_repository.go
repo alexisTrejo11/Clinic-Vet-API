@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"example.com/at/backend/api-vet/sqlc"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type AppointmentRepository interface {
@@ -12,7 +11,7 @@ type AppointmentRepository interface {
 	GetAppointmentByID(appointmentId int32) (*sqlc.Appointment, error)
 	GetAppointmentByOwnerID(ownerID int32) ([]sqlc.Appointment, error)
 	UpdateAppointment(updateParams sqlc.UpdateAppointmentParams) error
-	UpdateAppointmentStatus(appointmentID int32, status pgtype.Text) error
+	UpdateAppointmentStatus(appointmentID int32, status string) error
 	DeleteAppointment(appointmentId int32) error
 }
 
@@ -71,7 +70,7 @@ func (ar appointmentRepositoryImpl) DeleteAppointment(appointmentID int32) error
 }
 
 // TODO: MAKE ENUMS VALIDATIONS
-func (ar appointmentRepositoryImpl) UpdateAppointmentStatus(appointmentID int32, status pgtype.Text) error {
+func (ar appointmentRepositoryImpl) UpdateAppointmentStatus(appointmentID int32, status string) error {
 	updateParams := sqlc.UpdateAppointmentStatusParams{
 		ID:     appointmentID,
 		Status: status,

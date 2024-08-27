@@ -67,7 +67,7 @@ func (usc AuthClientController) ClientSignUp() fiber.Handler {
 			usc.logger.WithFields(logrus.Fields{"error": err.Error()}).Error("Failed to complete signup process")
 			return c.Status(fiber.StatusInternalServerError).JSON(responses.ErrorResponse{
 				Message: "Internal Server Error",
-				Error:   err.Error(),
+				Error:   "Can't Complete Signup",
 			})
 		}
 

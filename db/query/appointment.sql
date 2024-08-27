@@ -1,6 +1,6 @@
 -- name: CreateAppointment :one
-INSERT INTO appointments (pet_id, vet_id, owner_id, service, date, status ,created_at, updated_at)
-VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+INSERT INTO appointments (pet_id, owner_id, service, date, status, created_at, updated_at)
+VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
 RETURNING id, pet_id, vet_id, owner_id, service, date, status, created_at, updated_at;
 
 -- name: GetAppointmentByID :one

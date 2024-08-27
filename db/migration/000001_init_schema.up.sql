@@ -35,11 +35,11 @@ CREATE TABLE IF NOT EXISTS veterinarians (
 CREATE TABLE IF NOT EXISTS appointments (
     id SERIAL PRIMARY KEY,
     pet_id INT NOT NULL,
-    vet_id INT NOT NULL,
+    vet_id INT,
     owner_id INT NOT NULL,
     service TEXT NOT NULL,
     date TIMESTAMP NOT NULL,
-    status TEXT CHECK (status IN ('pending', 'cancelled', 'completed', 'rescheduled', 'no_show')),
+    status TEXT NOT NULL CHECK (status IN ('pending', 'cancelled', 'completed', 'rescheduled', 'no_show')),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
