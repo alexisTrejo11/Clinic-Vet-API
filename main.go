@@ -63,6 +63,11 @@ func main() {
 	vetServices := services.NewVeterinarianService(vetRepository)
 	vetController := controller.NewVeterinarianController(vetServices)
 
+	// Owner-MedicalHistory
+	medicalHistoryRepository := repository.NewMedicalHistoryRepository(queries)
+	medicalHistoryService := services.NewMedicalHistoryService(medicalHistoryRepository)
+	medicalHistoryController := controller.NewClientMedicalHistory(*petServices, ownerServices, medicalHistoryService)
+
 	// Users
 	userRepository := repository.NewUserRepository(queries)
 	authCommonService := services.NewCommonAuthService(userRepository, ownerRepository, vetRepository)
@@ -82,6 +87,7 @@ func main() {
 	routes.AuthRoutes(app, authClientController, authEmployeeController)
 	routes.OwnerPetRoutes(app, ownerPetController)
 	routes.OwnerAppointmentRoutes(app, ownerAppController)
+	routes.OwnerMedicalHistoryRoutes(app, medicalHistoryController)
 
 	port := ":8000"
 

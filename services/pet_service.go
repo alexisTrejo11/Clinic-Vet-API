@@ -38,7 +38,7 @@ func (ps *PetService) GetPetById(petID int32) (*DTOs.PetDTO, error) {
 	return &petDTO, nil
 }
 
-func (ps *PetService) GetPetByOwnerID(ownerID int32) ([]DTOs.PetDTO, error) {
+func (ps *PetService) GetPetsByOwnerID(ownerID int32) ([]DTOs.PetDTO, error) {
 	petList, err := ps.petRepository.GetPetByOwnerID(ownerID)
 	if err != nil {
 		return nil, err
@@ -64,11 +64,21 @@ func (ps *PetService) UpdatePet(petUpdateDTO DTOs.PetUpdateDTO, ownerID int32) e
 	return nil
 }
 
-func (ps *PetService) DeletePetbyId(petID int32) error {
+func (ps *PetService) DeletePetById(petID int32) error {
 	err := ps.petRepository.DeletePetById(petID)
 	if err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func (ps *PetService) ValidPetOwner(petID, ownerID int32) bool {
+	pet, _ := ps.petRepository.GetPetById(petID)
+
+	if pet.OwnerID != ownerID {
+		return false
+	}
+
+	return true
 }

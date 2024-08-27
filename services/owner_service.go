@@ -12,8 +12,8 @@ import (
 
 type OwnerService interface {
 	CreateOwner(ownerInsertDTO *DTOs.OwnerInsertDTO) error
-	GetOwnerById(ownerID int32) (*DTOs.OwnerReturnDTO, error)
-	GetOwnerByUserID(ownerID int32) (*DTOs.OwnerReturnDTO, error)
+	GetOwnerById(ownerID int32) (*DTOs.OwnerDTO, error)
+	GetOwnerByUserID(ownerID int32) (*DTOs.OwnerDTO, error)
 	ValidateExistingOwner(ownerId int32) bool
 	UpdateOwner(ownerUpdateDTO *DTOs.OwnerUpdateDTO) error
 	DeleteOwner(ownerID int32) error
@@ -43,25 +43,25 @@ func (os OwnerServiceImpl) CreateOwner(ownerInsertDTO *DTOs.OwnerInsertDTO) erro
 	return nil
 }
 
-func (os OwnerServiceImpl) GetOwnerById(ownerID int32) (*DTOs.OwnerReturnDTO, error) {
+func (os OwnerServiceImpl) GetOwnerById(ownerID int32) (*DTOs.OwnerDTO, error) {
 	owner, err := os.ownerRepository.GetOwnerByID(context.Background(), ownerID)
 	if err != nil {
 		return nil, err
 	}
 
-	var owneReturnDTO DTOs.OwnerReturnDTO
+	var owneReturnDTO DTOs.OwnerDTO
 	owneReturnDTO.ModelToDTO(owner)
 
 	return &owneReturnDTO, nil
 }
 
-func (os OwnerServiceImpl) GetOwnerByUserID(ownerID int32) (*DTOs.OwnerReturnDTO, error) {
+func (os OwnerServiceImpl) GetOwnerByUserID(ownerID int32) (*DTOs.OwnerDTO, error) {
 	owner, err := os.ownerRepository.GetOwnerByUserID(ownerID)
 	if err != nil {
 		return nil, err
 	}
 
-	var owneReturnDTO DTOs.OwnerReturnDTO
+	var owneReturnDTO DTOs.OwnerDTO
 	owneReturnDTO.ModelToDTO(*owner)
 
 	return &owneReturnDTO, nil

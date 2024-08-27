@@ -82,7 +82,7 @@ func (opc OwnerPetController) GetMyPets() fiber.Handler {
 			})
 		}
 
-		petListDTO, err := opc.petService.GetPetByOwnerID(ownerDTO.Id)
+		petListDTO, err := opc.petService.GetPetsByOwnerID(ownerDTO.Id)
 		if err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(responses.ErrorResponse{
 				Message: "Can't Get Pets",
@@ -179,7 +179,7 @@ func (opc OwnerPetController) DeletePet() fiber.Handler {
 			})
 		}
 
-		if err := opc.petService.DeletePetbyId(petId); err != nil {
+		if err := opc.petService.DeletePetById(petId); err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(responses.ErrorResponse{
 				Error: err.Error(),
 			})

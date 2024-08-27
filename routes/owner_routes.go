@@ -29,3 +29,10 @@ func OwnerAppointmentRoutes(app *fiber.App, ownerAppController *controller.Owner
 	ownerV1.Delete("/cancel/:id", ownerAppController.CancelAnAppointment())
 
 }
+
+func OwnerMedicalHistoryRoutes(app *fiber.App, ownerAppController *controller.ClientMedicalHistory) {
+	ownerV1 := app.Group("/api/v1/owner-medical-history")
+	ownerV1.Get("/my-pets", ownerAppController.GetMyPetsMedicalHistories())
+	ownerV1.Get("/pet/:id", ownerAppController.GetMyPetsMedicalHistoryByPetID())
+
+}

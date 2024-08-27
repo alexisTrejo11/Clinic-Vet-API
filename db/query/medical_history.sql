@@ -8,10 +8,17 @@ SELECT id, pet_id, date, description, vet_id, created_at, updated_at
 FROM medical_histories
 WHERE id = $1;
 
--- name: ListMedicalHistories :many
+-- name: ListMedicalHistoriesByVetID :many
 SELECT id, pet_id, date, description, vet_id, created_at, updated_at
 FROM medical_histories
-ORDER BY id;
+WHERE vet_id = $1
+ORDER BY date;
+
+-- name: ListMedicalHistoriesByPetID :many
+SELECT id, pet_id, date, description, vet_id, created_at, updated_at
+FROM medical_histories
+WHERE pet_id = $1
+ORDER BY date;
 
 -- name: UpdateMedicalHistory :exec
 UPDATE medical_histories
