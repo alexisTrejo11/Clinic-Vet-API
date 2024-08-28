@@ -10,12 +10,12 @@ import (
 )
 
 type OwnerAppointmentController struct {
-	appointmentService services.ClientAppointmentService
+	appointmentService services.AppointmentService
 	ownerService       services.OwnerService
 	validator          *validator.Validate
 }
 
-func NewOwnerAppointmentController(appointmentService services.ClientAppointmentService, ownerService services.OwnerService) *OwnerAppointmentController {
+func NewOwnerAppointmentController(appointmentService services.AppointmentService, ownerService services.OwnerService) *OwnerAppointmentController {
 	return &OwnerAppointmentController{
 		appointmentService: appointmentService,
 		ownerService:       ownerService,
@@ -25,7 +25,7 @@ func NewOwnerAppointmentController(appointmentService services.ClientAppointment
 
 func (cac OwnerAppointmentController) RequestAnAppointment() fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		var appointmentInsertDTO DTOs.AppointmentInsertDTO
+		var appointmentInsertDTO DTOs.AppointmentRequestInsertDTO
 
 		if err := c.BodyParser(&appointmentInsertDTO); err != nil {
 			return c.Status(fiber.StatusBadRequest).JSON(responses.ErrorResponse{
@@ -92,50 +92,6 @@ func (cac OwnerAppointmentController) GetMyAppointments() fiber.Handler {
 	}
 }
 
-func (cac OwnerAppointmentController) UpdateAnAppointment() fiber.Handler {
-	return func(c *fiber.Ctx) error {
-		var appointmentUpdateDTO DTOs.AppointmentUpdateDTO
-
-		if err := c.BodyParser(&appointmentUpdateDTO); err != nil {
-			return c.Status(fiber.StatusBadRequest).JSON(responses.ErrorResponse{
-				Message: "Invalid JSON payload",
-			})
-		}
-
-		if err := cac.validator.Struct(appointmentUpdateDTO); err != nil {
-			return c.Status(fiber.StatusBadRequest).JSON(responses.ErrorResponse{
-				Message: "Validation failed",
-				Error:   err.Error(),
-			})
-		}
-
-		userID, err := utils.GetUserIDFromRequest(c)
-		if err != nil {
-			return c.Status(fiber.StatusUnauthorized).JSON(responses.ErrorResponse{
-				Message: err.Error(),
-			})
-		}
-
-		ownerDTO, err := cac.ownerService.GetOwnerByUserID(int32(userID))
-		if err != nil {
-			return c.Status(fiber.StatusNotFound).JSON(responses.ErrorResponse{
-				Message: "Owner Not Found",
-			})
-		}
-
-		err = cac.appointmentService.UpdateAppointment(appointmentUpdateDTO, ownerDTO.Id)
-		if err != nil {
-			return c.Status(fiber.StatusBadRequest).JSON(responses.ErrorResponse{
-				Message: "Can't Update Appointment",
-			})
-		}
-
-		return c.Status(fiber.StatusOK).JSON(responses.SuccessResponse{
-			Message: "Appointment Successfully Updated.",
-		})
-	}
-}
-
 func (cac OwnerAppointmentController) CancelAnAppointment() fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		appointmentID, err := utils.ParseID(c)
@@ -167,11 +123,9 @@ func (cac OwnerAppointmentController) CancelAnAppointment() fiber.Handler {
 		}
 
 		if appointmentDTO.OwnerID != ownerDTO.Id {
-			if err != nil {
-				return c.Status(fiber.StatusUnauthorized).JSON(responses.ErrorResponse{
-					Message: "Cancellation Not Allowed",
-				})
-			}
+			return c.Status(fiber.StatusUnauthorized).JSON(responses.ErrorResponse{
+				Message: "Cancellation Not Allowed",
+			})
 		}
 
 		if err := cac.appointmentService.CancelAppointmentById(appointmentID); err != nil {

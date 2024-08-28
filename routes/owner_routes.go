@@ -6,7 +6,7 @@ import (
 )
 
 func OwnerRoutes(app *fiber.App, ownerController *controller.OwnerController) {
-	ownerV1 := app.Group("/api/v1/owner")
+	ownerV1 := app.Group("v1/clinic-vet/owner")
 	ownerV1.Post("/create", ownerController.CreateOwner())
 	ownerV1.Get("/:id", ownerController.GetOwnerById())
 	ownerV1.Put("/update", ownerController.UpdateOwner())
@@ -14,7 +14,7 @@ func OwnerRoutes(app *fiber.App, ownerController *controller.OwnerController) {
 }
 
 func OwnerPetRoutes(app *fiber.App, ownerPetController *controller.OwnerPetController) {
-	ownerV1 := app.Group("/api/v1/owner-pet")
+	ownerV1 := app.Group("v1/clinic-vet/owner-pet")
 	ownerV1.Post("/create", ownerPetController.AddPet())
 	ownerV1.Get("/my-pets", ownerPetController.GetMyPets())
 	ownerV1.Put("/update", ownerPetController.UpdatePet()) // To be Tested
@@ -22,16 +22,15 @@ func OwnerPetRoutes(app *fiber.App, ownerPetController *controller.OwnerPetContr
 }
 
 func OwnerAppointmentRoutes(app *fiber.App, ownerAppController *controller.OwnerAppointmentController) {
-	ownerV1 := app.Group("/api/v1/owner-appointment")
+	ownerV1 := app.Group("/v1/clinic-vet/owner-appointment")
 	ownerV1.Post("/request", ownerAppController.RequestAnAppointment())
 	ownerV1.Get("/my-appointments", ownerAppController.GetMyAppointments())
-	ownerV1.Put("/update", ownerAppController.UpdateAnAppointment()) // ToBeTested
 	ownerV1.Delete("/cancel/:id", ownerAppController.CancelAnAppointment())
 
 }
 
 func OwnerMedicalHistoryRoutes(app *fiber.App, ownerAppController *controller.ClientMedicalHistory) {
-	ownerV1 := app.Group("/api/v1/owner-medical-history")
+	ownerV1 := app.Group("v1/clinic-vet/owner-medical-history")
 	ownerV1.Get("/my-pets", ownerAppController.GetMyPetsMedicalHistories())
 	ownerV1.Get("/pet/:id", ownerAppController.GetMyPetsMedicalHistoryByPetID())
 

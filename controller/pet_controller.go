@@ -150,10 +150,9 @@ func (pc *PetController) DeletePet() fiber.Handler {
 			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 				notFound: err.Error(),
 			})
-
 		}
 
-		if err := pc.petService.DeletePetbyId(petId); err != nil {
+		if err := pc.petService.DeletePetById(petId); err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 				serverError: err.Error(),
 			})

@@ -9,10 +9,13 @@ import (
 type AppointmentRepository interface {
 	CreateAppointment(params sqlc.CreateAppointmentParams) (*sqlc.Appointment, error)
 	GetAppointmentByID(appointmentId int32) (*sqlc.Appointment, error)
-	GetAppointmentByOwnerID(ownerID int32) ([]sqlc.Appointment, error)
 	UpdateAppointment(updateParams sqlc.UpdateAppointmentParams) error
-	UpdateAppointmentStatus(appointmentID int32, status string) error
 	DeleteAppointment(appointmentId int32) error
+
+	GetAppointmentByOwnerID(ownerID int32) ([]sqlc.Appointment, error)
+	UpdateAppointmentStatus(appointmentID int32, status string) error
+	RequestAppointment(params sqlc.RequestAppointmentParams) (*sqlc.Appointment, error)
+	UpdateOwnerAppointment(updateParams sqlc.UpdateOwnerAppointmentParams) error
 }
 
 type appointmentRepositoryImpl struct {
@@ -77,6 +80,24 @@ func (ar appointmentRepositoryImpl) UpdateAppointmentStatus(appointmentID int32,
 	}
 
 	if err := ar.queries.UpdateAppointmentStatus(context.Background(), updateParams); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (ar appointmentRepositoryImpl) RequestAppointment(params sqlc.RequestAppointmentParams) (*sqlc.Appointment, error) {
+	appointment, err := ar.queries.RequestAppointment(context.Background(), params)
+	if err != nil {
+		return nil, err
+	}
+
+	return &appointment, nil
+}
+
+func (ar appointmentRepositoryImpl) UpdateOwnerAppointment(updateParams sqlc.UpdateOwnerAppointmentParams) error {
+	err := ar.queries.UpdateOwnerAppointment(context.Background(), updateParams)
+	if err != nil {
 		return err
 	}
 

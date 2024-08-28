@@ -50,12 +50,15 @@ func main() {
 	petServices := services.NewPetService(petRepository)
 	petController := controller.NewPetController(petServices)
 
+	// Appointment
+	appointmentRepository := repository.NewAppointmentRepository(queries)
+	appointmentService := services.NewAppointmentService(appointmentRepository)
+	appointmentController := controller.NewAppointmentController(appointmentService)
+
 	// Owner-Pet
 	ownerPetController := controller.NewOwnerPetController(ownerServices, *petServices)
 
 	// Owner-Appointment
-	appointmentRepository := repository.NewAppointmentRepository(queries)
-	appointmentService := services.NewAppointmentService(appointmentRepository)
 	ownerAppController := controller.NewOwnerAppointmentController(appointmentService, ownerServices)
 
 	// Vet
@@ -83,6 +86,7 @@ func main() {
 	// Routes
 	routes.OwnerRoutes(app, ownerController)
 	routes.PetsRoutes(app, petController)
+	routes.AppointmentRoutes(app, appointmentController)
 	routes.VeterinarianRoutes(app, vetController)
 	routes.AuthRoutes(app, authClientController, authEmployeeController)
 	routes.OwnerPetRoutes(app, ownerPetController)

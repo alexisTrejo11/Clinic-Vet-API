@@ -6,7 +6,7 @@ import (
 )
 
 func VeterinarianRoutes(app *fiber.App, vetController *controller.VeterinarianController) {
-	vetV1 := app.Group("/api/v1/vet")
+	vetV1 := app.Group("/v1/clinic-vet/vet")
 	vetV1.Post("/create", vetController.CreateVeterinarian())
 	vetV1.Get("/:id", vetController.GetVeterinarianById())
 	vetV1.Patch("/update", vetController.UpdateVeterinarian())

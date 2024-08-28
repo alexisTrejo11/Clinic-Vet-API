@@ -22,12 +22,23 @@ func NewAppointmentMappers() *AppointmentMappers {
 	}
 }
 
-func (AppointmentMappers) MapInsertDTOToInsertParams(appointmentInsertDTO DTOs.AppointmentInsertDTO, ownerID int32) sqlc.CreateAppointmentParams {
+func (AppointmentMappers) MapRequestInsertDTOToInsertParams(appointmentRequestInsertDTO DTOs.AppointmentRequestInsertDTO, ownerID int32) sqlc.RequestAppointmentParams {
+	return sqlc.RequestAppointmentParams{
+		PetID:   appointmentRequestInsertDTO.PetID,
+		OwnerID: ownerID,
+		Service: appointmentRequestInsertDTO.Service,
+		Status:  "pending",
+		Date:    pgtype.Timestamp{Time: appointmentRequestInsertDTO.Date, Valid: true},
+	}
+}
+
+func (AppointmentMappers) MapInsertDTOToInsertParams(appointmentInsertDTO DTOs.AppointmentInsertDTO) sqlc.CreateAppointmentParams {
 	return sqlc.CreateAppointmentParams{
 		PetID:   appointmentInsertDTO.PetID,
-		OwnerID: ownerID,
+		OwnerID: appointmentInsertDTO.OwnerID,
 		Service: appointmentInsertDTO.Service,
-		Status:  "pending",
+		VetID:   pgtype.Int4{Int32: appointmentInsertDTO.VetID, Valid: true},
+		Status:  appointmentInsertDTO.Status,
 		Date:    pgtype.Timestamp{Time: appointmentInsertDTO.Date, Valid: true},
 	}
 }
@@ -59,14 +70,63 @@ func (am AppointmentMappers) MapSqlcEntityToNamedDTO(appointment sqlc.Appointmen
 		Date:    appointment.CreatedAt.Time,
 	}
 }
+func (AppointmentMappers) MapUpdateDTOToUpdateParams(appointmentUpdateDTO DTOs.AppointmentUpdateDTO, appointment sqlc.Appointment) sqlc.UpdateAppointmentParams {
+	updateAppointmentParams := sqlc.UpdateAppointmentParams{
+		ID: appointment.ID,
+	}
+	if appointmentUpdateDTO.PetID != 0 {
+		updateAppointmentParams.PetID = appointmentUpdateDTO.PetID
+	} else {
+		updateAppointmentParams.PetID = appointment.PetID
+	}
 
-func (AppointmentMappers) MapUpdateDTOToUpdateParams(appointmentUpdateDTO DTOs.AppointmentUpdateDTO, ownerID int32) sqlc.UpdateAppointmentParams {
-	return sqlc.UpdateAppointmentParams{
+	if appointmentUpdateDTO.VetID != 0 {
+		updateAppointmentParams.VetID = pgtype.Int4{Int32: appointmentUpdateDTO.VetID, Valid: true}
+	} else {
+		updateAppointmentParams.VetID = appointment.VetID
+	}
+
+	if appointmentUpdateDTO.Service != "" {
+		updateAppointmentParams.Service = appointmentUpdateDTO.Service
+	} else {
+		updateAppointmentParams.Service = appointment.Service
+	}
+
+	if appointmentUpdateDTO.OwnerID != 0 {
+		updateAppointmentParams.OwnerID = appointmentUpdateDTO.OwnerID
+	} else {
+		updateAppointmentParams.OwnerID = appointment.OwnerID
+	}
+
+	if !appointmentUpdateDTO.Date.IsZero() {
+		updateAppointmentParams.Date = pgtype.Timestamp{Time: appointmentUpdateDTO.Date, Valid: true}
+	} else {
+		updateAppointmentParams.Date = appointment.Date
+	}
+
+	if appointmentUpdateDTO.Status != "" {
+		updateAppointmentParams.Status = appointmentUpdateDTO.Status
+	} else {
+		updateAppointmentParams.Status = appointment.Status
+	}
+
+	return updateAppointmentParams
+}
+
+func (AppointmentMappers) MapUpdateDTOToUpdateParams2(appointmentUpdateDTO DTOs.AppointmentUpdateDTO, ownerID int32) sqlc.UpdateOwnerAppointmentParams {
+	return sqlc.UpdateOwnerAppointmentParams{
 		ID:      appointmentUpdateDTO.Id,
 		PetID:   appointmentUpdateDTO.PetID,
-		VetID:   pgtype.Int4{Int32: appointmentUpdateDTO.PetID, Valid: true},
 		Service: appointmentUpdateDTO.Service,
-		OwnerID: ownerID,
+		Date:    pgtype.Timestamp{Time: appointmentUpdateDTO.Date, Valid: true},
+	}
+}
+
+func (AppointmentMappers) MapUpdateOwnerDTOToUpdateOwnerParams(appointmentUpdateDTO DTOs.AppointmentOwnerUpdateDTO) sqlc.UpdateOwnerAppointmentParams {
+	return sqlc.UpdateOwnerAppointmentParams{
+		ID:      appointmentUpdateDTO.Id,
+		PetID:   appointmentUpdateDTO.PetID,
+		Service: appointmentUpdateDTO.Service,
 		Date:    pgtype.Timestamp{Time: appointmentUpdateDTO.Date, Valid: true},
 	}
 }
