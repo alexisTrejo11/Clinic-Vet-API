@@ -14,12 +14,12 @@ import (
 	fiberSwagger "github.com/swaggo/fiber-swagger"
 )
 
-// @title Vet API
+// @title Clinic Vet API
 // @version 1.0
 // @description This is a sample server for a vet clinic.
 // @termsOfService http://example.com/terms/
 // @contact.name API Support
-// @contact.email support@example.com
+// @contact.email marcoalexispt.02@gmail.com
 // @license.name MIT
 // @license.url http://opensource.org/licenses/MIT
 // @host localhost:8080
