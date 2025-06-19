@@ -1,5 +1,6 @@
 package mappers
 
+/*
 import (
 	"example.com/at/backend/api-vet/DTOs"
 	"example.com/at/backend/api-vet/sqlc"
@@ -35,3 +36,4 @@ func MapVetUpdateDtoToEntity(vetUpdateDTO *DTOs.VetUpdateDTO, existingVet sqlc.V
 
 	return params
 }
+*/

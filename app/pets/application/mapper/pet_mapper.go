@@ -1,5 +1,6 @@
 package mapper
 
+/*
 import (
 	"example.com/at/backend/api-vet/DTOs"
 	"example.com/at/backend/api-vet/sqlc"
@@ -40,3 +41,4 @@ func MapPetToPetUpdateDTO(petUpdateDTO DTOs.PetUpdateDTO, ownerID int32) sqlc.Up
 		OwnerID: ownerID,
 	}
 }
+*/

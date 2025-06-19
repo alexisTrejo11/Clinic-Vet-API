@@ -1,5 +1,6 @@
 package repositories
 
+/*
 import (
 	"context"
 
@@ -15,3 +16,4 @@ type VeterinarianRepository interface {
 	ValidateExisting(ctx context.Context, VeterinarianId int32) bool
 	GetByUserID(userId int32) (*sqlc.Veterinarian, error)
 }
+*/

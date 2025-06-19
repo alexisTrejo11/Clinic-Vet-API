@@ -1,5 +1,6 @@
 package mappers
 
+/*
 import "example.com/at/backend/api-vet/app/container/sqlc"
 
 type UserMappers struct {
@@ -23,3 +24,4 @@ func (UserMappers) MapSqlcEntityToDTO(user *sqlc.User) DTOs.UserDTO {
 		Role:  user.Role,
 	}
 }
+*/

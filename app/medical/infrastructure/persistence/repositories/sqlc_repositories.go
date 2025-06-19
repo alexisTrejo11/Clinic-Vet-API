@@ -1,5 +1,6 @@
 package repositories
 
+/*
 import (
 	"context"
 
@@ -67,3 +68,4 @@ func (ar MedicalHistoryRepositoryImpl) DeleteMedicalHistory(medicalHistoryId int
 
 	return nil
 }
+*/

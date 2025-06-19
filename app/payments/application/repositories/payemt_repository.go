@@ -1,5 +1,6 @@
 package repositories
 
+/*
 import "example.com/at/backend/api-vet/app/container/sqlc"
 
 type PaymentRepository interface {
@@ -8,3 +9,4 @@ type PaymentRepository interface {
 	Update(updateParams sqlc.UpdatePaymentParams) error
 	Delete(PaymentId int32) error
 }
+*/

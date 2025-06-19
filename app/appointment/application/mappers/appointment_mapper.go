@@ -1,12 +1,6 @@
 package mappers
 
-import (
-	"example.com/at/backend/api-vet/app/container/repository"
-	"example.com/at/backend/api-vet/app/container/sqlc"
-	"example.com/at/backend/api-vet/db"
-	"github.com/jackc/pgx/v5/pgtype"
-)
-
+/*
 type AppointmentMappers struct {
 	NamesRepository repository.NamesRepository
 }
@@ -129,3 +123,4 @@ func (AppointmentMappers) MapUpdateOwnerDTOToUpdateOwnerParams(appointmentUpdate
 		Date:    pgtype.Timestamp{Time: appointmentUpdateDTO.Date, Valid: true},
 	}
 }
+*/

@@ -1,5 +1,6 @@
-package services
+package domain
 
+/*
 import (
 	"context"
 
@@ -73,3 +74,4 @@ func (vs VeterinarianServiceImpl) ValidateExistingVet(veterinarianID int32) bool
 	isExistingVet := vs.VeterinarianRepository.ValidateExistingVeterinarian(context.Background(), veterinarianID)
 	return isExistingVet
 }
+*/

@@ -1,5 +1,6 @@
 package repositories
 
+/*
 import "example.com/at/backend/api-vet/app/container/sqlc"
 
 type PetRepository interface {
@@ -9,3 +10,4 @@ type PetRepository interface {
 	UpdatePetById(params sqlc.UpdatePetParams) error
 	DeletePetById(petId int32) error
 }
+*/

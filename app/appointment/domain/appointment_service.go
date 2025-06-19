@@ -1,13 +1,6 @@
-package services
+package entities
 
-import (
-	"errors"
-
-	"example.com/at/backend/api-vet/DTOs"
-	"example.com/at/backend/api-vet/mappers"
-	"example.com/at/backend/api-vet/repository"
-)
-
+/*
 type AppointmentService interface {
 	//CRUD
 	CreateAppointment(appointmentInsertDTO DTOs.AppointmentInsertDTO) error
@@ -121,3 +114,4 @@ func (as AppointmentServiceImpl) CancelAppointmentById(appointmentID int32) erro
 	}
 
 }
+*/

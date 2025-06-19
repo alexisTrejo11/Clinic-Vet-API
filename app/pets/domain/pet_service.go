@@ -1,5 +1,6 @@
-package services
+package domain
 
+/*
 import (
 	"example.com/at/backend/api-vet/DTOs"
 	"example.com/at/backend/api-vet/mappers"
@@ -82,3 +83,4 @@ func (ps *PetService) ValidPetOwner(petID, ownerID int32) bool {
 
 	return true
 }
+*/

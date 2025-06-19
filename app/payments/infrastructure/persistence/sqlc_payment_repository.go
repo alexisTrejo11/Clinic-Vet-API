@@ -1,5 +1,6 @@
 package repository
 
+/*
 import (
 	"context"
 
@@ -49,3 +50,4 @@ func (ar paymentRepositoryImpl) DeletePayment(PaymentId int32) error {
 
 	return nil
 }
+*/

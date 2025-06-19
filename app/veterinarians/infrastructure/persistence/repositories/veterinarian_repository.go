@@ -1,5 +1,6 @@
 package repository
 
+/*
 import (
 	"context"
 
@@ -73,3 +74,4 @@ func (r *VeterinarianRepositoryImpl) AddUserIdToExisitngVet(veterinarianId, user
 
 	r.queries.UpdateVeterinarianUserID(context.Background(), args)
 }
+*/

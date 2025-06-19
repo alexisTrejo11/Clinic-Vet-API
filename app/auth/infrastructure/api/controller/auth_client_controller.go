@@ -1,5 +1,6 @@
 package controller
 
+/*
 import (
 	DTOs "example.com/at/backend/api-vet/DTOs"
 	"example.com/at/backend/api-vet/services"
@@ -133,3 +134,4 @@ func (usc AuthClientController) ClientLogin() fiber.Handler {
 		})
 	}
 }
+*/

@@ -1,5 +1,6 @@
 package controller
 
+/*
 import (
 	DTOs "example.com/at/backend/api-vet/DTOs"
 	"example.com/at/backend/api-vet/services"
@@ -128,3 +129,4 @@ func (ac AppointmentController) DeleteAppointment() fiber.Handler {
 		})
 	}
 }
+*/

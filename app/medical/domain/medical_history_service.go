@@ -1,4 +1,6 @@
-package services
+package domain
+
+/*
 
 import (
 	"example.com/at/backend/api-vet/DTOs"
@@ -113,3 +115,4 @@ func (mhs medicalHistoryServiceImpl) DeleteMedicalRepositoryById(medicalHistoryI
 	}
 	return nil
 }
+*/

@@ -1,5 +1,6 @@
 package controller
 
+/*
 import (
 	"example.com/at/backend/api-vet/services"
 	"example.com/at/backend/api-vet/utils"
@@ -97,3 +98,4 @@ func (cmh ClientMedicalHistory) GetMyPetsMedicalHistoryByPetID() fiber.Handler {
 
 	}
 }
+*/

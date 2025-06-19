@@ -1,5 +1,6 @@
 package repositories
 
+/*
 import "example.com/at/backend/api-vet/app/container/sqlc"
 
 type UserRepository interface {
@@ -13,3 +14,4 @@ type UserRepository interface {
 	CheckEmailExists(email string) bool
 	CheckPhoneNumberExists(phone_number string) bool
 }
+*/

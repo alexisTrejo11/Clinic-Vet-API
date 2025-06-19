@@ -1,5 +1,6 @@
 package repositories
 
+/*
 import "example.com/at/backend/api-vet/app/container/sqlc"
 
 type MedicalHistoryRepository interface {
@@ -10,3 +11,4 @@ type MedicalHistoryRepository interface {
 	Update(updateParams sqlc.UpdateMedicalHistoryParams) error
 	Delete(medicalHistoryId int32) error
 }
+*/

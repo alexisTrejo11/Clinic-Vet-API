@@ -1,9 +1,10 @@
 package repositrories
 
+/*
 import (
 	"context"
 
-	"example.com/at/backend/api-vet/sqlc"
+
 )
 
 type AppointmentRepositoryImpl struct {
@@ -91,3 +92,4 @@ func (r AppointmentRepositoryImpl) UpdateOwnerAppointment(updateParams sqlc.Upda
 
 	return nil
 }
+*/

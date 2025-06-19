@@ -1,5 +1,6 @@
 package services
 
+/*
 import (
 	"errors"
 	"fmt"
@@ -117,3 +118,4 @@ func (as *authCommonServiceImpl) CreateJWT(userId int32, role string) (string, e
 func Int32ToString(n int32) string {
 	return strconv.FormatInt(int64(n), 10)
 }
+*/

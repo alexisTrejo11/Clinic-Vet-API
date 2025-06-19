@@ -1,7 +1,6 @@
 package repositories
 
-import "example.com/at/backend/api-vet/app/container/sqlc"
-
+/*
 type AppointmentRepository interface {
 	Create(params sqlc.CreateAppointmentParams) (*sqlc.Appointment, error)
 	GetByID(appointmentId int32) (*sqlc.Appointment, error)
@@ -13,3 +12,4 @@ type AppointmentRepository interface {
 	Request(params sqlc.RequestAppointmentParams) (*sqlc.Appointment, error)
 	UpdateOwner(updateParams sqlc.UpdateOwnerAppointmentParams) error
 }
+*/

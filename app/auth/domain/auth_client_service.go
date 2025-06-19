@@ -1,5 +1,6 @@
 package services
 
+/*
 import (
 	"example.com/at/backend/api-vet/DTOs"
 	"example.com/at/backend/api-vet/mappers"
@@ -76,3 +77,4 @@ func (as *authClientServiceImpl) ProcessClientUserCreation(userSignUpDTO DTOs.Us
 
 	return newUser, nil
 }
+*/

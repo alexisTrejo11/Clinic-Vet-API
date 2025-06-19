@@ -1,5 +1,6 @@
 package repository
 
+/*
 import (
 	"context"
 
@@ -55,3 +56,4 @@ func (r *petRepositoryImpl) Delete(petId int32) error {
 	}
 	return nil
 }
+*/

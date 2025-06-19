@@ -1,5 +1,6 @@
 package services
 
+/*
 import (
 	"errors"
 
@@ -51,3 +52,4 @@ func (as *authEmployeeServiceImpl) CompleteSignUp(userSignUpDTO DTOs.UserEmploye
 
 	return JWT, nil
 }
+*/

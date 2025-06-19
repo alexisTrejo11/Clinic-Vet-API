@@ -1,5 +1,6 @@
 package controller
 
+/*
 import (
 	"strconv"
 
@@ -162,3 +163,4 @@ func (pc *PetController) DeletePet() fiber.Handler {
 		})
 	}
 }
+*/

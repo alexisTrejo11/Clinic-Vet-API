@@ -2,7 +2,7 @@ package dto
 
 type PaymentResponse struct {
 	ID            int32
-	Appointment   AppointmentResponse
+	Appointment   int // DTO
 	Amount        int32
 	PaymentMethod string
 }

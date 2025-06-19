@@ -1,5 +1,6 @@
 package repository
 
+/*
 import (
 	"context"
 
@@ -83,3 +84,4 @@ func (ur UserRepositoryImpl) UpdateUserLastLogin(userId int32) error {
 	err := ur.queries.UpdateLastLogin(context.Background(), userId)
 	return err
 }
+*/
