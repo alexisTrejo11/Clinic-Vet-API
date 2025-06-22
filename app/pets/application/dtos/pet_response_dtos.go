@@ -1,11 +1,28 @@
-package dtos
+package petDTOs
+
+import (
+	"time"
+
+	petDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/domain"
+)
 
 type PetResponse struct {
-	Id      int32  `json:"id" validate:"required"`
-	Name    string `json:"name" validate:"required"`
-	Photo   string `json:"photo" validate:"required"`
-	Species string `json:"species" validate:"required"`
-	Breed   string `json:"breed" validate:"required"`
-	Age     int32  `json:"age" validate:"required"`
-	OwnerID int32  `json:"owner_id" validate:"required"`
+	ID                 uint              `json:"id"`
+	Name               string            `json:"name"`
+	Photo              *string           `json:"photo,omitempty"`
+	Species            string            `json:"species"`
+	Breed              *string           `json:"breed,omitempty"`
+	Age                *int              `json:"age,omitempty"`
+	Gender             *petDomain.Gender `json:"gender,omitempty"`
+	Weight             *float64          `json:"weight,omitempty"` // kg
+	Color              *string           `json:"color,omitempty"`
+	Microchip          *string           `json:"microchip,omitempty"`
+	IsNeutered         *bool             `json:"is_neutered,omitempty"`
+	OwnerID            uint              `json:"owner_id"`
+	Allergies          *string           `json:"allergies,omitempty"`
+	CurrentMedications *string           `json:"current_medications,omitempty"`
+	SpecialNeeds       *string           `json:"special_needs,omitempty"`
+	IsActive           bool              `json:"is_active"`
+	CreatedAt          time.Time         `json:"created_at"`
+	UpdatedAt          time.Time         `json:"updated_at"`
 }

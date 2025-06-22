@@ -1,5 +1,6 @@
 package persistence
 
+/*
 import (
 	"context"
 
@@ -63,3 +64,4 @@ func (r *OwnerRepositoryImpl) ValidateExistingOwner(ctx context.Context, ownerId
 	_, err := r.queries.GetOwnerByID(ctx, ownerId)
 	return err == nil
 }
+*/

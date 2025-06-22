@@ -1,5 +1,6 @@
 package controller
 
+/*
 import (
 	"example.com/at/backend/api-vet/DTOs"
 	"example.com/at/backend/api-vet/services"
@@ -189,3 +190,4 @@ func (opc OwnerPetController) DeletePet() fiber.Handler {
 		})
 	}
 }
+*/

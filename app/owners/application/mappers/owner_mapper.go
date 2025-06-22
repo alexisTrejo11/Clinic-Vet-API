@@ -1,14 +1,6 @@
 package mappers
 
-import (
-	"fmt"
-	"time"
-
-	"example.com/at/backend/api-vet/DTOs"
-	"example.com/at/backend/api-vet/sqlc"
-	"github.com/jackc/pgx/v5/pgtype"
-)
-
+/*
 type OwnerMapper struct {
 }
 
@@ -57,3 +49,4 @@ func coalescePgText(newVal string, existingVal pgtype.Text) pgtype.Text {
 	}
 	return existingVal
 }
+*/

@@ -1,44 +1,149 @@
-package mapper
+package petMapper
 
-/*
 import (
-	"example.com/at/backend/api-vet/DTOs"
-	"example.com/at/backend/api-vet/sqlc"
-	"github.com/jackc/pgx/v5/pgtype"
+	"time"
+
+	dtos "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application/dtos"
+	petDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/domain"
 )
 
-func MapPetInsertDTOToCreatePetParams(petInsertDTO DTOs.PetInsertDTO, ownerId int32) sqlc.CreatePetParams {
-	return sqlc.CreatePetParams{
-		Name:    petInsertDTO.Name,
-		Photo:   pgtype.Text{String: petInsertDTO.Photo, Valid: true},
-		Species: petInsertDTO.Species,
-		Breed:   pgtype.Text{String: petInsertDTO.Breed, Valid: true},
-		Age:     pgtype.Int4{Int32: petInsertDTO.Age, Valid: true},
-		OwnerID: ownerId,
+func ToDomainFromCreate(dto dtos.PetCreate) petDomain.Pet {
+	pet := petDomain.Pet{
+		Name:      dto.Name,
+		Species:   dto.Species,
+		OwnerID:   dto.OwnerID,
+		IsActive:  dto.IsActive,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
 	}
+
+	if dto.Photo != nil {
+		pet.Photo = dto.Photo
+	}
+	if dto.Breed != nil {
+		pet.Breed = dto.Breed
+	}
+	if dto.Age != nil {
+		domainAge := *dto.Age
+		pet.Age = &domainAge
+	}
+	if dto.Gender != nil {
+		domainGender := petDomain.Gender(*dto.Gender)
+		pet.Gender = &domainGender
+	}
+	if dto.Weight != nil {
+		pet.Weight = dto.Weight
+	}
+	if dto.Color != nil {
+		pet.Color = dto.Color
+	}
+	if dto.Microchip != nil {
+		pet.Microchip = dto.Microchip
+	}
+	if dto.IsNeutered != nil {
+		pet.IsNeutered = dto.IsNeutered
+	}
+	if dto.Allergies != nil {
+		pet.Allergies = dto.Allergies
+	}
+	if dto.CurrentMedications != nil {
+		pet.CurrentMedications = dto.CurrentMedications
+	}
+	if dto.SpecialNeeds != nil {
+		pet.SpecialNeeds = dto.SpecialNeeds
+	}
+
+	return pet
 }
 
-func MapPetToPetDTO(pet sqlc.Pet) DTOs.PetDTO {
-	return DTOs.PetDTO{
-		Id:      pet.ID,
-		Name:    pet.Name,
-		Photo:   pet.Photo.String,
-		Species: pet.Species,
-		Breed:   pet.Breed.String,
-		Age:     pet.Age.Int32,
-		OwnerID: pet.OwnerID,
+func ToDomainFromUpdate(pet *petDomain.Pet, dto dtos.PetUpdate) {
+	if dto.Name != nil {
+		pet.Name = *dto.Name
 	}
+	if dto.Photo != nil {
+		pet.Photo = dto.Photo
+	}
+	if dto.Species != nil {
+		pet.Species = *dto.Species
+	}
+	if dto.Breed != nil {
+		pet.Breed = dto.Breed
+	}
+	if dto.Age != nil {
+		pet.Age = dto.Age
+	}
+	if dto.Gender != nil {
+		domainGender := petDomain.Gender(*dto.Gender)
+		pet.Gender = &domainGender
+	}
+	if dto.Weight != nil {
+		pet.Weight = dto.Weight
+	}
+	if dto.Color != nil {
+		pet.Color = dto.Color
+	}
+	if dto.Microchip != nil {
+		pet.Microchip = dto.Microchip
+	}
+	if dto.IsNeutered != nil {
+		pet.IsNeutered = dto.IsNeutered
+	}
+	if dto.OwnerID != nil {
+		pet.OwnerID = *dto.OwnerID
+	}
+	if dto.Allergies != nil {
+		pet.Allergies = dto.Allergies
+	}
+	if dto.CurrentMedications != nil {
+		pet.CurrentMedications = dto.CurrentMedications
+	}
+	if dto.SpecialNeeds != nil {
+		pet.SpecialNeeds = dto.SpecialNeeds
+	}
+	if dto.IsActive != nil {
+		pet.IsActive = *dto.IsActive
+	}
+	pet.UpdatedAt = time.Now()
 }
 
-func MapPetToPetUpdateDTO(petUpdateDTO DTOs.PetUpdateDTO, ownerID int32) sqlc.UpdatePetParams {
-	return sqlc.UpdatePetParams{
-		ID:      petUpdateDTO.Id,
-		Name:    petUpdateDTO.Name,
-		Photo:   pgtype.Text{String: petUpdateDTO.Photo, Valid: true},
-		Species: petUpdateDTO.Species,
-		Breed:   pgtype.Text{String: petUpdateDTO.Breed, Valid: true},
-		Age:     pgtype.Int4{Int32: petUpdateDTO.Age, Valid: true},
-		OwnerID: ownerID,
+func ToResponse(pet petDomain.Pet) dtos.PetResponse {
+	response := dtos.PetResponse{
+		ID:                 pet.ID,
+		Name:               pet.Name,
+		Photo:              pet.Photo,
+		Species:            pet.Species,
+		Breed:              pet.Breed,
+		Weight:             pet.Weight,
+		Color:              pet.Color,
+		Microchip:          pet.Microchip,
+		IsNeutered:         pet.IsNeutered,
+		OwnerID:            pet.OwnerID,
+		Allergies:          pet.Allergies,
+		CurrentMedications: pet.CurrentMedications,
+		SpecialNeeds:       pet.SpecialNeeds,
+		IsActive:           pet.IsActive,
+		CreatedAt:          pet.CreatedAt,
+		UpdatedAt:          pet.UpdatedAt,
 	}
+
+	if pet.Age != nil {
+		response.Age = pet.Age
+	}
+	if pet.Gender != nil {
+		dtoGender := petDomain.Gender(*pet.Gender)
+		response.Gender = &dtoGender
+	}
+
+	return response
 }
-*/
+
+func ToResponseList(pets []petDomain.Pet) []dtos.PetResponse {
+	if pets == nil {
+		return []dtos.PetResponse{}
+	}
+	dtos := make([]dtos.PetResponse, len(pets))
+	for i, pet := range pets {
+		dtos[i] = ToResponse(pet)
+	}
+	return dtos
+}

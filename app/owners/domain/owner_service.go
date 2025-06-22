@@ -1,4 +1,6 @@
+package domain
 
+/*
 import (
 	"context"
 
@@ -89,3 +91,4 @@ func (os OwnerServiceImpl) ValidateExistingOwner(ownerId int32) bool {
 	isExistingOwner := os.ownerRepository.ValidateExistingOwner(context.Background(), ownerId)
 	return isExistingOwner
 }
+*/

@@ -1,59 +1,122 @@
-package repository
+package sqlcPetRepository
 
-/*
 import (
 	"context"
+	"fmt"
 
-	"example.com/at/backend/api-vet/sqlc"
+	petRepository "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application/repositories"
+	petDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/domain"
+	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
 )
 
-type petRepositoryImpl struct {
+type SqlcPetRepository struct {
 	queries *sqlc.Queries
 }
 
-func NewPetRepository(queries *sqlc.Queries) PetRepository {
-	return &petRepositoryImpl{
+func NewSqlcPetRepository(queries *sqlc.Queries) petRepository.PetRepository {
+	return &SqlcPetRepository{
 		queries: queries,
 	}
 }
 
-func (r *petRepositoryImpl) Create(args sqlc.CreatePetParams) (*sqlc.Pet, error) {
-	pet, err := r.queries.CreatePet(context.Background(), args)
+func (r *SqlcPetRepository) List(ctx context.Context) ([]petDomain.Pet, error) {
+	sqlPets, err := r.queries.ListPets(ctx)
 	if err != nil {
-		return nil, err
+		return []petDomain.Pet{}, err
 	}
-	return &pet, nil
-}
 
-func (r *petRepositoryImpl) GetById(petId int32) (*sqlc.Pet, error) {
-	pet, err := r.queries.GetPetByID(context.Background(), petId)
-	if err != nil {
-		return nil, err
+	pets := make([]petDomain.Pet, len(sqlPets))
+	for i, sqlPet := range sqlPets {
+		domainPet, err := toDomainPet(sqlPet)
+		if err != nil {
+			return nil, fmt.Errorf("error while mapping pet %d: %w", sqlPet.ID, err)
+		}
+		pets[i] = domainPet
 	}
-	return &pet, nil
-}
 
-func (r *petRepositoryImpl) GetByOwnerID(petId int32) ([]sqlc.Pet, error) {
-	pets, err := r.queries.ListPetsByOwnerByID(context.Background(), petId)
-	if err != nil {
-		return nil, err
-	}
 	return pets, nil
 }
 
-func (r *petRepositoryImpl) Update(params sqlc.UpdatePetParams) error {
-	err := r.queries.UpdatePet(context.Background(), params)
+func (r *SqlcPetRepository) ListByOwnerId(ctx context.Context, ownerId uint) ([]petDomain.Pet, error) {
+	sqlPets, err := r.queries.GetPetsByOwnerID(ctx, int32(ownerId))
 	if err != nil {
+		return []petDomain.Pet{}, err
+	}
+
+	pets := make([]petDomain.Pet, len(sqlPets))
+	for i, sqlPet := range sqlPets {
+		domainPet, err := toDomainPet(sqlPet)
+		if err != nil {
+			return nil, fmt.Errorf("error while mapping pet %d: %w", sqlPet.ID, err)
+		}
+		pets[i] = domainPet
+	}
+
+	return pets, nil
+}
+
+func (r *SqlcPetRepository) GetById(ctx context.Context, petId uint) (petDomain.Pet, error) {
+	sqlPet, err := r.queries.GetPetByID(ctx, int32(petId))
+	if err != nil {
+		return petDomain.Pet{}, err
+	}
+
+	domainPet, err := toDomainPet(sqlPet)
+	if err != nil {
+		return petDomain.Pet{}, err
+	}
+
+	return domainPet, nil
+}
+func (r *SqlcPetRepository) Save(ctx context.Context, pet *petDomain.Pet) error {
+	if pet.ID == 0 {
+		if err := r.create(ctx, pet); err != nil {
+			return err
+		}
+		return nil
+	}
+
+	if err := r.update(ctx, pet); err != nil {
 		return err
 	}
+
 	return nil
 }
 
-func (r *petRepositoryImpl) Delete(petId int32) error {
-	err := r.queries.DeletePet(context.Background(), petId)
+func (r *SqlcPetRepository) create(ctx context.Context, pet *petDomain.Pet) error {
+	params := ToSqlCreateParam(*pet)
+
+	petCreated, err := r.queries.CreatePet(ctx, *params)
 	if err != nil {
 		return err
 	}
+
+	_, err = toDomainPet(petCreated)
+	if err != nil {
+		return err
+	}
+
+	pet.ID = uint(petCreated.ID)
+
 	return nil
 }
-*/
+
+func (r *SqlcPetRepository) update(ctx context.Context, pet *petDomain.Pet) error {
+	params := ToSqlUpdateParam(*pet)
+
+	err := r.queries.UpdatePet(ctx, *params)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// TODO:Add Soft Delete
+func (r *SqlcPetRepository) Delete(ctx context.Context, petId uint) error {
+	if err := r.queries.DeletePet(ctx, int32(petId)); err != nil {
+		return err
+	}
+
+	return nil
+}

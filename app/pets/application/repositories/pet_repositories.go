@@ -1,13 +1,15 @@
-package repositories
+package petRepository
 
-/*
-import "example.com/at/backend/api-vet/app/container/sqlc"
+import (
+	"context"
+
+	petDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/domain"
+)
 
 type PetRepository interface {
-	CreatePet(args sqlc.CreatePetParams) (*sqlc.Pet, error)
-	GetPetById(petId int32) (*sqlc.Pet, error)
-	GetPetByOwnerID(petId int32) ([]sqlc.Pet, error)
-	UpdatePetById(params sqlc.UpdatePetParams) error
-	DeletePetById(petId int32) error
+	List(ctx context.Context) ([]petDomain.Pet, error)
+	ListByOwnerId(ctx context.Context, petId uint) ([]petDomain.Pet, error)
+	GetById(ctx context.Context, petId uint) (petDomain.Pet, error)
+	Save(ctx context.Context, pet *petDomain.Pet) error
+	Delete(ctx context.Context, petId uint) error
 }
-*/

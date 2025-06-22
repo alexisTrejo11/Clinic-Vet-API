@@ -1,16 +1,15 @@
 package routes
 
-/*
 import (
-	"example.com/at/backend/api-vet/controller"
-	"github.com/gofiber/fiber/v2"
+	petController "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/infrastructure/api/controller"
+	"github.com/gin-gonic/gin"
 )
 
-func PetsRoutes(app *fiber.App, petController *controller.PetController) {
-	petV1 := app.Group("/v1/clinic-vet/pet")
-	petV1.Post("/create", petController.CreatePet())
-	petV1.Get("/:petId", petController.GetPetById())
-	petV1.Put("/update", petController.UpdatePet())
-	petV1.Get("/:petId", petController.DeletePet())
+func PetsRoutes(app *gin.Engine, petController *petController.PetController) {
+	path := app.Group("api/v2/pets")
+	path.GET("/", petController.ListPets)
+	path.GET("/:id", petController.GetPetById)
+	path.POST("/", petController.CreatePet)
+	path.PATCH("/:id", petController.UpdatePet)
+	path.DELETE("/:id", petController.DeletePet)
 }
-*/

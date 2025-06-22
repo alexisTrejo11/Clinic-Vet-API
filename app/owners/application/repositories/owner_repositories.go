@@ -1,5 +1,6 @@
 package repositories
 
+/*
 import (
 	"context"
 
@@ -16,3 +17,4 @@ type OwnerRepository interface {
 
 	ListAppointmentsByOwner(ctx context.Context, ownerID int32) ([]sqlc.Appointment, error)
 }
+*/

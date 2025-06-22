@@ -1,15 +1,6 @@
 package utils
 
-import (
-	"errors"
-	"strconv"
-	"strings"
-	"time"
-
-	"github.com/gofiber/fiber/v2"
-	"github.com/golang-jwt/jwt/v5"
-)
-
+/*
 var JWTSecret = []byte("your_secret_key")
 
 type Claims struct {
@@ -90,3 +81,4 @@ func GetUserIDFromRequest(c *fiber.Ctx) (int, error) {
 	}
 	return userID, nil
 }
+*/

@@ -1,22 +1,26 @@
 package utils
 
 import (
+	"errors"
 	"strconv"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gin-gonic/gin"
 )
 
-// ParseID extracts and converts a path variable to an integer.
-func ParseID(c *fiber.Ctx) (int32, error) {
-	idStr := c.Params("id")
+func ParseID(c *gin.Context, param_name string) (uint, error) {
+	idStr := c.Param("id")
 	if idStr == "" {
-		return 0, fiber.NewError(fiber.StatusBadRequest, "Id is Empty")
+		return 0, errors.New("empty id")
 	}
 
 	intValue, err := strconv.Atoi(idStr)
 	if err != nil {
-		return 0, fiber.NewError(fiber.StatusBadRequest, "Can't Process Id")
+		return 0, errors.New("id must be a valid number")
 	}
 
-	return int32(intValue), nil
+	if intValue < 0 {
+		return 0, errors.New("ID cannot be negative")
+	}
+
+	return uint(intValue), nil
 }

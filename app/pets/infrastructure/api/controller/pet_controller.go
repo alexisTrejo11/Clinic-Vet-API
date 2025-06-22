@@ -1,166 +1,130 @@
-package controller
+package petController
 
-/*
 import (
-	"strconv"
+	"context"
 
-	dtos "example.com/at/backend/api-vet/DTOs"
-	"example.com/at/backend/api-vet/services"
+	petDTOs "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application/dtos"
+	petUsecase "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application/usecase"
+	utils "github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
+	apiResponse "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/responses"
+	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
-	"github.com/gofiber/fiber/v2"
 )
 
 type PetController struct {
-	petService *services.PetService
-	validator  *validator.Validate
+	validator         *validator.Validate
+	getPetByIdUseCase *petUsecase.GetPetByIdUseCase
+	listPetsUseCase   *petUsecase.ListPetsUseCase
+	createPetUseCae   *petUsecase.CreatePetUseCase
+	updatePetUseCae   *petUsecase.UpdatePetUseCase
+	deletePetUseCase  *petUsecase.DeletePetUseCase
 }
 
-const (
-	badRequest    string = "Bad_Request"
-	validationErr string = "Validation_Error"
-	serverError   string = "Internal_Server_Error"
-	notFound      string = "NOT_FOUND"
-	created       string = "Created"
-	ok            string = "OK"
-	updateMsg     string = "Pet Succesfully Updated!."
-	createMsg     string = "Pet Succesfully Created!."
-	deleteMsg     string = "Pet Succesfully Deleted!."
-)
+func NewPetController(
+	validator *validator.Validate,
+	getPetByIdUseCase *petUsecase.GetPetByIdUseCase,
+	listPetsUseCase *petUsecase.ListPetsUseCase,
+	createPetUseCase *petUsecase.CreatePetUseCase,
+	updatePetUseCase *petUsecase.UpdatePetUseCase,
+	deletePetUseCase *petUsecase.DeletePetUseCase,
 
-func NewPetController(petService *services.PetService) *PetController {
+) *PetController {
 	return &PetController{
-		petService: petService,
-		validator:  validator.New(),
+		validator:         validator,
+		getPetByIdUseCase: getPetByIdUseCase,
+		listPetsUseCase:   listPetsUseCase,
+		createPetUseCae:   createPetUseCase,
+		updatePetUseCae:   updatePetUseCase,
+		deletePetUseCase:  deletePetUseCase,
 	}
 }
 
-func (pc *PetController) CreatePet() fiber.Handler {
-	return func(c *fiber.Ctx) error {
-		var newPet dtos.PetInsertDTO
-
-		if err := c.BodyParser(&newPet); err != nil {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				badRequest: err.Error(),
-			})
-
-		}
-
-		if err := pc.validator.Struct(&newPet); err != nil {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				validationErr: err.Error(),
-			})
-		}
-
-		if err := pc.petService.CreatePet(newPet, 1); err != nil {
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-				serverError: err.Error(),
-			})
-		}
-
-		return c.Status(fiber.StatusCreated).JSON(fiber.Map{
-			created: createMsg,
-		})
+func (c *PetController) ListPets(ctx *gin.Context) {
+	pets, err := c.listPetsUseCase.Execute(context.TODO())
+	if err != nil {
+		apiResponse.BadRequest(ctx, err)
+		return
 	}
+
+	apiResponse.Ok(ctx, pets)
 }
 
-func (pc *PetController) GetPetById() fiber.Handler {
-	return func(c *fiber.Ctx) error {
-		petIdStr := c.Params("petId")
-		if petIdStr == "" {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				"message": "petId is Empty",
-			})
-		}
-
-		intValue, err := strconv.Atoi(petIdStr)
-		if err != nil {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				"message": "Cant Proccess petId",
-			})
-		}
-
-		petId := int32(intValue)
-
-		petDTO, err := pc.petService.GetPetById(petId)
-		if err != nil {
-			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-				notFound: err.Error(),
-			})
-
-		}
-		return c.Status(fiber.StatusOK).JSON(petDTO)
+func (c *PetController) GetPetById(ctx *gin.Context) {
+	id, err := utils.ParseID(ctx, "id")
+	if err != nil {
+		apiResponse.RequestURLParamError(ctx, err, "pet_id", ctx.Param("id"))
+		return
 	}
+
+	pet, err := c.getPetByIdUseCase.Execute(context.TODO(), id)
+	if err != nil {
+		apiResponse.AppError(ctx, err)
+		return
+	}
+
+	apiResponse.Ok(ctx, pet)
 }
 
-func (pc *PetController) UpdatePet() fiber.Handler {
-	return func(c *fiber.Ctx) error {
-		var petUpdateDTO dtos.PetUpdateDTO
+func (c *PetController) CreatePet(ctx *gin.Context) {
+	var petCreate petDTOs.PetCreate
 
-		if err := c.BodyParser(&petUpdateDTO); err != nil {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				badRequest: err.Error(),
-			})
-		}
-
-		if err := pc.validator.Struct(&petUpdateDTO); err != nil {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				validationErr: err.Error(),
-			})
-		}
-
-		_, err := pc.petService.GetPetById(petUpdateDTO.Id)
-		if err != nil {
-			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-				notFound: err.Error(),
-			})
-
-		}
-
-		if err := pc.petService.UpdatePet(petUpdateDTO, 1); err != nil {
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-				serverError: err.Error(),
-			})
-		}
-
-		return c.Status(fiber.StatusOK).JSON(fiber.Map{
-			ok: updateMsg,
-		})
+	if err := ctx.ShouldBindBodyWithJSON(&petCreate); err != nil {
+		apiResponse.RequestBodyDataError(ctx, err)
+		return
 	}
+
+	if err := c.validator.Struct(&petCreate); err != nil {
+		apiResponse.RequestBodyDataError(ctx, err)
+		return
+	}
+
+	pet, err := c.createPetUseCae.Execute(context.TODO(), petCreate)
+	if err != nil {
+		apiResponse.AppError(ctx, err)
+		return
+	}
+
+	apiResponse.Created(ctx, pet)
 }
 
-func (pc *PetController) DeletePet() fiber.Handler {
-	return func(c *fiber.Ctx) error {
-		petIdStr := c.Params("petId")
-		if petIdStr == "" {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				"message": "petId is Empty",
-			})
-		}
-
-		intValue, err := strconv.Atoi(petIdStr)
-		if err != nil {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				"message": "Cant Proccess petId",
-			})
-		}
-
-		petId := int32(intValue)
-
-		_, err = pc.petService.GetPetById(petId)
-		if err != nil {
-			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-				notFound: err.Error(),
-			})
-		}
-
-		if err := pc.petService.DeletePetById(petId); err != nil {
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-				serverError: err.Error(),
-			})
-		}
-		return c.Status(fiber.StatusOK).JSON(fiber.Map{
-			ok: deleteMsg,
-		})
+func (c *PetController) UpdatePet(ctx *gin.Context) {
+	id, err := utils.ParseID(ctx, "id")
+	if err != nil {
+		apiResponse.RequestURLParamError(ctx, err, "pet_id", ctx.Param("id"))
+		return
 	}
+
+	var petCreate petDTOs.PetUpdate
+	if err := ctx.ShouldBindBodyWithJSON(&petCreate); err != nil {
+		apiResponse.RequestBodyDataError(ctx, err)
+		return
+	}
+
+	if err := c.validator.Struct(&petCreate); err != nil {
+		apiResponse.RequestBodyDataError(ctx, err)
+		return
+	}
+
+	pet, err := c.updatePetUseCae.Execute(context.TODO(), id, petCreate)
+	if err != nil {
+		apiResponse.AppError(ctx, err)
+		return
+	}
+
+	apiResponse.Ok(ctx, pet)
 }
-*/
+
+func (c *PetController) DeletePet(ctx *gin.Context) {
+	id, err := utils.ParseID(ctx, "id")
+	if err != nil {
+		apiResponse.RequestURLParamError(ctx, err, "pet_id", ctx.Param("id"))
+		return
+	}
+
+	if err := c.deletePetUseCase.Execute(context.TODO(), id); err != nil {
+		apiResponse.AppError(ctx, err)
+		return
+	}
+
+	apiResponse.NoContent(ctx)
+}

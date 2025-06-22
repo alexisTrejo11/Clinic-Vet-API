@@ -1,5 +1,6 @@
 package routes
 
+/*
 import (
 	"example.com/at/backend/api-vet/controller"
 	"github.com/gofiber/fiber/v2"
@@ -35,3 +36,4 @@ func OwnerMedicalHistoryRoutes(app *fiber.App, ownerAppController *controller.Cl
 	ownerV1.Get("/pet/:id", ownerAppController.GetMyPetsMedicalHistoryByPetID())
 
 }
+*/
