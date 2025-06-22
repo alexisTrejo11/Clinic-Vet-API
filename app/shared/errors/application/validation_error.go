@@ -16,6 +16,7 @@ func NewValidationError(field, value, message string) *ValidationError {
 				"field": field,
 				"value": value,
 			},
+			StatusCode: 400,
 		},
 		Field: field,
 		Value: value,

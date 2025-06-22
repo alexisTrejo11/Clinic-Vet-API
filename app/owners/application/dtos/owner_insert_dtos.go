@@ -1,6 +1,8 @@
 package dtos
 
-import "example.com/at/backend/api-vet/app/container/sqlc"
+import (
+	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
+)
 
 type OwnerCreate struct {
 	Photo string `json:"photo"`
@@ -22,11 +24,6 @@ func (ord *OwnerUpdate) ModelToDTO(owner sqlc.Owner) {
 
 func (ord *OwnerUpdate) GetPetsIDs() []int32 {
 	var petsIDs []int32
-	pets := ord.Pets
-
-	for _, pets := range pets {
-		petsIDs = append(petsIDs, pets.Id)
-	}
 
 	return petsIDs
 }

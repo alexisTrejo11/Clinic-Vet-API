@@ -121,7 +121,7 @@ func (c *PetController) DeletePet(ctx *gin.Context) {
 		return
 	}
 
-	if err := c.deletePetUseCase.Execute(context.TODO(), id); err != nil {
+	if err := c.deletePetUseCase.Execute(context.TODO(), id, true); err != nil {
 		apiResponse.AppError(ctx, err)
 		return
 	}

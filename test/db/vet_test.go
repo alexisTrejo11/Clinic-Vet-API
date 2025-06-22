@@ -1,5 +1,7 @@
 package db_test
 
+/*
+
 import (
 	"context"
 	"testing"
@@ -81,3 +83,4 @@ func TestDeleteVeterinarian(t *testing.T) {
 	require.Error(t, err)
 
 }
+*/

@@ -1,11 +1,11 @@
 TablesMigrationUp:
-	migrate -path db/migration -database "postgresql://postgres:root@localhost:5431/vet_database?sslmode=disable" -verbose up
+	migrate -path db/migrations -database "postgresql://postgres:postgres@localhost:5432/clinic-vet?sslmode=disable" -verbose up
 
 TablesMigrationDown:
-	migrate -path db/migration -database "postgresql://postgres:root@localhost:5431/vet_database?sslmode=disable" -verbose down
+	migrate -path db/migrations -database "postgresql://postgres:postgres@localhost:5432/clinic-vet?sslmode=disable" -verbose down
 
 CreateTablesMigrationTest:
-	migrate -path db/migration/test/ -database "postgresql://postgres:root@localhost:5430/vet_database_test?sslmode=disable" -verbose up
+	migrate -path db/migrations/test/ -database "postgresql://postgres:root@localhost:5432/clinic-vet_test?sslmode=disable" -verbose up
 
 InitSwagger:
 	swag init

@@ -1,10 +1,11 @@
-package persistence
+package owner_repository
 
-/*
 import (
 	"context"
 
-	"example.com/at/backend/api-vet/sqlc"
+	ownerRepository "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/application/repositories"
+	ownerDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/domain"
+	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -12,56 +13,45 @@ type OwnerRepositoryImpl struct {
 	queries *sqlc.Queries
 }
 
-func NewOwnerRepositoryImpl(queries *sqlc.Queries) OwnerRepository {
+func NewOwnerRepositoryImpl(queries *sqlc.Queries) ownerRepository.OwnerRepository {
 	return &OwnerRepositoryImpl{queries: queries}
 }
 
-func (r *OwnerRepositoryImpl) Create(arg sqlc.CreateOwnerParams) (sqlc.Owner, error) {
-	owner, err := r.queries.CreateOwner(context.Background(), arg)
-	if err != nil {
-		return sqlc.Owner{}, err
-	}
-	return owner, nil
+func (r *OwnerRepositoryImpl) Save(owner *ownerDomain.Owner) error {
+	return nil
 }
 
-func (r *OwnerRepositoryImpl) GetOwnerByID(ctx context.Context, ownerId int32) (sqlc.Owner, error) {
-	owner, err := r.queries.GetOwnerByID(ctx, ownerId)
+func (r *OwnerRepositoryImpl) GetByID(ctx context.Context, ownerId uint) (ownerDomain.Owner, error) {
+	_, err := r.queries.GetOwnerByID(ctx, int32(ownerId))
 	if err != nil {
-		return sqlc.Owner{}, err
+		return ownerDomain.Owner{}, err
 	}
-	return owner, nil
+	return ownerDomain.Owner{}, nil
 }
 
-func (r *OwnerRepositoryImpl) GetOwnerByUserID(ownerId int32) (*sqlc.Owner, error) {
-	owner, err := r.queries.GetOwnerByUserID(context.Background(), pgtype.Int4{Int32: ownerId, Valid: true})
+func (r *OwnerRepositoryImpl) GetByUserID(ownerId uint) (ownerDomain.Owner, error) {
+	_, err := r.queries.GetOwnerByUserID(context.Background(), pgtype.Int4{Int32: int32(ownerId), Valid: true})
 	if err != nil {
-		return nil, err
+		return ownerDomain.Owner{}, err
 	}
-	return &owner, nil
+	return ownerDomain.Owner{}, nil
 }
 
-func (r *OwnerRepositoryImpl) UpdateOwner(ctx context.Context, arg sqlc.UpdateOwnerParams) error {
-	err := r.queries.UpdateOwner(ctx, arg)
+func (r *OwnerRepositoryImpl) Delete(ctx context.Context, ownerId uint) error {
+	err := r.queries.DeleteOwner(ctx, int32(ownerId))
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (r *OwnerRepositoryImpl) DeleteOwner(ctx context.Context, ownerId int32) error {
-	err := r.queries.DeleteOwner(ctx, ownerId)
+func (r *OwnerRepositoryImpl) Exists(ctx context.Context, ownerId uint) (bool, error) {
+	_, err := r.queries.GetOwnerByID(ctx, int32(ownerId))
 	if err != nil {
-		return err
+		if err.Error() == "no rows in result set" {
+			return false, nil
+		}
+		return false, err
 	}
-	return nil
+	return true, err
 }
-
-func (r *OwnerRepositoryImpl) GetAppointmentsByOwner(ctx context.Context, ownerID int32) ([]sqlc.Appointment, error) {
-	return nil, nil
-}
-
-func (r *OwnerRepositoryImpl) ValidateExistingOwner(ctx context.Context, ownerId int32) bool {
-	_, err := r.queries.GetOwnerByID(ctx, ownerId)
-	return err == nil
-}
-*/

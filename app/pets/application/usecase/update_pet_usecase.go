@@ -3,32 +3,53 @@ package petUsecase
 import (
 	"context"
 
+	ownerRepository "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/application/repositories"
+	petAppError "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application"
 	petDTOs "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application/dtos"
 	petMapper "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application/mapper"
 	petRepository "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application/repositories"
 )
 
 type UpdatePetUseCase struct {
-	repository petRepository.PetRepository
+	petRepository   petRepository.PetRepository
+	ownerRepository ownerRepository.OwnerRepository
 }
 
-func NewUpdatePetUseCase(repository petRepository.PetRepository) *UpdatePetUseCase {
+func NewUpdatePetUseCase(petRepository petRepository.PetRepository, ownerRepository ownerRepository.OwnerRepository) *UpdatePetUseCase {
 	return &UpdatePetUseCase{
-		repository: repository,
+		petRepository:   petRepository,
+		ownerRepository: ownerRepository,
 	}
 }
 
 func (uc UpdatePetUseCase) Execute(ctx context.Context, petId uint, petUpdate petDTOs.PetUpdate) (petDTOs.PetResponse, error) {
-	pet, err := uc.repository.GetById(ctx, petId)
+	pet, err := uc.petRepository.GetById(ctx, petId)
 	if err != nil {
-		return petDTOs.PetResponse{}, err
+		return petDTOs.PetResponse{}, petAppError.HandleGetByIdError(err, petId)
+	}
+
+	if petUpdate.OwnerID != nil {
+		if err := uc.validate_owner(ctx, petId); err != nil {
+			return petDTOs.PetResponse{}, err
+		}
 	}
 
 	petMapper.ToDomainFromUpdate(&pet, petUpdate)
-
-	if err := uc.repository.Save(ctx, &pet); err != nil {
+	if err := uc.petRepository.Save(ctx, &pet); err != nil {
 		return petDTOs.PetResponse{}, err
 	}
 
 	return petMapper.ToResponse(pet), nil
+}
+
+func (uc UpdatePetUseCase) validate_owner(ctx context.Context, owner_id uint) error {
+	exists, err := uc.ownerRepository.Exists(ctx, owner_id)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		notFounderr := petAppError.OwnerNotFoundError(owner_id)
+		return notFounderr
+	}
+	return nil
 }

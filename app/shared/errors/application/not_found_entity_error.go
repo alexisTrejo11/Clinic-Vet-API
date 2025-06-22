@@ -18,6 +18,7 @@ func NewEntityNotFoundError(entityType, entityID string) *EntityNotFoundError {
 				"entity_type": entityType,
 				"entity_id":   entityID,
 			},
+			StatusCode: 404,
 		},
 		EntityType: entityType,
 		EntityID:   entityID,

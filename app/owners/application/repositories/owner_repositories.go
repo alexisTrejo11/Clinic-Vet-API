@@ -1,20 +1,17 @@
-package repositories
+package ownerRepository
 
-/*
 import (
 	"context"
 
-	"example.com/at/backend/api-vet/app/container/sqlc"
+	ownerDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/domain"
 )
 
 type OwnerRepository interface {
-	Create(arg sqlc.CreateOwnerParams) (sqlc.Owner, error)
-	GetByID(ctx context.Context, id int32) (sqlc.Owner, error)
-	GetByUserID(ownerId int32) (*sqlc.Owner, error)
-	Update(ctx context.Context, arg sqlc.UpdateOwnerParams) error
-	Delete(ctx context.Context, id int32) error
-	Exists(ctx context.Context, ownerId int32) bool
+	Save(arg *ownerDomain.Owner) error
+	GetByID(ctx context.Context, id uint) (ownerDomain.Owner, error)
+	GetByUserID(ownerId uint) (ownerDomain.Owner, error)
+	Delete(ctx context.Context, id uint) error
+	Exists(ctx context.Context, ownerId uint) (bool, error)
 
-	ListAppointmentsByOwner(ctx context.Context, ownerID int32) ([]sqlc.Appointment, error)
+	//ListAppointmentsByOwner(ctx context.Context, ownerID uint) ([]sqlc.Appointment, error)
 }
-*/

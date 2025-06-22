@@ -3,27 +3,46 @@ package petUsecase
 import (
 	"context"
 
+	ownerRepository "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/application/repositories"
+	petAppError "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application"
 	petDTOs "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application/dtos"
 	petMapper "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application/mapper"
 	petRepository "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application/repositories"
 )
 
 type CreatePetUseCase struct {
-	repository petRepository.PetRepository
+	petRepository   petRepository.PetRepository
+	ownerRepository ownerRepository.OwnerRepository
 }
 
-func NewCreatePetUseCase(repository petRepository.PetRepository) *CreatePetUseCase {
+func NewCreatePetUseCase(petRepository petRepository.PetRepository, ownerRepository ownerRepository.OwnerRepository) *CreatePetUseCase {
 	return &CreatePetUseCase{
-		repository: repository,
+		petRepository:   petRepository,
+		ownerRepository: ownerRepository,
 	}
 }
 
 func (uc CreatePetUseCase) Execute(ctx context.Context, petCreate petDTOs.PetCreate) (petDTOs.PetResponse, error) {
-	newPet := petMapper.ToDomainFromCreate(petCreate)
+	if err := uc.validate_owner(ctx, petCreate.OwnerID); err != nil {
+		return petDTOs.PetResponse{}, err
+	}
 
-	if err := uc.repository.Save(ctx, &newPet); err != nil {
+	newPet := petMapper.ToDomainFromCreate(petCreate)
+	if err := uc.petRepository.Save(ctx, &newPet); err != nil {
 		return petDTOs.PetResponse{}, err
 	}
 
 	return petMapper.ToResponse(newPet), nil
+}
+
+func (uc CreatePetUseCase) validate_owner(ctx context.Context, owner_id uint) error {
+	exists, err := uc.ownerRepository.Exists(ctx, owner_id)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		notFounderr := petAppError.OwnerNotFoundError(owner_id)
+		return notFounderr
+	}
+	return nil
 }

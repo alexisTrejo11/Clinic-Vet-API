@@ -22,7 +22,7 @@ func NewSqlcPetRepository(queries *sqlc.Queries) petRepository.PetRepository {
 func (r *SqlcPetRepository) List(ctx context.Context) ([]petDomain.Pet, error) {
 	sqlPets, err := r.queries.ListPets(ctx)
 	if err != nil {
-		return []petDomain.Pet{}, err
+		return []petDomain.Pet{}, DBSelectFoundError(err.Error())
 	}
 
 	pets := make([]petDomain.Pet, len(sqlPets))
@@ -40,7 +40,7 @@ func (r *SqlcPetRepository) List(ctx context.Context) ([]petDomain.Pet, error) {
 func (r *SqlcPetRepository) ListByOwnerId(ctx context.Context, ownerId uint) ([]petDomain.Pet, error) {
 	sqlPets, err := r.queries.GetPetsByOwnerID(ctx, int32(ownerId))
 	if err != nil {
-		return []petDomain.Pet{}, err
+		return []petDomain.Pet{}, DBSelectFoundError(err.Error())
 	}
 
 	pets := make([]petDomain.Pet, len(sqlPets))
@@ -58,7 +58,7 @@ func (r *SqlcPetRepository) ListByOwnerId(ctx context.Context, ownerId uint) ([]
 func (r *SqlcPetRepository) GetById(ctx context.Context, petId uint) (petDomain.Pet, error) {
 	sqlPet, err := r.queries.GetPetByID(ctx, int32(petId))
 	if err != nil {
-		return petDomain.Pet{}, err
+		return petDomain.Pet{}, DBSelectFoundError(err.Error())
 	}
 
 	domainPet, err := toDomainPet(sqlPet)
@@ -71,13 +71,13 @@ func (r *SqlcPetRepository) GetById(ctx context.Context, petId uint) (petDomain.
 func (r *SqlcPetRepository) Save(ctx context.Context, pet *petDomain.Pet) error {
 	if pet.ID == 0 {
 		if err := r.create(ctx, pet); err != nil {
-			return err
+			return DBCreateError(err.Error())
 		}
 		return nil
 	}
 
 	if err := r.update(ctx, pet); err != nil {
-		return err
+		return DBUpdateError(err.Error())
 	}
 
 	return nil
@@ -112,10 +112,10 @@ func (r *SqlcPetRepository) update(ctx context.Context, pet *petDomain.Pet) erro
 	return nil
 }
 
-// TODO:Add Soft Delete
 func (r *SqlcPetRepository) Delete(ctx context.Context, petId uint) error {
 	if err := r.queries.DeletePet(ctx, int32(petId)); err != nil {
-		return err
+		return DBDeleteError(err.Error())
+
 	}
 
 	return nil
