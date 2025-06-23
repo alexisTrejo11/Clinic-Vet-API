@@ -1,4 +1,4 @@
-package dtos
+package authDto
 
 type UserResponse struct {
 	Id       int32  `json:"id"`

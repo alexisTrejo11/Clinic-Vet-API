@@ -1,4 +1,4 @@
-package dtos
+package authDto
 
 import "time"
 

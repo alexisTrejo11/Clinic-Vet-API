@@ -1,17 +1,15 @@
-package routes
-
-/*
+package auth_routes
 
 import (
-	"github.com/gofiber/fiber/v2"
+	authController "github.com/alexisTrejo11/Clinic-Vet-API/app/auth/infrastructure/api/controller"
+	"github.com/gin-gonic/gin"
 )
-func AuthRoutes(app *fiber.App, authClientController *controller.AuthClientController, authEmployeeController *controller.AuthEmployeeController) {
-	authClientV2 := app.Group("v2/api/clinic-vet")
-	authClientV2.Post("/signup", authClientController.ClientSignUp())
-	authClientV2.Post("/login", authClientController.ClientLogin())
 
-	authEmployeeV2 := app.Group("/v2/api/employee/clinic-vet")
-	authEmployeeV2.Post("/signup", authEmployeeController.EmployeeSignUp())
-	authEmployeeV2.Post("/login", authEmployeeController.EmployeeLogin())
+func AuthRoutes(app *gin.Engine, authController authController.AuthController) {
+	authClientV2 := app.Group("/v2/api/auth")
+	authClientV2.POST("/signup", authController.Signup)
+	authClientV2.POST("/login", authController.Login)
+	authClientV2.DELETE("/logout", authController.Logout)
+	authClientV2.DELETE("/loug-all", authController.LogoutAll)
+
 }
-*/

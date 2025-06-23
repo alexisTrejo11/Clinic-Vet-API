@@ -1,1 +1,1 @@
-package repository
+package sqlc_user_repo

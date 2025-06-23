@@ -1,6 +1,6 @@
-package dtos
+package authDto
 
-type CustomerSignup struct {
+type RequestSignup struct {
 	Name        string `json:"name" validate:"required"`
 	LastName    string `json:"last_name" validate:"required"`
 	Email       string `json:"email" validate:"required,email"`
@@ -11,10 +11,20 @@ type CustomerSignup struct {
 	Genre       Genre  `json:"genre" validate:"required,oneof=male female other"`
 }
 
-type LoginDTO struct {
-	Email       string `json:"email"`
-	PhoneNumber string `json:"phone_number"`
-	Password    string `json:"password" validate:"required"`
+type RequestLogin struct {
+	IdentifierField string `json:"identifier_field" validate:"required"`
+	Password        string `json:"password" validate:"required"`
+}
+
+type RequestLogout struct {
+	RefreshToken string `json:"refresh_token" validate:"required"`
+}
+
+type TokenResponse struct {
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+	ExpiresIn    int64  `json:"expires_in"`
+	TokenType    string `json:"token_type"`
 }
 
 type Genre string
@@ -24,17 +34,3 @@ const (
 	Female Genre = "female"
 	Other  Genre = "other"
 )
-
-type EmployeeSignup struct {
-	Email          string `json:"email" validate:"required,email"`
-	PhoneNumber    string `json:"phone_number" validate:"required,e164"`
-	Password       string `json:"password" validate:"required,min=8"`
-	VeterinarianId int32  `json:"veterinarian_id" validate:"required"`
-}
-
-type EmployeeLogin struct {
-	VeterinarianId *int32 `json:"veterinarian_id"`
-	Email          string `json:"email"`
-	PhoneNumber    string `json:"phone_number"`
-	Password       string `json:"password" validate:"required"`
-}
