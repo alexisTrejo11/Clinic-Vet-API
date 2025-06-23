@@ -30,15 +30,22 @@ func AuditLog() gin.HandlerFunc {
 
 		var requestBody bytes.Buffer
 		if c.Request.Body != nil {
-			body, _ := io.ReadAll(c.Request.Body)
+			body, err := io.ReadAll(c.Request.Body)
+			if err != nil {
+				config.AppLogger.Error("Error reading request body", zap.Error(err))
+				c.AbortWithStatusJSON(400, gin.H{"error": "Invalid request body"})
+				return
+			}
+
 			requestBody.Write(body)
+
+			c.Request.Body = io.NopCloser(bytes.NewBuffer(body))
 		}
 
 		blw := &bodyLogWriter{
 			ResponseWriter: c.Writer,
 			body:           bytes.NewBufferString(""),
 		}
-
 		c.Writer = blw
 
 		c.Next()

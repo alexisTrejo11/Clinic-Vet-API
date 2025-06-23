@@ -2,6 +2,7 @@ package petController
 
 import (
 	"context"
+	"fmt"
 
 	petDTOs "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application/dtos"
 	petUsecase "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application/usecase"
@@ -69,6 +70,7 @@ func (c *PetController) CreatePet(ctx *gin.Context) {
 	var petCreate petDTOs.PetCreate
 
 	if err := ctx.ShouldBindBodyWithJSON(&petCreate); err != nil {
+		fmt.Println(petCreate)
 		apiResponse.RequestBodyDataError(ctx, err)
 		return
 	}

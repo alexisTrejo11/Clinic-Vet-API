@@ -68,14 +68,16 @@ func (r *SqlcPetRepository) GetById(ctx context.Context, petId uint) (petDomain.
 
 	return domainPet, nil
 }
+
 func (r *SqlcPetRepository) Save(ctx context.Context, pet *petDomain.Pet) error {
+	fmt.Println(pet.ID)
 	if pet.ID == 0 {
 		if err := r.create(ctx, pet); err != nil {
 			return DBCreateError(err.Error())
 		}
 		return nil
 	}
-
+	fmt.Println("A")
 	if err := r.update(ctx, pet); err != nil {
 		return DBUpdateError(err.Error())
 	}

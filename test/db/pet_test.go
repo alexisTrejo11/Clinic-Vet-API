@@ -149,6 +149,45 @@ func TestCreatePet(t *testing.T) {
 	})
 }
 
+func TestUpdatePet(t *testing.T) {
+	owner := createRandomOwner(t)
+	owner2 := createRandomOwner(t)
+	defer deleteTestOwner(t, owner.ID)
+
+	t.Run("UpdatePetWithRequiredFields", func(t *testing.T) {
+		// Arrange
+		created_pet := createRandomPetWithParams(t, owner.ID, sqlc.CreatePetParams{
+			Name:     "Required Fields Only",
+			Species:  "Cat",
+			OwnerID:  owner.ID,
+			IsActive: true,
+		})
+		defer deleteTestPet(t, created_pet.ID)
+
+		update_arg := sqlc.UpdatePetParams{
+			ID:       created_pet.ID,
+			Name:     "Required Update Fields Only",
+			Species:  "Dog",
+			OwnerID:  owner2.ID,
+			IsActive: false,
+		}
+
+		// Act
+		err := testQueries.UpdatePet(context.Background(), update_arg)
+		require.NoError(t, err)
+
+		updated_pet, err := testQueries.GetPetByID(context.Background(), created_pet.ID)
+		require.NoError(t, err)
+
+		// Asert
+		require.Equal(t, updated_pet.Name, update_arg.Name)
+		require.Equal(t, updated_pet.Species, update_arg.Species)
+		require.Equal(t, updated_pet.OwnerID, update_arg.OwnerID)
+		require.Equal(t, updated_pet.IsActive, update_arg.IsActive)
+	})
+
+}
+
 func TestGetPetByID(t *testing.T) {
 	owner := createRandomOwner(t)
 	defer deleteTestOwner(t, owner.ID)

@@ -102,6 +102,7 @@ func ToSqlCreateParam(pet petDomain.Pet) *sqlc.CreatePetParams {
 
 func ToSqlUpdateParam(pet petDomain.Pet) *sqlc.UpdatePetParams {
 	return &sqlc.UpdatePetParams{
+		ID:                 int32(pet.ID),
 		Name:               pet.Name,
 		Photo:              toPgTypeText(pet.Photo),
 		Species:            pet.Species,
