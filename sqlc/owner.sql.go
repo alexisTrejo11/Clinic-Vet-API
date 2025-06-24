@@ -12,46 +12,81 @@ import (
 )
 
 const createOwner = `-- name: CreateOwner :one
-INSERT INTO owners (photo, name, last_name, user_id, birthday, genre, created_at, updated_at)
-VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-RETURNING id, photo, name, last_name, user_id, birthday, genre, created_at, updated_at
+INSERT INTO owners (
+    id, photo, firstName, lastName, phoneNumber, gender, address, user_id, isActive, date_of_birth, created_at, updated_at
+) VALUES (
+    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+)
+RETURNING id, photo, firstName, lastName, phoneNumber, gender, address, user_id, isActive, date_of_birth, created_at, updated_at, deleted_at
 `
 
 type CreateOwnerParams struct {
-	Photo    pgtype.Text
-	Name     string
-	LastName string
-	UserID   pgtype.Int4
-	Birthday pgtype.Date
-	Genre    pgtype.Text
+	ID          int32
+	Photo       string
+	Firstname   string
+	Lastname    string
+	Phonenumber string
+	Gender      PersonGender
+	Address     pgtype.Text
+	UserID      pgtype.Int4
+	Isactive    bool
+	DateOfBirth pgtype.Date
 }
 
-func (q *Queries) CreateOwner(ctx context.Context, arg CreateOwnerParams) (Owner, error) {
+type CreateOwnerRow struct {
+	ID          int32
+	Photo       string
+	Firstname   string
+	Lastname    string
+	Phonenumber string
+	Gender      PersonGender
+	Address     pgtype.Text
+	UserID      pgtype.Int4
+	Isactive    bool
+	DateOfBirth pgtype.Date
+	CreatedAt   pgtype.Timestamp
+	UpdatedAt   pgtype.Timestamp
+	DeletedAt   pgtype.Timestamp
+}
+
+func (q *Queries) CreateOwner(ctx context.Context, arg CreateOwnerParams) (CreateOwnerRow, error) {
 	row := q.db.QueryRow(ctx, createOwner,
+		arg.ID,
 		arg.Photo,
-		arg.Name,
-		arg.LastName,
+		arg.Firstname,
+		arg.Lastname,
+		arg.Phonenumber,
+		arg.Gender,
+		arg.Address,
 		arg.UserID,
-		arg.Birthday,
-		arg.Genre,
+		arg.Isactive,
+		arg.DateOfBirth,
 	)
-	var i Owner
+	var i CreateOwnerRow
 	err := row.Scan(
 		&i.ID,
 		&i.Photo,
-		&i.Name,
-		&i.LastName,
+		&i.Firstname,
+		&i.Lastname,
+		&i.Phonenumber,
+		&i.Gender,
+		&i.Address,
 		&i.UserID,
-		&i.Birthday,
-		&i.Genre,
+		&i.Isactive,
+		&i.DateOfBirth,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.DeletedAt,
 	)
 	return i, err
 }
 
 const deleteOwner = `-- name: DeleteOwner :exec
-DELETE FROM owners
+UPDATE owners
+SET 
+    isActive = FALSE,
+    deleted_at = CURRENT_TIMESTAMP,
+    updated_at = CURRENT_TIMESTAMP
 WHERE id = $1
 `
 
@@ -61,76 +96,137 @@ func (q *Queries) DeleteOwner(ctx context.Context, id int32) error {
 }
 
 const getOwnerByID = `-- name: GetOwnerByID :one
-SELECT id, photo, name, last_name, user_id, birthday, genre, created_at, updated_at
+SELECT id, photo, firstName, lastName, phoneNumber, gender, address, user_id, isActive, date_of_birth, created_at, updated_at, deleted_at
 FROM owners
-WHERE id = $1
+WHERE id = $1 AND deleted_at IS NULL
 `
 
-func (q *Queries) GetOwnerByID(ctx context.Context, id int32) (Owner, error) {
+type GetOwnerByIDRow struct {
+	ID          int32
+	Photo       string
+	Firstname   string
+	Lastname    string
+	Phonenumber string
+	Gender      PersonGender
+	Address     pgtype.Text
+	UserID      pgtype.Int4
+	Isactive    bool
+	DateOfBirth pgtype.Date
+	CreatedAt   pgtype.Timestamp
+	UpdatedAt   pgtype.Timestamp
+	DeletedAt   pgtype.Timestamp
+}
+
+func (q *Queries) GetOwnerByID(ctx context.Context, id int32) (GetOwnerByIDRow, error) {
 	row := q.db.QueryRow(ctx, getOwnerByID, id)
-	var i Owner
+	var i GetOwnerByIDRow
 	err := row.Scan(
 		&i.ID,
 		&i.Photo,
-		&i.Name,
-		&i.LastName,
+		&i.Firstname,
+		&i.Lastname,
+		&i.Phonenumber,
+		&i.Gender,
+		&i.Address,
 		&i.UserID,
-		&i.Birthday,
-		&i.Genre,
+		&i.Isactive,
+		&i.DateOfBirth,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.DeletedAt,
 	)
 	return i, err
 }
 
 const getOwnerByUserID = `-- name: GetOwnerByUserID :one
-SELECT id, photo, name, last_name, user_id, birthday, genre, created_at, updated_at
+SELECT id, photo, firstName, lastName, phoneNumber, gender, address, user_id, isActive, date_of_birth, created_at, updated_at, deleted_at
 FROM owners
-WHERE user_id = $1
+WHERE user_id = $1 AND deleted_at IS NULL
 `
 
-func (q *Queries) GetOwnerByUserID(ctx context.Context, userID pgtype.Int4) (Owner, error) {
+type GetOwnerByUserIDRow struct {
+	ID          int32
+	Photo       string
+	Firstname   string
+	Lastname    string
+	Phonenumber string
+	Gender      PersonGender
+	Address     pgtype.Text
+	UserID      pgtype.Int4
+	Isactive    bool
+	DateOfBirth pgtype.Date
+	CreatedAt   pgtype.Timestamp
+	UpdatedAt   pgtype.Timestamp
+	DeletedAt   pgtype.Timestamp
+}
+
+func (q *Queries) GetOwnerByUserID(ctx context.Context, userID pgtype.Int4) (GetOwnerByUserIDRow, error) {
 	row := q.db.QueryRow(ctx, getOwnerByUserID, userID)
-	var i Owner
+	var i GetOwnerByUserIDRow
 	err := row.Scan(
 		&i.ID,
 		&i.Photo,
-		&i.Name,
-		&i.LastName,
+		&i.Firstname,
+		&i.Lastname,
+		&i.Phonenumber,
+		&i.Gender,
+		&i.Address,
 		&i.UserID,
-		&i.Birthday,
-		&i.Genre,
+		&i.Isactive,
+		&i.DateOfBirth,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.DeletedAt,
 	)
 	return i, err
 }
 
 const listOwners = `-- name: ListOwners :many
-SELECT id, photo, name, last_name, user_id, birthday, genre, created_at, updated_at
+SELECT id, photo, firstName, lastName, phoneNumber, gender, address, user_id, isActive, date_of_birth, created_at, updated_at, deleted_at
 FROM owners
+WHERE deleted_at IS NULL
 ORDER BY id
 `
 
-func (q *Queries) ListOwners(ctx context.Context) ([]Owner, error) {
+type ListOwnersRow struct {
+	ID          int32
+	Photo       string
+	Firstname   string
+	Lastname    string
+	Phonenumber string
+	Gender      PersonGender
+	Address     pgtype.Text
+	UserID      pgtype.Int4
+	Isactive    bool
+	DateOfBirth pgtype.Date
+	CreatedAt   pgtype.Timestamp
+	UpdatedAt   pgtype.Timestamp
+	DeletedAt   pgtype.Timestamp
+}
+
+func (q *Queries) ListOwners(ctx context.Context) ([]ListOwnersRow, error) {
 	rows, err := q.db.Query(ctx, listOwners)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Owner
+	var items []ListOwnersRow
 	for rows.Next() {
-		var i Owner
+		var i ListOwnersRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.Photo,
-			&i.Name,
-			&i.LastName,
+			&i.Firstname,
+			&i.Lastname,
+			&i.Phonenumber,
+			&i.Gender,
+			&i.Address,
 			&i.UserID,
-			&i.Birthday,
-			&i.Genre,
+			&i.Isactive,
+			&i.DateOfBirth,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.DeletedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -144,29 +240,45 @@ func (q *Queries) ListOwners(ctx context.Context) ([]Owner, error) {
 
 const updateOwner = `-- name: UpdateOwner :exec
 UPDATE owners
-SET photo = $2, name = $3, last_name = $4, user_id = $5, birthday = $6, genre = $7, updated_at = CURRENT_TIMESTAMP
-WHERE id = $1
+SET 
+    photo = $2, 
+    firstName = $3, 
+    lastName = $4, 
+    phoneNumber = $5, 
+    gender = $6, 
+    address = $7, 
+    user_id = $8, 
+    isActive = $9, 
+    date_of_birth = $10,
+    updated_at = CURRENT_TIMESTAMP
+WHERE id = $1 AND deleted_at IS NULL
 `
 
 type UpdateOwnerParams struct {
-	ID       int32
-	Photo    pgtype.Text
-	Name     string
-	LastName string
-	UserID   pgtype.Int4
-	Birthday pgtype.Date
-	Genre    pgtype.Text
+	ID          int32
+	Photo       string
+	Firstname   string
+	Lastname    string
+	Phonenumber string
+	Gender      PersonGender
+	Address     pgtype.Text
+	UserID      pgtype.Int4
+	Isactive    bool
+	DateOfBirth pgtype.Date
 }
 
 func (q *Queries) UpdateOwner(ctx context.Context, arg UpdateOwnerParams) error {
 	_, err := q.db.Exec(ctx, updateOwner,
 		arg.ID,
 		arg.Photo,
-		arg.Name,
-		arg.LastName,
+		arg.Firstname,
+		arg.Lastname,
+		arg.Phonenumber,
+		arg.Gender,
+		arg.Address,
 		arg.UserID,
-		arg.Birthday,
-		arg.Genre,
+		arg.Isactive,
+		arg.DateOfBirth,
 	)
 	return err
 }

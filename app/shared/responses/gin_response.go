@@ -95,6 +95,17 @@ func RequestURLParamError(ctx *gin.Context, err error, field string, value strin
 	BadRequest(ctx, bodyErro)
 }
 
+func RequestURLQueryError(ctx *gin.Context, err error) {
+	bodyErro := appError.BaseApplicationError{
+		Code:       "INVALID_URL_PARAM",
+		Type:       "ROUTING",
+		Message:    err.Error(),
+		Data:       map[string]interface{}{},
+		StatusCode: 400,
+	}
+	BadRequest(ctx, bodyErro)
+}
+
 func RequestBodyDataError(ctx *gin.Context, err error) {
 	bodyErro := appError.BaseApplicationError{
 		Code:       "REQUEST_BODY_ERROR",

@@ -1,0 +1,27 @@
+package ownerUsecase
+
+import (
+	"context"
+
+	ownerAppErr "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/application"
+	ownerRepository "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/application/repository"
+)
+
+type DeleteOwnerUseCase struct {
+	ownerRepo ownerRepository.OwnerRepository
+}
+
+func NewDeleteOwnerUseCase(ownerRepo ownerRepository.OwnerRepository) *DeleteOwnerUseCase {
+	return &DeleteOwnerUseCase{
+		ownerRepo: ownerRepo,
+	}
+}
+
+func (uc *DeleteOwnerUseCase) Execute(ctx context.Context, id uint) error {
+	_, err := uc.ownerRepo.GetByID(ctx, id)
+	if err != nil {
+		return ownerAppErr.HandleGetByIdError(err, id)
+	}
+
+	return nil
+}

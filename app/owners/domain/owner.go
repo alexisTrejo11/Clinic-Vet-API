@@ -1,15 +1,22 @@
 package ownerDomain
 
-import "time"
+import (
+	"time"
+
+	petDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/domain"
+	userEnums "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain/enum"
+	userValueObjects "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain/valueobjects"
+)
 
 type Owner struct {
-	ID        int        `json:"id" db:"id"`
-	Photo     *string    `json:"photo,omitempty" db:"photo"` // Opcional
-	Name      string     `json:"name" db:"name"`
-	LastName  string     `json:"last_name" db:"last_name"`
-	UserID    *int       `json:"user_id,omitempty" db:"user_id"`   // Opcional, FK a users.id
-	Birthday  *time.Time `json:"birthday,omitempty" db:"birthday"` // Opcional
-	Genre     *string    `json:"genre,omitempty" db:"genre"`       // Opcional, "male", "female", "other"
-	CreatedAt time.Time  `json:"created_at" db:"created_at"`
-	UpdatedAt time.Time  `json:"updated_at" db:"updated_at"`
+	Id          uint
+	Photo       string
+	FullName    userValueObjects.PersonName
+	Gender      userEnums.Gender
+	DateOfBirth time.Time
+	PhoneNumber string
+	Address     *string
+	UserId      *uint
+	IsActive    bool
+	Pets        []petDomain.Pet
 }

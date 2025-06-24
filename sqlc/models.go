@@ -5,19 +5,69 @@
 package sqlc
 
 import (
+	"database/sql/driver"
+	"fmt"
+
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type PersonGender string
+
+const (
+	PersonGenderMale         PersonGender = "male"
+	PersonGenderFemale       PersonGender = "female"
+	PersonGenderNotSpecified PersonGender = "not_specified"
+)
+
+func (e *PersonGender) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = PersonGender(s)
+	case string:
+		*e = PersonGender(s)
+	default:
+		return fmt.Errorf("unsupported scan type for PersonGender: %T", src)
+	}
+	return nil
+}
+
+type NullPersonGender struct {
+	PersonGender PersonGender
+	Valid        bool // Valid is true if PersonGender is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullPersonGender) Scan(value interface{}) error {
+	if value == nil {
+		ns.PersonGender, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.PersonGender.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullPersonGender) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.PersonGender), nil
+}
+
 type Owner struct {
-	ID        int32
-	Photo     pgtype.Text
-	Name      string
-	LastName  string
-	UserID    pgtype.Int4
-	Birthday  pgtype.Date
-	Genre     pgtype.Text
-	CreatedAt pgtype.Timestamp
-	UpdatedAt pgtype.Timestamp
+	ID          int32
+	Firstname   string
+	Lastname    string
+	Photo       string
+	Phonenumber string
+	DateOfBirth pgtype.Date
+	Gender      PersonGender
+	Address     pgtype.Text
+	UserID      pgtype.Int4
+	Isactive    bool
+	CreatedAt   pgtype.Timestamp
+	UpdatedAt   pgtype.Timestamp
+	DeletedAt   pgtype.Timestamp
 }
 
 type Pet struct {

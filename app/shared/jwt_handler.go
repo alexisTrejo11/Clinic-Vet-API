@@ -1,4 +1,4 @@
-package utils
+package shared
 
 /*
 var JWTSecret = []byte("your_secret_key")

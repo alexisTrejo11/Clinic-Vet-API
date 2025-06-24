@@ -11,21 +11,21 @@ import (
 )
 
 // TODO: FIX TO MAKE PGTYPES NULLABLES
-func createRandomOwner(t *testing.T) sqlc.Owner {
+func createRandomOwner(t *testing.T) sqlc.CreateOwnerRow {
 	arg := sqlc.CreateOwnerParams{
-		Name:     randomString(10),
-		LastName: randomString(10),
-		UserID:   pgtype.Int4{Int32: int32(randomInt(1, 1000)), Valid: true},
-		Birthday: pgtype.Date{Time: time.Now().AddDate(-30, 0, 0), Valid: true},
-		Genre:    pgtype.Text{String: "male", Valid: true},
+		Firstname:   randomString(10),
+		Lastname:    randomString(10),
+		UserID:      pgtype.Int4{Int32: int32(randomInt(1, 1000)), Valid: true},
+		DateOfBirth: pgtype.Date{Time: time.Now().AddDate(-30, 0, 0), Valid: true},
+		Gender:      sqlc.PersonGenderFemale,
 	}
 
 	owner, err := testQueries.CreateOwner(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, owner)
 
-	require.Equal(t, arg.Name, owner.Name)
-	require.Equal(t, arg.LastName, owner.LastName)
+	require.Equal(t, arg.Firstname, owner.Firstname)
+	require.Equal(t, arg.Lastname, owner.Lastname)
 	require.Equal(t, arg.UserID, owner.UserID)
 
 	require.NotZero(t, owner.ID)
@@ -45,12 +45,12 @@ func TestCreateOwner(t *testing.T) {
 
 	t.Run("CreateOwnerWithAllFields", func(t *testing.T) {
 		arg := sqlc.CreateOwnerParams{
-			Photo:    pgtype.Text{String: "photo.jpg", Valid: true},
-			Name:     "Test",
-			LastName: "Owner",
-			UserID:   pgtype.Int4{Int32: 123, Valid: true},
-			Birthday: pgtype.Date{Time: time.Date(1990, 1, 1, 0, 0, 0, 0, time.UTC), Valid: true},
-			Genre:    pgtype.Text{String: "female", Valid: true},
+			Photo:       "test-foto.com",
+			Firstname:   "Test",
+			Lastname:    "Owner",
+			UserID:      pgtype.Int4{Int32: 123, Valid: true},
+			DateOfBirth: pgtype.Date{Time: time.Date(1990, 1, 1, 0, 0, 0, 0, time.UTC), Valid: true},
+			Gender:      sqlc.PersonGenderMale,
 		}
 
 		owner, err := testQueries.CreateOwner(context.Background(), arg)
@@ -58,8 +58,8 @@ func TestCreateOwner(t *testing.T) {
 		defer deleteTestOwner(t, owner.ID)
 
 		require.Equal(t, arg.Photo, owner.Photo)
-		require.Equal(t, arg.Birthday, owner.Birthday)
-		require.Equal(t, arg.Genre, owner.Genre)
+		require.Equal(t, arg.DateOfBirth, owner.DateOfBirth)
+		require.Equal(t, arg.Gender, owner.Gender)
 	})
 }
 

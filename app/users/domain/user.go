@@ -9,7 +9,6 @@ import (
 
 type User struct {
 	ID          uint
-	Name        valueObjects.PersonName
 	Email       valueObjects.Email
 	PhoneNumber valueObjects.PhoneNumber
 	Password    string

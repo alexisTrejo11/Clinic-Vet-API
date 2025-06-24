@@ -1,206 +1,128 @@
-package controller
+package ownerController
 
-/*
 import (
-	dtos "example.com/at/backend/api-vet/DTOs"
-	"example.com/at/backend/api-vet/services"
-	"example.com/at/backend/api-vet/utils"
-	"example.com/at/backend/api-vet/utils/responses"
+	"context"
+
+	ownerDTOs "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/application/dtos"
+	ownerUsecase "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/application/usecase"
+	utils "github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
+	apiResponse "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/responses"
+	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
-	"github.com/gofiber/fiber/v2"
-	"github.com/sirupsen/logrus"
 )
 
 type OwnerController struct {
-	ownerService services.OwnerService
-	validator    *validator.Validate
-	logger       *logrus.Logger
+	validator     *validator.Validate
+	ownerUseCases ownerUsecase.OwnerUseCases
 }
 
-func NewOwnerController(ownerService services.OwnerService) *OwnerController {
+func NewOwnerController(
+	validator *validator.Validate,
+	ownerUseCases ownerUsecase.OwnerUseCases,
+) *OwnerController {
 	return &OwnerController{
-		ownerService: ownerService,
-		validator:    validator.New(),
-		logger:       logrus.New(),
+		validator:     validator,
+		ownerUseCases: ownerUseCases,
 	}
 }
 
-// CreateOwner godoc
-// @Summary Create a new owner
-// @Description Create a new owner with the input payload
-// @Tags owners
-// @Accept  json
-// @Produce  json
-// @Param owner body dtos.OwnerInsertDTO true "Owner to create"
-// @Success 201 {object} responses.SuccessResponse
-// @Failure 400 {object} responses.ErrorResponse
-// @Failure 500 {object} responses.ErrorResponse
-// @Router /owners [post]
-func (oc *OwnerController) CreateOwner() fiber.Handler {
-	return func(c *fiber.Ctx) error {
-		var owner dtos.OwnerInsertDTO
+func (c *OwnerController) ListOwners(ctx *gin.Context) {
+	limit := ctx.Query("limit")
+	offset := ctx.Query("offset")
+	status := ctx.Query("status")
+	include_pets := ctx.Query("include_pets")
 
-		if err := c.BodyParser(&owner); err != nil {
-			return c.Status(fiber.StatusBadRequest).JSON(responses.ErrorResponse{
-				Message: "Invalid JSON payload",
-			})
-		}
-
-		if err := oc.validator.Struct(owner); err != nil {
-			return c.Status(fiber.StatusBadRequest).JSON(responses.ErrorResponse{
-				Message: "Validation failed",
-				Error:   err.Error(),
-			})
-		}
-
-		if err := oc.ownerService.CreateOwner(&owner); err != nil {
-			return c.Status(fiber.StatusInternalServerError).JSON(responses.ErrorResponse{
-				Message: "Cannot create owner",
-			})
-		}
-
-		return c.Status(fiber.StatusCreated).JSON(responses.SuccessResponse{
-			Message: "Owner created successfully",
-		})
+	searchParams, err := ownerDTOs.NewOwnerSearch(limit, offset, status, include_pets)
+	if err != nil {
+		apiResponse.RequestURLQueryError(ctx, err)
+		return
 	}
+
+	owners, err := c.ownerUseCases.ListOwners(context.TODO(), *searchParams)
+	if err != nil {
+		apiResponse.AppError(ctx, err)
+		return
+	}
+
+	apiResponse.Ok(ctx, owners)
 }
 
-// GetOwnerById godoc
-// @Summary Get an owner by ID
-// @Description Get an owner by their ID
-// @Tags owners
-// @Accept  json
-// @Produce  json
-// @Param id path int true "Owner ID"
-// @Success 200 {object} dtos.OwnerReturnDTO
-// @Failure 400 {object} responses.ErrorResponse
-// @Failure 404 {object} responses.ErrorResponse
-// @Router /owners/{id} [get]
-func (oc *OwnerController) GetOwnerById() fiber.Handler {
-	return func(c *fiber.Ctx) error {
-		ownerID, err := utils.ParseID(c)
-		if err != nil {
-			return c.Status(fiber.StatusBadRequest).JSON(responses.ErrorResponse{
-				Message: "Invalid ID",
-			})
-		}
-
-		ownerDTO, err := oc.ownerService.GetOwnerById(ownerID)
-		if err != nil {
-			return c.Status(fiber.StatusNotFound).JSON(responses.ErrorResponse{
-				Message: "Owner not found",
-			})
-		}
-
-		return c.Status(fiber.StatusOK).JSON(ownerDTO)
+func (c *OwnerController) GetOwnerById(ctx *gin.Context) {
+	id, err := utils.ParseID(ctx, "id")
+	if err != nil {
+		apiResponse.RequestURLParamError(ctx, err, "owner_id", ctx.Param("id"))
+		return
 	}
+
+	owner, err := c.ownerUseCases.GetOwnerById(context.TODO(), id, true)
+	if err != nil {
+		apiResponse.AppError(ctx, err)
+		return
+	}
+
+	apiResponse.Ok(ctx, owner)
 }
 
-// UpdateOwner godoc
-// @Summary Update an owner
-// @Description Update an owner with the input payload
-// @Tags owners
-// @Accept  json
-// @Produce  json
-// @Param owner body dtos.OwnerUpdateDTO true "Owner to update"
-// @Success 200 {object} responses.SuccessResponse
-// @Failure 400 {object} responses.ErrorResponse
-// @Failure 404 {object} responses.ErrorResponse
-// @Failure 500 {object} responses.ErrorResponse
-// @Router /owners [put]
-func (oc *OwnerController) UpdateOwner() fiber.Handler {
-	return func(c *fiber.Ctx) error {
-		var ownerUpdateDTO dtos.OwnerUpdateDTO
+func (c *OwnerController) CreateOwner(ctx *gin.Context) {
+	var ownerCreate ownerDTOs.OwnerCreate
 
-		if err := c.BodyParser(&ownerUpdateDTO); err != nil {
-			oc.logger.WithFields(logrus.Fields{"error": err.Error()}).Error("Failed to parse request body for update")
-
-			return c.Status(fiber.StatusBadRequest).JSON(responses.ErrorResponse{
-				Message: "Invalid JSON payload",
-			})
-		}
-
-		if err := oc.validator.Struct(ownerUpdateDTO); err != nil {
-			oc.logger.WithFields(logrus.Fields{"error": err.Error()}).Error("Validation failed for owner update")
-
-			return c.Status(fiber.StatusBadRequest).JSON(responses.ErrorResponse{
-				Message: "Validation failed",
-				Error:   "Id is obligatory",
-			})
-		}
-
-		isOwnerExists := oc.ownerService.ValidateExistingOwner(ownerUpdateDTO.Id)
-		if !isOwnerExists {
-			oc.logger.WithFields(logrus.Fields{"id": ownerUpdateDTO.Id}).Warn("Owner does not exist")
-
-			return c.Status(fiber.StatusNotFound).JSON(responses.ErrorResponse{
-				Message: "Owner Doesn't Exist",
-			})
-		}
-
-		if err := oc.ownerService.UpdateOwner(&ownerUpdateDTO); err != nil {
-			oc.logger.WithFields(logrus.Fields{"id": ownerUpdateDTO.Id, "error": err.Error()}).Error("Failed to update owner")
-
-			return c.Status(fiber.StatusInternalServerError).JSON(responses.ErrorResponse{
-				Message: "Server Error",
-			})
-		}
-
-		oc.logger.WithFields(logrus.Fields{
-			"id": ownerUpdateDTO.Id,
-		}).Info("Owner successfully updated")
-
-		return c.Status(fiber.StatusOK).JSON(responses.SuccessResponse{
-			Message: "Owner successfully updated",
-		})
+	if err := ctx.ShouldBindBodyWithJSON(&ownerCreate); err != nil {
+		apiResponse.RequestBodyDataError(ctx, err)
+		return
 	}
+
+	if err := c.validator.Struct(&ownerCreate); err != nil {
+		apiResponse.RequestBodyDataError(ctx, err)
+		return
+	}
+
+	owner, err := c.ownerUseCases.CreateOwner(context.TODO(), ownerCreate)
+	if err != nil {
+		apiResponse.AppError(ctx, err)
+		return
+	}
+
+	apiResponse.Created(ctx, owner)
 }
 
-// DeleteOwner godoc
-// @Summary Delete an owner
-// @Description Delete an owner by ID
-// @Tags owners
-// @Accept  json
-// @Produce  json
-// @Param id path int true "Owner ID"
-// @Success 200 {object} responses.SuccessResponse
-// @Failure 400 {object} responses.ErrorResponse
-// @Failure 404 {object} responses.ErrorResponse
-// @Failure 500 {object} responses.ErrorResponse
-// @Router /owners/{id} [delete]
-func (oc *OwnerController) DeleteOwner() fiber.Handler {
-	return func(c *fiber.Ctx) error {
-		ownerID, err := utils.ParseID(c)
-		if err != nil {
-			oc.logger.WithFields(logrus.Fields{"error": err.Error()}).Error("Failed to parse owner ID for deletion")
-
-			return c.Status(fiber.StatusBadRequest).JSON(responses.ErrorResponse{
-				Message: "Invalid ID",
-			})
-		}
-
-		isOwnerExists := oc.ownerService.ValidateExistingOwner(ownerID)
-		if !isOwnerExists {
-			oc.logger.WithFields(logrus.Fields{"id": ownerID}).Warn("Owner does not exist")
-
-			return c.Status(fiber.StatusNotFound).JSON(responses.ErrorResponse{
-				Message: "Owner Doesn't Exist",
-			})
-		}
-
-		if err := oc.ownerService.DeleteOwner(ownerID); err != nil {
-			oc.logger.WithFields(logrus.Fields{"id": ownerID, "error": err.Error()}).Error("Failed to delete owner")
-
-			return c.Status(fiber.StatusInternalServerError).JSON(responses.ErrorResponse{
-				Message: "Server Error",
-			})
-		}
-
-		oc.logger.WithFields(logrus.Fields{"id": ownerID}).Info("Owner successfully deleted")
-
-		return c.Status(fiber.StatusOK).JSON(responses.SuccessResponse{
-			Message: "Owner successfully deleted",
-		})
+func (c *OwnerController) UpdateOwner(ctx *gin.Context) {
+	id, err := utils.ParseID(ctx, "id")
+	if err != nil {
+		apiResponse.RequestURLParamError(ctx, err, "Owner_id", ctx.Param("id"))
+		return
 	}
+
+	var OwnerCreate ownerDTOs.OwnerUpdate
+	if err := ctx.ShouldBindBodyWithJSON(&OwnerCreate); err != nil {
+		apiResponse.RequestBodyDataError(ctx, err)
+		return
+	}
+
+	if err := c.validator.Struct(&OwnerCreate); err != nil {
+		apiResponse.RequestBodyDataError(ctx, err)
+		return
+	}
+
+	Owner, err := c.ownerUseCases.UpdateOwner(context.TODO(), id, OwnerCreate)
+	if err != nil {
+		apiResponse.AppError(ctx, err)
+		return
+	}
+
+	apiResponse.Ok(ctx, Owner)
 }
-*/
+
+func (c *OwnerController) DeleteOwner(ctx *gin.Context) {
+	id, err := utils.ParseID(ctx, "id")
+	if err != nil {
+		apiResponse.RequestURLParamError(ctx, err, "owner_id", ctx.Param("id"))
+		return
+	}
+
+	if err := c.ownerUseCases.DeleteOwner(context.TODO(), id); err != nil {
+		apiResponse.AppError(ctx, err)
+		return
+	}
+
+	apiResponse.NoContent(ctx)
+}

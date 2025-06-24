@@ -5,6 +5,10 @@ import (
 	"log"
 	"os"
 
+	ownerUsecase "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/application/usecase"
+	ownerController "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/infrastructure/api/controller"
+	ownerRoutes "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/infrastructure/api/routes"
+	sqlcOwnerRepository "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/infrastructure/persistence"
 	petUsecase "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application/usecase"
 	petController "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/infrastructure/api/controller"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/pets/infrastructure/api/routes"
@@ -40,14 +44,32 @@ func main() {
 
 	queries := sqlc.New(dbConn)
 
+	// Repository
 	petRepo := sqlcPetRepository.NewSqlcPetRepository(queries)
+	ownerRepo := sqlcOwnerRepository.NewSlqcOwnerRepository(queries)
+
+	// Owner UseCase
+	getOwnerUseCase := ownerUsecase.NewGetOwnerByIdUseCase(ownerRepo)
+	listOwnerUseCase := ownerUsecase.NewListOwnersUseCase(ownerRepo)
+	createOwnerUseCase := ownerUsecase.NewCreateOwnerUseCase(ownerRepo)
+	updateOwnerUseCase := ownerUsecase.NewUpdateOwnerUseCase(ownerRepo)
+	deleteOwnerUseCase := ownerUsecase.NewDeleteOwnerUseCase(ownerRepo)
+
+	ownerUCContainer := ownerUsecase.NewOwnerUseCases(getOwnerUseCase, listOwnerUseCase, createOwnerUseCase, updateOwnerUseCase, deleteOwnerUseCase)
+
+	// Pet UseCase
 	getPetUseCase := petUsecase.NewGetPetByIdUseCase(petRepo)
 	listPetsUseCase := petUsecase.NewListPetsUseCase(petRepo)
-	createPetsUseCase := petUsecase.NewCreatePetUseCase(petRepo, nil) // TO Be IMPL
-	updatePetsUseCase := petUsecase.NewUpdatePetUseCase(petRepo, nil)
+	createPetsUseCase := petUsecase.NewCreatePetUseCase(petRepo, ownerRepo)
+	updatePetsUseCase := petUsecase.NewUpdatePetUseCase(petRepo, ownerRepo)
 	deletePetsUseCase := petUsecase.NewDeletePetUseCase(petRepo)
+
+	// Pet Controller
 	petController := petController.NewPetController(validator.New(), getPetUseCase, listPetsUseCase, createPetsUseCase, updatePetsUseCase, deletePetsUseCase)
+	ownerController := ownerController.NewOwnerController(validator.New(), ownerUCContainer)
 
 	routes.PetsRoutes(router, petController)
+	ownerRoutes.OwnerRoutes(router, ownerController)
+
 	router.Run()
 }

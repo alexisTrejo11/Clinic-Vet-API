@@ -16,3 +16,11 @@ func (r UserRole) IsValid() bool {
 	}
 	return false
 }
+
+type Gender string
+
+const (
+	MALE         Gender = "male"
+	Female       Gender = "female"
+	NotSpecified Gender = "not_specified"
+)

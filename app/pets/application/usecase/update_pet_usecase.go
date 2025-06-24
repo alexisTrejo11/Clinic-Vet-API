@@ -3,7 +3,7 @@ package petUsecase
 import (
 	"context"
 
-	ownerRepository "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/application/repositories"
+	ownerRepository "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/application/repository"
 	petAppError "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application"
 	petDTOs "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application/dtos"
 	petMapper "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application/mapper"
@@ -43,13 +43,11 @@ func (uc UpdatePetUseCase) Execute(ctx context.Context, petId uint, petUpdate pe
 }
 
 func (uc UpdatePetUseCase) validate_owner(ctx context.Context, owner_id uint) error {
-	exists, err := uc.ownerRepository.Exists(ctx, owner_id)
+	_, err := uc.ownerRepository.GetByID(ctx, owner_id)
 	if err != nil {
-		return err
-	}
-	if !exists {
-		notFounderr := petAppError.OwnerNotFoundError(owner_id)
+		notFounderr := petAppError.HandleGetByIdError(err, owner_id)
 		return notFounderr
 	}
+
 	return nil
 }

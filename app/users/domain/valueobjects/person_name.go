@@ -7,8 +7,8 @@ import (
 )
 
 type PersonName struct {
-	firstName string
-	lastName  string
+	FirstName string
+	LastName  string
 }
 
 func NewPersonName(firstName, lastName string) (PersonName, error) {
@@ -24,19 +24,11 @@ func NewPersonName(firstName, lastName string) (PersonName, error) {
 	}
 
 	return PersonName{
-		firstName: firstName,
-		lastName:  lastName,
+		FirstName: firstName,
+		LastName:  lastName,
 	}, nil
 }
 
-func (n PersonName) FirstName() string {
-	return n.firstName
-}
-
-func (n PersonName) LastName() string {
-	return n.lastName
-}
-
 func (n PersonName) FullName() string {
-	return fmt.Sprintf("%s %s", n.firstName, n.lastName)
+	return fmt.Sprintf("%s %s", n.FirstName, n.LastName)
 }

@@ -77,7 +77,7 @@ func (r *SqlcPetRepository) Save(ctx context.Context, pet *petDomain.Pet) error 
 		}
 		return nil
 	}
-	fmt.Println("A")
+
 	if err := r.update(ctx, pet); err != nil {
 		return DBUpdateError(err.Error())
 	}
