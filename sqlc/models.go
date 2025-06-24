@@ -56,15 +56,15 @@ func (ns NullPersonGender) Value() (driver.Value, error) {
 
 type Owner struct {
 	ID          int32
-	Firstname   string
-	Lastname    string
+	FirstName   string
+	LastName    string
 	Photo       string
-	Phonenumber string
+	PhoneNumber string
 	DateOfBirth pgtype.Date
 	Gender      PersonGender
 	Address     pgtype.Text
 	UserID      pgtype.Int4
-	Isactive    bool
+	IsActive    bool
 	CreatedAt   pgtype.Timestamp
 	UpdatedAt   pgtype.Timestamp
 	DeletedAt   pgtype.Timestamp

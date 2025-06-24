@@ -10,8 +10,8 @@ func OwnerNotFoundError(id uint) *appError.EntityNotFoundError {
 	return appError.NewEntityNotFoundError("Owner", strconv.Itoa(int(id)))
 }
 
-func PhoneConflictError(phone string) *appError.ConflictError {
-	return appError.NewConflictError("phone number", phone)
+func PhoneConflictError() *appError.ConflictError {
+	return appError.NewConflictError("phone number", "Phone Number Already Taken")
 }
 
 func HandleGetByIdError(err error, petId uint) error {
@@ -21,10 +21,7 @@ func HandleGetByIdError(err error, petId uint) error {
 	return err
 }
 
-func HandlePhoneConflictError(err error, phone string) error {
-	if err.Error() == "no rows in result set" {
-		return nil
-	} else {
-		return PhoneConflictError(phone)
-	}
+func HandlePhoneConflictError() error {
+	return PhoneConflictError()
+
 }

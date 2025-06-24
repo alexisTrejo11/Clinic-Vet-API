@@ -5,6 +5,8 @@ import (
 
 	ownerRepository "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/application/repository"
 	ownerDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/domain"
+	userEnums "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain/enum"
+	userValueObjects "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain/valueobjects"
 	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
 )
 
@@ -31,16 +33,15 @@ func (r *SqlcOwnerRepository) Save(ctx context.Context, owner *ownerDomain.Owner
 	return nil
 }
 
-func (r *SqlcOwnerRepository) create(ctx context.Context, Owner *ownerDomain.Owner) error {
-	params := ToCreateParams(*Owner)
+func (r *SqlcOwnerRepository) create(ctx context.Context, owner *ownerDomain.Owner) error {
+	params := ToCreateParams(*owner)
 
 	ownerCreated, err := r.queries.CreateOwner(ctx, *params)
 	if err != nil {
 		return err
 	}
 
-	Owner.Id = uint(ownerCreated.ID)
-
+	owner.Id = uint(ownerCreated.ID)
 	return nil
 }
 
@@ -58,12 +59,48 @@ func (r *SqlcOwnerRepository) update(ctx context.Context, owner *ownerDomain.Own
 func (r *SqlcOwnerRepository) GetByID(ctx context.Context, id uint) (ownerDomain.Owner, error) {
 	ownerRow, err := r.queries.GetOwnerByID(ctx, int32(id))
 	if err != nil {
+		return ownerDomain.Owner{}, err
+	}
+
+	ownerName, err := userValueObjects.NewPersonName(ownerRow.FirstName, ownerRow.LastName)
+	if err != nil {
 		return ownerDomain.Owner{}, nil
 	}
 
-	owner, err := RowToOwner(ownerRow)
+	owner := ownerDomain.Owner{
+		Id:          uint(ownerRow.ID),
+		Photo:       ownerRow.Photo,
+		FullName:    ownerName,
+		DateOfBirth: ownerRow.DateOfBirth.Time,
+		Gender:      userEnums.Gender(ownerRow.Gender),
+		PhoneNumber: ownerRow.PhoneNumber,
+		Address:     &ownerRow.Address.String,
+		IsActive:    ownerRow.IsActive,
+	}
+
+	return owner, nil
+}
+
+func (r *SqlcOwnerRepository) GetByPhone(ctx context.Context, phone string) (ownerDomain.Owner, error) {
+	row, err := r.queries.GetOwnerByPhone(ctx, phone)
+	if err != nil {
+		return ownerDomain.Owner{}, err
+	}
+
+	ownerName, err := userValueObjects.NewPersonName(row.FirstName, row.LastName)
 	if err != nil {
 		return ownerDomain.Owner{}, nil
+	}
+
+	owner := ownerDomain.Owner{
+		Id:          uint(row.ID),
+		Photo:       row.Photo,
+		FullName:    ownerName,
+		DateOfBirth: row.DateOfBirth.Time,
+		Gender:      userEnums.Gender(row.Gender),
+		PhoneNumber: row.PhoneNumber,
+		Address:     &row.Address.String,
+		IsActive:    row.IsActive,
 	}
 
 	return owner, nil
@@ -71,14 +108,15 @@ func (r *SqlcOwnerRepository) GetByID(ctx context.Context, id uint) (ownerDomain
 
 // Add Seacrh
 func (r *SqlcOwnerRepository) List(ctx context.Context, query string, limit, offset int) ([]ownerDomain.Owner, error) {
-	ownerRow, err := r.queries.ListOwners(ctx)
+	pageParams := sqlc.ListOwnersParams{Limit: int32(limit), Offset: int32(offset)}
+	ownerRow, err := r.queries.ListOwners(ctx, pageParams)
 	if err != nil {
-		return []ownerDomain.Owner{}, nil
+		return []ownerDomain.Owner{}, err
 	}
 
 	owners, err := ListRowToOwner(ownerRow)
 	if err != nil {
-		return []ownerDomain.Owner{}, nil
+		return []ownerDomain.Owner{}, err
 	}
 
 	return owners, nil
@@ -91,52 +129,35 @@ func (r *SqlcOwnerRepository) Delete(ctx context.Context, OwnerId uint) error {
 	return nil
 }
 
-func (r *SqlcOwnerRepository) GetByPhone(ctx context.Context, phone string) (ownerDomain.Owner, error) {
-	return ownerDomain.Owner{}, nil
+func (r *SqlcOwnerRepository) ExistsByPhone(ctx context.Context, phone string) (bool, error) {
+	exists, err := r.queries.ExistByPhoneNumber(ctx, phone)
+	if err != nil {
+		return false, DBSelectFoundError(err.Error())
+	}
+
+	return exists, nil
 }
-func (r *SqlcOwnerRepository) ListByName(ctx context.Context, name string) ([]ownerDomain.Owner, error) {
-	return nil, nil
-}
-func (r *SqlcOwnerRepository) ListActiveOwners(ctx context.Context, limit, offset int) ([]ownerDomain.Owner, error) {
-	return nil, nil
-}
-func (r *SqlcOwnerRepository) ListInactiveOwners(ctx context.Context, limit, offset int) ([]ownerDomain.Owner, error) {
-	return nil, nil
-}
-func (r *SqlcOwnerRepository) ListOwnersWithOwners(ctx context.Context, limit, offset int) ([]ownerDomain.Owner, error) {
-	return nil, nil
-}
-func (r *SqlcOwnerRepository) ListOwnersWithoutOwners(ctx context.Context, limit, offset int) ([]ownerDomain.Owner, error) {
-	return nil, nil
+
+func (r *SqlcOwnerRepository) ExistsByID(ctx context.Context, id uint) (bool, error) {
+	exists, err := r.queries.ExistByID(ctx, int32(id))
+	if err != nil {
+		return false, DBSelectFoundError(err.Error())
+	}
+
+	return exists, nil
 }
 
 func (r *SqlcOwnerRepository) ActivateOwner(ctx context.Context, id uint) error {
+	if err := r.queries.ActivateUser(ctx, int32(id)); err != nil {
+		return DBSelectFoundError(err.Error())
+	}
 	return nil
 }
+
 func (r *SqlcOwnerRepository) DeactivateOwner(ctx context.Context, id uint) error {
+	if err := r.queries.DeactivateUser(ctx, int32(id)); err != nil {
+		return DBSelectFoundError(err.Error())
+	}
+
 	return nil
-}
-
-func (r *SqlcOwnerRepository) CountOwners(ctx context.Context) (int64, error) {
-	return 0, nil
-}
-func (r *SqlcOwnerRepository) CountActiveOwners(ctx context.Context) (int64, error) {
-	return 0, nil
-}
-func (r *SqlcOwnerRepository) CountInactiveOwners(ctx context.Context) (int64, error) {
-	return 0, nil
-}
-
-func (r *SqlcOwnerRepository) ExistsByPhone(ctx context.Context, phone string) (bool, error) {
-	return false, nil
-}
-func (r *SqlcOwnerRepository) ExistsByID(ctx context.Context, id uint) (bool, error) {
-	return false, nil
-}
-
-func (r *SqlcOwnerRepository) ListOwnersWithPets(ctx context.Context, limit, offset int) ([]ownerDomain.Owner, error) {
-	return []ownerDomain.Owner{}, nil
-}
-func (r *SqlcOwnerRepository) ListOwnersWithoutPets(ctx context.Context, limit, offset int) ([]ownerDomain.Owner, error) {
-	return []ownerDomain.Owner{}, nil
 }

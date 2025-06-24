@@ -13,6 +13,7 @@ func FromRequestCreate(ownerCreate ownerDTOs.OwnerCreate) ownerDomain.Owner {
 		FullName:    fullName,
 		PhoneNumber: ownerCreate.PhoneNumber,
 		Address:     ownerCreate.Address,
+		Gender:      ownerCreate.Gender,
 		IsActive:    true,
 	}
 }

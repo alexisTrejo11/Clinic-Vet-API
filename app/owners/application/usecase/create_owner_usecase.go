@@ -21,8 +21,8 @@ func NewCreateOwnerUseCase(ownerRepo ownerRepository.OwnerRepository) *CreateOwn
 
 func (uc *CreateOwnerUseCase) Execute(ctx context.Context, dto ownerDTOs.OwnerCreate) (*ownerDTOs.OwnerResponse, error) {
 	_, err := uc.ownerRepo.GetByPhone(ctx, dto.PhoneNumber)
-	if err != nil {
-		return nil, ownerAppErr.HandlePhoneConflictError(err, dto.PhoneNumber)
+	if err == nil {
+		return nil, ownerAppErr.HandlePhoneConflictError()
 	}
 
 	new_owner := ownerMappers.FromRequestCreate(dto)

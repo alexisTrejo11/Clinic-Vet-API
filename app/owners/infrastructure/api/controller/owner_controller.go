@@ -88,22 +88,22 @@ func (c *OwnerController) CreateOwner(ctx *gin.Context) {
 func (c *OwnerController) UpdateOwner(ctx *gin.Context) {
 	id, err := utils.ParseID(ctx, "id")
 	if err != nil {
-		apiResponse.RequestURLParamError(ctx, err, "Owner_id", ctx.Param("id"))
+		apiResponse.RequestURLParamError(ctx, err, "owner_id", ctx.Param("id"))
 		return
 	}
 
-	var OwnerCreate ownerDTOs.OwnerUpdate
-	if err := ctx.ShouldBindBodyWithJSON(&OwnerCreate); err != nil {
+	var ownerUpdate ownerDTOs.OwnerUpdate
+	if err := ctx.ShouldBindBodyWithJSON(&ownerUpdate); err != nil {
 		apiResponse.RequestBodyDataError(ctx, err)
 		return
 	}
 
-	if err := c.validator.Struct(&OwnerCreate); err != nil {
+	if err := c.validator.Struct(&ownerUpdate); err != nil {
 		apiResponse.RequestBodyDataError(ctx, err)
 		return
 	}
 
-	Owner, err := c.ownerUseCases.UpdateOwner(context.TODO(), id, OwnerCreate)
+	Owner, err := c.ownerUseCases.UpdateOwner(context.TODO(), id, ownerUpdate)
 	if err != nil {
 		apiResponse.AppError(ctx, err)
 		return

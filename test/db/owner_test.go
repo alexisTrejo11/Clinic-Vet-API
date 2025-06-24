@@ -13,8 +13,8 @@ import (
 // TODO: FIX TO MAKE PGTYPES NULLABLES
 func createRandomOwner(t *testing.T) sqlc.CreateOwnerRow {
 	arg := sqlc.CreateOwnerParams{
-		Firstname:   randomString(10),
-		Lastname:    randomString(10),
+		FirstName:   randomString(10),
+		LastName:    randomString(10),
 		UserID:      pgtype.Int4{Int32: int32(randomInt(1, 1000)), Valid: true},
 		DateOfBirth: pgtype.Date{Time: time.Now().AddDate(-30, 0, 0), Valid: true},
 		Gender:      sqlc.PersonGenderFemale,
@@ -24,8 +24,8 @@ func createRandomOwner(t *testing.T) sqlc.CreateOwnerRow {
 	require.NoError(t, err)
 	require.NotEmpty(t, owner)
 
-	require.Equal(t, arg.Firstname, owner.Firstname)
-	require.Equal(t, arg.Lastname, owner.Lastname)
+	require.Equal(t, arg.FirstName, owner.FirstName)
+	require.Equal(t, arg.LastName, owner.LastName)
 	require.Equal(t, arg.UserID, owner.UserID)
 
 	require.NotZero(t, owner.ID)
@@ -46,8 +46,8 @@ func TestCreateOwner(t *testing.T) {
 	t.Run("CreateOwnerWithAllFields", func(t *testing.T) {
 		arg := sqlc.CreateOwnerParams{
 			Photo:       "test-foto.com",
-			Firstname:   "Test",
-			Lastname:    "Owner",
+			FirstName:   "Test",
+			LastName:    "Owner",
 			UserID:      pgtype.Int4{Int32: 123, Valid: true},
 			DateOfBirth: pgtype.Date{Time: time.Date(1990, 1, 1, 0, 0, 0, 0, time.UTC), Valid: true},
 			Gender:      sqlc.PersonGenderMale,

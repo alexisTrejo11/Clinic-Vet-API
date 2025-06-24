@@ -27,13 +27,12 @@ func (uc *UpdateOwnerUseCase) Execute(ctx context.Context, id uint, dto ownerDTO
 
 	if dto.PhoneNumber != nil && *dto.PhoneNumber != owner.PhoneNumber {
 		_, err := uc.ownerRepo.GetByPhone(ctx, *dto.PhoneNumber)
-		if err != nil {
-			ownerAppErr.HandlePhoneConflictError(err, *dto.PhoneNumber)
+		if err == nil {
+			ownerAppErr.HandlePhoneConflictError()
 		}
 
 	}
 
-	// Update fields
 	if dto.Photo != nil {
 		owner.Photo = *dto.Photo
 	}
@@ -48,6 +47,10 @@ func (uc *UpdateOwnerUseCase) Execute(ctx context.Context, id uint, dto ownerDTO
 
 	if dto.PhoneNumber != nil {
 		owner.PhoneNumber = *dto.PhoneNumber
+	}
+
+	if err := uc.ownerRepo.Save(ctx, &owner); err != nil {
+		return nil, err
 	}
 
 	return ownerMappers.ToResponse(owner), nil

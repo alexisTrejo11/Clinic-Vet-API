@@ -7,25 +7,28 @@ import (
 	"time"
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
+	userEnums "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain/enum"
 )
 
 type OwnerCreate struct {
-	Photo       string    `json:"photo" validate:"required"`
-	FirstName   string    `json:"first_name" validate:"required"`
-	LastName    string    `json:"lastName" validate:"required"`
-	Address     *string   `json:"address"`
-	DateOfBirth time.Time `json:"date_of_birth" validate:"required"`
-	PhoneNumber string    `json:"phone_number" validate:"required"`
+	Photo       string           `json:"photo" validate:"required"`
+	FirstName   string           `json:"first_name" validate:"required"`
+	LastName    string           `json:"last_name" validate:"required"`
+	Address     *string          `json:"address"`
+	Gender      userEnums.Gender `json:"gender,omitempty" validate:"required,oneof=male female not_specified"`
+	DateOfBirth time.Time        `json:"date_of_birth" validate:"required"`
+	PhoneNumber string           `json:"phone_number" validate:"required"`
 }
 
 type OwnerUpdate struct {
-	Photo       *string   `json:"photo"`
-	FirstName   *string   `json:"first_name"`
-	LastName    *string   `json:"last_name"`
-	Address     *string   `json:"address"`
-	Notes       *string   `json:"notes"`
-	DateOfBirth time.Time `json:"date_of_birth" validate:"required"`
-	PhoneNumber *string   `json:"phone_number"`
+	Photo       *string           `json:"photo"`
+	FirstName   *string           `json:"first_name"`
+	LastName    *string           `json:"last_name"`
+	Address     *string           `json:"address"`
+	Notes       *string           `json:"notes"`
+	Gender      *userEnums.Gender `json:"gender" validate:"omitempty,oneof=male female not_specified"`
+	DateOfBirth *time.Time        `json:"date_of_birth" validate:"required"`
+	PhoneNumber *string           `json:"phone_number"`
 }
 
 type GetOwnersRequest struct {

@@ -1,38 +1,60 @@
 -- name: CreateOwner :one
 INSERT INTO owners (
-    id, photo, firstName, lastName, phoneNumber, gender, address, user_id, isActive, date_of_birth, created_at, updated_at
+    photo, first_name, last_name, phone_number, gender, address, user_id, is_active, date_of_birth, created_at, updated_at
 ) VALUES (
-    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+    $1, $2, $3, $4, $5, $6, $7, $8, $9, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 )
-RETURNING id, photo, firstName, lastName, phoneNumber, gender, address, user_id, isActive, date_of_birth, created_at, updated_at, deleted_at;
+RETURNING id, photo, first_name, last_name, phone_number, gender, address, user_id, is_active, date_of_birth, created_at, updated_at, deleted_at;
 
 -- name: GetOwnerByID :one
-SELECT id, photo, firstName, lastName, phoneNumber, gender, address, user_id, isActive, date_of_birth, created_at, updated_at, deleted_at
+SELECT id, photo, first_name, last_name, phone_number, gender, address, user_id, is_active, date_of_birth, created_at, updated_at, deleted_at
 FROM owners
 WHERE id = $1 AND deleted_at IS NULL;
 
+-- name: GetOwnerByPhone :one
+SELECT id, photo, first_name, last_name, phone_number, gender, address, user_id, is_active, date_of_birth, created_at, updated_at, deleted_at
+FROM owners
+WHERE phone_number = $1 AND deleted_at IS NULL;
+
 -- name: GetOwnerByUserID :one
-SELECT id, photo, firstName, lastName, phoneNumber, gender, address, user_id, isActive, date_of_birth, created_at, updated_at, deleted_at
+SELECT id, photo, first_name, last_name, phone_number, gender, address, user_id, is_active, date_of_birth, created_at, updated_at, deleted_at
 FROM owners
 WHERE user_id = $1 AND deleted_at IS NULL;
 
 -- name: ListOwners :many
-SELECT id, photo, firstName, lastName, phoneNumber, gender, address, user_id, isActive, date_of_birth, created_at, updated_at, deleted_at
-FROM owners
-WHERE deleted_at IS NULL
-ORDER BY id;
+SELECT 
+    id, 
+    photo, 
+    first_name, 
+    last_name, 
+    phone_number, 
+    gender, 
+    address, 
+    user_id, 
+    is_active, 
+    date_of_birth, 
+    created_at, 
+    updated_at, 
+    deleted_at
+FROM 
+    owners
+WHERE 
+    deleted_at IS NULL
+ORDER BY 
+    id 
+LIMIT $1 OFFSET $2;
 
 -- name: UpdateOwner :exec
 UPDATE owners
 SET 
     photo = $2, 
-    firstName = $3, 
-    lastName = $4, 
-    phoneNumber = $5, 
+    first_name = $3, 
+    last_name = $4, 
+    phone_number = $5, 
     gender = $6, 
     address = $7, 
     user_id = $8, 
-    isActive = $9, 
+    is_active = $9, 
     date_of_birth = $10,
     updated_at = CURRENT_TIMESTAMP
 WHERE id = $1 AND deleted_at IS NULL;
@@ -40,7 +62,32 @@ WHERE id = $1 AND deleted_at IS NULL;
 -- name: DeleteOwner :exec
 UPDATE owners
 SET 
-    isActive = FALSE,
+    is_active = FALSE,
     deleted_at = CURRENT_TIMESTAMP,
+    updated_at = CURRENT_TIMESTAMP
+WHERE id = $1;
+
+
+-- name: ExistByID :one
+SELECT COUNT(*) > 0
+FROM owners
+WHERE id = $1;
+
+-- name: ExistByPhoneNumber :one
+SELECT COUNT(*) > 0
+FROM owners
+WHERE phone_number = $1;
+
+-- name: DeactivateUser :exec
+UPDATE owners
+SET 
+    is_active = false, 
+    updated_at = CURRENT_TIMESTAMP
+WHERE id = $1;
+
+-- name: ActivateUser :exec
+UPDATE owners
+SET 
+    is_active = true, 
     updated_at = CURRENT_TIMESTAMP
 WHERE id = $1;

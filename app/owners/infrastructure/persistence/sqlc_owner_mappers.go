@@ -1,6 +1,8 @@
 package sqlcOwnerRepository
 
 import (
+	"time"
+
 	ownerDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/domain"
 	userEnums "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain/enum"
 	userValueObjects "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain/valueobjects"
@@ -9,64 +11,65 @@ import (
 )
 
 func ToCreateParams(owner ownerDomain.Owner) *sqlc.CreateOwnerParams {
-	return &sqlc.CreateOwnerParams{
+	createOwnerParam := &sqlc.CreateOwnerParams{
 		Photo:       owner.Photo,
-		Phonenumber: owner.PhoneNumber,
+		PhoneNumber: owner.PhoneNumber,
 		Gender:      sqlc.PersonGender(owner.Gender),
-		Firstname:   owner.FullName.FirstName,
-		Lastname:    owner.FullName.LastName,
-		Address:     pgtype.Text{String: *owner.Address, Valid: true},
-		UserID:      pgtype.Int4{Int32: int32(*owner.UserId)},
-		Isactive:    owner.IsActive,
+		DateOfBirth: pgtype.Date{Time: time.Date(owner.DateOfBirth.Year(), owner.DateOfBirth.Month(), owner.DateOfBirth.Day(), 0, 0, 0, 0, time.UTC), Valid: true},
+		FirstName:   owner.FullName.FirstName,
+		LastName:    owner.FullName.LastName,
+		IsActive:    owner.IsActive,
 	}
+
+	if owner.Address != nil {
+		createOwnerParam.Address = pgtype.Text{String: *owner.Address, Valid: true}
+	}
+
+	if owner.UserId != nil {
+		createOwnerParam.UserID = pgtype.Int4{Int32: int32(*owner.UserId)}
+	}
+
+	return createOwnerParam
 }
 
 func ToUpdateParams(owner ownerDomain.Owner) *sqlc.UpdateOwnerParams {
-	return &sqlc.UpdateOwnerParams{
+	updateParams := &sqlc.UpdateOwnerParams{
 		ID:          int32(owner.Id),
 		Photo:       owner.Photo,
-		Phonenumber: owner.PhoneNumber,
+		PhoneNumber: owner.PhoneNumber,
 		Gender:      sqlc.PersonGender(owner.Gender),
-		Firstname:   owner.FullName.FirstName,
-		Lastname:    owner.FullName.LastName,
-		Address:     pgtype.Text{String: *owner.Address, Valid: true},
-		UserID:      pgtype.Int4{Int32: int32(*owner.UserId)},
-		Isactive:    owner.IsActive,
+		FirstName:   owner.FullName.FirstName,
+		DateOfBirth: pgtype.Date{Time: time.Date(owner.DateOfBirth.Year(), owner.DateOfBirth.Month(), owner.DateOfBirth.Day(), 0, 0, 0, 0, time.UTC), Valid: true},
+		LastName:    owner.FullName.LastName,
+		IsActive:    owner.IsActive,
 	}
+	if owner.Address != nil {
+		updateParams.Address = pgtype.Text{String: *owner.Address, Valid: true}
+	}
+
+	if owner.UserId != nil {
+		updateParams.UserID = pgtype.Int4{Int32: int32(*owner.UserId)}
+	}
+
+	return updateParams
 }
 
 func FromCreateToDomain(row sqlc.CreateOwnerRow) *ownerDomain.Owner {
-	ownerName, err := userValueObjects.NewPersonName(row.Firstname, row.Lastname)
+	ownerName, err := userValueObjects.NewPersonName(row.FirstName, row.LastName)
 	if err != nil {
 		return &ownerDomain.Owner{}
 	}
 
 	return &ownerDomain.Owner{
 		Id:          uint(row.ID),
-		Photo:       row.Phonenumber,
+		Photo:       row.Photo,
 		FullName:    ownerName,
 		Gender:      userEnums.Gender(row.Gender),
-		PhoneNumber: row.Phonenumber,
+		PhoneNumber: row.PhoneNumber,
+		DateOfBirth: row.DateOfBirth.Time,
 		Address:     &row.Address.String,
-		IsActive:    row.Isactive,
+		IsActive:    row.IsActive,
 	}
-}
-
-func RowToOwner(ownerRow sqlc.GetOwnerByIDRow) (ownerDomain.Owner, error) {
-	ownerName, err := userValueObjects.NewPersonName(ownerRow.Firstname, ownerRow.Lastname)
-	if err != nil {
-		return ownerDomain.Owner{}, nil
-	}
-
-	return ownerDomain.Owner{
-		Id:          uint(ownerRow.ID),
-		Photo:       ownerRow.Phonenumber,
-		FullName:    ownerName,
-		Gender:      userEnums.Gender(ownerRow.Gender),
-		PhoneNumber: ownerRow.Phonenumber,
-		Address:     &ownerRow.Address.String,
-		IsActive:    ownerRow.Isactive,
-	}, nil
 }
 
 func ListRowToOwner(rows []sqlc.ListOwnersRow) ([]ownerDomain.Owner, error) {
@@ -77,18 +80,18 @@ func ListRowToOwner(rows []sqlc.ListOwnersRow) ([]ownerDomain.Owner, error) {
 	}
 
 	for i, row := range rows {
-		ownerName, err := userValueObjects.NewPersonName(row.Firstname, row.Lastname)
+		ownerName, err := userValueObjects.NewPersonName(row.FirstName, row.LastName)
 		if err != nil {
 			return []ownerDomain.Owner{}, err
 		}
 		owner := ownerDomain.Owner{
 			Id:          uint(row.ID),
-			Photo:       row.Phonenumber,
+			Photo:       row.Photo,
 			FullName:    ownerName,
 			Gender:      userEnums.Gender(row.Gender),
-			PhoneNumber: row.Phonenumber,
+			PhoneNumber: row.PhoneNumber,
 			Address:     &row.Address.String,
-			IsActive:    row.Isactive,
+			IsActive:    row.IsActive,
 		}
 
 		owners[i] = owner

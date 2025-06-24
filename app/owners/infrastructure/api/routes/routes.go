@@ -6,7 +6,7 @@ import (
 )
 
 func OwnerRoutes(app *gin.Engine, ownerController *ownerController.OwnerController) {
-	ownerV2 := app.Group("v2/clinic-vet/owner")
+	ownerV2 := app.Group("/api/v2/owners")
 	ownerV2.GET("/:id", ownerController.GetOwnerById)
 	ownerV2.GET("/", ownerController.ListOwners)
 	ownerV2.POST("/", ownerController.CreateOwner)

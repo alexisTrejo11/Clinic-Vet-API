@@ -1,16 +1,16 @@
 CREATE TYPE person_gender AS ENUM ('male', 'female', 'not_specified');
 
 CREATE TABLE IF NOT EXISTS owners (
-    id INT PRIMARY KEY,
-    firstName VARCHAR(255) NOT NULL,
-    lastName VARCHAR(255) NOT NULL,
+    id SERIAL PRIMARY KEY,
+    first_name VARCHAR(255) NOT NULL,
+    last_name VARCHAR(255) NOT NULL,
     photo VARCHAR(255) NOT NULL,
-    phoneNumber VARCHAR(20) NOT NULL,
+    phone_number VARCHAR(20) UNIQUE NOT NULL,
     date_of_birth DATE NOT NULL,
     gender person_gender NOT NULL,
     address VARCHAR(255),
     user_id INT,
-    isActive BOOLEAN NOT NULL DEFAULT TRUE,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP NULL

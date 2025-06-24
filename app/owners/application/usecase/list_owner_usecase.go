@@ -6,7 +6,6 @@ import (
 	ownerDTOs "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/application/dtos"
 	ownerMappers "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/application/mappers"
 	ownerRepository "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/application/repository"
-	ownerDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/domain"
 )
 
 type ListOwnersUseCase struct {
@@ -25,33 +24,10 @@ func (uc *ListOwnersUseCase) Execute(ctx context.Context, dto ownerDTOs.GetOwner
 		dto.Page.Limit = 20
 	}
 	if dto.Page.Offset < 0 {
-		dto.Page.Offset = 0
-	}
-	if dto.Status == "" {
-		dto.Status = "all"
+		dto.Page.Offset = 1
 	}
 
-	var owners []ownerDomain.Owner
-	var err error
-
-	switch {
-	case dto.Status == "active":
-		owners, err = uc.ownerRepo.ListActiveOwners(ctx, dto.Page.Limit, dto.Page.Offset)
-	case dto.Status == "inactive":
-		owners, err = uc.ownerRepo.ListInactiveOwners(ctx, dto.Page.Limit, dto.Page.Offset)
-	case dto.WithPets:
-		owners, err = uc.ownerRepo.ListOwnersWithPets(ctx, dto.Page.Limit, dto.Page.Offset)
-	case !dto.WithPets:
-		owners, err = uc.ownerRepo.ListOwnersWithoutPets(ctx, dto.Page.Limit, dto.Page.Offset)
-	default:
-		owners, err = uc.ownerRepo.List(ctx, "", dto.Page.Limit, dto.Page.Offset)
-	}
-
-	if err != nil {
-		return ownerDTOs.OwnerListResponse{}, err
-	}
-
-	total, err := uc.ownerRepo.CountOwners(ctx)
+	owners, err := uc.ownerRepo.List(ctx, "", dto.Page.Limit, dto.Page.Offset)
 	if err != nil {
 		return ownerDTOs.OwnerListResponse{}, err
 	}
@@ -65,11 +41,11 @@ func (uc *ListOwnersUseCase) Execute(ctx context.Context, dto ownerDTOs.GetOwner
 	}
 
 	return ownerDTOs.OwnerListResponse{
-		Owners:  ownerResponses,
-		Total:   total,
-		Limit:   dto.Page.Limit,
-		Offset:  dto.Page.Offset,
-		HasMore: int64(dto.Page.Offset+dto.Page.Limit) < total,
+		Owners: ownerResponses,
+		//Total:   total,
+		//Limit:   dto.Page.Limit,
+		//Offset:  dto.Page.Offset,
+		//HasMore: int64(dto.Page.Offset+dto.Page.Limit) < total,
 	}, nil
 }
 
