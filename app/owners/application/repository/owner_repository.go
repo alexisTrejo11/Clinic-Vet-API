@@ -10,7 +10,7 @@ type OwnerRepository interface {
 	Save(ctx context.Context, owner *ownerDomain.Owner) error
 
 	List(ctx context.Context, query string, limit, offset int) ([]ownerDomain.Owner, error)
-	GetByID(ctx context.Context, id uint) (ownerDomain.Owner, error)
+	GetByID(ctx context.Context, id uint, includePets bool) (ownerDomain.Owner, error)
 	GetByPhone(ctx context.Context, phone string) (ownerDomain.Owner, error)
 
 	Delete(ctx context.Context, id uint) error

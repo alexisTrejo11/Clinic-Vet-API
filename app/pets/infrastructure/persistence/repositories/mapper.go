@@ -10,7 +10,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-func toDomainPet(sqlPet sqlc.Pet) (petDomain.Pet, error) {
+func ToDomainPet(sqlPet sqlc.Pet) (petDomain.Pet, error) {
 	var domainPet petDomain.Pet
 
 	domainPet.ID = uint(sqlPet.ID)

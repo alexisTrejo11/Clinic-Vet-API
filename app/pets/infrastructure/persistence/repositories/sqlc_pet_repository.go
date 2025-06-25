@@ -27,7 +27,7 @@ func (r *SqlcPetRepository) List(ctx context.Context) ([]petDomain.Pet, error) {
 
 	pets := make([]petDomain.Pet, len(sqlPets))
 	for i, sqlPet := range sqlPets {
-		domainPet, err := toDomainPet(sqlPet)
+		domainPet, err := ToDomainPet(sqlPet)
 		if err != nil {
 			return nil, fmt.Errorf("error while mapping pet %d: %w", sqlPet.ID, err)
 		}
@@ -45,7 +45,7 @@ func (r *SqlcPetRepository) ListByOwnerId(ctx context.Context, ownerId uint) ([]
 
 	pets := make([]petDomain.Pet, len(sqlPets))
 	for i, sqlPet := range sqlPets {
-		domainPet, err := toDomainPet(sqlPet)
+		domainPet, err := ToDomainPet(sqlPet)
 		if err != nil {
 			return nil, fmt.Errorf("error while mapping pet %d: %w", sqlPet.ID, err)
 		}
@@ -61,7 +61,7 @@ func (r *SqlcPetRepository) GetById(ctx context.Context, petId uint) (petDomain.
 		return petDomain.Pet{}, DBSelectFoundError(err.Error())
 	}
 
-	domainPet, err := toDomainPet(sqlPet)
+	domainPet, err := ToDomainPet(sqlPet)
 	if err != nil {
 		return petDomain.Pet{}, err
 	}
@@ -93,7 +93,7 @@ func (r *SqlcPetRepository) create(ctx context.Context, pet *petDomain.Pet) erro
 		return err
 	}
 
-	_, err = toDomainPet(petCreated)
+	_, err = ToDomainPet(petCreated)
 	if err != nil {
 		return err
 	}

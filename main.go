@@ -46,7 +46,7 @@ func main() {
 
 	// Repository
 	petRepo := sqlcPetRepository.NewSqlcPetRepository(queries)
-	ownerRepo := sqlcOwnerRepository.NewSlqcOwnerRepository(queries)
+	ownerRepo := sqlcOwnerRepository.NewSlqcOwnerRepository(queries, petRepo)
 
 	// Owner UseCase
 	getOwnerUseCase := ownerUsecase.NewGetOwnerByIdUseCase(ownerRepo)

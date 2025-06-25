@@ -1,12 +1,17 @@
 package ownerDTOs
 
-import petDTOs "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application/dtos"
+import (
+	"time"
+
+	petDTOs "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application/dtos"
+)
 
 type OwnerResponse struct {
 	Id               uint                  `json:"id"`
 	Photo            string                `json:"photo"`
 	Name             string                `json:"name"`
 	PhoneNumber      string                `json:"phone"`
+	DateOfBirth      time.Time             `json:"date_of_birth"`
 	Address          *string               `json:"address,omitempty" db:"address"`
 	EmergencyContact *string               `json:"emergency_contact,omitempty" db:"emergency_contact"`
 	Notes            *string               `json:"notes,omitempty" db:"notes"`

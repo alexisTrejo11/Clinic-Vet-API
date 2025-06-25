@@ -54,7 +54,13 @@ func (c *OwnerController) GetOwnerById(ctx *gin.Context) {
 		return
 	}
 
-	owner, err := c.ownerUseCases.GetOwnerById(context.TODO(), id, true)
+	includePets := true
+	includePetStr := ctx.Query("include_pets")
+	if includePetStr == "" || includePetStr != "true" {
+		includePets = false
+	}
+
+	owner, err := c.ownerUseCases.GetOwnerById(context.TODO(), id, includePets)
 	if err != nil {
 		apiResponse.AppError(ctx, err)
 		return
