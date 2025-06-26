@@ -32,7 +32,7 @@ func (c *VeterinarianController) ListVeterinarians(ctx *gin.Context) {
 	//status := ctx.Query("status")
 	//include_pets := ctx.Query("include_pets")
 
-	vets, err := c.vetUseCases.ListVetUseCase(context.TODO(), 1, 10)
+	vets, err := c.vetUseCases.ListVetUseCase(context.TODO(), nil)
 	if err != nil {
 		apiResponse.AppError(ctx, err)
 		return

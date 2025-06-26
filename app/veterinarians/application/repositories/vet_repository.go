@@ -1,19 +1,16 @@
-package repositories
+package vetRepo
 
-/*
 import (
 	"context"
 
-	"example.com/at/backend/api-vet/app/container/sqlc"
+	vetDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/veterinarians/domain"
 )
 
 type VeterinarianRepository interface {
-	Create(ctx context.Context, arg sqlc.CreateVeterinarianParams) (sqlc.Veterinarian, error)
-	GetByID(ctx context.Context, id int32) (sqlc.Veterinarian, error)
-	UpdateVeterinarianUserIDParams(ctx context.Context, arg sqlc.UpdateVeterinarianParams) error
-	AddUserId(veterinarianId, userId int32)
-	Delete(ctx context.Context, id int32) error
-	ValidateExisting(ctx context.Context, VeterinarianId int32) bool
-	GetByUserID(userId int32) (*sqlc.Veterinarian, error)
+	Search(ctx context.Context, searchParams map[string]interface{}) ([]vetDomain.Veterinarian, error)
+	GetByID(ctx context.Context, id uint) (vetDomain.Veterinarian, error)
+	GetByUserID(userId int32) (vetDomain.Veterinarian, error)
+	Save(ctx context.Context, pet *vetDomain.Veterinarian) error
+	Delete(ctx context.Context, id uint, isSoftDelete bool) error
+	Exists(ctx context.Context, vetId uint) (bool, error)
 }
-*/

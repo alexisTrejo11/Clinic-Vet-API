@@ -1,39 +1,81 @@
-package mappers
+package vetMapper
 
-/*
 import (
-	"example.com/at/backend/api-vet/DTOs"
-	"example.com/at/backend/api-vet/sqlc"
-	"github.com/jackc/pgx/v5/pgtype"
+	"time"
+
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
+	vetDtos "github.com/alexisTrejo11/Clinic-Vet-API/app/veterinarians/application/dtos"
+	vetDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/veterinarians/domain"
 )
 
-func MapVetInsertDtoToVetInsertParams(vetInsertDTO DTOs.VetInsertDTO) sqlc.CreateVeterinarianParams {
-	return sqlc.CreateVeterinarianParams{
-		Name:      vetInsertDTO.Name,
-		Photo:     pgtype.Text{String: vetInsertDTO.Photo, Valid: true},
-		Specialty: pgtype.Text{String: vetInsertDTO.Specialty, Valid: true},
+func FromCreateDTO(vetData vetDtos.VetCreate) *vetDomain.Veterinarian {
+	personName, _ := shared.NewPersonName(vetData.FirstName, vetData.LastName)
+	return &vetDomain.Veterinarian{
+		Name:            personName,
+		Photo:           vetData.Photo,
+		LicenseNumber:   vetData.LicenseNumber,
+		Specialty:       vetData.Specialty,
+		YearsExperience: vetData.YearsExperience,
+		ConsultationFee: vetData.ConsultationFee,
+		IsActive:        vetData.IsActive,
+		//WorkDaysSchedule: vetData.LaboralSchedule,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
 	}
 }
 
-func MapSqlcEntityToDTO(veterinarian sqlc.Veterinarian) DTOs.VetDTO {
-	return DTOs.VetDTO{
-		Id:        veterinarian.ID,
-		UserId:    &veterinarian.UserID.Int32,
-		Name:      veterinarian.Name,
-		Photo:     veterinarian.Photo.String,
-		Specialty: veterinarian.Specialty.String,
+func UpdateFromDTO(vet *vetDomain.Veterinarian, vetData vetDtos.VetUpdate) {
+	if vetData.FirstName != nil || vetData.LastName != nil {
+		currentFirstName := vet.Name.FirstName()
+		currentLastName := vet.Name.LastName()
+
+		if vetData.FirstName != nil {
+			currentFirstName = *vetData.FirstName
+		}
+		if vetData.LastName != nil {
+			currentLastName = *vetData.LastName
+		}
+
+		updatedName, _ := shared.NewPersonName(currentFirstName, currentLastName)
+		vet.Name = updatedName
+
+		if vetData.Photo != nil {
+			vet.Photo = *vetData.Photo
+		}
+
+		if vetData.LicenseNumber != nil {
+			vet.LicenseNumber = *vetData.LicenseNumber
+		}
+
+		if vetData.Specialty != nil {
+			vet.Specialty = *vetData.Specialty
+		}
+
+		if vetData.YearsExperience != nil {
+			vet.YearsExperience = *vetData.YearsExperience
+		}
+
+		if vetData.ConsultationFee != nil {
+			vet.ConsultationFee = vetData.ConsultationFee
+		}
+
+		if vetData.IsActive != nil {
+			vet.IsActive = *vetData.IsActive
+		}
+
+		vet.UpdatedAt = time.Now()
 	}
 }
 
-func MapVetUpdateDtoToEntity(vetUpdateDTO *DTOs.VetUpdateDTO, existingVet sqlc.Veterinarian) sqlc.UpdateVeterinarianParams {
-	params := sqlc.UpdateVeterinarianParams{
-		ID: vetUpdateDTO.Id,
+func ToResponse(vet vetDomain.Veterinarian) *vetDtos.VetResponse {
+	return &vetDtos.VetResponse{
+		FirstName:       vet.Name.FirstName(),
+		LastName:        vet.Name.LastName(),
+		Photo:           vet.Photo,
+		LicenseNumber:   vet.LicenseNumber,
+		Specialty:       vet.Specialty.String(),
+		YearsExperience: vet.YearsExperience,
+		ConsultationFee: vet.ConsultationFee,
+		//WorkDaysSchedule: vet.LaboralSchedule,
 	}
-
-	params.Name = coalesceString(vetUpdateDTO.Name, existingVet.Name)
-	params.Photo = coalescePgText(vetUpdateDTO.Photo, existingVet.Photo)
-	params.Specialty = coalescePgText(vetUpdateDTO.Specialty, existingVet.Specialty)
-
-	return params
 }
-*/

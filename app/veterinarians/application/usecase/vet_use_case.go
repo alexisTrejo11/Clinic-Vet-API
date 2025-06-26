@@ -30,8 +30,8 @@ func NewVetUseCase(
 	}
 }
 
-func (uc *VeterinarianUseCases) ListVetUseCase(ctx context.Context, limit, offset int) ([]vetDtos.VetResponse, error) {
-	return uc.listVetsUseCase.Execute(ctx, limit, offset)
+func (uc *VeterinarianUseCases) ListVetUseCase(ctx context.Context, searchParams map[string]interface{}) ([]vetDtos.VetResponse, error) {
+	return uc.listVetsUseCase.Execute(ctx, searchParams)
 }
 
 func (uc *VeterinarianUseCases) GetVetByIdUseCase(ctx context.Context, vetId uint) (vetDtos.VetResponse, error) {
@@ -47,5 +47,5 @@ func (uc *VeterinarianUseCases) UpdateVetUseCase(ctx context.Context, vetId uint
 }
 
 func (uc *VeterinarianUseCases) DeleteVetUseCase(ctx context.Context, vetId uint) error {
-	return uc.deleteVetUseCase.Execute(ctx, vetId)
+	return uc.deleteVetUseCase.Execute(ctx, vetId, true)
 }

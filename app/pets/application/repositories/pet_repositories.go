@@ -1,4 +1,4 @@
-package petRepository
+package petRepo
 
 import (
 	"context"
