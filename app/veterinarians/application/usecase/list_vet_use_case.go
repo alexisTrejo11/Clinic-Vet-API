@@ -19,7 +19,7 @@ func NewListVetUseCase(vetRepository vetRepo.VeterinarianRepository) *ListVetUse
 }
 
 func (uc *ListVetUseCase) Execute(ctx context.Context, searchParam map[string]interface{}) ([]dto.VetResponse, error) {
-	veterinarianList, err := uc.vetRepository.Search(ctx, searchParam)
+	veterinarianList, err := uc.vetRepository.List(ctx, searchParam)
 	if err != nil {
 		return []dto.VetResponse{}, err
 	}

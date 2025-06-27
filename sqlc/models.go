@@ -54,6 +54,67 @@ func (ns NullPersonGender) Value() (driver.Value, error) {
 	return string(ns.PersonGender), nil
 }
 
+type VeterinarianSpeciality string
+
+const (
+	VeterinarianSpecialityUnknownSpecialty      VeterinarianSpeciality = "unknown_specialty"
+	VeterinarianSpecialityGeneralPractice       VeterinarianSpeciality = "general_practice"
+	VeterinarianSpecialitySurgery               VeterinarianSpeciality = "surgery"
+	VeterinarianSpecialityInternalMedicine      VeterinarianSpeciality = "internal_medicine"
+	VeterinarianSpecialityDentistry             VeterinarianSpeciality = "dentistry"
+	VeterinarianSpecialityDermatology           VeterinarianSpeciality = "dermatology"
+	VeterinarianSpecialityOncology              VeterinarianSpeciality = "oncology"
+	VeterinarianSpecialityCardiology            VeterinarianSpeciality = "cardiology"
+	VeterinarianSpecialityNeurology             VeterinarianSpeciality = "neurology"
+	VeterinarianSpecialityOphthalmology         VeterinarianSpeciality = "ophthalmology"
+	VeterinarianSpecialityRadiology             VeterinarianSpeciality = "radiology"
+	VeterinarianSpecialityEmergencyCriticalCare VeterinarianSpeciality = "emergency_critical_care"
+	VeterinarianSpecialityAnesthesiology        VeterinarianSpeciality = "anesthesiology"
+	VeterinarianSpecialityPathology             VeterinarianSpeciality = "pathology"
+	VeterinarianSpecialityPreventiveMedicine    VeterinarianSpeciality = "preventive_medicine"
+	VeterinarianSpecialityExoticAnimalMedicine  VeterinarianSpeciality = "exotic_animal_medicine"
+	VeterinarianSpecialityEquineMedicine        VeterinarianSpeciality = "equine_medicine"
+	VeterinarianSpecialityAvianMedicine         VeterinarianSpeciality = "avian_medicine"
+	VeterinarianSpecialityZooAnimalMedicine     VeterinarianSpeciality = "zoo_animal_medicine"
+	VeterinarianSpecialityFoodAnimalMedicine    VeterinarianSpeciality = "food_animal_medicine"
+	VeterinarianSpecialityPublicHealth          VeterinarianSpeciality = "public_health"
+)
+
+func (e *VeterinarianSpeciality) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = VeterinarianSpeciality(s)
+	case string:
+		*e = VeterinarianSpeciality(s)
+	default:
+		return fmt.Errorf("unsupported scan type for VeterinarianSpeciality: %T", src)
+	}
+	return nil
+}
+
+type NullVeterinarianSpeciality struct {
+	VeterinarianSpeciality VeterinarianSpeciality
+	Valid                  bool // Valid is true if VeterinarianSpeciality is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullVeterinarianSpeciality) Scan(value interface{}) error {
+	if value == nil {
+		ns.VeterinarianSpeciality, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.VeterinarianSpeciality.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullVeterinarianSpeciality) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.VeterinarianSpeciality), nil
+}
+
 type Owner struct {
 	ID          int32
 	FirstName   string
@@ -89,4 +150,19 @@ type Pet struct {
 	IsActive           bool
 	CreatedAt          pgtype.Timestamptz
 	UpdatedAt          pgtype.Timestamptz
+}
+
+type Veterinarian struct {
+	ID                int32
+	FirstName         string
+	LastName          string
+	Photo             string
+	LicenseNumber     string
+	Speciality        VeterinarianSpeciality
+	YearsOfExperience int32
+	IsActive          pgtype.Bool
+	UserID            pgtype.Int4
+	CreatedAt         pgtype.Timestamptz
+	UpdatedAt         pgtype.Timestamptz
+	DeletedAt         pgtype.Timestamp
 }

@@ -12,3 +12,6 @@ InitSwagger:
 
 SQLC:
 	sqlc init
+
+CREATESQLCMOCK:
+	mockgen -source=sqlc/querier.go -destination=test/mock/queries_mock.go -package=mock

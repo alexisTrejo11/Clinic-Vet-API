@@ -1,6 +1,9 @@
 package vetDomain
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 type VetSpecialty int
 
@@ -74,5 +77,54 @@ func (s VetSpecialty) String() string {
 		return "public_health"
 	default:
 		return fmt.Sprintf("Specialty(%d)", s)
+	}
+}
+
+func VetSpecialtyFromString(s string) VetSpecialty {
+	switch strings.ToLower(strings.TrimSpace(s)) {
+	case "unknown_specialty":
+		return UnknownSpecialty
+	case "general_practice":
+		return GeneralPracticeSpecialty
+	case "surgery":
+		return SurgerySpecialty
+	case "internal_medicine":
+		return InternalMedicineSpecialty
+	case "dentistry":
+		return DentistrySpecialty
+	case "dermatology":
+		return DermatologySpecialty
+	case "oncology":
+		return OncologySpecialty
+	case "cardiology":
+		return CardiologySpecialty
+	case "neurology":
+		return NeurologySpecialty
+	case "ophthalmology":
+		return OphthalmologySpecialty
+	case "radiology":
+		return RadiologySpecialty
+	case "emergency_critical_care":
+		return EmergencyCriticalCareSpecialty
+	case "anesthesiology":
+		return AnesthesiologySpecialty
+	case "pathology":
+		return PathologySpecialty
+	case "preventive_medicine":
+		return PreventiveMedicineSpecialty
+	case "exotic_animal_medicine":
+		return ExoticAnimalMedicineSpecialty
+	case "equine_medicine":
+		return EquineMedicineSpecialty
+	case "avian_medicine":
+		return AvianMedicineSpecialty
+	case "zoo_animal_medicine":
+		return ZooAnimalMedicineSpecialty
+	case "food_animal_medicine":
+		return FoodAnimalMedicineSpecialty
+	case "public_health":
+		return PublicHealthSpecialty
+	default:
+		return UnknownSpecialty
 	}
 }
