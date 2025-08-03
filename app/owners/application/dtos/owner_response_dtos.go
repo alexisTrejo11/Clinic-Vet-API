@@ -7,7 +7,7 @@ import (
 )
 
 type OwnerResponse struct {
-	Id               uint                  `json:"id"`
+	Id               int                   `json:"id"`
 	Photo            string                `json:"photo"`
 	Name             string                `json:"name"`
 	PhoneNumber      string                `json:"phone"`
@@ -20,7 +20,7 @@ type OwnerResponse struct {
 }
 
 type OwnerSummaryResponse struct {
-	Id          uint   `json:"id"`
+	Id          int    `json:"id"`
 	Photo       string `json:"photo"`
 	Name        string `json:"name"`
 	PhoneNumber string `json:"phone"`

@@ -37,7 +37,7 @@ func NewListPetByOwnerAndIdUseCase(repository petRepository.PetRepository) *List
 	}
 }
 
-func (uc *ListPetsByOwnerIdUseCase) Execute(ctx context.Context, ownerId uint) ([]petDTOs.PetResponse, error) {
+func (uc *ListPetsByOwnerIdUseCase) Execute(ctx context.Context, ownerId int) ([]petDTOs.PetResponse, error) {
 	petList, err := uc.repository.ListByOwnerId(ctx, ownerId)
 	if err != nil {
 		return []petDTOs.PetResponse{}, err

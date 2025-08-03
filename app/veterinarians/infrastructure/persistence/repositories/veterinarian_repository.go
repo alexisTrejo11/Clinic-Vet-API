@@ -2,7 +2,10 @@ package sqlcVetRepo
 
 import (
 	"context"
+	"fmt"
 
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
+	vetDtos "github.com/alexisTrejo11/Clinic-Vet-API/app/veterinarians/application/dtos"
 	vetRepo "github.com/alexisTrejo11/Clinic-Vet-API/app/veterinarians/application/repositories"
 	vetDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/veterinarians/domain"
 	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
@@ -17,22 +20,106 @@ func NewSqlcVetRepository(queries sqlc.Querier) vetRepo.VeterinarianRepository {
 	return &SqlcVetRepository{queries: queries}
 }
 
-func (c *SqlcVetRepository) List(ctx context.Context, searchParams map[string]interface{}) ([]vetDomain.Veterinarian, error) {
-	listParams := sqlc.ListVeterinariansParams{Limit: 10, Offset: 0}
-	sqlVetList, err := c.queries.ListVeterinarians(ctx, listParams)
+func (r *SqlcVetRepository) List(ctx context.Context, searchParams vetDtos.VetSearchParams) ([]vetDomain.Veterinarian, error) {
+	params := sqlc.ListVeterinariansParams{
+		FirstName:           "%",
+		LastName:            "%",
+		LicenseNumber:       "%",
+		Speciality:          "",
+		YearsOfExperience:   0,
+		YearsOfExperience_2: 0,
+		IsActive:            pgtype.Bool{Bool: false, Valid: false},
+		Limit:               int32(searchParams.Limit),
+		Offset:              int32(searchParams.Offset),
+	}
+
+	// Apply Filters
+	if searchParams.Filters.Name != nil {
+		name := "%" + *searchParams.Filters.Name + "%"
+		params.FirstName = name
+		params.LastName = name
+	}
+
+	if searchParams.Filters.LicenseNumber != nil {
+		params.LicenseNumber = "%" + *searchParams.Filters.LicenseNumber + "%"
+	}
+
+	if searchParams.Filters.Specialty != nil {
+		params.Speciality = sqlc.VeterinarianSpeciality(searchParams.Filters.Specialty.String())
+	}
+
+	if searchParams.Filters.YearsExperience != nil {
+		if searchParams.Filters.YearsExperience.Min != nil {
+			params.YearsOfExperience = int32(*searchParams.Filters.YearsExperience.Min)
+		}
+		if searchParams.Filters.YearsExperience.Max != nil {
+			params.YearsOfExperience_2 = int32(*searchParams.Filters.YearsExperience.Max)
+		}
+	}
+
+	if searchParams.Filters.IsActive != nil {
+		params.IsActive = pgtype.Bool{Bool: *searchParams.Filters.IsActive, Valid: true}
+	}
+
+	// Ordering Config
+	orderParams := make([]interface{}, 8)
+	for i := range orderParams {
+		orderParams[i] = false
+	}
+
+	switch searchParams.OrderBy {
+	case "name":
+		if searchParams.SortDirection == shared.ASC {
+			orderParams[0] = true // $8: Order by first_name ASC
+		} else {
+			orderParams[1] = true // $9: Order by first_name DESC
+		}
+	case "specialty":
+		if searchParams.SortDirection == shared.ASC {
+			orderParams[2] = true // $10: Order by speciality ASC
+		} else {
+			orderParams[3] = true // $11: Order by speciality DESC
+		}
+	case "years_experience":
+		if searchParams.SortDirection == shared.ASC {
+			orderParams[4] = true // $12: Order by years_of_experience ASC
+		} else {
+			orderParams[5] = true // $13: Order by years_of_experience DESC
+		}
+	case "created_at":
+		if searchParams.SortDirection == shared.ASC {
+			orderParams[6] = true // $14: Order by created_at ASC
+		} else {
+			orderParams[7] = true // $15: Order by created_at DESC
+		}
+	default:
+		// Default ordering: for recents first
+		orderParams[7] = true
+	}
+
+	params.Column8 = orderParams[0]
+	params.Column9 = orderParams[1]
+	params.Column10 = orderParams[2]
+	params.Column11 = orderParams[3]
+	params.Column12 = orderParams[4]
+	params.Column13 = orderParams[5]
+	params.Column14 = orderParams[6]
+	params.Column15 = orderParams[7]
+
+	sqlVets, err := r.queries.ListVeterinarians(ctx, params)
 	if err != nil {
-		return []vetDomain.Veterinarian{}, err
+		return nil, fmt.Errorf("failed to list veterinarians: %w", err)
 	}
 
-	entitiesList := make([]vetDomain.Veterinarian, len(sqlVetList))
-	for i, sqlVet := range sqlVetList {
-		entitiesList[i] = *SqlcVetToDomain(sqlVet)
+	vets := make([]vetDomain.Veterinarian, len(sqlVets))
+	for i, sqlVet := range sqlVets {
+		vets[i] = *SqlcVetToDomain(sqlVet)
 	}
 
-	return entitiesList, nil
+	return vets, nil
 }
 
-func (c *SqlcVetRepository) GetByID(ctx context.Context, id uint) (vetDomain.Veterinarian, error) {
+func (c *SqlcVetRepository) GetByID(ctx context.Context, id int) (vetDomain.Veterinarian, error) {
 	sqlVet, err := c.queries.GetVeterinarianById(ctx, int32(id))
 	if err != nil {
 		return vetDomain.Veterinarian{}, err
@@ -40,7 +127,7 @@ func (c *SqlcVetRepository) GetByID(ctx context.Context, id uint) (vetDomain.Vet
 	return *SqlcVetToDomain(sqlVet), nil
 }
 
-func (c *SqlcVetRepository) GetByUserID(ctx context.Context, id uint) (vetDomain.Veterinarian, error) {
+func (c *SqlcVetRepository) GetByUserID(ctx context.Context, id int) (vetDomain.Veterinarian, error) {
 	sqlVet, err := c.queries.GetVeterinarianById(ctx, int32(id))
 	if err != nil {
 		return vetDomain.Veterinarian{}, err
@@ -62,14 +149,14 @@ func (c *SqlcVetRepository) Save(ctx context.Context, vet *vetDomain.Veterinaria
 	return nil
 }
 
-func (c *SqlcVetRepository) Delete(ctx context.Context, id uint, isSoftDelete bool) error {
+func (c *SqlcVetRepository) Delete(ctx context.Context, id int) error {
 	if err := c.queries.SoftDeleteVeterinarian(ctx, int32(id)); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (c *SqlcVetRepository) Exists(ctx context.Context, vetId uint) (bool, error) {
+func (c *SqlcVetRepository) Exists(ctx context.Context, vetId int) (bool, error) {
 	_, err := c.queries.GetVeterinarianById(ctx, int32(vetId))
 	if err != nil {
 		if err.Error() == "sql: no rows in result set" {
@@ -98,7 +185,7 @@ func (c *SqlcVetRepository) create(ctx context.Context, vet *vetDomain.Veterinar
 		return err
 	}
 
-	vet.ID = uint(sqlVet.ID)
+	vet.ID = int(sqlVet.ID)
 	vet.CreatedAt = sqlVet.CreatedAt.Time
 	vet.UpdatedAt = sqlVet.UpdatedAt.Time
 

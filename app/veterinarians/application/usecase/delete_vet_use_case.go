@@ -2,8 +2,9 @@ package vetUsecase
 
 import (
 	"context"
-	"fmt"
+	"strconv"
 
+	vetaApplication "github.com/alexisTrejo11/Clinic-Vet-API/app/veterinarians/application"
 	vetRepo "github.com/alexisTrejo11/Clinic-Vet-API/app/veterinarians/application/repositories"
 )
 
@@ -17,21 +18,18 @@ func NewDeleteVetUseCase(vetRepository vetRepo.VeterinarianRepository) *DeleteVe
 	}
 }
 
-func (uc *DeleteVetUseCase) Execute(ctx context.Context, vetId uint, isSoftDelete bool) error {
+func (uc *DeleteVetUseCase) Execute(ctx context.Context, vetId int) error {
 	exists, err := uc.vetRepository.Exists(ctx, vetId)
 	if err != nil {
-		return err
+		return vetaApplication.VetDBErr("search", err)
 	}
 
 	if !exists {
-		return fmt.Errorf("vet %v not found", vetId)
-	}
-	// TODO: Hard Delete Validation
-	if !isSoftDelete {
+		return vetaApplication.VetNotFoundErr("id", strconv.Itoa(vetId))
 	}
 
-	if err := uc.vetRepository.Delete(ctx, vetId, isSoftDelete); err != nil {
-		return err
+	if err := uc.vetRepository.Delete(ctx, vetId); err != nil {
+		return vetaApplication.VetDBErr("delete", err)
 	}
 
 	return nil

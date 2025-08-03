@@ -10,10 +10,10 @@ type OwnerRepository interface {
 	Save(ctx context.Context, owner *ownerDomain.Owner) error
 
 	List(ctx context.Context, query string, limit, offset int) ([]ownerDomain.Owner, error)
-	GetByID(ctx context.Context, id uint, includePets bool) (ownerDomain.Owner, error)
+	GetByID(ctx context.Context, id int, includePets bool) (ownerDomain.Owner, error)
 	GetByPhone(ctx context.Context, phone string) (ownerDomain.Owner, error)
 
-	Delete(ctx context.Context, id uint) error
+	Delete(ctx context.Context, id int) error
 
 	//GetByName(ctx context.Context, name string) ([]ownerDomain.Owner, error)
 	//ListActiveOwners(ctx context.Context, limit, offset int) ([]ownerDomain.Owner, error)
@@ -25,9 +25,9 @@ type OwnerRepository interface {
 	//CountActiveOwners(ctx context.Context) (int64, error)
 	//CountInactiveOwners(ctx context.Context) (int64, error)
 
-	//ActivateOwner(ctx context.Context, id uint) error
-	//DeactivateOwner(ctx context.Context, id uint) error
+	//ActivateOwner(ctx context.Context, id int) error
+	//DeactivateOwner(ctx context.Context, id int) error
 
 	ExistsByPhone(ctx context.Context, phone string) (bool, error)
-	ExistsByID(ctx context.Context, id uint) (bool, error)
+	ExistsByID(ctx context.Context, id int) (bool, error)
 }

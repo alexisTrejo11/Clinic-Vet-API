@@ -18,7 +18,7 @@ func NewGetVetByIdUseCase(vetRepository vetRepo.VeterinarianRepository) *GetVetB
 	}
 }
 
-func (uc *GetVetByIdUseCase) Execute(ctx context.Context, vetId uint) (dto.VetResponse, error) {
+func (uc *GetVetByIdUseCase) Execute(ctx context.Context, vetId int) (dto.VetResponse, error) {
 	veterinarian, err := uc.vetRepository.GetByID(ctx, vetId)
 	if err != nil {
 		return dto.VetResponse{}, err

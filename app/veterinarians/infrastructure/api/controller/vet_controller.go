@@ -27,12 +27,13 @@ func NewVeterinarianController(
 }
 
 func (c *VeterinarianController) ListVeterinarians(ctx *gin.Context) {
-	//limit := ctx.Query("limit")
-	//offset := ctx.Query("offset")
-	//status := ctx.Query("status")
-	//include_pets := ctx.Query("include_pets")
+	listParams, err := fetchVetParams(ctx)
+	if err != nil {
+		apiResponse.RequestURLQueryError(ctx, err)
+		return
+	}
 
-	vets, err := c.vetUseCases.ListVetUseCase(context.TODO(), nil)
+	vets, err := c.vetUseCases.ListVetUseCase(ctx.Request.Context(), listParams)
 	if err != nil {
 		apiResponse.AppError(ctx, err)
 		return

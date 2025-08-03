@@ -18,7 +18,7 @@ func NewDeletePetUseCase(repository petRepository.PetRepository) *DeletePetUseCa
 	}
 }
 
-func (uc *DeletePetUseCase) Execute(cxt context.Context, petId uint, isSoftDelete bool) error {
+func (uc *DeletePetUseCase) Execute(cxt context.Context, petId int, isSoftDelete bool) error {
 	pet, err := uc.repository.GetById(cxt, petId)
 	if err != nil {
 		return petAppError.HandleGetByIdError(err, petId)
@@ -37,7 +37,7 @@ func (uc *DeletePetUseCase) Execute(cxt context.Context, petId uint, isSoftDelet
 	return nil
 }
 
-func (uc *DeletePetUseCase) delete(cxt context.Context, petId uint) error {
+func (uc *DeletePetUseCase) delete(cxt context.Context, petId int) error {
 	if err := uc.repository.Delete(cxt, petId); err != nil {
 		return err
 	}

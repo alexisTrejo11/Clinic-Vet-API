@@ -12,7 +12,7 @@ type VetCreate struct {
 	LastName        string                 `json:"last_name" validate:"required"`
 	Photo           string                 `json:"photo"`
 	LicenseNumber   string                 `json:"license_number" validate:"required"`
-	YearsExperience uint                   `json:"years_experience"`
+	YearsExperience int                    `json:"years_experience"`
 	IsActive        bool                   `json:"is_active"`
 	Specialty       vetDomain.VetSpecialty `json:"specialty"`
 	ConsultationFee *shared.Money          `json:"consultation_fee"`
@@ -32,9 +32,35 @@ type VetUpdate struct {
 	LastName        *string                 `json:"last_name"`
 	Photo           *string                 `json:"photo"`
 	LicenseNumber   *string                 `json:"license_number"`
-	YearsExperience *uint                   `json:"years_experience"`
+	YearsExperience *int                    `json:"years_experience"`
 	Specialty       *vetDomain.VetSpecialty `json:"specialty"`
 	IsActive        *bool                   `json:"is_active"`
 	ConsultationFee *shared.Money           `json:"consultation_fee"`
 	LaboralSchedule *[]ScheduleInsert       `json:"laboral_schedule"`
 }
+
+type VetSearchParams struct {
+	shared.PageInput
+	Filters VetFilters `json:"filters"`
+	OrderBy VetOrderBy
+}
+
+type VetFilters struct {
+	Name            *string                 `json:"name"`
+	LicenseNumber   *string                 `json:"license_number"`
+	Specialty       *vetDomain.VetSpecialty `json:"specialty"`
+	YearsExperience *struct {
+		Min *int `json:"min"`
+		Max *int `json:"max"`
+	} `json:"years_experience"`
+	IsActive *bool `json:"is_active"`
+}
+
+type VetOrderBy string
+
+const (
+	OrderByName            VetOrderBy = "name"
+	OrderBySpecialty       VetOrderBy = "specialty"
+	OrderByYearsExperience VetOrderBy = "years_experience"
+	OrderByCreatedAt       VetOrderBy = "created_at"
+)

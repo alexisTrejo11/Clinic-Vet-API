@@ -20,7 +20,7 @@ func NewGetOwnerByIdUseCase(ownerRepo ownerRepository.OwnerRepository) *GetOwner
 	}
 }
 
-func (uc *GetOwnerByIdUseCase) Execute(ctx context.Context, id uint, includePets bool) (*ownerDTOs.OwnerResponse, error) {
+func (uc *GetOwnerByIdUseCase) Execute(ctx context.Context, id int, includePets bool) (*ownerDTOs.OwnerResponse, error) {
 	owner, err := uc.ownerRepo.GetByID(ctx, id, includePets)
 	if err != nil {
 		return nil, ownerAppErr.HandleGetByIdError(err, id)

@@ -1,6 +1,7 @@
 package vetMapper
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
@@ -68,7 +69,37 @@ func UpdateFromDTO(vet *vetDomain.Veterinarian, vetData vetDtos.VetUpdate) {
 }
 
 func ToResponse(vet vetDomain.Veterinarian) *vetDtos.VetResponse {
+	fmt.Println("MAPPER")
+	if vet.Schedule != nil {
+		days := vet.Schedule.WorkDays
+
+		scheduleResponses := make([]vetDtos.ScheduleInsert, len(days))
+		for i, day := range days {
+			shcedule := vetDtos.ScheduleInsert{
+				Day:           day.Day,
+				EntryTime:     day.StartHour,
+				DepartureTime: day.EndHour,
+				StartBreak:    day.Breaks.StartHour,
+				EndBreak:      day.Breaks.EndHour,
+			}
+			scheduleResponses[i] = shcedule
+		}
+
+		return &vetDtos.VetResponse{
+			Id:              vet.ID,
+			FirstName:       vet.Name.FirstName(),
+			LastName:        vet.Name.LastName(),
+			Photo:           vet.Photo,
+			LicenseNumber:   vet.LicenseNumber,
+			Specialty:       vet.Specialty.String(),
+			YearsExperience: vet.YearsExperience,
+			ConsultationFee: vet.ConsultationFee,
+			LaboralSchedule: &scheduleResponses,
+		}
+	}
+
 	return &vetDtos.VetResponse{
+		Id:              vet.ID,
 		FirstName:       vet.Name.FirstName(),
 		LastName:        vet.Name.LastName(),
 		Photo:           vet.Photo,
@@ -76,6 +107,5 @@ func ToResponse(vet vetDomain.Veterinarian) *vetDtos.VetResponse {
 		Specialty:       vet.Specialty.String(),
 		YearsExperience: vet.YearsExperience,
 		ConsultationFee: vet.ConsultationFee,
-		//WorkDaysSchedule: vet.LaboralSchedule,
 	}
 }

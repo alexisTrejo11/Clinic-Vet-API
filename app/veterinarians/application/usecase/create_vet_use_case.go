@@ -21,7 +21,7 @@ func NewCreateVetUseCase(vetRepository vetRepo.VeterinarianRepository) *CreateVe
 func (uc *CreateVetUseCase) Execute(ctx context.Context, vetCreateData dto.VetCreate) (dto.VetResponse, error) {
 	newVet := vetMapper.FromCreateDTO(vetCreateData)
 
-	if err := newVet.ValidateBuissnessLogic(); err != nil {
+	if err := newVet.ValidateBusinessLogic(); err != nil {
 		return dto.VetResponse{}, err
 	}
 

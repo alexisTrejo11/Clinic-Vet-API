@@ -30,22 +30,22 @@ func NewVetUseCase(
 	}
 }
 
-func (uc *VeterinarianUseCases) ListVetUseCase(ctx context.Context, searchParams map[string]interface{}) ([]vetDtos.VetResponse, error) {
+func (uc *VeterinarianUseCases) ListVetUseCase(ctx context.Context, searchParams vetDtos.VetSearchParams) ([]vetDtos.VetResponse, error) {
 	return uc.listVetsUseCase.Execute(ctx, searchParams)
 }
 
-func (uc *VeterinarianUseCases) GetVetByIdUseCase(ctx context.Context, vetId uint) (vetDtos.VetResponse, error) {
+func (uc *VeterinarianUseCases) GetVetByIdUseCase(ctx context.Context, vetId int) (vetDtos.VetResponse, error) {
 	return uc.getVetByIdUseCase.Execute(ctx, vetId)
-
 }
 
 func (uc *VeterinarianUseCases) CreateVetUseCase(ctx context.Context, vetCreateData vetDtos.VetCreate) (vetDtos.VetResponse, error) {
 	return uc.createVetUseCase.Execute(ctx, vetCreateData)
 }
-func (uc *VeterinarianUseCases) UpdateVetUseCase(ctx context.Context, vetId uint, vetCreateData vetDtos.VetUpdate) (vetDtos.VetResponse, error) {
+
+func (uc *VeterinarianUseCases) UpdateVetUseCase(ctx context.Context, vetId int, vetCreateData vetDtos.VetUpdate) (vetDtos.VetResponse, error) {
 	return uc.updateVetUseCase.Execute(ctx, vetId, vetCreateData)
 }
 
-func (uc *VeterinarianUseCases) DeleteVetUseCase(ctx context.Context, vetId uint) error {
-	return uc.deleteVetUseCase.Execute(ctx, vetId, true)
+func (uc *VeterinarianUseCases) DeleteVetUseCase(ctx context.Context, vetId int) error {
+	return uc.deleteVetUseCase.Execute(ctx, vetId)
 }

@@ -1,7 +1,10 @@
 package apiResponse
 
 import (
+	"database/sql"
+	"errors"
 	"fmt"
+	"net/http"
 
 	appError "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/errors/application"
 	"github.com/gin-gonic/gin"
@@ -27,7 +30,7 @@ func NoContent(ctx *gin.Context) {
 	ctx.JSON(204, response)
 }
 
-func NoFound(ctx *gin.Context, err error) {
+func NotFound(ctx *gin.Context, err error) {
 	response := APIResponse{}
 	errorResponse := response.ErrorRequest(err)
 	ctx.JSON(404, errorResponse)
@@ -71,14 +74,10 @@ func ServerError(ctx *gin.Context, err error) {
 func AppError(ctx *gin.Context, err error) {
 	response := APIResponse{}
 	errorResponse := response.ErrorRequest(err)
-	httpStatusCode := 500
+	httpStatusCode := http.StatusInternalServerError
 
-	type httpStatusCoder interface {
-		HTTPStatus() int
-	}
-
-	if e, ok := err.(httpStatusCoder); ok {
-		httpStatusCode = e.HTTPStatus()
+	if errors.Is(err, sql.ErrNoRows) {
+		httpStatusCode = http.StatusNotFound
 	}
 
 	ctx.JSON(httpStatusCode, errorResponse)

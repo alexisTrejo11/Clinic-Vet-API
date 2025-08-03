@@ -2,6 +2,7 @@ package petUsecase
 
 import (
 	"context"
+	"fmt"
 
 	petAppError "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application"
 	petDTOs "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application/dtos"
@@ -19,8 +20,9 @@ func NewGetPetByIdUseCase(repository petRepository.PetRepository) *GetPetByIdUse
 	}
 }
 
-func (uc *GetPetByIdUseCase) Execute(ctx context.Context, petId uint) (petDTOs.PetResponse, error) {
+func (uc *GetPetByIdUseCase) Execute(ctx context.Context, petId int) (petDTOs.PetResponse, error) {
 	pet, err := uc.repository.GetById(ctx, petId)
+	fmt.Println(err)
 	if err != nil {
 		return petDTOs.PetResponse{}, petAppError.HandleGetByIdError(err, petId)
 	}

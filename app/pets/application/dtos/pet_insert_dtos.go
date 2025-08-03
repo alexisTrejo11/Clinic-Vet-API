@@ -15,7 +15,7 @@ type PetCreate struct {
 	Color              *string      `json:"color,omitempty" validate:"omitempty,min=2,max=50"`
 	Microchip          *string      `json:"microchip,omitempty" validate:"omitempty,len=15,numeric"`
 	IsNeutered         *bool        `json:"is_neutered,omitempty"`
-	OwnerID            uint         `json:"owner_id" validate:"required,gt=0"`
+	OwnerID            int          `json:"owner_id" validate:"required,gt=0"`
 	Allergies          *string      `json:"allergies,omitempty" validate:"omitempty,max=500"`
 	CurrentMedications *string      `json:"current_medications,omitempty" validate:"omitempty,max=500"`
 	SpecialNeeds       *string      `json:"special_needs,omitempty" validate:"omitempty,max=500"`
@@ -33,7 +33,7 @@ type PetUpdate struct {
 	Color              *string      `json:"color,omitempty" validate:"omitempty,min=2,max=50"`
 	Microchip          *string      `json:"microchip,omitempty" validate:"omitempty,len=15,numeric"`
 	IsNeutered         *bool        `json:"is_neutered,omitempty"`
-	OwnerID            *uint        `json:"owner_id,omitempty" validate:"omitempty,gt=0"`
+	OwnerID            *int         `json:"owner_id,omitempty" validate:"omitempty,gt=0"`
 	Allergies          *string      `json:"allergies,omitempty" validate:"omitempty,max=500"`
 	CurrentMedications *string      `json:"current_medications,omitempty" validate:"omitempty,max=500"`
 	SpecialNeeds       *string      `json:"special_needs,omitempty" validate:"omitempty,max=500"`

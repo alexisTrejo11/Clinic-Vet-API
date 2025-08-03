@@ -29,7 +29,7 @@ type Querier interface {
 	SoftDeleteVeterinarian(ctx context.Context, id int32) error
 	UpdateOwner(ctx context.Context, arg UpdateOwnerParams) error
 	UpdatePet(ctx context.Context, arg UpdatePetParams) error
-	UpdateVeterinarian(ctx context.Context, arg UpdateVeterinarianParams) (UpdateVeterinarianRow, error)
+	UpdateVeterinarian(ctx context.Context, arg UpdateVeterinarianParams) (Veterinarian, error)
 	WithTx(tx pgx.Tx) *Queries
 }
 

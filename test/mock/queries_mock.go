@@ -346,10 +346,10 @@ func (mr *MockQuerierMockRecorder) UpdatePet(ctx, arg interface{}) *gomock.Call 
 }
 
 // UpdateVeterinarian mocks base method.
-func (m *MockQuerier) UpdateVeterinarian(ctx context.Context, arg sqlc.UpdateVeterinarianParams) (sqlc.UpdateVeterinarianRow, error) {
+func (m *MockQuerier) UpdateVeterinarian(ctx context.Context, arg sqlc.UpdateVeterinarianParams) (sqlc.Veterinarian, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateVeterinarian", ctx, arg)
-	ret0, _ := ret[0].(sqlc.UpdateVeterinarianRow)
+	ret0, _ := ret[0].(sqlc.Veterinarian)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

@@ -162,6 +162,7 @@ type Veterinarian struct {
 	YearsOfExperience int32
 	IsActive          pgtype.Bool
 	UserID            pgtype.Int4
+	ScheduleJson      []byte
 	CreatedAt         pgtype.Timestamptz
 	UpdatedAt         pgtype.Timestamptz
 	DeletedAt         pgtype.Timestamp

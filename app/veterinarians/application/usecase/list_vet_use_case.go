@@ -3,7 +3,7 @@ package vetUsecase
 import (
 	"context"
 
-	dto "github.com/alexisTrejo11/Clinic-Vet-API/app/veterinarians/application/dtos"
+	vetDtos "github.com/alexisTrejo11/Clinic-Vet-API/app/veterinarians/application/dtos"
 	vetMapper "github.com/alexisTrejo11/Clinic-Vet-API/app/veterinarians/application/mappers"
 	vetRepo "github.com/alexisTrejo11/Clinic-Vet-API/app/veterinarians/application/repositories"
 )
@@ -18,13 +18,13 @@ func NewListVetUseCase(vetRepository vetRepo.VeterinarianRepository) *ListVetUse
 	}
 }
 
-func (uc *ListVetUseCase) Execute(ctx context.Context, searchParam map[string]interface{}) ([]dto.VetResponse, error) {
+func (uc *ListVetUseCase) Execute(ctx context.Context, searchParam vetDtos.VetSearchParams) ([]vetDtos.VetResponse, error) {
 	veterinarianList, err := uc.vetRepository.List(ctx, searchParam)
 	if err != nil {
-		return []dto.VetResponse{}, err
+		return []vetDtos.VetResponse{}, err
 	}
 
-	vetResponseList := make([]dto.VetResponse, len(veterinarianList))
+	vetResponseList := make([]vetDtos.VetResponse, len(veterinarianList))
 	for i, vet := range veterinarianList {
 		vetResponses := vetMapper.ToResponse(vet)
 		vetResponseList[i] = *vetResponses

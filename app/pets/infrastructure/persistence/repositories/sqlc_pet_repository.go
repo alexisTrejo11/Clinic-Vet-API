@@ -37,7 +37,7 @@ func (r *SqlcPetRepository) List(ctx context.Context) ([]petDomain.Pet, error) {
 	return pets, nil
 }
 
-func (r *SqlcPetRepository) ListByOwnerId(ctx context.Context, ownerId uint) ([]petDomain.Pet, error) {
+func (r *SqlcPetRepository) ListByOwnerId(ctx context.Context, ownerId int) ([]petDomain.Pet, error) {
 	sqlPets, err := r.queries.GetPetsByOwnerID(ctx, int32(ownerId))
 	if err != nil {
 		return []petDomain.Pet{}, DBSelectFoundError(err.Error())
@@ -55,7 +55,7 @@ func (r *SqlcPetRepository) ListByOwnerId(ctx context.Context, ownerId uint) ([]
 	return pets, nil
 }
 
-func (r *SqlcPetRepository) GetById(ctx context.Context, petId uint) (petDomain.Pet, error) {
+func (r *SqlcPetRepository) GetById(ctx context.Context, petId int) (petDomain.Pet, error) {
 	sqlPet, err := r.queries.GetPetByID(ctx, int32(petId))
 	if err != nil {
 		return petDomain.Pet{}, DBSelectFoundError(err.Error())
@@ -98,7 +98,7 @@ func (r *SqlcPetRepository) create(ctx context.Context, pet *petDomain.Pet) erro
 		return err
 	}
 
-	pet.ID = uint(petCreated.ID)
+	pet.ID = int(petCreated.ID)
 
 	return nil
 }
@@ -114,7 +114,7 @@ func (r *SqlcPetRepository) update(ctx context.Context, pet *petDomain.Pet) erro
 	return nil
 }
 
-func (r *SqlcPetRepository) Delete(ctx context.Context, petId uint) error {
+func (r *SqlcPetRepository) Delete(ctx context.Context, petId int) error {
 	if err := r.queries.DeletePet(ctx, int32(petId)); err != nil {
 		return DBDeleteError(err.Error())
 

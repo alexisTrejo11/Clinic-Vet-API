@@ -8,8 +8,8 @@ import (
 
 type PetRepository interface {
 	List(ctx context.Context) ([]petDomain.Pet, error)
-	ListByOwnerId(ctx context.Context, petId uint) ([]petDomain.Pet, error)
-	GetById(ctx context.Context, petId uint) (petDomain.Pet, error)
+	ListByOwnerId(ctx context.Context, petId int) ([]petDomain.Pet, error)
+	GetById(ctx context.Context, petId int) (petDomain.Pet, error)
 	Save(ctx context.Context, pet *petDomain.Pet) error
-	Delete(ctx context.Context, petId uint) error
+	Delete(ctx context.Context, petId int) error
 }

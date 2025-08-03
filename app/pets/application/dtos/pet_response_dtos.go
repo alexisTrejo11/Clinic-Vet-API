@@ -7,7 +7,7 @@ import (
 )
 
 type PetResponse struct {
-	ID                 uint              `json:"id"`
+	ID                 int               `json:"id"`
 	Name               string            `json:"name"`
 	Photo              *string           `json:"photo,omitempty"`
 	Species            string            `json:"species"`
@@ -18,7 +18,7 @@ type PetResponse struct {
 	Color              *string           `json:"color,omitempty"`
 	Microchip          *string           `json:"microchip,omitempty"`
 	IsNeutered         *bool             `json:"is_neutered,omitempty"`
-	OwnerID            uint              `json:"owner_id"`
+	OwnerID            int               `json:"owner_id"`
 	Allergies          *string           `json:"allergies,omitempty"`
 	CurrentMedications *string           `json:"current_medications,omitempty"`
 	SpecialNeeds       *string           `json:"special_needs,omitempty"`

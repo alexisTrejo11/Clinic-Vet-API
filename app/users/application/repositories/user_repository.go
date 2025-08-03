@@ -8,7 +8,7 @@ type UserRepository interface {
 	Save(user *userDomain.User) error
 	FindByEmail(email string) (*userDomain.User, error)
 	FindByPhone(email string) (*userDomain.User, error)
-	FindByID(id uint) (*userDomain.User, error)
-	ActivateUser(id uint) error
-	Delete(id uint) error
+	FindByID(id int) (*userDomain.User, error)
+	ActivateUser(id int) error
+	Delete(id int) error
 }

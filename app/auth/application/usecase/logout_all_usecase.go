@@ -16,7 +16,7 @@ func NewLogoutAllUseCase(sessionRepo authRepository.SessionRepository) *LogoutAl
 	}
 }
 
-func (uc *LogoutAllUseCase) Execute(userID uint) error {
+func (uc *LogoutAllUseCase) Execute(userID int) error {
 	if err := uc.sessionRepo.DeleteAllUserSessions(userID); err != nil {
 		return errors.New("failed to logout from all devices")
 	}

@@ -1,6 +1,9 @@
 package appError
 
-import "fmt"
+import (
+	"fmt"
+	"net/http"
+)
 
 type EntityNotFoundError struct {
 	BaseApplicationError
@@ -22,5 +25,14 @@ func NewEntityNotFoundError(entityType, entityID string) *EntityNotFoundError {
 		},
 		EntityType: entityType,
 		EntityID:   entityID,
+	}
+}
+
+func NewInternalServerError() *BaseApplicationError {
+	return &BaseApplicationError{
+		Code:       "INTERNAL_SERVER_ERROR",
+		Type:       "server",
+		Message:    "Internal server error",
+		StatusCode: http.StatusInternalServerError,
 	}
 }

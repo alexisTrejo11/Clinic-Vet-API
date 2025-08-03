@@ -7,8 +7,8 @@ import (
 )
 
 type Session struct {
-	ID           uint
-	UserID       uint
+	ID           int
+	UserID       int
 	RefreshToken string
 	DeviceInfo   string
 	IPAddress    string

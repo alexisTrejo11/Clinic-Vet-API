@@ -22,7 +22,7 @@ func NewUpdatePetUseCase(petRepository petRepository.PetRepository, ownerReposit
 	}
 }
 
-func (uc UpdatePetUseCase) Execute(ctx context.Context, petId uint, petUpdate petDTOs.PetUpdate) (petDTOs.PetResponse, error) {
+func (uc UpdatePetUseCase) Execute(ctx context.Context, petId int, petUpdate petDTOs.PetUpdate) (petDTOs.PetResponse, error) {
 	pet, err := uc.petRepository.GetById(ctx, petId)
 	if err != nil {
 		return petDTOs.PetResponse{}, petAppError.HandleGetByIdError(err, petId)
@@ -42,7 +42,7 @@ func (uc UpdatePetUseCase) Execute(ctx context.Context, petId uint, petUpdate pe
 	return petMapper.ToResponse(pet), nil
 }
 
-func (uc UpdatePetUseCase) validate_owner(ctx context.Context, owner_id uint) error {
+func (uc UpdatePetUseCase) validate_owner(ctx context.Context, owner_id int) error {
 	_, err := uc.ownerRepository.GetByID(ctx, owner_id, false)
 	if err != nil {
 		notFounderr := petAppError.HandleGetByIdError(err, owner_id)

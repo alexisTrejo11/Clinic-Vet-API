@@ -48,6 +48,7 @@ CREATE TABLE IF NOT EXISTS veterinarians(
     years_of_experience INT NOT NULL,
     is_active BOOLEAN,
     user_id int,
+    schedule_json JSONB,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP NULL

@@ -13,7 +13,7 @@ import (
 func ToDomainPet(sqlPet sqlc.Pet) (petDomain.Pet, error) {
 	var domainPet petDomain.Pet
 
-	domainPet.ID = uint(sqlPet.ID)
+	domainPet.ID = int(sqlPet.ID)
 	domainPet.Name = sqlPet.Name
 
 	if sqlPet.Photo.Valid {
@@ -53,7 +53,7 @@ func ToDomainPet(sqlPet sqlc.Pet) (petDomain.Pet, error) {
 		domainPet.IsNeutered = &sqlPet.IsNeutered.Bool
 	}
 
-	domainPet.OwnerID = uint(sqlPet.OwnerID)
+	domainPet.OwnerID = int(sqlPet.OwnerID)
 
 	if sqlPet.Allergies.Valid {
 		domainPet.Allergies = &sqlPet.Allergies.String

@@ -61,7 +61,7 @@ func FromCreateToDomain(row sqlc.CreateOwnerRow) *ownerDomain.Owner {
 	}
 
 	return &ownerDomain.Owner{
-		Id:          uint(row.ID),
+		Id:          int(row.ID),
 		Photo:       row.Photo,
 		FullName:    ownerName,
 		Gender:      userEnums.Gender(row.Gender),
@@ -85,7 +85,7 @@ func ListRowToOwner(rows []sqlc.ListOwnersRow) ([]ownerDomain.Owner, error) {
 			return []ownerDomain.Owner{}, err
 		}
 		owner := ownerDomain.Owner{
-			Id:          uint(row.ID),
+			Id:          int(row.ID),
 			Photo:       row.Photo,
 			FullName:    ownerName,
 			Gender:      userEnums.Gender(row.Gender),

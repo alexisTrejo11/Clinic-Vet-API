@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
+	vetDtos "github.com/alexisTrejo11/Clinic-Vet-API/app/veterinarians/application/dtos"
 	vetRepo "github.com/alexisTrejo11/Clinic-Vet-API/app/veterinarians/application/repositories"
 	vetDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/veterinarians/domain"
 	sqlcVetRepo "github.com/alexisTrejo11/Clinic-Vet-API/app/veterinarians/infrastructure/persistence/repositories"
@@ -40,23 +41,22 @@ func (s *SqlcVetRepositoryTestSuite) TearDownTest() {
 	s.ctrl.Finish()
 }
 
-func (s *SqlcVetRepositoryTestSuite) TestList_Success() {
+func (s *SqlcVetRepositoryTestSuite) TestList_WithFiltersAndSorting() {
 	ctx := context.Background()
 	now := time.Now()
 
+	// Configurar datos de prueba
 	name, _ := shared.NewPersonName("John", "Doe")
-	expectedVets := []vetDomain.Veterinarian{
-		{
-			ID:               1,
-			Name:             name,
-			LicenseNumber:    "VET123",
-			Specialty:        vetDomain.GeneralPracticeSpecialty,
-			WorkDaysSchedule: []vetDomain.WorkDaySchedule{},
-			YearsExperience:  5,
-			IsActive:         true,
-			CreatedAt:        now,
-			UpdatedAt:        now,
-		},
+	expectedVet := vetDomain.Veterinarian{
+		ID:              1,
+		Name:            name,
+		LicenseNumber:   "VET123",
+		Specialty:       vetDomain.GeneralPracticeSpecialty,
+		Schedule:        nil,
+		YearsExperience: 5,
+		IsActive:        true,
+		CreatedAt:       now,
+		UpdatedAt:       now,
 	}
 
 	mockReturn := []sqlc.Veterinarian{
@@ -73,34 +73,154 @@ func (s *SqlcVetRepositoryTestSuite) TestList_Success() {
 		},
 	}
 
+	// Configurar parámetros de búsqueda
+	searchParams := vetDtos.VetSearchParams{
+		PageInput: shared.PageInput{
+			Limit:         10,
+			Offset:        0,
+			SortDirection: shared.DESC,
+		},
+		OrderBy: "years_experience",
+		Filters: vetDtos.VetFilters{
+			Name:      StringPtr("John"),
+			IsActive:  BoolPtr(true),
+			Specialty: VetSpecialtyPtr(vetDomain.GeneralPracticeSpecialty),
+			YearsExperience: &struct {
+				Min *int `json:"min"`
+				Max *int `json:"max"`
+			}{
+				Min: intPtr(3),
+				Max: intPtr(10),
+			},
+		},
+	}
+
+	// Configurar expectativas del mock
+	expectedParams := sqlc.ListVeterinariansParams{
+		FirstName:           "%John%",
+		LastName:            "%John%",
+		LicenseNumber:       "%",
+		Speciality:          sqlc.VeterinarianSpecialityGeneralPractice,
+		YearsOfExperience:   3,
+		YearsOfExperience_2: 10,
+		IsActive:            pgtype.Bool{Bool: true, Valid: true},
+		Column8:             false, // name asc
+		Column9:             false, // name desc
+		Column10:            false, // specialty asc
+		Column11:            false, // specialty desc
+		Column12:            false, // years asc
+		Column13:            true,  // years desc (nuestro caso)
+		Column14:            false, // created_at asc
+		Column15:            false, // created_at desc
+		Limit:               10,
+		Offset:              0,
+	}
+
 	s.mockQueries.EXPECT().
-		ListVeterinarians(ctx, gomock.Any()).
+		ListVeterinarians(ctx, expectedParams).
 		Return(mockReturn, nil)
 
-	result, err := s.repo.List(ctx, nil)
+	// Ejecutar
+	result, err := s.repo.List(ctx, searchParams)
 
+	// Verificar
 	s.NoError(err)
-	s.Equal(expectedVets, result)
+	s.Len(result, 1)
+	s.Equal(expectedVet, result[0])
+}
+
+func (s *SqlcVetRepositoryTestSuite) TestList_NoFilters() {
+	ctx := context.Background()
+	now := time.Now()
+
+	// Configurar datos de prueba
+	name, _ := shared.NewPersonName("John", "Doe")
+	expectedVet := vetDomain.Veterinarian{
+		ID:              1,
+		Name:            name,
+		LicenseNumber:   "VET123",
+		Specialty:       vetDomain.GeneralPracticeSpecialty,
+		Schedule:        nil,
+		YearsExperience: 5,
+		IsActive:        true,
+		CreatedAt:       now,
+		UpdatedAt:       now,
+	}
+
+	mockReturn := []sqlc.Veterinarian{
+		{
+			ID:                1,
+			FirstName:         "John",
+			LastName:          "Doe",
+			LicenseNumber:     "VET123",
+			Speciality:        sqlc.VeterinarianSpecialityGeneralPractice,
+			YearsOfExperience: 5,
+			IsActive:          pgtype.Bool{Bool: true, Valid: true},
+			CreatedAt:         pgtype.Timestamptz{Time: now, Valid: true},
+			UpdatedAt:         pgtype.Timestamptz{Time: now, Valid: true},
+		},
+	}
+
+	// Parámetros vacíos
+	searchParams := vetDtos.VetSearchParams{
+		PageInput: shared.PageInput{
+			Limit:  10,
+			Offset: 0,
+		},
+	}
+
+	// Configurar expectativas del mock
+	expectedParams := sqlc.ListVeterinariansParams{
+		FirstName:           "%",
+		LastName:            "%",
+		LicenseNumber:       "%",
+		Speciality:          "",
+		YearsOfExperience:   0,
+		YearsOfExperience_2: 0,
+		IsActive:            pgtype.Bool{Bool: false, Valid: false},
+		Column8:             false,
+		Column9:             false,
+		Column10:            false,
+		Column11:            false,
+		Column12:            false,
+		Column13:            false,
+		Column14:            false,
+		Column15:            true, // Orden por defecto (created_at DESC)
+		Limit:               10,
+		Offset:              0,
+	}
+
+	s.mockQueries.EXPECT().
+		ListVeterinarians(ctx, expectedParams).
+		Return(mockReturn, nil)
+
+	// Ejecutar
+	result, err := s.repo.List(ctx, searchParams)
+
+	// Verificar
+	s.NoError(err)
+	s.Len(result, 1)
+	s.Equal(expectedVet, result[0])
 }
 
 func (s *SqlcVetRepositoryTestSuite) TestGetByID_Success() {
 	ctx := context.Background()
 	now := time.Now()
-	vetID := uint(1)
+	vetID := int(1)
 
 	// Expected domain model
 	name, _ := shared.NewPersonName("John", "Doe")
 
 	expected := vetDomain.Veterinarian{
-		ID:               vetID,
-		Name:             name,
-		LicenseNumber:    "VET123",
-		WorkDaysSchedule: []vetDomain.WorkDaySchedule{},
-		Specialty:        vetDomain.GeneralPracticeSpecialty,
-		YearsExperience:  5,
-		IsActive:         true,
-		CreatedAt:        now,
-		UpdatedAt:        now,
+		ID:              vetID,
+		Name:            name,
+		LicenseNumber:   "VET123",
+		Schedule:        nil,
+		Specialty:       vetDomain.GeneralPracticeSpecialty,
+		YearsExperience: 5,
+		IsActive:        true,
+		CreatedAt:       now,
+		UpdatedAt:       now,
 	}
 
 	// Mock database return
@@ -127,6 +247,62 @@ func (s *SqlcVetRepositoryTestSuite) TestGetByID_Success() {
 	// Assertions
 	s.NoError(err)
 	s.Equal(expected, result)
+}
+
+func (s *SqlcVetRepositoryTestSuite) TestList_NamePartialSearch() {
+	ctx := context.Background()
+	now := time.Now()
+
+	// Configurar mock
+	mockReturn := []sqlc.Veterinarian{
+		{
+			ID:                1,
+			FirstName:         "John",
+			LastName:          "Doe",
+			LicenseNumber:     "VET123",
+			Speciality:        sqlc.VeterinarianSpecialityGeneralPractice,
+			YearsOfExperience: 5,
+			IsActive:          pgtype.Bool{Bool: true, Valid: true},
+			CreatedAt:         pgtype.Timestamptz{Time: now, Valid: true},
+			UpdatedAt:         pgtype.Timestamptz{Time: now, Valid: true},
+		},
+	}
+
+	// Configurar parámetros de búsqueda
+	searchParams := vetDtos.VetSearchParams{
+		Filters: vetDtos.VetFilters{
+			Name: StringPtr("Joh"),
+		},
+	}
+
+	// Configurar expectativas del mock
+	expectedParams := sqlc.ListVeterinariansParams{
+		FirstName:           "%Joh%",
+		LastName:            "%Joh%",
+		LicenseNumber:       "%",
+		Speciality:          "",
+		YearsOfExperience:   0,
+		YearsOfExperience_2: 0,
+		IsActive:            pgtype.Bool{Bool: false, Valid: false},
+		Column15:            true, // Orden por defecto
+		Limit:               0,    // Valor por defecto
+		Offset:              0,
+	}
+
+	s.mockQueries.EXPECT().
+		ListVeterinarians(ctx, gomock.Any()).
+		DoAndReturn(func(_ context.Context, p sqlc.ListVeterinariansParams) ([]sqlc.Veterinarian, error) {
+			s.Equal(expectedParams.FirstName, p.FirstName)
+			s.Equal(expectedParams.LastName, p.LastName)
+			return mockReturn, nil
+		})
+
+	// Ejecutar
+	result, err := s.repo.List(ctx, searchParams)
+
+	// Verificar
+	s.NoError(err)
+	s.Len(result, 1)
 }
 
 func (s *SqlcVetRepositoryTestSuite) TestSave_Create_Success() {
@@ -170,7 +346,7 @@ func (s *SqlcVetRepositoryTestSuite) TestSave_Create_Success() {
 	err := s.repo.Save(ctx, vet)
 
 	s.NoError(err)
-	s.Equal(uint(1), vet.ID)
+	s.Equal(int(1), vet.ID)
 	s.Equal(now, vet.CreatedAt)
 	s.Equal(now, vet.UpdatedAt)
 }
@@ -200,7 +376,7 @@ func (s *SqlcVetRepositoryTestSuite) TestSave_Update_Success() {
 		IsActive:          pgtype.Bool{Bool: true, Valid: true},
 	}
 
-	mockReturn := sqlc.UpdateVeterinarianRow{
+	mockReturn := sqlc.Veterinarian{
 		ID:            1,
 		FirstName:     "John",
 		LastName:      "Doe",
@@ -221,7 +397,7 @@ func (s *SqlcVetRepositoryTestSuite) TestSave_Update_Success() {
 
 func (s *SqlcVetRepositoryTestSuite) TestExists_True() {
 	ctx := context.Background()
-	id := uint(1)
+	id := int(1)
 
 	mockVet := sqlc.Veterinarian{
 		ID: 1,
@@ -239,7 +415,7 @@ func (s *SqlcVetRepositoryTestSuite) TestExists_True() {
 
 func (s *SqlcVetRepositoryTestSuite) TestExists_False() {
 	ctx := context.Background()
-	id := uint(999)
+	id := int(999)
 
 	s.mockQueries.EXPECT().
 		GetVeterinarianById(ctx, int32(id)).
@@ -249,4 +425,20 @@ func (s *SqlcVetRepositoryTestSuite) TestExists_False() {
 
 	s.NoError(err)
 	s.False(exists)
+}
+
+func StringPtr(s string) *string {
+	return &s
+}
+
+func BoolPtr(b bool) *bool {
+	return &b
+}
+
+func intPtr(u int) *int {
+	return &u
+}
+
+func VetSpecialtyPtr(s vetDomain.VetSpecialty) *vetDomain.VetSpecialty {
+	return &s
 }

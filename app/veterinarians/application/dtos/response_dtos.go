@@ -5,12 +5,12 @@ import (
 )
 
 type VetResponse struct {
-	Id              uint              `json:"id"`
+	Id              int               `json:"id"`
 	FirstName       string            `json:"first_name"`
 	LastName        string            `json:"last_name"`
 	Photo           string            `json:"photo"`
 	LicenseNumber   string            `json:"license_number"`
-	YearsExperience uint              `json:"years_experience"`
+	YearsExperience int               `json:"years_experience"`
 	Specialty       string            `json:"specialty"`
 	ConsultationFee *shared.Money     `json:"consultation_fee"`
 	LaboralSchedule *[]ScheduleInsert `json:"laboral_schedule"`

@@ -14,14 +14,14 @@ import (
 const createVeterinarian = `-- name: CreateVeterinarian :one
 INSERT INTO veterinarians(
     first_name, last_name, photo, license_number, speciality,
-    years_of_experience, is_active, created_at, updated_at, deleted_at
+    years_of_experience, is_active, schedule_json, created_at, updated_at
 )
 VALUES (
-    $1, $2, $3, $4, $5, $6, $7, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL
+    $1, $2, $3, $4, $5, $6, $7, $8::jsonb, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 )
 RETURNING
     id, first_name, last_name, photo, license_number, speciality, years_of_experience,
-    is_active, user_id, created_at, updated_at, deleted_at
+    is_active, user_id, schedule_json, created_at, updated_at, deleted_at
 `
 
 type CreateVeterinarianParams struct {
@@ -32,6 +32,7 @@ type CreateVeterinarianParams struct {
 	Speciality        VeterinarianSpeciality
 	YearsOfExperience int32
 	IsActive          pgtype.Bool
+	Column8           []byte
 }
 
 func (q *Queries) CreateVeterinarian(ctx context.Context, arg CreateVeterinarianParams) (Veterinarian, error) {
@@ -43,6 +44,7 @@ func (q *Queries) CreateVeterinarian(ctx context.Context, arg CreateVeterinarian
 		arg.Speciality,
 		arg.YearsOfExperience,
 		arg.IsActive,
+		arg.Column8,
 	)
 	var i Veterinarian
 	err := row.Scan(
@@ -55,6 +57,7 @@ func (q *Queries) CreateVeterinarian(ctx context.Context, arg CreateVeterinarian
 		&i.YearsOfExperience,
 		&i.IsActive,
 		&i.UserID,
+		&i.ScheduleJson,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.DeletedAt,
@@ -65,7 +68,7 @@ func (q *Queries) CreateVeterinarian(ctx context.Context, arg CreateVeterinarian
 const getVeterinarianById = `-- name: GetVeterinarianById :one
 SELECT 
     id, first_name, last_name, photo, license_number, speciality, years_of_experience, 
-    is_active, user_id, created_at, updated_at, deleted_at
+    is_active, user_id, schedule_json, created_at, updated_at, deleted_at
 FROM veterinarians
 WHERE id = $1 AND deleted_at IS NULL
 `
@@ -83,6 +86,7 @@ func (q *Queries) GetVeterinarianById(ctx context.Context, id int32) (Veterinari
 		&i.YearsOfExperience,
 		&i.IsActive,
 		&i.UserID,
+		&i.ScheduleJson,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.DeletedAt,
@@ -90,36 +94,111 @@ func (q *Queries) GetVeterinarianById(ctx context.Context, id int32) (Veterinari
 	return i, err
 }
 
-const listVeterinarians = `-- name: ListVeterinarians :many
-SELECT
-    id, first_name, last_name, photo, license_number, speciality, years_of_experience, 
-    is_active, user_id, created_at, updated_at, deleted_at
-FROM
-    veterinarians
-WHERE
+const getVeterinariansWithSchedule = `-- name: GetVeterinariansWithSchedule :many
+SELECT id, first_name, last_name, photo, license_number, speciality, years_of_experience, is_active, user_id, schedule_json, created_at, updated_at, deleted_at FROM veterinarians
+WHERE 
     deleted_at IS NULL
+    AND schedule_json @> '{"work_days": [{"day": 1, "start_hour": 9}]}'
+`
+
+func (q *Queries) GetVeterinariansWithSchedule(ctx context.Context) ([]Veterinarian, error) {
+	rows, err := q.db.Query(ctx, getVeterinariansWithSchedule)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Veterinarian
+	for rows.Next() {
+		var i Veterinarian
+		if err := rows.Scan(
+			&i.ID,
+			&i.FirstName,
+			&i.LastName,
+			&i.Photo,
+			&i.LicenseNumber,
+			&i.Speciality,
+			&i.YearsOfExperience,
+			&i.IsActive,
+			&i.UserID,
+			&i.ScheduleJson,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.DeletedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listVeterinarians = `-- name: ListVeterinarians :many
+SELECT 
+    id, first_name, last_name, photo, license_number, speciality, years_of_experience, 
+    is_active, user_id, schedule_json, created_at, updated_at, deleted_at
+FROM veterinarians
+WHERE 
+    (first_name ILIKE $1 OR last_name ILIKE $2)
+    AND (license_number ILIKE $3 OR $3 = '')
+    AND (speciality = $4 OR $4 = '')
+    AND (years_of_experience >= $5 OR $5 = 0)
+    AND (years_of_experience <= $6 OR $6 = 0)
+    AND (is_active = $7 OR $7 IS NULL)
+    AND deleted_at IS NULL
 ORDER BY
-    CASE WHEN $3 = 'id' AND $4 = 'ASC' THEN id END ASC,
-    CASE WHEN $3 = 'id' AND $4 = 'DESC' THEN id END DESC,
-    CASE WHEN $3 = 'created_at' AND $4 = 'ASC' THEN created_at END ASC,
-    CASE WHEN $3 = 'created_at' AND $4 = 'DESC' THEN created_at END DESC,
-    id ASC -- Fallback order if no match
-LIMIT $1 OFFSET $2
+    CASE WHEN $8 THEN first_name END ASC NULLS LAST,
+    CASE WHEN $9 THEN first_name END DESC NULLS LAST,
+    CASE WHEN $10 THEN speciality END ASC NULLS LAST,
+    CASE WHEN $11 THEN speciality END DESC NULLS LAST,
+    CASE WHEN $12 THEN years_of_experience END ASC NULLS LAST,
+    CASE WHEN $13 THEN years_of_experience END DESC NULLS LAST,
+    CASE WHEN $14 THEN created_at END ASC NULLS LAST,
+    CASE WHEN $15 THEN created_at END DESC NULLS LAST
+LIMIT $16 OFFSET $17
 `
 
 type ListVeterinariansParams struct {
-	Limit          int32
-	Offset         int32
-	OrderBy        interface{}
-	OrderDirection interface{}
+	FirstName           string
+	LastName            string
+	LicenseNumber       string
+	Speciality          VeterinarianSpeciality
+	YearsOfExperience   int32
+	YearsOfExperience_2 int32
+	IsActive            pgtype.Bool
+	Column8             interface{}
+	Column9             interface{}
+	Column10            interface{}
+	Column11            interface{}
+	Column12            interface{}
+	Column13            interface{}
+	Column14            interface{}
+	Column15            interface{}
+	Limit               int32
+	Offset              int32
 }
 
 func (q *Queries) ListVeterinarians(ctx context.Context, arg ListVeterinariansParams) ([]Veterinarian, error) {
 	rows, err := q.db.Query(ctx, listVeterinarians,
+		arg.FirstName,
+		arg.LastName,
+		arg.LicenseNumber,
+		arg.Speciality,
+		arg.YearsOfExperience,
+		arg.YearsOfExperience_2,
+		arg.IsActive,
+		arg.Column8,
+		arg.Column9,
+		arg.Column10,
+		arg.Column11,
+		arg.Column12,
+		arg.Column13,
+		arg.Column14,
+		arg.Column15,
 		arg.Limit,
 		arg.Offset,
-		arg.OrderBy,
-		arg.OrderDirection,
 	)
 	if err != nil {
 		return nil, err
@@ -138,6 +217,7 @@ func (q *Queries) ListVeterinarians(ctx context.Context, arg ListVeterinariansPa
 			&i.YearsOfExperience,
 			&i.IsActive,
 			&i.UserID,
+			&i.ScheduleJson,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.DeletedAt,
@@ -175,13 +255,14 @@ SET
     license_number = COALESCE($4, license_number),
     speciality = COALESCE($5, speciality),
     years_of_experience = COALESCE($6, years_of_experience),
-    is_active = COALESCE($7, is_active),  
+    is_active = COALESCE($7, is_active),
+    schedule_json = COALESCE($8::jsonb, schedule_json),
     updated_at = CURRENT_TIMESTAMP        
 WHERE
-    id = $8 AND deleted_at IS NULL       
+    id = $9 AND deleted_at IS NULL       
 RETURNING
     id, first_name, last_name, photo, license_number, speciality, years_of_experience,
-    is_active, created_at, updated_at, deleted_at
+    is_active, user_id, schedule_json, created_at, updated_at, deleted_at
 `
 
 type UpdateVeterinarianParams struct {
@@ -192,24 +273,11 @@ type UpdateVeterinarianParams struct {
 	Speciality        VeterinarianSpeciality
 	YearsOfExperience int32
 	IsActive          pgtype.Bool
+	Column8           []byte
 	ID                int32
 }
 
-type UpdateVeterinarianRow struct {
-	ID                int32
-	FirstName         string
-	LastName          string
-	Photo             string
-	LicenseNumber     string
-	Speciality        VeterinarianSpeciality
-	YearsOfExperience int32
-	IsActive          pgtype.Bool
-	CreatedAt         pgtype.Timestamptz
-	UpdatedAt         pgtype.Timestamptz
-	DeletedAt         pgtype.Timestamp
-}
-
-func (q *Queries) UpdateVeterinarian(ctx context.Context, arg UpdateVeterinarianParams) (UpdateVeterinarianRow, error) {
+func (q *Queries) UpdateVeterinarian(ctx context.Context, arg UpdateVeterinarianParams) (Veterinarian, error) {
 	row := q.db.QueryRow(ctx, updateVeterinarian,
 		arg.FirstName,
 		arg.LastName,
@@ -218,9 +286,10 @@ func (q *Queries) UpdateVeterinarian(ctx context.Context, arg UpdateVeterinarian
 		arg.Speciality,
 		arg.YearsOfExperience,
 		arg.IsActive,
+		arg.Column8,
 		arg.ID,
 	)
-	var i UpdateVeterinarianRow
+	var i Veterinarian
 	err := row.Scan(
 		&i.ID,
 		&i.FirstName,
@@ -230,6 +299,8 @@ func (q *Queries) UpdateVeterinarian(ctx context.Context, arg UpdateVeterinarian
 		&i.Speciality,
 		&i.YearsOfExperience,
 		&i.IsActive,
+		&i.UserID,
+		&i.ScheduleJson,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.DeletedAt,

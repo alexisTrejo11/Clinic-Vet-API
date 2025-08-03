@@ -41,7 +41,7 @@ func (r *SqlcOwnerRepository) Save(ctx context.Context, owner *ownerDomain.Owner
 	return nil
 }
 
-func (r *SqlcOwnerRepository) GetByID(ctx context.Context, id uint, includePets bool) (ownerDomain.Owner, error) {
+func (r *SqlcOwnerRepository) GetByID(ctx context.Context, id int, includePets bool) (ownerDomain.Owner, error) {
 	petsChan := make(chan struct {
 		pets []petDomain.Pet
 		err  error
@@ -82,7 +82,7 @@ func (r *SqlcOwnerRepository) GetByID(ctx context.Context, id uint, includePets 
 	}
 
 	owner := ownerDomain.Owner{
-		Id:          uint(ownerRow.ID),
+		Id:          int(ownerRow.ID),
 		Photo:       ownerRow.Photo,
 		FullName:    ownerName,
 		DateOfBirth: ownerRow.DateOfBirth.Time,
@@ -108,7 +108,7 @@ func (r *SqlcOwnerRepository) GetByPhone(ctx context.Context, phone string) (own
 	}
 
 	owner := ownerDomain.Owner{
-		Id:          uint(row.ID),
+		Id:          int(row.ID),
 		Photo:       row.Photo,
 		FullName:    ownerName,
 		DateOfBirth: row.DateOfBirth.Time,
@@ -137,7 +137,7 @@ func (r *SqlcOwnerRepository) List(ctx context.Context, query string, limit, off
 	return owners, nil
 }
 
-func (r *SqlcOwnerRepository) Delete(ctx context.Context, OwnerId uint) error {
+func (r *SqlcOwnerRepository) Delete(ctx context.Context, OwnerId int) error {
 	if err := r.queries.DeleteOwner(ctx, int32(OwnerId)); err != nil {
 		return DBDeleteError(err.Error())
 	}
@@ -153,7 +153,7 @@ func (r *SqlcOwnerRepository) ExistsByPhone(ctx context.Context, phone string) (
 	return exists, nil
 }
 
-func (r *SqlcOwnerRepository) ExistsByID(ctx context.Context, id uint) (bool, error) {
+func (r *SqlcOwnerRepository) ExistsByID(ctx context.Context, id int) (bool, error) {
 	exists, err := r.queries.ExistByID(ctx, int32(id))
 	if err != nil {
 		return false, DBSelectFoundError(err.Error())
@@ -162,14 +162,14 @@ func (r *SqlcOwnerRepository) ExistsByID(ctx context.Context, id uint) (bool, er
 	return exists, nil
 }
 
-func (r *SqlcOwnerRepository) ActivateOwner(ctx context.Context, id uint) error {
+func (r *SqlcOwnerRepository) ActivateOwner(ctx context.Context, id int) error {
 	if err := r.queries.ActivateUser(ctx, int32(id)); err != nil {
 		return DBSelectFoundError(err.Error())
 	}
 	return nil
 }
 
-func (r *SqlcOwnerRepository) DeactivateOwner(ctx context.Context, id uint) error {
+func (r *SqlcOwnerRepository) DeactivateOwner(ctx context.Context, id int) error {
 	if err := r.queries.DeactivateUser(ctx, int32(id)); err != nil {
 		return DBSelectFoundError(err.Error())
 	}
@@ -185,7 +185,7 @@ func (r *SqlcOwnerRepository) create(ctx context.Context, owner *ownerDomain.Own
 		return err
 	}
 
-	owner.Id = uint(ownerCreated.ID)
+	owner.Id = int(ownerCreated.ID)
 	return nil
 }
 

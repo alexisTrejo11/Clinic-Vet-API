@@ -17,7 +17,7 @@ func NewDeleteOwnerUseCase(ownerRepo ownerRepository.OwnerRepository) *DeleteOwn
 	}
 }
 
-func (uc *DeleteOwnerUseCase) Execute(ctx context.Context, id uint) error {
+func (uc *DeleteOwnerUseCase) Execute(ctx context.Context, id int) error {
 	_, err := uc.ownerRepo.ExistsByID(ctx, id)
 	if err != nil {
 		return ownerAppErr.HandleGetByIdError(err, id)

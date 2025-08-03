@@ -9,14 +9,14 @@ import (
 )
 
 type Owner struct {
-	Id          uint
+	Id          int
 	Photo       string
 	FullName    userValueObjects.PersonName
 	Gender      userEnums.Gender
 	DateOfBirth time.Time
 	PhoneNumber string
 	Address     *string
-	UserId      *uint
+	UserId      *int
 	IsActive    bool
 	Pets        []petDomain.Pet
 }
