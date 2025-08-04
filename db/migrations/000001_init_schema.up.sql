@@ -60,3 +60,26 @@ ALTER TABLE pets
 ADD CONSTRAINT fk_owner
 FOREIGN KEY (owner_id) REFERENCES owners(id) ON DELETE CASCADE;
 
+-- Create Medical History Table
+CREATE TABLE IF NOT EXISTS medical_history (
+    id SERIAL PRIMARY KEY,
+    pet_id INT NOT NULL,
+    owner_id INT NOT NULL,
+    veterinarian_id INT NOT NULL,
+    visit_date TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    diagnosis TEXT,
+    notes TEXT,
+    treatment TEXT,
+    condition VARCHAR(255),
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL,
+    FOREIGN KEY (pet_id) REFERENCES pets(id) ON DELETE CASCADE,
+    FOREIGN KEY (owner_id) REFERENCES owners(id) ON DELETE CASCADE,
+    FOREIGN KEY (veterinarian_id) REFERENCES veterinarians(id) ON DELETE CASCADE
+);
+
+-- Indexes
+CREATE INDEX IF NOT EXISTS idx_med_hist_pet_id ON medical_history(pet_id);
+CREATE INDEX IF NOT EXISTS idx_med_hist_owner_id ON medical_history(owner_id);
+CREATE INDEX IF NOT EXISTS idx_med_hist_vet_id ON medical_history(veterinarian_id);

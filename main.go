@@ -5,6 +5,10 @@ import (
 	"log"
 	"os"
 
+	medHistUsecases "github.com/alexisTrejo11/Clinic-Vet-API/app/medical/application/usecase"
+	med_hist_controller "github.com/alexisTrejo11/Clinic-Vet-API/app/medical/infrastructure/api/controller"
+	medHistoryRoutes "github.com/alexisTrejo11/Clinic-Vet-API/app/medical/infrastructure/api/routes"
+	sqlcMedHistoryRepo "github.com/alexisTrejo11/Clinic-Vet-API/app/medical/infrastructure/persistence/repositories"
 	ownerUsecase "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/application/usecase"
 	ownerController "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/infrastructure/api/controller"
 	ownerRoutes "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/infrastructure/api/routes"
@@ -17,6 +21,7 @@ import (
 	vetController "github.com/alexisTrejo11/Clinic-Vet-API/app/veterinarians/infrastructure/api/controller"
 	vetRoutes "github.com/alexisTrejo11/Clinic-Vet-API/app/veterinarians/infrastructure/api/routes"
 	sqlcVetRepo "github.com/alexisTrejo11/Clinic-Vet-API/app/veterinarians/infrastructure/persistence/repositories"
+
 	"github.com/alexisTrejo11/Clinic-Vet-API/config"
 	"github.com/alexisTrejo11/Clinic-Vet-API/middleware"
 	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
@@ -52,6 +57,10 @@ func main() {
 	petRepo := sqlcPetRepository.NewSqlcPetRepository(queries)
 	ownerRepo := sqlcOwnerRepository.NewSlqcOwnerRepository(queries, petRepo)
 	vetRepo := sqlcVetRepo.NewSqlcVetRepository(queries)
+	sqlcMedHistRepo := sqlcMedHistoryRepo.NewSQLCMedHistRepository(queries)
+
+	// Medical History UseCase
+	medHistUseCase := medHistUsecases.NewMedicalHistoryUseCase(sqlcMedHistRepo, ownerRepo, vetRepo)
 
 	// Owner UseCase
 	getOwnerUseCase := ownerUsecase.NewGetOwnerByIdUseCase(ownerRepo)
@@ -82,9 +91,13 @@ func main() {
 	ownerController := ownerController.NewOwnerController(validator.New(), ownerUCContainer)
 	vetControllers := vetController.NewVeterinarianController(validator.New(), *vetUseCaseContainer)
 
+	// Medical History Routes
+	med_hist_controller := med_hist_controller.NewAdminMedicalHistoryController(medHistUseCase)
+
 	routes.PetsRoutes(router, petController)
 	ownerRoutes.OwnerRoutes(router, ownerController)
 	vetRoutes.VetRoutes(router, vetControllers)
+	medHistoryRoutes.MedicalHistoryRoutes(router, *med_hist_controller)
 
 	router.Run()
 }

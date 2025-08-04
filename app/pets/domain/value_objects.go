@@ -1,6 +1,10 @@
 package petDomain
 
-import "errors"
+import (
+	"errors"
+
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
+)
 
 type Gender string
 
@@ -38,4 +42,29 @@ func NewAge(years, months int) (Age, error) {
 	}
 
 	return Age{Years: years, Months: months}, nil
+}
+
+type PetId struct {
+	id shared.IntegerId
+}
+
+func NewPetId(value any) (PetId, error) {
+	id, err := shared.NewIntegerId(value)
+	if err != nil {
+		return PetId{}, err
+	}
+
+	return PetId{id: id}, nil
+}
+
+func (p PetId) GetValue() int {
+	return p.id.GetValue()
+}
+
+func (p PetId) String() string {
+	return p.id.String()
+}
+
+func (p PetId) Equals(other PetId) bool {
+	return p.id.GetValue() == other.id.GetValue()
 }

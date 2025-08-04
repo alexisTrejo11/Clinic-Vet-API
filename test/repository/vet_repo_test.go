@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 	vetDtos "github.com/alexisTrejo11/Clinic-Vet-API/app/veterinarians/application/dtos"
 	vetRepo "github.com/alexisTrejo11/Clinic-Vet-API/app/veterinarians/application/repositories"
 	vetDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/veterinarians/domain"
@@ -75,10 +76,10 @@ func (s *SqlcVetRepositoryTestSuite) TestList_WithFiltersAndSorting() {
 
 	// Configurar parámetros de búsqueda
 	searchParams := vetDtos.VetSearchParams{
-		PageInput: shared.PageInput{
-			Limit:         10,
-			Offset:        0,
-			SortDirection: shared.DESC,
+		PageData: page.PageData{
+			PageSize:      10,
+			PageNumber:    0,
+			SortDirection: page.DESC,
 		},
 		OrderBy: "years_experience",
 		Filters: vetDtos.VetFilters{
@@ -163,9 +164,9 @@ func (s *SqlcVetRepositoryTestSuite) TestList_NoFilters() {
 
 	// Parámetros vacíos
 	searchParams := vetDtos.VetSearchParams{
-		PageInput: shared.PageInput{
-			Limit:  10,
-			Offset: 0,
+		PageData: page.PageData{
+			PageSize:   10,
+			PageNumber: 0,
 		},
 	}
 
@@ -242,7 +243,7 @@ func (s *SqlcVetRepositoryTestSuite) TestGetByID_Success() {
 		Return(mockReturn, nil)
 
 	// Call the method
-	result, err := s.repo.GetByID(ctx, vetID)
+	result, err := s.repo.GetById(ctx, vetID)
 
 	// Assertions
 	s.NoError(err)
@@ -285,7 +286,7 @@ func (s *SqlcVetRepositoryTestSuite) TestList_NamePartialSearch() {
 		YearsOfExperience_2: 0,
 		IsActive:            pgtype.Bool{Bool: false, Valid: false},
 		Column15:            true, // Orden por defecto
-		Limit:               0,    // Valor por defecto
+		Limit:               10,
 		Offset:              0,
 	}
 

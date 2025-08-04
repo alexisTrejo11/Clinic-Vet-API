@@ -36,7 +36,7 @@ func (uc CreatePetUseCase) Execute(ctx context.Context, petCreate petDTOs.PetCre
 }
 
 func (uc CreatePetUseCase) validate_owner(ctx context.Context, owner_id int) error {
-	_, err := uc.ownerRepository.GetByID(ctx, owner_id, false)
+	_, err := uc.ownerRepository.GetById(ctx, owner_id, false)
 	if err := petAppError.HandleGetByIdError(err, owner_id); err != nil {
 		return err
 	}

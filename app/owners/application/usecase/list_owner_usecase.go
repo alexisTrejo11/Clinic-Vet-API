@@ -19,15 +19,8 @@ func NewListOwnersUseCase(ownerRepo ownerRepository.OwnerRepository) *ListOwners
 }
 
 func (uc *ListOwnersUseCase) Execute(ctx context.Context, dto ownerDTOs.GetOwnersRequest) (ownerDTOs.OwnerListResponse, error) {
-	// Set defaults
-	if dto.Page.Limit <= 0 {
-		dto.Page.Limit = 20
-	}
-	if dto.Page.Offset < 0 {
-		dto.Page.Offset = 1
-	}
 
-	owners, err := uc.ownerRepo.List(ctx, "", dto.Page.Limit, dto.Page.Offset)
+	owners, err := uc.ownerRepo.List(ctx, dto.Page)
 	if err != nil {
 		return ownerDTOs.OwnerListResponse{}, err
 	}

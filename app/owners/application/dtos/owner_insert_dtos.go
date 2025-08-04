@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 	userEnums "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain/enum"
 )
 
@@ -32,7 +32,7 @@ type OwnerUpdate struct {
 }
 
 type GetOwnersRequest struct {
-	Page     shared.PageInput
+	Page     page.PageData
 	Status   string `json:"status" validate:"omitempty,oneof=active inactive all"`
 	WithPets bool   `json:"with_pets" validate:"omitempty"`
 }
@@ -82,9 +82,9 @@ func NewOwnerSearch(limitStr, offsetStr, status, includePets string) (*GetOwners
 		return nil, errors.Join(errs...)
 	}
 
-	page := shared.PageInput{
-		Limit:  limit,
-		Offset: offset,
+	page := page.PageData{
+		PageSize:   limit,
+		PageNumber: offset + 1,
 	}
 
 	return &GetOwnersRequest{

@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 	vetDtos "github.com/alexisTrejo11/Clinic-Vet-API/app/veterinarians/application/dtos"
 	vetRepo "github.com/alexisTrejo11/Clinic-Vet-API/app/veterinarians/application/repositories"
 	vetDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/veterinarians/domain"
@@ -29,8 +29,8 @@ func (r *SqlcVetRepository) List(ctx context.Context, searchParams vetDtos.VetSe
 		YearsOfExperience:   0,
 		YearsOfExperience_2: 0,
 		IsActive:            pgtype.Bool{Bool: false, Valid: false},
-		Limit:               int32(searchParams.Limit),
-		Offset:              int32(searchParams.Offset),
+		Limit:               int32(searchParams.PageSize),
+		Offset:              int32(searchParams.PageNumber - 1),
 	}
 
 	// Apply Filters
@@ -69,25 +69,25 @@ func (r *SqlcVetRepository) List(ctx context.Context, searchParams vetDtos.VetSe
 
 	switch searchParams.OrderBy {
 	case "name":
-		if searchParams.SortDirection == shared.ASC {
+		if searchParams.SortDirection == page.ASC {
 			orderParams[0] = true // $8: Order by first_name ASC
 		} else {
 			orderParams[1] = true // $9: Order by first_name DESC
 		}
 	case "specialty":
-		if searchParams.SortDirection == shared.ASC {
+		if searchParams.SortDirection == page.ASC {
 			orderParams[2] = true // $10: Order by speciality ASC
 		} else {
 			orderParams[3] = true // $11: Order by speciality DESC
 		}
 	case "years_experience":
-		if searchParams.SortDirection == shared.ASC {
+		if searchParams.SortDirection == page.ASC {
 			orderParams[4] = true // $12: Order by years_of_experience ASC
 		} else {
 			orderParams[5] = true // $13: Order by years_of_experience DESC
 		}
 	case "created_at":
-		if searchParams.SortDirection == shared.ASC {
+		if searchParams.SortDirection == page.ASC {
 			orderParams[6] = true // $14: Order by created_at ASC
 		} else {
 			orderParams[7] = true // $15: Order by created_at DESC
@@ -119,7 +119,7 @@ func (r *SqlcVetRepository) List(ctx context.Context, searchParams vetDtos.VetSe
 	return vets, nil
 }
 
-func (c *SqlcVetRepository) GetByID(ctx context.Context, id int) (vetDomain.Veterinarian, error) {
+func (c *SqlcVetRepository) GetById(ctx context.Context, id int) (vetDomain.Veterinarian, error) {
 	sqlVet, err := c.queries.GetVeterinarianById(ctx, int32(id))
 	if err != nil {
 		return vetDomain.Veterinarian{}, err
@@ -127,7 +127,7 @@ func (c *SqlcVetRepository) GetByID(ctx context.Context, id int) (vetDomain.Vete
 	return *SqlcVetToDomain(sqlVet), nil
 }
 
-func (c *SqlcVetRepository) GetByUserID(ctx context.Context, id int) (vetDomain.Veterinarian, error) {
+func (c *SqlcVetRepository) GetByUserId(ctx context.Context, id int) (vetDomain.Veterinarian, error) {
 	sqlVet, err := c.queries.GetVeterinarianById(ctx, int32(id))
 	if err != nil {
 		return vetDomain.Veterinarian{}, err

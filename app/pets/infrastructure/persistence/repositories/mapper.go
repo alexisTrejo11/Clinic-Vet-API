@@ -13,7 +13,7 @@ import (
 func ToDomainPet(sqlPet sqlc.Pet) (petDomain.Pet, error) {
 	var domainPet petDomain.Pet
 
-	domainPet.ID = int(sqlPet.ID)
+	domainPet.Id = int(sqlPet.ID)
 	domainPet.Name = sqlPet.Name
 
 	if sqlPet.Photo.Valid {
@@ -53,7 +53,7 @@ func ToDomainPet(sqlPet sqlc.Pet) (petDomain.Pet, error) {
 		domainPet.IsNeutered = &sqlPet.IsNeutered.Bool
 	}
 
-	domainPet.OwnerID = int(sqlPet.OwnerID)
+	domainPet.OwnerId = int(sqlPet.OwnerID)
 
 	if sqlPet.Allergies.Valid {
 		domainPet.Allergies = &sqlPet.Allergies.String
@@ -92,7 +92,7 @@ func ToSqlCreateParam(pet petDomain.Pet) *sqlc.CreatePetParams {
 		Color:              toPgTypeText(pet.Color),
 		Microchip:          toPgTypeText(pet.Microchip),
 		IsNeutered:         toPgTypeBool(pet.IsNeutered),
-		OwnerID:            int32(pet.OwnerID),
+		OwnerID:            int32(pet.OwnerId),
 		Allergies:          toPgTypeText(pet.Allergies),
 		CurrentMedications: toPgTypeText(pet.CurrentMedications),
 		SpecialNeeds:       toPgTypeText(pet.SpecialNeeds),
@@ -102,7 +102,7 @@ func ToSqlCreateParam(pet petDomain.Pet) *sqlc.CreatePetParams {
 
 func ToSqlUpdateParam(pet petDomain.Pet) *sqlc.UpdatePetParams {
 	return &sqlc.UpdatePetParams{
-		ID:                 int32(pet.ID),
+		ID:                 int32(pet.Id),
 		Name:               pet.Name,
 		Photo:              toPgTypeText(pet.Photo),
 		Species:            pet.Species,
@@ -113,7 +113,7 @@ func ToSqlUpdateParam(pet petDomain.Pet) *sqlc.UpdatePetParams {
 		Color:              toPgTypeText(pet.Color),
 		Microchip:          toPgTypeText(pet.Microchip),
 		IsNeutered:         toPgTypeBool(pet.IsNeutered),
-		OwnerID:            int32(pet.OwnerID),
+		OwnerID:            int32(pet.OwnerId),
 		Allergies:          toPgTypeText(pet.Allergies),
 		CurrentMedications: toPgTypeText(pet.CurrentMedications),
 		SpecialNeeds:       toPgTypeText(pet.SpecialNeeds),

@@ -11,7 +11,7 @@ func ToDomainFromCreate(dto dtos.PetCreate) petDomain.Pet {
 	pet := petDomain.Pet{
 		Name:      dto.Name,
 		Species:   dto.Species,
-		OwnerID:   dto.OwnerID,
+		OwnerId:   dto.OwnerID,
 		IsActive:  dto.IsActive,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
@@ -89,7 +89,7 @@ func ToDomainFromUpdate(pet *petDomain.Pet, dto dtos.PetUpdate) {
 		pet.IsNeutered = dto.IsNeutered
 	}
 	if dto.OwnerID != nil {
-		pet.OwnerID = *dto.OwnerID
+		pet.OwnerId = *dto.OwnerID
 	}
 	if dto.Allergies != nil {
 		pet.Allergies = dto.Allergies
@@ -108,7 +108,7 @@ func ToDomainFromUpdate(pet *petDomain.Pet, dto dtos.PetUpdate) {
 
 func ToResponse(pet petDomain.Pet) dtos.PetResponse {
 	response := dtos.PetResponse{
-		ID:                 pet.ID,
+		ID:                 pet.Id,
 		Name:               pet.Name,
 		Photo:              pet.Photo,
 		Species:            pet.Species,
@@ -117,7 +117,7 @@ func ToResponse(pet petDomain.Pet) dtos.PetResponse {
 		Color:              pet.Color,
 		Microchip:          pet.Microchip,
 		IsNeutered:         pet.IsNeutered,
-		OwnerID:            pet.OwnerID,
+		OwnerID:            pet.OwnerId,
 		Allergies:          pet.Allergies,
 		CurrentMedications: pet.CurrentMedications,
 		SpecialNeeds:       pet.SpecialNeeds,

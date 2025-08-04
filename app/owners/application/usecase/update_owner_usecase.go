@@ -20,7 +20,7 @@ func NewUpdateOwnerUseCase(ownerRepo ownerRepository.OwnerRepository) *UpdateOwn
 }
 
 func (uc *UpdateOwnerUseCase) Execute(ctx context.Context, id int, dto ownerDTOs.OwnerUpdate) (*ownerDTOs.OwnerResponse, error) {
-	owner, err := uc.ownerRepo.GetByID(ctx, id, false)
+	owner, err := uc.ownerRepo.GetById(ctx, id, false)
 	if err != nil {
 		return nil, ownerAppErr.HandleGetByIdError(err, id)
 	}

@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 	vetDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/veterinarians/domain"
 )
 
@@ -40,7 +41,7 @@ type VetUpdate struct {
 }
 
 type VetSearchParams struct {
-	shared.PageInput
+	page.PageData
 	Filters VetFilters `json:"filters"`
 	OrderBy VetOrderBy
 }

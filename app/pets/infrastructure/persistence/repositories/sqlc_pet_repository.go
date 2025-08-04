@@ -70,8 +70,8 @@ func (r *SqlcPetRepository) GetById(ctx context.Context, petId int) (petDomain.P
 }
 
 func (r *SqlcPetRepository) Save(ctx context.Context, pet *petDomain.Pet) error {
-	fmt.Println(pet.ID)
-	if pet.ID == 0 {
+	fmt.Println(pet.Id)
+	if pet.Id == 0 {
 		if err := r.create(ctx, pet); err != nil {
 			return DBCreateError(err.Error())
 		}
@@ -98,7 +98,7 @@ func (r *SqlcPetRepository) create(ctx context.Context, pet *petDomain.Pet) erro
 		return err
 	}
 
-	pet.ID = int(petCreated.ID)
+	pet.Id = int(petCreated.ID)
 
 	return nil
 }

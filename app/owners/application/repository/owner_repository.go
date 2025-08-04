@@ -4,15 +4,15 @@ import (
 	"context"
 
 	ownerDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/domain"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 )
 
 type OwnerRepository interface {
 	Save(ctx context.Context, owner *ownerDomain.Owner) error
 
-	List(ctx context.Context, query string, limit, offset int) ([]ownerDomain.Owner, error)
-	GetByID(ctx context.Context, id int, includePets bool) (ownerDomain.Owner, error)
+	List(ctx context.Context, pagination page.PageData) ([]ownerDomain.Owner, error)
+	GetById(ctx context.Context, id int, includePets bool) (ownerDomain.Owner, error)
 	GetByPhone(ctx context.Context, phone string) (ownerDomain.Owner, error)
-
 	Delete(ctx context.Context, id int) error
 
 	//GetByName(ctx context.Context, name string) ([]ownerDomain.Owner, error)

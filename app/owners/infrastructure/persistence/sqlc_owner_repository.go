@@ -9,6 +9,7 @@ import (
 	ownerDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/domain"
 	petRepository "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application/repositories"
 	petDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/domain"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 	userEnums "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain/enum"
 	userValueObjects "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain/valueobjects"
 	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
@@ -41,7 +42,7 @@ func (r *SqlcOwnerRepository) Save(ctx context.Context, owner *ownerDomain.Owner
 	return nil
 }
 
-func (r *SqlcOwnerRepository) GetByID(ctx context.Context, id int, includePets bool) (ownerDomain.Owner, error) {
+func (r *SqlcOwnerRepository) GetById(ctx context.Context, id int, includePets bool) (ownerDomain.Owner, error) {
 	petsChan := make(chan struct {
 		pets []petDomain.Pet
 		err  error
@@ -122,8 +123,8 @@ func (r *SqlcOwnerRepository) GetByPhone(ctx context.Context, phone string) (own
 }
 
 // Add Seacrh
-func (r *SqlcOwnerRepository) List(ctx context.Context, query string, limit, offset int) ([]ownerDomain.Owner, error) {
-	pageParams := sqlc.ListOwnersParams{Limit: int32(limit), Offset: int32(offset)}
+func (r *SqlcOwnerRepository) List(ctx context.Context, pagination page.PageData) ([]ownerDomain.Owner, error) {
+	pageParams := sqlc.ListOwnersParams{Limit: int32(pagination.PageNumber), Offset: int32(pagination.PageNumber - 1)}
 	ownerRow, err := r.queries.ListOwners(ctx, pageParams)
 	if err != nil {
 		return []ownerDomain.Owner{}, err

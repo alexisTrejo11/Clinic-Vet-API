@@ -115,6 +115,21 @@ func (ns NullVeterinarianSpeciality) Value() (driver.Value, error) {
 	return string(ns.VeterinarianSpeciality), nil
 }
 
+type MedicalHistory struct {
+	ID             int32
+	PetID          int32
+	OwnerID        int32
+	VeterinarianID int32
+	VisitDate      pgtype.Timestamptz
+	Diagnosis      pgtype.Text
+	Notes          pgtype.Text
+	Treatment      pgtype.Text
+	Condition      pgtype.Text
+	CreatedAt      pgtype.Timestamptz
+	UpdatedAt      pgtype.Timestamptz
+	DeletedAt      pgtype.Timestamp
+}
+
 type Owner struct {
 	ID          int32
 	FirstName   string

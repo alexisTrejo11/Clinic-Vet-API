@@ -1,18 +1,53 @@
-package dtos
+package mhDTOs
 
 import "time"
 
-type MedicalHistoryResponse struct {
-	ID          int32
-	PetID       int32
+type MedHistResponse struct {
+	Id          int
+	PetId       int
 	Date        time.Time
-	Description string
-	VetID       int32
+	Description *string
+	Diagnosis   string
+	Notes       string
+	Treatment   string
+	VetId       int
+	OwnerId     int
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
 }
 
-type MedicalHistoryResponseNamed struct {
-	Pet          string
+type MedicalHistoryResponseDetailed struct {
+	Id           int
+	Pet          PetDetails
+	Owner        OwnerDetails
 	Date         time.Time
+	Diagnosis    string
+	Notes        string
+	Treatment    string
 	Description  string
-	Veterinarian string
+	Veterinarian VetDetails
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+}
+
+type OwnerDetails struct {
+	Id        int
+	FirstName string
+	LastName  string
+}
+
+type VetDetails struct {
+	Id        int
+	FirstName string
+	Specialty string
+	LastName  string
+}
+
+type PetDetails struct {
+	Id      int
+	Name    string
+	Species string
+	Breed   string
+	Age     int
+	Weight  float64
 }

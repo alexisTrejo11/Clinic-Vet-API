@@ -21,7 +21,7 @@ func NewUpdateVetUseCase(vetRepository vetRepo.VeterinarianRepository) *UpdateVe
 }
 
 func (uc *UpdateVetUseCase) Execute(ctx context.Context, vetId int, vetUpdateData vetDtos.VetUpdate) (vetDtos.VetResponse, error) {
-	veterinarian, err := uc.vetRepository.GetByID(ctx, vetId)
+	veterinarian, err := uc.vetRepository.GetById(ctx, vetId)
 	if err != nil {
 		return vetDtos.VetResponse{}, vetApplication.VetNotFoundErr("id", strconv.Itoa(vetId))
 	}
