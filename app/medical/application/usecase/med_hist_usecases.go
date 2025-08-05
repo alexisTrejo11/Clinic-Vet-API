@@ -71,6 +71,30 @@ func (uc *MedicalHistoryUseCase) GetById(ctx context.Context, id int) (mhDTOs.Me
 	return mhDTOs.ToResponse(*medHistory), nil
 }
 
+func (uc *MedicalHistoryUseCase) GetByIdWithDeatils(ctx context.Context, id int) (mhDTOs.MedHistResponseDetail, error) {
+	medHistory, err := uc.medHistRepo.GetById(ctx, id)
+	if err != nil {
+		return mhDTOs.MedHistResponseDetail{}, err
+	}
+
+	owner, err := uc.ownerRepo.GetById(ctx, medHistory.OwnerId, true)
+	if err != nil {
+		return mhDTOs.MedHistResponseDetail{}, err
+	}
+
+	pet, err := owner.GetPetById(medHistory.PetId.GetValue())
+	if err != nil {
+		return mhDTOs.MedHistResponseDetail{}, err
+	}
+
+	vet, err := uc.vetRepo.GetById(ctx, medHistory.VetId.GetValue())
+	if err != nil {
+		return mhDTOs.MedHistResponseDetail{}, err
+	}
+
+	return mhDTOs.ToResponseDetail(*medHistory, owner, vet, *pet), nil
+}
+
 func (uc *MedicalHistoryUseCase) Create(ctx context.Context, dto mhDTOs.MedicalHistoryCreate) error {
 	medHistory, err := mhDTOs.FromCreateDTO(dto)
 	if err != nil {
@@ -137,6 +161,7 @@ func (uc *MedicalHistoryUseCase) valIdateCreation(ctx context.Context, medHistor
 	for _, pet := range owner.Pets {
 		if pet.Id == medHistory.PetId {
 			medHistory.PetId = pet.Id
+			petFound = true
 			break
 		}
 	}

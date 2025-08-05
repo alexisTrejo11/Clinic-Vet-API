@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 
+	mhDTOs "github.com/alexisTrejo11/Clinic-Vet-API/app/medical/application/dtos"
 	medHistUsecases "github.com/alexisTrejo11/Clinic-Vet-API/app/medical/application/usecase"
 	med_hist_controller "github.com/alexisTrejo11/Clinic-Vet-API/app/medical/infrastructure/api/controller"
 	medHistoryRoutes "github.com/alexisTrejo11/Clinic-Vet-API/app/medical/infrastructure/api/routes"
@@ -26,6 +27,7 @@ import (
 	"github.com/alexisTrejo11/Clinic-Vet-API/middleware"
 	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
 	"github.com/joho/godotenv"
 )
@@ -93,6 +95,13 @@ func main() {
 
 	// Medical History Routes
 	med_hist_controller := med_hist_controller.NewAdminMedicalHistoryController(medHistUseCase)
+
+	// Custom Validations
+	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
+		v.RegisterValidation("validVisitReason", mhDTOs.IsValidVisitReason)
+		v.RegisterValidation("validVisitType", mhDTOs.IsValidVisitType)
+		v.RegisterValidation("validPetCondition", mhDTOs.IsValidPetCondition)
+	}
 
 	routes.PetsRoutes(router, petController)
 	ownerRoutes.OwnerRoutes(router, ownerController)

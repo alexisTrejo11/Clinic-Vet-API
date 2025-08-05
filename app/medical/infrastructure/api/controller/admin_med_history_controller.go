@@ -54,7 +54,29 @@ func (mhc AdminMedicalHistoryController) GetMedicalHistory(c *gin.Context) {
 
 	medHistory, err := mhc.usecases.GetById(c.Request.Context(), idInt)
 	if err != nil {
-		c.JSON(404, gin.H{"error": "Medical history not found"})
+		c.JSON(404, gin.H{"error": "Medical history not found", "id": idInt, "details": err.Error()})
+		return
+	}
+
+	c.JSON(200, gin.H{"data": medHistory})
+}
+
+func (mhc AdminMedicalHistoryController) GetMedicalHistoryDetails(c *gin.Context) {
+	id := c.Param("id")
+	if id == "" {
+		c.JSON(400, gin.H{"error": "ID parameter is required"})
+		return
+	}
+
+	idInt, err := strconv.Atoi(id)
+	if err != nil {
+		c.JSON(400, gin.H{"error": "Invalid ID format"})
+		return
+	}
+
+	medHistory, err := mhc.usecases.GetByIdWithDeatils(c.Request.Context(), idInt)
+	if err != nil {
+		c.JSON(404, gin.H{"error": "Medical history not found", "id": idInt, "details": err.Error()})
 		return
 	}
 

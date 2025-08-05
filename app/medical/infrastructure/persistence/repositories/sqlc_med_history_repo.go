@@ -2,13 +2,12 @@ package sqlcMedHistoryRepo
 
 import (
 	"context"
+	"fmt"
 
 	mhDTOs "github.com/alexisTrejo11/Clinic-Vet-API/app/medical/application/dtos"
 	mhDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/medical/domain"
 	medHistRepo "github.com/alexisTrejo11/Clinic-Vet-API/app/medical/domain/repositories"
-	petDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/domain"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
-	vetDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/veterinarians/domain"
 	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
 	"github.com/jackc/pgx/v5/pgtype"
 )
@@ -29,10 +28,14 @@ func (r *SQLCMedHistRepository) GetById(ctx context.Context, medicalHistoryId in
 		return nil, err
 	}
 
+	fmt.Printf("SQLCMedHist: %+v\n", sqlcMedHist)
+
 	medHist, err := ToDomain(sqlcMedHist)
 	if err != nil {
 		return nil, err
 	}
+
+	fmt.Printf("Domain MedHist: %+v\n", medHist)
 
 	return &medHist, nil
 }
@@ -108,16 +111,8 @@ func (r *SQLCMedHistRepository) ListByOwnerId(ctx context.Context, ownerId int, 
 }
 
 func (r *SQLCMedHistRepository) Create(ctx context.Context, medHistory *mhDomain.MedicalHistory) error {
-	createdRow, err := r.queries.CreateMedicalHistory(ctx, sqlc.CreateMedicalHistoryParams{
-		PetID:          int32(medHistory.PetId.GetValue()),
-		OwnerID:        int32(medHistory.OwnerId),
-		VeterinarianID: int32(medHistory.VetId.GetValue()),
-		VisitDate:      pgtype.Timestamptz{Time: medHistory.VisitDate, Valid: true},
-		Diagnosis:      pgtype.Text{String: medHistory.Diagnosis, Valid: true},
-		Treatment:      pgtype.Text{String: medHistory.Treatment, Valid: true},
-		Notes:          pgtype.Text{String: medHistory.Notes, Valid: true},
-		Condition:      pgtype.Text{String: medHistory.Condition, Valid: true},
-	})
+	params := ToCreateParams(*medHistory)
+	createdRow, err := r.queries.CreateMedicalHistory(ctx, params)
 
 	if err != nil {
 		return err
@@ -128,7 +123,14 @@ func (r *SQLCMedHistRepository) Create(ctx context.Context, medHistory *mhDomain
 }
 
 func (r *SQLCMedHistRepository) Update(ctx context.Context, medHistory *mhDomain.MedicalHistory) error {
-	if _, err := r.queries.UpdateMedicalHistory(ctx, sqlc.UpdateMedicalHistoryParams{
+	var notes pgtype.Text
+	if medHistory.Notes != nil {
+		notes = pgtype.Text{String: *medHistory.Notes, Valid: true}
+	} else {
+		notes = pgtype.Text{Valid: false}
+	}
+
+	params := sqlc.UpdateMedicalHistoryParams{
 		ID:             int32(medHistory.Id.GetValue()),
 		PetID:          int32(medHistory.PetId.GetValue()),
 		OwnerID:        int32(medHistory.OwnerId),
@@ -136,9 +138,12 @@ func (r *SQLCMedHistRepository) Update(ctx context.Context, medHistory *mhDomain
 		VisitDate:      pgtype.Timestamptz{Time: medHistory.VisitDate, Valid: true},
 		Diagnosis:      pgtype.Text{String: medHistory.Diagnosis, Valid: true},
 		Treatment:      pgtype.Text{String: medHistory.Treatment, Valid: true},
-		Notes:          pgtype.Text{String: medHistory.Notes, Valid: true},
-		Condition:      pgtype.Text{String: medHistory.Condition, Valid: true},
-	}); err != nil {
+		Notes:          notes,
+		VisitType:      medHistory.VisitType.ToString(),
+		Condition:      pgtype.Text{String: medHistory.Condition.ToString(), Valid: true},
+	}
+
+	if _, err := r.queries.UpdateMedicalHistory(ctx, params); err != nil {
 		return err
 	}
 	return nil
@@ -149,47 +154,4 @@ func (r *SQLCMedHistRepository) Delete(ctx context.Context, medicalHistoryId int
 		return r.queries.SoftDeleteMedicalHistory(ctx, int32(medicalHistoryId))
 	}
 	return r.queries.HardDeleteMedicalHistory(ctx, int32(medicalHistoryId))
-}
-
-func ToDomain(medHist sqlc.MedicalHistory) (mhDomain.MedicalHistory, error) {
-	medHistId, err := mhDomain.NewMedHistoryId(medHist.ID)
-	if err != nil {
-		return mhDomain.MedicalHistory{}, err
-	}
-
-	petId, err := petDomain.NewPetId(medHist.PetID)
-	if err != nil {
-		return mhDomain.MedicalHistory{}, err
-	}
-
-	vetId, err := vetDomain.NewVeterinarianId(medHist.VeterinarianID)
-	if err != nil {
-		return mhDomain.MedicalHistory{}, err
-	}
-
-	return mhDomain.MedicalHistory{
-		Id:        medHistId,
-		PetId:     petId,
-		OwnerId:   int(medHist.OwnerID),
-		VetId:     vetId,
-		VisitDate: medHist.VisitDate.Time,
-		Diagnosis: medHist.Diagnosis.String,
-		Treatment: medHist.Treatment.String,
-		Notes:     medHist.Notes.String,
-		Condition: medHist.Condition.String,
-	}, nil
-}
-
-func ToDomainList(medHistList []sqlc.MedicalHistory) ([]mhDomain.MedicalHistory, error) {
-	domainList := make([]mhDomain.MedicalHistory, len(medHistList))
-
-	for i, medHist := range medHistList {
-		domainMedHist, err := ToDomain(medHist)
-		if err != nil {
-			return nil, err
-		}
-		domainList[i] = domainMedHist
-	}
-
-	return domainList, nil
 }

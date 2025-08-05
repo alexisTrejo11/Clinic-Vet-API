@@ -6,9 +6,11 @@ type MedHistResponse struct {
 	Id          int
 	PetId       int
 	Date        time.Time
-	Description *string
 	Diagnosis   string
-	Notes       string
+	VisitType   string
+	VisitReason string
+	Notes       *string
+	Condition   string
 	Treatment   string
 	VetId       int
 	OwnerId     int
@@ -16,7 +18,7 @@ type MedHistResponse struct {
 	UpdatedAt   time.Time
 }
 
-type MedicalHistoryResponseDetailed struct {
+type MedHistResponseDetail struct {
 	Id           int
 	Pet          PetDetails
 	Owner        OwnerDetails
@@ -24,7 +26,6 @@ type MedicalHistoryResponseDetailed struct {
 	Diagnosis    string
 	Notes        string
 	Treatment    string
-	Description  string
 	Veterinarian VetDetails
 	CreatedAt    time.Time
 	UpdatedAt    time.Time

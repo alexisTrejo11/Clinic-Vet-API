@@ -121,6 +121,7 @@ type MedicalHistory struct {
 	OwnerID        int32
 	VeterinarianID int32
 	VisitDate      pgtype.Timestamptz
+	VisitType      string
 	Diagnosis      pgtype.Text
 	Notes          pgtype.Text
 	Treatment      pgtype.Text

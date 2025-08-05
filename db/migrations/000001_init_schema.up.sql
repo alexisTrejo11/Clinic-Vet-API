@@ -67,6 +67,7 @@ CREATE TABLE IF NOT EXISTS medical_history (
     owner_id INT NOT NULL,
     veterinarian_id INT NOT NULL,
     visit_date TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    visit_type VARCHAR(50) NOT NULL,
     diagnosis TEXT,
     notes TEXT,
     treatment TEXT,

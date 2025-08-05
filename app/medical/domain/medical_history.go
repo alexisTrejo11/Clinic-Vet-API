@@ -12,14 +12,13 @@ type MedicalHistory struct {
 	Id          MedHistoryId
 	PetId       petDomain.PetId
 	OwnerId     int
-	VisitReason string
-	VisitType   string
+	VisitReason VisitReason
+	VisitType   VisitType
 	VisitDate   time.Time
-	Description *string
+	Notes       *string
 	Diagnosis   string
 	Treatment   string
-	Condition   string
-	Notes       string
+	Condition   PetCondition
 	VetId       vetDomain.VetId
 	CreatedAt   time.Time
 	UpdatedAt   time.Time

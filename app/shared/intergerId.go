@@ -28,14 +28,35 @@ func (m IntegerId) Equals(other IntegerId) bool {
 }
 
 func parseToInt(value any) (int, error) {
+	v32, ok := value.(int32)
+	if ok {
+		return int(v32), nil
+	}
+
+	v64, ok := value.(int64)
+	if ok {
+		return int(v64), nil
+	}
+
+	vUint, ok := value.(uint)
+	if ok {
+		return int(vUint), nil
+	}
+
+	vUint32, ok := value.(uint32)
+	if ok {
+		return int(vUint32), nil
+	}
+
+	vUint64, ok := value.(uint64)
+	if ok {
+		return int(vUint64), nil
+	}
+
 	v, ok := value.(int)
-
-	if !ok {
-		return 0, fmt.Errorf("invalid type for IntegerId: expected int, got %T", value)
+	if ok {
+		return v, nil
 	}
 
-	if v <= 0 {
-		return 0, fmt.Errorf("invalid IntegerId: %d", v)
-	}
-	return v, nil
+	return 0, fmt.Errorf("invalid type for IntegerId: expected int, got %T", value)
 }

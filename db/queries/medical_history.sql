@@ -3,12 +3,12 @@ INSERT INTO medical_history (
     pet_id, 
     owner_id,
     veterinarian_id,
-    visit_date, 
+    visit_date,
+    visit_type,
     diagnosis, 
     treatment,
     notes,
-    condition, 
-    treatment 
+    condition 
 )
 VALUES (
     $1, $2, $3, $4, $5, $6, $7, $8, $9
@@ -23,7 +23,7 @@ SET
     veterinarian_id = $4,
     visit_date = $5, 
     diagnosis = $6, 
-    treatment = $7,
+    visit_type = $7,
     notes = $8,
     condition = $9, 
     treatment = $10, 
