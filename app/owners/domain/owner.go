@@ -5,15 +5,14 @@ import (
 	"time"
 
 	petDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/domain"
-	userEnums "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain/enum"
-	userValueObjects "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain/valueobjects"
+	userDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
 )
 
 type Owner struct {
 	Id          int
 	Photo       string
-	FullName    userValueObjects.PersonName
-	Gender      userEnums.Gender
+	FullName    userDomain.PersonName
+	Gender      userDomain.Gender
 	DateOfBirth time.Time
 	PhoneNumber string
 	Address     *string

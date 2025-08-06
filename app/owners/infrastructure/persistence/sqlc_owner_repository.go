@@ -10,8 +10,7 @@ import (
 	petRepository "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application/repositories"
 	petDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/domain"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
-	userEnums "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain/enum"
-	userValueObjects "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain/valueobjects"
+	userDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
 	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
 )
 
@@ -69,7 +68,7 @@ func (r *SqlcOwnerRepository) GetById(ctx context.Context, id int, includePets b
 	} else {
 	}
 
-	ownerName, err := userValueObjects.NewPersonName(ownerRow.FirstName, ownerRow.LastName)
+	ownerName, err := userDomain.NewPersonName(ownerRow.FirstName, ownerRow.LastName)
 	if err != nil {
 		return ownerDomain.Owner{}, fmt.Errorf("failed to create owner name: %w", err)
 	}
@@ -87,7 +86,7 @@ func (r *SqlcOwnerRepository) GetById(ctx context.Context, id int, includePets b
 		Photo:       ownerRow.Photo,
 		FullName:    ownerName,
 		DateOfBirth: ownerRow.DateOfBirth.Time,
-		Gender:      userEnums.Gender(ownerRow.Gender),
+		Gender:      userDomain.Gender(ownerRow.Gender),
 		PhoneNumber: ownerRow.PhoneNumber,
 		Address:     &ownerRow.Address.String,
 		IsActive:    ownerRow.IsActive,
@@ -103,7 +102,7 @@ func (r *SqlcOwnerRepository) GetByPhone(ctx context.Context, phone string) (own
 		return ownerDomain.Owner{}, err
 	}
 
-	ownerName, err := userValueObjects.NewPersonName(row.FirstName, row.LastName)
+	ownerName, err := userDomain.NewPersonName(row.FirstName, row.LastName)
 	if err != nil {
 		return ownerDomain.Owner{}, nil
 	}
@@ -113,7 +112,7 @@ func (r *SqlcOwnerRepository) GetByPhone(ctx context.Context, phone string) (own
 		Photo:       row.Photo,
 		FullName:    ownerName,
 		DateOfBirth: row.DateOfBirth.Time,
-		Gender:      userEnums.Gender(row.Gender),
+		Gender:      userDomain.Gender(row.Gender),
 		PhoneNumber: row.PhoneNumber,
 		Address:     &row.Address.String,
 		IsActive:    row.IsActive,

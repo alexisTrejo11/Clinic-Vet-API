@@ -54,6 +54,95 @@ func (ns NullPersonGender) Value() (driver.Value, error) {
 	return string(ns.PersonGender), nil
 }
 
+type UserRole string
+
+const (
+	UserRoleOwner        UserRole = "owner"
+	UserRoleReceptionist UserRole = "receptionist"
+	UserRoleVeterinarian UserRole = "veterinarian"
+	UserRoleAdmin        UserRole = "admin"
+)
+
+func (e *UserRole) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = UserRole(s)
+	case string:
+		*e = UserRole(s)
+	default:
+		return fmt.Errorf("unsupported scan type for UserRole: %T", src)
+	}
+	return nil
+}
+
+type NullUserRole struct {
+	UserRole UserRole
+	Valid    bool // Valid is true if UserRole is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullUserRole) Scan(value interface{}) error {
+	if value == nil {
+		ns.UserRole, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.UserRole.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullUserRole) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.UserRole), nil
+}
+
+type UserStatus string
+
+const (
+	UserStatusActive   UserStatus = "active"
+	UserStatusInactive UserStatus = "inactive"
+	UserStatusPending  UserStatus = "pending"
+	UserStatusBanned   UserStatus = "banned"
+	UserStatusDeleted  UserStatus = "deleted"
+)
+
+func (e *UserStatus) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = UserStatus(s)
+	case string:
+		*e = UserStatus(s)
+	default:
+		return fmt.Errorf("unsupported scan type for UserStatus: %T", src)
+	}
+	return nil
+}
+
+type NullUserStatus struct {
+	UserStatus UserStatus
+	Valid      bool // Valid is true if UserStatus is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullUserStatus) Scan(value interface{}) error {
+	if value == nil {
+		ns.UserStatus, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.UserStatus.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullUserStatus) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.UserStatus), nil
+}
+
 type VeterinarianSpeciality string
 
 const (
@@ -166,6 +255,30 @@ type Pet struct {
 	IsActive           bool
 	CreatedAt          pgtype.Timestamptz
 	UpdatedAt          pgtype.Timestamptz
+}
+
+type Profile struct {
+	ID              int32
+	UserID          pgtype.Int4
+	VeterinariansID pgtype.Int4
+	OwnerID         pgtype.Int4
+	Bio             pgtype.Text
+	ProfilePic      pgtype.Text
+	CreatedAt       pgtype.Timestamptz
+	LastUpdate      pgtype.Timestamptz
+}
+
+type User struct {
+	ID          int32
+	Email       pgtype.Text
+	PhoneNumber pgtype.Text
+	Password    pgtype.Text
+	Status      UserStatus
+	Role        UserRole
+	ProfileID   pgtype.Int4
+	CreatedAt   pgtype.Timestamptz
+	UpdatedAt   pgtype.Timestamptz
+	DeletedAt   pgtype.Timestamp
 }
 
 type Veterinarian struct {

@@ -9,7 +9,7 @@ import (
 	authDto "github.com/alexisTrejo11/Clinic-Vet-API/app/auth/application/dtos"
 	authRepository "github.com/alexisTrejo11/Clinic-Vet-API/app/auth/application/repositories"
 	authDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/auth/domain"
-	userRepository "github.com/alexisTrejo11/Clinic-Vet-API/app/users/application/repositories"
+	userRepository "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain/repositories"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -32,20 +32,16 @@ func NewLoginUseCase(userRepo userRepository.UserRepository, sessionRepo authRep
 }
 
 func (uc *loginUseCase) Execute(dto authDto.RequestLogin, deviceInfo, ipAddress string) (*authDto.TokenResponse, error) {
-	user, err := uc.userRepo.FindByEmail(dto.IdentifierField)
+	user, err := uc.userRepo.GetByEmail(dto.IdentifierField)
 	if err != nil {
 		return nil, errors.New("invalid credentials")
 	}
 
-	if !user.IsActive {
-		return nil, errors.New("account is not activated")
-	}
-
-	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(dto.Password)); err != nil {
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password()), []byte(dto.Password)); err != nil {
 		return nil, errors.New("invalid credentials")
 	}
 
-	userIdStr := strconv.Itoa(int(user.ID))
+	userIdStr := strconv.Itoa(int(user.Id().GetValue()))
 	accessToken, err := uc.jwtService.GenerateAccessToken(userIdStr)
 	if err != nil {
 		return nil, errors.New("failed to generate access token")
@@ -57,7 +53,7 @@ func (uc *loginUseCase) Execute(dto authDto.RequestLogin, deviceInfo, ipAddress 
 	}
 
 	session := &authDomain.Session{
-		UserID:       user.ID,
+		UserID:       user.Id().GetValue(),
 		RefreshToken: refreshToken,
 		DeviceInfo:   deviceInfo,
 		IPAddress:    ipAddress,

@@ -3,11 +3,11 @@ package ownerMappers
 import (
 	ownerDTOs "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/application/dtos"
 	ownerDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/domain"
-	userValueObjects "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain/valueobjects"
+	userDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
 )
 
 func FromRequestCreate(ownerCreate ownerDTOs.OwnerCreate) ownerDomain.Owner {
-	fullName, _ := userValueObjects.NewPersonName(ownerCreate.FirstName, ownerCreate.LastName)
+	fullName, _ := userDomain.NewPersonName(ownerCreate.FirstName, ownerCreate.LastName)
 	return ownerDomain.Owner{
 		Photo:       ownerCreate.Photo,
 		FullName:    fullName,

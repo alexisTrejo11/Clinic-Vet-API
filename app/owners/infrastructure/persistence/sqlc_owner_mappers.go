@@ -4,8 +4,7 @@ import (
 	"time"
 
 	ownerDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/domain"
-	userEnums "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain/enum"
-	userValueObjects "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain/valueobjects"
+	userDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
 	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
 	"github.com/jackc/pgx/v5/pgtype"
 )
@@ -55,7 +54,7 @@ func ToUpdateParams(owner ownerDomain.Owner) *sqlc.UpdateOwnerParams {
 }
 
 func FromCreateToDomain(row sqlc.CreateOwnerRow) *ownerDomain.Owner {
-	ownerName, err := userValueObjects.NewPersonName(row.FirstName, row.LastName)
+	ownerName, err := userDomain.NewPersonName(row.FirstName, row.LastName)
 	if err != nil {
 		return &ownerDomain.Owner{}
 	}
@@ -64,7 +63,7 @@ func FromCreateToDomain(row sqlc.CreateOwnerRow) *ownerDomain.Owner {
 		Id:          int(row.ID),
 		Photo:       row.Photo,
 		FullName:    ownerName,
-		Gender:      userEnums.Gender(row.Gender),
+		Gender:      userDomain.Gender(row.Gender),
 		PhoneNumber: row.PhoneNumber,
 		DateOfBirth: row.DateOfBirth.Time,
 		Address:     &row.Address.String,
@@ -80,7 +79,7 @@ func ListRowToOwner(rows []sqlc.ListOwnersRow) ([]ownerDomain.Owner, error) {
 	}
 
 	for i, row := range rows {
-		ownerName, err := userValueObjects.NewPersonName(row.FirstName, row.LastName)
+		ownerName, err := userDomain.NewPersonName(row.FirstName, row.LastName)
 		if err != nil {
 			return []ownerDomain.Owner{}, err
 		}
@@ -88,7 +87,7 @@ func ListRowToOwner(rows []sqlc.ListOwnersRow) ([]ownerDomain.Owner, error) {
 			Id:          int(row.ID),
 			Photo:       row.Photo,
 			FullName:    ownerName,
-			Gender:      userEnums.Gender(row.Gender),
+			Gender:      userDomain.Gender(row.Gender),
 			PhoneNumber: row.PhoneNumber,
 			Address:     &row.Address.String,
 			IsActive:    row.IsActive,

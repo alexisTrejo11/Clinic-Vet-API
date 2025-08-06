@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
-	userEnums "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain/enum"
+	userEnums "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
 )
 
 type OwnerCreate struct {
