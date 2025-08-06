@@ -31,6 +31,10 @@ type UserId struct {
 	id shared.IntegerId
 }
 
+func NilUserId() UserId {
+	return UserId{id: shared.NilIntegerId()}
+}
+
 func NewUserId(id any) (UserId, error) {
 	userId, err := shared.NewIntegerId(id)
 	if err != nil {
@@ -112,17 +116,24 @@ func (a Age) String() string {
 	return fmt.Sprintf("%d años y %d meses", a.years, a.months)
 }
 
-func NewEmail(email string) (Email, error) {
-	if email == "" {
+func NewEmail(emailStr string) (Email, error) {
+	if emailStr == "" {
 		return Email{}, errors.New("email cannot be empty")
 	}
 
-	emailRegex := regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
-	if !emailRegex.MatchString(email) {
+	email := Email{value: strings.ToLower(emailStr)}
+	if !email.isValid() {
 		return Email{}, errors.New("invalid email format")
 	}
 
-	return Email{value: strings.ToLower(email)}, nil
+	return email, nil
+}
+
+func (e Email) isValid() bool {
+	// Simple regex for email validation
+	const emailRegex = `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`
+	re := regexp.MustCompile(emailRegex)
+	return re.MatchString(e.value)
 }
 
 func (e Email) Value() string {

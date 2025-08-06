@@ -18,26 +18,40 @@ type User struct {
 	password    string
 	role        UserRole
 	status      UserStatus
-	lastLoginAt *time.Time
+	lastLoginAt time.Time
+	joinedAt    time.Time
 	profile     *Profile
 }
 
 type Profile struct {
-	Name        PersonName
-	PhotoURL    string
-	Bio         string
-	Location    string
-	DateOfBirth *time.Time
-	Gender      string
-	JoinedAt    time.Time
+	UserId         int
+	OwnerId        *int
+	VeterinarianId *int
+	Name           PersonName
+	PhotoURL       string
+	Bio            string
+	Location       string
+	DateOfBirth    *time.Time
+	Gender         string
+	JoinedAt       time.Time
 }
 
-func NewUser(id UserId, email Email, phoneNumber PhoneNumber, password string, role UserRole, status UserStatus, profile Profile) (*User, error) {
+func NewUser(id UserId, email Email, phoneNumber PhoneNumber, password string, role UserRole, status UserStatus, profile *Profile) (*User, error) {
 	if !role.IsValid() {
 		return nil, ErrInvalidUserRole(string(role))
 	}
 	if !status.IsValid() {
 		return nil, ErrInvalidUserStatus(string(status))
+	}
+
+	if profile == nil {
+		profile = &Profile{
+			Name:        PersonName{},
+			PhotoURL:    "",
+			Bio:         "",
+			Location:    "",
+			DateOfBirth: nil,
+		}
 	}
 
 	return &User{
@@ -47,7 +61,7 @@ func NewUser(id UserId, email Email, phoneNumber PhoneNumber, password string, r
 		password:    password,
 		role:        role,
 		status:      status,
-		profile:     &profile,
+		profile:     profile,
 	}, nil
 }
 
@@ -75,7 +89,7 @@ func (u *User) Status() UserStatus {
 	return u.status
 }
 
-func (u *User) LastLoginAt() *time.Time {
+func (u *User) LastLoginAt() time.Time {
 	return u.lastLoginAt
 }
 
@@ -84,7 +98,7 @@ func (u *User) Profile() Profile {
 }
 
 func (u *User) SetLastLoginAt(t time.Time) {
-	u.lastLoginAt = &t
+	u.lastLoginAt = t
 }
 
 func (u *User) SetProfile(profile *Profile) {
@@ -117,6 +131,10 @@ func (u *User) SetPhoneNumber(phoneNumber PhoneNumber) {
 
 func (u *User) SetPassword(password string) {
 	u.password = password
+}
+
+func (u *User) JoinedAt() time.Time {
+	return u.joinedAt
 }
 
 func ValidatePassword(password string) error {

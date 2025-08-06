@@ -68,3 +68,26 @@ UPDATE users
 SET deleted_at = NULL
 WHERE id = $1;
 
+-- name: UpdateUserLastLogin :exec
+UPDATE users
+SET last_login = CURRENT_TIMESTAMP
+WHERE id = $1;
+
+-- name: ExistsUserByEmail :one
+SELECT COUNT(*) > 0
+FROM users
+WHERE email = $1;
+
+-- name: ExistsUserByPhoneNumber :one
+SELECT COUNT(*) > 0
+FROM users
+WHERE phone_number = $1;
+
+-- name: ListUsersByRole :many
+SELECT *
+FROM users
+WHERE role = $1
+AND deleted_at IS NULL
+ORDER BY created_at DESC
+LIMIT $2
+OFFSET $3;

@@ -25,6 +25,36 @@ func (r UserRole) IsValid() bool {
 	return false
 }
 
+func UserRoleFromString(role string) UserRole {
+	switch role {
+	case "admin":
+		return UserRoleAdmin
+	case "veterinarian":
+		return UserRoleVeterinarian
+	case "owner":
+		return UserRoleOwner
+	case "receptionist":
+		return UserRoleReceptionist
+	default:
+		return UserRoleOwner
+	}
+}
+
+func (u UserRole) String() string {
+	switch u {
+	case UserRoleAdmin:
+		return "admin"
+	case UserRoleVeterinarian:
+		return "veterinarian"
+	case UserRoleOwner:
+		return "owner"
+	case UserRoleReceptionist:
+		return "receptionist"
+	default:
+		return "unknown"
+	}
+}
+
 const (
 	UserStatusActive   UserStatus = "active"
 	UserStatusInactive UserStatus = "inactive"

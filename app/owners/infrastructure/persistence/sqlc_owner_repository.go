@@ -9,6 +9,7 @@ import (
 	ownerDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/domain"
 	petRepository "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application/repositories"
 	petDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/domain"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 	userDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
 	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
@@ -86,7 +87,7 @@ func (r *SqlcOwnerRepository) GetById(ctx context.Context, id int, includePets b
 		Photo:       ownerRow.Photo,
 		FullName:    ownerName,
 		DateOfBirth: ownerRow.DateOfBirth.Time,
-		Gender:      userDomain.Gender(ownerRow.Gender),
+		Gender:      userDomain.Gender(shared.AssertString(ownerRow.Gender)),
 		PhoneNumber: ownerRow.PhoneNumber,
 		Address:     &ownerRow.Address.String,
 		IsActive:    ownerRow.IsActive,
@@ -112,7 +113,7 @@ func (r *SqlcOwnerRepository) GetByPhone(ctx context.Context, phone string) (own
 		Photo:       row.Photo,
 		FullName:    ownerName,
 		DateOfBirth: row.DateOfBirth.Time,
-		Gender:      userDomain.Gender(row.Gender),
+		Gender:      userDomain.Gender(shared.AssertString(row.Gender)),
 		PhoneNumber: row.PhoneNumber,
 		Address:     &row.Address.String,
 		IsActive:    row.IsActive,

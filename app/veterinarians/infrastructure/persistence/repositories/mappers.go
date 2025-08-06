@@ -43,7 +43,7 @@ func SqlcVetToDomain(sql sqlc.Veterinarian) *vetDomain.Veterinarian {
 		Name:            name,
 		Photo:           sql.Photo,
 		LicenseNumber:   sql.LicenseNumber,
-		Specialty:       vetDomain.VetSpecialtyFromString(string(sql.Speciality)),
+		Specialty:       vetDomain.VetSpecialtyFromString(shared.AssertString(sql.Speciality)),
 		YearsExperience: int(sql.YearsOfExperience),
 		ConsultationFee: nil,
 		IsActive:        isActive,

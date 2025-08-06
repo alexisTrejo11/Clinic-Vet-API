@@ -45,7 +45,7 @@ func (r *SqlcVetRepository) List(ctx context.Context, searchParams vetDtos.VetSe
 	}
 
 	if searchParams.Filters.Specialty != nil {
-		params.Speciality = sqlc.VeterinarianSpeciality(searchParams.Filters.Specialty.String())
+		params.Speciality = searchParams.Filters.Specialty.String()
 	}
 
 	if searchParams.Filters.YearsExperience != nil {
@@ -175,7 +175,7 @@ func (c *SqlcVetRepository) create(ctx context.Context, vet *vetDomain.Veterinar
 		LastName:          vet.Name.LastName(),
 		LicenseNumber:     vet.LicenseNumber,
 		Photo:             vet.Photo,
-		Speciality:        sqlc.VeterinarianSpeciality(vet.Specialty.String()),
+		Speciality:        vet.Specialty.String(),
 		YearsOfExperience: int32(vet.YearsExperience),
 		IsActive:          pgtype.Bool{Bool: vet.IsActive, Valid: true},
 	}
@@ -199,7 +199,7 @@ func (c *SqlcVetRepository) update(ctx context.Context, vet *vetDomain.Veterinar
 		LastName:          vet.Name.LastName(),
 		LicenseNumber:     vet.LicenseNumber,
 		Photo:             vet.Photo,
-		Speciality:        sqlc.VeterinarianSpeciality(vet.Specialty.String()),
+		Speciality:        vet.Specialty.String(),
 		YearsOfExperience: int32(vet.YearsExperience),
 		IsActive:          pgtype.Bool{Bool: vet.IsActive, Valid: true},
 	}

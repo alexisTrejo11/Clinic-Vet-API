@@ -6,6 +6,10 @@ type IntegerId struct {
 	value int
 }
 
+func NilIntegerId() IntegerId {
+	return IntegerId{value: 0}
+}
+
 func NewIntegerId(value any) (IntegerId, error) {
 	idInt, err := parseToInt(value)
 	if err != nil {

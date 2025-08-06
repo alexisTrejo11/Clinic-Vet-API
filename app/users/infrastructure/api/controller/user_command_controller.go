@@ -1,17 +1,20 @@
 package userController
 
 import (
+	userUsecase "github.com/alexisTrejo11/Clinic-Vet-API/app/users/application/usecases"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )
 
 type UserCommandController struct {
 	validator *validator.Validate
+	useCases  userUsecase.UserUseCases
 }
 
-func NewUserCommandController(validator *validator.Validate) *UserCommandController {
+func NewUserCommandController(validator *validator.Validate, useCases userUsecase.UserUseCases) *UserCommandController {
 	return &UserCommandController{
 		validator: validator,
+		useCases:  useCases,
 	}
 }
 

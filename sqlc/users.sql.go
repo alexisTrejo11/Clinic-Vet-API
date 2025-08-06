@@ -33,8 +33,8 @@ type CreateUserParams struct {
 	Email       pgtype.Text
 	PhoneNumber pgtype.Text
 	Password    pgtype.Text
-	Status      UserStatus
-	Role        UserRole
+	Status      interface{}
+	Role        interface{}
 	ProfileID   pgtype.Int4
 }
 
@@ -61,6 +61,32 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.DeletedAt,
 	)
 	return i, err
+}
+
+const existsUserByEmail = `-- name: ExistsUserByEmail :one
+SELECT COUNT(*) > 0
+FROM users
+WHERE email = $1
+`
+
+func (q *Queries) ExistsUserByEmail(ctx context.Context, email pgtype.Text) (bool, error) {
+	row := q.db.QueryRow(ctx, existsUserByEmail, email)
+	var column_1 bool
+	err := row.Scan(&column_1)
+	return column_1, err
+}
+
+const existsUserByPhoneNumber = `-- name: ExistsUserByPhoneNumber :one
+SELECT COUNT(*) > 0
+FROM users
+WHERE phone_number = $1
+`
+
+func (q *Queries) ExistsUserByPhoneNumber(ctx context.Context, phoneNumber pgtype.Text) (bool, error) {
+	row := q.db.QueryRow(ctx, existsUserByPhoneNumber, phoneNumber)
+	var column_1 bool
+	err := row.Scan(&column_1)
+	return column_1, err
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
@@ -193,6 +219,53 @@ func (q *Queries) ListUsers(ctx context.Context, arg ListUsersParams) ([]User, e
 	return items, nil
 }
 
+const listUsersByRole = `-- name: ListUsersByRole :many
+SELECT id, email, phone_number, password, status, role, profile_id, created_at, updated_at, deleted_at
+FROM users
+WHERE role = $1
+AND deleted_at IS NULL
+ORDER BY created_at DESC
+LIMIT $2
+OFFSET $3
+`
+
+type ListUsersByRoleParams struct {
+	Role   interface{}
+	Limit  int32
+	Offset int32
+}
+
+func (q *Queries) ListUsersByRole(ctx context.Context, arg ListUsersByRoleParams) ([]User, error) {
+	rows, err := q.db.Query(ctx, listUsersByRole, arg.Role, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []User
+	for rows.Next() {
+		var i User
+		if err := rows.Scan(
+			&i.ID,
+			&i.Email,
+			&i.PhoneNumber,
+			&i.Password,
+			&i.Status,
+			&i.Role,
+			&i.ProfileID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.DeletedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const restoreUser = `-- name: RestoreUser :exec
 UPDATE users
 SET deleted_at = NULL
@@ -234,8 +307,8 @@ type UpdateUserParams struct {
 	Email       pgtype.Text
 	PhoneNumber pgtype.Text
 	Password    pgtype.Text
-	Status      UserStatus
-	Role        UserRole
+	Status      interface{}
+	Role        interface{}
 	ProfileID   pgtype.Int4
 }
 
@@ -263,4 +336,15 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, e
 		&i.DeletedAt,
 	)
 	return i, err
+}
+
+const updateUserLastLogin = `-- name: UpdateUserLastLogin :exec
+UPDATE users
+SET last_login = CURRENT_TIMESTAMP
+WHERE id = $1
+`
+
+func (q *Queries) UpdateUserLastLogin(ctx context.Context, id int32) error {
+	_, err := q.db.Exec(ctx, updateUserLastLogin, id)
+	return err
 }

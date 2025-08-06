@@ -128,7 +128,7 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE TABLE IF NOT EXISTS profiles (
     id SERIAL PRIMARY KEY,
     user_id INT,
-    veterinarians_id INT,
+    veterinarian_id INT,
     owner_id INT,
     bio TEXT,
     profile_pic VARCHAR(255),
@@ -152,7 +152,7 @@ ADD CONSTRAINT fk_profiles_owner
 
 ALTER TABLE profiles
 ADD CONSTRAINT fk_profiles_veterinarian
-    FOREIGN KEY (veterinarians_id) REFERENCES veterinarians(id) ON DELETE CASCADE;
+    FOREIGN KEY (veterinarian_id) REFERENCES veterinarians(id) ON DELETE CASCADE;
 
 CREATE INDEX IF NOT EXISTS idx_profile_user_id ON profiles(user_id);
 CREATE INDEX IF NOT EXISTS idx_user_profile_id ON users(profile_id);

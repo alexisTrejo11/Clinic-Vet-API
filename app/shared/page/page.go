@@ -35,6 +35,13 @@ func NewPage[T any](data T, metadata PageMetadata) *Page[T] {
 	}
 }
 
+func EmptyPage[T any]() Page[T] {
+	return Page[T]{
+		Data:     *new(T),
+		Metadata: PageMetadata{},
+	}
+}
+
 func GetPageMetadata(totalItems int, page PageData) *PageMetadata {
 	var totalPages int
 	if page.PageSize > 0 {

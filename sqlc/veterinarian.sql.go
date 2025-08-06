@@ -29,7 +29,7 @@ type CreateVeterinarianParams struct {
 	LastName          string
 	Photo             string
 	LicenseNumber     string
-	Speciality        VeterinarianSpeciality
+	Speciality        interface{}
 	YearsOfExperience int32
 	IsActive          pgtype.Bool
 	Column8           []byte
@@ -164,7 +164,7 @@ type ListVeterinariansParams struct {
 	FirstName           string
 	LastName            string
 	LicenseNumber       string
-	Speciality          VeterinarianSpeciality
+	Speciality          interface{}
 	YearsOfExperience   int32
 	YearsOfExperience_2 int32
 	IsActive            pgtype.Bool
@@ -270,7 +270,7 @@ type UpdateVeterinarianParams struct {
 	LastName          string
 	Photo             string
 	LicenseNumber     string
-	Speciality        VeterinarianSpeciality
+	Speciality        interface{}
 	YearsOfExperience int32
 	IsActive          pgtype.Bool
 	Column8           []byte

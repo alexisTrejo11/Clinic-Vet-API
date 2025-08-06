@@ -60,3 +60,11 @@ func NewMoney(amount float64, currency string) (Money, error) {
 		currency: strings.ToUpper(currency),
 	}, nil
 }
+
+// assertString safely asserts an interface{} to string, returns empty string if not possible
+func AssertString(val interface{}) string {
+	if s, ok := val.(string); ok {
+		return s
+	}
+	return ""
+}

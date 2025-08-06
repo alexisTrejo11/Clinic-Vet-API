@@ -5,204 +5,8 @@
 package sqlc
 
 import (
-	"database/sql/driver"
-	"fmt"
-
 	"github.com/jackc/pgx/v5/pgtype"
 )
-
-type PersonGender string
-
-const (
-	PersonGenderMale         PersonGender = "male"
-	PersonGenderFemale       PersonGender = "female"
-	PersonGenderNotSpecified PersonGender = "not_specified"
-)
-
-func (e *PersonGender) Scan(src interface{}) error {
-	switch s := src.(type) {
-	case []byte:
-		*e = PersonGender(s)
-	case string:
-		*e = PersonGender(s)
-	default:
-		return fmt.Errorf("unsupported scan type for PersonGender: %T", src)
-	}
-	return nil
-}
-
-type NullPersonGender struct {
-	PersonGender PersonGender
-	Valid        bool // Valid is true if PersonGender is not NULL
-}
-
-// Scan implements the Scanner interface.
-func (ns *NullPersonGender) Scan(value interface{}) error {
-	if value == nil {
-		ns.PersonGender, ns.Valid = "", false
-		return nil
-	}
-	ns.Valid = true
-	return ns.PersonGender.Scan(value)
-}
-
-// Value implements the driver Valuer interface.
-func (ns NullPersonGender) Value() (driver.Value, error) {
-	if !ns.Valid {
-		return nil, nil
-	}
-	return string(ns.PersonGender), nil
-}
-
-type UserRole string
-
-const (
-	UserRoleOwner        UserRole = "owner"
-	UserRoleReceptionist UserRole = "receptionist"
-	UserRoleVeterinarian UserRole = "veterinarian"
-	UserRoleAdmin        UserRole = "admin"
-)
-
-func (e *UserRole) Scan(src interface{}) error {
-	switch s := src.(type) {
-	case []byte:
-		*e = UserRole(s)
-	case string:
-		*e = UserRole(s)
-	default:
-		return fmt.Errorf("unsupported scan type for UserRole: %T", src)
-	}
-	return nil
-}
-
-type NullUserRole struct {
-	UserRole UserRole
-	Valid    bool // Valid is true if UserRole is not NULL
-}
-
-// Scan implements the Scanner interface.
-func (ns *NullUserRole) Scan(value interface{}) error {
-	if value == nil {
-		ns.UserRole, ns.Valid = "", false
-		return nil
-	}
-	ns.Valid = true
-	return ns.UserRole.Scan(value)
-}
-
-// Value implements the driver Valuer interface.
-func (ns NullUserRole) Value() (driver.Value, error) {
-	if !ns.Valid {
-		return nil, nil
-	}
-	return string(ns.UserRole), nil
-}
-
-type UserStatus string
-
-const (
-	UserStatusActive   UserStatus = "active"
-	UserStatusInactive UserStatus = "inactive"
-	UserStatusPending  UserStatus = "pending"
-	UserStatusBanned   UserStatus = "banned"
-	UserStatusDeleted  UserStatus = "deleted"
-)
-
-func (e *UserStatus) Scan(src interface{}) error {
-	switch s := src.(type) {
-	case []byte:
-		*e = UserStatus(s)
-	case string:
-		*e = UserStatus(s)
-	default:
-		return fmt.Errorf("unsupported scan type for UserStatus: %T", src)
-	}
-	return nil
-}
-
-type NullUserStatus struct {
-	UserStatus UserStatus
-	Valid      bool // Valid is true if UserStatus is not NULL
-}
-
-// Scan implements the Scanner interface.
-func (ns *NullUserStatus) Scan(value interface{}) error {
-	if value == nil {
-		ns.UserStatus, ns.Valid = "", false
-		return nil
-	}
-	ns.Valid = true
-	return ns.UserStatus.Scan(value)
-}
-
-// Value implements the driver Valuer interface.
-func (ns NullUserStatus) Value() (driver.Value, error) {
-	if !ns.Valid {
-		return nil, nil
-	}
-	return string(ns.UserStatus), nil
-}
-
-type VeterinarianSpeciality string
-
-const (
-	VeterinarianSpecialityUnknownSpecialty      VeterinarianSpeciality = "unknown_specialty"
-	VeterinarianSpecialityGeneralPractice       VeterinarianSpeciality = "general_practice"
-	VeterinarianSpecialitySurgery               VeterinarianSpeciality = "surgery"
-	VeterinarianSpecialityInternalMedicine      VeterinarianSpeciality = "internal_medicine"
-	VeterinarianSpecialityDentistry             VeterinarianSpeciality = "dentistry"
-	VeterinarianSpecialityDermatology           VeterinarianSpeciality = "dermatology"
-	VeterinarianSpecialityOncology              VeterinarianSpeciality = "oncology"
-	VeterinarianSpecialityCardiology            VeterinarianSpeciality = "cardiology"
-	VeterinarianSpecialityNeurology             VeterinarianSpeciality = "neurology"
-	VeterinarianSpecialityOphthalmology         VeterinarianSpeciality = "ophthalmology"
-	VeterinarianSpecialityRadiology             VeterinarianSpeciality = "radiology"
-	VeterinarianSpecialityEmergencyCriticalCare VeterinarianSpeciality = "emergency_critical_care"
-	VeterinarianSpecialityAnesthesiology        VeterinarianSpeciality = "anesthesiology"
-	VeterinarianSpecialityPathology             VeterinarianSpeciality = "pathology"
-	VeterinarianSpecialityPreventiveMedicine    VeterinarianSpeciality = "preventive_medicine"
-	VeterinarianSpecialityExoticAnimalMedicine  VeterinarianSpeciality = "exotic_animal_medicine"
-	VeterinarianSpecialityEquineMedicine        VeterinarianSpeciality = "equine_medicine"
-	VeterinarianSpecialityAvianMedicine         VeterinarianSpeciality = "avian_medicine"
-	VeterinarianSpecialityZooAnimalMedicine     VeterinarianSpeciality = "zoo_animal_medicine"
-	VeterinarianSpecialityFoodAnimalMedicine    VeterinarianSpeciality = "food_animal_medicine"
-	VeterinarianSpecialityPublicHealth          VeterinarianSpeciality = "public_health"
-)
-
-func (e *VeterinarianSpeciality) Scan(src interface{}) error {
-	switch s := src.(type) {
-	case []byte:
-		*e = VeterinarianSpeciality(s)
-	case string:
-		*e = VeterinarianSpeciality(s)
-	default:
-		return fmt.Errorf("unsupported scan type for VeterinarianSpeciality: %T", src)
-	}
-	return nil
-}
-
-type NullVeterinarianSpeciality struct {
-	VeterinarianSpeciality VeterinarianSpeciality
-	Valid                  bool // Valid is true if VeterinarianSpeciality is not NULL
-}
-
-// Scan implements the Scanner interface.
-func (ns *NullVeterinarianSpeciality) Scan(value interface{}) error {
-	if value == nil {
-		ns.VeterinarianSpeciality, ns.Valid = "", false
-		return nil
-	}
-	ns.Valid = true
-	return ns.VeterinarianSpeciality.Scan(value)
-}
-
-// Value implements the driver Valuer interface.
-func (ns NullVeterinarianSpeciality) Value() (driver.Value, error) {
-	if !ns.Valid {
-		return nil, nil
-	}
-	return string(ns.VeterinarianSpeciality), nil
-}
 
 type MedicalHistory struct {
 	ID             int32
@@ -227,7 +31,7 @@ type Owner struct {
 	Photo       string
 	PhoneNumber string
 	DateOfBirth pgtype.Date
-	Gender      PersonGender
+	Gender      interface{}
 	Address     pgtype.Text
 	UserID      pgtype.Int4
 	IsActive    bool
@@ -258,14 +62,14 @@ type Pet struct {
 }
 
 type Profile struct {
-	ID              int32
-	UserID          pgtype.Int4
-	VeterinariansID pgtype.Int4
-	OwnerID         pgtype.Int4
-	Bio             pgtype.Text
-	ProfilePic      pgtype.Text
-	CreatedAt       pgtype.Timestamptz
-	LastUpdate      pgtype.Timestamptz
+	ID             int32
+	UserID         pgtype.Int4
+	VeterinarianID pgtype.Int4
+	OwnerID        pgtype.Int4
+	Bio            pgtype.Text
+	ProfilePic     pgtype.Text
+	CreatedAt      pgtype.Timestamptz
+	LastUpdate     pgtype.Timestamptz
 }
 
 type User struct {
@@ -273,8 +77,8 @@ type User struct {
 	Email       pgtype.Text
 	PhoneNumber pgtype.Text
 	Password    pgtype.Text
-	Status      UserStatus
-	Role        UserRole
+	Status      interface{}
+	Role        interface{}
 	ProfileID   pgtype.Int4
 	CreatedAt   pgtype.Timestamptz
 	UpdatedAt   pgtype.Timestamptz
@@ -287,7 +91,7 @@ type Veterinarian struct {
 	LastName          string
 	Photo             string
 	LicenseNumber     string
-	Speciality        VeterinarianSpeciality
+	Speciality        interface{}
 	YearsOfExperience int32
 	IsActive          pgtype.Bool
 	UserID            pgtype.Int4
