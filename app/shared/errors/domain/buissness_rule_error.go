@@ -1,4 +1,4 @@
-package domain_error
+package domainErr
 
 type BusinessRuleError struct {
 	BaseDomainError
