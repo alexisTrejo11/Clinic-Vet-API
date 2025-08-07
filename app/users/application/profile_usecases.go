@@ -1,16 +1,27 @@
-package userUsecase
+package userApplication
 
 import (
 	"context"
+	"time"
 
-	userCommand "github.com/alexisTrejo11/Clinic-Vet-API/app/users/application/command"
 	userDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
 	userRepo "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain/repositories"
 )
 
+type UpdateProfileRequest struct {
+	UserId      userDomain.UserId
+	FirstName   *string
+	LastName    *string
+	Gender      *string
+	ProfilePic  *string
+	Bio         *string
+	DateOfBirth *time.Time
+	Address     *string
+}
+
 type ProfileUseCases interface {
 	GetUserProfile(ctx context.Context, userId int) (userDomain.Profile, error)
-	UpdateProfileUseCase(ctx context.Context, command userCommand.UpdateProfileCommand) error
+	UpdateProfileUseCase(ctx context.Context, request UpdateProfileRequest) error
 }
 
 type GetProfileByIdUseCase struct {
@@ -39,22 +50,22 @@ func NewProfileUseCases(
 	}
 }
 
-func (p *profileUseCasesImpl) UpdateProfileUseCase(ctx context.Context, command userCommand.UpdateProfileCommand) error {
-	return p.updateProfile.Execute(ctx, command)
+func (p *profileUseCasesImpl) UpdateProfileUseCase(ctx context.Context, request UpdateProfileRequest) error {
+	return p.updateProfile.Execute(ctx, request)
 }
 
 func (p *profileUseCasesImpl) GetUserProfile(ctx context.Context, userId int) (userDomain.Profile, error) {
 	return p.getProfile.Execute(ctx, userId)
 }
 
-func (uc *UpdateUserProfileUseCase) Execute(ctx context.Context, command userCommand.UpdateProfileCommand) error {
-	user, err := uc.repo.GetById(ctx, command.UserId.GetValue())
+func (uc *UpdateUserProfileUseCase) Execute(ctx context.Context, request UpdateProfileRequest) error {
+	user, err := uc.repo.GetById(ctx, request.UserId.GetValue())
 	if err != nil {
 		return err
 	}
 
-	applyProfileUpdates(user, command)
-	uc.repo.UpdateProfile(ctx, command.UserId.GetValue(), user.Profile())
+	applyProfileUpdates(user, request)
+	uc.repo.UpdateProfile(ctx, request.UserId.GetValue(), user.Profile())
 	return nil
 }
 
@@ -67,29 +78,29 @@ func (uc *GetProfileByIdUseCase) Execute(ctx context.Context, userId int) (userD
 	return profile, nil
 }
 
-func applyProfileUpdates(user *userDomain.User, command userCommand.UpdateProfileCommand) {
+func applyProfileUpdates(user *userDomain.User, request UpdateProfileRequest) {
 	profile := user.Profile()
 
-	if command.FirstName != nil {
-		profile.Name.FirstName = *command.FirstName
+	if request.FirstName != nil {
+		profile.Name.FirstName = *request.FirstName
 	}
-	if command.LastName != nil {
-		profile.Name.LastName = *command.LastName
+	if request.LastName != nil {
+		profile.Name.LastName = *request.LastName
 	}
-	if command.Address != nil {
-		profile.Location = *command.Address
+	if request.Address != nil {
+		profile.Location = *request.Address
 	}
-	if command.Bio != nil {
-		profile.Bio = *command.Bio
+	if request.Bio != nil {
+		profile.Bio = *request.Bio
 	}
-	if command.DateOfBirth != nil {
-		profile.DateOfBirth = command.DateOfBirth
+	if request.DateOfBirth != nil {
+		profile.DateOfBirth = request.DateOfBirth
 	}
-	if command.ProfilePic != nil {
-		profile.PhotoURL = *command.ProfilePic
+	if request.ProfilePic != nil {
+		profile.PhotoURL = *request.ProfilePic
 	}
-	if command.Gender != nil {
-		profile.Gender = *command.Gender
+	if request.Gender != nil {
+		profile.Gender = *request.Gender
 	}
 
 	user.SetProfile(&profile)

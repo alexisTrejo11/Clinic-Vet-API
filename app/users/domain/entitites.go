@@ -1,6 +1,7 @@
 package userDomain
 
 import (
+	"errors"
 	"regexp"
 	"strconv"
 	"time"
@@ -121,11 +122,11 @@ func (u *User) SetRole(role UserRole) error {
 	return nil
 }
 
-func (u *User) SetEmail(email Email) {
+func (u *User) UpdateEmail(email Email) {
 	u.email = email
 }
 
-func (u *User) SetPhoneNumber(phoneNumber PhoneNumber) {
+func (u *User) UpdatePhoneNumber(phoneNumber PhoneNumber) {
 	u.phoneNumber = phoneNumber
 }
 
@@ -135,6 +136,14 @@ func (u *User) SetPassword(password string) {
 
 func (u *User) JoinedAt() time.Time {
 	return u.joinedAt
+}
+
+func (u *User) ChangePassword(newPassword string) error {
+	if err := ValidatePassword(newPassword); err != nil {
+		return err
+	}
+	u.password = newPassword
+	return nil
 }
 
 func ValidatePassword(password string) error {
@@ -148,6 +157,45 @@ func ValidatePassword(password string) error {
 	passwordRegex := regexp.MustCompile(`^[a-zA-Z0-9!@#$%^&*()_+={}\[\]:;"'<>,.?/\\|-]+$`).MatchString(password)
 	if !passwordRegex {
 		return ErrPasswordInvalidFormat("Password must contain only alphanumeric characters and special symbols !@#$%^&*()_+={}[]:;\"'<>,.?/\\\\|-")
+	}
+	return nil
+}
+
+func (u *User) UpdateStatus(status UserStatus) error {
+	if !status.IsValid() {
+		return errors.New("invalid user status")
+	}
+
+	if err := u.ValidateStatusTransition(status); err != nil {
+		return err
+	}
+
+	u.status = status
+	return nil
+}
+
+func (u *User) ValidateStatusTransition(newStatus UserStatus) error {
+	switch u.status {
+	case UserStatusPending:
+		if u.status != UserStatusActive && u.status != UserStatusDeleted {
+			return errors.New("pending users can only be activated or deleted")
+		}
+	case UserStatusBanned:
+		if u.status != UserStatusActive && u.status != UserStatusDeleted {
+			return errors.New("banned users can only be activated or deleted")
+		}
+	case UserStatusDeleted:
+		if u.status != UserStatusActive {
+			return errors.New("can only set deleted status from active")
+		}
+	case UserStatusInactive:
+		if u.status != UserStatusActive && u.status != UserStatusBanned {
+			return errors.New("inactive users can only be activated or banned")
+		}
+	case UserStatusActive:
+		if u.status == UserStatusPending {
+			return errors.New("active users cannot be set to pending")
+		}
 	}
 	return nil
 }

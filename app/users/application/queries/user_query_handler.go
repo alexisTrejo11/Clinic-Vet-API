@@ -1,10 +1,9 @@
-package userUsecase
+package userQueries
 
 import (
 	"context"
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
-	queries "github.com/alexisTrejo11/Clinic-Vet-API/app/users/application/queries"
 	userDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
 	userRepository "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain/repositories"
 )
@@ -19,7 +18,7 @@ func NewUserQueryUsecases(userRepo userRepository.UserRepository) *UserQueryUsec
 	}
 }
 
-func (u *UserQueryUsecases) GetUserByID(context context.Context, id int) (*queries.UserResponse, error) {
+func (u *UserQueryUsecases) GetUserByID(context context.Context, id int) (*UserResponse, error) {
 	user, err := u.userRepo.GetById(context, id)
 	if err != nil {
 		return nil, err
@@ -27,32 +26,32 @@ func (u *UserQueryUsecases) GetUserByID(context context.Context, id int) (*queri
 	return toResponse(*user), nil
 }
 
-func (u *UserQueryUsecases) SearchUsers(context context.Context, query queries.UserSearchQuery) (page.Page[[]queries.UserResponse], error) {
+func (u *UserQueryUsecases) SearchUsers(context context.Context, query UserSearchQuery) (page.Page[[]UserResponse], error) {
 	userPage, err := u.userRepo.Search(context, query.ToMap(), query.Pagination)
 	if err != nil {
-		return page.EmptyPage[[]queries.UserResponse](), err
+		return page.EmptyPage[[]UserResponse](), err
 	}
 	return toResponsePage(userPage), nil
 }
 
-func (u *UserQueryUsecases) GetUserByEmail(context context.Context, email string) (queries.UserResponse, error) {
+func (u *UserQueryUsecases) GetUserByEmail(context context.Context, email string) (UserResponse, error) {
 	user, err := u.userRepo.GetByEmail(context, email)
 	if err != nil {
-		return queries.UserResponse{}, err
+		return UserResponse{}, err
 	}
 	return *toResponse(*user), nil
 }
 
-func (u *UserQueryUsecases) GetUserByPhone(context context.Context, phone string) (queries.UserResponse, error) {
+func (u *UserQueryUsecases) GetUserByPhone(context context.Context, phone string) (UserResponse, error) {
 	user, err := u.userRepo.GetByPhone(context, phone)
 	if err != nil {
-		return queries.UserResponse{}, err
+		return UserResponse{}, err
 	}
 	return *toResponse(*user), nil
 }
 
-func toResponse(user userDomain.User) *queries.UserResponse {
-	return &queries.UserResponse{
+func toResponse(user userDomain.User) *UserResponse {
+	return &UserResponse{
 		Id:          user.Id().String(),
 		Email:       user.Email().String(),
 		PhoneNumber: user.PhoneNumber().String(),
@@ -63,8 +62,8 @@ func toResponse(user userDomain.User) *queries.UserResponse {
 	}
 }
 
-func toResponsePage(userPage page.Page[[]userDomain.User]) page.Page[[]queries.UserResponse] {
-	var userResponses []queries.UserResponse
+func toResponsePage(userPage page.Page[[]userDomain.User]) page.Page[[]UserResponse] {
+	var userResponses []UserResponse
 
 	users := userPage.Data
 	for _, user := range users {
