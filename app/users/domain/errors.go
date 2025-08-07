@@ -1,4 +1,4 @@
-package userDomain
+package user
 
 import domain_error "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/errors/domain"
 

@@ -1,20 +1,17 @@
 package userController
 
 import (
-	userUsecase "github.com/alexisTrejo11/Clinic-Vet-API/app/users/application/usecases"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )
 
 type UserQueryController struct {
 	validator *validator.Validate
-	useCases  userUsecase.UserUseCases
 }
 
-func NewUserQueryController(validator *validator.Validate, useCases userUsecase.UserUseCases) *UserQueryController {
+func NewUserQueryController(validator *validator.Validate) *UserQueryController {
 	return &UserQueryController{
 		validator: validator,
-		useCases:  useCases,
 	}
 }
 

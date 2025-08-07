@@ -3,58 +3,60 @@ package authController
 import (
 	"fmt"
 
-	authDto "github.com/alexisTrejo11/Clinic-Vet-API/app/auth/application/dtos"
-	authUsecase "github.com/alexisTrejo11/Clinic-Vet-API/app/auth/application/usecase"
+	authCmd "github.com/alexisTrejo11/Clinic-Vet-API/app/auth/application/command"
 	apiResponse "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/responses"
+	user "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )
 
 type AuthController struct {
 	validator        *validator.Validate
-	signupUseCase    authUsecase.SignUpUseCase
-	loginUseCase     authUsecase.LoginUseCase
-	logoutUseCase    authUsecase.LogoutUseCase
-	logoutAllUseCase authUsecase.LogoutAllUseCase
+	singupHandler    authCmd.SignupHandler
+	loginHandler     authCmd.LoginHandler
+	logoutHandler    authCmd.LogoutHandler
+	logoutAllHandler authCmd.LogoutAllHandler
 }
 
 func NewAuthController(
 	validator *validator.Validate,
-	signupUseCase authUsecase.SignUpUseCase,
-	loginUseCase authUsecase.LoginUseCase,
-	logoutUseCase authUsecase.LogoutUseCase,
-	logoutAllUseCase authUsecase.LogoutAllUseCase,
+	singupHandler authCmd.SignupHandler,
+	loginHandler authCmd.LoginHandler,
+	logoutHandler authCmd.LogoutHandler,
+	logoutAllHandler authCmd.LogoutAllHandler,
 ) *AuthController {
 	return &AuthController{
 		validator:        validator,
-		signupUseCase:    signupUseCase,
-		loginUseCase:     loginUseCase,
-		logoutUseCase:    logoutUseCase,
-		logoutAllUseCase: logoutAllUseCase,
+		singupHandler:    singupHandler,
+		loginHandler:     loginHandler,
+		logoutHandler:    logoutHandler,
+		logoutAllHandler: logoutAllHandler,
 	}
 }
 
 func (c *AuthController) Signup(ctx *gin.Context) {
-	var singup authDto.RequestSignup
+	var singupRequest RequestSignup
 
-	if err := ctx.ShouldBindBodyWithJSON(&singup); err != nil {
+	if err := ctx.ShouldBindBodyWithJSON(&singupRequest); err != nil {
 		apiResponse.RequestBodyDataError(ctx, err)
 	}
 
-	if err := c.validator.Struct(&singup); err != nil {
+	if err := c.validator.Struct(&singupRequest); err != nil {
 		apiResponse.RequestBodyDataError(ctx, err)
 		return
 	}
 
-	if err := c.signupUseCase.Execute(singup); err != nil {
-		apiResponse.AppError(ctx, err)
+	result := c.singupHandler.Handle(singupRequest.ToCommand())
+	if !result.IsSuccess {
+		apiResponse.AppError(ctx, result.Error)
 		return
 	}
 
 	apiResponse.Created(ctx, gin.H{"success": "Signup Succesfully Proccesed an Email Will Be Send to Activate your Account"})
 }
+
 func (c *AuthController) Login(ctx *gin.Context) {
-	var requestlogin authDto.RequestLogin
+	var requestlogin RequestLogin
 
 	if err := ctx.ShouldBindBodyWithJSON(&requestlogin); err != nil {
 		apiResponse.RequestBodyDataError(ctx, err)
@@ -65,7 +67,7 @@ func (c *AuthController) Login(ctx *gin.Context) {
 		return
 	}
 
-	session, err := c.loginUseCase.Execute(requestlogin, "", "")
+	session, err := c.loginHandler.Handle(requestlogin.ToCommand())
 	if err != nil {
 		apiResponse.AppError(ctx, err)
 		return
@@ -75,7 +77,7 @@ func (c *AuthController) Login(ctx *gin.Context) {
 }
 
 func (c *AuthController) Logout(ctx *gin.Context) {
-	var requestLogout authDto.RequestLogout
+	var requestLogout RequestLogout
 
 	if err := ctx.ShouldBindBodyWithJSON(&requestLogout); err != nil {
 		apiResponse.RequestBodyDataError(ctx, err)
@@ -87,7 +89,7 @@ func (c *AuthController) Logout(ctx *gin.Context) {
 		return
 	}
 
-	if err := c.logoutUseCase.Execute(requestLogout); err != nil {
+	if err := c.logoutHandler.Handle(*requestLogout.ToCommand()); err != nil {
 		apiResponse.AppError(ctx, err)
 		return
 	}
@@ -102,7 +104,11 @@ func (c *AuthController) LogoutAll(ctx *gin.Context) {
 		return
 	}
 
-	if err := c.logoutAllUseCase.Execute(1); err != nil {
+	command := authCmd.LogoutAllCommand{
+		UserId: user.NilUserId(),
+		CTX:    ctx.Request.Context(),
+	}
+	if err := c.logoutAllHandler.Handle(command); err != nil {
 		apiResponse.AppError(ctx, err)
 		return
 	}

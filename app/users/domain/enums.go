@@ -1,4 +1,4 @@
-package userDomain
+package user
 
 type UserRole string
 type Gender string
@@ -23,6 +23,21 @@ func (r UserRole) IsValid() bool {
 		return true
 	}
 	return false
+}
+
+func NewGender(value string) Gender {
+	switch value {
+	case "male":
+		return MALE
+	case "female":
+		return Female
+	case "not_specified":
+		return NotSpecified
+	case "":
+		return NotSpecified
+	default:
+		return NotSpecified
+	}
 }
 
 func UserRoleFromString(role string) UserRole {

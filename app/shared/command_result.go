@@ -1,4 +1,4 @@
-package userCommand
+package shared
 
 type CommandResult struct {
 	IsSuccess bool

@@ -1,32 +1,32 @@
 package sqlcUserRepo
 
 import (
-	userDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
+	user "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
 	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
 )
 
-func MapUserFromSQLC(sqlRow sqlc.User) (*userDomain.User, error) {
-	userId, err := userDomain.NewUserId(sqlRow.ID)
+func MapUserFromSQLC(sqlRow sqlc.User) (*user.User, error) {
+	userId, err := user.NewUserId(sqlRow.ID)
 	if err != nil {
 		return nil, err
 	}
 
-	email, err := userDomain.NewEmail(sqlRow.Email.String)
+	email, err := user.NewEmail(sqlRow.Email.String)
 	if err != nil {
 		return nil, err
 	}
 
-	phone, err := userDomain.NewPhoneNumber(sqlRow.PhoneNumber.String)
+	phone, err := user.NewPhoneNumber(sqlRow.PhoneNumber.String)
 	if err != nil {
 		return nil, err
 	}
 
 	roleStr, _ := sqlRow.Role.(string)
-	role := userDomain.UserRoleFromString(roleStr)
+	role := user.UserRoleFromString(roleStr)
 	statusStr, _ := sqlRow.Status.(string)
-	status := userDomain.UserStatusFromString(statusStr)
+	status := user.UserStatusFromString(statusStr)
 
-	user, err := userDomain.NewUser(
+	user, err := user.NewUser(
 		userId,
 		email,
 		phone,
@@ -44,8 +44,8 @@ func MapUserFromSQLC(sqlRow sqlc.User) (*userDomain.User, error) {
 
 }
 
-func MapUsersFromSQLC(sqlRows []sqlc.User) ([]userDomain.User, error) {
-	users := make([]userDomain.User, 0, len(sqlRows))
+func MapUsersFromSQLC(sqlRows []sqlc.User) ([]user.User, error) {
+	users := make([]user.User, 0, len(sqlRows))
 	for i, sqlRow := range sqlRows {
 		user, err := MapUserFromSQLC(sqlRow)
 		if err != nil {

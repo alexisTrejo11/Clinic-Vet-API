@@ -5,14 +5,14 @@ import (
 	"time"
 
 	petDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/domain"
-	userDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
+	user "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
 )
 
 type Owner struct {
 	Id          int
 	Photo       string
-	FullName    userDomain.PersonName
-	Gender      userDomain.Gender
+	FullName    user.PersonName
+	Gender      user.Gender
 	DateOfBirth time.Time
 	PhoneNumber string
 	Address     *string

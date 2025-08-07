@@ -4,20 +4,20 @@ import (
 	"context"
 	"errors"
 
-	userDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
+	user "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
 	userRepository "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain/repositories"
 )
 
 type ChangeEmailCommand struct {
-	UserId int              `json:"user_id"`
-	Email  userDomain.Email `json:"email"`
-	CTX    context.Context  `json:"-"`
+	UserId int             `json:"user_id"`
+	Email  user.Email      `json:"email"`
+	CTX    context.Context `json:"-"`
 }
 
 type ChangePhoneCommand struct {
-	UserId int                    `json:"user_id"`
-	Phone  userDomain.PhoneNumber `json:"phone"`
-	CTX    context.Context        `json:"-"`
+	UserId int              `json:"user_id"`
+	Phone  user.PhoneNumber `json:"phone"`
+	CTX    context.Context  `json:"-"`
 }
 
 type ChangeEmailHandler struct {
@@ -41,7 +41,7 @@ func NewChangeEmailHandler(userRepository userRepository.UserRepository) ChangeE
 }
 
 func (h ChangePhoneHandler) Handle(command ChangePhoneCommand) error {
-	user, err := h.userRepository.GetById(command.CTX, command.UserId)
+	user, err := h.userRepository.GetByIdWithProfile(command.CTX, command.UserId)
 	if err != nil {
 		return err
 	}
@@ -60,7 +60,7 @@ func (h ChangePhoneHandler) Handle(command ChangePhoneCommand) error {
 }
 
 func (h ChangeEmailHandler) Handle(command ChangeEmailCommand) error {
-	user, err := h.userRepository.GetById(command.CTX, command.UserId)
+	user, err := h.userRepository.GetByIdWithProfile(command.CTX, command.UserId)
 	if err != nil {
 		return err
 	}
@@ -78,7 +78,7 @@ func (h ChangeEmailHandler) Handle(command ChangeEmailCommand) error {
 	return nil
 }
 
-func (h ChangeEmailHandler) validate(command ChangeEmailCommand, user userDomain.User) error {
+func (h ChangeEmailHandler) validate(command ChangeEmailCommand, user user.User) error {
 	if user.Email().String() == command.Email.String() {
 		return nil
 	}
@@ -92,7 +92,7 @@ func (h ChangeEmailHandler) validate(command ChangeEmailCommand, user userDomain
 	return nil
 }
 
-func (h ChangePhoneHandler) validate(command ChangePhoneCommand, user userDomain.User) error {
+func (h ChangePhoneHandler) validate(command ChangePhoneCommand, user user.User) error {
 	if user.PhoneNumber().String() == command.Phone.String() {
 		return nil
 	}

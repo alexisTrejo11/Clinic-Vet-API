@@ -6,19 +6,9 @@ import (
 	"time"
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
-	userDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
+	user "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
 	userRepository "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain/repositories"
 )
-
-type CreateUserHandler struct {
-	repo userRepository.UserRepository
-}
-
-func NewCreateUserHandler(repo userRepository.UserRepository) *CreateUserHandler {
-	return &CreateUserHandler{
-		repo: repo,
-	}
-}
 
 type CreateProfileCommand struct {
 	FirstName   string
@@ -40,66 +30,75 @@ type CreateUserCommand struct {
 	Role           string
 	OwnerId        *int
 	VeterinarianId *int
-	Status         string
+	Status         user.UserStatus
 	DateOfBirth    time.Time
 	Profile        CreateProfileCommand
 	Ctx            context.Context
 }
 
-func (uc *CreateUserHandler) Handle(cmd any) CommandResult {
+type CreateUserHandler struct {
+	repo userRepository.UserRepository
+}
+
+func NewCreateUserHandler(repo userRepository.UserRepository) *CreateUserHandler {
+	return &CreateUserHandler{
+		repo: repo,
+	}
+}
+
+func (uc *CreateUserHandler) Handle(cmd any) shared.CommandResult {
 	command := cmd.(CreateUserCommand)
 
 	user, err := FromCreateCommand(command)
 	if err != nil {
-		FailureResult("an error ocurrred mappping user", err)
+		shared.FailureResult("an error ocurrred mappping user", err)
 	}
 
 	if err := uc.validateBuissnessRules(command.Ctx, *user); err != nil {
-		return FailureResult("an error ocurrred validating user", err)
+		return shared.FailureResult("an error ocurrred validating user", err)
 	}
 
 	if err := uc.proceessCreation(command.Ctx, user); err != nil {
-		return FailureResult("an error ocurrred creating user", err)
+		return shared.FailureResult("an error ocurrred creating user", err)
 	}
 
-	return SuccesResult(user.Id().String(), "user created successfully")
+	return shared.SuccesResult(user.Id().String(), "user created successfully")
 }
 
-func (uc *CreateUserHandler) validateBuissnessRules(ctx context.Context, user userDomain.User) error {
-	if err := userDomain.ValidatePassword(user.Password()); err != nil {
+func (uc *CreateUserHandler) validateBuissnessRules(ctx context.Context, userEntity user.User) error {
+	if err := user.ValidatePassword(userEntity.Password()); err != nil {
 		return err
 	}
 
-	if err := uc.validateUniqueConstraints(ctx, user); err != nil {
+	if err := uc.validateUniqueConstraints(ctx, userEntity); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (uc *CreateUserHandler) validateUniqueConstraints(ctx context.Context, user userDomain.User) error {
-	if exists, err := uc.repo.ExistsByEmail(ctx, user.Email().String()); err == nil {
-		if err != nil {
-			return err
-		}
-		if exists {
-			return errors.New("email already exists")
-		}
+func (uc *CreateUserHandler) validateUniqueConstraints(ctx context.Context, user user.User) error {
+	exists, err := uc.repo.ExistsByEmail(ctx, user.Email().String())
+	if err != nil {
+		return err
+	}
+	if exists {
+		return errors.New("email already exists")
 	}
 
-	if exists, err := uc.repo.ExistsByPhone(ctx, user.PhoneNumber().String()); err == nil {
-		if err != nil {
-			return err
-		}
-		if exists {
-			return errors.New("phone number already exists")
-		}
+	exists, err = uc.repo.ExistsByPhone(ctx, user.PhoneNumber().String())
+	if err != nil {
+		return err
+	}
+
+	if exists {
+		return errors.New("phone number already exists")
 	}
 
 	return nil
 }
 
-func (uc *CreateUserHandler) proceessCreation(ctx context.Context, user *userDomain.User) error {
+func (uc *CreateUserHandler) proceessCreation(ctx context.Context, user *user.User) error {
 	if err := uc.hashPassword(user); err != nil {
 		return err
 	}
@@ -109,10 +108,10 @@ func (uc *CreateUserHandler) proceessCreation(ctx context.Context, user *userDom
 	}
 
 	return nil
-	// Event --> userCreatedEvent := userDomain.NewUserCreatedEvent(user)
+	// Event --> userCreatedEvent := user.NewUserCreatedEvent(user)
 }
 
-func (u *CreateUserHandler) hashPassword(user *userDomain.User) error {
+func (u *CreateUserHandler) hashPassword(user *user.User) error {
 	hashedPw, err := shared.HashPassword(user.Password())
 	if err != nil {
 		return err
@@ -122,6 +121,6 @@ func (u *CreateUserHandler) hashPassword(user *userDomain.User) error {
 	return nil
 }
 
-func FromCreateCommand(command CreateUserCommand) (*userDomain.User, error) {
-	return &userDomain.User{}, nil
+func FromCreateCommand(command CreateUserCommand) (*user.User, error) {
+	return &user.User{}, nil
 }

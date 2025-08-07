@@ -1,20 +1,16 @@
-package authDomain
+package session
 
 import (
 	"time"
-
-	userDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
 )
 
 type Session struct {
-	ID           int
-	UserID       int
+	Id           string
+	UserId       string
 	RefreshToken string
 	DeviceInfo   string
-	IPAddress    string
-	IsActive     bool
+	UserAgent    string
+	IpAddress    string
 	ExpiresAt    time.Time
 	CreatedAt    time.Time
-	UpdatedAt    time.Time
-	User         userDomain.User
 }

@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"reflect"
 
-	userCommand "github.com/alexisTrejo11/Clinic-Vet-API/app/users/application/command"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
 )
 
 type CommandHandler interface {
-	Handle(command any) userCommand.CommandResult
+	Handle(command any) shared.CommandResult
 }
 
 type CommandDispatcher struct {
@@ -26,11 +26,11 @@ func (d *CommandDispatcher) Register(command any, handler CommandHandler) {
 	d.handlers[commandType] = handler
 }
 
-func (d *CommandDispatcher) Dispatch(command any) userCommand.CommandResult {
+func (d *CommandDispatcher) Dispatch(command any) shared.CommandResult {
 	commandType := reflect.TypeOf(command)
 	handler, ok := d.handlers[commandType]
 	if !ok {
-		return userCommand.FailureResult(
+		return shared.FailureResult(
 			"an ocurred dispatching command", fmt.Errorf("no handler registered for command type %s", commandType),
 		)
 	}

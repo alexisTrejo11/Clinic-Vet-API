@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
+	user "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
 )
 
 const (
@@ -22,7 +23,7 @@ const (
 
 type Veterinarian struct {
 	ID              int
-	Name            shared.PersonName
+	Name            user.PersonName
 	Photo           string
 	LicenseNumber   string
 	Specialty       VetSpecialty

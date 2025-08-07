@@ -4,12 +4,12 @@ import (
 	"context"
 	"time"
 
-	userDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
+	user "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
 	userRepo "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain/repositories"
 )
 
 type UpdateProfileRequest struct {
-	UserId      userDomain.UserId
+	UserId      user.UserId
 	FirstName   *string
 	LastName    *string
 	Gender      *string
@@ -20,7 +20,7 @@ type UpdateProfileRequest struct {
 }
 
 type ProfileUseCases interface {
-	GetUserProfile(ctx context.Context, userId int) (userDomain.Profile, error)
+	GetUserProfile(ctx context.Context, userId int) (user.Profile, error)
 	UpdateProfileUseCase(ctx context.Context, request UpdateProfileRequest) error
 }
 
@@ -54,12 +54,12 @@ func (p *profileUseCasesImpl) UpdateProfileUseCase(ctx context.Context, request 
 	return p.updateProfile.Execute(ctx, request)
 }
 
-func (p *profileUseCasesImpl) GetUserProfile(ctx context.Context, userId int) (userDomain.Profile, error) {
+func (p *profileUseCasesImpl) GetUserProfile(ctx context.Context, userId int) (user.Profile, error) {
 	return p.getProfile.Execute(ctx, userId)
 }
 
 func (uc *UpdateUserProfileUseCase) Execute(ctx context.Context, request UpdateProfileRequest) error {
-	user, err := uc.repo.GetById(ctx, request.UserId.GetValue())
+	user, err := uc.repo.GetByIdWithProfile(ctx, request.UserId.GetValue())
 	if err != nil {
 		return err
 	}
@@ -69,17 +69,17 @@ func (uc *UpdateUserProfileUseCase) Execute(ctx context.Context, request UpdateP
 	return nil
 }
 
-func (uc *GetProfileByIdUseCase) Execute(ctx context.Context, userId int) (userDomain.Profile, error) {
-	user, err := uc.repo.GetById(ctx, userId)
+func (uc *GetProfileByIdUseCase) Execute(ctx context.Context, userId int) (user.Profile, error) {
+	userEntity, err := uc.repo.GetByIdWithProfile(ctx, userId)
 	if err != nil {
-		return userDomain.Profile{}, err
+		return user.Profile{}, err
 	}
-	profile := user.Profile()
+	profile := userEntity.Profile()
 	return profile, nil
 }
 
-func applyProfileUpdates(user *userDomain.User, request UpdateProfileRequest) {
-	profile := user.Profile()
+func applyProfileUpdates(userEntity *user.User, request UpdateProfileRequest) {
+	profile := userEntity.Profile()
 
 	if request.FirstName != nil {
 		profile.Name.FirstName = *request.FirstName
@@ -103,5 +103,5 @@ func applyProfileUpdates(user *userDomain.User, request UpdateProfileRequest) {
 		profile.Gender = *request.Gender
 	}
 
-	user.SetProfile(&profile)
+	userEntity.SetProfile(&profile)
 }

@@ -5,7 +5,7 @@ import (
 
 	ownerDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/domain"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
-	userDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
+	user "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
 	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
 	"github.com/jackc/pgx/v5/pgtype"
 )
@@ -55,7 +55,7 @@ func ToUpdateParams(owner ownerDomain.Owner) *sqlc.UpdateOwnerParams {
 }
 
 func FromCreateToDomain(row sqlc.CreateOwnerRow) *ownerDomain.Owner {
-	ownerName, err := userDomain.NewPersonName(row.FirstName, row.LastName)
+	ownerName, err := user.NewPersonName(row.FirstName, row.LastName)
 	if err != nil {
 		return &ownerDomain.Owner{}
 	}
@@ -64,7 +64,7 @@ func FromCreateToDomain(row sqlc.CreateOwnerRow) *ownerDomain.Owner {
 		Id:          int(row.ID),
 		Photo:       row.Photo,
 		FullName:    ownerName,
-		Gender:      userDomain.Gender(shared.AssertString(row.Gender)),
+		Gender:      user.Gender(shared.AssertString(row.Gender)),
 		PhoneNumber: row.PhoneNumber,
 		DateOfBirth: row.DateOfBirth.Time,
 		Address:     &row.Address.String,
@@ -80,7 +80,7 @@ func ListRowToOwner(rows []sqlc.ListOwnersRow) ([]ownerDomain.Owner, error) {
 	}
 
 	for i, row := range rows {
-		ownerName, err := userDomain.NewPersonName(row.FirstName, row.LastName)
+		ownerName, err := user.NewPersonName(row.FirstName, row.LastName)
 		if err != nil {
 			return []ownerDomain.Owner{}, err
 		}
@@ -88,7 +88,7 @@ func ListRowToOwner(rows []sqlc.ListOwnersRow) ([]ownerDomain.Owner, error) {
 			Id:          int(row.ID),
 			Photo:       row.Photo,
 			FullName:    ownerName,
-			Gender:      userDomain.Gender(shared.AssertString(row.Gender)),
+			Gender:      user.Gender(shared.AssertString(row.Gender)),
 			PhoneNumber: row.PhoneNumber,
 			Address:     &row.Address.String,
 			IsActive:    row.IsActive,

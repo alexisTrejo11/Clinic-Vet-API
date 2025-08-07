@@ -1,4 +1,4 @@
-package userDomain
+package user
 
 import (
 	"errors"
@@ -13,15 +13,16 @@ const (
 )
 
 type User struct {
-	id          UserId
-	email       Email
-	phoneNumber PhoneNumber
-	password    string
-	role        UserRole
-	status      UserStatus
-	lastLoginAt time.Time
-	joinedAt    time.Time
-	profile     *Profile
+	id           UserId
+	email        Email
+	phoneNumber  PhoneNumber
+	password     string
+	role         UserRole
+	status       UserStatus
+	lastLoginAt  time.Time
+	joinedAt     time.Time
+	profile      *Profile
+	is2FAEnabled bool
 }
 
 type Profile struct {
@@ -198,4 +199,8 @@ func (u *User) ValidateStatusTransition(newStatus UserStatus) error {
 		}
 	}
 	return nil
+}
+
+func (u *User) Is2FAEnabled() bool {
+	return u.is2FAEnabled
 }
