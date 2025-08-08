@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
+	user "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
 	vetDtos "github.com/alexisTrejo11/Clinic-Vet-API/app/veterinarians/application/dtos"
 	vetDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/veterinarians/domain"
 )
 
 func FromCreateDTO(vetData vetDtos.VetCreate) *vetDomain.Veterinarian {
-	personName, _ := shared.NewPersonName(vetData.FirstName, vetData.LastName)
+	personName, _ := user.NewPersonName(vetData.FirstName, vetData.LastName)
 	return &vetDomain.Veterinarian{
 		Name:            personName,
 		Photo:           vetData.Photo,
@@ -27,8 +27,8 @@ func FromCreateDTO(vetData vetDtos.VetCreate) *vetDomain.Veterinarian {
 
 func UpdateFromDTO(vet *vetDomain.Veterinarian, vetData vetDtos.VetUpdate) {
 	if vetData.FirstName != nil || vetData.LastName != nil {
-		currentFirstName := vet.Name.FirstName()
-		currentLastName := vet.Name.LastName()
+		currentFirstName := vet.Name.FirstName
+		currentLastName := vet.Name.LastName
 
 		if vetData.FirstName != nil {
 			currentFirstName = *vetData.FirstName
@@ -37,7 +37,7 @@ func UpdateFromDTO(vet *vetDomain.Veterinarian, vetData vetDtos.VetUpdate) {
 			currentLastName = *vetData.LastName
 		}
 
-		updatedName, _ := shared.NewPersonName(currentFirstName, currentLastName)
+		updatedName, _ := user.NewPersonName(currentFirstName, currentLastName)
 		vet.Name = updatedName
 
 		if vetData.Photo != nil {
@@ -87,8 +87,8 @@ func ToResponse(vet vetDomain.Veterinarian) *vetDtos.VetResponse {
 
 		return &vetDtos.VetResponse{
 			Id:              vet.ID,
-			FirstName:       vet.Name.FirstName(),
-			LastName:        vet.Name.LastName(),
+			FirstName:       vet.Name.FirstName,
+			LastName:        vet.Name.LastName,
 			Photo:           vet.Photo,
 			LicenseNumber:   vet.LicenseNumber,
 			Specialty:       vet.Specialty.String(),
@@ -100,8 +100,8 @@ func ToResponse(vet vetDomain.Veterinarian) *vetDtos.VetResponse {
 
 	return &vetDtos.VetResponse{
 		Id:              vet.ID,
-		FirstName:       vet.Name.FirstName(),
-		LastName:        vet.Name.LastName(),
+		FirstName:       vet.Name.FirstName,
+		LastName:        vet.Name.LastName,
 		Photo:           vet.Photo,
 		LicenseNumber:   vet.LicenseNumber,
 		Specialty:       vet.Specialty.String(),

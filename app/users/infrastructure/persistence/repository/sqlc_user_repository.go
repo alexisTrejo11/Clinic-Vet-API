@@ -21,7 +21,6 @@ func NewSQLCUserRepository(queries *sqlc.Queries) userRepository.UserRepository 
 	}
 }
 
-// TODO: ADD profile creation
 func (r *SQLCUserRepository) GetById(ctx context.Context, id int) (*user.User, error) {
 	sqlRow, err := r.queries.GetUserByID(ctx, int32(id))
 	if err != nil {
@@ -33,6 +32,26 @@ func (r *SQLCUserRepository) GetById(ctx context.Context, id int) (*user.User, e
 		return nil, err
 	}
 
+	return user, nil
+}
+
+func (r *SQLCUserRepository) GetByIdWithProfile(ctx context.Context, id int) (*user.User, error) {
+	sqlRow, err := r.queries.GetUserByID(ctx, int32(id))
+	if err != nil {
+		return nil, err
+	}
+
+	user, err := MapUserFromSQLC(sqlRow)
+	if err != nil {
+		return nil, err
+	}
+
+	profile, err := r.SQLCProfileRepository.GetByUserId(ctx, user.Id().GetValue())
+	if err != nil {
+		return nil, err
+	}
+
+	user.SetProfile(profile)
 	return user, nil
 }
 
@@ -123,7 +142,7 @@ func (r *SQLCUserRepository) ExistsByPhone(ctx context.Context, phone string) (b
 }
 
 func (r *SQLCUserRepository) Save(ctx context.Context, user *user.User) error {
-	if user.Id().Equals(user.NilUserId()) {
+	if user.Id().GetValue() == 0 {
 		return r.create(ctx, user)
 	}
 

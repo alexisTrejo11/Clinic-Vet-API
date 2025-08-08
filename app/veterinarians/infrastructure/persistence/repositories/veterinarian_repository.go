@@ -171,8 +171,8 @@ func (c *SqlcVetRepository) Exists(ctx context.Context, vetId int) (bool, error)
 
 func (c *SqlcVetRepository) create(ctx context.Context, vet *vetDomain.Veterinarian) error {
 	createParams := sqlc.CreateVeterinarianParams{
-		FirstName:         vet.Name.FirstName(),
-		LastName:          vet.Name.LastName(),
+		FirstName:         vet.Name.FirstName,
+		LastName:          vet.Name.LastName,
 		LicenseNumber:     vet.LicenseNumber,
 		Photo:             vet.Photo,
 		Speciality:        vet.Specialty.String(),
@@ -195,8 +195,8 @@ func (c *SqlcVetRepository) create(ctx context.Context, vet *vetDomain.Veterinar
 func (c *SqlcVetRepository) update(ctx context.Context, vet *vetDomain.Veterinarian) error {
 	updateParams := sqlc.UpdateVeterinarianParams{
 		ID:                int32(vet.ID),
-		FirstName:         vet.Name.FirstName(),
-		LastName:          vet.Name.LastName(),
+		FirstName:         vet.Name.FirstName,
+		LastName:          vet.Name.LastName,
 		LicenseNumber:     vet.LicenseNumber,
 		Photo:             vet.Photo,
 		Speciality:        vet.Specialty.String(),

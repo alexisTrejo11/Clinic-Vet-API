@@ -43,7 +43,7 @@ func (r *SQLCProfileRepository) GetByUserId(ctx context.Context, userId int) (*u
 		Name:     user.PersonName{FirstName: "Jhon", LastName: "Doe"},
 		PhotoURL: sqlRow.ProfilePic.String,
 		Bio:      sqlRow.Bio.String,
-		Location: "",
+		Address:  &user.Address{},
 		Gender:   "MALE",
 		JoinedAt: sqlRow.CreatedAt.Time,
 	}, nil

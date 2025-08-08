@@ -169,9 +169,9 @@ func ToResponseDetail(medHistory mhDomain.MedicalHistory, owner ownerDomain.Owne
 		Treatment: medHistory.Treatment,
 		Veterinarian: VetDetails{
 			Id:        vet.ID,
-			FirstName: vet.Name.FirstName(),
+			FirstName: vet.Name.FirstName,
 			Specialty: vet.Specialty.String(),
-			LastName:  vet.Name.LastName(),
+			LastName:  vet.Name.LastName,
 		},
 		CreatedAt: medHistory.CreatedAt,
 		UpdatedAt: medHistory.UpdatedAt,

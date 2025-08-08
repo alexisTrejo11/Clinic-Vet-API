@@ -14,3 +14,22 @@ type CreateUserRequest struct {
 	Location       *string    `json:"location" validate:"required"`
 	DateOfBirth    *time.Time `json:"date_of_birth" validate:"required"`
 }
+
+type UpdateProfileRequest struct {
+	UserId   int             `json:"user_id" validate:"required"`
+	Bio      *string         `json:"bio" validate:"min=0,max=500"`
+	PhotoURL *string         `json:"photo_url" validate:"omitempty,url"`
+	Name     *string         `json:"name" validate:"omitempty"`
+	Address  *AddressRequest `json:"address" validate:"omitempty"`
+}
+
+type AddressRequest struct {
+	Street              string  `json:"street" validate:"required"`
+	City                string  `json:"city" validate:"required"`
+	State               string  `json:"state" validate:"required"`
+	ZipCode             string  `json:"zip_code" validate:"required"`
+	Country             string  `json:"country" validate:"required"`
+	BuildingType        string  `json:"building_type" validate:"omitempty,oneof=house apartment office other"`
+	BuildingOuterNumber string  `json:"building_outer_number" validate:"required"`
+	BuildingInnerNumber *string `json:"building_inner_number" validate:"omitempty"`
+}

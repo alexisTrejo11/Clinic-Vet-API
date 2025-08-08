@@ -32,9 +32,9 @@ type Profile struct {
 	Name           PersonName
 	PhotoURL       string
 	Bio            string
-	Location       string
+	Gender         Gender
+	Address        *Address
 	DateOfBirth    *time.Time
-	Gender         string
 	JoinedAt       time.Time
 }
 
@@ -51,7 +51,7 @@ func NewUser(id UserId, email Email, phoneNumber PhoneNumber, password string, r
 			Name:        PersonName{},
 			PhotoURL:    "",
 			Bio:         "",
-			Location:    "",
+			Address:     &Address{},
 			DateOfBirth: nil,
 		}
 	}
