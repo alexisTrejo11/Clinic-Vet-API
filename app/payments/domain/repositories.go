@@ -3,18 +3,19 @@ package paymentDomain
 import (
 	"context"
 	"time"
+
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 )
 
 type PaymentRepository interface {
 	Save(payment *Payment) error
 
-	Search(ctx context.Context, limit, offset int, searchCriteria map[string]interface{}) ([]Payment, error)
+	Search(ctx context.Context, pagination page.PageData, searchCriteria map[string]interface{}) (page.Page[[]Payment], error)
 	GetById(ctx context.Context, id int) (*Payment, error)
-	ListByAppointmentId(appointmentId int) ([]Payment, error)
-	ListByOwnerId(ctx context.Context, ownerId int) ([]Payment, error)
-	ListByStatus(ctx context.Context, status PaymentStatus) ([]Payment, error)
-	ListOverduePayments(ctx context.Context) ([]Payment, error)
-	ListPaymentsByDateRange(startDate, endDate time.Time) ([]Payment, error)
+	ListByUserId(ctx context.Context, userId int, pagination page.PageData) (page.Page[[]Payment], error)
+	ListByStatus(ctx context.Context, status PaymentStatus, pagination page.PageData) (page.Page[[]Payment], error)
+	ListOverduePayments(ctx context.Context, pagination page.PageData) (page.Page[[]Payment], error)
+	ListPaymentsByDateRange(startDate, endDate time.Time) (page.Page[[]Payment], error)
 
 	SoftDelete(id int) error
 
@@ -28,7 +29,7 @@ type PaymentService interface {
 	ValidatePayment(payment *Payment) error
 	CalculateTotal(appointmentId int) (Money, error)
 
-	GetPaymentHistory(ownerId int) ([]Payment, error)
+	GetPaymentHistory(ownerId int) (page.Page[[]Payment], error)
 	MarkOverduePayments() error
 	GeneratePaymentReport(startDate, endDate time.Time) (PaymentReport, error)
 }

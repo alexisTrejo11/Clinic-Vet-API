@@ -29,7 +29,12 @@ func (p *Payment) MarkAsPaid() {
 	p.UpdatedAt = now
 }
 
-func (p *Payment) MarkAsRefunded() {
+func (p *Payment) MarkAsOverdue() {
+	p.Status = OVERDUE
+	p.UpdatedAt = time.Now()
+}
+
+func (p *Payment) markAsRefunded() {
 	now := time.Now()
 	p.Status = REFUNDED
 	p.RefundedAt = &now
@@ -54,4 +59,99 @@ func (p *Payment) CanBeRefunded() bool {
 
 func (p *Payment) GetFormattedAmount() string {
 	return p.Amount.FormatWithCurrency(p.Currency)
+}
+
+func (p *Payment) Cancel(reason string) error {
+	if p.Status == PAID {
+		return ErrPaymentAlreadyPaid
+	}
+
+	if p.Status == CANCELLED {
+		return PaymentStatusConflict(p.Id, ErrPaymentAlreadyCancelled)
+	}
+
+	p.Status = CANCELLED
+	p.UpdatedAt = time.Now()
+
+	if reason != "" {
+		cancelReason := "Cancelled: " + reason
+		p.Description = &cancelReason
+	}
+
+	return nil
+}
+
+func (p *Payment) ValidateDelete() error {
+	if p.Status == PAID {
+		return NewPaymentError("CANNOT_DELETE", "cannot delete paid payments", p.Id, "")
+	}
+
+	if p.Status == REFUNDED {
+		return NewPaymentError("CANNOT_DELETE", "cannot delete refunded payments", p.Id, "")
+	}
+
+	return nil
+}
+
+func (p *Payment) Proccess(transactionId string) error {
+	if p.Status == PAID {
+		return ErrPaymentAlreadyPaid
+	}
+
+	if transactionId != "" {
+		p.TransactionId = &transactionId
+	}
+
+	p.MarkAsPaid()
+
+	return nil
+}
+
+func (p *Payment) Refund(reason string) error {
+	if !p.CanBeRefunded() {
+		return ErrPaymentCannotBeRefunded
+	}
+
+	p.markAsRefunded()
+
+	if reason != "" {
+		refundReason := "Refunded: " + reason
+		p.Description = &refundReason
+	}
+
+	return nil
+}
+
+func (p *Payment) Update(amount *Money, paymentMethod *PaymentMethod, description *string, dueDate *time.Time) error {
+	if p.Status != PENDING {
+		return NewPaymentError("CANNOT_UPDATE", "can only update pending payments", p.Id, "")
+	}
+
+	if amount != nil && (amount.IsZero() || amount.IsNegative()) {
+		return ErrInvalidAmount
+	}
+
+	if paymentMethod != nil && !paymentMethod.IsValid() {
+		return ErrInvalidPaymentMethod
+	}
+
+	if description != nil && len(*description) > 255 {
+		return NewPaymentError("INVALID_DESCRIPTION", "description cannot exceed 255 characters", p.Id, "")
+	}
+
+	if dueDate != nil && dueDate.Before(time.Now()) {
+		return NewPaymentError("INVALID_DUE_DATE", "due date cannot be in the past", p.Id, "")
+	}
+
+	if paymentMethod != nil {
+		p.PaymentMethod = *paymentMethod
+	}
+
+	if dueDate != nil {
+		p.DueDate = dueDate
+	}
+
+	p.UpdatedAt = time.Now()
+
+	return nil
 }
