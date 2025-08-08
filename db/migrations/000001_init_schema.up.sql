@@ -21,6 +21,20 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'user_role') THEN
         CREATE TYPE user_role AS ENUM('owner', 'receptionist', 'veterinarian', 'admin');
     END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'currency') THEN
+        CREATE TYPE currency AS ENUM('USD', 'MXN', 'EUR', 'GBP', 'JPY', 'AUD', 'CAD', 'CHF', 'CNY', 'SEK', 'NZD');
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'payment_status') THEN
+        CREATE TYPE payment_status AS ENUM('pending', 'completed', 'failed', 'refunded');
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'payment_method') THEN
+        CREATE TYPE payment_method AS ENUM(
+            'cash', 'credit_card', 'debit_card', 'bank_transfer', 'paypal', 'stripe', 'check'
+        );
+    END IF;
 END
 $$;
 
@@ -158,3 +172,25 @@ CREATE INDEX IF NOT EXISTS idx_profile_user_id ON profiles(user_id);
 CREATE INDEX IF NOT EXISTS idx_user_profile_id ON users(profile_id);
 CREATE INDEX IF NOT EXISTS idx_user_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_user_phone_number ON users(phone_number);
+
+
+-- Create Payment Table
+CREATE TABLE IF NOT EXISTS payments (
+    id SERIAL PRIMARY KEY,
+    amount NUMERIC(10, 2) NOT NULL CHECK (amount > 0),
+    currency VARCHAR(10) NOT NULL DEFAULT 'MXN',
+    status payment_status NOT NULL DEFAULT 'pending',
+    method payment_method NOT NULL DEFAULT 'cash',
+    transaction_id VARCHAR(255) UNIQUE,
+    description TEXT,
+    duedate TIMESTAMP WITH TIME ZONE NOT NULL,
+    paid_at TIMESTAMP WITH TIME ZONE,
+    refunded_at TIMESTAMP WITH TIME ZONE,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    deleted_at TIMESTAMP NULL,
+    user_id INT NOT NULL,
+    ADD CONSTRAINT fk_payment_user
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+)

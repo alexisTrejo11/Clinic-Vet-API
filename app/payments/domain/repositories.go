@@ -10,12 +10,12 @@ import (
 type PaymentRepository interface {
 	Save(payment *Payment) error
 
-	Search(ctx context.Context, pagination page.PageData, searchCriteria map[string]interface{}) (page.Page[[]Payment], error)
+	Search(ctx context.Context, pagination page.PageData, searchCriteria map[string]interface{}) (*page.Page[[]Payment], error)
 	GetById(ctx context.Context, id int) (*Payment, error)
-	ListByUserId(ctx context.Context, userId int, pagination page.PageData) (page.Page[[]Payment], error)
-	ListByStatus(ctx context.Context, status PaymentStatus, pagination page.PageData) (page.Page[[]Payment], error)
-	ListOverduePayments(ctx context.Context, pagination page.PageData) (page.Page[[]Payment], error)
-	ListPaymentsByDateRange(startDate, endDate time.Time) (page.Page[[]Payment], error)
+	ListByUserId(ctx context.Context, userId int, pagination page.PageData) (*page.Page[[]Payment], error)
+	ListByStatus(ctx context.Context, status PaymentStatus, pagination page.PageData) (*page.Page[[]Payment], error)
+	ListOverduePayments(ctx context.Context, pagination page.PageData) (*page.Page[[]Payment], error)
+	ListPaymentsByDateRange(startDate, endDate time.Time) (*page.Page[[]Payment], error)
 
 	SoftDelete(id int) error
 
@@ -29,7 +29,7 @@ type PaymentService interface {
 	ValidatePayment(payment *Payment) error
 	CalculateTotal(appointmentId int) (Money, error)
 
-	GetPaymentHistory(ownerId int) (page.Page[[]Payment], error)
+	GetPaymentHistory(ownerId int) (*page.Page[[]Payment], error)
 	MarkOverduePayments() error
 	GeneratePaymentReport(startDate, endDate time.Time) (PaymentReport, error)
 }

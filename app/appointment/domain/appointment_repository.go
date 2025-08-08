@@ -1,4 +1,4 @@
-package repositories
+package appointDomain
 
 /*
 type AppointmentRepository interface {
