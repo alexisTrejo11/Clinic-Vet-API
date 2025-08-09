@@ -14,10 +14,16 @@ import (
 	ownerController "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/infrastructure/api/controller"
 	ownerRoutes "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/infrastructure/api/routes"
 	sqlcOwnerRepository "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/infrastructure/persistence"
+	paymentAPI "github.com/alexisTrejo11/Clinic-Vet-API/app/payments/infrastructure/api"
+	paymentRepo "github.com/alexisTrejo11/Clinic-Vet-API/app/payments/infrastructure/persistence"
 	petUsecase "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application/usecase"
 	petController "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/infrastructure/api/controller"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/pets/infrastructure/api/routes"
 	sqlcPetRepository "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/infrastructure/persistence/repositories"
+	userApplication "github.com/alexisTrejo11/Clinic-Vet-API/app/users/application"
+	userController "github.com/alexisTrejo11/Clinic-Vet-API/app/users/infrastructure/api/controller"
+	userRoutes "github.com/alexisTrejo11/Clinic-Vet-API/app/users/infrastructure/api/routes"
+	sqlcUserRepo "github.com/alexisTrejo11/Clinic-Vet-API/app/users/infrastructure/persistence/repository"
 	vetUsecase "github.com/alexisTrejo11/Clinic-Vet-API/app/veterinarians/application/usecase"
 	vetController "github.com/alexisTrejo11/Clinic-Vet-API/app/veterinarians/infrastructure/api/controller"
 	vetRoutes "github.com/alexisTrejo11/Clinic-Vet-API/app/veterinarians/infrastructure/api/routes"
@@ -60,6 +66,7 @@ func main() {
 	ownerRepo := sqlcOwnerRepository.NewSlqcOwnerRepository(queries, petRepo)
 	vetRepo := sqlcVetRepo.NewSqlcVetRepository(queries)
 	sqlcMedHistRepo := sqlcMedHistoryRepo.NewSQLCMedHistRepository(queries)
+	paymentRepo := paymentRepo.NewSQLCPaymentRepository(queries)
 
 	// Medical History UseCase
 	medHistUseCase := medHistUsecases.NewMedicalHistoryUseCase(sqlcMedHistRepo, ownerRepo, vetRepo)
@@ -89,9 +96,10 @@ func main() {
 	vetUseCaseContainer := vetUsecase.NewVetUseCase(*listVetUseCase, *getVetUseCase, *createVetUseCase, *updateVetUseCase, *deleteVetUseCase)
 
 	// Pet Controller
-	petController := petController.NewPetController(validator.New(), getPetUseCase, listPetsUseCase, createPetsUseCase, updatePetsUseCase, deletePetsUseCase)
-	ownerController := ownerController.NewOwnerController(validator.New(), ownerUCContainer)
-	vetControllers := vetController.NewVeterinarianController(validator.New(), *vetUseCaseContainer)
+	dataValidator := validator.New()
+	petController := petController.NewPetController(dataValidator, getPetUseCase, listPetsUseCase, createPetsUseCase, updatePetsUseCase, deletePetsUseCase)
+	ownerController := ownerController.NewOwnerController(dataValidator, ownerUCContainer)
+	vetControllers := vetController.NewVeterinarianController(dataValidator, *vetUseCaseContainer)
 
 	// Medical History Routes
 	med_hist_controller := med_hist_controller.NewAdminMedicalHistoryController(medHistUseCase)
@@ -107,6 +115,21 @@ func main() {
 	ownerRoutes.OwnerRoutes(router, ownerController)
 	vetRoutes.VetRoutes(router, vetControllers)
 	medHistoryRoutes.MedicalHistoryRoutes(router, *med_hist_controller)
+
+	// Payment
+	paymentAPI.SetupPaymentAPI(router, dataValidator, paymentRepo)
+
+	// User
+	userRepo := sqlcUserRepo.NewSQLCUserRepository(queries)
+	userDispatcher := userApplication.NewCommandDispatcher()
+	userDispatcher.RegisterCurrentCommands(userRepo)
+	userControllers := userController.NewUserAdminController(dataValidator, userDispatcher)
+	userRoutes.UserRoutes(router, userControllers)
+
+	// User Profile
+	profileUseCase := userApplication.NewProfileUseCases(userRepo)
+	profileController := userController.NewProfileController(profileUseCase)
+	userRoutes.ProfileRoutes(router, profileController)
 
 	router.Run()
 }

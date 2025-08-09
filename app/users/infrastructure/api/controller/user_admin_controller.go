@@ -18,10 +18,24 @@ type UserAdminController struct {
 	dispatcher *userApplication.CommandDispatcher
 }
 
-func NewUserAdminController(validator *validator.Validate) *UserAdminController {
+func NewUserAdminController(validator *validator.Validate, dispatcher *userApplication.CommandDispatcher) *UserAdminController {
 	return &UserAdminController{
-		validator: validator,
+		validator:  validator,
+		dispatcher: dispatcher,
 	}
+}
+
+func (c *UserAdminController) GetUserById(ctx *gin.Context) {
+	userId, err := shared.ParseID(ctx, "id")
+	if err != nil {
+		apiResponse.RequestURLParamError(ctx, err, "id", ctx.Param("id"))
+		return
+	}
+
+	apiResponse.Ok(ctx, gin.H{"user_id": userId})
+}
+
+func (c *UserAdminController) SearchUsers(ctx *gin.Context) {
 }
 
 func (c *UserAdminController) CreateUser(ctx *gin.Context) {

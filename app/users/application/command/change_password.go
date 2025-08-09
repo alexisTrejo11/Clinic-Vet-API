@@ -20,6 +20,10 @@ type ChangePasswordHandler struct {
 	userRepository userRepository.UserRepository
 }
 
+func NewChangePasswordHandler(userRepo userRepository.UserRepository) *ChangePasswordHandler {
+	return &ChangePasswordHandler{userRepository: userRepo}
+}
+
 func (c *ChangePasswordHandler) Handle(cmd any) shared.CommandResult {
 	command := cmd.(ChangePasswordCommand)
 

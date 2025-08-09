@@ -34,18 +34,15 @@ type UpdateUserProfileUseCase struct {
 type profileUseCasesImpl struct {
 	getProfile    *GetProfileByIdUseCase
 	updateProfile *UpdateUserProfileUseCase
-	repo          userRepo.UserRepository
 }
 
 func NewProfileUseCases(
 	repo userRepo.UserRepository,
-	getProfile *GetProfileByIdUseCase,
-	updateProfile *UpdateUserProfileUseCase,
+
 ) ProfileUseCases {
 	return &profileUseCasesImpl{
-		repo:          repo,
-		getProfile:    getProfile,
-		updateProfile: updateProfile,
+		getProfile:    &GetProfileByIdUseCase{repo: repo},
+		updateProfile: &UpdateUserProfileUseCase{repo: repo},
 	}
 }
 

@@ -7,7 +7,7 @@ import (
 type Payment struct {
 	Id            int           `json:"id" db:"id"`
 	AppointmentId int           `json:"appointment_id" db:"appointment_id"`
-	OwnerId       int           `json:"owner_id" db:"owner_id"`
+	UserId        int           `json:"owner_id" db:"owner_id"`
 	Amount        Money         `json:"amount" db:"amount"`
 	Currency      string        `json:"currency" db:"currency"`
 	PaymentMethod PaymentMethod `json:"payment_method" db:"payment_method"`
@@ -154,4 +154,8 @@ func (p *Payment) Update(amount *Money, paymentMethod *PaymentMethod, descriptio
 	p.UpdatedAt = time.Now()
 
 	return nil
+}
+
+func (p *Payment) SetId(id int) {
+	p.Id = id
 }

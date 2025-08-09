@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
 	user "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
 	userRepository "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain/repositories"
 )
@@ -40,42 +41,46 @@ func NewChangeEmailHandler(userRepository userRepository.UserRepository) ChangeE
 	}
 }
 
-func (h ChangePhoneHandler) Handle(command ChangePhoneCommand) error {
+func (h ChangePhoneHandler) Handle(cmd any) shared.CommandResult {
+	command := cmd.(ChangePhoneCommand)
+
 	user, err := h.userRepository.GetByIdWithProfile(command.CTX, command.UserId)
 	if err != nil {
-		return err
+		return shared.FailureResult("failed to find user", err)
 	}
 
 	if err := h.validate(command, *user); err != nil {
-		return err
+		return shared.FailureResult("failed to change phone", err)
 	}
 
 	user.UpdatePhoneNumber(command.Phone)
 
 	if err := h.userRepository.Save(command.CTX, user); err != nil {
-		return err
+		return shared.FailureResult("failed to update user", err)
 	}
 
-	return nil
+	return shared.SuccesResult(user.Id().String(), "phone changed successfully")
 }
 
-func (h ChangeEmailHandler) Handle(command ChangeEmailCommand) error {
+func (h ChangeEmailHandler) Handle(cmd any) shared.CommandResult {
+	command := cmd.(ChangeEmailCommand)
+
 	user, err := h.userRepository.GetByIdWithProfile(command.CTX, command.UserId)
 	if err != nil {
-		return err
+		return shared.FailureResult("failed to find user", err)
 	}
 
 	if err := h.validate(command, *user); err != nil {
-		return err
+		return shared.FailureResult("failed to change email", err)
 	}
 
 	user.UpdateEmail(command.Email)
 
 	if err := h.userRepository.Save(command.CTX, user); err != nil {
-		return err
+		return shared.FailureResult("failed to update user", err)
 	}
 
-	return nil
+	return shared.SuccesResult(user.Id().String(), "email changed successfully")
 }
 
 func (h ChangeEmailHandler) validate(command ChangeEmailCommand, user user.User) error {

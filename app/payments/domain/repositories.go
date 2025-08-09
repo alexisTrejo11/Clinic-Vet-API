@@ -15,12 +15,12 @@ type PaymentRepository interface {
 	ListByUserId(ctx context.Context, userId int, pagination page.PageData) (*page.Page[[]Payment], error)
 	ListByStatus(ctx context.Context, status PaymentStatus, pagination page.PageData) (*page.Page[[]Payment], error)
 	ListOverduePayments(ctx context.Context, pagination page.PageData) (*page.Page[[]Payment], error)
-	ListPaymentsByDateRange(startDate, endDate time.Time) (*page.Page[[]Payment], error)
+	ListPaymentsByDateRange(ctx context.Context, startDate, endDate time.Time, pagination page.PageData) (*page.Page[[]Payment], error)
 
-	SoftDelete(id int) error
+	SoftDelete(ctx context.Context, id int) error
 
 	//GetTotalCount() (int, error)
-	GetByTransactionId(transactionId string) (*Payment, error)
+	GetByTransactionId(ctx context.Context, transactionId string) (*Payment, error)
 }
 
 type PaymentService interface {

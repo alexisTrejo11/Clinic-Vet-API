@@ -1,4 +1,4 @@
--- name: createPayment: one
+-- name: CreatePayment :one
 INSERT INTO payments (
     amount,
     currency,
@@ -9,9 +9,11 @@ INSERT INTO payments (
     duedate,
     paid_at,
     refunded_at,
-    is_active
+    user_id,
+    is_active,
     created_at,
-    updated_at
+    updated_at,
+    deleted_at
 ) VALUES (
     $1,
     $2,
@@ -22,41 +24,75 @@ INSERT INTO payments (
     $7,
     $8,
     $9,
+    $10,
     TRUE,
     CURRENT_TIMESTAMP,
-    CURRENT_TIMESTAMP
-)RETURNING *;
+    CURRENT_TIMESTAMP,
+    NULL
+) RETURNING *;
 
--- name: updatePayment: one
+
+-- name: UpdatePayment :one
 UPDATE payments
-    SET
-        amount = $1,
-        currency = $2,
-        status = $3,
-        method = $4,
-        transaction_id = $5,
-        description = $6,
-        duedate = $7,
-        paid_at = $8,
-        refunded_at = $9,
-        is_active = $10,
-        updated_at = CURRENT_TIMESTAMP
-    WHERE id = $11
+SET
+    amount = $1,
+    currency = $2,
+    status = $3,
+    method = $4,
+    transaction_id = $5,
+    description = $6,
+    duedate = $7,
+    paid_at = $8,
+    refunded_at = $9,
+    is_active = $10,
+    user_id = $11,
+    updated_at = CURRENT_TIMESTAMP
+WHERE id = $12
 RETURNING *;
 
--- name: softDeletePayment: exec
+
+-- name: SoftDeletePayment :exec
 UPDATE payments
 SET
     is_active = FALSE,
     deleted_at = CURRENT_TIMESTAMP
-WHERE id = $1
+WHERE id = $1 AND is_active = TRUE;
 
--- name: getPaymentById: one
+
+-- name: GetPaymentById :one
 SELECT *
 FROM payments
 WHERE id = $1 AND deleted_at IS NULL;
 
--- name: getPaymentsByUserId: many
+-- name: ListPaymentsByUserId :many
 SELECT *
 FROM payments
-WHERE user_id = $1 AND is_active = TRUE AND deleted_at IS NULL;
+WHERE user_id = $1 AND deleted_at IS NULL
+ORDER BY created_at DESC
+LIMIT $2 OFFSET $3;
+
+-- name: ListPaymentsByStatus :many
+SELECT *
+FROM payments
+WHERE status = $1 AND deleted_at IS NULL
+ORDER BY created_at DESC
+LIMIT $2 OFFSET $3;
+
+-- name: ListPaymentsByDateRange :many
+SELECT *
+FROM payments
+WHERE created_at BETWEEN $1 AND $2 AND deleted_at IS NULL
+ORDER BY created_at DESC
+LIMIT $3 OFFSET $4;
+
+-- name: ListOverduePayments :many
+SELECT *
+FROM payments
+WHERE duedate < CURRENT_TIMESTAMP AND status != 'paid' AND deleted_at IS NULL
+ORDER BY duedate ASC
+LIMIT $1 OFFSET $2;
+
+-- name: GetPaymentByTransactionId :one
+SELECT *
+FROM payments
+WHERE transaction_id = $1 AND deleted_at IS NULL;

@@ -95,7 +95,7 @@ CREATE TABLE IF NOT EXISTS veterinarians(
 
 -- Add Relations
 ALTER TABLE pets
-ADD CONSTRAINT fk_owner
+ADD CONSTRAINT fk_owner_id
 FOREIGN KEY (owner_id) REFERENCES owners(id) ON DELETE CASCADE;
 
 -- Create Medical History Table
@@ -191,6 +191,5 @@ CREATE TABLE IF NOT EXISTS payments (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
     deleted_at TIMESTAMP NULL,
     user_id INT NOT NULL,
-    ADD CONSTRAINT fk_payment_user
-        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-)
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);

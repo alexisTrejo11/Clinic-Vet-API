@@ -9,7 +9,7 @@ import (
 	userRepository "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain/repositories"
 )
 
-type DeleteUserHandler struct {
+type deleteUserHandler struct {
 	userRepository userRepository.UserRepository
 }
 
@@ -19,7 +19,19 @@ type DeleteUserCommand struct {
 	CTX        context.Context `json:"-"`
 }
 
-func (d *DeleteUserHandler) Handle(command DeleteUserCommand) shared.CommandResult {
+func NewDeleteUserHandler(userRepo userRepository.UserRepository) DeleteUserHandler {
+	return &deleteUserHandler{
+		userRepository: userRepo,
+	}
+}
+
+type DeleteUserHandler interface {
+	Handle(cmd any) shared.CommandResult
+}
+
+func (d *deleteUserHandler) Handle(cmd any) shared.CommandResult {
+	command := cmd.(DeleteUserCommand)
+
 	if _, err := d.userRepository.GetByIdWithProfile(command.CTX, command.UserId.GetValue()); err != nil {
 		return shared.FailureResult("failed to find user", err)
 	}

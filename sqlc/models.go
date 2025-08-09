@@ -40,6 +40,24 @@ type Owner struct {
 	DeletedAt   pgtype.Timestamp
 }
 
+type Payment struct {
+	ID            int32
+	Amount        pgtype.Numeric
+	Currency      string
+	Status        interface{}
+	Method        interface{}
+	TransactionID pgtype.Text
+	Description   pgtype.Text
+	Duedate       pgtype.Timestamptz
+	PaidAt        pgtype.Timestamptz
+	RefundedAt    pgtype.Timestamptz
+	IsActive      bool
+	CreatedAt     pgtype.Timestamptz
+	UpdatedAt     pgtype.Timestamptz
+	DeletedAt     pgtype.Timestamp
+	UserID        int32
+}
+
 type Pet struct {
 	ID                 int32
 	Name               string

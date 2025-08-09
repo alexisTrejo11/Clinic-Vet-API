@@ -1,6 +1,16 @@
 package paymentDomain
 
+import "errors"
+
 type PaymentStatus string
+
+func NewPaymentStatus(status string) (PaymentStatus, error) {
+	ps := PaymentStatus(status)
+	if !ps.IsValid() {
+		return "", errors.New("invalid payment status: " + string(ps))
+	}
+	return ps, nil
+}
 
 const (
 	PENDING   PaymentStatus = "pending"
@@ -31,6 +41,14 @@ const (
 	STRIPE        PaymentMethod = "stripe"
 	CHECK         PaymentMethod = "check"
 )
+
+func NewPaymentMethod(method string) (PaymentMethod, error) {
+	pm := PaymentMethod(method)
+	if !pm.IsValid() {
+		return "", errors.New("invalid payment method: " + string(pm))
+	}
+	return pm, nil
+}
 
 func (pm PaymentMethod) IsValid() bool {
 	switch pm {
