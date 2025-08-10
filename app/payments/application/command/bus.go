@@ -7,6 +7,7 @@ import (
 	"time"
 
 	paymentDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/payments/domain"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 )
 
@@ -16,7 +17,7 @@ type CommandHandler interface{}
 
 type CommandBus interface {
 	Register(commandType reflect.Type, handler CommandHandler) error
-	Execute(ctx context.Context, command Command) (interface{}, error)
+	Execute(ctx context.Context, command Command) shared.CommandResult
 }
 
 type paymentCommandBus struct {
@@ -29,7 +30,6 @@ func NewPaymentCommandBus(paymentRepo paymentDomain.PaymentRepository) CommandBu
 	}
 
 	bus.registerHandlers(paymentRepo)
-
 	return bus
 }
 
@@ -52,45 +52,48 @@ func (bus *paymentCommandBus) Register(commandType reflect.Type, handler Command
 	return nil
 }
 
-func (bus *paymentCommandBus) Execute(ctx context.Context, command Command) (interface{}, error) {
+func (bus *paymentCommandBus) Execute(ctx context.Context, command Command) shared.CommandResult {
 	commandType := reflect.TypeOf(command)
 	handler, exists := bus.handlers[commandType]
 
 	if !exists {
-		return nil, fmt.Errorf("no handler registered for command type %s", commandType.Name())
+		return shared.FailureResult(
+			fmt.Sprint("unhandled command type"),
+			fmt.Errorf("no handler registered for command type %s", commandType.Name()),
+		)
 	}
 
 	switch cmd := command.(type) {
 	case CreatePaymentCommand:
 		h := handler.(CreatePaymentHander)
-		return h.Handle(cmd)
+		return h.Handle(ctx, cmd)
 
 	case ProcessPaymentCommand:
 		h := handler.(ProcessPaymentHandler)
-		return nil, h.Handle(cmd)
+		return h.Handle(ctx, cmd)
 
 	case RefundPaymentCommand:
 		h := handler.(RefundPaymentHandler)
-		return nil, h.Handle(cmd)
+		return h.Handle(ctx, cmd)
 
 	case CancelPaymentCommand:
 		h := handler.(CancelPaymentHandler)
-		return nil, h.Handle(cmd)
+		return h.Handle(ctx, cmd)
 
 	case UpdatePaymentCommand:
 		h := handler.(UpdatePaymentHandler)
-		return h.Handle(cmd)
+		return h.Handle(ctx, cmd)
 
 	case DeletePaymentCommand:
 		h := handler.(DeletePaymentHandler)
-		return nil, h.Handle(cmd)
+		return h.Handle(ctx, cmd)
 
 	case MarkOverduePaymentsCommand:
 		h := handler.(MarkOverduePaymentsHandler)
-		return h.Handle(cmd)
+		return h.Handle(ctx, cmd)
 
 	default:
-		return nil, fmt.Errorf("unknown command type: %s", commandType.Name())
+		return shared.FailureResult("not registred command", fmt.Errorf("unknown command type: %s", commandType.Name()))
 	}
 }
 
@@ -99,32 +102,22 @@ type PaymentCommandService struct {
 	paymentRepo paymentDomain.PaymentRepository
 }
 
-func NewPaymentCommandService(commandBus CommandBus, paymentRepo paymentDomain.PaymentRepository) *PaymentCommandService {
+func NewPaymentCommandService(ctx context.Context, commandBus CommandBus, paymentRepo paymentDomain.PaymentRepository) *PaymentCommandService {
 	return &PaymentCommandService{
 		commandBus:  commandBus,
 		paymentRepo: paymentRepo,
 	}
 }
 
-func (s *PaymentCommandService) ProcessPayment(payment *paymentDomain.Payment) error {
-	cmd := ProcessPaymentCommand{
-		PaymentId: payment.Id,
-		CTX:       context.Background(),
-	}
+func (s *PaymentCommandService) ProcessPayment(payment *paymentDomain.Payment) shared.CommandResult {
+	cmd := NewProcessPaymentCommand(payment.Id, *payment.TransactionId)
+	return s.commandBus.Execute(context.Background(), cmd)
 
-	_, err := s.commandBus.Execute(context.Background(), cmd)
-	return err
 }
 
-func (s *PaymentCommandService) RefundPayment(paymentId int, reason string) error {
-	cmd := RefundPaymentCommand{
-		PaymentId: paymentId,
-		Reason:    reason,
-		CTX:       context.Background(),
-	}
-
-	_, err := s.commandBus.Execute(context.Background(), cmd)
-	return err
+func (s *PaymentCommandService) RefundPayment(paymentId int, reason string) shared.CommandResult {
+	cmd := NewRefundPaymentCommand(paymentId, reason)
+	return s.commandBus.Execute(context.Background(), cmd)
 }
 
 func (s *PaymentCommandService) ValidatePayment(payment *paymentDomain.Payment) error {
@@ -155,13 +148,11 @@ func (s *PaymentCommandService) GetPaymentHistory(ownerId int) (*page.Page[[]pay
 	return nil, fmt.Errorf("use query handler for read operations")
 }
 
-func (s *PaymentCommandService) MarkOverduePayments() error {
-	cmd := MarkOverduePaymentsCommand{
-		CTX: context.Background(),
-	}
+func (s *PaymentCommandService) MarkOverduePayments() shared.CommandResult {
+	cmd := MarkOverduePaymentsCommand{}
 
-	_, err := s.commandBus.Execute(context.Background(), cmd)
-	return err
+	return s.commandBus.Execute(context.Background(), cmd)
+
 }
 
 func (s *PaymentCommandService) GeneratePaymentReport(startDate, endDate time.Time) (paymentDomain.PaymentReport, error) {

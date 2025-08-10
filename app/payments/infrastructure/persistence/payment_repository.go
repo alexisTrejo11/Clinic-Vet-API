@@ -20,11 +20,11 @@ func NewSQLCPaymentRepository(queries *sqlc.Queries) paymentDomain.PaymentReposi
 	}
 }
 
-func (c *SQLCPaymentRepository) Save(payment *paymentDomain.Payment) error {
+func (c *SQLCPaymentRepository) Save(ctx context.Context, payment *paymentDomain.Payment) error {
 	if payment.Id == 0 {
-		return c.create(context.Background(), payment)
+		return c.create(ctx, payment)
 	}
-	return c.update(context.Background(), payment)
+	return c.update(ctx, payment)
 }
 
 func (c *SQLCPaymentRepository) Search(ctx context.Context, pageInput page.PageData, searchCriteria map[string]interface{}) (*page.Page[[]paymentDomain.Payment], error) {

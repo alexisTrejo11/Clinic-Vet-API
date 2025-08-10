@@ -10,7 +10,7 @@ import (
 // CreatePaymentRequest represents the request to create a payment
 type CreatePaymentRequest struct {
 	AppointmentId int                         `json:"appointment_id" validate:"required,min=1"`
-	OwnerId       int                         `json:"owner_id" validate:"required,min=1"`
+	UserId        int                         `json:"owner_id" validate:"required,min=1"`
 	Amount        float64                     `json:"amount" validate:"required,min=0.01"`
 	Currency      string                      `json:"currency" validate:"required,len=3"`
 	PaymentMethod paymentDomain.PaymentMethod `json:"payment_method" validate:"required"`
@@ -45,7 +45,7 @@ type CancelPaymentRequest struct {
 
 // PaymentSearchRequest represents the request to search payments
 type PaymentSearchRequest struct {
-	OwnerId       *int                         `json:"owner_id,omitempty"`
+	UserId        *int                         `json:"owner_id,omitempty"`
 	AppointmentId *int                         `json:"appointment_id,omitempty"`
 	Status        *paymentDomain.PaymentStatus `json:"status,omitempty"`
 	PaymentMethod *paymentDomain.PaymentMethod `json:"payment_method,omitempty"`
@@ -61,7 +61,7 @@ type PaymentSearchRequest struct {
 type PaymentResponse struct {
 	Id            int                         `json:"id"`
 	AppointmentId int                         `json:"appointment_id"`
-	OwnerId       int                         `json:"owner_id"`
+	UserId        int                         `json:"owner_id"`
 	Amount        float64                     `json:"amount"`
 	Currency      string                      `json:"currency"`
 	PaymentMethod paymentDomain.PaymentMethod `json:"payment_method"`

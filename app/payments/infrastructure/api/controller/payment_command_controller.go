@@ -14,22 +14,16 @@ import (
 
 type PaymentController struct {
 	validator      *validator.Validate
-	commandFacade  *paymentCmd.PaymentCommandFacade
-	paymentRepo    paymentDomain.PaymentRepository
+	commandBus     paymentCmd.CommandBus
 	paymentService paymentDomain.PaymentService
 }
 
 func NewPaymentController(
 	validator *validator.Validate,
-	commandFacade *paymentCmd.PaymentCommandFacade,
-	paymentRepo paymentDomain.PaymentRepository,
-	paymentService paymentDomain.PaymentService,
-) *PaymentController {
+	commandBus paymentCmd.CommandBus) *PaymentController {
 	return &PaymentController{
-		validator:      validator,
-		commandFacade:  commandFacade,
-		paymentRepo:    paymentRepo,
-		paymentService: paymentService,
+		validator:  validator,
+		commandBus: commandBus,
 	}
 }
 
@@ -47,33 +41,14 @@ func (c *PaymentController) CreatePayment(ctx *gin.Context) {
 		return
 	}
 
-	cmd := req.ToCreatePaymentCommand()
-	payment, err := c.commandFacade.CreatePayment(context.TODO(), cmd)
-	if err != nil {
-		apiResponse.AppError(ctx, err)
+	createCommand := req.ToCreatePaymentCommand()
+	commandResult := c.commandBus.Execute(context.TODO(), createCommand)
+	if !commandResult.IsSuccess {
+		apiResponse.AppError(ctx, commandResult.Error)
 		return
 	}
 
-	response := paymentDTOs.ToPaymentResponse(payment)
-	apiResponse.Created(ctx, response)
-}
-
-// GetPayment retrieves a payment by ID
-func (c *PaymentController) GetPayment(ctx *gin.Context) {
-	id, err := utils.ParseID(ctx, "id")
-	if err != nil {
-		apiResponse.RequestURLParamError(ctx, err, "payment_id", ctx.Param("id"))
-		return
-	}
-
-	payment, err := c.paymentRepo.GetById(context.TODO(), id)
-	if err != nil {
-		apiResponse.AppError(ctx, err)
-		return
-	}
-
-	response := paymentDTOs.ToPaymentResponse(payment)
-	apiResponse.Ok(ctx, response)
+	apiResponse.Created(ctx, commandResult)
 }
 
 // UpdatePayment updates an existing payment
@@ -95,15 +70,15 @@ func (c *PaymentController) UpdatePayment(ctx *gin.Context) {
 		return
 	}
 
-	cmd := req.ToUpdatePaymentCommand(id)
-	payment, err := c.commandFacade.UpdatePayment(context.TODO(), cmd)
-	if err != nil {
-		apiResponse.AppError(ctx, err)
+	updatePaymentCommand := req.ToUpdatePaymentCommand(id)
+
+	commandResult := c.commandBus.Execute(context.TODO(), updatePaymentCommand)
+	if !commandResult.IsSuccess {
+		apiResponse.AppError(ctx, commandResult.Error)
 		return
 	}
 
-	response := paymentDTOs.ToPaymentResponse(payment)
-	apiResponse.Ok(ctx, response)
+	apiResponse.Ok(ctx, commandResult)
 }
 
 // DeletePayment soft deletes a payment
@@ -114,9 +89,11 @@ func (c *PaymentController) DeletePayment(ctx *gin.Context) {
 		return
 	}
 
-	err = c.commandFacade.DeletePayment(context.TODO(), id)
-	if err != nil {
-		apiResponse.AppError(ctx, err)
+	deleteCommand := paymentCmd.NewDeletePaymentCommand(id)
+
+	commandResult := c.commandBus.Execute(context.TODO(), deleteCommand)
+	if !commandResult.IsSuccess {
+		apiResponse.AppError(ctx, commandResult.Error)
 		return
 	}
 
@@ -142,20 +119,15 @@ func (c *PaymentController) ProcessPayment(ctx *gin.Context) {
 		return
 	}
 
-	err = c.commandFacade.ProcessPayment(context.TODO(), id, req.TransactionId)
-	if err != nil {
-		apiResponse.AppError(ctx, err)
+	proccessPaymentCommand := paymentCmd.NewProcessPaymentCommand(id, req.TransactionId)
+
+	commandResult := c.commandBus.Execute(context.TODO(), proccessPaymentCommand)
+	if !commandResult.IsSuccess {
+		apiResponse.AppError(ctx, commandResult.Error)
 		return
 	}
 
-	payment, err := c.paymentRepo.GetById(context.TODO(), id)
-	if err != nil {
-		apiResponse.AppError(ctx, err)
-		return
-	}
-
-	response := paymentDTOs.ToPaymentResponse(payment)
-	apiResponse.Ok(ctx, response)
+	apiResponse.Ok(ctx, commandResult)
 }
 
 // RefundPayment refunds a payment
@@ -177,20 +149,15 @@ func (c *PaymentController) RefundPayment(ctx *gin.Context) {
 		return
 	}
 
-	err = c.commandFacade.RefundPayment(context.TODO(), id, req.Reason)
-	if err != nil {
-		apiResponse.AppError(ctx, err)
+	refundPaymentCommand := paymentCmd.NewRefundPaymentCommand(id, req.Reason)
+
+	commandResult := c.commandBus.Execute(context.TODO(), refundPaymentCommand)
+	if !commandResult.IsSuccess {
+		apiResponse.AppError(ctx, commandResult.Error)
 		return
 	}
 
-	payment, err := c.paymentRepo.GetById(context.TODO(), id)
-	if err != nil {
-		apiResponse.AppError(ctx, err)
-		return
-	}
-
-	response := paymentDTOs.ToPaymentResponse(payment)
-	apiResponse.Ok(ctx, response)
+	apiResponse.Ok(ctx, commandResult)
 }
 
 // CancelPayment cancels a payment
@@ -212,18 +179,13 @@ func (c *PaymentController) CancelPayment(ctx *gin.Context) {
 		return
 	}
 
-	err = c.commandFacade.CancelPayment(context.TODO(), id, req.Reason)
-	if err != nil {
-		apiResponse.AppError(ctx, err)
+	cancelPaymentCommand := paymentCmd.NewCancelPaymentCommand(id, req.Reason)
+
+	commandResult := c.commandBus.Execute(context.TODO(), cancelPaymentCommand)
+	if !commandResult.IsSuccess {
+		apiResponse.AppError(ctx, commandResult.Error)
 		return
 	}
 
-	payment, err := c.paymentRepo.GetById(context.TODO(), id)
-	if err != nil {
-		apiResponse.AppError(ctx, err)
-		return
-	}
-
-	response := paymentDTOs.ToPaymentResponse(payment)
-	apiResponse.Ok(ctx, response)
+	apiResponse.Ok(ctx, commandResult)
 }

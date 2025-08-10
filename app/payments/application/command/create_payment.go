@@ -1,14 +1,16 @@
 package paymentCmd
 
 import (
+	"context"
 	"time"
 
 	paymentDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/payments/domain"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
 )
 
 type CreatePaymentCommand struct {
 	AppointmentId int                         `json:"appointment_id"`
-	OwnerId       int                         `json:"owner_id"`
+	UserId        int                         `json:"owner_id"`
 	Amount        float64                     `json:"amount"`
 	Currency      string                      `json:"currency"`
 	PaymentMethod paymentDomain.PaymentMethod `json:"payment_method"`
@@ -18,9 +20,8 @@ type CreatePaymentCommand struct {
 }
 
 type CreatePaymentHander interface {
-	Handle(command CreatePaymentCommand) (*paymentDomain.Payment, error)
+	Handle(ctx context.Context, command CreatePaymentCommand) shared.CommandResult
 }
-
 type createPaymentHandler struct {
 	paymentRepo paymentDomain.PaymentRepository
 }
@@ -31,10 +32,20 @@ func NewCreatePaymentHandler(paymentRepo paymentDomain.PaymentRepository) Create
 	}
 }
 
-func (h *createPaymentHandler) Handle(command CreatePaymentCommand) (*paymentDomain.Payment, error) {
-	payment := &paymentDomain.Payment{
+func (h *createPaymentHandler) Handle(ctx context.Context, command CreatePaymentCommand) shared.CommandResult {
+	payment := h.createCommandToDomain(command)
+
+	if err := h.paymentRepo.Save(ctx, payment); err != nil {
+		return shared.FailureResult("failed to create payment", err)
+	}
+
+	return shared.SuccesResult(string(payment.Id), "payment created successfully")
+}
+
+func (req *createPaymentHandler) createCommandToDomain(command CreatePaymentCommand) *paymentDomain.Payment {
+	return &paymentDomain.Payment{
 		AppointmentId: command.AppointmentId,
-		OwnerId:       command.OwnerId,
+		UserId:        command.UserId,
 		Amount:        paymentDomain.NewMoney(command.Amount, command.Currency),
 		Currency:      command.Currency,
 		PaymentMethod: command.PaymentMethod,
@@ -46,10 +57,4 @@ func (h *createPaymentHandler) Handle(command CreatePaymentCommand) (*paymentDom
 		CreatedAt:     time.Now(),
 		UpdatedAt:     time.Now(),
 	}
-
-	if err := h.paymentRepo.Save(payment); err != nil {
-		return nil, err
-	}
-
-	return payment, nil
 }

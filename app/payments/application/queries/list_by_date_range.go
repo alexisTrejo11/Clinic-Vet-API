@@ -1,6 +1,7 @@
 package paymentQuery
 
 import (
+	"context"
 	"time"
 
 	paymentDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/payments/domain"
@@ -9,13 +10,21 @@ import (
 )
 
 type ListPaymentsByDateRangeQuery struct {
-	StartDate     time.Time `json:"start_date"`
-	EndDate       time.Time `json:"end_date"`
-	page.PageData `json:"page_data"`
+	startDate time.Time
+	endDate   time.Time
+	page.PageData
+}
+
+func NewListPaymentsByDateRangeQuery(startDate, endDate time.Time, pageData page.PageData) ListPaymentsByDateRangeQuery {
+	return ListPaymentsByDateRangeQuery{
+		startDate: startDate,
+		endDate:   endDate,
+		PageData:  pageData,
+	}
 }
 
 type ListPaymentsByDateRangeQueryHandler interface {
-	Handle(query ListPaymentsByDateRangeQuery) (*page.Page[[]PaymentResponse], error)
+	Handle(ctx context.Context, query ListPaymentsByDateRangeQuery) (*page.Page[[]PaymentResponse], error)
 }
 
 type listPaymentsByDateRangeHandler struct {
@@ -28,12 +37,12 @@ func NewListPaymentsByDateRangeHandler(paymentRepository paymentDomain.PaymentRe
 	}
 }
 
-func (h *listPaymentsByDateRangeHandler) Handle(query ListPaymentsByDateRangeQuery) (*page.Page[[]PaymentResponse], error) {
-	if query.StartDate.After(query.EndDate) {
-		return nil, PaymentRangeDateErr(query.StartDate, query.EndDate)
+func (h *listPaymentsByDateRangeHandler) Handle(ctx context.Context, query ListPaymentsByDateRangeQuery) (*page.Page[[]PaymentResponse], error) {
+	if query.startDate.After(query.endDate) {
+		return nil, PaymentRangeDateErr(query.startDate, query.endDate)
 	}
 
-	paymentsPage, err := h.paymentRepository.ListPaymentsByDateRange(query.StartDate, query.EndDate)
+	paymentsPage, err := h.paymentRepository.ListPaymentsByDateRange(ctx, query.startDate, query.endDate, query.PageData)
 	if err != nil {
 		return nil, err
 	}

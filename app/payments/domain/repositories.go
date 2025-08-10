@@ -8,7 +8,7 @@ import (
 )
 
 type PaymentRepository interface {
-	Save(payment *Payment) error
+	Save(ctx context.Context, payment *Payment) error
 
 	Search(ctx context.Context, pagination page.PageData, searchCriteria map[string]interface{}) (*page.Page[[]Payment], error)
 	GetById(ctx context.Context, id int) (*Payment, error)

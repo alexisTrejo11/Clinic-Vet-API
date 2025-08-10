@@ -1,7 +1,8 @@
 package paymentAPI
 
 import (
-	paymentCmd "github.com/alexisTrejo11/Clinic-Vet-API/app/payments/application/advanced/command"
+	paymentCmd "github.com/alexisTrejo11/Clinic-Vet-API/app/payments/application/command"
+	paymentQuery "github.com/alexisTrejo11/Clinic-Vet-API/app/payments/application/queries"
 	paymentDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/payments/domain"
 	paymentController "github.com/alexisTrejo11/Clinic-Vet-API/app/payments/infrastructure/api/controller"
 	paymentRoutes "github.com/alexisTrejo11/Clinic-Vet-API/app/payments/infrastructure/api/routes"
@@ -13,7 +14,8 @@ import (
 type PaymentAPI struct {
 	validator   *validator.Validate
 	paymentRepo paymentDomain.PaymentRepository
-	buss        *paymentCmd.CommandBus
+	commandBuss *paymentCmd.CommandBus
+	queryBus    *paymentQuery.QueryBus
 }
 
 // NewPaymentAPI creates a new payment API factory
@@ -21,12 +23,14 @@ func NewPaymentAPI(
 	validator *validator.Validate,
 	paymentRepo paymentDomain.PaymentRepository,
 ) *PaymentAPI {
-	buss := paymentCmd.NewPaymentCommandBus(paymentRepo)
+	commandBuss := paymentCmd.NewPaymentCommandBus(paymentRepo)
+	queryBuss := paymentQuery.NewQueryBus(paymentRepo)
 
 	return &PaymentAPI{
 		validator:   validator,
 		paymentRepo: paymentRepo,
-		buss:        &buss,
+		commandBuss: &commandBuss,
+		queryBus:    &queryBuss,
 	}
 }
 
@@ -44,24 +48,22 @@ func (f *PaymentAPI) CreateControllers() *PaymentControllers {
 	queryController := paymentController.NewPaymentQueryController(
 		f.validator,
 		f.paymentRepo,
+		*f.queryBus,
 	)
 
 	commandController := paymentController.NewPaymentController(
 		f.validator,
-		f.paymentRepo,
-		paymentService,
+		*f.commandBuss,
 	)
 
 	clientController := paymentController.NewClientPaymentController(
 		f.validator,
 		f.paymentRepo,
-		paymentService,
 		queryController,
 	)
 
 	adminController := paymentController.NewAdminPaymentController(
 		f.validator,
-		commandFacade,
 		queryController,
 		commandController,
 	)
@@ -92,9 +94,14 @@ func (f *PaymentAPI) Validate() error {
 		return paymentDomain.NewPaymentError("INVALID_API_CONFIG", "payment repository cannot be nil", 0, "")
 	}
 
-	if f.buss == nil {
+	if f.commandBuss == nil {
 		return paymentDomain.NewPaymentError("INVALID_API_CONFIG", "command bus cannot be nil", 0, "")
 
 	}
+
+	if f.queryBus == nil {
+		return paymentDomain.NewPaymentError("INVALID_API_CONFIG", "query bus cannot be nil", 0, "")
+	}
+
 	return nil
 }

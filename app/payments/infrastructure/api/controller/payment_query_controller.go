@@ -5,8 +5,10 @@ import (
 	"strconv"
 	"time"
 
+	paymentQuery "github.com/alexisTrejo11/Clinic-Vet-API/app/payments/application/queries"
 	paymentDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/payments/domain"
 	paymentDTOs "github.com/alexisTrejo11/Clinic-Vet-API/app/payments/infrastructure/api/dtos"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 	apiResponse "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/responses"
 	"github.com/gin-gonic/gin"
@@ -14,28 +16,27 @@ import (
 )
 
 type PaymentQueryController struct {
-	validator   *validator.Validate
-	paymentRepo paymentDomain.PaymentRepository
+	validator *validator.Validate
+	queryBus  paymentQuery.QueryBus
 }
 
 func NewPaymentQueryController(
 	validator *validator.Validate,
 	paymentRepo paymentDomain.PaymentRepository,
+	queryBus paymentQuery.QueryBus,
 
 ) *PaymentQueryController {
 	return &PaymentQueryController{
-		validator:   validator,
-		paymentRepo: paymentRepo,
+		validator: validator,
+		queryBus:  queryBus,
 	}
 }
 
 func (c *PaymentQueryController) SearchPayments(ctx *gin.Context) {
 	searchReq := c.parseSearchRequest(ctx)
+	searchPaymentCommand := ToSearchComand(searchReq)
 
-	pagination := searchReq.Page
-	criteria := searchReq.ToSearchCriteria()
-
-	payments, err := c.paymentRepo.Search(context.TODO(), pagination, criteria)
+	payments, err := c.queryBus.Execute(context.TODO(), searchPaymentCommand)
 	if err != nil {
 		apiResponse.AppError(ctx, err)
 		return
@@ -45,38 +46,55 @@ func (c *PaymentQueryController) SearchPayments(ctx *gin.Context) {
 	apiResponse.Ok(ctx, response)
 }
 
-func (c *PaymentQueryController) GetPaymentsByOwner(ctx *gin.Context) {
-	ownerIdStr := ctx.Param("owner_id")
-	ownerId, err := strconv.Atoi(ownerIdStr)
+func (c *PaymentQueryController) GetPayment(ctx *gin.Context) {
+	paymentId, err := shared.ParseID(ctx, ctx.Param("payment_id"))
 	if err != nil {
-		apiResponse.RequestURLParamError(ctx, err, "owner_id", ownerIdStr)
+		apiResponse.RequestURLParamError(ctx, err, "payment_id", ctx.Param("payment_id"))
 		return
 	}
 
-	pagination := c.parsePagination(ctx)
-
-	payments, err := c.paymentRepo.ListByUserId(context.TODO(), ownerId, pagination)
+	getPaymentQuery := paymentQuery.NewGetPaymentByIdQuery(paymentId)
+	payment, err := c.queryBus.Execute(context.TODO(), getPaymentQuery)
 	if err != nil {
 		apiResponse.AppError(ctx, err)
 		return
 	}
 
-	response := paymentDTOs.ToPaymentListResponse(payments)
+	response := paymentDTOs.ToPaymentResponse(payment)
+	apiResponse.Ok(ctx, response)
+}
+
+func (c *PaymentQueryController) GetPaymentsByUser(ctx *gin.Context) {
+	userId, err := shared.ParseID(ctx, ctx.Param("user_id"))
+	if err != nil {
+		apiResponse.RequestURLParamError(ctx, err, "user_id", ctx.Param("user_id"))
+		return
+	}
+
+	listByUserQuery := paymentQuery.NewListPaymentsByUserQuery(userId, c.parsePagination(ctx))
+	paymentPage, err := c.queryBus.Execute(context.TODO(), listByUserQuery)
+	if err != nil {
+		apiResponse.AppError(ctx, err)
+		return
+	}
+
+	response := paymentDTOs.ToPaymentListResponse(paymentPage)
 	apiResponse.Ok(ctx, response)
 }
 
 func (c *PaymentQueryController) GetPaymentsByStatus(ctx *gin.Context) {
 	statusStr := ctx.Param("status")
 	status := paymentDomain.PaymentStatus(statusStr)
-
 	if !status.IsValid() {
 		apiResponse.RequestURLParamError(ctx, paymentDomain.ErrInvalidPaymentStatus, "status", statusStr)
 		return
 	}
 
-	pagination := c.parsePagination(ctx)
+	payments, err := c.queryBus.Execute(
+		context.TODO(),
+		paymentQuery.NewListPaymentsByStatusQuery(status, c.parsePagination(ctx)),
+	)
 
-	payments, err := c.paymentRepo.ListByStatus(context.TODO(), status, pagination)
 	if err != nil {
 		apiResponse.AppError(ctx, err)
 		return
@@ -88,8 +106,9 @@ func (c *PaymentQueryController) GetPaymentsByStatus(ctx *gin.Context) {
 
 func (c *PaymentQueryController) GetOverduePayments(ctx *gin.Context) {
 	pagination := c.parsePagination(ctx)
+	paymentOverdueQuery := paymentQuery.NewListOverduePaymentsQuery(pagination)
 
-	payments, err := c.paymentRepo.ListOverduePayments(context.TODO(), pagination)
+	payments, err := c.queryBus.Execute(context.TODO(), paymentOverdueQuery)
 	if err != nil {
 		apiResponse.AppError(ctx, err)
 		return
@@ -99,25 +118,7 @@ func (c *PaymentQueryController) GetOverduePayments(ctx *gin.Context) {
 	apiResponse.Ok(ctx, response)
 }
 
-func (c *PaymentQueryController) GetPaymentHistory(ctx *gin.Context) {
-	ownerIdStr := ctx.Param("owner_id")
-	ownerId, err := strconv.Atoi(ownerIdStr)
-	if err != nil {
-		apiResponse.RequestURLParamError(ctx, err, "owner_id", ownerIdStr)
-		return
-	}
-
-	payments, err := c.paymentService.GetPaymentHistory(ownerId)
-	if err != nil {
-		apiResponse.AppError(ctx, err)
-		return
-	}
-
-	response := paymentDTOs.ToPaymentListResponse(payments)
-	apiResponse.Ok(ctx, response)
-}
-
-func (c *PaymentQueryController) GeneratePaymentReport(ctx *gin.Context) {
+/* func (c *PaymentQueryController) GeneratePaymentReport(ctx *gin.Context) {
 	startDateStr := ctx.Query("start_date")
 	endDateStr := ctx.Query("end_date")
 
@@ -146,30 +147,18 @@ func (c *PaymentQueryController) GeneratePaymentReport(ctx *gin.Context) {
 
 	response := paymentDTOs.ToPaymentReportResponse(report)
 	apiResponse.Ok(ctx, response)
-}
+} */
 
 func (c *PaymentQueryController) GetPaymentsByDateRange(ctx *gin.Context) {
-	startDateStr := ctx.Query("start_date")
-	endDateStr := ctx.Query("end_date")
-
-	if startDateStr == "" || endDateStr == "" {
-		apiResponse.RequestURLQueryError(ctx, paymentDomain.NewPaymentError("MISSING_DATES", "start_date and end_date are required", 0, ""))
-		return
-	}
-
-	startDate, err := time.Parse("2006-01-02", startDateStr)
+	startDate, endDate, err := parseStartEndDates(ctx)
 	if err != nil {
 		apiResponse.RequestURLQueryError(ctx, err)
 		return
 	}
 
-	endDate, err := time.Parse("2006-01-02", endDateStr)
-	if err != nil {
-		apiResponse.RequestURLQueryError(ctx, err)
-		return
-	}
+	paymentsByDateRangeQuery := paymentQuery.NewListPaymentsByDateRangeQuery(startDate, endDate, c.parsePagination(ctx))
 
-	payments, err := c.paymentRepo.ListPaymentsByDateRange(startDate, endDate)
+	payments, err := c.queryBus.Execute(context.TODO(), paymentsByDateRangeQuery)
 	if err != nil {
 		apiResponse.AppError(ctx, err)
 		return
@@ -184,9 +173,9 @@ func (c *PaymentQueryController) parseSearchRequest(ctx *gin.Context) paymentDTO
 		Page: c.parsePagination(ctx),
 	}
 
-	if ownerIdStr := ctx.Query("owner_id"); ownerIdStr != "" {
-		if ownerId, err := strconv.Atoi(ownerIdStr); err == nil {
-			req.OwnerId = &ownerId
+	if UserIdStr := ctx.Query("owner_id"); UserIdStr != "" {
+		if UserId, err := strconv.Atoi(UserIdStr); err == nil {
+			req.UserId = &UserId
 		}
 	}
 
@@ -269,4 +258,40 @@ func (c *PaymentQueryController) parsePagination(ctx *gin.Context) page.PageData
 		PageNumber:    pageNumber,
 		SortDirection: sortDirection,
 	}
+}
+
+func ToSearchComand(req paymentDTOs.PaymentSearchRequest) paymentQuery.SearchPaymentsQuery {
+	return paymentQuery.SearchPaymentsQuery{
+		UserId:        req.UserId,
+		AppointmentId: req.AppointmentId,
+		Status:        req.Status,
+		PaymentMethod: req.PaymentMethod,
+		MinAmount:     req.MinAmount,
+		MaxAmount:     req.MaxAmount,
+		Currency:      req.Currency,
+		StartDate:     req.StartDate,
+		EndDate:       req.EndDate,
+		Pagination:    req.Page,
+	}
+}
+
+func parseStartEndDates(ctx *gin.Context) (time.Time, time.Time, error) {
+	startDateStr := ctx.Query("start_date")
+	endDateStr := ctx.Query("end_date")
+
+	if startDateStr == "" || endDateStr == "" {
+		return time.Time{}, time.Time{}, paymentDomain.NewPaymentError("MISSING_DATES", "start_date and end_date are required", 0, "")
+	}
+
+	startDate, err := time.Parse("2006-01-02", startDateStr)
+	if err != nil {
+		return time.Time{}, time.Time{}, err
+	}
+
+	endDate, err := time.Parse("2006-01-02", endDateStr)
+	if err != nil {
+		return time.Time{}, time.Time{}, err
+	}
+
+	return startDate, endDate, nil
 }

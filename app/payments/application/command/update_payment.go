@@ -5,6 +5,7 @@ import (
 	"time"
 
 	paymentDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/payments/domain"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
 )
 
 type UpdatePaymentCommand struct {
@@ -13,11 +14,10 @@ type UpdatePaymentCommand struct {
 	PaymentMethod *paymentDomain.PaymentMethod `json:"payment_method,omitempty"`
 	Description   *string                      `json:"description,omitempty"`
 	DueDate       *time.Time                   `json:"due_date,omitempty"`
-	CTX           context.Context              `json:"-"`
 }
 
 type UpdatePaymentHandler interface {
-	Handle(command UpdatePaymentCommand) (*paymentDomain.Payment, error)
+	Handle(ctx context.Context, command UpdatePaymentCommand) shared.CommandResult
 }
 
 type updatePaymentHandler struct {
@@ -30,25 +30,27 @@ func NewUpdatePaymentHandler(paymentRepo paymentDomain.PaymentRepository) Update
 	}
 }
 
-func (h *updatePaymentHandler) Handle(cmd UpdatePaymentCommand) (*paymentDomain.Payment, error) {
+func (h *updatePaymentHandler) Handle(ctx context.Context, cmd UpdatePaymentCommand) shared.CommandResult {
 	if cmd.PaymentId == 0 {
-		return nil, paymentDomain.PaymentNotFoundErr(cmd.PaymentId)
+		return shared.FailureResult("payment ID is zero", paymentDomain.InvalidPaymentIdErr(cmd.PaymentId))
 	}
-
-	payment, err := h.paymentRepo.GetById(cmd.CTX, cmd.PaymentId)
+	payment, err := h.paymentRepo.GetById(ctx, cmd.PaymentId)
 	if err != nil {
-		return nil, err
+		return shared.FailureResult("error fetching payment", err)
 	}
 
 	err = payment.Update(cmd.Amount, cmd.PaymentMethod, cmd.Description, cmd.DueDate)
 	if err != nil {
-		return nil, err
+		return shared.FailureResult("error updating payment", err)
 	}
 
-	err = h.paymentRepo.Save(payment)
+	err = h.paymentRepo.Save(ctx, payment)
 	if err != nil {
-		return nil, err
+		return shared.FailureResult("error saving payment", err)
 	}
 
-	return payment, nil
+	return shared.SuccesResult(
+		string(rune(cmd.PaymentId)),
+		"payment updated successfully",
+	)
 }

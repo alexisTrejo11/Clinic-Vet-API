@@ -9,7 +9,7 @@ import (
 type PaymentResponse struct {
 	Id            int     `json:"id"`
 	AppointmentId int     `json:"appointment_id"`
-	OwnerId       int     `json:"owner_id"`
+	UserId        int     `json:"owner_id"`
 	Amount        float64 `json:"amount"`
 	Currency      string  `json:"currency"`
 	PaymentMethod string  `json:"payment_method"`
@@ -28,7 +28,7 @@ func NewPaymentResponse(payment *paymentDomain.Payment) PaymentResponse {
 	return PaymentResponse{
 		Id:            payment.Id,
 		AppointmentId: payment.AppointmentId,
-		OwnerId:       payment.OwnerId,
+		UserId:        payment.UserId,
 		Amount:        payment.Amount.ToFloat(),
 		Currency:      payment.Currency,
 		PaymentMethod: string(payment.PaymentMethod),

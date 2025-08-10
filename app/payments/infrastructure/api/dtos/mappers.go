@@ -1,7 +1,7 @@
 package paymentDTOs
 
 import (
-	paymentCmd "github.com/alexisTrejo11/Clinic-Vet-API/app/payments/application/advanced/command"
+	paymentCmd "github.com/alexisTrejo11/Clinic-Vet-API/app/payments/application/command"
 	paymentDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/payments/domain"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 )
@@ -9,7 +9,7 @@ import (
 func (req CreatePaymentRequest) ToCreatePaymentCommand() paymentCmd.CreatePaymentCommand {
 	return paymentCmd.CreatePaymentCommand{
 		AppointmentId: req.AppointmentId,
-		OwnerId:       req.OwnerId,
+		UserId:        req.UserId,
 		Amount:        req.Amount,
 		Currency:      req.Currency,
 		PaymentMethod: req.PaymentMethod,
@@ -36,31 +36,24 @@ func (req UpdatePaymentRequest) ToUpdatePaymentCommand(paymentId int) paymentCmd
 }
 
 func (req ProcessPaymentRequest) ToProcessPaymentCommand(paymentId int) paymentCmd.ProcessPaymentCommand {
-	return paymentCmd.ProcessPaymentCommand{
-		PaymentId:     paymentId,
-		TransactionId: req.TransactionId,
-	}
+	return paymentCmd.NewProcessPaymentCommand(paymentId, req.TransactionId)
 }
 
 func (req RefundPaymentRequest) ToRefundPaymentCommand(paymentId int) paymentCmd.RefundPaymentCommand {
-	return paymentCmd.RefundPaymentCommand{
-		PaymentId: paymentId,
-		Reason:    req.Reason,
-	}
+	return paymentCmd.NewRefundPaymentCommand(paymentId, req.Reason)
 }
 
 func (req CancelPaymentRequest) ToCancelPaymentCommand(paymentId int) paymentCmd.CancelPaymentCommand {
-	return paymentCmd.CancelPaymentCommand{
-		PaymentId: paymentId,
-		Reason:    req.Reason,
-	}
+	return paymentCmd.NewCancelPaymentCommand(paymentId, req.Reason)
 }
 
-func ToPaymentResponse(payment *paymentDomain.Payment) PaymentResponse {
+func ToPaymentResponse(entity interface{}) PaymentResponse {
+	payment := entity.(*paymentDomain.Payment)
+
 	return PaymentResponse{
 		Id:            payment.Id,
 		AppointmentId: payment.AppointmentId,
-		OwnerId:       payment.OwnerId,
+		UserId:        payment.UserId,
 		Amount:        payment.Amount.ToFloat(),
 		Currency:      payment.Currency,
 		PaymentMethod: payment.PaymentMethod,
@@ -76,7 +69,9 @@ func ToPaymentResponse(payment *paymentDomain.Payment) PaymentResponse {
 	}
 }
 
-func ToPaymentListResponse(paymentsPage *page.Page[[]paymentDomain.Payment]) PaymentListResponse {
+func ToPaymentListResponse(data interface{}) PaymentListResponse {
+	paymentsPage := data.(*page.Page[[]paymentDomain.Payment])
+
 	responses := make([]PaymentResponse, len(paymentsPage.Data))
 	for i, payment := range paymentsPage.Data {
 		responses[i] = ToPaymentResponse(&payment)
@@ -123,8 +118,8 @@ func ToPaymentReportResponse(report paymentDomain.PaymentReport) PaymentReportRe
 func (req PaymentSearchRequest) ToSearchCriteria() map[string]interface{} {
 	criteria := make(map[string]interface{})
 
-	if req.OwnerId != nil {
-		criteria["owner_id"] = *req.OwnerId
+	if req.UserId != nil {
+		criteria["owner_id"] = *req.UserId
 	}
 	if req.AppointmentId != nil {
 		criteria["appointment_id"] = *req.AppointmentId

@@ -22,20 +22,18 @@ type ClientPaymentController struct {
 func NewClientPaymentController(
 	validator *validator.Validate,
 	paymentRepo paymentDomain.PaymentRepository,
-	paymentService paymentDomain.PaymentService,
 	queryController *PaymentQueryController,
 ) *ClientPaymentController {
 	return &ClientPaymentController{
 		validator:       validator,
 		paymentRepo:     paymentRepo,
-		paymentService:  paymentService,
 		queryController: queryController,
 	}
 }
 
 // GetMyPayments retrieves payments for the authenticated owner
 func (c *ClientPaymentController) GetMyPayments(ctx *gin.Context) {
-	c.queryController.GetPaymentsByOwner(ctx)
+	c.queryController.GetPaymentsByUser(ctx)
 }
 
 // GetMyPayment retrieves a specific payment for the authenticated owner
@@ -58,7 +56,7 @@ func (c *ClientPaymentController) GetMyPayment(ctx *gin.Context) {
 
 // GetMyPaymentHistory retrieves payment history for the authenticated owner
 func (c *ClientPaymentController) GetMyPaymentHistory(ctx *gin.Context) {
-	c.queryController.GetPaymentHistory(ctx)
+	c.queryController.GetPaymentsByUser(ctx)
 }
 
 // GetMyOverduePayments retrieves overdue payments for the authenticated owner

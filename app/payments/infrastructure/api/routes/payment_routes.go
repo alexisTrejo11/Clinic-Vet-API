@@ -27,7 +27,7 @@ func RegisterAdminPaymentRoutes(router *gin.Engine, controller *paymentControlle
 		adminGroup.GET("/overdue", controller.GetOverduePayments)
 		adminGroup.GET("/status/:status", controller.GetPaymentsByStatus)
 		adminGroup.GET("/date-range", controller.GetPaymentsByDateRange)
-		adminGroup.GET("/report", controller.GeneratePaymentReport)
+		//adminGroup.GET("/report", controller.GeneratePaymentReport)
 	}
 }
 
@@ -47,11 +47,10 @@ func RegisterPaymentQueryRoutes(router *gin.Engine, controller *paymentControlle
 	queryGroup := router.Group("api/v2/payments")
 	{
 		queryGroup.GET("/search", controller.SearchPayments)
-		queryGroup.GET("/owners/:owner_id", controller.GetPaymentsByOwner)
+		queryGroup.GET("/user/:user_id", controller.GetPaymentsByUser)
 		queryGroup.GET("/status/:status", controller.GetPaymentsByStatus)
 		queryGroup.GET("/overdue", controller.GetOverduePayments)
-		queryGroup.GET("/owners/:owner_id/history", controller.GetPaymentHistory)
-		queryGroup.GET("/report", controller.GeneratePaymentReport)
+		//queryGroup.GET("/report", controller.GeneratePaymentReport)
 		queryGroup.GET("/date-range", controller.GetPaymentsByDateRange)
 	}
 }
