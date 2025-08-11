@@ -4,7 +4,7 @@ import (
 	"context"
 
 	ownerRepository "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/application/repository"
-	petAppError "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application"
+	petApplicationError "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application"
 	petDTOs "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application/dtos"
 	petMapper "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application/mapper"
 	petRepository "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application/repositories"
@@ -37,7 +37,7 @@ func (uc CreatePetUseCase) Execute(ctx context.Context, petCreate petDTOs.PetCre
 
 func (uc CreatePetUseCase) validate_owner(ctx context.Context, owner_id int) error {
 	_, err := uc.ownerRepository.GetById(ctx, owner_id, false)
-	if err := petAppError.HandleGetByIdError(err, owner_id); err != nil {
+	if err := petApplicationError.HandleGetByIdError(err, owner_id); err != nil {
 		return err
 	}
 

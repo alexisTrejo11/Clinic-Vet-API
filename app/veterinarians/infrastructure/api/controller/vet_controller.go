@@ -35,11 +35,11 @@ func (c *VeterinarianController) ListVeterinarians(ctx *gin.Context) {
 
 	vets, err := c.vetUseCases.ListVetUseCase(ctx.Request.Context(), listParams)
 	if err != nil {
-		apiResponse.AppError(ctx, err)
+		apiResponse.ApplicationError(ctx, err)
 		return
 	}
 
-	apiResponse.Ok(ctx, vets)
+	apiResponse.Success(ctx, vets)
 }
 
 func (c *VeterinarianController) GetVeterinarianById(ctx *gin.Context) {
@@ -51,11 +51,11 @@ func (c *VeterinarianController) GetVeterinarianById(ctx *gin.Context) {
 
 	Veterinarian, err := c.vetUseCases.GetVetByIdUseCase(context.TODO(), id)
 	if err != nil {
-		apiResponse.AppError(ctx, err)
+		apiResponse.ApplicationError(ctx, err)
 		return
 	}
 
-	apiResponse.Ok(ctx, Veterinarian)
+	apiResponse.Success(ctx, Veterinarian)
 }
 
 func (c *VeterinarianController) CreateVeterinarian(ctx *gin.Context) {
@@ -73,7 +73,7 @@ func (c *VeterinarianController) CreateVeterinarian(ctx *gin.Context) {
 
 	vetCreated, err := c.vetUseCases.CreateVetUseCase(context.TODO(), vetCreate)
 	if err != nil {
-		apiResponse.AppError(ctx, err)
+		apiResponse.ApplicationError(ctx, err)
 		return
 	}
 
@@ -100,11 +100,11 @@ func (c *VeterinarianController) UpdateVeterinarian(ctx *gin.Context) {
 
 	verUpdated, err := c.vetUseCases.UpdateVetUseCase(context.TODO(), id, vetUpdate)
 	if err != nil {
-		apiResponse.AppError(ctx, err)
+		apiResponse.ApplicationError(ctx, err)
 		return
 	}
 
-	apiResponse.Ok(ctx, verUpdated)
+	apiResponse.Success(ctx, verUpdated)
 }
 
 func (c *VeterinarianController) DeleteVeterinarian(ctx *gin.Context) {
@@ -115,7 +115,7 @@ func (c *VeterinarianController) DeleteVeterinarian(ctx *gin.Context) {
 	}
 
 	if err := c.vetUseCases.DeleteVetUseCase(context.TODO(), id); err != nil {
-		apiResponse.AppError(ctx, err)
+		apiResponse.ApplicationError(ctx, err)
 		return
 	}
 

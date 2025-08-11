@@ -28,11 +28,11 @@ func (c *ProfileController) GetUserProfile(ctx *gin.Context) {
 
 	profile, err := c.useCases.GetUserProfile(ctx, userId)
 	if err != nil {
-		apiResponse.AppError(ctx, err)
+		apiResponse.ApplicationError(ctx, err)
 		return
 	}
 
-	apiResponse.Ok(ctx, profile)
+	apiResponse.Success(ctx, profile)
 }
 
 func (c *ProfileController) UpdateUserProfile(ctx *gin.Context) {
@@ -51,7 +51,7 @@ func (c *ProfileController) UpdateUserProfile(ctx *gin.Context) {
 	profileUpdateData := mapRequestToProfileUpdate(request, userIdInt)
 
 	if err := c.useCases.UpdateProfileUseCase(ctx, profileUpdateData); err != nil {
-		apiResponse.AppError(ctx, err)
+		apiResponse.ApplicationError(ctx, err)
 		return
 	}
 

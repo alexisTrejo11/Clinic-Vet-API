@@ -42,11 +42,11 @@ func NewPetController(
 func (c *PetController) ListPets(ctx *gin.Context) {
 	pets, err := c.listPetsUseCase.Execute(context.TODO())
 	if err != nil {
-		apiResponse.AppError(ctx, err)
+		apiResponse.ApplicationError(ctx, err)
 		return
 	}
 
-	apiResponse.Ok(ctx, pets)
+	apiResponse.Success(ctx, pets)
 }
 
 func (c *PetController) GetPetById(ctx *gin.Context) {
@@ -58,11 +58,11 @@ func (c *PetController) GetPetById(ctx *gin.Context) {
 
 	pet, err := c.getPetByIdUseCase.Execute(context.TODO(), id)
 	if err != nil {
-		apiResponse.AppError(ctx, err)
+		apiResponse.ApplicationError(ctx, err)
 		return
 	}
 
-	apiResponse.Ok(ctx, pet)
+	apiResponse.Success(ctx, pet)
 }
 
 func (c *PetController) CreatePet(ctx *gin.Context) {
@@ -80,7 +80,7 @@ func (c *PetController) CreatePet(ctx *gin.Context) {
 
 	pet, err := c.createPetUseCae.Execute(context.TODO(), petCreate)
 	if err != nil {
-		apiResponse.AppError(ctx, err)
+		apiResponse.ApplicationError(ctx, err)
 		return
 	}
 
@@ -107,11 +107,11 @@ func (c *PetController) UpdatePet(ctx *gin.Context) {
 
 	pet, err := c.updatePetUseCae.Execute(context.TODO(), id, petCreate)
 	if err != nil {
-		apiResponse.AppError(ctx, err)
+		apiResponse.ApplicationError(ctx, err)
 		return
 	}
 
-	apiResponse.Ok(ctx, pet)
+	apiResponse.Success(ctx, pet)
 }
 
 func (c *PetController) DeletePet(ctx *gin.Context) {
@@ -122,7 +122,7 @@ func (c *PetController) DeletePet(ctx *gin.Context) {
 	}
 
 	if err := c.deletePetUseCase.Execute(context.TODO(), id, true); err != nil {
-		apiResponse.AppError(ctx, err)
+		apiResponse.ApplicationError(ctx, err)
 		return
 	}
 

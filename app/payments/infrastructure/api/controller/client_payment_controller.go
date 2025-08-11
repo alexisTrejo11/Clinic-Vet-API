@@ -46,12 +46,12 @@ func (c *ClientPaymentController) GetMyPayment(ctx *gin.Context) {
 
 	payment, err := c.paymentRepo.GetById(context.TODO(), paymentId)
 	if err != nil {
-		apiResponse.AppError(ctx, err)
+		apiResponse.ApplicationError(ctx, err)
 		return
 	}
 
 	response := paymentDTOs.ToPaymentResponse(payment)
-	apiResponse.Ok(ctx, response)
+	apiResponse.Success(ctx, response)
 }
 
 // GetMyPaymentHistory retrieves payment history for the authenticated owner
@@ -72,12 +72,12 @@ func (c *ClientPaymentController) GetMyOverduePayments(ctx *gin.Context) {
 	criteria := searchReq.ToSearchCriteria()
 	payments, err := c.paymentRepo.Search(context.TODO(), searchReq.Page, criteria)
 	if err != nil {
-		apiResponse.AppError(ctx, err)
+		apiResponse.ApplicationError(ctx, err)
 		return
 	}
 
 	response := paymentDTOs.ToPaymentListResponse(payments)
-	apiResponse.Ok(ctx, response)
+	apiResponse.Success(ctx, response)
 }
 
 // GetMyPendingPayments retrieves pending payments for the authenticated owner
@@ -93,10 +93,10 @@ func (c *ClientPaymentController) GetMyPendingPayments(ctx *gin.Context) {
 	criteria := searchReq.ToSearchCriteria()
 	payments, err := c.paymentRepo.Search(context.TODO(), searchReq.Page, criteria)
 	if err != nil {
-		apiResponse.AppError(ctx, err)
+		apiResponse.ApplicationError(ctx, err)
 		return
 	}
 
 	response := paymentDTOs.ToPaymentListResponse(payments)
-	apiResponse.Ok(ctx, response)
+	apiResponse.Success(ctx, response)
 }

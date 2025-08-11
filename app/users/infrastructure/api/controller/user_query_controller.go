@@ -29,7 +29,7 @@ func (c *UserQueryController) GetUserByPhone(ctx *gin.Context) {
 		return
 	}
 
-	apiResponse.Ok(ctx, gin.H{"phone": phone})
+	apiResponse.Success(ctx, gin.H{"phone": phone})
 	return
 
 }

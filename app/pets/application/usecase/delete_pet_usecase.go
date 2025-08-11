@@ -3,7 +3,7 @@ package petUsecase
 import (
 	"context"
 
-	petAppError "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application"
+	petApplicationError "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application"
 	petRepository "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application/repositories"
 	petDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/domain"
 )
@@ -21,7 +21,7 @@ func NewDeletePetUseCase(repository petRepository.PetRepository) *DeletePetUseCa
 func (uc *DeletePetUseCase) Execute(cxt context.Context, petId int, isSoftDelete bool) error {
 	pet, err := uc.repository.GetById(cxt, petId)
 	if err != nil {
-		return petAppError.HandleGetByIdError(err, petId)
+		return petApplicationError.HandleGetByIdError(err, petId)
 	}
 
 	if isSoftDelete {

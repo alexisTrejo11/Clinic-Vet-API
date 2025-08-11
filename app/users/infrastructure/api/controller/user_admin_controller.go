@@ -32,7 +32,7 @@ func (c *UserAdminController) GetUserById(ctx *gin.Context) {
 		return
 	}
 
-	apiResponse.Ok(ctx, gin.H{"user_id": userId})
+	apiResponse.Success(ctx, gin.H{"user_id": userId})
 }
 
 func (c *UserAdminController) SearchUsers(ctx *gin.Context) {
@@ -85,11 +85,11 @@ func (c *UserAdminController) BanUser(ctx *gin.Context) {
 
 	result := c.dispatcher.Dispatch(command)
 	if !result.IsSuccess {
-		apiResponse.AppError(ctx, err)
+		apiResponse.ApplicationError(ctx, err)
 		return
 	}
 
-	apiResponse.Ok(ctx, result.Message)
+	apiResponse.Success(ctx, result.Message)
 }
 
 func (c *UserAdminController) UnBanUser(ctx *gin.Context) {
@@ -107,11 +107,11 @@ func (c *UserAdminController) UnBanUser(ctx *gin.Context) {
 
 	result := c.dispatcher.Dispatch(command)
 	if !result.IsSuccess {
-		apiResponse.AppError(ctx, err)
+		apiResponse.ApplicationError(ctx, err)
 		return
 	}
 
-	apiResponse.Ok(ctx, result.Message)
+	apiResponse.Success(ctx, result.Message)
 }
 
 func (c *UserAdminController) DeleteUser(ctx *gin.Context) {
@@ -129,9 +129,9 @@ func (c *UserAdminController) DeleteUser(ctx *gin.Context) {
 
 	result := c.dispatcher.Dispatch(command)
 	if !result.IsSuccess {
-		apiResponse.AppError(ctx, err)
+		apiResponse.ApplicationError(ctx, err)
 		return
 	}
 
-	apiResponse.Ok(ctx, result.Message)
+	apiResponse.Success(ctx, result.Message)
 }

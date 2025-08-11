@@ -44,7 +44,7 @@ func (c *PaymentController) CreatePayment(ctx *gin.Context) {
 	createCommand := req.ToCreatePaymentCommand()
 	commandResult := c.commandBus.Execute(context.TODO(), createCommand)
 	if !commandResult.IsSuccess {
-		apiResponse.AppError(ctx, commandResult.Error)
+		apiResponse.ApplicationError(ctx, commandResult.Error)
 		return
 	}
 
@@ -74,11 +74,11 @@ func (c *PaymentController) UpdatePayment(ctx *gin.Context) {
 
 	commandResult := c.commandBus.Execute(context.TODO(), updatePaymentCommand)
 	if !commandResult.IsSuccess {
-		apiResponse.AppError(ctx, commandResult.Error)
+		apiResponse.ApplicationError(ctx, commandResult.Error)
 		return
 	}
 
-	apiResponse.Ok(ctx, commandResult)
+	apiResponse.Success(ctx, commandResult)
 }
 
 // DeletePayment soft deletes a payment
@@ -93,7 +93,7 @@ func (c *PaymentController) DeletePayment(ctx *gin.Context) {
 
 	commandResult := c.commandBus.Execute(context.TODO(), deleteCommand)
 	if !commandResult.IsSuccess {
-		apiResponse.AppError(ctx, commandResult.Error)
+		apiResponse.ApplicationError(ctx, commandResult.Error)
 		return
 	}
 
@@ -123,11 +123,11 @@ func (c *PaymentController) ProcessPayment(ctx *gin.Context) {
 
 	commandResult := c.commandBus.Execute(context.TODO(), proccessPaymentCommand)
 	if !commandResult.IsSuccess {
-		apiResponse.AppError(ctx, commandResult.Error)
+		apiResponse.ApplicationError(ctx, commandResult.Error)
 		return
 	}
 
-	apiResponse.Ok(ctx, commandResult)
+	apiResponse.Success(ctx, commandResult)
 }
 
 // RefundPayment refunds a payment
@@ -153,11 +153,11 @@ func (c *PaymentController) RefundPayment(ctx *gin.Context) {
 
 	commandResult := c.commandBus.Execute(context.TODO(), refundPaymentCommand)
 	if !commandResult.IsSuccess {
-		apiResponse.AppError(ctx, commandResult.Error)
+		apiResponse.ApplicationError(ctx, commandResult.Error)
 		return
 	}
 
-	apiResponse.Ok(ctx, commandResult)
+	apiResponse.Success(ctx, commandResult)
 }
 
 // CancelPayment cancels a payment
@@ -183,9 +183,9 @@ func (c *PaymentController) CancelPayment(ctx *gin.Context) {
 
 	commandResult := c.commandBus.Execute(context.TODO(), cancelPaymentCommand)
 	if !commandResult.IsSuccess {
-		apiResponse.AppError(ctx, commandResult.Error)
+		apiResponse.ApplicationError(ctx, commandResult.Error)
 		return
 	}
 
-	apiResponse.Ok(ctx, commandResult)
+	apiResponse.Success(ctx, commandResult)
 }

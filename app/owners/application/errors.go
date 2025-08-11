@@ -3,15 +3,15 @@ package ownerAppErr
 import (
 	"strconv"
 
-	appError "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/errors/application"
+	ApplicationError "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/errors/application"
 )
 
-func OwnerNotFoundError(id int) *appError.EntityNotFoundError {
-	return appError.NewEntityNotFoundError("Owner", strconv.Itoa(int(id)))
+func OwnerNotFoundError(id int) *ApplicationError.EntityNotFoundError {
+	return ApplicationError.NewEntityNotFoundError("Owner", strconv.Itoa(int(id)))
 }
 
-func PhoneConflictError() *appError.ConflictError {
-	return appError.NewConflictError("phone number", "Phone Number Already Taken")
+func PhoneConflictError() *ApplicationError.ConflictError {
+	return ApplicationError.NewConflictError("phone number", "Phone Number Already Taken")
 }
 
 func HandleGetByIdError(err error, petId int) error {

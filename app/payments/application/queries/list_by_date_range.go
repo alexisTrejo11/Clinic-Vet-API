@@ -5,7 +5,7 @@ import (
 	"time"
 
 	paymentDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/payments/domain"
-	appError "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/errors/application"
+	ApplicationError "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/errors/application"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 )
 
@@ -52,7 +52,7 @@ func (h *listPaymentsByDateRangeHandler) Handle(ctx context.Context, query ListP
 }
 
 func PaymentRangeDateErr(startDate, endDate time.Time) error {
-	return appError.NewValidationError("start_date",
+	return ApplicationError.NewValidationError("start_date",
 		"startdate:"+startDate.String()+"- enddate"+endDate.String(),
 		"Start date cannot be after end date")
 }

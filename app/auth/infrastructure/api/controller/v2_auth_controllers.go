@@ -48,7 +48,7 @@ func (c *AuthController) Signup(ctx *gin.Context) {
 
 	result := c.singupHandler.Handle(singupRequest.ToCommand())
 	if !result.IsSuccess {
-		apiResponse.AppError(ctx, result.Error)
+		apiResponse.ApplicationError(ctx, result.Error)
 		return
 	}
 
@@ -69,7 +69,7 @@ func (c *AuthController) Login(ctx *gin.Context) {
 
 	session, err := c.loginHandler.Handle(requestlogin.ToCommand())
 	if err != nil {
-		apiResponse.AppError(ctx, err)
+		apiResponse.ApplicationError(ctx, err)
 		return
 	}
 
@@ -90,7 +90,7 @@ func (c *AuthController) Logout(ctx *gin.Context) {
 	}
 
 	if err := c.logoutHandler.Handle(*requestLogout.ToCommand()); err != nil {
-		apiResponse.AppError(ctx, err)
+		apiResponse.ApplicationError(ctx, err)
 		return
 	}
 
@@ -109,7 +109,7 @@ func (c *AuthController) LogoutAll(ctx *gin.Context) {
 		CTX:    ctx.Request.Context(),
 	}
 	if err := c.logoutAllHandler.Handle(command); err != nil {
-		apiResponse.AppError(ctx, err)
+		apiResponse.ApplicationError(ctx, err)
 		return
 	}
 

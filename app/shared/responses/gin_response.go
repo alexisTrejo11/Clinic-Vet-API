@@ -10,7 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func Ok(ctx *gin.Context, data interface{}) {
+func Success(ctx *gin.Context, data interface{}) {
 	response := APIResponse{}
 	response.SuccessRequest(data)
 
@@ -58,7 +58,7 @@ func Unauthorized(ctx *gin.Context, err error) {
 	ctx.JSON(401, errorResponse)
 }
 
-func Forbbbiden(ctx *gin.Context, err error) {
+func Forbidden(ctx *gin.Context, err error) {
 	response := APIResponse{}
 	errorResponse := response.ErrorRequest(err)
 
@@ -71,7 +71,7 @@ func ServerError(ctx *gin.Context, err error) {
 	ctx.JSON(500, errorResponse)
 }
 
-func AppError(ctx *gin.Context, err error) {
+func ApplicationError(ctx *gin.Context, err error) {
 	response := APIResponse{}
 	errorResponse := response.ErrorRequest(err)
 	httpStatusCode := http.StatusInternalServerError

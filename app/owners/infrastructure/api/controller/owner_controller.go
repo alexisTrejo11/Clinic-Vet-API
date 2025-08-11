@@ -40,11 +40,11 @@ func (c *OwnerController) ListOwners(ctx *gin.Context) {
 
 	owners, err := c.ownerUseCases.ListOwners(context.TODO(), *searchParams)
 	if err != nil {
-		apiResponse.AppError(ctx, err)
+		apiResponse.ApplicationError(ctx, err)
 		return
 	}
 
-	apiResponse.Ok(ctx, owners)
+	apiResponse.Success(ctx, owners)
 }
 
 func (c *OwnerController) GetOwnerById(ctx *gin.Context) {
@@ -62,11 +62,11 @@ func (c *OwnerController) GetOwnerById(ctx *gin.Context) {
 
 	owner, err := c.ownerUseCases.GetOwnerById(context.TODO(), id, includePets)
 	if err != nil {
-		apiResponse.AppError(ctx, err)
+		apiResponse.ApplicationError(ctx, err)
 		return
 	}
 
-	apiResponse.Ok(ctx, owner)
+	apiResponse.Success(ctx, owner)
 }
 
 func (c *OwnerController) CreateOwner(ctx *gin.Context) {
@@ -84,7 +84,7 @@ func (c *OwnerController) CreateOwner(ctx *gin.Context) {
 
 	owner, err := c.ownerUseCases.CreateOwner(context.TODO(), ownerCreate)
 	if err != nil {
-		apiResponse.AppError(ctx, err)
+		apiResponse.ApplicationError(ctx, err)
 		return
 	}
 
@@ -111,11 +111,11 @@ func (c *OwnerController) UpdateOwner(ctx *gin.Context) {
 
 	Owner, err := c.ownerUseCases.UpdateOwner(context.TODO(), id, ownerUpdate)
 	if err != nil {
-		apiResponse.AppError(ctx, err)
+		apiResponse.ApplicationError(ctx, err)
 		return
 	}
 
-	apiResponse.Ok(ctx, Owner)
+	apiResponse.Success(ctx, Owner)
 }
 
 func (c *OwnerController) DeleteOwner(ctx *gin.Context) {
@@ -126,7 +126,7 @@ func (c *OwnerController) DeleteOwner(ctx *gin.Context) {
 	}
 
 	if err := c.ownerUseCases.DeleteOwner(context.TODO(), id); err != nil {
-		apiResponse.AppError(ctx, err)
+		apiResponse.ApplicationError(ctx, err)
 		return
 	}
 

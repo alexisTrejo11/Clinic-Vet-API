@@ -8,8 +8,8 @@ import (
 )
 
 type RefundPaymentCommand struct {
-	paymentId int    `json:"payment_id"`
-	reason    string `json:"reason"`
+	paymentId int
+	reason    string
 }
 
 func NewRefundPaymentCommand(paymentId int, reason string) RefundPaymentCommand {

@@ -38,12 +38,12 @@ func (c *PaymentQueryController) SearchPayments(ctx *gin.Context) {
 
 	payments, err := c.queryBus.Execute(context.TODO(), searchPaymentCommand)
 	if err != nil {
-		apiResponse.AppError(ctx, err)
+		apiResponse.ApplicationError(ctx, err)
 		return
 	}
 
 	response := paymentDTOs.ToPaymentListResponse(payments)
-	apiResponse.Ok(ctx, response)
+	apiResponse.Success(ctx, response)
 }
 
 func (c *PaymentQueryController) GetPayment(ctx *gin.Context) {
@@ -56,12 +56,12 @@ func (c *PaymentQueryController) GetPayment(ctx *gin.Context) {
 	getPaymentQuery := paymentQuery.NewGetPaymentByIdQuery(paymentId)
 	payment, err := c.queryBus.Execute(context.TODO(), getPaymentQuery)
 	if err != nil {
-		apiResponse.AppError(ctx, err)
+		apiResponse.ApplicationError(ctx, err)
 		return
 	}
 
 	response := paymentDTOs.ToPaymentResponse(payment)
-	apiResponse.Ok(ctx, response)
+	apiResponse.Success(ctx, response)
 }
 
 func (c *PaymentQueryController) GetPaymentsByUser(ctx *gin.Context) {
@@ -74,12 +74,12 @@ func (c *PaymentQueryController) GetPaymentsByUser(ctx *gin.Context) {
 	listByUserQuery := paymentQuery.NewListPaymentsByUserQuery(userId, c.parsePagination(ctx))
 	paymentPage, err := c.queryBus.Execute(context.TODO(), listByUserQuery)
 	if err != nil {
-		apiResponse.AppError(ctx, err)
+		apiResponse.ApplicationError(ctx, err)
 		return
 	}
 
 	response := paymentDTOs.ToPaymentListResponse(paymentPage)
-	apiResponse.Ok(ctx, response)
+	apiResponse.Success(ctx, response)
 }
 
 func (c *PaymentQueryController) GetPaymentsByStatus(ctx *gin.Context) {
@@ -96,12 +96,12 @@ func (c *PaymentQueryController) GetPaymentsByStatus(ctx *gin.Context) {
 	)
 
 	if err != nil {
-		apiResponse.AppError(ctx, err)
+		apiResponse.ApplicationError(ctx, err)
 		return
 	}
 
 	response := paymentDTOs.ToPaymentListResponse(payments)
-	apiResponse.Ok(ctx, response)
+	apiResponse.Success(ctx, response)
 }
 
 func (c *PaymentQueryController) GetOverduePayments(ctx *gin.Context) {
@@ -110,12 +110,12 @@ func (c *PaymentQueryController) GetOverduePayments(ctx *gin.Context) {
 
 	payments, err := c.queryBus.Execute(context.TODO(), paymentOverdueQuery)
 	if err != nil {
-		apiResponse.AppError(ctx, err)
+		apiResponse.ApplicationError(ctx, err)
 		return
 	}
 
 	response := paymentDTOs.ToPaymentListResponse(payments)
-	apiResponse.Ok(ctx, response)
+	apiResponse.Success(ctx, response)
 }
 
 /* func (c *PaymentQueryController) GeneratePaymentReport(ctx *gin.Context) {
@@ -141,12 +141,12 @@ func (c *PaymentQueryController) GetOverduePayments(ctx *gin.Context) {
 
 	report, err := c.paymentService.GeneratePaymentReport(startDate, endDate)
 	if err != nil {
-		apiResponse.AppError(ctx, err)
+		apiResponse.ApplicationError(ctx, err)
 		return
 	}
 
 	response := paymentDTOs.ToPaymentReportResponse(report)
-	apiResponse.Ok(ctx, response)
+	apiResponse.Success(ctx, response)
 } */
 
 func (c *PaymentQueryController) GetPaymentsByDateRange(ctx *gin.Context) {
@@ -160,12 +160,12 @@ func (c *PaymentQueryController) GetPaymentsByDateRange(ctx *gin.Context) {
 
 	payments, err := c.queryBus.Execute(context.TODO(), paymentsByDateRangeQuery)
 	if err != nil {
-		apiResponse.AppError(ctx, err)
+		apiResponse.ApplicationError(ctx, err)
 		return
 	}
 
 	response := paymentDTOs.ToPaymentListResponse(payments)
-	apiResponse.Ok(ctx, response)
+	apiResponse.Success(ctx, response)
 }
 
 func (c *PaymentQueryController) parseSearchRequest(ctx *gin.Context) paymentDTOs.PaymentSearchRequest {

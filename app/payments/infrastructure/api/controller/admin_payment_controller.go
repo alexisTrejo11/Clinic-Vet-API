@@ -73,11 +73,11 @@ func (c *AdminPaymentController) CancelPayment(ctx *gin.Context) {
 func (c *AdminPaymentController) MarkOverduePayments(ctx *gin.Context) {
 	commandResult := c.commandBus.Execute(context.TODO(), paymentCmd.MarkOverduePaymentsCommand{})
 	if !commandResult.IsSuccess {
-		apiResponse.AppError(ctx, commandResult.Error)
+		apiResponse.ApplicationError(ctx, commandResult.Error)
 		return
 	}
 
-	apiResponse.Ok(ctx, commandResult)
+	apiResponse.Success(ctx, commandResult)
 }
 
 // GetOverduePayments delegates to query controller

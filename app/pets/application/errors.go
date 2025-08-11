@@ -1,17 +1,17 @@
-package petAppError
+package petApplicationError
 
 import (
 	"strconv"
 
-	appError "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/errors/application"
+	ApplicationError "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/errors/application"
 )
 
-func OwnerNotFoundError(id int) *appError.ValidationError {
-	return appError.NewValidationError("Owner ", strconv.Itoa(int(id)), "Invalid owner Id provided")
+func OwnerNotFoundError(id int) *ApplicationError.ValidationError {
+	return ApplicationError.NewValidationError("Owner ", strconv.Itoa(int(id)), "Invalid owner Id provided")
 }
 
-func PetNotFoundError(id int) *appError.EntityNotFoundError {
-	return appError.NewEntityNotFoundError("Pet", strconv.Itoa(int(id)))
+func PetNotFoundError(id int) *ApplicationError.EntityNotFoundError {
+	return ApplicationError.NewEntityNotFoundError("Pet", strconv.Itoa(int(id)))
 }
 
 func HandleGetByIdError(err error, petId int) error {

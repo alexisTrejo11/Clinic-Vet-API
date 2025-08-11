@@ -4,7 +4,7 @@ import (
 	"context"
 
 	ownerRepository "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/application/repository"
-	petAppError "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application"
+	petApplicationError "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application"
 	petDTOs "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application/dtos"
 	petMapper "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application/mapper"
 	petRepository "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application/repositories"
@@ -25,7 +25,7 @@ func NewUpdatePetUseCase(petRepository petRepository.PetRepository, ownerReposit
 func (uc UpdatePetUseCase) Execute(ctx context.Context, petId int, petUpdate petDTOs.PetUpdate) (petDTOs.PetResponse, error) {
 	pet, err := uc.petRepository.GetById(ctx, petId)
 	if err != nil {
-		return petDTOs.PetResponse{}, petAppError.HandleGetByIdError(err, petId)
+		return petDTOs.PetResponse{}, petApplicationError.HandleGetByIdError(err, petId)
 	}
 
 	if petUpdate.OwnerID != nil {
@@ -45,7 +45,7 @@ func (uc UpdatePetUseCase) Execute(ctx context.Context, petId int, petUpdate pet
 func (uc UpdatePetUseCase) validate_owner(ctx context.Context, owner_id int) error {
 	_, err := uc.ownerRepository.GetById(ctx, owner_id, false)
 	if err != nil {
-		notFounderr := petAppError.HandleGetByIdError(err, owner_id)
+		notFounderr := petApplicationError.HandleGetByIdError(err, owner_id)
 		return notFounderr
 	}
 
