@@ -8,14 +8,15 @@ import (
 )
 
 type GetAllAppointmentsQuery struct {
-	Page     int `json:"page"`
-	PageSize int `json:"page_size"`
+	pageInput page.PageData `json:"page_data"`
 }
 
-func NewGetAllAppointmentsQuery(page, pageSize int) GetAllAppointmentsQuery {
+func NewGetAllAppointmentsQuery(pageNumber, pageSize int) GetAllAppointmentsQuery {
 	return GetAllAppointmentsQuery{
-		Page:     page,
-		PageSize: pageSize,
+		pageInput: page.PageData{
+			PageNumber: pageNumber,
+			PageSize:   pageSize,
+		},
 	}
 }
 
@@ -34,37 +35,17 @@ func NewGetAllAppointmentsHandler(appointmentRepo appointmentDomain.AppointmentR
 }
 
 func (h *getAllAppointmentsHandler) Handle(ctx context.Context, query GetAllAppointmentsQuery) (*page.Page[[]AppointmentResponse], error) {
-	// Get all appointments (in a real implementation, this would use pagination from the repository)
-	appointments, err := h.appointmentRepo.ListAll(ctx)
+	appointmentPage, err := h.appointmentRepo.ListAll(ctx, query.pageInput)
 	if err != nil {
 		return nil, err
 	}
 
-	// Convert to responses
-	responses := mapAppointmentsToResponses(appointments)
-
-	// Calculate pagination manually (in a real implementation, this would be done in the repository)
-	totalCount := len(responses)
-	pageData := page.PageData{
-		PageSize:   query.PageSize,
-		PageNumber: query.Page,
-	}
-
-	// Apply pagination to responses
-	startIndex := (query.Page - 1) * query.PageSize
-	endIndex := startIndex + query.PageSize
-
-	if startIndex > totalCount {
-		responses = []AppointmentResponse{}
-	} else {
-		if endIndex > totalCount {
-			endIndex = totalCount
+	if appointmentPage != nil {
+		if len(appointmentPage.Data) == 0 {
+			return page.NewPage([]AppointmentResponse{}, appointmentPage.Metadata), nil
 		}
-		responses = responses[startIndex:endIndex]
 	}
 
-	// Calculate metadata
-	metadata := page.GetPageMetadata(totalCount, pageData)
-
-	return page.NewPage(responses, *metadata), nil
+	responses := mapAppointmentsToResponses(appointmentPage.Data)
+	return page.NewPage(responses, appointmentPage.Metadata), nil
 }

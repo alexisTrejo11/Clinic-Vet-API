@@ -6,6 +6,7 @@ import (
 	"time"
 
 	appointmentDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/appointment/domain"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 )
 
 type GetAppointmentStatsQuery struct {
@@ -41,12 +42,20 @@ func NewGetAppointmentStatsHandler(appointmentRepo appointmentDomain.Appointment
 func (h *getAppointmentStatsHandler) Handle(ctx context.Context, query GetAppointmentStatsQuery) (*AppointmentStatsResponse, error) {
 	var appointments []appointmentDomain.Appointment
 	var err error
+	maxPage := page.PageData{
+		PageNumber: 1,
+		PageSize:   10000,
+	}
 
 	// Get appointments based on filters
 	if query.StartDate != nil && query.EndDate != nil {
-		appointments, err = h.appointmentRepo.ListByDateRange(ctx, *query.StartDate, *query.EndDate)
+		appointmentsPage, err := h.appointmentRepo.ListByDateRange(ctx, *query.StartDate, *query.EndDate, maxPage)
+		appointments = appointmentsPage.Data
+		err = err
 	} else {
-		appointments, err = h.appointmentRepo.ListAll(ctx)
+		appointmentsPage, err := h.appointmentRepo.ListAll(ctx, maxPage)
+		appointments = appointmentsPage.Data
+		err = err
 	}
 
 	if err != nil {

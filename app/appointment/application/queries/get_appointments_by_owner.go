@@ -8,16 +8,17 @@ import (
 )
 
 type GetAppointmentsByOwnerQuery struct {
-	OwnerId  int `json:"owner_id"`
-	Page     int `json:"page"`
-	PageSize int `json:"page_size"`
+	OwnerId   int `json:"owner_id"`
+	PageInput page.PageData
 }
 
-func NewGetAppointmentsByOwnerQuery(ownerId, page, pageSize int) GetAppointmentsByOwnerQuery {
+func NewGetAppointmentsByOwnerQuery(ownerId, pageNumber, pageSize int) GetAppointmentsByOwnerQuery {
 	return GetAppointmentsByOwnerQuery{
-		OwnerId:  ownerId,
-		Page:     page,
-		PageSize: pageSize,
+		OwnerId: ownerId,
+		PageInput: page.PageData{
+			PageNumber: pageNumber,
+			PageSize:   pageSize,
+		},
 	}
 }
 
@@ -36,36 +37,13 @@ func NewGetAppointmentsByOwnerHandler(appointmentRepo appointmentDomain.Appointm
 }
 
 func (h *getAppointmentsByOwnerHandler) Handle(ctx context.Context, query GetAppointmentsByOwnerQuery) (*page.Page[[]AppointmentResponse], error) {
-	appointments, err := h.appointmentRepo.ListByOwnerId(ctx, query.OwnerId)
+	appointmentsPage, err := h.appointmentRepo.ListByOwnerId(ctx, query.OwnerId, query.PageInput)
 	if err != nil {
 		return nil, err
 	}
 
-	// Convert to responses
-	responses := mapAppointmentsToResponses(appointments)
-
-	// Calculate pagination manually
-	totalCount := len(responses)
-	pageData := page.PageData{
-		PageSize:   query.PageSize,
-		PageNumber: query.Page,
-	}
-
-	// Apply pagination to responses
-	startIndex := (query.Page - 1) * query.PageSize
-	endIndex := startIndex + query.PageSize
-
-	if startIndex > totalCount {
-		responses = []AppointmentResponse{}
-	} else {
-		if endIndex > totalCount {
-			endIndex = totalCount
-		}
-		responses = responses[startIndex:endIndex]
-	}
-
-	// Calculate metadata
-	metadata := page.GetPageMetadata(totalCount, pageData)
-
-	return page.NewPage(responses, *metadata), nil
+	return page.NewPage(
+		mapAppointmentsToResponses(appointmentsPage.Data),
+		appointmentsPage.Metadata,
+	), nil
 }

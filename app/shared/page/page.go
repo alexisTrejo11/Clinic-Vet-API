@@ -29,6 +29,7 @@ type Page[T any] struct {
 }
 
 func NewPage[T any](data T, metadata PageMetadata) *Page[T] {
+
 	return &Page[T]{
 		Data:     data,
 		Metadata: metadata,

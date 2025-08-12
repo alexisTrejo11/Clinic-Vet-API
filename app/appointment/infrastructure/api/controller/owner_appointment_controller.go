@@ -84,11 +84,7 @@ func (controller *OwnerAppointmentController) GetMyAppointments(ctx *gin.Context
 		return
 	}
 
-	query := appointmentQuery.GetAppointmentsByOwnerQuery{
-		OwnerId:  ownerId,
-		Page:     page,
-		PageSize: limit,
-	}
+	query := appointmentQuery.NewGetAppointmentsByOwnerQuery(ownerId, page, limit)
 
 	response, err := controller.queryBus.Execute(ctx, query)
 	if err != nil {
@@ -199,12 +195,7 @@ func (controller *OwnerAppointmentController) GetAppointmentsByPet(ctx *gin.Cont
 		return
 	}
 
-	query := appointmentQuery.GetAppointmentsByPetQuery{
-		PetId:    petId,
-		Page:     page,
-		PageSize: limit,
-	}
-
+	query := appointmentQuery.NewGetAppointmentsByPetQuery(petId, page, limit)
 	response, err := controller.queryBus.Execute(ctx, query)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -249,12 +240,7 @@ func (controller *OwnerAppointmentController) GetUpcomingAppointments(ctx *gin.C
 		return
 	}
 
-	query := appointmentQuery.GetAppointmentsByDateRangeQuery{
-		StartDate: startDate,
-		EndDate:   endDate,
-		Page:      page,
-		PageSize:  limit,
-	}
+	query := appointmentQuery.NewGetAppointmentsByDateRangeQuery(startDate, endDate, page, limit)
 
 	response, err := controller.queryBus.Execute(ctx, query)
 	if err != nil {

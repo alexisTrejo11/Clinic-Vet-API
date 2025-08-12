@@ -26,7 +26,7 @@ func NewAppointmentRoutes(
 // RegisterRoutes sets up all appointment-related routes
 func (r *AppointmentRoutes) RegisterRoutes(router *gin.Engine) {
 	// Admin/General appointment routes
-	appointmentGroup := router.Group("/api/v1/appointments")
+	appointmentGroup := router.Group("/api/v2/appointments")
 	{
 		// CRUD operations (admin access)
 		appointmentGroup.POST("", r.appointmentController.CreateAppointment)
@@ -44,7 +44,7 @@ func (r *AppointmentRoutes) RegisterRoutes(router *gin.Engine) {
 	}
 
 	// Owner-specific appointment routes
-	ownerGroup := router.Group("/api/v1/owner")
+	ownerGroup := router.Group("/api/v2/owner")
 	{
 		// Owner appointment management
 		ownerGroup.POST("/appointments", r.ownerAppointmentController.RequestAppointment)
@@ -58,7 +58,7 @@ func (r *AppointmentRoutes) RegisterRoutes(router *gin.Engine) {
 	}
 
 	// Veterinarian-specific appointment routes
-	vetGroup := router.Group("/api/v1/vet")
+	vetGroup := router.Group("/api/v2/vet")
 	{
 		// Vet appointment management
 		vetGroup.GET("/appointments", r.vetAppointmentController.GetMyAppointments)
@@ -76,7 +76,7 @@ func (r *AppointmentRoutes) RegisterRoutes(router *gin.Engine) {
 
 // RegisterOwnerRoutes registers only owner-specific appointment routes
 func (r *AppointmentRoutes) RegisterOwnerRoutes(router *gin.Engine) {
-	ownerGroup := router.Group("/api/v1/owner")
+	ownerGroup := router.Group("/api/v2/owner")
 	{
 		ownerGroup.POST("/appointments", r.ownerAppointmentController.RequestAppointment)
 		ownerGroup.GET("/appointments", r.ownerAppointmentController.GetMyAppointments)
@@ -89,7 +89,7 @@ func (r *AppointmentRoutes) RegisterOwnerRoutes(router *gin.Engine) {
 
 // RegisterVetRoutes registers only veterinarian-specific appointment routes
 func (r *AppointmentRoutes) RegisterVetRoutes(router *gin.Engine) {
-	vetGroup := router.Group("/api/v1/vet")
+	vetGroup := router.Group("/api/v2/vet")
 	{
 		vetGroup.GET("/appointments", r.vetAppointmentController.GetMyAppointments)
 		vetGroup.GET("/appointments/today", r.vetAppointmentController.GetTodayAppointments)
@@ -104,7 +104,7 @@ func (r *AppointmentRoutes) RegisterVetRoutes(router *gin.Engine) {
 
 // RegisterAdminRoutes registers only admin-specific appointment routes
 func (r *AppointmentRoutes) RegisterAdminRoutes(router *gin.Engine) {
-	appointmentGroup := router.Group("/api/v1/appointments")
+	appointmentGroup := router.Group("/api/v2/appointments")
 	{
 		appointmentGroup.POST("", r.appointmentController.CreateAppointment)
 		appointmentGroup.GET("", r.appointmentController.GetAllAppointments)

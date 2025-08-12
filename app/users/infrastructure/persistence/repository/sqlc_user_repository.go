@@ -6,6 +6,7 @@ import (
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 	user "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
 	userRepository "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/db/models"
 	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
 	"github.com/jackc/pgx/v5/pgtype"
 )
@@ -187,7 +188,7 @@ func (r *SQLCUserRepository) create(ctx context.Context, user *user.User) error 
 		Email:       pgtype.Text{String: user.Email().String(), Valid: true},
 		PhoneNumber: pgtype.Text{String: user.PhoneNumber().String(), Valid: true},
 		Password:    pgtype.Text{String: user.Password(), Valid: true},
-		Role:        user.Role(),
+		Role:        models.UserRole(user.Role()),
 		ProfileID:   pgtype.Int4{Valid: false},
 	})
 	if err != nil {
@@ -202,7 +203,7 @@ func (r *SQLCUserRepository) update(ctx context.Context, user *user.User) error 
 		Email:       pgtype.Text{String: user.Email().String(), Valid: true},
 		PhoneNumber: pgtype.Text{String: user.PhoneNumber().String(), Valid: true},
 		Password:    pgtype.Text{String: user.Password(), Valid: true},
-		Role:        user.Role(),
+		Role:        models.UserRole(user.Role()),
 	})
 	return err
 }

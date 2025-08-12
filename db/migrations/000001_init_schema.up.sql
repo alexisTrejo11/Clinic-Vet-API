@@ -35,9 +35,19 @@ BEGIN
             'cash', 'credit_card', 'debit_card', 'bank_transfer', 'paypal', 'stripe', 'check'
         );
     END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'clinic_service') THEN
+        CREATE TYPE clinic_service AS ENUM(
+            'general_consultation', 'vaccination', 'surgery', 'dental_care', 'emergency_care',
+            'grooming', 'nutrition_consult', 'behavior_consult', 'wellness_exam', 'other'
+        )
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'appointment_status') THEN
+        CREATE TYPE appointment_status AS ENUM('pending', 'cancelled', 'confirmed', 'rescheduled' ,'completed', 'not_presented');
+    END IF;
 END
 $$;
-
 
 CREATE TABLE IF NOT EXISTS owners (
     id SERIAL PRIMARY KEY,
@@ -193,3 +203,28 @@ CREATE TABLE IF NOT EXISTS payments (
     user_id INT NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
+
+
+CREATE TABLE IF NOT EXISTS appoinments(
+    id SERIAL PRIMARY KEY,
+    clinic_service clinic_service NOT NULL,
+    schedule_date TIMESTAMP WITH TIME ZONE NOT NULL,
+    status appointment_status NOT NULL,
+    reason TEXT NOT NULL DEFAULT '',
+    notes TEXT DEFAULT '',
+    owner_id INT NOT NULL,
+    veterinarian_id INT NOT NULL,
+    pet_id INT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL,
+    FOREIGN KEY (pet_id) REFERENCES pets(id) ON DELETE CASCADE,
+    FOREIGN KEY (owner_id) REFERENCES owners(id) ON DELETE CASCADE,
+    FOREIGN KEY (veterinarian_id) REFERENCES veterinarians(id) ON DELETE CASCADE
+);
+
+
+CREATE INDEX IF NOT EXISTS idx_appointment_owner_id ON appoinments(owner_id);
+CREATE INDEX IF NOT EXISTS idx_appointment_vet_id ON appoinments(veterinarian_id);
+CREATE INDEX IF NOT EXISTS idx_appointment_pet_id ON appoinments(pet_id);
+CREATE INDEX IF NOT EXISTS idx_appointment_status ON appoinments(status);

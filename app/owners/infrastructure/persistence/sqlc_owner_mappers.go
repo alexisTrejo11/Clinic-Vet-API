@@ -6,6 +6,7 @@ import (
 	ownerDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/domain"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
 	user "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
+	"github.com/alexisTrejo11/Clinic-Vet-API/db/models"
 	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
 	"github.com/jackc/pgx/v5/pgtype"
 )
@@ -14,7 +15,7 @@ func ToCreateParams(owner ownerDomain.Owner) *sqlc.CreateOwnerParams {
 	createOwnerParam := &sqlc.CreateOwnerParams{
 		Photo:       owner.Photo,
 		PhoneNumber: owner.PhoneNumber,
-		Gender:      owner.Gender,
+		Gender:      models.PersonGender(shared.AssertString(owner)),
 		DateOfBirth: pgtype.Date{Time: time.Date(owner.DateOfBirth.Year(), owner.DateOfBirth.Month(), owner.DateOfBirth.Day(), 0, 0, 0, 0, time.UTC), Valid: true},
 		FirstName:   owner.FullName.FirstName,
 		LastName:    owner.FullName.LastName,
@@ -37,7 +38,7 @@ func ToUpdateParams(owner ownerDomain.Owner) *sqlc.UpdateOwnerParams {
 		ID:          int32(owner.Id),
 		Photo:       owner.Photo,
 		PhoneNumber: owner.PhoneNumber,
-		Gender:      owner.Gender,
+		Gender:      models.PersonGender(shared.AssertString(owner)),
 		FirstName:   owner.FullName.FirstName,
 		DateOfBirth: pgtype.Date{Time: time.Date(owner.DateOfBirth.Year(), owner.DateOfBirth.Month(), owner.DateOfBirth.Day(), 0, 0, 0, 0, time.UTC), Valid: true},
 		LastName:    owner.FullName.LastName,
@@ -84,6 +85,7 @@ func ListRowToOwner(rows []sqlc.ListOwnersRow) ([]ownerDomain.Owner, error) {
 		if err != nil {
 			return []ownerDomain.Owner{}, err
 		}
+
 		owner := ownerDomain.Owner{
 			Id:          int(row.ID),
 			Photo:       row.Photo,

@@ -8,6 +8,7 @@ package sqlc
 import (
 	"context"
 
+	"github.com/alexisTrejo11/Clinic-Vet-API/db/models"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -48,8 +49,8 @@ INSERT INTO payments (
 type CreatePaymentParams struct {
 	Amount        pgtype.Numeric
 	Currency      string
-	Status        interface{}
-	Method        interface{}
+	Status        models.PaymentStatus
+	Method        models.PaymentMethod
 	TransactionID pgtype.Text
 	Description   pgtype.Text
 	Duedate       pgtype.Timestamptz
@@ -264,7 +265,7 @@ LIMIT $2 OFFSET $3
 `
 
 type ListPaymentsByStatusParams struct {
-	Status interface{}
+	Status models.PaymentStatus
 	Limit  int32
 	Offset int32
 }
@@ -390,8 +391,8 @@ RETURNING id, amount, currency, status, method, transaction_id, description, due
 type UpdatePaymentParams struct {
 	Amount        pgtype.Numeric
 	Currency      string
-	Status        interface{}
-	Method        interface{}
+	Status        models.PaymentStatus
+	Method        models.PaymentMethod
 	TransactionID pgtype.Text
 	Description   pgtype.Text
 	Duedate       pgtype.Timestamptz

@@ -8,6 +8,7 @@ package sqlc
 import (
 	"context"
 
+	"github.com/alexisTrejo11/Clinic-Vet-API/db/models"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -33,8 +34,8 @@ type CreateUserParams struct {
 	Email       pgtype.Text
 	PhoneNumber pgtype.Text
 	Password    pgtype.Text
-	Status      interface{}
-	Role        interface{}
+	Status      models.UserStatus
+	Role        models.UserRole
 	ProfileID   pgtype.Int4
 }
 
@@ -230,7 +231,7 @@ OFFSET $3
 `
 
 type ListUsersByRoleParams struct {
-	Role   interface{}
+	Role   models.UserRole
 	Limit  int32
 	Offset int32
 }
@@ -307,8 +308,8 @@ type UpdateUserParams struct {
 	Email       pgtype.Text
 	PhoneNumber pgtype.Text
 	Password    pgtype.Text
-	Status      interface{}
-	Role        interface{}
+	Status      models.UserStatus
+	Role        models.UserRole
 	ProfileID   pgtype.Int4
 }
 

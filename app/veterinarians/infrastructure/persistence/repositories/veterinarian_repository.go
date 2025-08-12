@@ -8,6 +8,7 @@ import (
 	vetDtos "github.com/alexisTrejo11/Clinic-Vet-API/app/veterinarians/application/dtos"
 	vetRepo "github.com/alexisTrejo11/Clinic-Vet-API/app/veterinarians/application/repositories"
 	vetDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/veterinarians/domain"
+	"github.com/alexisTrejo11/Clinic-Vet-API/db/models"
 	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
 	"github.com/jackc/pgx/v5/pgtype"
 )
@@ -45,7 +46,7 @@ func (r *SqlcVetRepository) List(ctx context.Context, searchParams vetDtos.VetSe
 	}
 
 	if searchParams.Filters.Specialty != nil {
-		params.Speciality = searchParams.Filters.Specialty.String()
+		params.Speciality = models.VeterinarianSpeciality(searchParams.Filters.Specialty.String())
 	}
 
 	if searchParams.Filters.YearsExperience != nil {
@@ -175,7 +176,7 @@ func (c *SqlcVetRepository) create(ctx context.Context, vet *vetDomain.Veterinar
 		LastName:          vet.Name.LastName,
 		LicenseNumber:     vet.LicenseNumber,
 		Photo:             vet.Photo,
-		Speciality:        vet.Specialty.String(),
+		Speciality:        models.VeterinarianSpeciality(vet.Specialty.String()),
 		YearsOfExperience: int32(vet.YearsExperience),
 		IsActive:          pgtype.Bool{Bool: vet.IsActive, Valid: true},
 	}
@@ -199,7 +200,7 @@ func (c *SqlcVetRepository) update(ctx context.Context, vet *vetDomain.Veterinar
 		LastName:          vet.Name.LastName,
 		LicenseNumber:     vet.LicenseNumber,
 		Photo:             vet.Photo,
-		Speciality:        vet.Specialty.String(),
+		Speciality:        models.VeterinarianSpeciality(vet.Specialty.String()),
 		YearsOfExperience: int32(vet.YearsExperience),
 		IsActive:          pgtype.Bool{Bool: vet.IsActive, Valid: true},
 	}

@@ -18,17 +18,16 @@ const (
 
 type Appointment struct {
 	id            AppointmentId
-	petId         petDomain.PetId
-	ownerId       int
-	vetId         *vetDomain.VetId
 	service       ClinicService
 	scheduledDate time.Time
 	status        AppointmentStatus
 	reason        string
 	notes         *string
-
-	createdAt time.Time
-	updatedAt time.Time
+	ownerId       int
+	vetId         *vetDomain.VetId
+	petId         petDomain.PetId
+	createdAt     time.Time
+	updatedAt     time.Time
 }
 
 func NewAppointment(id AppointmentId, petId petDomain.PetId, ownerId int, vetId *vetDomain.VetId, service ClinicService, scheduledDate time.Time, status AppointmentStatus, createdAt, updatedAt time.Time) *Appointment {
@@ -204,4 +203,8 @@ func (a *Appointment) SetNotes(notes *string) {
 	} else {
 		a.notes = notes
 	}
+}
+
+func (a *Appointment) SetId(id AppointmentId) {
+	a.id = id
 }

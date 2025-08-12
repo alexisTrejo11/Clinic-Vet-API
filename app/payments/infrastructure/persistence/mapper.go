@@ -4,17 +4,18 @@ import (
 	"math/big"
 
 	paymentDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/payments/domain"
+	"github.com/alexisTrejo11/Clinic-Vet-API/db/models"
 	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
 func mapSQLCPaymentToDomain(sqlcPayment sqlc.Payment) (*paymentDomain.Payment, error) {
-	status, err := paymentDomain.NewPaymentStatus(sqlcPayment.Status.(string))
+	status, err := paymentDomain.NewPaymentStatus(string(sqlcPayment.Status))
 	if err != nil {
 		return nil, err
 	}
 
-	method, err := paymentDomain.NewPaymentMethod(sqlcPayment.Method.(string))
+	method, err := paymentDomain.NewPaymentMethod(string(sqlcPayment.Method))
 	if err != nil {
 		return nil, err
 	}
@@ -71,8 +72,8 @@ func mapDomainToCreateParams(payment *paymentDomain.Payment) sqlc.CreatePaymentP
 		Amount:        pgtype.Numeric{Int: big.NewInt(payment.Amount.Amount), Valid: true},
 		Currency:      payment.Amount.Currency,
 		TransactionID: pgtype.Text{String: *payment.TransactionId, Valid: payment.TransactionId != nil},
-		Status:        string(payment.Status),
-		Method:        string(payment.PaymentMethod),
+		Status:        models.PaymentStatus(string(payment.Status)),
+		Method:        models.PaymentMethod(string(payment.PaymentMethod)),
 		Description:   pgtype.Text{String: *payment.Description, Valid: payment.Description != nil},
 		Duedate:       pgtype.Timestamptz{Time: *payment.DueDate, Valid: payment.DueDate != nil},
 		PaidAt:        pgtype.Timestamptz{Time: *payment.PaidAt, Valid: payment.PaidAt != nil},
@@ -86,8 +87,8 @@ func mapDomainToUpdateParams(payment *paymentDomain.Payment) sqlc.UpdatePaymentP
 		Amount:        pgtype.Numeric{Int: big.NewInt(payment.Amount.Amount), Valid: true},
 		Currency:      payment.Amount.Currency,
 		TransactionID: pgtype.Text{String: *payment.TransactionId, Valid: payment.TransactionId != nil},
-		Status:        string(payment.Status),
-		Method:        string(payment.PaymentMethod),
+		Status:        models.PaymentStatus(string(payment.Status)),
+		Method:        models.PaymentMethod(string(payment.PaymentMethod)),
 		UserID:        int32(payment.UserId),
 		Description:   pgtype.Text{String: *payment.Description, Valid: payment.Description != nil},
 		Duedate:       pgtype.Timestamptz{Time: *payment.DueDate, Valid: payment.DueDate != nil},

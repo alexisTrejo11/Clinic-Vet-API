@@ -31,16 +31,16 @@ func (c *VetAppointmentController) GetMyAppointments(ctx *gin.Context) {
 	page, _ := strconv.Atoi(ctx.DefaultQuery("page", "1"))
 	pageSize, _ := strconv.Atoi(ctx.DefaultQuery("pageSize", "10"))
 
-	// Get vet ID from JWT context (assuming it's set by auth middleware)
+	// Get vet id from JWT context (assuming it's set by auth middleware)
 	vetIdInterface, exists := ctx.Get("vet_id")
 	if !exists {
-		responses.Unauthorized(ctx, errors.New("Vet ID not found in context"))
+		responses.Unauthorized(ctx, errors.New("vet id not found in context"))
 		return
 	}
 
 	vetId, ok := vetIdInterface.(int)
 	if !ok {
-		responses.BadRequest(ctx, errors.New("Invalid vet ID format"))
+		responses.BadRequest(ctx, errors.New("invalid vet id format"))
 		return
 	}
 
@@ -57,26 +57,13 @@ func (c *VetAppointmentController) GetMyAppointments(ctx *gin.Context) {
 // GetTodayAppointments retrieves today's appointments for the current veterinarian
 // GET /vet/appointments/today
 func (c *VetAppointmentController) GetTodayAppointments(ctx *gin.Context) {
-	// Get vet ID from JWT context
-	vetIdInterface, exists := ctx.Get("vet_id")
-	if !exists {
-		responses.Unauthorized(ctx, errors.New("Vet ID not found in context"))
-		return
-	}
-
-	vetId, ok := vetIdInterface.(int)
-	if !ok {
-		responses.BadRequest(ctx, errors.New("Invalid vet ID format"))
-		return
-	}
-
 	// Get today's date range
 	now := time.Now()
 	startOfDay := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
 	endOfDay := startOfDay.Add(24 * time.Hour).Add(-time.Nanosecond)
 
 	query := appointmentQuery.NewGetAppointmentsByDateRangeQuery(
-		startOfDay, endOfDay, &vetId, nil, nil, 1, 50,
+		startOfDay, endOfDay, 1, 5000,
 	)
 	result, err := c.queryBus.Execute(context.Background(), query)
 	if err != nil {
@@ -96,16 +83,16 @@ func (c *VetAppointmentController) ConfirmAppointment(ctx *gin.Context) {
 		return
 	}
 
-	// Get vet ID from JWT context
+	// Get vet id from JWT context
 	vetIdInterface, exists := ctx.Get("vet_id")
 	if !exists {
-		responses.Unauthorized(ctx, errors.New("Vet ID not found in context"))
+		responses.Unauthorized(ctx, errors.New("vet id not found in context"))
 		return
 	}
 
 	vetId, ok := vetIdInterface.(int)
 	if !ok {
-		responses.BadRequest(ctx, errors.New("Invalid vet ID format"))
+		responses.BadRequest(ctx, errors.New("invalid vet id format"))
 		return
 	}
 
@@ -141,16 +128,16 @@ func (c *VetAppointmentController) CompleteAppointment(ctx *gin.Context) {
 		return
 	}
 
-	// Get vet ID from JWT context to verify the appointment belongs to this vet
+	// Get vet id from JWT context to verify the appointment belongs to this vet
 	vetIdInterface, exists := ctx.Get("vet_id")
 	if !exists {
-		responses.Unauthorized(ctx, errors.New("Vet ID not found in context"))
+		responses.Unauthorized(ctx, errors.New("vet id not found in context"))
 		return
 	}
 
 	vetId, ok := vetIdInterface.(int)
 	if !ok {
-		responses.BadRequest(ctx, errors.New("Invalid vet ID format"))
+		responses.BadRequest(ctx, errors.New("invalid vet id format"))
 		return
 	}
 
@@ -165,7 +152,7 @@ func (c *VetAppointmentController) CompleteAppointment(ctx *gin.Context) {
 	appointment := getResult.(*appointmentQuery.AppointmentResponse)
 
 	if appointment.VetId == nil || *appointment.VetId != vetId {
-		responses.Forbidden(ctx, errors.New("Access denied: You can only complete your own appointments"))
+		responses.Forbidden(ctx, errors.New("access denied: you can only complete your own appointments"))
 		return
 	}
 
@@ -201,16 +188,16 @@ func (c *VetAppointmentController) CancelAppointment(ctx *gin.Context) {
 		return
 	}
 
-	// Get vet ID from JWT context to verify the appointment belongs to this vet
+	// Get vet id from JWT context to verify the appointment belongs to this vet
 	vetIdInterface, exists := ctx.Get("vet_id")
 	if !exists {
-		responses.Unauthorized(ctx, errors.New("Vet ID not found in context"))
+		responses.Unauthorized(ctx, errors.New("vet id not found in context"))
 		return
 	}
 
 	vetId, ok := vetIdInterface.(int)
 	if !ok {
-		responses.BadRequest(ctx, errors.New("Invalid vet ID format"))
+		responses.BadRequest(ctx, errors.New("invalid vet id format"))
 		return
 	}
 
@@ -225,7 +212,7 @@ func (c *VetAppointmentController) CancelAppointment(ctx *gin.Context) {
 	appointment := getResult.(*appointmentQuery.AppointmentResponse)
 
 	if appointment.VetId == nil || *appointment.VetId != vetId {
-		responses.Forbidden(ctx, errors.New("Access denied: You can only cancel your own appointments"))
+		responses.Forbidden(ctx, errors.New("access denied: you can only cancel your own appointments"))
 		return
 	}
 
@@ -252,16 +239,16 @@ func (c *VetAppointmentController) MarkAsNoShow(ctx *gin.Context) {
 		return
 	}
 
-	// Get vet ID from JWT context to verify the appointment belongs to this vet
+	// Get vet id from JWT context to verify the appointment belongs to this vet
 	vetIdInterface, exists := ctx.Get("vet_id")
 	if !exists {
-		responses.Unauthorized(ctx, errors.New("Vet ID not found in context"))
+		responses.Unauthorized(ctx, errors.New("vet id not found in context"))
 		return
 	}
 
 	vetId, ok := vetIdInterface.(int)
 	if !ok {
-		responses.BadRequest(ctx, errors.New("Invalid vet ID format"))
+		responses.BadRequest(ctx, errors.New("invalid vet id format"))
 		return
 	}
 
@@ -276,7 +263,7 @@ func (c *VetAppointmentController) MarkAsNoShow(ctx *gin.Context) {
 	appointment := getResult.(*appointmentQuery.AppointmentResponse)
 
 	if appointment.VetId == nil || *appointment.VetId != vetId {
-		responses.Forbidden(ctx, errors.New("Access denied: You can only mark your own appointments as no-show"))
+		responses.Forbidden(ctx, errors.New("access denied: you can only mark your own appointments as no-show"))
 		return
 	}
 
@@ -296,16 +283,16 @@ func (c *VetAppointmentController) MarkAsNoShow(ctx *gin.Context) {
 // GetAppointmentStats retrieves appointment statistics for the veterinarian
 // GET /vet/appointments/stats
 func (c *VetAppointmentController) GetAppointmentStats(ctx *gin.Context) {
-	// Get vet ID from JWT context
+	// Get vet id from JWT context
 	vetIdInterface, exists := ctx.Get("vet_id")
 	if !exists {
-		responses.Unauthorized(ctx, errors.New("Vet ID not found in context"))
+		responses.Unauthorized(ctx, errors.New("vet id not found in context"))
 		return
 	}
 
 	vetId, ok := vetIdInterface.(int)
 	if !ok {
-		responses.BadRequest(ctx, errors.New("Invalid vet ID format"))
+		responses.BadRequest(ctx, errors.New("invalid vet id format"))
 		return
 	}
 
@@ -349,16 +336,16 @@ func (c *VetAppointmentController) RescheduleAppointment(ctx *gin.Context) {
 
 	command.AppointmentId = appointmentId
 
-	// Get vet ID from JWT context to verify the appointment belongs to this vet
+	// Get vet id from JWT context to verify the appointment belongs to this vet
 	vetIdInterface, exists := ctx.Get("vet_id")
 	if !exists {
-		responses.Unauthorized(ctx, errors.New("Vet ID not found in context"))
+		responses.Unauthorized(ctx, errors.New("vet id not found in context"))
 		return
 	}
 
 	vetId, ok := vetIdInterface.(int)
 	if !ok {
-		responses.BadRequest(ctx, errors.New("Invalid vet ID format"))
+		responses.BadRequest(ctx, errors.New("invalid vet id format"))
 		return
 	}
 
@@ -373,7 +360,7 @@ func (c *VetAppointmentController) RescheduleAppointment(ctx *gin.Context) {
 	appointment := getResult.(*appointmentQuery.AppointmentResponse)
 
 	if appointment.VetId == nil || *appointment.VetId != vetId {
-		responses.Forbidden(ctx, errors.New("Access denied: You can only reschedule your own appointments"))
+		responses.Forbidden(ctx, errors.New("acccess denied: you can only reschedule your own appointments"))
 		return
 	}
 

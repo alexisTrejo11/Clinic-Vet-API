@@ -8,6 +8,7 @@ package sqlc
 import (
 	"context"
 
+	"github.com/alexisTrejo11/Clinic-Vet-API/db/models"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -29,7 +30,7 @@ type CreateVeterinarianParams struct {
 	LastName          string
 	Photo             string
 	LicenseNumber     string
-	Speciality        interface{}
+	Speciality        models.VeterinarianSpeciality
 	YearsOfExperience int32
 	IsActive          pgtype.Bool
 	Column8           []byte
@@ -164,7 +165,7 @@ type ListVeterinariansParams struct {
 	FirstName           string
 	LastName            string
 	LicenseNumber       string
-	Speciality          interface{}
+	Speciality          models.VeterinarianSpeciality
 	YearsOfExperience   int32
 	YearsOfExperience_2 int32
 	IsActive            pgtype.Bool
@@ -270,7 +271,7 @@ type UpdateVeterinarianParams struct {
 	LastName          string
 	Photo             string
 	LicenseNumber     string
-	Speciality        interface{}
+	Speciality        models.VeterinarianSpeciality
 	YearsOfExperience int32
 	IsActive          pgtype.Bool
 	Column8           []byte

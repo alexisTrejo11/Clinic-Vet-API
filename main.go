@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 
+	appointmentAPI "github.com/alexisTrejo11/Clinic-Vet-API/app/appointment/infrastructure/api"
 	mhDTOs "github.com/alexisTrejo11/Clinic-Vet-API/app/medical/application/dtos"
 	medHistUsecases "github.com/alexisTrejo11/Clinic-Vet-API/app/medical/application/usecase"
 	med_hist_controller "github.com/alexisTrejo11/Clinic-Vet-API/app/medical/infrastructure/api/controller"
@@ -130,6 +131,8 @@ func main() {
 	profileUseCase := userApplication.NewProfileUseCases(userRepo)
 	profileController := userController.NewProfileController(profileUseCase)
 	userRoutes.ProfileRoutes(router, profileController)
+
+	appointmentAPI.SetupAppoinmentAPI(router, queries)
 
 	router.Run()
 }

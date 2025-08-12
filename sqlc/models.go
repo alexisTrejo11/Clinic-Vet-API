@@ -5,8 +5,24 @@
 package sqlc
 
 import (
+	"github.com/alexisTrejo11/Clinic-Vet-API/db/models"
 	"github.com/jackc/pgx/v5/pgtype"
 )
+
+type Appoinment struct {
+	ID             int32
+	ClinicService  models.ClinicService
+	ScheduleDate   pgtype.Timestamptz
+	Status         models.AppointmentStatus
+	Reason         string
+	Notes          pgtype.Text
+	OwnerID        int32
+	VeterinarianID int32
+	PetID          int32
+	CreatedAt      pgtype.Timestamptz
+	UpdatedAt      pgtype.Timestamptz
+	DeletedAt      pgtype.Timestamp
+}
 
 type MedicalHistory struct {
 	ID             int32
@@ -31,7 +47,7 @@ type Owner struct {
 	Photo       string
 	PhoneNumber string
 	DateOfBirth pgtype.Date
-	Gender      interface{}
+	Gender      models.PersonGender
 	Address     pgtype.Text
 	UserID      pgtype.Int4
 	IsActive    bool
@@ -44,8 +60,8 @@ type Payment struct {
 	ID            int32
 	Amount        pgtype.Numeric
 	Currency      string
-	Status        interface{}
-	Method        interface{}
+	Status        models.PaymentStatus
+	Method        models.PaymentMethod
 	TransactionID pgtype.Text
 	Description   pgtype.Text
 	Duedate       pgtype.Timestamptz
@@ -95,8 +111,8 @@ type User struct {
 	Email       pgtype.Text
 	PhoneNumber pgtype.Text
 	Password    pgtype.Text
-	Status      interface{}
-	Role        interface{}
+	Status      models.UserStatus
+	Role        models.UserRole
 	ProfileID   pgtype.Int4
 	CreatedAt   pgtype.Timestamptz
 	UpdatedAt   pgtype.Timestamptz
@@ -109,7 +125,7 @@ type Veterinarian struct {
 	LastName          string
 	Photo             string
 	LicenseNumber     string
-	Speciality        interface{}
+	Speciality        models.VeterinarianSpeciality
 	YearsOfExperience int32
 	IsActive          pgtype.Bool
 	UserID            pgtype.Int4

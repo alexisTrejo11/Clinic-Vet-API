@@ -1,5 +1,7 @@
 package appointDomain
 
+import "errors"
+
 type AppointmentStatus string
 
 const (
@@ -7,8 +9,26 @@ const (
 	StatusCancelled    AppointmentStatus = "cancelled"
 	StatusCompleted    AppointmentStatus = "completed"
 	StatusRescheduled  AppointmentStatus = "rescheduled"
+	StatusConfirmed    AppointmentStatus = "confirmed"
 	StatusNotPresented AppointmentStatus = "not_presented"
 )
+
+func (as AppointmentStatus) IsValid() bool {
+	switch as {
+	case StatusPending, StatusCancelled, StatusCompleted, StatusRescheduled, StatusConfirmed, StatusNotPresented:
+		return true
+	default:
+		return false
+	}
+}
+
+func NewAppointmentStatus(status string) (AppointmentStatus, error) {
+	as := AppointmentStatus(status)
+	if !as.IsValid() {
+		return "", errors.New("invalid appointment status: " + string(as))
+	}
+	return as, nil
+}
 
 type ClinicService string
 

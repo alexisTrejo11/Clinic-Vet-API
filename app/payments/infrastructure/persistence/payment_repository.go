@@ -6,6 +6,7 @@ import (
 
 	paymentDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/payments/domain"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
+	"github.com/alexisTrejo11/Clinic-Vet-API/db/models"
 	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
 	"github.com/jackc/pgx/v5/pgtype"
 )
@@ -61,7 +62,7 @@ func (c *SQLCPaymentRepository) ListByUserId(ctx context.Context, userId int, pa
 
 func (c *SQLCPaymentRepository) ListByStatus(ctx context.Context, status paymentDomain.PaymentStatus, pageInput page.PageData) (*page.Page[[]paymentDomain.Payment], error) {
 	sqlRows, err := c.queries.ListPaymentsByStatus(ctx, sqlc.ListPaymentsByStatusParams{
-		Status: pgtype.Text{String: string(status), Valid: true},
+		Status: models.PaymentStatus(status),
 	})
 
 	if err != nil {

@@ -7,6 +7,8 @@ import (
 
 	appointmentCmd "github.com/alexisTrejo11/Clinic-Vet-API/app/appointment/application/command"
 	appointmentQuery "github.com/alexisTrejo11/Clinic-Vet-API/app/appointment/application/queries"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
+	apiResponse "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/responses"
 	"github.com/gin-gonic/gin"
 )
 
@@ -61,33 +63,30 @@ func (controller *AppointmentController) GetAppointmentById(ctx *gin.Context) {
 
 // Get all appointments with pagination
 func (controller *AppointmentController) GetAllAppointments(ctx *gin.Context) {
-	pageParam := ctx.DefaultQuery("page", "1")
+	pageParam := ctx.DefaultQuery("pageNumber", "1")
 	limitParam := ctx.DefaultQuery("pageSize", "10")
 
-	page, err := strconv.Atoi(pageParam)
+	pageNumber, err := strconv.Atoi(pageParam)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid page number"})
+		apiResponse.RequestURLQueryError(ctx, err)
 		return
 	}
 
 	limit, err := strconv.Atoi(limitParam)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid limit"})
+		apiResponse.RequestURLQueryError(ctx, err)
 		return
 	}
 
-	query := appointmentQuery.GetAllAppointmentsQuery{
-		Page:     page,
-		PageSize: limit,
-	}
+	query := appointmentQuery.NewGetAllAppointmentsQuery(pageNumber, limit)
 
 	response, err := controller.queryBus.Execute(ctx, query)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		apiResponse.ApplicationError(ctx, err)
 		return
 	}
 
-	ctx.JSON(http.StatusOK, response)
+	apiResponse.Success(ctx, response.(*page.Page[[]appointmentQuery.AppointmentResponse]))
 }
 
 // Update appointment
@@ -174,12 +173,7 @@ func (controller *AppointmentController) GetAppointmentsByDateRange(ctx *gin.Con
 		return
 	}
 
-	query := appointmentQuery.GetAppointmentsByDateRangeQuery{
-		StartDate: startDate,
-		EndDate:   endDate,
-		Page:      page,
-		PageSize:  limit,
-	}
+	query := appointmentQuery.NewGetAppointmentsByDateRangeQuery(startDate, endDate, page, limit)
 
 	response, err := controller.queryBus.Execute(ctx, query)
 	if err != nil {
@@ -214,11 +208,7 @@ func (controller *AppointmentController) GetAppointmentsByOwner(ctx *gin.Context
 		return
 	}
 
-	query := appointmentQuery.GetAppointmentsByOwnerQuery{
-		OwnerId:  ownerId,
-		Page:     page,
-		PageSize: limit,
-	}
+	query := appointmentQuery.NewGetAppointmentsByOwnerQuery(ownerId, page, limit)
 
 	response, err := controller.queryBus.Execute(ctx, query)
 	if err != nil {
@@ -253,11 +243,7 @@ func (controller *AppointmentController) GetAppointmentsByVet(ctx *gin.Context) 
 		return
 	}
 
-	query := appointmentQuery.GetAppointmentsByVetQuery{
-		VetId:    vetId,
-		Page:     page,
-		PageSize: limit,
-	}
+	query := appointmentQuery.NewGetAppointmentsByVetQuery(vetId, page, limit)
 
 	response, err := controller.queryBus.Execute(ctx, query)
 	if err != nil {
@@ -292,11 +278,7 @@ func (controller *AppointmentController) GetAppointmentsByPet(ctx *gin.Context) 
 		return
 	}
 
-	query := appointmentQuery.GetAppointmentsByPetQuery{
-		PetId:    petId,
-		Page:     page,
-		PageSize: limit,
-	}
+	query := appointmentQuery.NewGetAppointmentsByPetQuery(petId, page, limit)
 
 	response, err := controller.queryBus.Execute(ctx, query)
 	if err != nil {

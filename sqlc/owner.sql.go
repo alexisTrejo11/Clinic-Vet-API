@@ -8,6 +8,7 @@ package sqlc
 import (
 	"context"
 
+	"github.com/alexisTrejo11/Clinic-Vet-API/db/models"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -38,7 +39,7 @@ type CreateOwnerParams struct {
 	FirstName   string
 	LastName    string
 	PhoneNumber string
-	Gender      interface{}
+	Gender      models.PersonGender
 	Address     pgtype.Text
 	UserID      pgtype.Int4
 	IsActive    bool
@@ -51,7 +52,7 @@ type CreateOwnerRow struct {
 	FirstName   string
 	LastName    string
 	PhoneNumber string
-	Gender      interface{}
+	Gender      models.PersonGender
 	Address     pgtype.Text
 	UserID      pgtype.Int4
 	IsActive    bool
@@ -157,7 +158,7 @@ type GetOwnerByIDRow struct {
 	FirstName   string
 	LastName    string
 	PhoneNumber string
-	Gender      interface{}
+	Gender      models.PersonGender
 	Address     pgtype.Text
 	UserID      pgtype.Int4
 	IsActive    bool
@@ -200,7 +201,7 @@ type GetOwnerByPhoneRow struct {
 	FirstName   string
 	LastName    string
 	PhoneNumber string
-	Gender      interface{}
+	Gender      models.PersonGender
 	Address     pgtype.Text
 	UserID      pgtype.Int4
 	IsActive    bool
@@ -243,7 +244,7 @@ type GetOwnerByUserIDRow struct {
 	FirstName   string
 	LastName    string
 	PhoneNumber string
-	Gender      interface{}
+	Gender      models.PersonGender
 	Address     pgtype.Text
 	UserID      pgtype.Int4
 	IsActive    bool
@@ -309,7 +310,7 @@ type ListOwnersRow struct {
 	FirstName   string
 	LastName    string
 	PhoneNumber string
-	Gender      interface{}
+	Gender      models.PersonGender
 	Address     pgtype.Text
 	UserID      pgtype.Int4
 	IsActive    bool
@@ -375,7 +376,7 @@ type UpdateOwnerParams struct {
 	FirstName   string
 	LastName    string
 	PhoneNumber string
-	Gender      interface{}
+	Gender      models.PersonGender
 	Address     pgtype.Text
 	UserID      pgtype.Int4
 	IsActive    bool

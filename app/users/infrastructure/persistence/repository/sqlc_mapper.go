@@ -21,9 +21,12 @@ func MapUserFromSQLC(sqlRow sqlc.User) (*user.User, error) {
 		return nil, err
 	}
 
-	roleStr, _ := sqlRow.Role.(string)
+	roleVal, _ := sqlRow.Role.Value()
+	roleStr, _ := roleVal.(string)
 	role := user.UserRoleFromString(roleStr)
-	statusStr, _ := sqlRow.Status.(string)
+
+	statusVal, _ := sqlRow.Status.Value()
+	statusStr, _ := statusVal.(string)
 	status := user.UserStatusFromString(statusStr)
 
 	user, err := user.NewUser(

@@ -8,16 +8,17 @@ import (
 )
 
 type GetAppointmentsByPetQuery struct {
-	PetId    int `json:"pet_id"`
-	Page     int `json:"page"`
-	PageSize int `json:"page_size"`
+	PetId     int `json:"pet_id"`
+	PageInput page.PageData
 }
 
-func NewGetAppointmentsByPetQuery(petId, page, pageSize int) GetAppointmentsByPetQuery {
+func NewGetAppointmentsByPetQuery(petId, pageNumber, pageSize int) GetAppointmentsByPetQuery {
 	return GetAppointmentsByPetQuery{
-		PetId:    petId,
-		Page:     page,
-		PageSize: pageSize,
+		PetId: petId,
+		PageInput: page.PageData{
+			PageNumber: pageNumber,
+			PageSize:   pageSize,
+		},
 	}
 }
 
@@ -36,37 +37,13 @@ func NewGetAppointmentsByPetHandler(appointmentRepo appointmentDomain.Appointmen
 }
 
 func (h *getAppointmentsByPetHandler) Handle(ctx context.Context, query GetAppointmentsByPetQuery) (*page.Page[[]AppointmentResponse], error) {
-	// Using ListByPetId with empty query string (we'll filter by pet ID in the repo implementation)
-	appointments, err := h.appointmentRepo.ListByPetId(ctx, query.PetId, "")
+	appointmentsPage, err := h.appointmentRepo.ListByPetId(ctx, query.PetId, query.PageInput)
 	if err != nil {
 		return nil, err
 	}
 
-	// Convert to responses
-	responses := mapAppointmentsToResponses(appointments)
-
-	// Calculate pagination manually
-	totalCount := len(responses)
-	pageData := page.PageData{
-		PageSize:   query.PageSize,
-		PageNumber: query.Page,
-	}
-
-	// Apply pagination to responses
-	startIndex := (query.Page - 1) * query.PageSize
-	endIndex := startIndex + query.PageSize
-
-	if startIndex > totalCount {
-		responses = []AppointmentResponse{}
-	} else {
-		if endIndex > totalCount {
-			endIndex = totalCount
-		}
-		responses = responses[startIndex:endIndex]
-	}
-
-	// Calculate metadata
-	metadata := page.GetPageMetadata(totalCount, pageData)
-
-	return page.NewPage(responses, *metadata), nil
+	return page.NewPage(
+		mapAppointmentsToResponses(appointmentsPage.Data),
+		appointmentsPage.Metadata,
+	), nil
 }
