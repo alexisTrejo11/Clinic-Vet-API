@@ -13,7 +13,3 @@ func OwnerNotFoundError(id int) *ApplicationError.ValidationError {
 func PetNotFoundError(id int) *ApplicationError.EntityNotFoundError {
 	return ApplicationError.NewEntityNotFoundError("Pet", strconv.Itoa(int(id)))
 }
-
-func HandleGetByIdError(err error, petId int) error {
-	return err
-}

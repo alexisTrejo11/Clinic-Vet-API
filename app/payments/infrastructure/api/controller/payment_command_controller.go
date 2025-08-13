@@ -53,7 +53,7 @@ func (c *PaymentController) CreatePayment(ctx *gin.Context) {
 
 // UpdatePayment updates an existing payment
 func (c *PaymentController) UpdatePayment(ctx *gin.Context) {
-	id, err := utils.ParseID(ctx, "id")
+	id, err := utils.ParseParamToInt(ctx, "id")
 	if err != nil {
 		apiResponse.RequestURLParamError(ctx, err, "payment_id", ctx.Param("id"))
 		return
@@ -83,7 +83,7 @@ func (c *PaymentController) UpdatePayment(ctx *gin.Context) {
 
 // DeletePayment soft deletes a payment
 func (c *PaymentController) DeletePayment(ctx *gin.Context) {
-	id, err := utils.ParseID(ctx, "id")
+	id, err := utils.ParseParamToInt(ctx, "id")
 	if err != nil {
 		apiResponse.RequestURLParamError(ctx, err, "payment_id", ctx.Param("id"))
 		return
@@ -102,7 +102,7 @@ func (c *PaymentController) DeletePayment(ctx *gin.Context) {
 
 // ProcessPayment processes a payment
 func (c *PaymentController) ProcessPayment(ctx *gin.Context) {
-	id, err := utils.ParseID(ctx, "id")
+	id, err := utils.ParseParamToInt(ctx, "id")
 	if err != nil {
 		apiResponse.RequestURLParamError(ctx, err, "payment_id", ctx.Param("id"))
 		return
@@ -132,7 +132,7 @@ func (c *PaymentController) ProcessPayment(ctx *gin.Context) {
 
 // RefundPayment refunds a payment
 func (c *PaymentController) RefundPayment(ctx *gin.Context) {
-	id, err := utils.ParseID(ctx, "id")
+	id, err := utils.ParseParamToInt(ctx, "id")
 	if err != nil {
 		apiResponse.RequestURLParamError(ctx, err, "payment_id", ctx.Param("id"))
 		return
@@ -162,7 +162,7 @@ func (c *PaymentController) RefundPayment(ctx *gin.Context) {
 
 // CancelPayment cancels a payment
 func (c *PaymentController) CancelPayment(ctx *gin.Context) {
-	id, err := utils.ParseID(ctx, "id")
+	id, err := utils.ParseParamToInt(ctx, "id")
 	if err != nil {
 		apiResponse.RequestURLParamError(ctx, err, "payment_id", ctx.Param("id"))
 		return

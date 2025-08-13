@@ -95,7 +95,7 @@ func (cac OwnerAppointmentController) GetMyAppointments() fiber.Handler {
 
 func (cac OwnerAppointmentController) CancelAnAppointment() fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		appointmentID, err := utils.ParseID(c)
+		appointmentID, err := utils.ParseParamToInt(c)
 		if err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(responses.ErrorResponse{
 				Message: err.Error(),

@@ -6,6 +6,7 @@ import (
 	appointmentController "github.com/alexisTrejo11/Clinic-Vet-API/app/appointment/infrastructure/api/controller"
 	appointmentRoutes "github.com/alexisTrejo11/Clinic-Vet-API/app/appointment/infrastructure/api/routes"
 	appointmentRepo "github.com/alexisTrejo11/Clinic-Vet-API/app/appointment/infrastructure/persistence/repositories"
+	ownerRepository "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/application/repository"
 	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -14,12 +15,14 @@ import (
 type AppointmentApiFactory struct {
 	queries   *sqlc.Queries
 	validator *validator.Validate
+	ownerRepo ownerRepository.OwnerRepository
 }
 
-func NewAppointmentApiFactory(queries *sqlc.Queries, validator *validator.Validate) *AppointmentApiFactory {
+func NewAppointmentApiFactory(queries *sqlc.Queries, validator *validator.Validate, ownerRepo ownerRepository.OwnerRepository) *AppointmentApiFactory {
 	return &AppointmentApiFactory{
 		queries:   queries,
 		validator: validator,
+		ownerRepo: ownerRepo,
 	}
 }
 
@@ -32,7 +35,7 @@ func (factory *AppointmentApiFactory) CreateCommandController() *appointmentCont
 
 func (factory *AppointmentApiFactory) CreateQueryController() *appointmentController.AppointmentQueryController {
 	appointmentRepository := appointmentRepo.NewSQLCAppointmentRepository(factory.queries)
-	queryBus := appointmentQuery.NewAppointmentQueryBus(appointmentRepository)
+	queryBus := appointmentQuery.NewAppointmentQueryBus(appointmentRepository, factory.ownerRepo)
 
 	return appointmentController.NewAppointmentQueryController(queryBus, factory.validator)
 }
@@ -40,15 +43,16 @@ func (factory *AppointmentApiFactory) CreateQueryController() *appointmentContro
 func (factory *AppointmentApiFactory) CreateOwnerController() *appointmentController.OwnerAppointmentController {
 	appointmentRepository := appointmentRepo.NewSQLCAppointmentRepository(factory.queries)
 	commandBus := appointmentCmd.NewAppointmentCommandBus(appointmentRepository)
-	queryBus := appointmentQuery.NewAppointmentQueryBus(appointmentRepository)
+	queryBus := appointmentQuery.NewAppointmentQueryBus(appointmentRepository, factory.ownerRepo)
 
 	return appointmentController.NewOwnerAppointmentController(commandBus, queryBus)
 }
 
 func (factory *AppointmentApiFactory) CreateVetController() *appointmentController.VetAppointmentController {
 	appointmentRepository := appointmentRepo.NewSQLCAppointmentRepository(factory.queries)
+
 	commandBus := appointmentCmd.NewAppointmentCommandBus(appointmentRepository)
-	queryBus := appointmentQuery.NewAppointmentQueryBus(appointmentRepository)
+	queryBus := appointmentQuery.NewAppointmentQueryBus(appointmentRepository, factory.ownerRepo)
 
 	return appointmentController.NewVetAppointmentController(commandBus, queryBus)
 }
@@ -64,7 +68,7 @@ func (factory *AppointmentApiFactory) CreateRoutes(router *gin.Engine) *appointm
 	return routes
 }
 
-func SetupAppoinmentAPI(router *gin.Engine, queries *sqlc.Queries, validator *validator.Validate) {
-	factory := NewAppointmentApiFactory(queries, validator)
+func SetupAppoinmentAPI(router *gin.Engine, queries *sqlc.Queries, validator *validator.Validate, ownerRepo ownerRepository.OwnerRepository) {
+	factory := NewAppointmentApiFactory(queries, validator, ownerRepo)
 	factory.CreateRoutes(router)
 }

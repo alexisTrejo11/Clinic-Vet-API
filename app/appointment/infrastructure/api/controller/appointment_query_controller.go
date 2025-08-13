@@ -1,15 +1,11 @@
 package appointmentController
 
 import (
-	"net/http"
-	"strconv"
-
 	"errors"
 
 	appointmentQuery "github.com/alexisTrejo11/Clinic-Vet-API/app/appointment/application/queries"
 	appControllerDTO "github.com/alexisTrejo11/Clinic-Vet-API/app/appointment/infrastructure/api/dto"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 	response "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/responses"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -32,7 +28,7 @@ func NewAppointmentQueryController(
 
 // Get appointment by ID
 func (controller *AppointmentQueryController) GetAppointmentById(ctx *gin.Context) {
-	appointmentId, err := shared.ParseID(ctx, "id")
+	appointmentId, err := shared.ParseParamToInt(ctx, "id")
 	if err != nil {
 		response.RequestURLQueryError(ctx, err)
 		return
@@ -51,30 +47,23 @@ func (controller *AppointmentQueryController) GetAppointmentById(ctx *gin.Contex
 
 // Get all appointments with pagination
 func (controller *AppointmentQueryController) GetAllAppointments(ctx *gin.Context) {
-	pageParam := ctx.DefaultQuery("pageNumber", "1")
-	limitParam := ctx.DefaultQuery("pageSize", "10")
+	var pageParams appControllerDTO.PaginationRequest
 
-	pageNumber, err := strconv.Atoi(pageParam)
-	if err != nil {
+	if err := ctx.ShouldBindQuery(&pageParams); err != nil {
 		response.RequestURLQueryError(ctx, err)
 		return
 	}
 
-	limit, err := strconv.Atoi(limitParam)
-	if err != nil {
-		response.RequestURLQueryError(ctx, err)
-		return
-	}
+	pageParams.SetDefaultsIfNotProvided()
+	query := appointmentQuery.NewGetAllAppointmentsQuery(pageParams.PageNumber, pageParams.PageNumber)
 
-	query := appointmentQuery.NewGetAllAppointmentsQuery(pageNumber, limit)
-
-	appointment, err := controller.queryBus.Execute(ctx, query)
+	pageInterface, err := controller.queryBus.Execute(ctx, query)
 	if err != nil {
 		response.ApplicationError(ctx, err)
 		return
 	}
 
-	response.Success(ctx, appointment.(page.Page[[]appointmentQuery.AppointmentResponse]))
+	HandlePaginatedResponse(ctx, pageInterface, pageParams)
 }
 
 // Get appointments by date range
@@ -109,29 +98,20 @@ func (controller *AppointmentQueryController) GetAppointmentsByDateRange(ctx *gi
 
 // Get appointments by owner
 func (controller *AppointmentQueryController) GetAppointmentsByOwner(ctx *gin.Context) {
-	ownerIdParam := ctx.Param("ownerId")
-	ownerId, err := strconv.Atoi(ownerIdParam)
+	ownerId, err := shared.ParseParamToInt(ctx, "ownerId")
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid owner ID"})
+		response.RequestURLParamError(ctx, err, "ownerId", ctx.Param("ownerId"))
 		return
 	}
 
-	pageParam := ctx.DefaultQuery("page", "1")
-	limitParam := ctx.DefaultQuery("pageSize", "10")
-
-	page, err := strconv.Atoi(pageParam)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid page number"})
+	var pageParams appControllerDTO.PaginationRequest
+	if err := ctx.ShouldBindQuery(&pageParams); err != nil {
+		response.RequestURLQueryError(ctx, err)
 		return
 	}
 
-	limit, err := strconv.Atoi(limitParam)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid limit"})
-		return
-	}
-
-	query := appointmentQuery.NewGetAppointmentsByOwnerQuery(ownerId, page, limit)
+	pageParams.SetDefaultsIfNotProvided()
+	query := appointmentQuery.NewGetAppointmentsByOwnerQuery(ownerId, pageParams.PageNumber, pageParams.PageSize)
 
 	pageInterface, err := controller.queryBus.Execute(ctx, query)
 	if err != nil {
@@ -139,34 +119,29 @@ func (controller *AppointmentQueryController) GetAppointmentsByOwner(ctx *gin.Co
 		return
 	}
 
-	HandlePaginatedResponse(ctx, pageInterface, query)
+	HandlePaginatedResponse(ctx, pageInterface, pageParams)
 }
 
 // Get appointments by vet
 func (controller *AppointmentQueryController) GetAppointmentsByVet(ctx *gin.Context) {
-	vetIdParam := ctx.Param("vetId")
-	vetId, err := strconv.Atoi(vetIdParam)
+	vetId, err := shared.ParseParamToInt(ctx, "vetId")
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid vet ID"})
+		response.RequestURLParamError(ctx, err, "vetId", ctx.Param("vetId"))
 		return
 	}
 
-	pageParam := ctx.DefaultQuery("page", "1")
-	limitParam := ctx.DefaultQuery("pageSize", "10")
-
-	page, err := strconv.Atoi(pageParam)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid page number"})
+	var pageParams appControllerDTO.PaginationRequest
+	if err := ctx.ShouldBindQuery(&pageParams); err != nil {
+		response.RequestURLQueryError(ctx, err)
 		return
 	}
+	pageParams.SetDefaultsIfNotProvided()
 
-	limit, err := strconv.Atoi(limitParam)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid limit"})
-		return
-	}
-
-	query := appointmentQuery.NewGetAppointmentsByVetQuery(vetId, page, limit)
+	query := appointmentQuery.NewGetAppointmentsByVetQuery(
+		vetId,
+		pageParams.PageNumber,
+		pageParams.PageSize,
+	)
 
 	pageInterface, err := controller.queryBus.Execute(ctx, query)
 	if err != nil {
@@ -179,29 +154,24 @@ func (controller *AppointmentQueryController) GetAppointmentsByVet(ctx *gin.Cont
 
 // Get appointments by pet
 func (controller *AppointmentQueryController) GetAppointmentsByPet(ctx *gin.Context) {
-	petIdParam := ctx.Param("petId")
-	petId, err := strconv.Atoi(petIdParam)
+	petId, err := shared.ParseParamToInt(ctx, "petId")
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid pet ID"})
+		response.RequestURLParamError(ctx, err, "petId", ctx.Param("petId"))
 		return
 	}
 
-	pageParam := ctx.DefaultQuery("page", "1")
-	limitParam := ctx.DefaultQuery("pageSize", "10")
-
-	page, err := strconv.Atoi(pageParam)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid page number"})
+	var pageParams appControllerDTO.PaginationRequest
+	if err := ctx.ShouldBindQuery(&pageParams); err != nil {
+		response.RequestURLQueryError(ctx, err)
 		return
 	}
+	pageParams.SetDefaultsIfNotProvided()
 
-	limit, err := strconv.Atoi(limitParam)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid limit"})
-		return
-	}
-
-	query := appointmentQuery.NewGetAppointmentsByPetQuery(petId, page, limit)
+	query := appointmentQuery.NewGetAppointmentsByPetQuery(
+		petId,
+		pageParams.PageNumber,
+		pageParams.PageSize,
+	)
 
 	pageInterface, err := controller.queryBus.Execute(ctx, query)
 	if err != nil {

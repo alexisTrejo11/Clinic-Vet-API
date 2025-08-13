@@ -6,26 +6,30 @@ import (
 	user "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
 )
 
-func FromRequestCreate(ownerCreate ownerDTOs.OwnerCreate) ownerDomain.Owner {
+func FromRequestCreate(ownerCreate ownerDTOs.OwnerCreate) *ownerDomain.Owner {
 	fullName, _ := user.NewPersonName(ownerCreate.FirstName, ownerCreate.LastName)
-	return ownerDomain.Owner{
-		Photo:       ownerCreate.Photo,
-		FullName:    fullName,
-		PhoneNumber: ownerCreate.PhoneNumber,
-		Address:     ownerCreate.Address,
-		Gender:      ownerCreate.Gender,
-		IsActive:    true,
+
+	builder := ownerDomain.NewOwnerBuilder(0, fullName, ownerCreate.PhoneNumber).
+		WithGender(ownerCreate.Gender).
+		WithPhoto(ownerCreate.Photo).
+		WithDateOfBirth(ownerCreate.DateOfBirth)
+
+	if ownerCreate.Address != nil {
+		builder.WithAddress(*ownerCreate.Address)
 	}
+
+	newOwner := builder.Build()
+
+	return newOwner
 }
 
-func ToResponse(owner ownerDomain.Owner) *ownerDTOs.OwnerResponse {
+func ToResponse(owner *ownerDomain.Owner) *ownerDTOs.OwnerResponse {
 	return &ownerDTOs.OwnerResponse{
-		Id:          owner.Id,
-		Photo:       owner.Photo,
-		Name:        owner.FullName.FullName(),
-		PhoneNumber: owner.PhoneNumber,
-		Address:     owner.Address,
-		IsActive:    owner.IsActive,
+		Id:          owner.ID(),
+		Photo:       owner.Photo(),
+		Name:        owner.FullName().FullName(),
+		PhoneNumber: owner.PhoneNumber(),
+		Address:     owner.Address(),
+		IsActive:    owner.IsActive(),
 	}
-
 }

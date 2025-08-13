@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func ParseID(c *gin.Context, param_name string) (int, error) {
+func ParseParamToInt(c *gin.Context, param_name string) (int, error) {
 	idStr := c.Param(param_name)
 	if idStr == "" {
 		return 0, errors.New("empty id")

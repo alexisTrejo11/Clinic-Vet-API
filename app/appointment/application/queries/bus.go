@@ -6,6 +6,7 @@ import (
 	"reflect"
 
 	appointmentDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/appointment/domain"
+	ownerRepository "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/application/repository"
 	appError "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/errors/application"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 )
@@ -25,18 +26,21 @@ type appointmentQueryBus struct {
 	handlers map[reflect.Type]interface{}
 }
 
-func NewAppointmentQueryBus(appointmentRepo appointmentDomain.AppointmentRepository) QueryBus {
+func NewAppointmentQueryBus(
+	appointmentRepo appointmentDomain.AppointmentRepository,
+	ownerRepo ownerRepository.OwnerRepository,
+) QueryBus {
 	bus := &appointmentQueryBus{
 		handlers: make(map[reflect.Type]interface{}),
 	}
-	bus.registerHandlers(appointmentRepo)
+	bus.registerHandlers(appointmentRepo, ownerRepo)
 	return bus
 }
 
-func (bus *appointmentQueryBus) registerHandlers(appointmentRepo appointmentDomain.AppointmentRepository) {
+func (bus *appointmentQueryBus) registerHandlers(appointmentRepo appointmentDomain.AppointmentRepository, ownerRepo ownerRepository.OwnerRepository) {
 	bus.Register(reflect.TypeOf(GetAppointmentByIdQuery{}), NewGetAppointmentByIdHandler(appointmentRepo))
 	bus.Register(reflect.TypeOf(GetAllAppointmentsQuery{}), NewGetAllAppointmentsHandler(appointmentRepo))
-	bus.Register(reflect.TypeOf(GetAppointmentsByOwnerQuery{}), NewGetAppointmentsByOwnerHandler(appointmentRepo))
+	bus.Register(reflect.TypeOf(GetAppointmentsByOwnerQuery{}), NewGetAppointmentsByOwnerHandler(appointmentRepo, ownerRepo))
 	bus.Register(reflect.TypeOf(GetAppointmentsByVetQuery{}), NewGetAppointmentsByVetHandler(appointmentRepo))
 	bus.Register(reflect.TypeOf(GetAppointmentsByPetQuery{}), NewGetAppointmentsByPetHandler(appointmentRepo))
 	bus.Register(reflect.TypeOf(GetAppointmentsByDateRangeQuery{}), NewGetAppointmentsByDateRangeHandler(appointmentRepo))

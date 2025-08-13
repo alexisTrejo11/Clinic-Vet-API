@@ -9,23 +9,96 @@ import (
 )
 
 type Owner struct {
-	Id          int
-	Photo       string
-	FullName    user.PersonName
-	Gender      user.Gender
-	DateOfBirth time.Time
-	PhoneNumber string
-	Address     *string
-	UserId      *int
-	IsActive    bool
-	Pets        []petDomain.Pet
+	id          int
+	photo       string
+	fullName    user.PersonName
+	gender      user.Gender
+	dateOfBirth time.Time
+	phoneNumber string
+	address     *string
+	userId      *int
+	isActive    bool
+	pets        []petDomain.Pet
 }
 
-func (o *Owner) GetPetById(petId int) (*petDomain.Pet, error) {
-	for _, pet := range o.Pets {
-		if pet.Id == petId {
-			return &pet, nil
-		}
+func NewOwner(id int, photo string, fullName user.PersonName, gender user.Gender, dateOfBirth time.Time, phoneNumber string) (*Owner, error) {
+	if id <= 0 {
+		return nil, errors.New("owner ID must be a positive integer")
 	}
-	return nil, errors.New("pet not found")
+
+	return &Owner{
+		id:          id,
+		photo:       photo,
+		fullName:    fullName,
+		gender:      gender,
+		dateOfBirth: dateOfBirth,
+		phoneNumber: phoneNumber,
+		isActive:    true,
+	}, nil
+}
+
+// --- Getters ---
+func (o *Owner) ID() int {
+	return o.id
+}
+
+func (o *Owner) Photo() string {
+	return o.photo
+}
+
+func (o *Owner) FullName() user.PersonName {
+	return o.fullName
+}
+
+func (o *Owner) Gender() user.Gender {
+	return o.gender
+}
+
+func (o *Owner) DateOfBirth() time.Time {
+	return o.dateOfBirth
+}
+
+func (o *Owner) PhoneNumber() string {
+	return o.phoneNumber
+}
+
+func (o *Owner) Address() *string {
+	return o.address
+}
+
+func (o *Owner) UserID() *int {
+	return o.userId
+}
+
+func (o *Owner) IsActive() bool {
+	return o.isActive
+}
+
+func (o *Owner) Pets() []petDomain.Pet {
+	return o.pets
+}
+
+// --- Setters ---
+func (o *Owner) SetPhoto(photo string) {
+	o.photo = photo
+}
+
+func (o *Owner) SetPhoneNumber(phoneNumber string) {
+	o.phoneNumber = phoneNumber
+}
+
+func (o *Owner) SetAddress(address string) {
+	o.address = &address
+}
+
+func (o *Owner) AddPet(pet petDomain.Pet) {
+	o.pets = append(o.pets, pet)
+}
+
+func (o *Owner) SetActive(status bool) {
+	o.isActive = status
+}
+
+func (o *Owner) SetFullName(fullName user.PersonName) {
+	o.fullName = fullName
 }

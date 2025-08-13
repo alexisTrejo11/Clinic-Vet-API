@@ -12,17 +12,17 @@ import (
 )
 
 type OwnerController struct {
-	validator     *validator.Validate
-	ownerUseCases ownerUsecase.OwnerUseCases
+	validator   *validator.Validate
+	ownerFacade ownerUsecase.OwnerFacade
 }
 
 func NewOwnerController(
 	validator *validator.Validate,
-	ownerUseCases ownerUsecase.OwnerUseCases,
+	ownerFacade ownerUsecase.OwnerFacade,
 ) *OwnerController {
 	return &OwnerController{
-		validator:     validator,
-		ownerUseCases: ownerUseCases,
+		validator:   validator,
+		ownerFacade: ownerFacade,
 	}
 }
 
@@ -38,7 +38,7 @@ func (c *OwnerController) ListOwners(ctx *gin.Context) {
 		return
 	}
 
-	owners, err := c.ownerUseCases.ListOwners(context.TODO(), *searchParams)
+	owners, err := c.ownerFacade.ListOwners(context.TODO(), *searchParams)
 	if err != nil {
 		apiResponse.ApplicationError(ctx, err)
 		return
@@ -48,19 +48,13 @@ func (c *OwnerController) ListOwners(ctx *gin.Context) {
 }
 
 func (c *OwnerController) GetOwnerById(ctx *gin.Context) {
-	id, err := utils.ParseID(ctx, "id")
+	id, err := utils.ParseParamToInt(ctx, "id")
 	if err != nil {
 		apiResponse.RequestURLParamError(ctx, err, "owner_id", ctx.Param("id"))
 		return
 	}
 
-	includePets := true
-	includePetStr := ctx.Query("include_pets")
-	if includePetStr == "" || includePetStr != "true" {
-		includePets = false
-	}
-
-	owner, err := c.ownerUseCases.GetOwnerById(context.TODO(), id, includePets)
+	owner, err := c.ownerFacade.GetOwnerById(context.TODO(), id)
 	if err != nil {
 		apiResponse.ApplicationError(ctx, err)
 		return
@@ -82,7 +76,7 @@ func (c *OwnerController) CreateOwner(ctx *gin.Context) {
 		return
 	}
 
-	owner, err := c.ownerUseCases.CreateOwner(context.TODO(), ownerCreate)
+	owner, err := c.ownerFacade.CreateOwner(context.TODO(), ownerCreate)
 	if err != nil {
 		apiResponse.ApplicationError(ctx, err)
 		return
@@ -92,7 +86,7 @@ func (c *OwnerController) CreateOwner(ctx *gin.Context) {
 }
 
 func (c *OwnerController) UpdateOwner(ctx *gin.Context) {
-	id, err := utils.ParseID(ctx, "id")
+	id, err := utils.ParseParamToInt(ctx, "id")
 	if err != nil {
 		apiResponse.RequestURLParamError(ctx, err, "owner_id", ctx.Param("id"))
 		return
@@ -109,7 +103,7 @@ func (c *OwnerController) UpdateOwner(ctx *gin.Context) {
 		return
 	}
 
-	Owner, err := c.ownerUseCases.UpdateOwner(context.TODO(), id, ownerUpdate)
+	Owner, err := c.ownerFacade.UpdateOwner(context.TODO(), id, ownerUpdate)
 	if err != nil {
 		apiResponse.ApplicationError(ctx, err)
 		return
@@ -119,13 +113,13 @@ func (c *OwnerController) UpdateOwner(ctx *gin.Context) {
 }
 
 func (c *OwnerController) DeleteOwner(ctx *gin.Context) {
-	id, err := utils.ParseID(ctx, "id")
+	id, err := utils.ParseParamToInt(ctx, "id")
 	if err != nil {
 		apiResponse.RequestURLParamError(ctx, err, "owner_id", ctx.Param("id"))
 		return
 	}
 
-	if err := c.ownerUseCases.DeleteOwner(context.TODO(), id); err != nil {
+	if err := c.ownerFacade.DeleteOwner(context.TODO(), id); err != nil {
 		apiResponse.ApplicationError(ctx, err)
 		return
 	}

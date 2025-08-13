@@ -145,7 +145,7 @@ func (opc OwnerPetController) UpdatePet() fiber.Handler {
 
 func (opc OwnerPetController) DeletePet() fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		petId, err := utils.ParseID(c)
+		petId, err := utils.ParseParamToInt(c)
 		if err != nil {
 			return c.Status(fiber.StatusBadRequest).JSON(responses.ErrorResponse{
 				Error: err.Error(),

@@ -5,14 +5,14 @@ import (
 
 	ownerDTOs "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/application/dtos"
 	ownerMappers "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/application/mappers"
-	ownerRepository "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/application/repository"
+	ownerDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/domain"
 )
 
 type ListOwnersUseCase struct {
-	ownerRepo ownerRepository.OwnerRepository
+	ownerRepo ownerDomain.OwnerRepository
 }
 
-func NewListOwnersUseCase(ownerRepo ownerRepository.OwnerRepository) *ListOwnersUseCase {
+func NewListOwnersUseCase(ownerRepo ownerDomain.OwnerRepository) *ListOwnersUseCase {
 	return &ListOwnersUseCase{
 		ownerRepo: ownerRepo,
 	}
@@ -27,7 +27,7 @@ func (uc *ListOwnersUseCase) Execute(ctx context.Context, dto ownerDTOs.GetOwner
 
 	ownerResponses := make([]ownerDTOs.OwnerResponse, len(owners))
 	for i, owner := range owners {
-		ownerResponses[i] = *ownerMappers.ToResponse(owner)
+		ownerResponses[i] = *ownerMappers.ToResponse(&owner)
 
 		if dto.WithPets {
 		}

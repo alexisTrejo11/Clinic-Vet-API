@@ -1,4 +1,4 @@
-package ownerAppErr
+package ownerDomain
 
 import (
 	"strconv"

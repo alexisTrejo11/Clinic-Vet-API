@@ -43,7 +43,7 @@ func (c *VeterinarianController) ListVeterinarians(ctx *gin.Context) {
 }
 
 func (c *VeterinarianController) GetVeterinarianById(ctx *gin.Context) {
-	id, err := utils.ParseID(ctx, "id")
+	id, err := utils.ParseParamToInt(ctx, "id")
 	if err != nil {
 		apiResponse.RequestURLParamError(ctx, err, "Veterinarian_id", ctx.Param("id"))
 		return
@@ -81,7 +81,7 @@ func (c *VeterinarianController) CreateVeterinarian(ctx *gin.Context) {
 }
 
 func (c *VeterinarianController) UpdateVeterinarian(ctx *gin.Context) {
-	id, err := utils.ParseID(ctx, "id")
+	id, err := utils.ParseParamToInt(ctx, "id")
 	if err != nil {
 		apiResponse.RequestURLParamError(ctx, err, "Veterinarian_id", ctx.Param("id"))
 		return
@@ -108,7 +108,7 @@ func (c *VeterinarianController) UpdateVeterinarian(ctx *gin.Context) {
 }
 
 func (c *VeterinarianController) DeleteVeterinarian(ctx *gin.Context) {
-	id, err := utils.ParseID(ctx, "id")
+	id, err := utils.ParseParamToInt(ctx, "id")
 	if err != nil {
 		apiResponse.RequestURLParamError(ctx, err, "Veterinarian_id", ctx.Param("id"))
 		return

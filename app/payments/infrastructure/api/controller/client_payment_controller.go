@@ -38,7 +38,7 @@ func (c *ClientPaymentController) GetMyPayments(ctx *gin.Context) {
 
 // GetMyPayment retrieves a specific payment for the authenticated owner
 func (c *ClientPaymentController) GetMyPayment(ctx *gin.Context) {
-	paymentId, err := utils.ParseID(ctx, "payment_id")
+	paymentId, err := utils.ParseParamToInt(ctx, "payment_id")
 	if err != nil {
 		apiResponse.RequestURLParamError(ctx, err, "payment_id", ctx.Param("payment_id"))
 		return

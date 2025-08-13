@@ -47,7 +47,7 @@ func (c *PaymentQueryController) SearchPayments(ctx *gin.Context) {
 }
 
 func (c *PaymentQueryController) GetPayment(ctx *gin.Context) {
-	paymentId, err := shared.ParseID(ctx, ctx.Param("payment_id"))
+	paymentId, err := shared.ParseParamToInt(ctx, ctx.Param("payment_id"))
 	if err != nil {
 		apiResponse.RequestURLParamError(ctx, err, "payment_id", ctx.Param("payment_id"))
 		return
@@ -65,7 +65,7 @@ func (c *PaymentQueryController) GetPayment(ctx *gin.Context) {
 }
 
 func (c *PaymentQueryController) GetPaymentsByUser(ctx *gin.Context) {
-	userId, err := shared.ParseID(ctx, ctx.Param("user_id"))
+	userId, err := shared.ParseParamToInt(ctx, ctx.Param("user_id"))
 	if err != nil {
 		apiResponse.RequestURLParamError(ctx, err, "user_id", ctx.Param("user_id"))
 		return

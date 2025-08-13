@@ -6,8 +6,8 @@ import (
 	ownerDTOs "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/application/dtos"
 )
 
-type OwnerUseCases interface {
-	GetOwnerById(ctx context.Context, ownerId int, includePets bool) (*ownerDTOs.OwnerResponse, error)
+type OwnerFacade interface {
+	GetOwnerById(ctx context.Context, ownerId int) (*ownerDTOs.OwnerResponse, error)
 	ListOwners(ctx context.Context, params ownerDTOs.GetOwnersRequest) (ownerDTOs.OwnerListResponse, error)
 	CreateOwner(ctx context.Context, data ownerDTOs.OwnerCreate) (*ownerDTOs.OwnerResponse, error)
 	UpdateOwner(ctx context.Context, ownerId int, data ownerDTOs.OwnerUpdate) (*ownerDTOs.OwnerResponse, error)
@@ -28,7 +28,7 @@ func NewOwnerUseCases(
 	createOwnerUC *CreateOwnerUseCase,
 	updateOwnerUC *UpdateOwnerUseCase,
 	deleteOwnerUC *DeleteOwnerUseCase,
-) OwnerUseCases {
+) OwnerFacade {
 	return &ownerUseCases{
 		getOwnerByIdUseCase: getOwnerByIdUC,
 		listOwnersUseCase:   listOwnersUC,
@@ -38,8 +38,8 @@ func NewOwnerUseCases(
 	}
 }
 
-func (uc *ownerUseCases) GetOwnerById(ctx context.Context, ownerId int, includePets bool) (*ownerDTOs.OwnerResponse, error) {
-	return uc.getOwnerByIdUseCase.Execute(ctx, ownerId, includePets)
+func (uc *ownerUseCases) GetOwnerById(ctx context.Context, ownerId int) (*ownerDTOs.OwnerResponse, error) {
+	return uc.getOwnerByIdUseCase.Execute(ctx, ownerId)
 }
 
 func (uc *ownerUseCases) ListOwners(ctx context.Context, params ownerDTOs.GetOwnersRequest) (ownerDTOs.OwnerListResponse, error) {

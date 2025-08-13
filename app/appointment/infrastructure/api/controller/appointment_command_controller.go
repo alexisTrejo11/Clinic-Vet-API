@@ -47,7 +47,7 @@ func (controller *AppointmentCommandController) CreateAppointment(ctx *gin.Conte
 
 // Update appointment
 func (controller *AppointmentCommandController) UpdateAppointment(ctx *gin.Context) {
-	idInt, err := shared.ParseID(ctx, "id")
+	idInt, err := shared.ParseParamToInt(ctx, "id")
 	if err != nil {
 		responses.RequestURLParamError(ctx, err, "id", ctx.Param("id"))
 		return
@@ -76,7 +76,7 @@ func (controller *AppointmentCommandController) UpdateAppointment(ctx *gin.Conte
 
 // Delete appointment
 func (controller *AppointmentCommandController) DeleteAppointment(ctx *gin.Context) {
-	idInt, err := shared.ParseID(ctx, "id")
+	idInt, err := shared.ParseParamToInt(ctx, "id")
 	if err != nil {
 		responses.RequestURLParamError(ctx, err, "id", ctx.Param("id"))
 		return
@@ -95,7 +95,7 @@ func (controller *AppointmentCommandController) DeleteAppointment(ctx *gin.Conte
 
 // Reschedule appointment
 func (controller *AppointmentCommandController) RescheduleAppointment(ctx *gin.Context) {
-	appointmentId, err := shared.ParseID(ctx, "id")
+	appointmentId, err := shared.ParseParamToInt(ctx, "id")
 	if err != nil {
 		responses.RequestURLParamError(ctx, err, "id", ctx.Param("id"))
 		return
@@ -120,7 +120,7 @@ func (controller *AppointmentCommandController) RescheduleAppointment(ctx *gin.C
 
 // MarkAsNoShow allows veterinarians to mark appointments as no-show
 func (controller *AppointmentCommandController) MarkAsNoShow(ctx *gin.Context) {
-	appointmentId, err := shared.ParseID(ctx, "id")
+	appointmentId, err := shared.ParseParamToInt(ctx, "id")
 	if err != nil {
 		responses.RequestURLParamError(ctx, err, "id", ctx.Param("id"))
 		return
@@ -140,7 +140,7 @@ func (controller *AppointmentCommandController) MarkAsNoShow(ctx *gin.Context) {
 }
 
 func (controller *AppointmentCommandController) ConfirmAppointment(ctx *gin.Context) {
-	appointmentId, err := shared.ParseID(ctx, "id")
+	appointmentId, err := shared.ParseParamToInt(ctx, "id")
 	if err != nil {
 		responses.RequestURLParamError(ctx, err, "id", ctx.Param("id"))
 		return
@@ -182,7 +182,7 @@ func (controller *AppointmentCommandController) ConfirmAppointment(ctx *gin.Cont
 // CompleteAppointment allows veterinarians to mark appointments as completed
 // PUT /vet/appointments/:id/complete
 func (controller *AppointmentCommandController) CompleteAppointment(ctx *gin.Context) {
-	appointmentId, err := shared.ParseID(ctx, "id")
+	appointmentId, err := shared.ParseParamToInt(ctx, "id")
 	if err != nil {
 		responses.RequestURLParamError(ctx, err, "id", ctx.Param("id"))
 		return

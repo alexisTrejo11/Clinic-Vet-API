@@ -55,7 +55,7 @@ func (cmh ClientMedicalHistory) GetMyPetsMedicalHistories() fiber.Handler {
 
 func (cmh ClientMedicalHistory) GetMyPetsMedicalHistoryByPetID() fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		petID, err := utils.ParseID(c)
+		petID, err := utils.ParseParamToInt(c)
 
 		if err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(responses.ErrorResponse{

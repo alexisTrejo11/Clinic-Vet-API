@@ -26,7 +26,7 @@ func NewUserAdminController(validator *validator.Validate, dispatcher *userAppli
 }
 
 func (c *UserAdminController) GetUserById(ctx *gin.Context) {
-	userId, err := shared.ParseID(ctx, "id")
+	userId, err := shared.ParseParamToInt(ctx, "id")
 	if err != nil {
 		apiResponse.RequestURLParamError(ctx, err, "id", ctx.Param("id"))
 		return
@@ -71,7 +71,7 @@ func (c *UserAdminController) CreateUser(ctx *gin.Context) {
 }
 
 func (c *UserAdminController) BanUser(ctx *gin.Context) {
-	idInt, err := shared.ParseID(ctx, "id")
+	idInt, err := shared.ParseParamToInt(ctx, "id")
 	if err != nil {
 		apiResponse.RequestURLParamError(ctx, err, "id", ctx.Param("id"))
 	}
@@ -93,7 +93,7 @@ func (c *UserAdminController) BanUser(ctx *gin.Context) {
 }
 
 func (c *UserAdminController) UnBanUser(ctx *gin.Context) {
-	idInt, err := shared.ParseID(ctx, "id")
+	idInt, err := shared.ParseParamToInt(ctx, "id")
 	if err != nil {
 		apiResponse.RequestURLParamError(ctx, err, "id", ctx.Param("id"))
 	}
@@ -115,7 +115,7 @@ func (c *UserAdminController) UnBanUser(ctx *gin.Context) {
 }
 
 func (c *UserAdminController) DeleteUser(ctx *gin.Context) {
-	idInt, err := shared.ParseID(ctx, "id")
+	idInt, err := shared.ParseParamToInt(ctx, "id")
 	if err != nil {
 		apiResponse.RequestURLParamError(ctx, err, "id", ctx.Param("id"))
 	}

@@ -20,7 +20,7 @@ func NewProfileController(useCases userApplication.ProfileUseCases) *ProfileCont
 }
 
 func (c *ProfileController) GetUserProfile(ctx *gin.Context) {
-	userId, err := shared.ParseID(ctx, "id")
+	userId, err := shared.ParseParamToInt(ctx, "id")
 	if err != nil {
 		apiResponse.RequestURLParamError(ctx, err, "id", ctx.Param("id"))
 		return
@@ -42,7 +42,7 @@ func (c *ProfileController) UpdateUserProfile(ctx *gin.Context) {
 		return
 	}
 
-	userIdInt, err := shared.ParseID(ctx, "id")
+	userIdInt, err := shared.ParseParamToInt(ctx, "id")
 	if err != nil {
 		apiResponse.RequestURLParamError(ctx, err, "id", ctx.Param("id"))
 		return

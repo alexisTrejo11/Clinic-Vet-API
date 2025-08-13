@@ -7,10 +7,25 @@ import (
 )
 
 type GetAppointmentsByDateRangeRequest struct {
-	StartDate  CustomDate `json:"start_date" binding:"required"`
-	EndDate    CustomDate `json:"end_date" binding:"required"`
-	PageNumber int        `json:"page_number" validate:"min=1"`
-	PageSize   int        `json:"page_size" validate:"min=1,max=100"`
+	StartDate CustomDate `json:"start_date"  form:"start_date" binding:"required"`
+	EndDate   CustomDate `json:"end_date"  form:"end_date" binding:"required"`
+	PaginationRequest
+}
+
+type PaginationRequest struct {
+	PageNumber int `json:"page_number" form:"page_number" validate:"min=1"`
+	PageSize   int `json:"page_size" form:"page_size" validate:"min=1,max=100"`
+}
+
+func (r *PaginationRequest) SetDefaultsIfNotProvided() {
+	if r.PageNumber <= 0 {
+		r.PageNumber = 1
+	}
+
+	if r.PageSize <= 0 {
+		r.PageSize = 10
+	}
+
 }
 
 type CustomDate struct {

@@ -3,7 +3,7 @@ package petUsecase
 import (
 	"context"
 
-	ownerRepository "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/application/repository"
+	ownerDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/domain"
 	petApplicationError "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application"
 	petDTOs "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application/dtos"
 	petMapper "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application/mapper"
@@ -12,10 +12,10 @@ import (
 
 type CreatePetUseCase struct {
 	petRepository   petRepository.PetRepository
-	ownerRepository ownerRepository.OwnerRepository
+	ownerRepository ownerDomain.OwnerRepository
 }
 
-func NewCreatePetUseCase(petRepository petRepository.PetRepository, ownerRepository ownerRepository.OwnerRepository) *CreatePetUseCase {
+func NewCreatePetUseCase(petRepository petRepository.PetRepository, ownerRepository ownerDomain.OwnerRepository) *CreatePetUseCase {
 	return &CreatePetUseCase{
 		petRepository:   petRepository,
 		ownerRepository: ownerRepository,
@@ -23,7 +23,7 @@ func NewCreatePetUseCase(petRepository petRepository.PetRepository, ownerReposit
 }
 
 func (uc CreatePetUseCase) Execute(ctx context.Context, petCreate petDTOs.PetCreate) (petDTOs.PetResponse, error) {
-	if err := uc.validate_owner(ctx, petCreate.OwnerID); err != nil {
+	if err := uc.validateOwner(ctx, petCreate.OwnerID); err != nil {
 		return petDTOs.PetResponse{}, err
 	}
 
@@ -35,10 +35,14 @@ func (uc CreatePetUseCase) Execute(ctx context.Context, petCreate petDTOs.PetCre
 	return petMapper.ToResponse(newPet), nil
 }
 
-func (uc CreatePetUseCase) validate_owner(ctx context.Context, owner_id int) error {
-	_, err := uc.ownerRepository.GetById(ctx, owner_id, false)
-	if err := petApplicationError.HandleGetByIdError(err, owner_id); err != nil {
+func (uc CreatePetUseCase) validateOwner(ctx context.Context, ownerId int) error {
+	exists, err := uc.ownerRepository.ExistsByID(ctx, ownerId)
+	if err != nil {
 		return err
+	}
+
+	if !exists {
+		petApplicationError.OwnerNotFoundError(ownerId)
 	}
 
 	return nil

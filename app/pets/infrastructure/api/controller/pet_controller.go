@@ -50,7 +50,7 @@ func (c *PetController) ListPets(ctx *gin.Context) {
 }
 
 func (c *PetController) GetPetById(ctx *gin.Context) {
-	id, err := utils.ParseID(ctx, "id")
+	id, err := utils.ParseParamToInt(ctx, "id")
 	if err != nil {
 		apiResponse.RequestURLParamError(ctx, err, "pet_id", ctx.Param("id"))
 		return
@@ -88,7 +88,7 @@ func (c *PetController) CreatePet(ctx *gin.Context) {
 }
 
 func (c *PetController) UpdatePet(ctx *gin.Context) {
-	id, err := utils.ParseID(ctx, "id")
+	id, err := utils.ParseParamToInt(ctx, "id")
 	if err != nil {
 		apiResponse.RequestURLParamError(ctx, err, "pet_id", ctx.Param("id"))
 		return
@@ -115,7 +115,7 @@ func (c *PetController) UpdatePet(ctx *gin.Context) {
 }
 
 func (c *PetController) DeletePet(ctx *gin.Context) {
-	id, err := utils.ParseID(ctx, "id")
+	id, err := utils.ParseParamToInt(ctx, "id")
 	if err != nil {
 		apiResponse.RequestURLParamError(ctx, err, "pet_id", ctx.Param("id"))
 		return

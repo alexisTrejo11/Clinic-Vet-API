@@ -3,55 +3,65 @@ package ownerUsecase
 import (
 	"context"
 
-	ownerAppErr "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/application"
 	ownerDTOs "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/application/dtos"
 	ownerMappers "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/application/mappers"
-	ownerRepository "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/application/repository"
+	ownerDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/domain"
+	user "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
 )
 
 type UpdateOwnerUseCase struct {
-	ownerRepo ownerRepository.OwnerRepository
+	ownerRepo ownerDomain.OwnerRepository
 }
 
-func NewUpdateOwnerUseCase(ownerRepo ownerRepository.OwnerRepository) *UpdateOwnerUseCase {
+func NewUpdateOwnerUseCase(ownerRepo ownerDomain.OwnerRepository) *UpdateOwnerUseCase {
 	return &UpdateOwnerUseCase{
 		ownerRepo: ownerRepo,
 	}
 }
 
 func (uc *UpdateOwnerUseCase) Execute(ctx context.Context, id int, dto ownerDTOs.OwnerUpdate) (*ownerDTOs.OwnerResponse, error) {
-	owner, err := uc.ownerRepo.GetById(ctx, id, false)
+	owner, err := uc.ownerRepo.GetById(ctx, id)
 	if err != nil {
-		return nil, ownerAppErr.HandleGetByIdError(err, id)
+		return nil, ownerDomain.HandleGetByIdError(err, id)
 	}
 
-	if dto.PhoneNumber != nil && *dto.PhoneNumber != owner.PhoneNumber {
+	if dto.PhoneNumber != nil && *dto.PhoneNumber != owner.PhoneNumber() {
 		_, err := uc.ownerRepo.GetByPhone(ctx, *dto.PhoneNumber)
 		if err == nil {
-			ownerAppErr.HandlePhoneConflictError()
+			return nil, ownerDomain.HandlePhoneConflictError()
 		}
-
+		owner.SetPhoneNumber(*dto.PhoneNumber)
 	}
 
 	if dto.Photo != nil {
-		owner.Photo = *dto.Photo
+		owner.SetPhoto(*dto.Photo)
 	}
 
-	if dto.FirstName != nil {
-		owner.FullName.FirstName = *dto.FirstName
+	if dto.FirstName != nil || dto.LastName != nil {
+		firstName := owner.FullName().FirstName
+		if dto.FirstName != nil {
+			firstName = *dto.FirstName
+		}
+
+		lastName := owner.FullName().LastName
+		if dto.LastName != nil {
+			lastName = *dto.LastName
+		}
+
+		fullName, err := user.NewPersonName(firstName, lastName)
+		if err != nil {
+			return nil, err
+		}
+		owner.SetFullName(fullName)
 	}
 
-	if dto.LastName != nil {
-		owner.FullName.FirstName = *dto.LastName
+	if dto.Address != nil {
+		owner.SetAddress(*dto.Address)
 	}
 
-	if dto.PhoneNumber != nil {
-		owner.PhoneNumber = *dto.PhoneNumber
-	}
-
-	if err := uc.ownerRepo.Save(ctx, &owner); err != nil {
+	if err := uc.ownerRepo.Save(ctx, owner); err != nil {
 		return nil, err
 	}
 
-	return ownerMappers.ToResponse(owner), nil
+	return ownerMappers.ToResponse(&owner), nil
 }
