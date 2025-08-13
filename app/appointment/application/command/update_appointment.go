@@ -44,11 +44,26 @@ func (h *updateAppointmentHandler) Handle(ctx context.Context, command UpdateApp
 		return shared.FailureResult("appointment not found", err)
 	}
 
-	// Apply updates
+	if err := h.updateFields(&appointment, command); err != nil {
+		return shared.FailureResult("failed to update appointment fields", err)
+	}
+
+	if err := appointment.ValidateFields(); err != nil {
+		return shared.FailureResult("appointment validation failed", err)
+	}
+
+	if err := h.appointmentRepo.Save(ctx, &appointment); err != nil {
+		return shared.FailureResult("failed to update appointment", err)
+	}
+
+	return shared.SuccesResult(appointment.GetId().String(), "appointment updated successfully")
+}
+
+func (h *updateAppointmentHandler) updateFields(appointment *appointmentDomain.Appointment, command UpdateAppointmentCommand) error {
 	if command.VetId != nil {
 		vetId, err := vetDomain.NewVeterinarianId(*command.VetId)
 		if err != nil {
-			return shared.FailureResult("invalid vet ID", err)
+			return err
 		}
 
 		appointment.SetVetId(&vetId)
@@ -74,14 +89,5 @@ func (h *updateAppointmentHandler) Handle(ctx context.Context, command UpdateApp
 		appointment.SetNotes(command.Notes)
 	}
 
-	// Validate and save
-	if err := appointment.ValidateFields(); err != nil {
-		return shared.FailureResult("appointment validation failed", err)
-	}
-
-	if err := h.appointmentRepo.Save(ctx, appointment); err != nil {
-		return shared.FailureResult("failed to update appointment", err)
-	}
-
-	return shared.SuccesResult(appointment.GetId().String(), "appointment updated successfully")
+	return nil
 }

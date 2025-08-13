@@ -144,8 +144,8 @@ func (s *PaymentCommandService) CalculateTotal(appointmentId int) (paymentDomain
 	return paymentDomain.NewMoney(0, "USD"), fmt.Errorf("not implemented")
 }
 
-func (s *PaymentCommandService) GetPaymentHistory(ownerId int) (*page.Page[[]paymentDomain.Payment], error) {
-	return nil, fmt.Errorf("use query handler for read operations")
+func (s *PaymentCommandService) GetPaymentHistory(ownerId int) (page.Page[[]paymentDomain.Payment], error) {
+	return page.Page[[]paymentDomain.Payment]{}, fmt.Errorf("use query handler for read operations")
 }
 
 func (s *PaymentCommandService) MarkOverduePayments() shared.CommandResult {

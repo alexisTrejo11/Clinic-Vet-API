@@ -1,4 +1,4 @@
-package infra_error
+package infraErr
 
 type BaseInfrastructureError struct {
 	Code       string                 `json:"code"`

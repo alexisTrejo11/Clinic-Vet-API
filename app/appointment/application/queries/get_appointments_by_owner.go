@@ -23,7 +23,7 @@ func NewGetAppointmentsByOwnerQuery(ownerId, pageNumber, pageSize int) GetAppoin
 }
 
 type GetAppointmentsByOwnerHandler interface {
-	Handle(ctx context.Context, query GetAppointmentsByOwnerQuery) (*page.Page[[]AppointmentResponse], error)
+	Handle(ctx context.Context, query GetAppointmentsByOwnerQuery) (page.Page[[]AppointmentResponse], error)
 }
 
 type getAppointmentsByOwnerHandler struct {
@@ -36,13 +36,13 @@ func NewGetAppointmentsByOwnerHandler(appointmentRepo appointmentDomain.Appointm
 	}
 }
 
-func (h *getAppointmentsByOwnerHandler) Handle(ctx context.Context, query GetAppointmentsByOwnerQuery) (*page.Page[[]AppointmentResponse], error) {
+func (h *getAppointmentsByOwnerHandler) Handle(ctx context.Context, query GetAppointmentsByOwnerQuery) (page.Page[[]AppointmentResponse], error) {
 	appointmentsPage, err := h.appointmentRepo.ListByOwnerId(ctx, query.OwnerId, query.PageInput)
 	if err != nil {
-		return nil, err
+		return page.Page[[]AppointmentResponse]{}, err
 	}
 
-	return page.NewPage(
+	return *page.NewPage(
 		mapAppointmentsToResponses(appointmentsPage.Data),
 		appointmentsPage.Metadata,
 	), nil

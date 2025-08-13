@@ -48,6 +48,11 @@ func sqlRowToDomain(row sqlc.Appoinment) (*appointDomain.Appointment, error) {
 
 func sqlRowsToDomainList(rows []sqlc.Appoinment) ([]appointDomain.Appointment, error) {
 	var appointments []appointDomain.Appointment
+
+	if len(rows) == 0 {
+		return []appointDomain.Appointment{}, nil
+	}
+
 	for _, row := range rows {
 		appointment, err := sqlRowToDomain(row)
 		if err != nil {

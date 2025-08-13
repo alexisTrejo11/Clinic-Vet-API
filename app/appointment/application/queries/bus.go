@@ -6,6 +6,8 @@ import (
 	"reflect"
 
 	appointmentDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/appointment/domain"
+	appError "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/errors/application"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 )
 
 type Query interface{}
@@ -80,7 +82,7 @@ func (bus *appointmentQueryBus) Execute(ctx context.Context, query Query) (inter
 		return h.Handle(ctx, q)
 
 	default:
-		return nil, fmt.Errorf("unknown query type: %s", queryType.Name())
+		return nil, appError.NewConflictError("query type", fmt.Sprintf("unknown query type: %s", queryType.Name()))
 	}
 }
 
@@ -104,7 +106,6 @@ func NewAppointmentQueryService(queryBus QueryBus, appointmentRepo appointmentDo
 	}
 }
 
-// Convenience methods for common queries
 func (s *AppointmentQueryService) GetAppointmentById(query GetAppointmentByIdQuery) (*AppointmentResponse, error) {
 	result, err := s.queryBus.Execute(context.Background(), query)
 	if err != nil {
@@ -118,7 +119,6 @@ func (s *AppointmentQueryService) GetAllAppointments(query GetAllAppointmentsQue
 	if err != nil {
 		return nil, err
 	}
-	// Type assertion might need adjustment based on actual page type
 	return result.(*AppointmentPageResponse), nil
 }
 
@@ -162,5 +162,4 @@ func (s *AppointmentQueryService) GetAppointmentStats(query GetAppointmentStatsQ
 	return result.(*AppointmentStatsResponse), nil
 }
 
-// Type alias for convenience
-type AppointmentPageResponse = any // This will be the actual page type from the page package
+type AppointmentPageResponse = page.Page[[]AppointmentResponse]

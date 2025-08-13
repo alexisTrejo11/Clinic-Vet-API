@@ -8,7 +8,7 @@ import (
 )
 
 type ListPaymentsByUserHandler interface {
-	Handle(ctx context.Context, query ListPaymentsByUserQuery) (*page.Page[[]PaymentResponse], error)
+	Handle(ctx context.Context, query ListPaymentsByUserQuery) (page.Page[[]PaymentResponse], error)
 }
 
 type ListPaymentsByUserQuery struct {
@@ -31,11 +31,11 @@ func NewListByUserHandler(repository paymentDomain.PaymentRepository) ListPaymen
 	return &listByUserHandlerImpl{repository: repository}
 }
 
-func (h *listByUserHandlerImpl) Handle(ctx context.Context, query ListPaymentsByUserQuery) (*page.Page[[]PaymentResponse], error) {
+func (h *listByUserHandlerImpl) Handle(ctx context.Context, query ListPaymentsByUserQuery) (page.Page[[]PaymentResponse], error) {
 	paymentsPage, err := h.repository.ListByUserId(context.Background(), query.userId, query.pagination)
 	if err != nil {
-		return nil, err
+		return page.Page[[]PaymentResponse]{}, err
 	}
 	responses := mapPaymentsToResponses(paymentsPage.Data)
-	return page.NewPage(responses, paymentsPage.Metadata), nil
+	return *page.NewPage(responses, paymentsPage.Metadata), nil
 }

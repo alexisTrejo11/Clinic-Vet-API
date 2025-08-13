@@ -26,7 +26,7 @@ func NewGetAppointmentsByDateRangeQuery(startDate, endDate time.Time, pageNumber
 }
 
 type GetAppointmentsByDateRangeHandler interface {
-	Handle(ctx context.Context, query GetAppointmentsByDateRangeQuery) (*page.Page[[]AppointmentResponse], error)
+	Handle(ctx context.Context, query GetAppointmentsByDateRangeQuery) (page.Page[[]AppointmentResponse], error)
 }
 
 type getAppointmentsByDateRangeHandler struct {
@@ -39,13 +39,13 @@ func NewGetAppointmentsByDateRangeHandler(appointmentRepo appointmentDomain.Appo
 	}
 }
 
-func (h *getAppointmentsByDateRangeHandler) Handle(ctx context.Context, query GetAppointmentsByDateRangeQuery) (*page.Page[[]AppointmentResponse], error) {
+func (h *getAppointmentsByDateRangeHandler) Handle(ctx context.Context, query GetAppointmentsByDateRangeQuery) (page.Page[[]AppointmentResponse], error) {
 	appointmentsPage, err := h.appointmentRepo.ListByDateRange(ctx, query.StartDate, query.EndDate, query.pageInput)
 	if err != nil {
-		return nil, err
+		return page.Page[[]AppointmentResponse]{}, err
 	}
 
-	return page.NewPage(
+	return *page.NewPage(
 		mapAppointmentsToResponses(appointmentsPage.Data),
 		appointmentsPage.Metadata,
 	), nil

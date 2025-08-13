@@ -21,3 +21,15 @@ func NewValidationError(field, value, message string) *ValidationError {
 		Value: value,
 	}
 }
+
+func InvalidEnumValue(field, value, message string) *ValidationError {
+	return NewValidationError(field, value, message)
+}
+
+func InvalidFormat(field, value, message string) *ValidationError {
+	return NewValidationError(field, value, message)
+}
+
+func RequiredField(field, message string) *ValidationError {
+	return NewValidationError(field, "", message)
+}

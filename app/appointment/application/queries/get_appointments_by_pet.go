@@ -23,7 +23,7 @@ func NewGetAppointmentsByPetQuery(petId, pageNumber, pageSize int) GetAppointmen
 }
 
 type GetAppointmentsByPetHandler interface {
-	Handle(ctx context.Context, query GetAppointmentsByPetQuery) (*page.Page[[]AppointmentResponse], error)
+	Handle(ctx context.Context, query GetAppointmentsByPetQuery) (page.Page[[]AppointmentResponse], error)
 }
 
 type getAppointmentsByPetHandler struct {
@@ -36,13 +36,13 @@ func NewGetAppointmentsByPetHandler(appointmentRepo appointmentDomain.Appointmen
 	}
 }
 
-func (h *getAppointmentsByPetHandler) Handle(ctx context.Context, query GetAppointmentsByPetQuery) (*page.Page[[]AppointmentResponse], error) {
+func (h *getAppointmentsByPetHandler) Handle(ctx context.Context, query GetAppointmentsByPetQuery) (page.Page[[]AppointmentResponse], error) {
 	appointmentsPage, err := h.appointmentRepo.ListByPetId(ctx, query.PetId, query.PageInput)
 	if err != nil {
-		return nil, err
+		return page.Page[[]AppointmentResponse]{}, err
 	}
 
-	return page.NewPage(
+	return *page.NewPage(
 		mapAppointmentsToResponses(appointmentsPage.Data),
 		appointmentsPage.Metadata,
 	), nil

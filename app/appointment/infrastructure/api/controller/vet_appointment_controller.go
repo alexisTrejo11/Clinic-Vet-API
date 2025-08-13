@@ -77,157 +77,17 @@ func (c *VetAppointmentController) GetTodayAppointments(ctx *gin.Context) {
 // ConfirmAppointment allows veterinarians to confirm pending appointments
 // PUT /vet/appointments/:id/confirm
 func (c *VetAppointmentController) ConfirmAppointment(ctx *gin.Context) {
-	appointmentId, err := strconv.Atoi(ctx.Param("id"))
-	if err != nil {
-		responses.RequestURLQueryError(ctx, err)
-		return
-	}
 
-	// Get vet id from JWT context
-	vetIdInterface, exists := ctx.Get("vet_id")
-	if !exists {
-		responses.Unauthorized(ctx, errors.New("vet id not found in context"))
-		return
-	}
-
-	vetId, ok := vetIdInterface.(int)
-	if !ok {
-		responses.BadRequest(ctx, errors.New("invalid vet id format"))
-		return
-	}
-
-	command := appointmentCmd.ConfirmAppointmentCommand{
-		Id:    appointmentId,
-		VetId: &vetId,
-	}
-
-	result := c.commandBus.Execute(context.Background(), command)
-	if !result.IsSuccess {
-		responses.ApplicationError(ctx, result.Error)
-		return
-	}
-
-	responses.Success(ctx, result)
 }
 
 // CompleteAppointment allows veterinarians to mark appointments as completed
 // PUT /vet/appointments/:id/complete
 func (c *VetAppointmentController) CompleteAppointment(ctx *gin.Context) {
-	appointmentId, err := strconv.Atoi(ctx.Param("id"))
-	if err != nil {
-		responses.RequestURLQueryError(ctx, err)
-		return
-	}
-
-	var requestBody struct {
-		Notes *string `json:"notes,omitempty"`
-	}
-
-	if err := ctx.ShouldBindJSON(&requestBody); err != nil {
-		responses.RequestBodyDataError(ctx, err)
-		return
-	}
-
-	// Get vet id from JWT context to verify the appointment belongs to this vet
-	vetIdInterface, exists := ctx.Get("vet_id")
-	if !exists {
-		responses.Unauthorized(ctx, errors.New("vet id not found in context"))
-		return
-	}
-
-	vetId, ok := vetIdInterface.(int)
-	if !ok {
-		responses.BadRequest(ctx, errors.New("invalid vet id format"))
-		return
-	}
-
-	// Verify the appointment belongs to this vet
-	getQuery := appointmentQuery.NewGetAppointmentByIdQuery(appointmentId)
-	getResult, err := c.queryBus.Execute(context.Background(), getQuery)
-	if err != nil {
-		responses.ApplicationError(ctx, err)
-		return
-	}
-
-	appointment := getResult.(*appointmentQuery.AppointmentResponse)
-
-	if appointment.VetId == nil || *appointment.VetId != vetId {
-		responses.Forbidden(ctx, errors.New("access denied: you can only complete your own appointments"))
-		return
-	}
-
-	command := appointmentCmd.CompleteAppointmentCommand{
-		Id:    appointmentId,
-		Notes: requestBody.Notes,
-	}
-
-	result := c.commandBus.Execute(context.Background(), command)
-	if !result.IsSuccess {
-		responses.ApplicationError(ctx, result.Error)
-		return
-	}
-
-	responses.Success(ctx, result)
 }
 
 // CancelAppointment allows veterinarians to cancel appointments
 // DELETE /vet/appointments/:id
 func (c *VetAppointmentController) CancelAppointment(ctx *gin.Context) {
-	appointmentId, err := strconv.Atoi(ctx.Param("id"))
-	if err != nil {
-		responses.RequestURLQueryError(ctx, err)
-		return
-	}
-
-	var requestBody struct {
-		Reason string `json:"reason" binding:"required"`
-	}
-
-	if err := ctx.ShouldBindJSON(&requestBody); err != nil {
-		responses.RequestBodyDataError(ctx, err)
-		return
-	}
-
-	// Get vet id from JWT context to verify the appointment belongs to this vet
-	vetIdInterface, exists := ctx.Get("vet_id")
-	if !exists {
-		responses.Unauthorized(ctx, errors.New("vet id not found in context"))
-		return
-	}
-
-	vetId, ok := vetIdInterface.(int)
-	if !ok {
-		responses.BadRequest(ctx, errors.New("invalid vet id format"))
-		return
-	}
-
-	// Verify the appointment belongs to this vet
-	getQuery := appointmentQuery.NewGetAppointmentByIdQuery(appointmentId)
-	getResult, err := c.queryBus.Execute(context.Background(), getQuery)
-	if err != nil {
-		responses.ApplicationError(ctx, err)
-		return
-	}
-
-	appointment := getResult.(*appointmentQuery.AppointmentResponse)
-
-	if appointment.VetId == nil || *appointment.VetId != vetId {
-		responses.Forbidden(ctx, errors.New("access denied: you can only cancel your own appointments"))
-		return
-	}
-
-	command := appointmentCmd.CancelAppointmentCommand{
-		AppointmentId: appointmentId,
-		Reason:        requestBody.Reason,
-	}
-
-	result := c.commandBus.Execute(context.Background(), command)
-	if !result.IsSuccess {
-		responses.ApplicationError(ctx, result.Error)
-		return
-	}
-
-	responses.Success(ctx, result)
 }
 
 // MarkAsNoShow allows veterinarians to mark appointments as no-show

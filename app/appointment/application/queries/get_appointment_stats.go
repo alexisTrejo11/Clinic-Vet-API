@@ -49,13 +49,13 @@ func (h *getAppointmentStatsHandler) Handle(ctx context.Context, query GetAppoin
 
 	// Get appointments based on filters
 	if query.StartDate != nil && query.EndDate != nil {
-		appointmentsPage, err := h.appointmentRepo.ListByDateRange(ctx, *query.StartDate, *query.EndDate, maxPage)
+		appointmentsPage, dberr := h.appointmentRepo.ListByDateRange(ctx, *query.StartDate, *query.EndDate, maxPage)
 		appointments = appointmentsPage.Data
-		err = err
+		err = dberr
 	} else {
-		appointmentsPage, err := h.appointmentRepo.ListAll(ctx, maxPage)
+		appointmentsPage, dberr := h.appointmentRepo.ListAll(ctx, maxPage)
 		appointments = appointmentsPage.Data
-		err = err
+		err = dberr
 	}
 
 	if err != nil {

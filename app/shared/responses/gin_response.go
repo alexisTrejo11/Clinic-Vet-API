@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	appError "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/errors/application"
 	"github.com/gin-gonic/gin"
@@ -13,6 +14,13 @@ import (
 func Success(ctx *gin.Context, data interface{}) {
 	response := APIResponse{}
 	response.SuccessRequest(data)
+
+	ctx.JSON(200, response)
+}
+
+func SuccessWithMeta(ctx *gin.Context, data interface{}, meta interface{}) {
+	response := APIResponse{}
+	response.SuccessWithMeta(data, meta)
 
 	ctx.JSON(200, response)
 }
@@ -105,6 +113,36 @@ func RequestURLQueryError(ctx *gin.Context, err error) {
 	BadRequest(ctx, bodyErro)
 }
 
+func InvalidDateFormatError(ctx *gin.Context, field, format string) {
+	bodyErro := appError.BaseApplicationError{
+		Code:    "INVALID_DATE_FORMAT",
+		Type:    "DATE FORMAT",
+		Message: fmt.Sprintf("Invalid date format, expected format: %s", format),
+		Data: map[string]interface{}{
+			"field":  field,
+			"format": format,
+		},
+		StatusCode: 400,
+	}
+	BadRequest(ctx, bodyErro)
+}
+
+func InvalidParseDataError(ctx *gin.Context, field string, value, meesage string) {
+	bodyErro := appError.BaseApplicationError{
+		Code:    "INVALID_PARSE_DATA",
+		Type:    "DATA PARSING",
+		Message: fmt.Sprintf("Invalid data for field '%s': %s", field, value),
+		Data: map[string]interface{}{
+			"field":   field,
+			"value":   value,
+			"message": meesage,
+		},
+
+		StatusCode: 400,
+	}
+	BadRequest(ctx, bodyErro)
+}
+
 func RequestBodyDataError(ctx *gin.Context, err error) {
 	bodyErro := appError.BaseApplicationError{
 		Code:       "REQUEST_BODY_ERROR",
@@ -114,4 +152,31 @@ func RequestBodyDataError(ctx *gin.Context, err error) {
 		StatusCode: 400,
 	}
 	BadRequest(ctx, bodyErro)
+}
+
+func GetPaginationParams(ctx *gin.Context) (int, int, error) {
+	pageParam := ctx.DefaultQuery("page", "1")
+	limitParam := ctx.DefaultQuery("pageSize", "10")
+
+	pageNumber, err := strconv.Atoi(pageParam)
+	if err != nil {
+		return 0, 0, err
+
+	}
+
+	limit, err := strconv.Atoi(limitParam)
+	if err != nil {
+		return 0, 0, err
+
+	}
+
+	if pageNumber < 1 {
+		return 0, 0, errors.New("page number must be greater than 0")
+	}
+
+	if limit < 1 {
+		return 0, 0, errors.New("limit must be greater than 0")
+	}
+
+	return pageNumber, limit, nil
 }

@@ -8,7 +8,7 @@ import (
 )
 
 func ParseID(c *gin.Context, param_name string) (int, error) {
-	idStr := c.Param("id")
+	idStr := c.Param(param_name)
 	if idStr == "" {
 		return 0, errors.New("empty id")
 	}

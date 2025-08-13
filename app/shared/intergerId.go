@@ -1,9 +1,17 @@
 package shared
 
-import "fmt"
+import (
+	"fmt"
+
+	domainErr "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/errors/domain"
+)
 
 type IntegerId struct {
 	value int
+}
+
+func invalidIntegerIdError(value any) error {
+	return domainErr.NewValidationError("invalid IntegerId", fmt.Sprintf("%T", value), fmt.Sprintf("expected int, got %T", value))
 }
 
 func NilIntegerId() IntegerId {
@@ -13,7 +21,7 @@ func NilIntegerId() IntegerId {
 func NewIntegerId(value any) (IntegerId, error) {
 	idInt, err := parseToInt(value)
 	if err != nil {
-		return IntegerId{}, fmt.Errorf("invalid IntegerId: %w", err)
+		return IntegerId{}, invalidIntegerIdError(value)
 	}
 
 	return IntegerId{value: idInt}, nil
@@ -62,5 +70,5 @@ func parseToInt(value any) (int, error) {
 		return v, nil
 	}
 
-	return 0, fmt.Errorf("invalid type for IntegerId: expected int, got %T", value)
+	return 0, invalidIntegerIdError(value)
 }

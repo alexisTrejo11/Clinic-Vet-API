@@ -28,8 +28,8 @@ func (c *SQLCPaymentRepository) Save(ctx context.Context, payment *paymentDomain
 	return c.update(ctx, payment)
 }
 
-func (c *SQLCPaymentRepository) Search(ctx context.Context, pageInput page.PageData, searchCriteria map[string]interface{}) (*page.Page[[]paymentDomain.Payment], error) {
-	return nil, nil
+func (c *SQLCPaymentRepository) Search(ctx context.Context, pageInput page.PageData, searchCriteria map[string]interface{}) (page.Page[[]paymentDomain.Payment], error) {
+	return page.Page[[]paymentDomain.Payment]{}, nil
 }
 
 func (c *SQLCPaymentRepository) GetById(ctx context.Context, id int) (*paymentDomain.Payment, error) {
@@ -46,7 +46,7 @@ func (c *SQLCPaymentRepository) GetById(ctx context.Context, id int) (*paymentDo
 	return payment, nil
 }
 
-func (c *SQLCPaymentRepository) ListByUserId(ctx context.Context, userId int, pageInput page.PageData) (*page.Page[[]paymentDomain.Payment], error) {
+func (c *SQLCPaymentRepository) ListByUserId(ctx context.Context, userId int, pageInput page.PageData) (page.Page[[]paymentDomain.Payment], error) {
 	sqlRows, err := c.queries.ListPaymentsByUserId(ctx, sqlc.ListPaymentsByUserIdParams{
 		UserID: int32(userId),
 		Limit:  int32(pageInput.PageSize),
@@ -54,38 +54,38 @@ func (c *SQLCPaymentRepository) ListByUserId(ctx context.Context, userId int, pa
 	})
 
 	if err != nil {
-		return nil, err
+		return page.Page[[]paymentDomain.Payment]{}, err
 	}
 
 	return toPageablePayments(sqlRows, pageInput, len(sqlRows))
 }
 
-func (c *SQLCPaymentRepository) ListByStatus(ctx context.Context, status paymentDomain.PaymentStatus, pageInput page.PageData) (*page.Page[[]paymentDomain.Payment], error) {
+func (c *SQLCPaymentRepository) ListByStatus(ctx context.Context, status paymentDomain.PaymentStatus, pageInput page.PageData) (page.Page[[]paymentDomain.Payment], error) {
 	sqlRows, err := c.queries.ListPaymentsByStatus(ctx, sqlc.ListPaymentsByStatusParams{
 		Status: models.PaymentStatus(status),
 	})
 
 	if err != nil {
-		return nil, err
+		return page.Page[[]paymentDomain.Payment]{}, err
 	}
 
 	return toPageablePayments(sqlRows, pageInput, len(sqlRows))
 }
 
-func (c *SQLCPaymentRepository) ListOverduePayments(ctx context.Context, pageInput page.PageData) (*page.Page[[]paymentDomain.Payment], error) {
+func (c *SQLCPaymentRepository) ListOverduePayments(ctx context.Context, pageInput page.PageData) (page.Page[[]paymentDomain.Payment], error) {
 	sqlRows, err := c.queries.ListOverduePayments(ctx, sqlc.ListOverduePaymentsParams{
 		Limit:  int32(pageInput.PageSize),
 		Offset: int32(pageInput.PageNumber*pageInput.PageSize) - 1,
 	})
 
 	if err != nil {
-		return nil, err
+		return page.Page[[]paymentDomain.Payment]{}, err
 	}
 
 	return toPageablePayments(sqlRows, pageInput, len(sqlRows))
 }
 
-func (c *SQLCPaymentRepository) ListPaymentsByDateRange(ctx context.Context, startDate, endDate time.Time, pageInput page.PageData) (*page.Page[[]paymentDomain.Payment], error) {
+func (c *SQLCPaymentRepository) ListPaymentsByDateRange(ctx context.Context, startDate, endDate time.Time, pageInput page.PageData) (page.Page[[]paymentDomain.Payment], error) {
 	sqlRows, err := c.queries.ListPaymentsByDateRange(ctx, sqlc.ListPaymentsByDateRangeParams{
 		CreatedAt:   pgtype.Timestamptz{Time: startDate, Valid: true},
 		CreatedAt_2: pgtype.Timestamptz{Time: endDate, Valid: true},
@@ -93,7 +93,7 @@ func (c *SQLCPaymentRepository) ListPaymentsByDateRange(ctx context.Context, sta
 		Offset:      int32(pageInput.PageNumber*pageInput.PageSize) - 1,
 	})
 	if err != nil {
-		return nil, err
+		return page.Page[[]paymentDomain.Payment]{}, err
 	}
 
 	return toPageablePayments(sqlRows, pageInput, len(sqlRows))
@@ -137,10 +137,10 @@ func (c *SQLCPaymentRepository) update(context context.Context, payment *payment
 	return nil
 }
 
-func toPageablePayments(sqlRows []sqlc.Payment, pageInput page.PageData, totalItems int) (*page.Page[[]paymentDomain.Payment], error) {
+func toPageablePayments(sqlRows []sqlc.Payment, pageInput page.PageData, totalItems int) (page.Page[[]paymentDomain.Payment], error) {
 	payments, err := mapSQLCPaymentListToDomain(sqlRows)
 	if err != nil {
-		return nil, err
+		return page.Page[[]paymentDomain.Payment]{}, err
 	}
-	return page.NewPage(payments, *page.GetPageMetadata(totalItems, pageInput)), nil
+	return *page.NewPage(payments, *page.GetPageMetadata(totalItems, pageInput)), nil
 }

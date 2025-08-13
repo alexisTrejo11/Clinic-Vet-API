@@ -50,7 +50,6 @@ func (h *createAppointmentHandler) Handle(ctx context.Context, command CreateApp
 }
 
 func (h *createAppointmentHandler) commandToDomain(command CreateAppointmentCommand) (*appointmentDomain.Appointment, error) {
-	// Create appointment ID (will be 0 for new appointments)
 	appointmentId, err := appointmentDomain.NewAppointmentId(0)
 	if err != nil {
 		return nil, err

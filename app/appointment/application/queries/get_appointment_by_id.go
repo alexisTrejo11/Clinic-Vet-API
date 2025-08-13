@@ -2,7 +2,6 @@ package appointmentQuery
 
 import (
 	"context"
-	"fmt"
 
 	appointmentDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/appointment/domain"
 )
@@ -35,10 +34,6 @@ func (h *getAppointmentByIdHandler) Handle(ctx context.Context, query GetAppoint
 		return nil, err
 	}
 
-	if appointment == nil {
-		return nil, fmt.Errorf("appointment with ID %d not found", query.AppointmentId)
-	}
-
-	response := NewAppointmentResponse(appointment)
+	response := NewAppointmentResponse(&appointment)
 	return &response, nil
 }

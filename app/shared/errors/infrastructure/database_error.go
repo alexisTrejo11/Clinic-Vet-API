@@ -1,4 +1,4 @@
-package infra_error
+package infraErr
 
 import "net/http"
 
@@ -13,6 +13,21 @@ func NewDatabaseError(operation, message string) *DatabaseError {
 			Code:       "DATABASE_ERROR",
 			Type:       "infrastructure",
 			Message:    message,
+			StatusCode: http.StatusInternalServerError,
+			Data: map[string]interface{}{
+				"operation": operation,
+			},
+		},
+		Operation: operation,
+	}
+}
+
+func MapFieldErrorToDatabaseError(err error, operation string) *DatabaseError {
+	return &DatabaseError{
+		BaseInfrastructureError: BaseInfrastructureError{
+			Code:       "DATABASE_ERROR",
+			Type:       "infrastructure",
+			Message:    err.Error(),
 			StatusCode: http.StatusInternalServerError,
 			Data: map[string]interface{}{
 				"operation": operation,

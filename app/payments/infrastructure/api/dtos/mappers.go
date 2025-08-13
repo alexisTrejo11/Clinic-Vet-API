@@ -70,7 +70,7 @@ func ToPaymentResponse(entity interface{}) PaymentResponse {
 }
 
 func ToPaymentListResponse(data interface{}) PaymentListResponse {
-	paymentsPage := data.(*page.Page[[]paymentDomain.Payment])
+	paymentsPage := data.(page.Page[[]paymentDomain.Payment])
 
 	responses := make([]PaymentResponse, len(paymentsPage.Data))
 	for i, payment := range paymentsPage.Data {

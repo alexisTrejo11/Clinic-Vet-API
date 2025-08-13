@@ -24,7 +24,7 @@ func NewListPaymentsByDateRangeQuery(startDate, endDate time.Time, pageData page
 }
 
 type ListPaymentsByDateRangeQueryHandler interface {
-	Handle(ctx context.Context, query ListPaymentsByDateRangeQuery) (*page.Page[[]PaymentResponse], error)
+	Handle(ctx context.Context, query ListPaymentsByDateRangeQuery) (page.Page[[]PaymentResponse], error)
 }
 
 type listPaymentsByDateRangeHandler struct {
@@ -37,18 +37,18 @@ func NewListPaymentsByDateRangeHandler(paymentRepository paymentDomain.PaymentRe
 	}
 }
 
-func (h *listPaymentsByDateRangeHandler) Handle(ctx context.Context, query ListPaymentsByDateRangeQuery) (*page.Page[[]PaymentResponse], error) {
+func (h *listPaymentsByDateRangeHandler) Handle(ctx context.Context, query ListPaymentsByDateRangeQuery) (page.Page[[]PaymentResponse], error) {
 	if query.startDate.After(query.endDate) {
-		return nil, PaymentRangeDateErr(query.startDate, query.endDate)
+		return page.Page[[]PaymentResponse]{}, PaymentRangeDateErr(query.startDate, query.endDate)
 	}
 
 	paymentsPage, err := h.paymentRepository.ListPaymentsByDateRange(ctx, query.startDate, query.endDate, query.PageData)
 	if err != nil {
-		return nil, err
+		return page.Page[[]PaymentResponse]{}, err
 	}
 
 	response := mapPaymentsToResponses(paymentsPage.Data)
-	return page.NewPage(response, paymentsPage.Metadata), nil
+	return *page.NewPage(response, paymentsPage.Metadata), nil
 }
 
 func PaymentRangeDateErr(startDate, endDate time.Time) error {

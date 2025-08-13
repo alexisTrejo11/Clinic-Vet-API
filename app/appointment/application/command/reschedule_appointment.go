@@ -29,31 +29,16 @@ func NewRescheduleAppointmentHandler(appointmentRepo appointmentDomain.Appointme
 }
 
 func (h *rescheduleAppointmentHandler) Handle(ctx context.Context, command RescheduleAppointmentCommand) shared.CommandResult {
-	// Get existing appointment
 	appointment, err := h.appointmentRepo.GetById(ctx, command.AppointmentId)
 	if err != nil {
 		return shared.FailureResult("appointment not found", err)
 	}
 
-	// Validate appointment can be rescheduled
-	if appointment.GetStatus() == appointmentDomain.StatusCompleted {
-		return shared.FailureResult("cannot reschedule completed appointment", nil)
+	if err := appointment.RescheduleAppointment(command.DateTime); err != nil {
+		return shared.FailureResult("failed to reschedule appointment", err)
 	}
 
-	if appointment.GetStatus() == appointmentDomain.StatusCancelled {
-		return shared.FailureResult("cannot reschedule cancelled appointment", nil)
-	}
-
-	// Validate new date is in the future
-	if command.DateTime.Before(time.Now()) {
-		return shared.FailureResult("appointment date must be in the future", nil)
-	}
-
-	// Reschedule appointment
-	appointment.RescheduleAppointment(command.DateTime)
-
-	// Save updated appointment
-	if err := h.appointmentRepo.Save(ctx, appointment); err != nil {
+	if err := h.appointmentRepo.Save(ctx, &appointment); err != nil {
 		return shared.FailureResult("failed to save rescheduled appointment", err)
 	}
 

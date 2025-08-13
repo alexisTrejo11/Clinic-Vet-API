@@ -132,7 +132,7 @@ func main() {
 	profileController := userController.NewProfileController(profileUseCase)
 	userRoutes.ProfileRoutes(router, profileController)
 
-	appointmentAPI.SetupAppoinmentAPI(router, queries)
+	appointmentAPI.SetupAppoinmentAPI(router, queries, dataValidator)
 
 	router.Run()
 }

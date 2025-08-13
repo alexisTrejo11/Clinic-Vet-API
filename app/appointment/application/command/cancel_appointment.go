@@ -33,22 +33,11 @@ func (h *cancelAppointmentHandler) Handle(ctx context.Context, command CancelApp
 		return shared.FailureResult("appointment not found", err)
 	}
 
-	// Validate appointment can be cancelled
-	if appointment.GetStatus() == appointmentDomain.StatusCompleted {
-		return shared.FailureResult("cannot cancel completed appointment", nil)
-	}
-
-	if appointment.GetStatus() == appointmentDomain.StatusCancelled {
-		return shared.FailureResult("appointment is already cancelled", nil)
-	}
-
-	// Cancel appointment
 	if err := appointment.Cancel(); err != nil {
 		return shared.FailureResult("failed to cancel appointment", err)
 	}
 
-	// Save updated appointment
-	if err := h.appointmentRepo.Save(ctx, appointment); err != nil {
+	if err := h.appointmentRepo.Save(ctx, &appointment); err != nil {
 		return shared.FailureResult("failed to save cancelled appointment", err)
 	}
 

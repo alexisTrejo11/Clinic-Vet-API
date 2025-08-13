@@ -1,6 +1,9 @@
 package page
 
-import "math"
+import (
+	"math"
+	"reflect"
+)
 
 type SortDirection string
 
@@ -29,7 +32,6 @@ type Page[T any] struct {
 }
 
 func NewPage[T any](data T, metadata PageMetadata) *Page[T] {
-
 	return &Page[T]{
 		Data:     data,
 		Metadata: metadata,
@@ -37,6 +39,16 @@ func NewPage[T any](data T, metadata PageMetadata) *Page[T] {
 }
 
 func EmptyPage[T any]() Page[T] {
+	var zero T
+	if v := reflect.ValueOf(zero); v.Kind() == reflect.Slice {
+		zero = reflect.MakeSlice(v.Type(), 0, 0).Interface().(T)
+
+		return Page[T]{
+			Data:     zero,
+			Metadata: PageMetadata{},
+		}
+	}
+
 	return Page[T]{
 		Data:     *new(T),
 		Metadata: PageMetadata{},

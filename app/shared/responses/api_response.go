@@ -10,7 +10,7 @@ type APIResponse struct {
 	Success   bool        `json:"success"`
 	Data      interface{} `json:"data,omitempty"`
 	Error     *ErrorInfo  `json:"error,omitempty"`
-	Meta      *Meta       `json:"meta,omitempty"`
+	Meta      interface{} `json:"meta,omitempty"`
 	Timestamp time.Time   `json:"timestamp"`
 	RequestID string      `json:"request_id,omitempty"`
 }
@@ -45,21 +45,20 @@ func (r *APIResponse) SuccessRequest(data interface{}) {
 	r.Timestamp = time.Now()
 }
 
-func (r *APIResponse) SuccessWithMeta(data interface{}, meta *Meta) *APIResponse {
-	return &APIResponse{
-		Success:   true,
-		Data:      data,
-		Meta:      meta,
-		Timestamp: time.Now(),
-	}
+func (r *APIResponse) SuccessWithMeta(data interface{}, meta interface{}) *APIResponse {
+	r.Success = true
+	r.Data = data
+	r.Meta = meta
+	r.Timestamp = time.Now()
+	return r
 }
 
-func (r *APIResponse) SuccessWithPagination(data interface{}, pagination *PaginationMeta) *APIResponse {
+func (r *APIResponse) SuccessWithPagination(data interface{}, pagination interface{}) *APIResponse {
 	meta := &Meta{
-		Page:       pagination.CurrentPage,
-		PageSize:   pagination.PageSize,
-		Total:      pagination.Total,
-		TotalPages: pagination.TotalPages,
+		Page:       pagination.(PaginationMeta).CurrentPage,
+		PageSize:   pagination.(PaginationMeta).PageSize,
+		Total:      pagination.(PaginationMeta).Total,
+		TotalPages: pagination.(PaginationMeta).TotalPages,
 	}
 
 	return &APIResponse{

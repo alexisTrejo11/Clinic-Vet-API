@@ -20,7 +20,7 @@ func NewListPaymentsByStatusQuery(status paymentDomain.PaymentStatus, pagination
 }
 
 type ListPaymentsByStatusHandler interface {
-	Handle(ctx context.Context, query ListPaymentsByStatusQuery) (*page.Page[[]PaymentResponse], error)
+	Handle(ctx context.Context, query ListPaymentsByStatusQuery) (page.Page[[]PaymentResponse], error)
 }
 
 type listPaymentsByStatusHandler struct {
@@ -31,16 +31,16 @@ func NewListPaymentsByStatusHandler(repo paymentDomain.PaymentRepository) ListPa
 	return &listPaymentsByStatusHandler{repo: repo}
 }
 
-func (h *listPaymentsByStatusHandler) Handle(ctx context.Context, query ListPaymentsByStatusQuery) (*page.Page[[]PaymentResponse], error) {
+func (h *listPaymentsByStatusHandler) Handle(ctx context.Context, query ListPaymentsByStatusQuery) (page.Page[[]PaymentResponse], error) {
 	if !query.status.IsValid() {
-		return nil, paymentDomain.InvalidPaymentStatusErr(query.status)
+		return page.Page[[]PaymentResponse]{}, paymentDomain.InvalidPaymentStatusErr(query.status)
 	}
 
 	paymentPage, err := h.repo.ListByStatus(ctx, query.status, query.pagination)
 	if err != nil {
-		return nil, err
+		return page.Page[[]PaymentResponse]{}, err
 	}
 
 	response := mapPaymentsToResponses(paymentPage.Data)
-	return page.NewPage(response, paymentPage.Metadata), nil
+	return *page.NewPage(response, paymentPage.Metadata), nil
 }

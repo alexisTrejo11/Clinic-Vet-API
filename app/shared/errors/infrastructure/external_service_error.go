@@ -1,4 +1,4 @@
-package infra_error
+package infraErr
 
 import "net/http"
 

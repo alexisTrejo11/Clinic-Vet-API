@@ -2,7 +2,7 @@ package vetApplication
 
 import (
 	ApplicationError "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/errors/application"
-	infra_error "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/errors/infrastructure"
+	infraErr "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/errors/infrastructure"
 )
 
 func VetNotFoundErr(parameter string, value string) error {
@@ -11,5 +11,5 @@ func VetNotFoundErr(parameter string, value string) error {
 }
 
 func VetDBErr(operation string, err error) error {
-	return infra_error.NewDatabaseError(operation, err.Error())
+	return infraErr.NewDatabaseError(operation, err.Error())
 }

@@ -40,23 +40,23 @@ func (r *SQLCMedHistRepository) GetById(ctx context.Context, medicalHistoryId in
 	return &medHist, nil
 }
 
-func (r *SQLCMedHistRepository) Search(ctx context.Context, searchParams mhDTOs.MedHistSearchParams) (*page.Page[[]mhDomain.MedicalHistory], error) {
+func (r *SQLCMedHistRepository) Search(ctx context.Context, searchParams mhDTOs.MedHistSearchParams) (page.Page[[]mhDomain.MedicalHistory], error) {
 	queryRows, err := r.queries.SearchMedicalHistory(ctx, sqlc.SearchMedicalHistoryParams{})
 	if err != nil {
-		return nil, err
+		return page.Page[[]mhDomain.MedicalHistory]{}, err
 	}
 
 	entities, err := ToDomainList(queryRows)
 	if err != nil {
-		return nil, err
+		return page.Page[[]mhDomain.MedicalHistory]{}, err
 	}
 
 	medicalHistPage := page.NewPage(entities, *page.GetPageMetadata(len(queryRows), searchParams.Page))
-	return medicalHistPage, nil
+	return *medicalHistPage, nil
 
 }
 
-func (r *SQLCMedHistRepository) ListByVetId(ctx context.Context, vetId int, pagination page.PageData) (*page.Page[[]mhDomain.MedicalHistory], error) {
+func (r *SQLCMedHistRepository) ListByVetId(ctx context.Context, vetId int, pagination page.PageData) (page.Page[[]mhDomain.MedicalHistory], error) {
 	arg := sqlc.ListMedicalHistoryByVetParams{
 		VeterinarianID: int32(vetId),
 		Limit:          int32(pagination.PageNumber),
@@ -65,49 +65,49 @@ func (r *SQLCMedHistRepository) ListByVetId(ctx context.Context, vetId int, pagi
 
 	queryRows, err := r.queries.ListMedicalHistoryByVet(ctx, arg)
 	if err != nil {
-		return nil, err
+		return page.Page[[]mhDomain.MedicalHistory]{}, err
 	}
 
 	entitiyList, err := ToDomainList(queryRows)
 	if err != nil {
-		return nil, err
+		return page.Page[[]mhDomain.MedicalHistory]{}, err
 	}
 
 	medicalHistPage := page.NewPage(entitiyList, *page.GetPageMetadata(len(queryRows), pagination))
-	return medicalHistPage, nil
+	return *medicalHistPage, nil
 
 }
 
 // TODO: Paginate SQLC
-func (r *SQLCMedHistRepository) ListByPetId(ctx context.Context, petId int, pagination page.PageData) (*page.Page[[]mhDomain.MedicalHistory], error) {
+func (r *SQLCMedHistRepository) ListByPetId(ctx context.Context, petId int, pagination page.PageData) (page.Page[[]mhDomain.MedicalHistory], error) {
 	queryRows, err := r.queries.ListMedicalHistoryByPet(ctx, int32(petId))
 	if err != nil {
-		return nil, err
+		return page.Page[[]mhDomain.MedicalHistory]{}, err
 	}
 
 	entitiyList, err := ToDomainList(queryRows)
 	if err != nil {
-		return nil, err
+		return page.Page[[]mhDomain.MedicalHistory]{}, err
 	}
 
 	medicalHistPage := page.NewPage(entitiyList, *page.GetPageMetadata(len(queryRows), pagination))
-	return medicalHistPage, nil
+	return *medicalHistPage, nil
 }
 
 // TODO: Create QUERY
-func (r *SQLCMedHistRepository) ListByOwnerId(ctx context.Context, ownerId int, pagination page.PageData) (*page.Page[[]mhDomain.MedicalHistory], error) {
+func (r *SQLCMedHistRepository) ListByOwnerId(ctx context.Context, ownerId int, pagination page.PageData) (page.Page[[]mhDomain.MedicalHistory], error) {
 	queryRows, err := r.queries.ListMedicalHistoryByPet(ctx, int32(ownerId))
 	if err != nil {
-		return nil, err
+		return page.Page[[]mhDomain.MedicalHistory]{}, err
 	}
 
 	entitiyList, err := ToDomainList(queryRows)
 	if err != nil {
-		return nil, err
+		return page.Page[[]mhDomain.MedicalHistory]{}, err
 	}
 
 	medicalHistPage := page.NewPage(entitiyList, *page.GetPageMetadata(len(queryRows), pagination))
-	return medicalHistPage, nil
+	return *medicalHistPage, nil
 }
 
 func (r *SQLCMedHistRepository) Create(ctx context.Context, medHistory *mhDomain.MedicalHistory) error {

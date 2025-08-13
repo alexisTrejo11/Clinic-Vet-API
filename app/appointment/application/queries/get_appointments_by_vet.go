@@ -8,14 +8,14 @@ import (
 )
 
 type GetAppointmentsByVetQuery struct {
-	VetId     int           `json:"vet_id"`
-	PageInput page.PageData `json:"page_data"`
+	VetId     int `json:"vet_id"`
+	pageInput page.PageData
 }
 
 func NewGetAppointmentsByVetQuery(vetId, pageNumber, pageSize int) GetAppointmentsByVetQuery {
 	return GetAppointmentsByVetQuery{
 		VetId: vetId,
-		PageInput: page.PageData{
+		pageInput: page.PageData{
 			PageNumber: pageNumber,
 			PageSize:   pageSize,
 		},
@@ -23,7 +23,7 @@ func NewGetAppointmentsByVetQuery(vetId, pageNumber, pageSize int) GetAppointmen
 }
 
 type GetAppointmentsByVetHandler interface {
-	Handle(ctx context.Context, query GetAppointmentsByVetQuery) (*page.Page[[]AppointmentResponse], error)
+	Handle(ctx context.Context, query GetAppointmentsByVetQuery) (page.Page[[]AppointmentResponse], error)
 }
 
 type getAppointmentsByVetHandler struct {
@@ -36,12 +36,12 @@ func NewGetAppointmentsByVetHandler(appointmentRepo appointmentDomain.Appointmen
 	}
 }
 
-func (h *getAppointmentsByVetHandler) Handle(ctx context.Context, query GetAppointmentsByVetQuery) (*page.Page[[]AppointmentResponse], error) {
-	appointmentsPage, err := h.appointmentRepo.ListByVetId(ctx, query.VetId, query.PageInput)
+func (h *getAppointmentsByVetHandler) Handle(ctx context.Context, query GetAppointmentsByVetQuery) (page.Page[[]AppointmentResponse], error) {
+	appointmentsPage, err := h.appointmentRepo.ListByVetId(ctx, query.VetId, query.pageInput)
 	if err != nil {
-		return nil, err
+		return page.Page[[]AppointmentResponse]{}, err
 	}
 
 	responses := mapAppointmentsToResponses(appointmentsPage.Data)
-	return page.NewPage(responses, appointmentsPage.Metadata), nil
+	return *page.NewPage(responses, appointmentsPage.Metadata), nil
 }

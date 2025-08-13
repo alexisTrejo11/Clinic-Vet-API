@@ -8,7 +8,8 @@ import (
 )
 
 type CompleteAppointmentCommand struct {
-	Id    int     `json:"id" binding:"required"`
+	Id int `json:"id" binding:"required"`
+
 	Notes *string `json:"notes,omitempty"`
 }
 
@@ -27,26 +28,16 @@ func NewCompleteAppointmentHandler(appointmentRepo appointmentDomain.Appointment
 }
 
 func (h *completeAppointmentHandler) Handle(ctx context.Context, command CompleteAppointmentCommand) shared.CommandResult {
-	// Get existing appointment
 	appointment, err := h.appointmentRepo.GetById(ctx, command.Id)
 	if err != nil {
 		return shared.FailureResult("appointment not found", err)
 	}
 
-	// Validate appointment can be completed
-	if appointment.GetStatus() == appointmentDomain.StatusCompleted {
-		return shared.FailureResult("appointment is already completed", nil)
+	if err := appointment.Complete(); err != nil {
+		return shared.FailureResult("failed to complete appointment", err)
 	}
 
-	if appointment.GetStatus() == appointmentDomain.StatusCancelled {
-		return shared.FailureResult("cannot complete cancelled appointment", nil)
-	}
-
-	// Complete appointment
-	appointment.CompleteAppointment()
-
-	// Save updated appointment
-	if err := h.appointmentRepo.Save(ctx, appointment); err != nil {
+	if err := h.appointmentRepo.Save(ctx, &appointment); err != nil {
 		return shared.FailureResult("failed to save completed appointment", err)
 	}
 

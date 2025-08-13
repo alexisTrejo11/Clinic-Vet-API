@@ -33,11 +33,11 @@ func NewSearchPaymentsHandler(repository paymentDomain.PaymentRepository) *Searc
 	return &SearchPaymentsHandler{repository: repository}
 }
 
-func (h *SearchPaymentsHandler) Handle(ctx context.Context, query SearchPaymentsQuery) (*page.Page[[]PaymentResponse], error) {
+func (h *SearchPaymentsHandler) Handle(ctx context.Context, query SearchPaymentsQuery) (page.Page[[]PaymentResponse], error) {
 	criteria := toSearchCriteria(query)
 	paymentsPage, err := h.repository.Search(context.Background(), query.Pagination, criteria)
 	if err != nil {
-		return nil, err
+		return page.Page[[]PaymentResponse]{}, err
 	}
 
 	var responses []PaymentResponse
@@ -45,7 +45,7 @@ func (h *SearchPaymentsHandler) Handle(ctx context.Context, query SearchPayments
 		responses = append(responses, NewPaymentResponse(&payment))
 	}
 
-	return page.NewPage(responses, paymentsPage.Metadata), nil
+	return *page.NewPage(responses, paymentsPage.Metadata), nil
 }
 
 func toSearchCriteria(query SearchPaymentsQuery) map[string]interface{} {

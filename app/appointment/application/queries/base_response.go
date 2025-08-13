@@ -42,7 +42,7 @@ func NewAppointmentResponse(appointment *appointmentDomain.Appointment) Appointm
 }
 
 func mapAppointmentsToResponses(appointments []appointmentDomain.Appointment) []AppointmentResponse {
-	var responses []AppointmentResponse
+	responses := make([]AppointmentResponse, 0, len(appointments))
 	for _, appointment := range appointments {
 		responses = append(responses, NewAppointmentResponse(&appointment))
 	}

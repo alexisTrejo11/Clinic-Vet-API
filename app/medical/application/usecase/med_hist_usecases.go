@@ -21,45 +21,45 @@ func NewMedicalHistoryUseCase(medHistRepo medHistRepo.MedicalHistoryRepository, 
 	return &MedicalHistoryUseCase{medHistRepo: medHistRepo, ownerRepo: ownerRepo, vetRepo: vetRepo}
 }
 
-func (uc *MedicalHistoryUseCase) Search(ctx context.Context, searchParams mhDTOs.MedHistSearchParams) (*page.Page[[]mhDTOs.MedHistResponse], error) {
+func (uc *MedicalHistoryUseCase) Search(ctx context.Context, searchParams mhDTOs.MedHistSearchParams) (page.Page[[]mhDTOs.MedHistResponse], error) {
 	medHistPage, err := uc.medHistRepo.Search(ctx, searchParams)
 	if err != nil {
-		return nil, err
+		return page.Page[[]mhDTOs.MedHistResponse]{}, err
 	}
 
 	reponsePage := page.NewPage(mhDTOs.ListToResponse(medHistPage.Data), medHistPage.Metadata)
 
-	return reponsePage, nil
+	return *reponsePage, nil
 }
 
-func (uc *MedicalHistoryUseCase) GetByPet(ctx context.Context, petId int, pagintation page.PageData) (*page.Page[[]mhDTOs.MedHistResponse], error) {
+func (uc *MedicalHistoryUseCase) GetByPet(ctx context.Context, petId int, pagintation page.PageData) (page.Page[[]mhDTOs.MedHistResponse], error) {
 	medHistPage, err := uc.medHistRepo.ListByPetId(ctx, petId, pagintation)
 	if err != nil {
-		return nil, err
+		return page.Page[[]mhDTOs.MedHistResponse]{}, err
 	}
 
 	reponsePage := page.NewPage(mhDTOs.ListToResponse(medHistPage.Data), medHistPage.Metadata)
-	return reponsePage, nil
+	return *reponsePage, nil
 }
 
-func (uc *MedicalHistoryUseCase) ListByOwner(ctx context.Context, ownerId int, pagintation page.PageData) (*page.Page[[]mhDTOs.MedHistResponse], error) {
+func (uc *MedicalHistoryUseCase) ListByOwner(ctx context.Context, ownerId int, pagintation page.PageData) (page.Page[[]mhDTOs.MedHistResponse], error) {
 	medHistPage, err := uc.medHistRepo.ListByOwnerId(ctx, ownerId, pagintation)
 	if err != nil {
-		return nil, err
+		return page.Page[[]mhDTOs.MedHistResponse]{}, err
 	}
 
 	reponsePage := page.NewPage(mhDTOs.ListToResponse(medHistPage.Data), medHistPage.Metadata)
-	return reponsePage, nil
+	return *reponsePage, nil
 }
 
-func (uc *MedicalHistoryUseCase) ListByVet(ctx context.Context, vetId int, pagintation page.PageData) (*page.Page[[]mhDTOs.MedHistResponse], error) {
+func (uc *MedicalHistoryUseCase) ListByVet(ctx context.Context, vetId int, pagintation page.PageData) (page.Page[[]mhDTOs.MedHistResponse], error) {
 	medHistPage, err := uc.medHistRepo.ListByVetId(ctx, vetId, pagintation)
 	if err != nil {
-		return nil, err
+		return page.Page[[]mhDTOs.MedHistResponse]{}, err
 	}
 
 	reponsePage := page.NewPage(mhDTOs.ListToResponse(medHistPage.Data), medHistPage.Metadata)
-	return reponsePage, nil
+	return *reponsePage, nil
 }
 
 func (uc *MedicalHistoryUseCase) GetById(ctx context.Context, id int) (mhDTOs.MedHistResponse, error) {

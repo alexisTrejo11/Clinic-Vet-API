@@ -6,41 +6,44 @@ import (
 )
 
 type AppointmentRoutes struct {
-	appointmentController      *appointmentController.AppointmentController
-	ownerAppointmentController *appointmentController.OwnerAppointmentController
-	vetAppointmentController   *appointmentController.VetAppointmentController
+	appointmentCommandController *appointmentController.AppointmentCommandController
+	appointmentQueryController   *appointmentController.AppointmentQueryController
+	ownerAppointmentController   *appointmentController.OwnerAppointmentController
+	vetAppointmentController     *appointmentController.VetAppointmentController
 }
 
 func NewAppointmentRoutes(
-	appointmentController *appointmentController.AppointmentController,
+	appointmentCommandController *appointmentController.AppointmentCommandController,
+	appointmentQueryController *appointmentController.AppointmentQueryController,
 	ownerAppointmentController *appointmentController.OwnerAppointmentController,
 	vetAppointmentController *appointmentController.VetAppointmentController,
 ) *AppointmentRoutes {
 	return &AppointmentRoutes{
-		appointmentController:      appointmentController,
-		ownerAppointmentController: ownerAppointmentController,
-		vetAppointmentController:   vetAppointmentController,
+		appointmentCommandController: appointmentCommandController,
+		appointmentQueryController:   appointmentQueryController,
+		ownerAppointmentController:   ownerAppointmentController,
+		vetAppointmentController:     vetAppointmentController,
 	}
 }
 
 // RegisterRoutes sets up all appointment-related routes
-func (r *AppointmentRoutes) RegisterRoutes(router *gin.Engine) {
+func (r *AppointmentRoutes) RegisterAdminRoutes(router *gin.Engine) {
 	// Admin/General appointment routes
 	appointmentGroup := router.Group("/api/v2/appointments")
 	{
-		// CRUD operations (admin access)
-		appointmentGroup.POST("", r.appointmentController.CreateAppointment)
-		appointmentGroup.GET("", r.appointmentController.GetAllAppointments)
-		appointmentGroup.GET("/:id", r.appointmentController.GetAppointmentById)
-		appointmentGroup.PUT("/:id", r.appointmentController.UpdateAppointment)
-		appointmentGroup.DELETE("/:id", r.appointmentController.DeleteAppointment)
+		// Command operations (admin access)
+		appointmentGroup.POST("", r.appointmentCommandController.CreateAppointment)
+		appointmentGroup.PUT("/:id", r.appointmentCommandController.UpdateAppointment)
+		appointmentGroup.DELETE("/:id", r.appointmentCommandController.DeleteAppointment)
 
-		// Query operations
-		appointmentGroup.GET("/date-range", r.appointmentController.GetAppointmentsByDateRange)
-		appointmentGroup.GET("/owner/:ownerId", r.appointmentController.GetAppointmentsByOwner)
-		appointmentGroup.GET("/vet/:vetId", r.appointmentController.GetAppointmentsByVet)
-		appointmentGroup.GET("/pet/:petId", r.appointmentController.GetAppointmentsByPet)
-		appointmentGroup.GET("/stats", r.appointmentController.GetAppointmentStats)
+		// Query operations (admin access)
+		appointmentGroup.GET("", r.appointmentQueryController.GetAllAppointments)
+		appointmentGroup.GET("/:id", r.appointmentQueryController.GetAppointmentById)
+		appointmentGroup.GET("/date-range", r.appointmentQueryController.GetAppointmentsByDateRange)
+		appointmentGroup.GET("/owner/:ownerId", r.appointmentQueryController.GetAppointmentsByOwner)
+		appointmentGroup.GET("/vet/:vetId", r.appointmentQueryController.GetAppointmentsByVet)
+		appointmentGroup.GET("/pet/:petId", r.appointmentQueryController.GetAppointmentsByPet)
+		appointmentGroup.GET("/stats", r.appointmentQueryController.GetAppointmentStats)
 	}
 
 	// Owner-specific appointment routes
@@ -99,22 +102,5 @@ func (r *AppointmentRoutes) RegisterVetRoutes(router *gin.Engine) {
 		vetGroup.PUT("/appointments/:id/reschedule", r.vetAppointmentController.RescheduleAppointment)
 		vetGroup.PUT("/appointments/:id/no-show", r.vetAppointmentController.MarkAsNoShow)
 		vetGroup.DELETE("/appointments/:id", r.vetAppointmentController.CancelAppointment)
-	}
-}
-
-// RegisterAdminRoutes registers only admin-specific appointment routes
-func (r *AppointmentRoutes) RegisterAdminRoutes(router *gin.Engine) {
-	appointmentGroup := router.Group("/api/v2/appointments")
-	{
-		appointmentGroup.POST("", r.appointmentController.CreateAppointment)
-		appointmentGroup.GET("", r.appointmentController.GetAllAppointments)
-		appointmentGroup.GET("/:id", r.appointmentController.GetAppointmentById)
-		appointmentGroup.PUT("/:id", r.appointmentController.UpdateAppointment)
-		appointmentGroup.DELETE("/:id", r.appointmentController.DeleteAppointment)
-		appointmentGroup.GET("/date-range", r.appointmentController.GetAppointmentsByDateRange)
-		appointmentGroup.GET("/owner/:ownerId", r.appointmentController.GetAppointmentsByOwner)
-		appointmentGroup.GET("/vet/:vetId", r.appointmentController.GetAppointmentsByVet)
-		appointmentGroup.GET("/pet/:petId", r.appointmentController.GetAppointmentsByPet)
-		appointmentGroup.GET("/stats", r.appointmentController.GetAppointmentStats)
 	}
 }

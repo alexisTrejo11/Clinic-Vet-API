@@ -8,7 +8,7 @@ import (
 )
 
 type ListOverduePaymentsHandler interface {
-	Handle(ctx context.Context, query ListOverduePaymentsQuery) (*page.Page[[]PaymentResponse], error)
+	Handle(ctx context.Context, query ListOverduePaymentsQuery) (page.Page[[]PaymentResponse], error)
 }
 
 type listOverduePaymentsHandlerImpl struct {
@@ -31,12 +31,12 @@ func NewListOverduePaymentsHandler(paymentRepository paymentDomain.PaymentReposi
 	}
 }
 
-func (h *listOverduePaymentsHandlerImpl) Handle(ctx context.Context, query ListOverduePaymentsQuery) (*page.Page[[]PaymentResponse], error) {
+func (h *listOverduePaymentsHandlerImpl) Handle(ctx context.Context, query ListOverduePaymentsQuery) (page.Page[[]PaymentResponse], error) {
 	paymentsPage, err := h.paymentRepository.ListOverduePayments(ctx, query.pagination)
 	if err != nil {
-		return nil, err
+		return page.Page[[]PaymentResponse]{}, err
 	}
 
 	response := mapPaymentsToResponses(paymentsPage.Data)
-	return page.NewPage(response, paymentsPage.Metadata), nil
+	return *page.NewPage(response, paymentsPage.Metadata), nil
 }

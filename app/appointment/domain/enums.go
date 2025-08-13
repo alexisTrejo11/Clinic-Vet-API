@@ -1,6 +1,8 @@
 package appointDomain
 
-import "errors"
+import (
+	domainErr "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/errors/domain"
+)
 
 type AppointmentStatus string
 
@@ -25,7 +27,7 @@ func (as AppointmentStatus) IsValid() bool {
 func NewAppointmentStatus(status string) (AppointmentStatus, error) {
 	as := AppointmentStatus(status)
 	if !as.IsValid() {
-		return "", errors.New("invalid appointment status: " + string(as))
+		return "", domainErr.InvalidEnumValue("status", status, "invalid appointment status")
 	}
 	return as, nil
 }

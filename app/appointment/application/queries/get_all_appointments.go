@@ -8,7 +8,7 @@ import (
 )
 
 type GetAllAppointmentsQuery struct {
-	pageInput page.PageData `json:"page_data"`
+	pageInput page.PageData
 }
 
 func NewGetAllAppointmentsQuery(pageNumber, pageSize int) GetAllAppointmentsQuery {
@@ -21,7 +21,7 @@ func NewGetAllAppointmentsQuery(pageNumber, pageSize int) GetAllAppointmentsQuer
 }
 
 type GetAllAppointmentsHandler interface {
-	Handle(ctx context.Context, query GetAllAppointmentsQuery) (*page.Page[[]AppointmentResponse], error)
+	Handle(ctx context.Context, query GetAllAppointmentsQuery) (page.Page[[]AppointmentResponse], error)
 }
 
 type getAllAppointmentsHandler struct {
@@ -34,18 +34,12 @@ func NewGetAllAppointmentsHandler(appointmentRepo appointmentDomain.AppointmentR
 	}
 }
 
-func (h *getAllAppointmentsHandler) Handle(ctx context.Context, query GetAllAppointmentsQuery) (*page.Page[[]AppointmentResponse], error) {
+func (h *getAllAppointmentsHandler) Handle(ctx context.Context, query GetAllAppointmentsQuery) (page.Page[[]AppointmentResponse], error) {
 	appointmentPage, err := h.appointmentRepo.ListAll(ctx, query.pageInput)
 	if err != nil {
-		return nil, err
-	}
-
-	if appointmentPage != nil {
-		if len(appointmentPage.Data) == 0 {
-			return page.NewPage([]AppointmentResponse{}, appointmentPage.Metadata), nil
-		}
+		return page.Page[[]AppointmentResponse]{}, err
 	}
 
 	responses := mapAppointmentsToResponses(appointmentPage.Data)
-	return page.NewPage(responses, appointmentPage.Metadata), nil
+	return *page.NewPage(responses, appointmentPage.Metadata), nil
 }

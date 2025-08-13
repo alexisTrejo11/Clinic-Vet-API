@@ -8,7 +8,13 @@ import (
 )
 
 type DeleteAppointmentCommand struct {
-	AppointmentId int `json:"id" binding:"required"`
+	appointmentId int `json:"id" binding:"required"`
+}
+
+func NewDeleteAppointmentCommand(appointmentId int) DeleteAppointmentCommand {
+	return DeleteAppointmentCommand{
+		appointmentId: appointmentId,
+	}
 }
 
 type DeleteAppointmentHandler interface {
@@ -26,18 +32,16 @@ func NewDeleteAppointmentHandler(appointmentRepo appointmentDomain.AppointmentRe
 }
 
 func (h *deleteAppointmentHandler) Handle(ctx context.Context, command DeleteAppointmentCommand) shared.CommandResult {
-	// Check if appointment exists
-	appointment, err := h.appointmentRepo.GetById(ctx, command.AppointmentId)
+	appointment, err := h.appointmentRepo.GetById(ctx, command.appointmentId)
 	if err != nil {
 		return shared.FailureResult("appointment not found", err)
 	}
 
-	// Validate if appointment can be deleted
 	if appointment.GetStatus() == appointmentDomain.StatusCompleted {
 		return shared.FailureResult("cannot delete completed appointment", nil)
 	}
 
-	if err := h.appointmentRepo.Delete(command.AppointmentId); err != nil {
+	if err := h.appointmentRepo.Delete(command.appointmentId); err != nil {
 		return shared.FailureResult("failed to delete appointment", err)
 	}
 

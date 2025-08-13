@@ -8,28 +8,37 @@ import (
 	appointmentRepo "github.com/alexisTrejo11/Clinic-Vet-API/app/appointment/infrastructure/persistence/repositories"
 	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 )
 
 type AppointmentApiFactory struct {
-	queries *sqlc.Queries
+	queries   *sqlc.Queries
+	validator *validator.Validate
 }
 
-func NewAppointmentApiFactory(queries *sqlc.Queries) *AppointmentApiFactory {
+func NewAppointmentApiFactory(queries *sqlc.Queries, validator *validator.Validate) *AppointmentApiFactory {
 	return &AppointmentApiFactory{
-		queries: queries,
+		queries:   queries,
+		validator: validator,
 	}
 }
 
-func (factory *AppointmentApiFactory) CreateController() *appointmentController.AppointmentController {
-	appointmentRepository := appointmentRepo.NewPostgresAppointmentRepository(factory.queries)
+func (factory *AppointmentApiFactory) CreateCommandController() *appointmentController.AppointmentCommandController {
+	appointmentRepository := appointmentRepo.NewSQLCAppointmentRepository(factory.queries)
 	commandBus := appointmentCmd.NewAppointmentCommandBus(appointmentRepository)
+
+	return appointmentController.NewAppointmentCommandController(commandBus, factory.validator)
+}
+
+func (factory *AppointmentApiFactory) CreateQueryController() *appointmentController.AppointmentQueryController {
+	appointmentRepository := appointmentRepo.NewSQLCAppointmentRepository(factory.queries)
 	queryBus := appointmentQuery.NewAppointmentQueryBus(appointmentRepository)
 
-	return appointmentController.NewAppointmentController(commandBus, queryBus)
+	return appointmentController.NewAppointmentQueryController(queryBus, factory.validator)
 }
 
 func (factory *AppointmentApiFactory) CreateOwnerController() *appointmentController.OwnerAppointmentController {
-	appointmentRepository := appointmentRepo.NewPostgresAppointmentRepository(factory.queries)
+	appointmentRepository := appointmentRepo.NewSQLCAppointmentRepository(factory.queries)
 	commandBus := appointmentCmd.NewAppointmentCommandBus(appointmentRepository)
 	queryBus := appointmentQuery.NewAppointmentQueryBus(appointmentRepository)
 
@@ -37,21 +46,25 @@ func (factory *AppointmentApiFactory) CreateOwnerController() *appointmentContro
 }
 
 func (factory *AppointmentApiFactory) CreateVetController() *appointmentController.VetAppointmentController {
-	appointmentRepository := appointmentRepo.NewPostgresAppointmentRepository(factory.queries)
+	appointmentRepository := appointmentRepo.NewSQLCAppointmentRepository(factory.queries)
 	commandBus := appointmentCmd.NewAppointmentCommandBus(appointmentRepository)
 	queryBus := appointmentQuery.NewAppointmentQueryBus(appointmentRepository)
 
 	return appointmentController.NewVetAppointmentController(commandBus, queryBus)
 }
 
-func SetupAppoinmentAPI(router *gin.Engine, queries *sqlc.Queries) {
-	appointmentRepository := appointmentRepo.NewPostgresAppointmentRepository(queries)
-	commandBus := appointmentCmd.NewAppointmentCommandBus(appointmentRepository)
-	queryBus := appointmentQuery.NewAppointmentQueryBus(appointmentRepository)
-	controllers := appointmentController.NewAppointmentController(commandBus, queryBus)
-	vetControllers := appointmentController.NewVetAppointmentController(commandBus, queryBus)
-	ownerControllers := appointmentController.NewOwnerAppointmentController(commandBus, queryBus)
+func (factory *AppointmentApiFactory) CreateRoutes(router *gin.Engine) *appointmentRoutes.AppointmentRoutes {
+	appointmentController := factory.CreateCommandController()
+	ownerAppointmentController := factory.CreateOwnerController()
+	vetAppointmentController := factory.CreateVetController()
+	appointmentQueryController := factory.CreateQueryController()
 
-	routes := appointmentRoutes.NewAppointmentRoutes(controllers, ownerControllers, vetControllers)
-	routes.RegisterRoutes(router)
+	routes := appointmentRoutes.NewAppointmentRoutes(appointmentController, appointmentQueryController, ownerAppointmentController, vetAppointmentController)
+	routes.RegisterAdminRoutes(router)
+	return routes
+}
+
+func SetupAppoinmentAPI(router *gin.Engine, queries *sqlc.Queries, validator *validator.Validate) {
+	factory := NewAppointmentApiFactory(queries, validator)
+	factory.CreateRoutes(router)
 }
