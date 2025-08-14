@@ -11,49 +11,54 @@ import (
 	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
 )
 
-func SqlcVetToDomain(sql sqlc.Veterinarian) *vetDomain.Veterinarian {
-	name, _ := valueObjects.NewPersonName(sql.FirstName, sql.LastName)
-
-	var isActive bool
-	if sql.IsActive.Valid {
-		isActive = sql.IsActive.Bool
+func SqlcVetToDomain(sql sqlc.Veterinarian) (*vetDomain.Veterinarian, error) {
+	name, err := valueObjects.NewPersonName(sql.FirstName, sql.LastName)
+	if err != nil {
+		return nil, fmt.Errorf("error al crear el nombre de la persona: %w", err)
 	}
 
-	var userID *int
+	schedule, err := UnmarshalVetSchedule(sql.ScheduleJson)
+	if err != nil {
+		schedule = &vetDomain.Schedule{}
+	}
+
+	// Utiliza el builder para construir el objeto del dominio
+	builder := vetDomain.NewVeterinarianBuilder().
+		WithID(int(sql.ID)).
+		WithName(name).
+		WithPhoto(sql.Photo).
+		WithLicenseNumber(sql.LicenseNumber).
+		WithYearsExperience(int(sql.YearsOfExperience)).
+		WithSpecialty(vetDomain.VetSpecialtyFromString(shared.AssertString(sql.Speciality))).
+		WithSchedule(schedule).
+		WithScheduleJSON(string(sql.ScheduleJson))
+
+	// Manejar campos opcionales/nulos
+	if sql.IsActive.Valid {
+		builder.WithIsActive(sql.IsActive.Bool)
+	} else {
+		// Asume un valor por defecto si no es válido
+		builder.WithIsActive(false)
+	}
+
 	if sql.UserID.Valid {
 		uid := int(sql.UserID.Int32)
-		userID = &uid
+		builder.WithUserID(&uid)
 	}
 
-	var createdAt, updatedAt time.Time
 	if sql.CreatedAt.Valid {
-		createdAt = sql.CreatedAt.Time
+		builder.WithCreatedAt(sql.CreatedAt.Time)
+	} else {
+		builder.WithCreatedAt(time.Time{})
 	}
+
 	if sql.UpdatedAt.Valid {
-		updatedAt = sql.UpdatedAt.Time
+		builder.WithUpdatedAt(sql.UpdatedAt.Time)
+	} else {
+		builder.WithUpdatedAt(time.Time{})
 	}
 
-	scheduleJSON, err := UnmarshalVetSchedule(sql.ScheduleJson)
-	if err != nil {
-		fmt.Println(err.Error())
-		scheduleJSON = &vetDomain.Schedule{}
-	}
-
-	return &vetDomain.Veterinarian{
-		ID:              int(sql.ID),
-		Name:            name,
-		Photo:           sql.Photo,
-		LicenseNumber:   sql.LicenseNumber,
-		Specialty:       vetDomain.VetSpecialtyFromString(shared.AssertString(sql.Speciality)),
-		YearsExperience: int(sql.YearsOfExperience),
-		ConsultationFee: nil,
-		IsActive:        isActive,
-		UserID:          userID,
-		CreatedAt:       createdAt,
-		UpdatedAt:       updatedAt,
-		Schedule:        scheduleJSON,
-		ScheduleJSON:    "{}",
-	}
+	return builder.Build(), nil
 }
 
 // Estructura temporal para parsear el JSON de PostgreSQL

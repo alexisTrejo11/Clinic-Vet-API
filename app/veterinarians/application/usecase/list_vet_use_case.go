@@ -26,7 +26,7 @@ func (uc *ListVetUseCase) Execute(ctx context.Context, searchParam vetDtos.VetSe
 
 	vetResponseList := make([]vetDtos.VetResponse, len(veterinarianList))
 	for i, vet := range veterinarianList {
-		vetResponses := vetMapper.ToResponse(vet)
+		vetResponses := vetMapper.ToResponse(&vet)
 		vetResponseList[i] = *vetResponses
 	}
 

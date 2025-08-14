@@ -24,6 +24,6 @@ func (uc *GetVetByIdUseCase) Execute(ctx context.Context, vetId int) (dto.VetRes
 		return dto.VetResponse{}, err
 	}
 
-	vetResponse := vetMapper.ToResponse(veterinarian)
+	vetResponse := vetMapper.ToResponse(&veterinarian)
 	return *vetResponse, nil
 }

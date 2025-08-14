@@ -210,34 +210,32 @@ func (h *SignupCommandHandler) createOwner(cmd SignupCommand, userId int) error 
 }
 
 func (h *SignupCommandHandler) createVet(cmd SignupCommand) error {
-	if cmd.Role != user.UserRoleVeterinarian {
-		return nil
-	}
-
 	name, err := valueObjects.NewPersonName(cmd.FirstName, cmd.LastName)
 	if err != nil {
 		return err
 	}
 
-	vet := vetDomain.Veterinarian{
-		Name:     name,
-		Photo:    cmd.ProfilePicture,
-		IsActive: true,
-		UserID:   func(v int) *int { return &v }(cmd.UserId),
-	}
+	builder := vetDomain.NewVeterinarianBuilder().
+		WithName(name).
+		WithPhoto(cmd.ProfilePicture).
+		WithIsActive(true).
+		WithUserID(func(v int) *int { return &v }(cmd.UserId))
 
 	if cmd.LicenseNumber != nil {
-		vet.LicenseNumber = *cmd.LicenseNumber
+		builder.WithLicenseNumber(*cmd.LicenseNumber)
 	}
 	if cmd.Specialty != nil {
-		vet.Specialty = *cmd.Specialty
+		builder.WithSpecialty(*cmd.Specialty)
 	}
 	if cmd.YearsExperience != nil {
-		vet.YearsExperience = *cmd.YearsExperience
+		builder.WithYearsExperience(*cmd.YearsExperience)
 	}
 
-	if err := h.vetRepo.Save(cmd.CTX, &vet); err != nil {
+	vet := builder.Build()
+
+	if err := h.vetRepo.Save(cmd.CTX, vet); err != nil {
 		return err
 	}
+
 	return nil
 }

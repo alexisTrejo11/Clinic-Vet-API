@@ -114,7 +114,11 @@ func (r *SqlcVetRepository) List(ctx context.Context, searchParams vetDtos.VetSe
 
 	vets := make([]vetDomain.Veterinarian, len(sqlVets))
 	for i, sqlVet := range sqlVets {
-		vets[i] = *SqlcVetToDomain(sqlVet)
+		vet, err := SqlcVetToDomain(sqlVet)
+		if err != nil {
+			return nil, err
+		}
+		vets[i] = *vet
 	}
 
 	return vets, nil
@@ -125,7 +129,13 @@ func (c *SqlcVetRepository) GetById(ctx context.Context, id int) (vetDomain.Vete
 	if err != nil {
 		return vetDomain.Veterinarian{}, err
 	}
-	return *SqlcVetToDomain(sqlVet), nil
+
+	vet, err := SqlcVetToDomain(sqlVet)
+	if err != nil {
+		return vetDomain.Veterinarian{}, err
+	}
+
+	return *vet, nil
 }
 
 func (c *SqlcVetRepository) GetByUserId(ctx context.Context, id int) (vetDomain.Veterinarian, error) {
@@ -134,11 +144,15 @@ func (c *SqlcVetRepository) GetByUserId(ctx context.Context, id int) (vetDomain.
 		return vetDomain.Veterinarian{}, err
 	}
 
-	return *SqlcVetToDomain(sqlVet), nil
+	vet, err := SqlcVetToDomain(sqlVet)
+	if err != nil {
+		return vetDomain.Veterinarian{}, err
+	}
+	return *vet, nil
 }
 
 func (c *SqlcVetRepository) Save(ctx context.Context, vet *vetDomain.Veterinarian) error {
-	if vet.ID == 0 {
+	if vet.GetID() == 0 {
 		if err := c.create(ctx, vet); err != nil {
 			return err
 		}
@@ -172,13 +186,13 @@ func (c *SqlcVetRepository) Exists(ctx context.Context, vetId int) (bool, error)
 
 func (c *SqlcVetRepository) create(ctx context.Context, vet *vetDomain.Veterinarian) error {
 	createParams := sqlc.CreateVeterinarianParams{
-		FirstName:         vet.Name.FirstName,
-		LastName:          vet.Name.LastName,
-		LicenseNumber:     vet.LicenseNumber,
-		Photo:             vet.Photo,
-		Speciality:        models.VeterinarianSpeciality(vet.Specialty.String()),
-		YearsOfExperience: int32(vet.YearsExperience),
-		IsActive:          pgtype.Bool{Bool: vet.IsActive, Valid: true},
+		FirstName:         vet.GetName().FirstName,
+		LastName:          vet.GetName().LastName,
+		LicenseNumber:     vet.GetLicenseNumber(),
+		Photo:             vet.GetPhoto(),
+		Speciality:        models.VeterinarianSpeciality(vet.GetSpecialty().String()),
+		YearsOfExperience: int32(vet.GetYearsExperience()),
+		IsActive:          pgtype.Bool{Bool: vet.GetIsActive(), Valid: true},
 	}
 
 	sqlVet, err := c.queries.CreateVeterinarian(ctx, createParams)
@@ -186,23 +200,23 @@ func (c *SqlcVetRepository) create(ctx context.Context, vet *vetDomain.Veterinar
 		return err
 	}
 
-	vet.ID = int(sqlVet.ID)
-	vet.CreatedAt = sqlVet.CreatedAt.Time
-	vet.UpdatedAt = sqlVet.UpdatedAt.Time
+	vet.SetID(int(sqlVet.ID))
+	vet.SetCreatedAt(sqlVet.CreatedAt.Time)
+	vet.SetUpdatedAt(sqlVet.UpdatedAt.Time)
 
 	return nil
 }
 
 func (c *SqlcVetRepository) update(ctx context.Context, vet *vetDomain.Veterinarian) error {
 	updateParams := sqlc.UpdateVeterinarianParams{
-		ID:                int32(vet.ID),
-		FirstName:         vet.Name.FirstName,
-		LastName:          vet.Name.LastName,
-		LicenseNumber:     vet.LicenseNumber,
-		Photo:             vet.Photo,
-		Speciality:        models.VeterinarianSpeciality(vet.Specialty.String()),
-		YearsOfExperience: int32(vet.YearsExperience),
-		IsActive:          pgtype.Bool{Bool: vet.IsActive, Valid: true},
+		ID:                int32(vet.GetID()),
+		FirstName:         vet.GetName().FirstName,
+		LastName:          vet.GetName().LastName,
+		LicenseNumber:     vet.GetLicenseNumber(),
+		Photo:             vet.GetPhoto(),
+		Speciality:        models.VeterinarianSpeciality(vet.GetSpecialty().String()),
+		YearsOfExperience: int32(vet.GetYearsExperience()),
+		IsActive:          pgtype.Bool{Bool: vet.GetIsActive(), Valid: true},
 	}
 
 	sqlVet, err := c.queries.UpdateVeterinarian(ctx, updateParams)
@@ -210,7 +224,7 @@ func (c *SqlcVetRepository) update(ctx context.Context, vet *vetDomain.Veterinar
 		return err
 	}
 
-	vet.UpdatedAt = sqlVet.UpdatedAt.Time
+	vet.SetUpdatedAt(sqlVet.UpdatedAt.Time)
 
 	return nil
 }

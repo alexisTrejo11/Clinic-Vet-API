@@ -19,7 +19,10 @@ func NewCreateVetUseCase(vetRepository vetRepo.VeterinarianRepository) *CreateVe
 }
 
 func (uc *CreateVetUseCase) Execute(ctx context.Context, vetCreateData dto.VetCreate) (dto.VetResponse, error) {
-	newVet := vetMapper.FromCreateDTO(vetCreateData)
+	newVet, err := vetMapper.FromCreateDTO(vetCreateData)
+	if err != nil {
+		return dto.VetResponse{}, err
+	}
 
 	if err := newVet.ValidateBusinessLogic(); err != nil {
 		return dto.VetResponse{}, err
@@ -29,6 +32,6 @@ func (uc *CreateVetUseCase) Execute(ctx context.Context, vetCreateData dto.VetCr
 		return dto.VetResponse{}, err
 	}
 
-	vetResponse := vetMapper.ToResponse(*newVet)
+	vetResponse := vetMapper.ToResponse(newVet)
 	return *vetResponse, nil
 }
