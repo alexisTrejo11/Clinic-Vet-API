@@ -40,7 +40,7 @@ func createRandomPet(t *testing.T, ownerID int32) sqlc.Pet {
 	require.Equal(t, arg.Species, pet.Species)
 	require.Equal(t, arg.OwnerID, pet.OwnerID)
 
-	require.NotZero(t, pet.ID)
+	require.NotZero(t, pet.GetID())
 	require.NotZero(t, pet.CreatedAt)
 
 	return pet
@@ -81,7 +81,7 @@ func TestCreatePet(t *testing.T) {
 
 	t.Run("CreatePetWithAllFields", func(t *testing.T) {
 		pet := createRandomPet(t, owner.ID)
-		defer deleteTestPet(t, pet.ID)
+		defer deleteTestPet(t, pet.GetID())
 
 		require.True(t, pet.Photo.Valid)
 		require.True(t, pet.Breed.Valid)
@@ -162,10 +162,10 @@ func TestUpdatePet(t *testing.T) {
 			OwnerID:  owner.ID,
 			IsActive: true,
 		})
-		defer deleteTestPet(t, created_pet.ID)
+		defer deleteTestPet(t, created_pet.GetID())
 
 		update_arg := sqlc.UpdatePetParams{
-			ID:       created_pet.ID,
+			ID:       created_pet.GetID(),
 			Name:     "Required Update Fields Only",
 			Species:  "Dog",
 			OwnerID:  owner2.ID,
@@ -176,7 +176,7 @@ func TestUpdatePet(t *testing.T) {
 		err := testQueries.UpdatePet(context.Background(), update_arg)
 		require.NoError(t, err)
 
-		updated_pet, err := testQueries.GetPetByID(context.Background(), created_pet.ID)
+		updated_pet, err := testQueries.GetPetByID(context.Background(), created_pet.GetID())
 		require.NoError(t, err)
 
 		// Asert
@@ -195,16 +195,16 @@ func TestGetPetByID(t *testing.T) {
 	t.Run("GetExistingPet", func(t *testing.T) {
 		// Arrange
 		createdPet := createRandomPet(t, owner.ID)
-		defer deleteTestPet(t, createdPet.ID)
+		defer deleteTestPet(t, createdpet.GetID())
 
 		// Act
-		retrievedPet, err := testQueries.GetPetByID(context.Background(), createdPet.ID)
+		retrievedPet, err := testQueries.GetPetByID(context.Background(), createdpet.GetID())
 
 		// Assert
 		require.NoError(t, err)
 		require.NotEmpty(t, retrievedPet)
 
-		require.Equal(t, createdPet.ID, retrievedPet.ID)
+		require.Equal(t, createdpet.ID, retrievedpet.ID)
 		require.Equal(t, createdPet.Name, retrievedPet.Name)
 		require.Equal(t, createdPet.Species, retrievedPet.Species)
 		require.Equal(t, createdPet.OwnerID, retrievedPet.OwnerID)
@@ -255,10 +255,10 @@ func TestGetPetByID(t *testing.T) {
 
 		createdPet, err := testQueries.CreatePet(context.Background(), arg)
 		require.NoError(t, err)
-		defer deleteTestPet(t, createdPet.ID)
+		defer deleteTestPet(t, createdpet.GetID())
 
 		// Act
-		retrievedPet, err := testQueries.GetPetByID(context.Background(), createdPet.ID)
+		retrievedPet, err := testQueries.GetPetByID(context.Background(), createdpet.GetID())
 
 		// Assert
 		require.NoError(t, err)
@@ -289,10 +289,10 @@ func TestGetPetByID(t *testing.T) {
 		}
 		createdPet, err := testQueries.CreatePet(context.Background(), arg)
 		require.NoError(t, err)
-		defer deleteTestPet(t, createdPet.ID)
+		defer deleteTestPet(t, createdpet.GetID())
 
 		// Act
-		retrievedPet, err := testQueries.GetPetByID(context.Background(), createdPet.ID)
+		retrievedPet, err := testQueries.GetPetByID(context.Background(), createdpet.GetID())
 
 		// Assert
 		require.NoError(t, err)
@@ -357,20 +357,20 @@ func TestGetPetsByOwnerID(t *testing.T) {
 
 	t.Run("IsolationBetweenOwners", func(t *testing.T) {
 		ownerPet := createRandomPet(t, owner.ID)
-		defer deleteTestPet(t, ownerPet.ID)
+		defer deleteTestPet(t, ownerpet.GetID())
 
 		otherOwnerPet := createRandomPet(t, otherOwner.ID)
-		defer deleteTestPet(t, otherOwnerPet.ID)
+		defer deleteTestPet(t, otherOwnerpet.GetID())
 
 		pets, err := testQueries.GetPetsByOwnerID(context.Background(), owner.ID)
 		require.NoError(t, err)
 		require.Len(t, pets, 1)
-		require.Equal(t, ownerPet.ID, pets[0].ID)
+		require.Equal(t, ownerpet.GetID(), pets[0].ID)
 
 		otherPets, err := testQueries.GetPetsByOwnerID(context.Background(), otherOwner.ID)
 		require.NoError(t, err)
 		require.Len(t, otherPets, 1)
-		require.Equal(t, otherOwnerPet.ID, otherPets[0].ID)
+		require.Equal(t, otherOwnerpet.GetID(), otherPets[0].ID)
 	})
 
 	t.Run("PetsWithDifferentOptionalFields", func(t *testing.T) {
@@ -437,10 +437,10 @@ func TestDeletePet(t *testing.T) {
 	t.Run("DeleteExistingPet", func(t *testing.T) {
 		pet := createRandomPet(t, owner.ID)
 
-		err := testQueries.DeletePet(context.Background(), pet.ID)
+		err := testQueries.DeletePet(context.Background(), pet.GetID())
 		require.NoError(t, err)
 
-		deletedPet, err := testQueries.GetPetByID(context.Background(), pet.ID)
+		deletedPet, err := testQueries.GetPetByID(context.Background(), pet.GetID())
 		require.Error(t, err)
 		require.Empty(t, deletedPet)
 		require.Contains(t, err.Error(), "no rows in result set")
@@ -455,21 +455,21 @@ func TestDeletePet(t *testing.T) {
 	t.Run("DeletePetWithRelatedRecords", func(t *testing.T) {
 		pet := createRandomPet(t, owner.ID)
 
-		err := testQueries.DeletePet(context.Background(), pet.ID)
+		err := testQueries.DeletePet(context.Background(), pet.GetID())
 
 		require.NoError(t, err)
 
-		_, err = testQueries.GetPetByID(context.Background(), pet.ID)
+		_, err = testQueries.GetPetByID(context.Background(), pet.GetID())
 		require.Error(t, err)
 	})
 
 	t.Run("ConsecutiveDeletes", func(t *testing.T) {
 		pet := createRandomPet(t, owner.ID)
 
-		err := testQueries.DeletePet(context.Background(), pet.ID)
+		err := testQueries.DeletePet(context.Background(), pet.GetID())
 		require.NoError(t, err)
 
-		err = testQueries.DeletePet(context.Background(), pet.ID)
+		err = testQueries.DeletePet(context.Background(), pet.GetID())
 		require.NoError(t, err)
 	})
 

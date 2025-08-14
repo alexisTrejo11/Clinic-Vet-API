@@ -161,8 +161,8 @@ func (uc *MedicalHistoryUseCase) validateCreation(ctx context.Context, medHistor
 
 	petFound := false
 	for _, pet := range owner.Pets() {
-		if pet.Id == medHistory.PetId {
-			medHistory.PetId = pet.Id
+		if pet.GetID() == medHistory.PetId {
+			medHistory.PetId = pet.GetID()
 			petFound = true
 			break
 		}
@@ -189,7 +189,7 @@ func (uc *MedicalHistoryUseCase) validateUpdate(ctx context.Context, medHistory 
 		if medHistory.PetId == nil {
 			petFound := false
 			for _, pet := range owner.Pets() {
-				if pet.Id == *medHistory.PetId {
+				if pet.GetID() == *medHistory.PetId {
 					petFound = true
 					break
 				}

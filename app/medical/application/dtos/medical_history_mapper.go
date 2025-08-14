@@ -137,23 +137,23 @@ func ListToResponse(medHistories []mhDomain.MedicalHistory) []MedHistResponse {
 
 func ToResponseDetail(medHistory mhDomain.MedicalHistory, owner ownerDomain.Owner, vet vetDomain.Veterinarian, pet petDomain.Pet) MedHistResponseDetail {
 	petDetail := &PetDetails{
-		Id:      pet.Id,
-		Name:    pet.Name,
-		Species: pet.Species,
+		Id:      pet.GetID(),
+		Name:    pet.GetName(),
+		Species: pet.GetSpecies(),
 	}
 
-	if pet.Age != nil {
-		petDetail.Age = *pet.Age
+	if pet.GetAge() != nil {
+		petDetail.Age = *pet.GetAge()
 	}
 
-	if pet.Breed == nil {
+	if pet.GetBreed() == nil {
 		petDetail.Breed = "Unknown"
 	} else {
-		petDetail.Breed = *pet.Breed
+		petDetail.Breed = *pet.GetBreed()
 	}
 
-	if pet.Weight != nil {
-		petDetail.Weight = *pet.Weight
+	if pet.GetWeight() != nil {
+		petDetail.Weight = *pet.GetWeight()
 	}
 
 	detail := &MedHistResponseDetail{

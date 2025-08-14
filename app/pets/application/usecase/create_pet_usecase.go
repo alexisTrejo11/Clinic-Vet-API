@@ -28,7 +28,7 @@ func (uc CreatePetUseCase) Execute(ctx context.Context, petCreate petDTOs.PetCre
 	}
 
 	newPet := petMapper.ToDomainFromCreate(petCreate)
-	if err := uc.petRepository.Save(ctx, &newPet); err != nil {
+	if err := uc.petRepository.Save(ctx, newPet); err != nil {
 		return petDTOs.PetResponse{}, err
 	}
 

@@ -3,121 +3,108 @@ package sqlcPetRepository
 import (
 	"fmt"
 	"strconv"
-	"time"
 
 	petDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/domain"
 	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-func ToDomainPet(sqlPet sqlc.Pet) (petDomain.Pet, error) {
-	var domainPet petDomain.Pet
-
-	domainPet.Id = int(sqlPet.ID)
-	domainPet.Name = sqlPet.Name
+func ToDomainPet(sqlPet sqlc.Pet) (*petDomain.Pet, error) {
+	builder := petDomain.NewPetBuilder().
+		WithID(int(sqlPet.ID)).
+		WithName(sqlPet.Name).
+		WithSpecies(sqlPet.Species).
+		WithOwnerID(int(sqlPet.OwnerID)).
+		WithIsActive(sqlPet.IsActive)
 
 	if sqlPet.Photo.Valid {
-		domainPet.Photo = &sqlPet.Photo.String
+		builder.WithPhoto(&sqlPet.Photo.String)
 	}
-	domainPet.Species = sqlPet.Species
 	if sqlPet.Breed.Valid {
-		domainPet.Breed = &sqlPet.Breed.String
+		builder.WithBreed(&sqlPet.Breed.String)
 	}
-
 	if sqlPet.Age.Valid {
 		age := int(sqlPet.Age.Int16)
-		domainPet.Age = &age
+		builder.WithAge(&age)
 	}
-
 	if sqlPet.Gender.Valid {
 		genderVal := petDomain.Gender(sqlPet.Gender.String)
-		domainPet.Gender = &genderVal
+		builder.WithGender(&genderVal)
 	}
-
 	if sqlPet.Weight.Valid {
 		weight := sqlPet.Weight.Int.String()
 		parsedWeight, err := strconv.ParseFloat(weight, 64)
 		if err != nil {
-			return petDomain.Pet{}, fmt.Errorf("error al parsear peso: %w", err)
+			return nil, fmt.Errorf("error al parsear peso: %w", err)
 		}
-		domainPet.Weight = &parsedWeight
+		builder.WithWeight(&parsedWeight)
 	}
-
 	if sqlPet.Color.Valid {
-		domainPet.Color = &sqlPet.Color.String
+		builder.WithColor(&sqlPet.Color.String)
 	}
 	if sqlPet.Microchip.Valid {
-		domainPet.Microchip = &sqlPet.Microchip.String
+		builder.WithMicrochip(&sqlPet.Microchip.String)
 	}
 	if sqlPet.IsNeutered.Valid {
-		domainPet.IsNeutered = &sqlPet.IsNeutered.Bool
+		builder.WithIsNeutered(&sqlPet.IsNeutered.Bool)
 	}
-
-	domainPet.OwnerId = int(sqlPet.OwnerID)
-
 	if sqlPet.Allergies.Valid {
-		domainPet.Allergies = &sqlPet.Allergies.String
+		builder.WithAllergies(&sqlPet.Allergies.String)
 	}
 	if sqlPet.CurrentMedications.Valid {
-		domainPet.CurrentMedications = &sqlPet.CurrentMedications.String
+		builder.WithCurrentMedications(&sqlPet.CurrentMedications.String)
 	}
 	if sqlPet.SpecialNeeds.Valid {
-		domainPet.SpecialNeeds = &sqlPet.SpecialNeeds.String
+		builder.WithSpecialNeeds(&sqlPet.SpecialNeeds.String)
 	}
-
-	domainPet.IsActive = sqlPet.IsActive
-
 	if sqlPet.CreatedAt.Valid {
-		domainPet.CreatedAt = sqlPet.CreatedAt.Time
-	} else {
-		domainPet.CreatedAt = time.Time{}
+		builder.WithCreatedAt(sqlPet.CreatedAt.Time)
 	}
 	if sqlPet.UpdatedAt.Valid {
-		domainPet.UpdatedAt = sqlPet.UpdatedAt.Time
-	} else {
-		domainPet.UpdatedAt = time.Time{}
+		builder.WithUpdatedAt(sqlPet.UpdatedAt.Time)
 	}
-	return domainPet, nil
+
+	return builder.Build(), nil
 }
 
-func ToSqlCreateParam(pet petDomain.Pet) *sqlc.CreatePetParams {
+func ToSqlCreateParam(pet *petDomain.Pet) *sqlc.CreatePetParams {
 	return &sqlc.CreatePetParams{
-		Name:               pet.Name,
-		Photo:              toPgTypeText(pet.Photo),
-		Species:            pet.Species,
-		Breed:              toPgTypeText(pet.Breed),
-		Age:                toPgTypeInt2(pet.Age),
-		Gender:             toPgTypeText((*string)(pet.Gender)),
-		Weight:             toPgTypeNumeric(pet.Weight),
-		Color:              toPgTypeText(pet.Color),
-		Microchip:          toPgTypeText(pet.Microchip),
-		IsNeutered:         toPgTypeBool(pet.IsNeutered),
-		OwnerID:            int32(pet.OwnerId),
-		Allergies:          toPgTypeText(pet.Allergies),
-		CurrentMedications: toPgTypeText(pet.CurrentMedications),
-		SpecialNeeds:       toPgTypeText(pet.SpecialNeeds),
-		IsActive:           pet.IsActive,
+		Name:               pet.GetName(),
+		Photo:              toPgTypeText(pet.GetPhoto()),
+		Species:            pet.GetSpecies(),
+		Breed:              toPgTypeText(pet.GetBreed()),
+		Age:                toPgTypeInt2(pet.GetAge()),
+		Gender:             toPgTypeText((*string)(pet.GetGender())),
+		Weight:             toPgTypeNumeric(pet.GetWeight()),
+		Color:              toPgTypeText(pet.GetColor()),
+		Microchip:          toPgTypeText(pet.GetMicrochip()),
+		IsNeutered:         toPgTypeBool(pet.GetIsNeutered()),
+		OwnerID:            int32(pet.GetOwnerID()),
+		Allergies:          toPgTypeText(pet.GetAllergies()),
+		CurrentMedications: toPgTypeText(pet.GetCurrentMedications()),
+		SpecialNeeds:       toPgTypeText(pet.GetSpecialNeeds()),
+		IsActive:           pet.GetIsActive(),
 	}
 }
 
-func ToSqlUpdateParam(pet petDomain.Pet) *sqlc.UpdatePetParams {
+func ToSqlUpdateParam(pet *petDomain.Pet) *sqlc.UpdatePetParams {
 	return &sqlc.UpdatePetParams{
-		ID:                 int32(pet.Id),
-		Name:               pet.Name,
-		Photo:              toPgTypeText(pet.Photo),
-		Species:            pet.Species,
-		Breed:              toPgTypeText(pet.Breed),
-		Age:                toPgTypeInt2(pet.Age),
-		Gender:             toPgTypeText((*string)(pet.Gender)),
-		Weight:             toPgTypeNumeric(pet.Weight),
-		Color:              toPgTypeText(pet.Color),
-		Microchip:          toPgTypeText(pet.Microchip),
-		IsNeutered:         toPgTypeBool(pet.IsNeutered),
-		OwnerID:            int32(pet.OwnerId),
-		Allergies:          toPgTypeText(pet.Allergies),
-		CurrentMedications: toPgTypeText(pet.CurrentMedications),
-		SpecialNeeds:       toPgTypeText(pet.SpecialNeeds),
-		IsActive:           pet.IsActive,
+		ID:                 int32(pet.GetID()),
+		Name:               pet.GetName(),
+		Photo:              toPgTypeText(pet.GetPhoto()),
+		Species:            pet.GetSpecies(),
+		Breed:              toPgTypeText(pet.GetBreed()),
+		Age:                toPgTypeInt2(pet.GetAge()),
+		Gender:             toPgTypeText((*string)(pet.GetGender())),
+		Weight:             toPgTypeNumeric(pet.GetWeight()),
+		Color:              toPgTypeText(pet.GetColor()),
+		Microchip:          toPgTypeText(pet.GetMicrochip()),
+		IsNeutered:         toPgTypeBool(pet.GetIsNeutered()),
+		OwnerID:            int32(pet.GetOwnerID()),
+		Allergies:          toPgTypeText(pet.GetAllergies()),
+		CurrentMedications: toPgTypeText(pet.GetCurrentMedications()),
+		SpecialNeeds:       toPgTypeText(pet.GetSpecialNeeds()),
+		IsActive:           pet.GetIsActive(),
 	}
 }
 

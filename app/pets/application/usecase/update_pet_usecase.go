@@ -38,7 +38,7 @@ func (uc UpdatePetUseCase) Execute(ctx context.Context, petId int, petUpdate pet
 		return petDTOs.PetResponse{}, err
 	}
 
-	return petMapper.ToResponse(pet), nil
+	return petMapper.ToResponse(&pet), nil
 }
 
 func (uc UpdatePetUseCase) validate_owner(ctx context.Context, owner_id int) error {

@@ -7,130 +7,129 @@ import (
 	petDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/domain"
 )
 
-func ToDomainFromCreate(dto dtos.PetCreate) petDomain.Pet {
-	pet := petDomain.Pet{
-		Name:      dto.Name,
-		Species:   dto.Species,
-		OwnerId:   dto.OwnerID,
-		IsActive:  dto.IsActive,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
-	}
+func ToDomainFromCreate(dto dtos.PetCreate) *petDomain.Pet {
+	builder := petDomain.NewPetBuilder().
+		WithName(dto.Name).
+		WithSpecies(dto.Species).
+		WithOwnerID(dto.OwnerID).
+		WithIsActive(dto.IsActive).
+		WithCreatedAt(time.Now()).
+		WithUpdatedAt(time.Now())
 
 	if dto.Photo != nil {
-		pet.Photo = dto.Photo
+		builder.WithPhoto(dto.Photo)
 	}
 	if dto.Breed != nil {
-		pet.Breed = dto.Breed
+		builder.WithBreed(dto.Breed)
 	}
 	if dto.Age != nil {
-		domainAge := *dto.Age
-		pet.Age = &domainAge
+		builder.WithAge(dto.Age)
 	}
 	if dto.Gender != nil {
 		domainGender := petDomain.Gender(*dto.Gender)
-		pet.Gender = &domainGender
+		builder.WithGender(&domainGender)
 	}
 	if dto.Weight != nil {
-		pet.Weight = dto.Weight
+		builder.WithWeight(dto.Weight)
 	}
 	if dto.Color != nil {
-		pet.Color = dto.Color
+		builder.WithColor(dto.Color)
 	}
 	if dto.Microchip != nil {
-		pet.Microchip = dto.Microchip
+		builder.WithMicrochip(dto.Microchip)
 	}
 	if dto.IsNeutered != nil {
-		pet.IsNeutered = dto.IsNeutered
+		builder.WithIsNeutered(dto.IsNeutered)
 	}
 	if dto.Allergies != nil {
-		pet.Allergies = dto.Allergies
+		builder.WithAllergies(dto.Allergies)
 	}
 	if dto.CurrentMedications != nil {
-		pet.CurrentMedications = dto.CurrentMedications
+		builder.WithCurrentMedications(dto.CurrentMedications)
 	}
 	if dto.SpecialNeeds != nil {
-		pet.SpecialNeeds = dto.SpecialNeeds
+		builder.WithSpecialNeeds(dto.SpecialNeeds)
 	}
 
-	return pet
+	return builder.Build()
 }
 
 func ToDomainFromUpdate(pet *petDomain.Pet, dto dtos.PetUpdate) {
 	if dto.Name != nil {
-		pet.Name = *dto.Name
+		pet.SetName(*dto.Name)
 	}
 	if dto.Photo != nil {
-		pet.Photo = dto.Photo
+		pet.SetPhoto(dto.Photo)
 	}
 	if dto.Species != nil {
-		pet.Species = *dto.Species
+		pet.SetSpecies(*dto.Species)
 	}
 	if dto.Breed != nil {
-		pet.Breed = dto.Breed
+		pet.SetBreed(dto.Breed)
 	}
 	if dto.Age != nil {
-		pet.Age = dto.Age
+		pet.SetAge(dto.Age)
 	}
 	if dto.Gender != nil {
 		domainGender := petDomain.Gender(*dto.Gender)
-		pet.Gender = &domainGender
+		pet.SetGender(&domainGender)
 	}
 	if dto.Weight != nil {
-		pet.Weight = dto.Weight
+		pet.SetWeight(dto.Weight)
 	}
 	if dto.Color != nil {
-		pet.Color = dto.Color
+		pet.SetColor(dto.Color)
 	}
 	if dto.Microchip != nil {
-		pet.Microchip = dto.Microchip
+		pet.SetMicrochip(dto.Microchip)
 	}
 	if dto.IsNeutered != nil {
-		pet.IsNeutered = dto.IsNeutered
+		pet.SetIsNeutered(dto.IsNeutered)
 	}
 	if dto.OwnerID != nil {
-		pet.OwnerId = *dto.OwnerID
+		pet.SetOwnerID(*dto.OwnerID)
 	}
 	if dto.Allergies != nil {
-		pet.Allergies = dto.Allergies
+		pet.SetAllergies(dto.Allergies)
 	}
 	if dto.CurrentMedications != nil {
-		pet.CurrentMedications = dto.CurrentMedications
+		pet.SetCurrentMedications(dto.CurrentMedications)
 	}
 	if dto.SpecialNeeds != nil {
-		pet.SpecialNeeds = dto.SpecialNeeds
+		pet.SetSpecialNeeds(dto.SpecialNeeds)
 	}
 	if dto.IsActive != nil {
-		pet.IsActive = *dto.IsActive
+		pet.SetIsActive(*dto.IsActive)
 	}
-	pet.UpdatedAt = time.Now()
+
+	pet.SetUpdatedAt(time.Now())
 }
 
-func ToResponse(pet petDomain.Pet) dtos.PetResponse {
+func ToResponse(pet *petDomain.Pet) dtos.PetResponse {
 	response := dtos.PetResponse{
-		ID:                 pet.Id,
-		Name:               pet.Name,
-		Photo:              pet.Photo,
-		Species:            pet.Species,
-		Breed:              pet.Breed,
-		Weight:             pet.Weight,
-		Color:              pet.Color,
-		Microchip:          pet.Microchip,
-		IsNeutered:         pet.IsNeutered,
-		OwnerID:            pet.OwnerId,
-		Allergies:          pet.Allergies,
-		CurrentMedications: pet.CurrentMedications,
-		SpecialNeeds:       pet.SpecialNeeds,
-		IsActive:           pet.IsActive,
-		CreatedAt:          pet.CreatedAt,
-		UpdatedAt:          pet.UpdatedAt,
+		ID:                 pet.GetID(),
+		Name:               pet.GetName(),
+		Photo:              pet.GetPhoto(),
+		Species:            pet.GetSpecies(),
+		Breed:              pet.GetBreed(),
+		Weight:             pet.GetWeight(),
+		Color:              pet.GetColor(),
+		Microchip:          pet.GetMicrochip(),
+		IsNeutered:         pet.GetIsNeutered(),
+		OwnerID:            pet.GetOwnerID(),
+		Allergies:          pet.GetAllergies(),
+		CurrentMedications: pet.GetCurrentMedications(),
+		SpecialNeeds:       pet.GetSpecialNeeds(),
+		IsActive:           pet.GetIsActive(),
+		CreatedAt:          pet.GetCreatedAt(),
+		UpdatedAt:          pet.GetUpdatedAt(),
 	}
 
-	if pet.Age != nil {
-		response.Age = pet.Age
+	if pet.GetAge() != nil {
+		response.Age = pet.GetAge()
 	}
-	if pet.Gender != nil {
-		dtoGender := petDomain.Gender(*pet.Gender)
+	if pet.GetGender() != nil {
+		dtoGender := petDomain.Gender(*pet.GetGender())
 		response.Gender = &dtoGender
 	}
 
@@ -143,7 +142,7 @@ func ToResponseList(pets []petDomain.Pet) []dtos.PetResponse {
 	}
 	dtos := make([]dtos.PetResponse, len(pets))
 	for i, pet := range pets {
-		dtos[i] = ToResponse(pet)
+		dtos[i] = ToResponse(&pet)
 	}
 	return dtos
 }

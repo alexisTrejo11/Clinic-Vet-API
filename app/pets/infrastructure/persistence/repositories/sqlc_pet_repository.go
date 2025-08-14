@@ -31,7 +31,7 @@ func (r *SqlcPetRepository) List(ctx context.Context) ([]petDomain.Pet, error) {
 		if err != nil {
 			return nil, fmt.Errorf("error while mapping pet %d: %w", sqlPet.ID, err)
 		}
-		pets[i] = domainPet
+		pets[i] = *domainPet
 	}
 
 	return pets, nil
@@ -49,7 +49,7 @@ func (r *SqlcPetRepository) ListByOwnerId(ctx context.Context, ownerId int) ([]p
 		if err != nil {
 			return nil, fmt.Errorf("error while mapping pet %d: %w", sqlPet.ID, err)
 		}
-		pets[i] = domainPet
+		pets[i] = *domainPet
 	}
 
 	return pets, nil
@@ -66,12 +66,11 @@ func (r *SqlcPetRepository) GetById(ctx context.Context, petId int) (petDomain.P
 		return petDomain.Pet{}, err
 	}
 
-	return domainPet, nil
+	return *domainPet, nil
 }
 
 func (r *SqlcPetRepository) Save(ctx context.Context, pet *petDomain.Pet) error {
-	fmt.Println(pet.Id)
-	if pet.Id == 0 {
+	if pet.GetID() == 0 {
 		if err := r.create(ctx, pet); err != nil {
 			return DBCreateError(err.Error())
 		}
@@ -90,7 +89,7 @@ func (r *SqlcPetRepository) ExistsById(ctx context.Context, petId int) (bool, er
 }
 
 func (r *SqlcPetRepository) create(ctx context.Context, pet *petDomain.Pet) error {
-	params := ToSqlCreateParam(*pet)
+	params := ToSqlCreateParam(pet)
 
 	petCreated, err := r.queries.CreatePet(ctx, *params)
 	if err != nil {
@@ -102,13 +101,13 @@ func (r *SqlcPetRepository) create(ctx context.Context, pet *petDomain.Pet) erro
 		return err
 	}
 
-	pet.Id = int(petCreated.ID)
+	pet.SetID(int(petCreated.ID))
 
 	return nil
 }
 
 func (r *SqlcPetRepository) update(ctx context.Context, pet *petDomain.Pet) error {
-	params := ToSqlUpdateParam(*pet)
+	params := ToSqlUpdateParam(pet)
 
 	err := r.queries.UpdatePet(ctx, *params)
 	if err != nil {
@@ -123,6 +122,5 @@ func (r *SqlcPetRepository) Delete(ctx context.Context, petId int) error {
 		return DBDeleteError(err.Error())
 
 	}
-
 	return nil
 }

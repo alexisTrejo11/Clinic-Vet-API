@@ -25,5 +25,5 @@ func (uc *GetPetByIdUseCase) Execute(ctx context.Context, petId int) (petDTOs.Pe
 		return petDTOs.PetResponse{}, err
 	}
 
-	return petMapper.ToResponse(pet), nil
+	return petMapper.ToResponse(&pet), nil
 }
