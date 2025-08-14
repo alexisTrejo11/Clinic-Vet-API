@@ -38,7 +38,7 @@ func NewOwner(id int, photo string, fullName user.PersonName, gender user.Gender
 }
 
 // --- Getters ---
-func (o *Owner) ID() int {
+func (o *Owner) Id() int {
 	return o.id
 }
 
@@ -66,7 +66,7 @@ func (o *Owner) Address() *string {
 	return o.address
 }
 
-func (o *Owner) UserID() *int {
+func (o *Owner) UserId() *int {
 	return o.userId
 }
 
@@ -79,6 +79,10 @@ func (o *Owner) Pets() []petDomain.Pet {
 }
 
 // --- Setters ---
+func (o *Owner) SetId(id int) {
+	o.id = id
+}
+
 func (o *Owner) SetPhoto(photo string) {
 	o.photo = photo
 }
@@ -101,4 +105,24 @@ func (o *Owner) SetActive(status bool) {
 
 func (o *Owner) SetFullName(fullName user.PersonName) {
 	o.fullName = fullName
+}
+
+func (o *Owner) SetDateOfBirth(dateOfBirth time.Time) {
+	o.dateOfBirth = dateOfBirth
+}
+
+func (o *Owner) SetUserId(userId int) {
+	o.userId = &userId
+}
+
+func (o *Owner) SetPets(pets []petDomain.Pet) {
+	o.pets = pets
+}
+
+func (o *Owner) GetId() int {
+	return o.id
+}
+
+func (o *Owner) SetGender(gender user.Gender) {
+	o.gender = gender
 }

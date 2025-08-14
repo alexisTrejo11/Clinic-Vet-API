@@ -85,6 +85,10 @@ func (r *SqlcPetRepository) Save(ctx context.Context, pet *petDomain.Pet) error 
 	return nil
 }
 
+func (r *SqlcPetRepository) ExistsById(ctx context.Context, petId int) (bool, error) {
+	return true, nil
+}
+
 func (r *SqlcPetRepository) create(ctx context.Context, pet *petDomain.Pet) error {
 	params := ToSqlCreateParam(*pet)
 

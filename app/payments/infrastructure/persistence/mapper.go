@@ -20,36 +20,36 @@ func mapSQLCPaymentToDomain(sqlcPayment sqlc.Payment) (*paymentDomain.Payment, e
 		return nil, err
 	}
 
-	payment := &paymentDomain.Payment{
-		Id: int(sqlcPayment.ID),
-		Amount: paymentDomain.Money{
-			Amount:   sqlcPayment.Amount.Int.Int64(),
-			Currency: sqlcPayment.Currency,
-		},
-		Status:        status,
-		PaymentMethod: method,
-		CreatedAt:     sqlcPayment.CreatedAt.Time,
-		UpdatedAt:     sqlcPayment.UpdatedAt.Time,
-	}
+	payment := &paymentDomain.Payment{}
+
+	payment.SetId(int(sqlcPayment.ID))
+	payment.SetAmount(paymentDomain.Money{
+		Amount:   sqlcPayment.Amount.Int.Int64(),
+		Currency: sqlcPayment.Currency,
+	})
+	payment.SetStatus(status)
+	payment.SetPaymentMethod(method)
+	payment.SetCreatedAt(sqlcPayment.CreatedAt.Time)
+	payment.SetUpdatedAt(sqlcPayment.UpdatedAt.Time)
 
 	if sqlcPayment.TransactionID.Valid {
-		payment.TransactionId = &sqlcPayment.TransactionID.String
+		payment.SetTransactionId(&sqlcPayment.TransactionID.String)
 	}
 
 	if sqlcPayment.Description.Valid {
-		payment.Description = &sqlcPayment.Description.String
+		payment.SetDescription(&sqlcPayment.Description.String)
 	}
 
 	if sqlcPayment.Duedate.Valid {
-		payment.DueDate = &sqlcPayment.Duedate.Time
+		payment.SetDueDate(&sqlcPayment.Duedate.Time)
 	}
 
 	if sqlcPayment.PaidAt.Valid {
-		payment.PaidAt = &sqlcPayment.PaidAt.Time
+		payment.SetPaidAt(&sqlcPayment.PaidAt.Time)
 	}
 
 	if sqlcPayment.RefundedAt.Valid {
-		payment.RefundedAt = &sqlcPayment.RefundedAt.Time
+		payment.SetRefundedAt(&sqlcPayment.RefundedAt.Time)
 	}
 
 	return payment, nil
@@ -69,30 +69,30 @@ func mapSQLCPaymentListToDomain(sqlcPayments []sqlc.Payment) ([]paymentDomain.Pa
 
 func mapDomainToCreateParams(payment *paymentDomain.Payment) sqlc.CreatePaymentParams {
 	return sqlc.CreatePaymentParams{
-		Amount:        pgtype.Numeric{Int: big.NewInt(payment.Amount.Amount), Valid: true},
-		Currency:      payment.Amount.Currency,
-		TransactionID: pgtype.Text{String: *payment.TransactionId, Valid: payment.TransactionId != nil},
-		Status:        models.PaymentStatus(string(payment.Status)),
-		Method:        models.PaymentMethod(string(payment.PaymentMethod)),
-		Description:   pgtype.Text{String: *payment.Description, Valid: payment.Description != nil},
-		Duedate:       pgtype.Timestamptz{Time: *payment.DueDate, Valid: payment.DueDate != nil},
-		PaidAt:        pgtype.Timestamptz{Time: *payment.PaidAt, Valid: payment.PaidAt != nil},
-		RefundedAt:    pgtype.Timestamptz{Time: *payment.RefundedAt, Valid: payment.RefundedAt != nil},
+		Amount:        pgtype.Numeric{Int: big.NewInt(payment.GetAmount().Amount), Valid: true},
+		Currency:      payment.GetAmount().Currency,
+		TransactionID: pgtype.Text{String: *payment.GetTransactionId(), Valid: payment.GetTransactionId() != nil},
+		Status:        models.PaymentStatus(string(payment.GetStatus())),
+		Method:        models.PaymentMethod(string(payment.GetPaymentMethod())),
+		Description:   pgtype.Text{String: *payment.GetDescription(), Valid: payment.GetDescription() != nil},
+		Duedate:       pgtype.Timestamptz{Time: *payment.GetDueDate(), Valid: payment.GetDueDate() != nil},
+		PaidAt:        pgtype.Timestamptz{Time: *payment.GetPaidAt(), Valid: payment.GetPaidAt() != nil},
+		RefundedAt:    pgtype.Timestamptz{Time: *payment.GetRefundedAt(), Valid: payment.GetRefundedAt() != nil},
 	}
 }
 
 func mapDomainToUpdateParams(payment *paymentDomain.Payment) sqlc.UpdatePaymentParams {
 	return sqlc.UpdatePaymentParams{
-		ID:            int32(payment.Id),
-		Amount:        pgtype.Numeric{Int: big.NewInt(payment.Amount.Amount), Valid: true},
-		Currency:      payment.Amount.Currency,
-		TransactionID: pgtype.Text{String: *payment.TransactionId, Valid: payment.TransactionId != nil},
-		Status:        models.PaymentStatus(string(payment.Status)),
-		Method:        models.PaymentMethod(string(payment.PaymentMethod)),
-		UserID:        int32(payment.UserId),
-		Description:   pgtype.Text{String: *payment.Description, Valid: payment.Description != nil},
-		Duedate:       pgtype.Timestamptz{Time: *payment.DueDate, Valid: payment.DueDate != nil},
-		PaidAt:        pgtype.Timestamptz{Time: *payment.PaidAt, Valid: payment.PaidAt != nil},
-		RefundedAt:    pgtype.Timestamptz{Time: *payment.RefundedAt, Valid: payment.RefundedAt != nil},
+		ID:            int32(payment.GetId()),
+		Amount:        pgtype.Numeric{Int: big.NewInt(payment.GetAmount().Amount), Valid: true},
+		Currency:      payment.GetAmount().Currency,
+		TransactionID: pgtype.Text{String: *payment.GetTransactionId(), Valid: payment.GetTransactionId() != nil},
+		Status:        models.PaymentStatus(string(payment.GetStatus())),
+		Method:        models.PaymentMethod(string(payment.GetPaymentMethod())),
+		UserID:        int32(payment.GetUserId()),
+		Description:   pgtype.Text{String: *payment.GetDescription(), Valid: payment.GetDescription() != nil},
+		Duedate:       pgtype.Timestamptz{Time: *payment.GetDueDate(), Valid: payment.GetDueDate() != nil},
+		PaidAt:        pgtype.Timestamptz{Time: *payment.GetPaidAt(), Valid: payment.GetPaidAt() != nil},
+		RefundedAt:    pgtype.Timestamptz{Time: *payment.GetRefundedAt(), Valid: payment.GetRefundedAt() != nil},
 	}
 }

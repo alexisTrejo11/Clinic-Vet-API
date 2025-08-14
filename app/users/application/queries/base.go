@@ -46,5 +46,5 @@ func toResponsePage(userPage page.Page[[]user.User]) page.Page[[]UserResponse] {
 		userResponses = append(userResponses, *toResponse(user))
 	}
 
-	return *page.NewPage(userResponses, userPage.Metadata)
+	return page.NewPage(userResponses, userPage.Metadata)
 }

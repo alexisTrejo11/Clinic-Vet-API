@@ -4,22 +4,23 @@ import (
 	"context"
 
 	ownerDTOs "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/application/dtos"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 )
 
-type OwnerFacade interface {
-	GetOwnerById(ctx context.Context, ownerId int) (*ownerDTOs.OwnerResponse, error)
-	ListOwners(ctx context.Context, params ownerDTOs.GetOwnersRequest) (ownerDTOs.OwnerListResponse, error)
-	CreateOwner(ctx context.Context, data ownerDTOs.OwnerCreate) (*ownerDTOs.OwnerResponse, error)
-	UpdateOwner(ctx context.Context, ownerId int, data ownerDTOs.OwnerUpdate) (*ownerDTOs.OwnerResponse, error)
-	DeleteOwner(ctx context.Context, ownerId int) error
+type OwnerServiceFacade interface {
+	GetOwnerById(ctx context.Context, ownerId int) (ownerDTOs.OwnerResponse, error)
+	ListOwners(ctx context.Context, params ownerDTOs.GetOwnersRequest) (page.Page[[]ownerDTOs.OwnerResponse], error)
+	CreateOwner(ctx context.Context, data ownerDTOs.OwnerCreate) (ownerDTOs.OwnerResponse, error)
+	UpdateOwner(ctx context.Context, ownerId int, data ownerDTOs.OwnerUpdate) (ownerDTOs.OwnerResponse, error)
+	SoftDeleteOwner(ctx context.Context, ownerId int) error
 }
 
 type ownerUseCases struct {
-	getOwnerByIdUseCase *GetOwnerByIdUseCase
-	listOwnersUseCase   *ListOwnersUseCase
-	createOwnerUseCase  *CreateOwnerUseCase
-	updateOwnerUseCase  *UpdateOwnerUseCase
-	deleteOwnerUseCase  *DeleteOwnerUseCase
+	getOwnerByIdUseCase    *GetOwnerByIdUseCase
+	listOwnersUseCase      *ListOwnersUseCase
+	createOwnerUseCase     *CreateOwnerUseCase
+	updateOwnerUseCase     *UpdateOwnerUseCase
+	softDeleteOwnerUseCase *SoftDeleteOwnerUseCase
 }
 
 func NewOwnerUseCases(
@@ -27,33 +28,33 @@ func NewOwnerUseCases(
 	listOwnersUC *ListOwnersUseCase,
 	createOwnerUC *CreateOwnerUseCase,
 	updateOwnerUC *UpdateOwnerUseCase,
-	deleteOwnerUC *DeleteOwnerUseCase,
-) OwnerFacade {
+	softDeleteOwnerUC *SoftDeleteOwnerUseCase,
+) OwnerServiceFacade {
 	return &ownerUseCases{
-		getOwnerByIdUseCase: getOwnerByIdUC,
-		listOwnersUseCase:   listOwnersUC,
-		createOwnerUseCase:  createOwnerUC,
-		updateOwnerUseCase:  updateOwnerUC,
-		deleteOwnerUseCase:  deleteOwnerUC,
+		getOwnerByIdUseCase:    getOwnerByIdUC,
+		listOwnersUseCase:      listOwnersUC,
+		createOwnerUseCase:     createOwnerUC,
+		updateOwnerUseCase:     updateOwnerUC,
+		softDeleteOwnerUseCase: softDeleteOwnerUC,
 	}
 }
 
-func (uc *ownerUseCases) GetOwnerById(ctx context.Context, ownerId int) (*ownerDTOs.OwnerResponse, error) {
+func (uc *ownerUseCases) GetOwnerById(ctx context.Context, ownerId int) (ownerDTOs.OwnerResponse, error) {
 	return uc.getOwnerByIdUseCase.Execute(ctx, ownerId)
 }
 
-func (uc *ownerUseCases) ListOwners(ctx context.Context, params ownerDTOs.GetOwnersRequest) (ownerDTOs.OwnerListResponse, error) {
+func (uc *ownerUseCases) ListOwners(ctx context.Context, params ownerDTOs.GetOwnersRequest) (page.Page[[]ownerDTOs.OwnerResponse], error) {
 	return uc.listOwnersUseCase.Execute(ctx, params)
 }
 
-func (uc *ownerUseCases) CreateOwner(ctx context.Context, data ownerDTOs.OwnerCreate) (*ownerDTOs.OwnerResponse, error) {
+func (uc *ownerUseCases) CreateOwner(ctx context.Context, data ownerDTOs.OwnerCreate) (ownerDTOs.OwnerResponse, error) {
 	return uc.createOwnerUseCase.Execute(ctx, data)
 }
 
-func (uc *ownerUseCases) UpdateOwner(ctx context.Context, ownerId int, data ownerDTOs.OwnerUpdate) (*ownerDTOs.OwnerResponse, error) {
+func (uc *ownerUseCases) UpdateOwner(ctx context.Context, ownerId int, data ownerDTOs.OwnerUpdate) (ownerDTOs.OwnerResponse, error) {
 	return uc.updateOwnerUseCase.Execute(ctx, ownerId, data)
 }
 
-func (uc *ownerUseCases) DeleteOwner(ctx context.Context, ownerId int) error {
-	return uc.deleteOwnerUseCase.Execute(ctx, ownerId)
+func (uc *ownerUseCases) SoftDeleteOwner(ctx context.Context, ownerId int) error {
+	return uc.softDeleteOwnerUseCase.Execute(ctx, ownerId)
 }

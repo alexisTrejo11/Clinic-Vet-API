@@ -4,44 +4,27 @@ INSERT INTO owners (
 ) VALUES (
     $1, $2, $3, $4, $5, $6, $7, $8, $9, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 )
-RETURNING id, photo, first_name, last_name, phone_number, gender, address, user_id, is_active, date_of_birth, created_at, updated_at, deleted_at;
+RETURNING *;
 
 -- name: GetOwnerByID :one
-SELECT id, photo, first_name, last_name, phone_number, gender, address, user_id, is_active, date_of_birth, created_at, updated_at, deleted_at
+SELECT *
 FROM owners
 WHERE id = $1 AND deleted_at IS NULL;
 
 -- name: GetOwnerByPhone :one
-SELECT id, photo, first_name, last_name, phone_number, gender, address, user_id, is_active, date_of_birth, created_at, updated_at, deleted_at
+SELECT *
 FROM owners
 WHERE phone_number = $1 AND deleted_at IS NULL;
 
 -- name: GetOwnerByUserID :one
-SELECT id, photo, first_name, last_name, phone_number, gender, address, user_id, is_active, date_of_birth, created_at, updated_at, deleted_at
+SELECT *
 FROM owners
 WHERE user_id = $1 AND deleted_at IS NULL;
 
 -- name: ListOwners :many
-SELECT 
-    id, 
-    photo, 
-    first_name, 
-    last_name, 
-    phone_number, 
-    gender, 
-    address, 
-    user_id, 
-    is_active, 
-    date_of_birth, 
-    created_at, 
-    updated_at, 
-    deleted_at
-FROM 
-    owners
-WHERE 
-    deleted_at IS NULL
-ORDER BY 
-    id 
+SELECT * FROM owners
+WHERE deleted_at IS NULL
+ORDER BY created_at DESC
 LIMIT $1 OFFSET $2;
 
 -- name: UpdateOwner :exec
@@ -57,9 +40,10 @@ SET
     is_active = $9, 
     date_of_birth = $10,
     updated_at = CURRENT_TIMESTAMP
-WHERE id = $1 AND deleted_at IS NULL;
+WHERE id = $1 AND deleted_at IS NULL
+RETURNING *;
 
--- name: DeleteOwner :exec
+-- name: SoftDeleteOwner :exec
 UPDATE owners
 SET 
     is_active = FALSE,

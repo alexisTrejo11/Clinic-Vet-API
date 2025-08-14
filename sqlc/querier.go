@@ -9,7 +9,7 @@ import (
 
 type Querier interface {
 	ActivateUser(ctx context.Context, id int32) error
-	CreateOwner(ctx context.Context, arg CreateOwnerParams) (CreateOwnerRow, error)
+	CreateOwner(ctx context.Context, arg CreateOwnerParams) (Owner, error)
 	CreatePet(ctx context.Context, arg CreatePetParams) (Pet, error)
 	CreateVeterinarian(ctx context.Context, arg CreateVeterinarianParams) (Veterinarian, error)
 	DeactivateUser(ctx context.Context, id int32) error
@@ -17,13 +17,13 @@ type Querier interface {
 	DeletePet(ctx context.Context, id int32) error
 	ExistByID(ctx context.Context, id int32) (bool, error)
 	ExistByPhoneNumber(ctx context.Context, phoneNumber string) (bool, error)
-	GetOwnerByID(ctx context.Context, id int32) (GetOwnerByIDRow, error)
-	GetOwnerByPhone(ctx context.Context, phoneNumber string) (GetOwnerByPhoneRow, error)
-	GetOwnerByUserID(ctx context.Context, userID pgtype.Int4) (GetOwnerByUserIDRow, error)
+	GetOwnerByID(ctx context.Context, id int32) (Owner, error)
+	GetOwnerByPhone(ctx context.Context, phoneNumber string) (Owner, error)
+	GetOwnerByUserID(ctx context.Context, userID pgtype.Int4) (Owner, error)
 	GetPetByID(ctx context.Context, id int32) (Pet, error)
 	GetPetsByOwnerID(ctx context.Context, ownerID int32) ([]Pet, error)
 	GetVeterinarianById(ctx context.Context, id int32) (Veterinarian, error)
-	ListOwners(ctx context.Context, arg ListOwnersParams) ([]ListOwnersRow, error)
+	ListOwners(ctx context.Context, arg ListOwnersParams) ([]Owner, error)
 	ListPets(ctx context.Context) ([]Pet, error)
 	ListVeterinarians(ctx context.Context, arg ListVeterinariansParams) ([]Veterinarian, error)
 	SoftDeleteVeterinarian(ctx context.Context, id int32) error
@@ -33,4 +33,5 @@ type Querier interface {
 	WithTx(tx pgx.Tx) *Queries
 }
 
-var _ Querier = (*Queries)(nil)
+// TODO: ADD NEW QUERIES
+//var _ Querier = (*Queries)(nil)

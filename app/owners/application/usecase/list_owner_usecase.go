@@ -3,9 +3,10 @@ package ownerUsecase
 import (
 	"context"
 
-	ownerDTOs "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/application/dtos"
+	DTOs "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/application/dtos"
 	ownerMappers "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/application/mappers"
 	ownerDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/domain"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 )
 
 type ListOwnersUseCase struct {
@@ -18,28 +19,16 @@ func NewListOwnersUseCase(ownerRepo ownerDomain.OwnerRepository) *ListOwnersUseC
 	}
 }
 
-func (uc *ListOwnersUseCase) Execute(ctx context.Context, dto ownerDTOs.GetOwnersRequest) (ownerDTOs.OwnerListResponse, error) {
-
-	owners, err := uc.ownerRepo.List(ctx, dto.Page)
+func (uc *ListOwnersUseCase) Execute(ctx context.Context, dto DTOs.GetOwnersRequest) (page.Page[[]DTOs.OwnerResponse], error) {
+	ownersPage, err := uc.ownerRepo.List(ctx, dto.Page)
 	if err != nil {
-		return ownerDTOs.OwnerListResponse{}, err
+		return page.Page[[]DTOs.OwnerResponse]{}, err
 	}
 
-	ownerResponses := make([]ownerDTOs.OwnerResponse, len(owners))
-	for i, owner := range owners {
-		ownerResponses[i] = *ownerMappers.ToResponse(&owner)
+	ownerResponses := ownerMappers.ToResponseList(ownersPage.Data)
 
-		if dto.WithPets {
-		}
-	}
-
-	return ownerDTOs.OwnerListResponse{
-		Owners: ownerResponses,
-		//Total:   total,
-		//Limit:   dto.Page.Limit,
-		//Offset:  dto.Page.Offset,
-		//HasMore: int64(dto.Page.Offset+dto.Page.Limit) < total,
-	}, nil
+	pageResponse := page.NewPage(ownerResponses, ownersPage.Metadata)
+	return pageResponse, nil
 }
 
 type OwnerStatsResponse struct {

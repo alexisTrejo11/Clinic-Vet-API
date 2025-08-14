@@ -16,7 +16,7 @@ func sqlRowToDomain(row sqlc.Appoinment) (*appointDomain.Appointment, error) {
 		return nil, err
 	}
 
-	vetId, err := vetDomain.NewVeterinarianId(int(row.VeterinarianID))
+	vetId, err := vetDomain.NewVeterinarianId(int(row.VeterinarianID.Int32))
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +66,7 @@ func sqlRowsToDomainList(rows []sqlc.Appoinment) ([]appointDomain.Appointment, e
 func domainToCreateParams(appointment *appointDomain.Appointment) sqlc.CreateAppoinmentParams {
 	return sqlc.CreateAppoinmentParams{
 		OwnerID:        int32(appointment.GetOwnerId()),
-		VeterinarianID: int32(appointment.GetId().GetValue()),
+		VeterinarianID: pgtype.Int4{Int32: int32(appointment.GetVetId().GetValue()), Valid: appointment.GetVetId().IsValid()},
 		PetID:          int32(appointment.GetPetId().GetValue()),
 		ScheduleDate:   pgtype.Timestamptz{Time: appointment.GetScheduledDate(), Valid: true},
 		Notes:          pgtype.Text{String: *appointment.GetNotes(), Valid: appointment.GetNotes() != nil},
@@ -78,7 +78,7 @@ func domainToUpdateParams(appointment *appointDomain.Appointment) sqlc.UpdateApp
 	return sqlc.UpdateAppoinmentParams{
 		ID:             int32(appointment.GetId().GetValue()),
 		OwnerID:        int32(appointment.GetOwnerId()),
-		VeterinarianID: int32(appointment.GetVetId().GetValue()),
+		VeterinarianID: pgtype.Int4{Int32: int32(appointment.GetVetId().GetValue()), Valid: appointment.GetVetId().IsValid()},
 		PetID:          int32(appointment.GetPetId().GetValue()),
 		ScheduleDate:   pgtype.Timestamptz{Time: appointment.GetScheduledDate(), Valid: true},
 		Notes:          pgtype.Text{String: *appointment.GetNotes(), Valid: appointment.GetNotes() != nil},

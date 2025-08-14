@@ -46,13 +46,13 @@ func (r *SQLCMedHistRepository) Search(ctx context.Context, searchParams mhDTOs.
 		return page.Page[[]mhDomain.MedicalHistory]{}, err
 	}
 
-	entities, err := ToDomainList(queryRows)
+	medHistoryList, err := ToDomainList(queryRows)
 	if err != nil {
 		return page.Page[[]mhDomain.MedicalHistory]{}, err
 	}
 
-	medicalHistPage := page.NewPage(entities, *page.GetPageMetadata(len(queryRows), searchParams.Page))
-	return *medicalHistPage, nil
+	metadata := *page.GetPageMetadata(len(queryRows), searchParams.Page)
+	return page.NewPage(medHistoryList, metadata), nil
 
 }
 
@@ -74,7 +74,7 @@ func (r *SQLCMedHistRepository) ListByVetId(ctx context.Context, vetId int, pagi
 	}
 
 	medicalHistPage := page.NewPage(entitiyList, *page.GetPageMetadata(len(queryRows), pagination))
-	return *medicalHistPage, nil
+	return medicalHistPage, nil
 
 }
 
@@ -90,8 +90,8 @@ func (r *SQLCMedHistRepository) ListByPetId(ctx context.Context, petId int, pagi
 		return page.Page[[]mhDomain.MedicalHistory]{}, err
 	}
 
-	medicalHistPage := page.NewPage(entitiyList, *page.GetPageMetadata(len(queryRows), pagination))
-	return *medicalHistPage, nil
+	metadata := *page.GetPageMetadata(len(queryRows), pagination)
+	return page.NewPage(entitiyList, metadata), nil
 }
 
 // TODO: Create QUERY
@@ -107,7 +107,7 @@ func (r *SQLCMedHistRepository) ListByOwnerId(ctx context.Context, ownerId int, 
 	}
 
 	medicalHistPage := page.NewPage(entitiyList, *page.GetPageMetadata(len(queryRows), pagination))
-	return *medicalHistPage, nil
+	return medicalHistPage, nil
 }
 
 func (r *SQLCMedHistRepository) Create(ctx context.Context, medHistory *mhDomain.MedicalHistory) error {

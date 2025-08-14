@@ -6,7 +6,7 @@ import (
 	"reflect"
 
 	appointmentDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/appointment/domain"
-	ownerRepository "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/application/repository"
+	ownerDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/domain"
 	appError "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/errors/application"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 )
@@ -28,7 +28,7 @@ type appointmentQueryBus struct {
 
 func NewAppointmentQueryBus(
 	appointmentRepo appointmentDomain.AppointmentRepository,
-	ownerRepo ownerRepository.OwnerRepository,
+	ownerRepo ownerDomain.OwnerRepository,
 ) QueryBus {
 	bus := &appointmentQueryBus{
 		handlers: make(map[reflect.Type]interface{}),
@@ -37,7 +37,7 @@ func NewAppointmentQueryBus(
 	return bus
 }
 
-func (bus *appointmentQueryBus) registerHandlers(appointmentRepo appointmentDomain.AppointmentRepository, ownerRepo ownerRepository.OwnerRepository) {
+func (bus *appointmentQueryBus) registerHandlers(appointmentRepo appointmentDomain.AppointmentRepository, ownerRepo ownerDomain.OwnerRepository) {
 	bus.Register(reflect.TypeOf(GetAppointmentByIdQuery{}), NewGetAppointmentByIdHandler(appointmentRepo))
 	bus.Register(reflect.TypeOf(GetAllAppointmentsQuery{}), NewGetAllAppointmentsHandler(appointmentRepo))
 	bus.Register(reflect.TypeOf(GetAppointmentsByOwnerQuery{}), NewGetAppointmentsByOwnerHandler(appointmentRepo, ownerRepo))

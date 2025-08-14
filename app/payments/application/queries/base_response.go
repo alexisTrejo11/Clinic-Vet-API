@@ -26,21 +26,21 @@ type PaymentResponse struct {
 
 func NewPaymentResponse(payment *paymentDomain.Payment) PaymentResponse {
 	return PaymentResponse{
-		Id:            payment.Id,
-		AppointmentId: payment.AppointmentId,
-		UserId:        payment.UserId,
-		Amount:        payment.Amount.ToFloat(),
-		Currency:      payment.Currency,
-		PaymentMethod: string(payment.PaymentMethod),
-		Status:        string(payment.Status),
-		TransactionId: payment.TransactionId,
-		Description:   payment.Description,
-		DueDate:       formatTime(payment.DueDate),
-		PaidAt:        formatTime(payment.PaidAt),
-		RefundedAt:    formatTime(payment.RefundedAt),
-		IsActive:      payment.IsActive,
-		CreatedAt:     payment.CreatedAt.Format(time.RFC3339),
-		UpdatedAt:     payment.UpdatedAt.Format(time.RFC3339),
+		Id:            payment.GetId(),
+		AppointmentId: payment.GetAppointmentId(),
+		UserId:        payment.GetUserId(),
+		Amount:        payment.GetAmount().ToFloat(),
+		Currency:      payment.GetCurrency(),
+		PaymentMethod: string(payment.GetPaymentMethod()),
+		Status:        string(payment.GetStatus()),
+		TransactionId: payment.GetTransactionId(),
+		Description:   payment.GetDescription(),
+		DueDate:       formatTime(payment.GetDueDate()),
+		PaidAt:        formatTime(payment.GetPaidAt()),
+		RefundedAt:    formatTime(payment.GetRefundedAt()),
+		IsActive:      payment.GetIsActive(),
+		CreatedAt:     payment.GetCreatedAt().Format(time.RFC3339),
+		UpdatedAt:     payment.GetUpdatedAt().Format(time.RFC3339),
 	}
 }
 

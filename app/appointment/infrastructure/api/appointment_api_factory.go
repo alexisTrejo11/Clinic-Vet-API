@@ -6,7 +6,7 @@ import (
 	appointmentController "github.com/alexisTrejo11/Clinic-Vet-API/app/appointment/infrastructure/api/controller"
 	appointmentRoutes "github.com/alexisTrejo11/Clinic-Vet-API/app/appointment/infrastructure/api/routes"
 	appointmentRepo "github.com/alexisTrejo11/Clinic-Vet-API/app/appointment/infrastructure/persistence/repositories"
-	ownerRepository "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/application/repository"
+	ownerDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/domain"
 	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -15,10 +15,10 @@ import (
 type AppointmentApiFactory struct {
 	queries   *sqlc.Queries
 	validator *validator.Validate
-	ownerRepo ownerRepository.OwnerRepository
+	ownerRepo ownerDomain.OwnerRepository
 }
 
-func NewAppointmentApiFactory(queries *sqlc.Queries, validator *validator.Validate, ownerRepo ownerRepository.OwnerRepository) *AppointmentApiFactory {
+func NewAppointmentApiFactory(queries *sqlc.Queries, validator *validator.Validate, ownerRepo ownerDomain.OwnerRepository) *AppointmentApiFactory {
 	return &AppointmentApiFactory{
 		queries:   queries,
 		validator: validator,
@@ -68,7 +68,7 @@ func (factory *AppointmentApiFactory) CreateRoutes(router *gin.Engine) *appointm
 	return routes
 }
 
-func SetupAppoinmentAPI(router *gin.Engine, queries *sqlc.Queries, validator *validator.Validate, ownerRepo ownerRepository.OwnerRepository) {
+func SetupAppointmentAPI(router *gin.Engine, queries *sqlc.Queries, validator *validator.Validate, ownerRepo ownerDomain.OwnerRepository) {
 	factory := NewAppointmentApiFactory(queries, validator, ownerRepo)
 	factory.CreateRoutes(router)
 }

@@ -14,10 +14,10 @@ import (
 )
 
 type SqlcVetRepository struct {
-	queries sqlc.Querier
+	queries *sqlc.Queries
 }
 
-func NewSqlcVetRepository(queries sqlc.Querier) vetRepo.VeterinarianRepository {
+func NewSqlcVetRepository(queries *sqlc.Queries) vetRepo.VeterinarianRepository {
 	return &SqlcVetRepository{queries: queries}
 }
 
@@ -150,7 +150,7 @@ func (c *SqlcVetRepository) Save(ctx context.Context, vet *vetDomain.Veterinaria
 	return nil
 }
 
-func (c *SqlcVetRepository) Delete(ctx context.Context, id int) error {
+func (c *SqlcVetRepository) SoftDelete(ctx context.Context, id int) error {
 	if err := c.queries.SoftDeleteVeterinarian(ctx, int32(id)); err != nil {
 		return err
 	}

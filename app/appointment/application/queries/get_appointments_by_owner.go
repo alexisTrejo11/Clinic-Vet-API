@@ -5,7 +5,7 @@ import (
 	"strconv"
 
 	appointmentDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/appointment/domain"
-	ownerRepository "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/application/repository"
+	ownerDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/domain"
 	appError "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/errors/application"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 )
@@ -31,12 +31,12 @@ type GetAppointmentsByOwnerHandler interface {
 
 type getAppointmentsByOwnerHandler struct {
 	appointmentRepo appointmentDomain.AppointmentRepository
-	ownerRepo       ownerRepository.OwnerRepository
+	ownerRepo       ownerDomain.OwnerRepository
 }
 
 func NewGetAppointmentsByOwnerHandler(
 	appointmentRepo appointmentDomain.AppointmentRepository,
-	ownerRepo ownerRepository.OwnerRepository,
+	ownerRepo ownerDomain.OwnerRepository,
 ) GetAppointmentsByOwnerHandler {
 	return &getAppointmentsByOwnerHandler{
 		appointmentRepo: appointmentRepo,
@@ -54,7 +54,7 @@ func (h *getAppointmentsByOwnerHandler) Handle(ctx context.Context, query GetApp
 		return page.Page[[]AppointmentResponse]{}, err
 	}
 
-	return *page.NewPage(
+	return page.NewPage(
 		mapAppointmentsToResponses(appointmentsPage.Data),
 		appointmentsPage.Metadata,
 	), nil

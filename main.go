@@ -11,6 +11,7 @@ import (
 	med_hist_controller "github.com/alexisTrejo11/Clinic-Vet-API/app/medical/infrastructure/api/controller"
 	medHistoryRoutes "github.com/alexisTrejo11/Clinic-Vet-API/app/medical/infrastructure/api/routes"
 	sqlcMedHistoryRepo "github.com/alexisTrejo11/Clinic-Vet-API/app/medical/infrastructure/persistence/repositories"
+	notificationApi "github.com/alexisTrejo11/Clinic-Vet-API/app/notifications/infrastructure/api"
 	ownerUsecase "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/application/usecase"
 	ownerController "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/infrastructure/api/controller"
 	ownerRoutes "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/infrastructure/api/routes"
@@ -48,6 +49,10 @@ func main() {
 		log.Fatalf("Error while loading .env: %v", err)
 	}
 
+	mongoClient := config.InitMongoDB()
+	config.InitTwilio()
+	emailConfig := config.InitEmailConfig()
+
 	ctx := context.Background()
 	dbConn := config.DbConn(os.Getenv("DATABASE_URL"))
 	defer dbConn.Close(ctx)
@@ -64,20 +69,20 @@ func main() {
 
 	// Repository
 	petRepo := sqlcPetRepository.NewSqlcPetRepository(queries)
-	ownerRepo := sqlcOwnerRepository.NewSlqcOwnerRepository(queries, petRepo)
+	ownerRepo := sqlcOwnerRepository.NewSqlcOwnerRepository(queries, petRepo)
 	vetRepo := sqlcVetRepo.NewSqlcVetRepository(queries)
 	sqlcMedHistRepo := sqlcMedHistoryRepo.NewSQLCMedHistRepository(queries)
 	paymentRepo := paymentRepo.NewSQLCPaymentRepository(queries)
 
 	// Medical History UseCase
-	medHistUseCase := medHistUsecases.NewMedicalHistoryUseCase(sqlcMedHistRepo, ownerRepo, vetRepo)
+	medHistUseCase := medHistUsecases.NewMedicalHistoryUseCase(sqlcMedHistRepo, ownerRepo, vetRepo, petRepo)
 
 	// Owner UseCase
 	getOwnerUseCase := ownerUsecase.NewGetOwnerByIdUseCase(ownerRepo)
 	listOwnerUseCase := ownerUsecase.NewListOwnersUseCase(ownerRepo)
 	createOwnerUseCase := ownerUsecase.NewCreateOwnerUseCase(ownerRepo)
 	updateOwnerUseCase := ownerUsecase.NewUpdateOwnerUseCase(ownerRepo)
-	deleteOwnerUseCase := ownerUsecase.NewDeleteOwnerUseCase(ownerRepo)
+	deleteOwnerUseCase := ownerUsecase.NewSoftDeleteOwnerUseCase(ownerRepo)
 
 	ownerUCContainer := ownerUsecase.NewOwnerUseCases(getOwnerUseCase, listOwnerUseCase, createOwnerUseCase, updateOwnerUseCase, deleteOwnerUseCase)
 
@@ -132,7 +137,11 @@ func main() {
 	profileController := userController.NewProfileController(profileUseCase)
 	userRoutes.ProfileRoutes(router, profileController)
 
-	appointmentAPI.SetupAppoinmentAPI(router, queries, dataValidator, ownerRepo)
+	// Appointment
+	appointmentAPI.SetupAppointmentAPI(router, queries, dataValidator, ownerRepo)
+
+	// Notification
+	notificationApi.SetupNotificationModule(router, mongoClient, emailConfig, config.GetTwilioClient())
 
 	router.Run()
 }

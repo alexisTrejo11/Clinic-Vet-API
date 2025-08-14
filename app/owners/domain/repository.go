@@ -7,11 +7,11 @@ import (
 )
 
 type OwnerRepository interface {
-	Save(ctx context.Context, owner Owner) error
-	List(ctx context.Context, pagination page.PageData) ([]Owner, error)
+	Save(ctx context.Context, owner *Owner) error
+	List(ctx context.Context, pagination page.PageData) (page.Page[[]Owner], error)
 	GetById(ctx context.Context, id int) (Owner, error)
 	GetByPhone(ctx context.Context, phone string) (Owner, error)
-	Delete(ctx context.Context, id int) error
+	SoftDelete(ctx context.Context, id int) error
 
 	//ListByName(ctx context.Context, name string) ([]Owner, error)
 	//ListActiveOwners(ctx context.Context, limit, offset int) ([]Owner, error)

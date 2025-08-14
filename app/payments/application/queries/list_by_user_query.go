@@ -37,5 +37,5 @@ func (h *listByUserHandlerImpl) Handle(ctx context.Context, query ListPaymentsBy
 		return page.Page[[]PaymentResponse]{}, err
 	}
 	responses := mapPaymentsToResponses(paymentsPage.Data)
-	return *page.NewPage(responses, paymentsPage.Metadata), nil
+	return page.NewPage(responses, paymentsPage.Metadata), nil
 }

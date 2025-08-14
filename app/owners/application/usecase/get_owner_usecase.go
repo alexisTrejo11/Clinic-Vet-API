@@ -19,10 +19,10 @@ func NewGetOwnerByIdUseCase(ownerRepo ownerDomain.OwnerRepository) *GetOwnerById
 	}
 }
 
-func (uc *GetOwnerByIdUseCase) Execute(ctx context.Context, id int) (*ownerDTOs.OwnerResponse, error) {
+func (uc *GetOwnerByIdUseCase) Execute(ctx context.Context, id int) (ownerDTOs.OwnerResponse, error) {
 	owner, err := uc.ownerRepo.GetById(ctx, id)
 	if err != nil {
-		return nil, ownerDomain.HandleGetByIdError(err, id)
+		return ownerDTOs.OwnerResponse{}, ownerDomain.HandleGetByIdError(err, id)
 	}
 
 	ownerResponse := ownerMappers.ToResponse(&owner)

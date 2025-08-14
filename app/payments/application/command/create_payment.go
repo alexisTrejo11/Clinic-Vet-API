@@ -39,22 +39,22 @@ func (h *createPaymentHandler) Handle(ctx context.Context, command CreatePayment
 		return shared.FailureResult("failed to create payment", err)
 	}
 
-	return shared.SuccesResult(string(payment.Id), "payment created successfully")
+	return shared.SuccesResult(string(payment.GetId()), "payment created successfully")
 }
 
 func (req *createPaymentHandler) createCommandToDomain(command CreatePaymentCommand) *paymentDomain.Payment {
-	return &paymentDomain.Payment{
-		AppointmentId: command.AppointmentId,
-		UserId:        command.UserId,
-		Amount:        paymentDomain.NewMoney(command.Amount, command.Currency),
-		Currency:      command.Currency,
-		PaymentMethod: command.PaymentMethod,
-		Description:   command.Description,
-		DueDate:       command.DueDate,
-		TransactionId: command.TransactionId,
-		Status:        paymentDomain.PENDING,
-		IsActive:      true,
-		CreatedAt:     time.Now(),
-		UpdatedAt:     time.Now(),
-	}
+	return paymentDomain.NewPaymentBuilder().
+		WithAppointmentId(command.AppointmentId).
+		WithUserId(command.UserId).
+		WithAmount(paymentDomain.NewMoney(command.Amount, command.Currency)).
+		WithCurrency(command.Currency).
+		WithPaymentMethod(command.PaymentMethod).
+		WithDescription(command.Description).
+		WithDueDate(command.DueDate).
+		WithTransactionId(command.TransactionId).
+		WithStatus(paymentDomain.PENDING).
+		WithIsActive(true).
+		WithCreatedAt(time.Now()).
+		WithUpdatedAt(time.Now()).
+		Build()
 }

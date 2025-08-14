@@ -42,7 +42,7 @@ func (r *SQLCAppointmentRepository) ListAll(ctx context.Context, pageInput page.
 
 	pageMetadata := page.GetPageMetadata(int(queryTotalCount), pageInput)
 
-	return *page.NewPage(appointments, *pageMetadata), nil
+	return page.NewPage(appointments, *pageMetadata), nil
 }
 
 func (r *SQLCAppointmentRepository) GetById(ctx context.Context, appointmentId int) (appoint.Appointment, error) {
@@ -81,13 +81,13 @@ func (r *SQLCAppointmentRepository) Search(ctx context.Context, pageInput page.P
 
 	pageMetadata := page.GetPageMetadata(int(queryTotalCount), pageInput)
 
-	return *page.NewPage(appointments, *pageMetadata), nil
+	return page.NewPage(appointments, *pageMetadata), nil
 
 }
 
 func (r *SQLCAppointmentRepository) ListByVetId(ctx context.Context, ownerId int, pageInput page.PageData) (page.Page[[]appoint.Appointment], error) {
 	sqlRows, err := r.queries.ListAppoinmentsByVeterinarianID(ctx, sqlc.ListAppoinmentsByVeterinarianIDParams{
-		VeterinarianID: int32(ownerId),
+		VeterinarianID: pgtype.Int4{Int32: int32(ownerId), Valid: true},
 		Offset:         int32(pageInput.PageNumber-1) * int32(pageInput.PageSize),
 		Limit:          int32(pageInput.PageNumber),
 	})
@@ -101,18 +101,18 @@ func (r *SQLCAppointmentRepository) ListByVetId(ctx context.Context, ownerId int
 		return page.Page[[]appoint.Appointment]{}, AppointmentDBError(err.Error())
 	}
 
-	queryTotalCount, err := r.queries.CountAppoinmentsByVeterinarianID(ctx, int32(ownerId))
+	queryTotalCount, err := r.queries.CountAppoinmentsByVeterinarianID(ctx, pgtype.Int4{Int32: int32(ownerId), Valid: true})
 	if err != nil {
 		return page.Page[[]appoint.Appointment]{}, AppointmentDBError(err.Error())
 	}
 
 	pageMetadata := page.GetPageMetadata(int(queryTotalCount), pageInput)
-	return *page.NewPage(appointments, *pageMetadata), nil
+	return page.NewPage(appointments, *pageMetadata), nil
 }
 
 func (r *SQLCAppointmentRepository) ListByPetId(ctx context.Context, ownerId int, pageInput page.PageData) (page.Page[[]appoint.Appointment], error) {
 	sqlRows, err := r.queries.ListAppoinmentsByVeterinarianID(ctx, sqlc.ListAppoinmentsByVeterinarianIDParams{
-		VeterinarianID: int32(ownerId),
+		VeterinarianID: pgtype.Int4{Int32: int32(ownerId), Valid: true},
 		Offset:         int32(pageInput.PageNumber-1) * int32(pageInput.PageSize),
 		Limit:          int32(pageInput.PageNumber),
 	})
@@ -126,13 +126,13 @@ func (r *SQLCAppointmentRepository) ListByPetId(ctx context.Context, ownerId int
 		return page.Page[[]appoint.Appointment]{}, AppointmentDBError(err.Error())
 	}
 
-	queryTotalCount, err := r.queries.CountAppoinmentsByVeterinarianID(ctx, int32(ownerId))
+	queryTotalCount, err := r.queries.CountAppoinmentsByVeterinarianID(ctx, pgtype.Int4{Int32: int32(ownerId), Valid: true})
 	if err != nil {
 		return page.Page[[]appoint.Appointment]{}, AppointmentDBError(err.Error())
 	}
 
 	pageMetadata := page.GetPageMetadata(int(queryTotalCount), pageInput)
-	return *page.NewPage(appointments, *pageMetadata), nil
+	return page.NewPage(appointments, *pageMetadata), nil
 }
 
 func (r *SQLCAppointmentRepository) ListByOwnerId(ctx context.Context, ownerId int, pageInput page.PageData) (page.Page[[]appoint.Appointment], error) {
@@ -151,13 +151,13 @@ func (r *SQLCAppointmentRepository) ListByOwnerId(ctx context.Context, ownerId i
 		return page.Page[[]appoint.Appointment]{}, AppointmentDBError(err.Error())
 	}
 
-	queryTotalCount, err := r.queries.CountAppoinmentsByVeterinarianID(ctx, int32(ownerId))
+	queryTotalCount, err := r.queries.CountAppoinmentsByVeterinarianID(ctx, pgtype.Int4{Int32: int32(ownerId), Valid: true})
 	if err != nil {
 		return page.Page[[]appoint.Appointment]{}, AppointmentDBError(err.Error())
 	}
 
 	pageMetadata := page.GetPageMetadata(int(queryTotalCount), pageInput)
-	return *page.NewPage(appointments, *pageMetadata), nil
+	return page.NewPage(appointments, *pageMetadata), nil
 }
 
 func (r *SQLCAppointmentRepository) ListByDateRange(ctx context.Context, startDate, endDate time.Time, pageInput page.PageData) (page.Page[[]appoint.Appointment], error) {
@@ -187,7 +187,7 @@ func (r *SQLCAppointmentRepository) ListByDateRange(ctx context.Context, startDa
 	}
 
 	pageMetadata := page.GetPageMetadata(int(queryTotalCount), pageInput)
-	return *page.NewPage(appointments, *pageMetadata), nil
+	return page.NewPage(appointments, *pageMetadata), nil
 }
 
 func (r *SQLCAppointmentRepository) Save(ctx context.Context, appointment *appoint.Appointment) error {

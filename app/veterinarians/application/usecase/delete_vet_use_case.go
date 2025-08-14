@@ -28,7 +28,7 @@ func (uc *DeleteVetUseCase) Execute(ctx context.Context, vetId int) error {
 		return vetaApplication.VetNotFoundErr("id", strconv.Itoa(vetId))
 	}
 
-	if err := uc.vetRepository.Delete(ctx, vetId); err != nil {
+	if err := uc.vetRepository.SoftDelete(ctx, vetId); err != nil {
 		return vetaApplication.VetDBErr("delete", err)
 	}
 

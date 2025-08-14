@@ -87,7 +87,7 @@ WHERE veterinarian_id = $1
 AND deleted_at IS NULL
 `
 
-func (q *Queries) CountAppoinmentsByVeterinarianID(ctx context.Context, veterinarianID int32) (int64, error) {
+func (q *Queries) CountAppoinmentsByVeterinarianID(ctx context.Context, veterinarianID pgtype.Int4) (int64, error) {
 	row := q.db.QueryRow(ctx, countAppoinmentsByVeterinarianID, veterinarianID)
 	var count int64
 	err := row.Scan(&count)
@@ -109,7 +109,7 @@ INSERT INTO appoinments (
     deleted_at
 ) VALUES (
     $1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL
-) RETURNING id, clinic_service, schedule_date, status, reason, notes, owner_id, veterinarian_id, pet_id, created_at, updated_at, deleted_at
+) RETURNING id, clinic_service, schedule_date, status, reason, notes, owner_id, pet_id, veterinarian_id, created_at, updated_at, deleted_at
 `
 
 type CreateAppoinmentParams struct {
@@ -119,7 +119,7 @@ type CreateAppoinmentParams struct {
 	Reason         string
 	Notes          pgtype.Text
 	OwnerID        int32
-	VeterinarianID int32
+	VeterinarianID pgtype.Int4
 	PetID          int32
 }
 
@@ -143,8 +143,8 @@ func (q *Queries) CreateAppoinment(ctx context.Context, arg CreateAppoinmentPara
 		&i.Reason,
 		&i.Notes,
 		&i.OwnerID,
-		&i.VeterinarianID,
 		&i.PetID,
+		&i.VeterinarianID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.DeletedAt,
@@ -164,7 +164,7 @@ func (q *Queries) DeleteAppoinment(ctx context.Context, id int32) error {
 }
 
 const getAppoinmentByID = `-- name: GetAppoinmentByID :one
-SELECT id, clinic_service, schedule_date, status, reason, notes, owner_id, veterinarian_id, pet_id, created_at, updated_at, deleted_at FROM appoinments 
+SELECT id, clinic_service, schedule_date, status, reason, notes, owner_id, pet_id, veterinarian_id, created_at, updated_at, deleted_at FROM appoinments 
 WHERE id = $1 
 AND deleted_at IS NULL
 `
@@ -180,8 +180,8 @@ func (q *Queries) GetAppoinmentByID(ctx context.Context, id int32) (Appoinment, 
 		&i.Reason,
 		&i.Notes,
 		&i.OwnerID,
-		&i.VeterinarianID,
 		&i.PetID,
+		&i.VeterinarianID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.DeletedAt,
@@ -190,7 +190,7 @@ func (q *Queries) GetAppoinmentByID(ctx context.Context, id int32) (Appoinment, 
 }
 
 const listAppoinments = `-- name: ListAppoinments :many
-SELECT id, clinic_service, schedule_date, status, reason, notes, owner_id, veterinarian_id, pet_id, created_at, updated_at, deleted_at FROM appoinments 
+SELECT id, clinic_service, schedule_date, status, reason, notes, owner_id, pet_id, veterinarian_id, created_at, updated_at, deleted_at FROM appoinments 
 WHERE deleted_at IS NULL 
 ORDER BY created_at DESC LIMIT $1 OFFSET $2
 `
@@ -217,8 +217,8 @@ func (q *Queries) ListAppoinments(ctx context.Context, arg ListAppoinmentsParams
 			&i.Reason,
 			&i.Notes,
 			&i.OwnerID,
-			&i.VeterinarianID,
 			&i.PetID,
+			&i.VeterinarianID,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.DeletedAt,
@@ -234,7 +234,7 @@ func (q *Queries) ListAppoinments(ctx context.Context, arg ListAppoinmentsParams
 }
 
 const listAppoinmentsByDateRange = `-- name: ListAppoinmentsByDateRange :many
-SELECT id, clinic_service, schedule_date, status, reason, notes, owner_id, veterinarian_id, pet_id, created_at, updated_at, deleted_at FROM appoinments
+SELECT id, clinic_service, schedule_date, status, reason, notes, owner_id, pet_id, veterinarian_id, created_at, updated_at, deleted_at FROM appoinments
 WHERE schedule_date BETWEEN $1 AND $2
 AND deleted_at IS NULL
 ORDER BY schedule_date DESC LIMIT $3 OFFSET $4
@@ -269,8 +269,8 @@ func (q *Queries) ListAppoinmentsByDateRange(ctx context.Context, arg ListAppoin
 			&i.Reason,
 			&i.Notes,
 			&i.OwnerID,
-			&i.VeterinarianID,
 			&i.PetID,
+			&i.VeterinarianID,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.DeletedAt,
@@ -286,7 +286,7 @@ func (q *Queries) ListAppoinmentsByDateRange(ctx context.Context, arg ListAppoin
 }
 
 const listAppoinmentsByOwnerID = `-- name: ListAppoinmentsByOwnerID :many
-SELECT id, clinic_service, schedule_date, status, reason, notes, owner_id, veterinarian_id, pet_id, created_at, updated_at, deleted_at FROM appoinments 
+SELECT id, clinic_service, schedule_date, status, reason, notes, owner_id, pet_id, veterinarian_id, created_at, updated_at, deleted_at FROM appoinments 
 WHERE owner_id = $1
 AND deleted_at IS NULL
 ORDER BY created_at DESC LIMIT $2 OFFSET $3
@@ -315,8 +315,8 @@ func (q *Queries) ListAppoinmentsByOwnerID(ctx context.Context, arg ListAppoinme
 			&i.Reason,
 			&i.Notes,
 			&i.OwnerID,
-			&i.VeterinarianID,
 			&i.PetID,
+			&i.VeterinarianID,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.DeletedAt,
@@ -332,7 +332,7 @@ func (q *Queries) ListAppoinmentsByOwnerID(ctx context.Context, arg ListAppoinme
 }
 
 const listAppoinmentsByPetID = `-- name: ListAppoinmentsByPetID :many
-SELECT id, clinic_service, schedule_date, status, reason, notes, owner_id, veterinarian_id, pet_id, created_at, updated_at, deleted_at FROM appoinments
+SELECT id, clinic_service, schedule_date, status, reason, notes, owner_id, pet_id, veterinarian_id, created_at, updated_at, deleted_at FROM appoinments
 WHERE pet_id = $1
 AND deleted_at IS NULL
 ORDER BY created_at DESC LIMIT $2 OFFSET $3
@@ -361,8 +361,8 @@ func (q *Queries) ListAppoinmentsByPetID(ctx context.Context, arg ListAppoinment
 			&i.Reason,
 			&i.Notes,
 			&i.OwnerID,
-			&i.VeterinarianID,
 			&i.PetID,
+			&i.VeterinarianID,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.DeletedAt,
@@ -378,7 +378,7 @@ func (q *Queries) ListAppoinmentsByPetID(ctx context.Context, arg ListAppoinment
 }
 
 const listAppoinmentsByStatus = `-- name: ListAppoinmentsByStatus :many
-SELECT id, clinic_service, schedule_date, status, reason, notes, owner_id, veterinarian_id, pet_id, created_at, updated_at, deleted_at FROM appoinments
+SELECT id, clinic_service, schedule_date, status, reason, notes, owner_id, pet_id, veterinarian_id, created_at, updated_at, deleted_at FROM appoinments
 WHERE status = $1
 AND deleted_at IS NULL
 ORDER BY created_at DESC LIMIT $2 OFFSET $3
@@ -407,8 +407,8 @@ func (q *Queries) ListAppoinmentsByStatus(ctx context.Context, arg ListAppoinmen
 			&i.Reason,
 			&i.Notes,
 			&i.OwnerID,
-			&i.VeterinarianID,
 			&i.PetID,
+			&i.VeterinarianID,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.DeletedAt,
@@ -424,14 +424,14 @@ func (q *Queries) ListAppoinmentsByStatus(ctx context.Context, arg ListAppoinmen
 }
 
 const listAppoinmentsByVeterinarianID = `-- name: ListAppoinmentsByVeterinarianID :many
-SELECT id, clinic_service, schedule_date, status, reason, notes, owner_id, veterinarian_id, pet_id, created_at, updated_at, deleted_at FROM appoinments
+SELECT id, clinic_service, schedule_date, status, reason, notes, owner_id, pet_id, veterinarian_id, created_at, updated_at, deleted_at FROM appoinments
 WHERE veterinarian_id = $1
 AND deleted_at IS NULL
 ORDER BY created_at DESC LIMIT $2 OFFSET $3
 `
 
 type ListAppoinmentsByVeterinarianIDParams struct {
-	VeterinarianID int32
+	VeterinarianID pgtype.Int4
 	Limit          int32
 	Offset         int32
 }
@@ -453,8 +453,8 @@ func (q *Queries) ListAppoinmentsByVeterinarianID(ctx context.Context, arg ListA
 			&i.Reason,
 			&i.Notes,
 			&i.OwnerID,
-			&i.VeterinarianID,
 			&i.PetID,
+			&i.VeterinarianID,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.DeletedAt,
@@ -481,7 +481,7 @@ UPDATE appoinments SET
     pet_id = $9,
     updated_at = CURRENT_TIMESTAMP
 WHERE id = $1
-RETURNING id, clinic_service, schedule_date, status, reason, notes, owner_id, veterinarian_id, pet_id, created_at, updated_at, deleted_at
+RETURNING id, clinic_service, schedule_date, status, reason, notes, owner_id, pet_id, veterinarian_id, created_at, updated_at, deleted_at
 `
 
 type UpdateAppoinmentParams struct {
@@ -492,7 +492,7 @@ type UpdateAppoinmentParams struct {
 	Reason         string
 	Notes          pgtype.Text
 	OwnerID        int32
-	VeterinarianID int32
+	VeterinarianID pgtype.Int4
 	PetID          int32
 }
 
@@ -517,8 +517,8 @@ func (q *Queries) UpdateAppoinment(ctx context.Context, arg UpdateAppoinmentPara
 		&i.Reason,
 		&i.Notes,
 		&i.OwnerID,
-		&i.VeterinarianID,
 		&i.PetID,
+		&i.VeterinarianID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.DeletedAt,

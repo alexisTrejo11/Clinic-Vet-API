@@ -17,8 +17,8 @@ type Appoinment struct {
 	Reason         string
 	Notes          pgtype.Text
 	OwnerID        int32
-	VeterinarianID int32
 	PetID          int32
+	VeterinarianID pgtype.Int4
 	CreatedAt      pgtype.Timestamptz
 	UpdatedAt      pgtype.Timestamptz
 	DeletedAt      pgtype.Timestamp

@@ -42,7 +42,7 @@ func (h *getAppointmentsByPetHandler) Handle(ctx context.Context, query GetAppoi
 		return page.Page[[]AppointmentResponse]{}, err
 	}
 
-	return *page.NewPage(
+	return page.NewPage(
 		mapAppointmentsToResponses(appointmentsPage.Data),
 		appointmentsPage.Metadata,
 	), nil

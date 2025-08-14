@@ -48,7 +48,7 @@ func (h *listPaymentsByDateRangeHandler) Handle(ctx context.Context, query ListP
 	}
 
 	response := mapPaymentsToResponses(paymentsPage.Data)
-	return *page.NewPage(response, paymentsPage.Metadata), nil
+	return page.NewPage(response, paymentsPage.Metadata), nil
 }
 
 func PaymentRangeDateErr(startDate, endDate time.Time) error {

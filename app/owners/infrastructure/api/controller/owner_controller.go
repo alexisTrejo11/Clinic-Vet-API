@@ -13,12 +13,12 @@ import (
 
 type OwnerController struct {
 	validator   *validator.Validate
-	ownerFacade ownerUsecase.OwnerFacade
+	ownerFacade ownerUsecase.OwnerServiceFacade
 }
 
 func NewOwnerController(
 	validator *validator.Validate,
-	ownerFacade ownerUsecase.OwnerFacade,
+	ownerFacade ownerUsecase.OwnerServiceFacade,
 ) *OwnerController {
 	return &OwnerController{
 		validator:   validator,
@@ -119,7 +119,7 @@ func (c *OwnerController) DeleteOwner(ctx *gin.Context) {
 		return
 	}
 
-	if err := c.ownerFacade.DeleteOwner(context.TODO(), id); err != nil {
+	if err := c.ownerFacade.SoftDeleteOwner(context.TODO(), id); err != nil {
 		apiResponse.ApplicationError(ctx, err)
 		return
 	}

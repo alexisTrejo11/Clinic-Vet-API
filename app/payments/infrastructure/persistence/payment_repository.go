@@ -22,7 +22,7 @@ func NewSQLCPaymentRepository(queries *sqlc.Queries) paymentDomain.PaymentReposi
 }
 
 func (c *SQLCPaymentRepository) Save(ctx context.Context, payment *paymentDomain.Payment) error {
-	if payment.Id == 0 {
+	if payment.GetId() == 0 {
 		return c.create(ctx, payment)
 	}
 	return c.update(ctx, payment)
@@ -142,5 +142,5 @@ func toPageablePayments(sqlRows []sqlc.Payment, pageInput page.PageData, totalIt
 	if err != nil {
 		return page.Page[[]paymentDomain.Payment]{}, err
 	}
-	return *page.NewPage(payments, *page.GetPageMetadata(totalItems, pageInput)), nil
+	return page.NewPage(payments, *page.GetPageMetadata(totalItems, pageInput)), nil
 }

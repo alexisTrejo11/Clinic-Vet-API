@@ -43,7 +43,7 @@ func (h *processPaymentHandler) Handle(ctx context.Context, command ProcessPayme
 		return shared.FailureResult("failed to retrieve payment", err)
 	}
 
-	if err := payment.Proccess(command.transactionId); err != nil {
+	if err := payment.Process(command.transactionId); err != nil {
 		return shared.FailureResult("failed to process payment", err)
 	}
 
@@ -51,5 +51,5 @@ func (h *processPaymentHandler) Handle(ctx context.Context, command ProcessPayme
 		return shared.FailureResult("failed to save processed payment", err)
 	}
 
-	return shared.SuccesResult(string(payment.Id), "payment processed successfully")
+	return shared.SuccesResult(string(payment.GetId()), "payment processed successfully")
 }

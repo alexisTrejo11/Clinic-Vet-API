@@ -31,11 +31,13 @@ type Page[T any] struct {
 	Metadata PageMetadata `json:"metadata"`
 }
 
-func NewPage[T any](data T, metadata PageMetadata) *Page[T] {
-	return &Page[T]{
+func NewPage[T any](data T, metadata PageMetadata) Page[T] {
+	page := &Page[T]{
 		Data:     data,
 		Metadata: metadata,
 	}
+
+	return *page
 }
 
 func EmptyPage[T any]() Page[T] {

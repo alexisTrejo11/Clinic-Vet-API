@@ -45,7 +45,7 @@ func (h *SearchPaymentsHandler) Handle(ctx context.Context, query SearchPayments
 		responses = append(responses, NewPaymentResponse(&payment))
 	}
 
-	return *page.NewPage(responses, paymentsPage.Metadata), nil
+	return page.NewPage(responses, paymentsPage.Metadata), nil
 }
 
 func toSearchCriteria(query SearchPaymentsQuery) map[string]interface{} {

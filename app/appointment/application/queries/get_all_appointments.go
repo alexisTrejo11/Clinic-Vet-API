@@ -41,5 +41,5 @@ func (h *getAllAppointmentsHandler) Handle(ctx context.Context, query GetAllAppo
 	}
 
 	responses := mapAppointmentsToResponses(appointmentPage.Data)
-	return *page.NewPage(responses, appointmentPage.Metadata), nil
+	return page.NewPage(responses, appointmentPage.Metadata), nil
 }

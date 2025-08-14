@@ -38,5 +38,5 @@ func (h *listOverduePaymentsHandlerImpl) Handle(ctx context.Context, query ListO
 	}
 
 	response := mapPaymentsToResponses(paymentsPage.Data)
-	return *page.NewPage(response, paymentsPage.Metadata), nil
+	return page.NewPage(response, paymentsPage.Metadata), nil
 }

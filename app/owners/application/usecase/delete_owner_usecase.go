@@ -6,24 +6,26 @@ import (
 	ownerDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/domain"
 )
 
-type DeleteOwnerUseCase struct {
+type SoftDeleteOwnerUseCase struct {
 	ownerRepo ownerDomain.OwnerRepository
 }
 
-func NewDeleteOwnerUseCase(ownerRepo ownerDomain.OwnerRepository) *DeleteOwnerUseCase {
-	return &DeleteOwnerUseCase{
+func NewSoftDeleteOwnerUseCase(ownerRepo ownerDomain.OwnerRepository) *SoftDeleteOwnerUseCase {
+	return &SoftDeleteOwnerUseCase{
 		ownerRepo: ownerRepo,
 	}
 }
 
-func (uc *DeleteOwnerUseCase) Execute(ctx context.Context, id int) error {
-	_, err := uc.ownerRepo.ExistsByID(ctx, id)
-	if err != nil {
+func (uc *SoftDeleteOwnerUseCase) Execute(ctx context.Context, id int) error {
+	if exists, err := uc.ownerRepo.ExistsByID(ctx, id); err != nil {
+		return err
+	} else if !exists {
 		return ownerDomain.HandleGetByIdError(err, id)
 	}
 
-	if err := uc.ownerRepo.Delete(ctx, id); err != nil {
+	if err := uc.ownerRepo.SoftDelete(ctx, id); err != nil {
 		return err
 	}
+
 	return nil
 }

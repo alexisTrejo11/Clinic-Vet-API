@@ -51,21 +51,21 @@ func ToPaymentResponse(entity interface{}) PaymentResponse {
 	payment := entity.(*paymentDomain.Payment)
 
 	return PaymentResponse{
-		Id:            payment.Id,
-		AppointmentId: payment.AppointmentId,
-		UserId:        payment.UserId,
-		Amount:        payment.Amount.ToFloat(),
-		Currency:      payment.Currency,
-		PaymentMethod: payment.PaymentMethod,
-		Status:        payment.Status,
-		TransactionId: payment.TransactionId,
-		Description:   payment.Description,
-		DueDate:       payment.DueDate,
-		PaidAt:        payment.PaidAt,
-		RefundedAt:    payment.RefundedAt,
-		IsActive:      payment.IsActive,
-		CreatedAt:     payment.CreatedAt,
-		UpdatedAt:     payment.UpdatedAt,
+		Id:            payment.GetId(),
+		AppointmentId: payment.GetAppointmentId(),
+		UserId:        payment.GetUserId(),
+		Amount:        payment.GetAmount().ToFloat(),
+		Currency:      payment.GetCurrency(),
+		PaymentMethod: payment.GetPaymentMethod(),
+		Status:        payment.GetStatus(),
+		TransactionId: payment.GetTransactionId(),
+		Description:   payment.GetDescription(),
+		DueDate:       payment.GetDueDate(),
+		PaidAt:        payment.GetPaidAt(),
+		RefundedAt:    payment.GetRefundedAt(),
+		IsActive:      payment.GetIsActive(),
+		CreatedAt:     payment.GetCreatedAt(),
+		UpdatedAt:     payment.GetUpdatedAt(),
 	}
 }
 

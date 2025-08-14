@@ -7,7 +7,6 @@ import (
 
 	session "github.com/alexisTrejo11/Clinic-Vet-API/app/auth/domain"
 	sessionRepo "github.com/alexisTrejo11/Clinic-Vet-API/app/auth/domain/repositories"
-	ownerRepository "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/application/repository"
 	ownerDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/domain"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
 	userApplication "github.com/alexisTrejo11/Clinic-Vet-API/app/users/application"
@@ -56,14 +55,14 @@ type SignupCommandHandler struct {
 	userRepo    userRepository.UserRepository
 	dispatcher  *userApplication.CommandDispatcher
 	sessionRepo sessionRepo.SessionRepository
-	ownerRepo   ownerRepository.OwnerRepository
+	ownerRepo   ownerDomain.OwnerRepository
 	vetRepo     vetRepo.VeterinarianRepository
 }
 
 func NewSignupCommandHandler(
 	userRepo userRepository.UserRepository,
 	dispatcher *userApplication.CommandDispatcher,
-	ownerRepo ownerRepository.OwnerRepository,
+	ownerRepo ownerDomain.OwnerRepository,
 	sessionRepo sessionRepo.SessionRepository,
 	vetRepo vetRepo.VeterinarianRepository,
 
@@ -197,15 +196,13 @@ func (h *SignupCommandHandler) createOwner(cmd SignupCommand, userId user.UserId
 		return err
 	}
 
-	newUserOwner := &ownerDomain.Owner{
-		Photo:       cmd.ProfilePicture,
-		FullName:    name,
-		Gender:      cmd.Gender,
-		DateOfBirth: cmd.DateOfBirth,
-		UserId:      func(v int) *int { return &v }(userId.GetValue()),
-		IsActive:    true,
-		Address:     &cmd.Address,
-	}
+	newUserOwner := &ownerDomain.Owner{}
+	newUserOwner.SetFullName(name)
+	newUserOwner.SetUserId(userId.GetValue())
+	newUserOwner.SetPhoto(cmd.ProfilePicture)
+	newUserOwner.SetGender(cmd.Gender)
+	newUserOwner.SetDateOfBirth(cmd.DateOfBirth)
+	newUserOwner.SetAddress(cmd.Address)
 
 	if err := h.ownerRepo.Save(cmd.CTX, newUserOwner); err != nil {
 		return err

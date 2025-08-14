@@ -160,9 +160,9 @@ func ToResponseDetail(medHistory mhDomain.MedicalHistory, owner ownerDomain.Owne
 		Id:  medHistory.Id.GetValue(),
 		Pet: *petDetail,
 		Owner: OwnerDetails{
-			Id:        owner.Id,
-			FirstName: owner.FullName.FirstName,
-			LastName:  owner.FullName.LastName,
+			Id:        owner.Id(),
+			FirstName: owner.FullName().FirstName,
+			LastName:  owner.FullName().LastName,
 		},
 		Date:      medHistory.VisitDate,
 		Diagnosis: medHistory.Diagnosis,

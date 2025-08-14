@@ -9,7 +9,10 @@ import (
 func FromRequestCreate(ownerCreate ownerDTOs.OwnerCreate) *ownerDomain.Owner {
 	fullName, _ := user.NewPersonName(ownerCreate.FirstName, ownerCreate.LastName)
 
-	builder := ownerDomain.NewOwnerBuilder(0, fullName, ownerCreate.PhoneNumber).
+	builder := ownerDomain.NewOwnerBuilder().
+		WithFullName(fullName).
+		WithIsActive(true).
+		WithPhoneNumber(ownerCreate.PhoneNumber).
 		WithGender(ownerCreate.Gender).
 		WithPhoto(ownerCreate.Photo).
 		WithDateOfBirth(ownerCreate.DateOfBirth)
@@ -23,13 +26,22 @@ func FromRequestCreate(ownerCreate ownerDTOs.OwnerCreate) *ownerDomain.Owner {
 	return newOwner
 }
 
-func ToResponse(owner *ownerDomain.Owner) *ownerDTOs.OwnerResponse {
-	return &ownerDTOs.OwnerResponse{
-		Id:          owner.ID(),
+func ToResponse(owner *ownerDomain.Owner) ownerDTOs.OwnerResponse {
+	response := &ownerDTOs.OwnerResponse{
+		Id:          owner.Id(),
 		Photo:       owner.Photo(),
 		Name:        owner.FullName().FullName(),
 		PhoneNumber: owner.PhoneNumber(),
 		Address:     owner.Address(),
 		IsActive:    owner.IsActive(),
 	}
+	return *response
+}
+
+func ToResponseList(owners []ownerDomain.Owner) []ownerDTOs.OwnerResponse {
+	responses := make([]ownerDTOs.OwnerResponse, len(owners))
+	for i, owner := range owners {
+		responses[i] = ToResponse(&owner)
+	}
+	return responses
 }

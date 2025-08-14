@@ -54,5 +54,5 @@ func (h *cancelPaymentHandler) Handle(ctx context.Context, command CancelPayment
 		return shared.FailureResult("failed to save canceled payment", err)
 	}
 
-	return shared.SuccesResult(string(rune(payment.Id)), "payment canceled successfully")
+	return shared.SuccesResult(string(rune(payment.GetId())), "payment canceled successfully")
 }

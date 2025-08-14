@@ -51,7 +51,7 @@ func (h *markOverduePaymentsHandler) Handle(ctx context.Context, command MarkOve
 
 		for _, payment := range payments {
 			if err := h.UpdatePaymentOverdued(ctx, &payment); err != nil {
-				fmt.Printf("Error updating payment %d: %v\n", payment.Id, err)
+				fmt.Printf("Error updating payment %d: %v\n", payment.GetId(), err)
 				continue
 			}
 			updatedCount++

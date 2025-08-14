@@ -41,6 +41,6 @@ func (h *listPaymentsByStatusHandler) Handle(ctx context.Context, query ListPaym
 		return page.Page[[]PaymentResponse]{}, err
 	}
 
-	response := mapPaymentsToResponses(paymentPage.Data)
-	return *page.NewPage(response, paymentPage.Metadata), nil
+	paymentsResponse := mapPaymentsToResponses(paymentPage.Data)
+	return page.NewPage(paymentsResponse, paymentPage.Metadata), nil
 }

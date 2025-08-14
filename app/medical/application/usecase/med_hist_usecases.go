@@ -6,19 +6,21 @@ import (
 
 	mhDTOs "github.com/alexisTrejo11/Clinic-Vet-API/app/medical/application/dtos"
 	medHistRepo "github.com/alexisTrejo11/Clinic-Vet-API/app/medical/domain/repositories"
-	ownerRepository "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/application/repository"
+	ownerDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/domain"
+	petRepo "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application/repositories"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 	vetRepo "github.com/alexisTrejo11/Clinic-Vet-API/app/veterinarians/application/repositories"
 )
 
 type MedicalHistoryUseCase struct {
 	medHistRepo medHistRepo.MedicalHistoryRepository
-	ownerRepo   ownerRepository.OwnerRepository
+	ownerRepo   ownerDomain.OwnerRepository
 	vetRepo     vetRepo.VeterinarianRepository
+	petRepo     petRepo.PetRepository
 }
 
-func NewMedicalHistoryUseCase(medHistRepo medHistRepo.MedicalHistoryRepository, ownerRepo ownerRepository.OwnerRepository, vetRepo vetRepo.VeterinarianRepository) *MedicalHistoryUseCase {
-	return &MedicalHistoryUseCase{medHistRepo: medHistRepo, ownerRepo: ownerRepo, vetRepo: vetRepo}
+func NewMedicalHistoryUseCase(medHistRepo medHistRepo.MedicalHistoryRepository, ownerRepo ownerDomain.OwnerRepository, vetRepo vetRepo.VeterinarianRepository, petRepo petRepo.PetRepository) *MedicalHistoryUseCase {
+	return &MedicalHistoryUseCase{medHistRepo: medHistRepo, ownerRepo: ownerRepo, vetRepo: vetRepo, petRepo: petRepo}
 }
 
 func (uc *MedicalHistoryUseCase) Search(ctx context.Context, searchParams mhDTOs.MedHistSearchParams) (page.Page[[]mhDTOs.MedHistResponse], error) {
@@ -27,9 +29,8 @@ func (uc *MedicalHistoryUseCase) Search(ctx context.Context, searchParams mhDTOs
 		return page.Page[[]mhDTOs.MedHistResponse]{}, err
 	}
 
-	reponsePage := page.NewPage(mhDTOs.ListToResponse(medHistPage.Data), medHistPage.Metadata)
-
-	return *reponsePage, nil
+	responsePage := page.NewPage(mhDTOs.ListToResponse(medHistPage.Data), medHistPage.Metadata)
+	return responsePage, nil
 }
 
 func (uc *MedicalHistoryUseCase) GetByPet(ctx context.Context, petId int, pagintation page.PageData) (page.Page[[]mhDTOs.MedHistResponse], error) {
@@ -38,8 +39,8 @@ func (uc *MedicalHistoryUseCase) GetByPet(ctx context.Context, petId int, pagint
 		return page.Page[[]mhDTOs.MedHistResponse]{}, err
 	}
 
-	reponsePage := page.NewPage(mhDTOs.ListToResponse(medHistPage.Data), medHistPage.Metadata)
-	return *reponsePage, nil
+	medHistResponse := mhDTOs.ListToResponse(medHistPage.Data)
+	return page.NewPage(medHistResponse, medHistPage.Metadata), nil
 }
 
 func (uc *MedicalHistoryUseCase) ListByOwner(ctx context.Context, ownerId int, pagintation page.PageData) (page.Page[[]mhDTOs.MedHistResponse], error) {
@@ -48,8 +49,9 @@ func (uc *MedicalHistoryUseCase) ListByOwner(ctx context.Context, ownerId int, p
 		return page.Page[[]mhDTOs.MedHistResponse]{}, err
 	}
 
-	reponsePage := page.NewPage(mhDTOs.ListToResponse(medHistPage.Data), medHistPage.Metadata)
-	return *reponsePage, nil
+	medHistResponse := mhDTOs.ListToResponse(medHistPage.Data)
+	reponsePage := page.NewPage(medHistResponse, medHistPage.Metadata)
+	return reponsePage, nil
 }
 
 func (uc *MedicalHistoryUseCase) ListByVet(ctx context.Context, vetId int, pagintation page.PageData) (page.Page[[]mhDTOs.MedHistResponse], error) {
@@ -58,8 +60,8 @@ func (uc *MedicalHistoryUseCase) ListByVet(ctx context.Context, vetId int, pagin
 		return page.Page[[]mhDTOs.MedHistResponse]{}, err
 	}
 
-	reponsePage := page.NewPage(mhDTOs.ListToResponse(medHistPage.Data), medHistPage.Metadata)
-	return *reponsePage, nil
+	medHistResponse := mhDTOs.ListToResponse(medHistPage.Data)
+	return page.NewPage(medHistResponse, medHistPage.Metadata), nil
 }
 
 func (uc *MedicalHistoryUseCase) GetById(ctx context.Context, id int) (mhDTOs.MedHistResponse, error) {
@@ -77,12 +79,12 @@ func (uc *MedicalHistoryUseCase) GetByIdWithDeatils(ctx context.Context, id int)
 		return mhDTOs.MedHistResponseDetail{}, err
 	}
 
-	owner, err := uc.ownerRepo.GetById(ctx, medHistory.OwnerId, true)
+	owner, err := uc.ownerRepo.GetById(ctx, medHistory.OwnerId)
 	if err != nil {
 		return mhDTOs.MedHistResponseDetail{}, err
 	}
 
-	pet, err := owner.GetPetById(medHistory.PetId.GetValue())
+	pet, err := uc.petRepo.GetById(ctx, medHistory.PetId.GetValue())
 	if err != nil {
 		return mhDTOs.MedHistResponseDetail{}, err
 	}
@@ -92,7 +94,7 @@ func (uc *MedicalHistoryUseCase) GetByIdWithDeatils(ctx context.Context, id int)
 		return mhDTOs.MedHistResponseDetail{}, err
 	}
 
-	return mhDTOs.ToResponseDetail(*medHistory, owner, vet, *pet), nil
+	return mhDTOs.ToResponseDetail(*medHistory, owner, vet, pet), nil
 }
 
 func (uc *MedicalHistoryUseCase) Create(ctx context.Context, dto mhDTOs.MedicalHistoryCreate) error {
@@ -101,7 +103,7 @@ func (uc *MedicalHistoryUseCase) Create(ctx context.Context, dto mhDTOs.MedicalH
 		return err
 	}
 
-	if err := uc.valIdateCreation(ctx, &dto); err != nil {
+	if err := uc.validateCreation(ctx, &dto); err != nil {
 		return err
 	}
 
@@ -122,7 +124,7 @@ func (uc *MedicalHistoryUseCase) Update(ctx context.Context, id int, dto mhDTOs.
 		return err
 	}
 
-	if err := uc.valIdateUpdate(ctx, &dto); err != nil {
+	if err := uc.validateUpdate(ctx, &dto); err != nil {
 		return err
 	}
 
@@ -151,14 +153,14 @@ func (uc *MedicalHistoryUseCase) Delete(ctx context.Context, id int, isSoftDelet
 	return uc.medHistRepo.Delete(ctx, id, isSoftDelete)
 }
 
-func (uc *MedicalHistoryUseCase) valIdateCreation(ctx context.Context, medHistory *mhDTOs.MedicalHistoryCreate) error {
-	owner, err := uc.ownerRepo.GetById(ctx, medHistory.OwnerId, true)
+func (uc *MedicalHistoryUseCase) validateCreation(ctx context.Context, medHistory *mhDTOs.MedicalHistoryCreate) error {
+	owner, err := uc.ownerRepo.GetById(ctx, medHistory.OwnerId)
 	if err != nil {
 		return err
 	}
 
 	petFound := false
-	for _, pet := range owner.Pets {
+	for _, pet := range owner.Pets() {
 		if pet.Id == medHistory.PetId {
 			medHistory.PetId = pet.Id
 			petFound = true
@@ -177,16 +179,16 @@ func (uc *MedicalHistoryUseCase) valIdateCreation(ctx context.Context, medHistor
 	return nil
 }
 
-func (uc *MedicalHistoryUseCase) valIdateUpdate(ctx context.Context, medHistory *mhDTOs.MedicalHistoryUpdate) error {
+func (uc *MedicalHistoryUseCase) validateUpdate(ctx context.Context, medHistory *mhDTOs.MedicalHistoryUpdate) error {
 	if medHistory.OwnerId != nil {
-		owner, err := uc.ownerRepo.GetById(ctx, *medHistory.OwnerId, true)
+		owner, err := uc.ownerRepo.GetById(ctx, *medHistory.OwnerId)
 		if err != nil {
 			return err
 		}
 
 		if medHistory.PetId == nil {
 			petFound := false
-			for _, pet := range owner.Pets {
+			for _, pet := range owner.Pets() {
 				if pet.Id == *medHistory.PetId {
 					petFound = true
 					break

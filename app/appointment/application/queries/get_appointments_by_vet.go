@@ -43,5 +43,5 @@ func (h *getAppointmentsByVetHandler) Handle(ctx context.Context, query GetAppoi
 	}
 
 	responses := mapAppointmentsToResponses(appointmentsPage.Data)
-	return *page.NewPage(responses, appointmentsPage.Metadata), nil
+	return page.NewPage(responses, appointmentsPage.Metadata), nil
 }

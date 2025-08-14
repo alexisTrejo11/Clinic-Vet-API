@@ -45,7 +45,7 @@ func (h *getAppointmentsByDateRangeHandler) Handle(ctx context.Context, query Ge
 		return page.Page[[]AppointmentResponse]{}, err
 	}
 
-	return *page.NewPage(
+	return page.NewPage(
 		mapAppointmentsToResponses(appointmentsPage.Data),
 		appointmentsPage.Metadata,
 	), nil

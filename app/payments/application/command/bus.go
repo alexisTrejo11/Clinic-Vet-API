@@ -58,7 +58,7 @@ func (bus *paymentCommandBus) Execute(ctx context.Context, command Command) shar
 
 	if !exists {
 		return shared.FailureResult(
-			fmt.Sprint("unhandled command type"),
+			"unhandled command type",
 			fmt.Errorf("no handler registered for command type %s", commandType.Name()),
 		)
 	}
@@ -110,7 +110,7 @@ func NewPaymentCommandService(ctx context.Context, commandBus CommandBus, paymen
 }
 
 func (s *PaymentCommandService) ProcessPayment(payment *paymentDomain.Payment) shared.CommandResult {
-	cmd := NewProcessPaymentCommand(payment.Id, *payment.TransactionId)
+	cmd := NewProcessPaymentCommand(payment.GetId(), *payment.GetTransactionId())
 	return s.commandBus.Execute(context.Background(), cmd)
 
 }
@@ -125,15 +125,15 @@ func (s *PaymentCommandService) ValidatePayment(payment *paymentDomain.Payment) 
 		return paymentDomain.NewPaymentError("INVALID_PAYMENT", "payment cannot be nil", 0, "")
 	}
 
-	if payment.Amount.IsZero() || payment.Amount.IsNegative() {
+	if payment.GetAmount().IsZero() || payment.GetAmount().IsNegative() {
 		return paymentDomain.ErrInvalidAmount
 	}
 
-	if !payment.PaymentMethod.IsValid() {
+	if !payment.GetPaymentMethod().IsValid() {
 		return paymentDomain.ErrInvalidPaymentMethod
 	}
 
-	if !payment.Status.IsValid() {
+	if !payment.GetStatus().IsValid() {
 		return paymentDomain.ErrInvalidPaymentStatus
 	}
 

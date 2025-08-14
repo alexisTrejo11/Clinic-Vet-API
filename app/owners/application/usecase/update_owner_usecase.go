@@ -19,16 +19,16 @@ func NewUpdateOwnerUseCase(ownerRepo ownerDomain.OwnerRepository) *UpdateOwnerUs
 	}
 }
 
-func (uc *UpdateOwnerUseCase) Execute(ctx context.Context, id int, dto ownerDTOs.OwnerUpdate) (*ownerDTOs.OwnerResponse, error) {
+func (uc *UpdateOwnerUseCase) Execute(ctx context.Context, id int, dto ownerDTOs.OwnerUpdate) (ownerDTOs.OwnerResponse, error) {
 	owner, err := uc.ownerRepo.GetById(ctx, id)
 	if err != nil {
-		return nil, ownerDomain.HandleGetByIdError(err, id)
+		return ownerDTOs.OwnerResponse{}, ownerDomain.HandleGetByIdError(err, id)
 	}
 
 	if dto.PhoneNumber != nil && *dto.PhoneNumber != owner.PhoneNumber() {
 		_, err := uc.ownerRepo.GetByPhone(ctx, *dto.PhoneNumber)
 		if err == nil {
-			return nil, ownerDomain.HandlePhoneConflictError()
+			return ownerDTOs.OwnerResponse{}, ownerDomain.HandlePhoneConflictError()
 		}
 		owner.SetPhoneNumber(*dto.PhoneNumber)
 	}
@@ -50,7 +50,7 @@ func (uc *UpdateOwnerUseCase) Execute(ctx context.Context, id int, dto ownerDTOs
 
 		fullName, err := user.NewPersonName(firstName, lastName)
 		if err != nil {
-			return nil, err
+			return ownerDTOs.OwnerResponse{}, err
 		}
 		owner.SetFullName(fullName)
 	}
@@ -59,8 +59,8 @@ func (uc *UpdateOwnerUseCase) Execute(ctx context.Context, id int, dto ownerDTOs
 		owner.SetAddress(*dto.Address)
 	}
 
-	if err := uc.ownerRepo.Save(ctx, owner); err != nil {
-		return nil, err
+	if err := uc.ownerRepo.Save(ctx, &owner); err != nil {
+		return ownerDTOs.OwnerResponse{}, err
 	}
 
 	return ownerMappers.ToResponse(&owner), nil

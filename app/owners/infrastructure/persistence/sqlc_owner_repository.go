@@ -1,17 +1,14 @@
-package sqlcOwnerRepository
+package ownerRepository
 
 import (
 	"context"
 	"fmt"
 	"sync"
 
-	ownerRepository "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/application/repository"
 	ownerDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/domain"
 	petRepository "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application/repositories"
 	petDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/domain"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
-	user "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
 	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
 )
 
@@ -20,7 +17,7 @@ type SqlcOwnerRepository struct {
 	petRepository petRepository.PetRepository
 }
 
-func NewSlqcOwnerRepository(queries *sqlc.Queries, petRepository petRepository.PetRepository) ownerRepository.OwnerRepository {
+func NewSqlcOwnerRepository(queries *sqlc.Queries, petRepository petRepository.PetRepository) ownerDomain.OwnerRepository {
 	return &SqlcOwnerRepository{
 		queries:       queries,
 		petRepository: petRepository,
@@ -28,7 +25,7 @@ func NewSlqcOwnerRepository(queries *sqlc.Queries, petRepository petRepository.P
 }
 
 func (r *SqlcOwnerRepository) Save(ctx context.Context, owner *ownerDomain.Owner) error {
-	if owner.Id == 0 {
+	if owner.Id() == 0 {
 		if err := r.create(ctx, owner); err != nil {
 			return DBCreateError(err.Error())
 		}
@@ -42,7 +39,7 @@ func (r *SqlcOwnerRepository) Save(ctx context.Context, owner *ownerDomain.Owner
 	return nil
 }
 
-func (r *SqlcOwnerRepository) GetById(ctx context.Context, id int, includePets bool) (ownerDomain.Owner, error) {
+func (r *SqlcOwnerRepository) GetById(ctx context.Context, id int) (ownerDomain.Owner, error) {
 	petsChan := make(chan struct {
 		pets []petDomain.Pet
 		err  error
@@ -56,90 +53,58 @@ func (r *SqlcOwnerRepository) GetById(ctx context.Context, id int, includePets b
 	}
 
 	var pets []petDomain.Pet
-	if includePets {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			p, petErr := r.petRepository.ListByOwnerId(ctx, id)
-			petsChan <- struct {
-				pets []petDomain.Pet
-				err  error
-			}{pets: p, err: petErr}
-		}()
-	} else {
-	}
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		p, petErr := r.petRepository.ListByOwnerId(ctx, id)
+		petsChan <- struct {
+			pets []petDomain.Pet
+			err  error
+		}{pets: p, err: petErr}
+	}()
 
-	ownerName, err := user.NewPersonName(ownerRow.FirstName, ownerRow.LastName)
-	if err != nil {
-		return ownerDomain.Owner{}, fmt.Errorf("failed to create owner name: %w", err)
+	petsResult := <-petsChan
+	if petsResult.err != nil {
+		return ownerDomain.Owner{}, fmt.Errorf("failed to list pets for owner: %w", petsResult.err)
 	}
+	pets = petsResult.pets
 
-	if includePets {
-		petsResult := <-petsChan
-		if petsResult.err != nil {
-			return ownerDomain.Owner{}, fmt.Errorf("failed to list pets for owner: %w", petsResult.err)
-		}
-		pets = petsResult.pets
-	}
-
-	owner := ownerDomain.Owner{
-		Id:          int(ownerRow.ID),
-		Photo:       ownerRow.Photo,
-		FullName:    ownerName,
-		DateOfBirth: ownerRow.DateOfBirth.Time,
-		Gender:      user.Gender(shared.AssertString(ownerRow.Gender)),
-		PhoneNumber: ownerRow.PhoneNumber,
-		Address:     &ownerRow.Address.String,
-		IsActive:    ownerRow.IsActive,
-		Pets:        pets,
-	}
-
+	owner := rowToOwner(ownerRow)
+	owner.SetPets(pets)
 	return owner, nil
 }
 
 func (r *SqlcOwnerRepository) GetByPhone(ctx context.Context, phone string) (ownerDomain.Owner, error) {
-	row, err := r.queries.GetOwnerByPhone(ctx, phone)
+	sqlRow, err := r.queries.GetOwnerByPhone(ctx, phone)
 	if err != nil {
 		return ownerDomain.Owner{}, err
 	}
 
-	ownerName, err := user.NewPersonName(row.FirstName, row.LastName)
-	if err != nil {
-		return ownerDomain.Owner{}, nil
-	}
-
-	owner := ownerDomain.Owner{
-		Id:          int(row.ID),
-		Photo:       row.Photo,
-		FullName:    ownerName,
-		DateOfBirth: row.DateOfBirth.Time,
-		Gender:      user.Gender(shared.AssertString(row.Gender)),
-		PhoneNumber: row.PhoneNumber,
-		Address:     &row.Address.String,
-		IsActive:    row.IsActive,
-	}
-
-	return owner, nil
+	return rowToOwner(sqlRow), nil
 }
 
 // Add Seacrh
-func (r *SqlcOwnerRepository) List(ctx context.Context, pagination page.PageData) ([]ownerDomain.Owner, error) {
-	pageParams := sqlc.ListOwnersParams{Limit: int32(pagination.PageNumber), Offset: int32(pagination.PageNumber - 1)}
+func (r *SqlcOwnerRepository) List(ctx context.Context, pagination page.PageData) (page.Page[[]ownerDomain.Owner], error) {
+	pageParams := sqlc.ListOwnersParams{
+		Limit:  int32(pagination.PageSize),
+		Offset: int32((pagination.PageNumber - 1) * pagination.PageSize),
+	}
+
 	ownerRow, err := r.queries.ListOwners(ctx, pageParams)
 	if err != nil {
-		return []ownerDomain.Owner{}, err
+		return page.Page[[]ownerDomain.Owner]{}, err
 	}
 
 	owners, err := ListRowToOwner(ownerRow)
 	if err != nil {
-		return []ownerDomain.Owner{}, err
+		return page.Page[[]ownerDomain.Owner]{}, err
 	}
 
-	return owners, nil
+	return page.NewPage(owners, *page.GetPageMetadata(len(owners), pagination)), nil
 }
 
-func (r *SqlcOwnerRepository) Delete(ctx context.Context, OwnerId int) error {
-	if err := r.queries.DeleteOwner(ctx, int32(OwnerId)); err != nil {
+func (r *SqlcOwnerRepository) SoftDelete(ctx context.Context, OwnerId int) error {
+	if err := r.queries.SoftDeleteOwner(ctx, int32(OwnerId)); err != nil {
 		return DBDeleteError(err.Error())
 	}
 	return nil
@@ -159,7 +124,6 @@ func (r *SqlcOwnerRepository) ExistsByID(ctx context.Context, id int) (bool, err
 	if err != nil {
 		return false, DBSelectFoundError(err.Error())
 	}
-
 	return exists, nil
 }
 
@@ -174,27 +138,25 @@ func (r *SqlcOwnerRepository) DeactivateOwner(ctx context.Context, id int) error
 	if err := r.queries.DeactivateUser(ctx, int32(id)); err != nil {
 		return DBSelectFoundError(err.Error())
 	}
-
 	return nil
 }
 
 func (r *SqlcOwnerRepository) create(ctx context.Context, owner *ownerDomain.Owner) error {
-	params := ToCreateParams(*owner)
+	createParams := toCreateParams(*owner)
 
-	ownerCreated, err := r.queries.CreateOwner(ctx, *params)
+	ownerCreated, err := r.queries.CreateOwner(ctx, *createParams)
 	if err != nil {
 		return err
 	}
 
-	owner.Id = int(ownerCreated.ID)
+	owner.SetId(int(ownerCreated.ID))
 	return nil
 }
 
 func (r *SqlcOwnerRepository) update(ctx context.Context, owner *ownerDomain.Owner) error {
-	params := ToUpdateParams(*owner)
+	params := toUpdateParams(*owner)
 
-	err := r.queries.UpdateOwner(ctx, *params)
-	if err != nil {
+	if err := r.queries.UpdateOwner(ctx, *params); err != nil {
 		return err
 	}
 

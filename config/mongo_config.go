@@ -13,7 +13,7 @@ import (
 
 var mongoClient *mongo.Client
 
-func InitMongo() *mongo.Client {
+func InitMongoDB() *mongo.Client {
 	var uri string
 	if uri = os.Getenv("MONGODB_URI"); uri == "" {
 		log.Fatal("'MONGODB_URI' environment variable is not set. Closing Server.")
@@ -43,7 +43,7 @@ func InitMongo() *mongo.Client {
 
 func GetMongoClient() *mongo.Client {
 	if mongoClient == nil {
-		mongoClient = InitMongo()
+		mongoClient = InitMongoDB()
 	}
 	return mongoClient
 }
