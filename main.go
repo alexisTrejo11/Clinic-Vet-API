@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"log"
+	"net/http"
 	"os"
 
 	appointmentAPI "github.com/alexisTrejo11/Clinic-Vet-API/app/appointment/infrastructure/api"
@@ -38,7 +39,26 @@ import (
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
 	"github.com/joho/godotenv"
+
+	_ "github.com/alexisTrejo11/Clinic-Vet-API/docs"
+	swaggerfiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
+
+// Ping
+// @BasePath /api/v2
+// PingExample godoc
+// @Summary ping example
+// @Schemes
+// @Description do ping
+// @Tags example
+// @Accept json
+// @Produce json
+// @Success 200 {string} Ping
+// @Router /ping [get]
+func Ping(g *gin.Context) {
+	g.JSON(http.StatusOK, "Ping")
+}
 
 func main() {
 	config.InitLogger()
@@ -60,10 +80,6 @@ func main() {
 	router := gin.Default()
 	router.Use(gin.Recovery())
 	router.Use(middleware.AuditLog())
-
-	router.GET("/ping", func(c *gin.Context) {
-		c.JSON(200, gin.H{"message": "pong"})
-	})
 
 	queries := sqlc.New(dbConn)
 
@@ -143,5 +159,19 @@ func main() {
 	// Notification
 	notificationApi.SetupNotificationModule(router, mongoClient, emailConfig, config.GetTwilioClient())
 
-	router.Run()
+	// Open API
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
+	ginSwagger.WrapHandler(swaggerfiles.Handler,
+		ginSwagger.URL("http://localhost:8080/swagger/doc.json"),
+		ginSwagger.DefaultModelsExpandDepth(-1))
+
+	// Ping
+	router.GET("/api/v2/ping", Ping)
+
+	serverPort := os.Getenv("SERVER_PORT")
+	if serverPort == "" {
+		router.Run(":8080")
+	} else {
+		router.Run(":" + serverPort)
+	}
 }
