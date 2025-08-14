@@ -3,12 +3,14 @@ package authCmd
 import (
 	"context"
 	"errors"
+	"strconv"
 	"time"
 
 	session "github.com/alexisTrejo11/Clinic-Vet-API/app/auth/domain"
 	sessionRepo "github.com/alexisTrejo11/Clinic-Vet-API/app/auth/domain/repositories"
 	ownerDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/domain"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/valueObjects"
 	userApplication "github.com/alexisTrejo11/Clinic-Vet-API/app/users/application"
 	userCommand "github.com/alexisTrejo11/Clinic-Vet-API/app/users/application/command"
 	user "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
@@ -22,17 +24,18 @@ type SignupCommand struct {
 	Email       *string `json:"email"`
 	PhoneNumber *string `json:"phone_number"`
 	Password    string  `json:"password"`
+	UserId      int     `json:"user_id"`
 
 	// Personal details
-	FirstName      string        `json:"first_name"`
-	LastName       string        `json:"last_name"`
-	Gender         user.Gender   `json:"gender"`
-	DateOfBirth    time.Time     `json:"date_of_birth"`
-	Location       string        `json:"location"`
-	Address        string        `json:"address"`
-	Role           user.UserRole `json:"role"`
-	ProfilePicture string        `json:"profile_picture"`
-	Bio            string        `json:"bio"`
+	FirstName      string              `json:"first_name"`
+	LastName       string              `json:"last_name"`
+	Gender         valueObjects.Gender `json:"gender"`
+	DateOfBirth    time.Time           `json:"date_of_birth"`
+	Location       string              `json:"location"`
+	Address        string              `json:"address"`
+	Role           user.UserRole       `json:"role"`
+	ProfilePicture string              `json:"profile_picture"`
+	Bio            string              `json:"bio"`
 
 	// Veterinarian details
 	LicenseNumber   *string
@@ -88,7 +91,7 @@ func (h *SignupCommandHandler) Handle(cmd *SignupCommand) shared.CommandResult {
 
 	// TODO: Produce Event
 
-	return shared.SuccesResult(userId.String(), "User created successfully")
+	return shared.SuccesResult(strconv.Itoa(userId), "User created successfully")
 
 }
 
@@ -132,33 +135,28 @@ func (h *SignupCommandHandler) validateUniqueCredentials(cmd *SignupCommand) err
 	return nil
 }
 
-func (h *SignupCommandHandler) createUser(cmd *SignupCommand) (user.UserId, error) {
-	userCommand := ToCreteUserCommand(*cmd)
+func (h *SignupCommandHandler) createUser(cmd *SignupCommand) (int, error) {
+	userCommand := ToCreateUserCommand(*cmd)
 
 	result := h.dispatcher.Dispatch(userCommand)
 	if !result.IsSuccess {
-		return user.UserId{}, errors.New(result.Message)
+		return 0, errors.New(result.Message)
 	}
 
-	userId, err := user.NewUserId(result.Id)
-	if err != nil {
-		return user.UserId{}, err
+	if err := h.createOwner(*cmd, cmd.UserId); err != nil {
+		return 0, err
 	}
 
-	if err := h.createOwner(*cmd, userId); err != nil {
-		return user.UserId{}, err
+	if err := h.createVet(*cmd); err != nil {
+		return 0, err
 	}
 
-	if err := h.createVet(*cmd, userId); err != nil {
-		return user.UserId{}, err
-	}
-
-	return userId, nil
+	return cmd.UserId, nil
 }
 
-func (h *SignupCommandHandler) createSession(userId user.UserId, cmd SignupCommand) error {
+func (h *SignupCommandHandler) CreateSession(cmd SignupCommand) error {
 	session := session.Session{
-		UserId: userId.String(),
+		UserId: strconv.Itoa(cmd.UserId),
 	}
 
 	if err := h.sessionRepo.Create(cmd.CTX, &session); err != nil {
@@ -168,7 +166,7 @@ func (h *SignupCommandHandler) createSession(userId user.UserId, cmd SignupComma
 	return nil
 }
 
-func ToCreteUserCommand(cmd SignupCommand) userCommand.CreateUserCommand {
+func ToCreateUserCommand(cmd SignupCommand) userCommand.CreateUserCommand {
 	command := userCommand.CreateUserCommand{
 		Password: cmd.Password,
 		Address:  cmd.Address,
@@ -186,19 +184,19 @@ func ToCreteUserCommand(cmd SignupCommand) userCommand.CreateUserCommand {
 	return command
 }
 
-func (h *SignupCommandHandler) createOwner(cmd SignupCommand, userId user.UserId) error {
+func (h *SignupCommandHandler) createOwner(cmd SignupCommand, userId int) error {
 	if cmd.Role != user.UserRoleOwner {
 		return nil
 	}
 
-	name, err := user.NewPersonName(cmd.FirstName, cmd.LastName)
+	name, err := valueObjects.NewPersonName(cmd.FirstName, cmd.LastName)
 	if err != nil {
 		return err
 	}
 
 	newUserOwner := &ownerDomain.Owner{}
 	newUserOwner.SetFullName(name)
-	newUserOwner.SetUserId(userId.GetValue())
+	newUserOwner.SetUserId(userId)
 	newUserOwner.SetPhoto(cmd.ProfilePicture)
 	newUserOwner.SetGender(cmd.Gender)
 	newUserOwner.SetDateOfBirth(cmd.DateOfBirth)
@@ -211,12 +209,12 @@ func (h *SignupCommandHandler) createOwner(cmd SignupCommand, userId user.UserId
 	return nil
 }
 
-func (h *SignupCommandHandler) createVet(cmd SignupCommand, userId user.UserId) error {
+func (h *SignupCommandHandler) createVet(cmd SignupCommand) error {
 	if cmd.Role != user.UserRoleVeterinarian {
 		return nil
 	}
 
-	name, err := user.NewPersonName(cmd.FirstName, cmd.LastName)
+	name, err := valueObjects.NewPersonName(cmd.FirstName, cmd.LastName)
 	if err != nil {
 		return err
 	}
@@ -225,7 +223,7 @@ func (h *SignupCommandHandler) createVet(cmd SignupCommand, userId user.UserId) 
 		Name:     name,
 		Photo:    cmd.ProfilePicture,
 		IsActive: true,
-		UserID:   func(v int) *int { return &v }(userId.GetValue()),
+		UserID:   func(v int) *int { return &v }(cmd.UserId),
 	}
 
 	if cmd.LicenseNumber != nil {

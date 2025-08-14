@@ -6,7 +6,7 @@ import (
 	ownerDTOs "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/application/dtos"
 	ownerMappers "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/application/mappers"
 	ownerDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/domain"
-	user "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/valueObjects"
 )
 
 type UpdateOwnerUseCase struct {
@@ -48,7 +48,7 @@ func (uc *UpdateOwnerUseCase) Execute(ctx context.Context, id int, dto ownerDTOs
 			lastName = *dto.LastName
 		}
 
-		fullName, err := user.NewPersonName(firstName, lastName)
+		fullName, err := valueObjects.NewPersonName(firstName, lastName)
 		if err != nil {
 			return ownerDTOs.OwnerResponse{}, err
 		}

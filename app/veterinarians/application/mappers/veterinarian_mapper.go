@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"time"
 
-	user "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/valueObjects"
 	vetDtos "github.com/alexisTrejo11/Clinic-Vet-API/app/veterinarians/application/dtos"
 	vetDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/veterinarians/domain"
 )
 
 func FromCreateDTO(vetData vetDtos.VetCreate) *vetDomain.Veterinarian {
-	personName, _ := user.NewPersonName(vetData.FirstName, vetData.LastName)
+	personName, _ := valueObjects.NewPersonName(vetData.FirstName, vetData.LastName)
 	return &vetDomain.Veterinarian{
 		Name:            personName,
 		Photo:           vetData.Photo,
@@ -37,7 +37,7 @@ func UpdateFromDTO(vet *vetDomain.Veterinarian, vetData vetDtos.VetUpdate) {
 			currentLastName = *vetData.LastName
 		}
 
-		updatedName, _ := user.NewPersonName(currentFirstName, currentLastName)
+		updatedName, _ := valueObjects.NewPersonName(currentFirstName, currentLastName)
 		vet.Name = updatedName
 
 		if vetData.Photo != nil {

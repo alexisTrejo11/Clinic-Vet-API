@@ -5,14 +5,14 @@ import (
 	"time"
 
 	petDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/domain"
-	user "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/valueObjects"
 )
 
 type Owner struct {
 	id          int
 	photo       string
-	fullName    user.PersonName
-	gender      user.Gender
+	fullName    valueObjects.PersonName
+	gender      valueObjects.Gender
 	dateOfBirth time.Time
 	phoneNumber string
 	address     *string
@@ -21,7 +21,7 @@ type Owner struct {
 	pets        []petDomain.Pet
 }
 
-func NewOwner(id int, photo string, fullName user.PersonName, gender user.Gender, dateOfBirth time.Time, phoneNumber string) (*Owner, error) {
+func NewOwner(id int, photo string, fullName valueObjects.PersonName, gender valueObjects.Gender, dateOfBirth time.Time, phoneNumber string) (*Owner, error) {
 	if id <= 0 {
 		return nil, errors.New("owner ID must be a positive integer")
 	}
@@ -46,11 +46,11 @@ func (o *Owner) Photo() string {
 	return o.photo
 }
 
-func (o *Owner) FullName() user.PersonName {
+func (o *Owner) FullName() valueObjects.PersonName {
 	return o.fullName
 }
 
-func (o *Owner) Gender() user.Gender {
+func (o *Owner) Gender() valueObjects.Gender {
 	return o.gender
 }
 
@@ -103,7 +103,7 @@ func (o *Owner) SetActive(status bool) {
 	o.isActive = status
 }
 
-func (o *Owner) SetFullName(fullName user.PersonName) {
+func (o *Owner) SetFullName(fullName valueObjects.PersonName) {
 	o.fullName = fullName
 }
 
@@ -123,6 +123,6 @@ func (o *Owner) GetId() int {
 	return o.id
 }
 
-func (o *Owner) SetGender(gender user.Gender) {
+func (o *Owner) SetGender(gender valueObjects.Gender) {
 	o.gender = gender
 }

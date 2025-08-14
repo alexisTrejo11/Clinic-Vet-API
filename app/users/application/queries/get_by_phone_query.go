@@ -3,14 +3,15 @@ package userQueries
 import (
 	"context"
 
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/valueObjects"
 	user "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
 	userRepo "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain/repositories"
 )
 
 type GetByPhoneQuery struct {
-	Email          user.Email      `json:"email"`
-	Ctx            context.Context `json:"-"`
-	IncludeProfile bool            `json:"include_profile"`
+	Phone          valueObjects.PhoneNumber `json:"phone"`
+	Ctx            context.Context          `json:"-"`
+	IncludeProfile bool                     `json:"include_profile"`
 }
 
 type GetByPhoneHandler interface {
@@ -28,7 +29,7 @@ func NewGetByPhoneHandler(userRepository userRepo.UserRepository) GetByPhoneHand
 }
 
 func (h *getByPhoneHandler) Handle(ctx context.Context, query GetByPhoneQuery) (*user.User, error) {
-	user, err := h.userRepository.GetByPhone(ctx, query.Email.Value())
+	user, err := h.userRepository.GetByPhone(ctx, query.Phone.Value())
 	if err != nil {
 		return nil, err
 	}

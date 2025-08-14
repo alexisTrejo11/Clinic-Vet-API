@@ -5,7 +5,6 @@ import (
 	"strconv"
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
-	user "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
 	userRepository "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain/repositories"
 )
 
@@ -14,7 +13,7 @@ type deleteUserHandler struct {
 }
 
 type DeleteUserCommand struct {
-	UserId     user.UserId     `json:"user_id" validate:"required"`
+	UserId     int             `json:"user_id" validate:"required"`
 	SoftDelete bool            `json:"soft_delete"`
 	CTX        context.Context `json:"-"`
 }
@@ -32,14 +31,14 @@ type DeleteUserHandler interface {
 func (d *deleteUserHandler) Handle(cmd any) shared.CommandResult {
 	command := cmd.(DeleteUserCommand)
 
-	if _, err := d.userRepository.GetByIdWithProfile(command.CTX, command.UserId.GetValue()); err != nil {
+	if _, err := d.userRepository.GetByIdWithProfile(command.CTX, command.UserId); err != nil {
 		return shared.FailureResult("failed to find user", err)
 	}
 
-	err := d.userRepository.Delete(command.CTX, command.UserId.GetValue(), command.SoftDelete)
+	err := d.userRepository.Delete(command.CTX, command.UserId, command.SoftDelete)
 	if err != nil {
 		return shared.FailureResult("failed to delete user", err)
 	}
 
-	return shared.SuccesResult(strconv.Itoa(command.UserId.GetValue()), "user deleted successfully")
+	return shared.SuccesResult(strconv.Itoa(command.UserId), "user deleted successfully")
 }

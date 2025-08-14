@@ -5,12 +5,11 @@ import (
 	"errors"
 
 	sessionRepo "github.com/alexisTrejo11/Clinic-Vet-API/app/auth/domain/repositories"
-	user "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
 	userRepository "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain/repositories"
 )
 
 type LogoutAllCommand struct {
-	UserId user.UserId     `json:"user_id"`
+	UserId int             `json:"user_id"`
 	CTX    context.Context `json:"-"`
 }
 
@@ -34,7 +33,7 @@ func NewLogoutAllHandler(
 }
 
 func (h logoutAllHandlerImpl) Handle(command LogoutAllCommand) error {
-	user, err := h.userRepository.GetById(command.CTX, command.UserId.GetValue())
+	user, err := h.userRepository.GetById(command.CTX, command.UserId)
 	if err != nil {
 		return err
 	}

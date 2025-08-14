@@ -5,6 +5,8 @@ import (
 	"regexp"
 	"strconv"
 	"time"
+
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/valueObjects"
 )
 
 const (
@@ -13,9 +15,9 @@ const (
 )
 
 type User struct {
-	id           UserId
-	email        Email
-	phoneNumber  PhoneNumber
+	id           valueObjects.UserId
+	email        valueObjects.Email
+	phoneNumber  valueObjects.PhoneNumber
 	password     string
 	role         UserRole
 	status       UserStatus
@@ -29,16 +31,16 @@ type Profile struct {
 	UserId         int
 	OwnerId        *int
 	VeterinarianId *int
-	Name           PersonName
+	Name           valueObjects.PersonName
 	PhotoURL       string
 	Bio            string
-	Gender         Gender
+	Gender         valueObjects.Gender
 	Address        *Address
 	DateOfBirth    *time.Time
 	JoinedAt       time.Time
 }
 
-func NewUser(id UserId, email Email, phoneNumber PhoneNumber, password string, role UserRole, status UserStatus, profile *Profile) (*User, error) {
+func NewUser(id valueObjects.UserId, email valueObjects.Email, phoneNumber valueObjects.PhoneNumber, password string, role UserRole, status UserStatus, profile *Profile) (*User, error) {
 	if !role.IsValid() {
 		return nil, ErrInvalidUserRole(string(role))
 	}
@@ -48,7 +50,7 @@ func NewUser(id UserId, email Email, phoneNumber PhoneNumber, password string, r
 
 	if profile == nil {
 		profile = &Profile{
-			Name:        PersonName{},
+			Name:        valueObjects.PersonName{},
 			PhotoURL:    "",
 			Bio:         "",
 			Address:     &Address{},
@@ -67,15 +69,15 @@ func NewUser(id UserId, email Email, phoneNumber PhoneNumber, password string, r
 	}, nil
 }
 
-func (u *User) Id() UserId {
+func (u *User) Id() valueObjects.UserId {
 	return u.id
 }
 
-func (u *User) Email() Email {
+func (u *User) Email() valueObjects.Email {
 	return u.email
 }
 
-func (u *User) PhoneNumber() PhoneNumber {
+func (u *User) PhoneNumber() valueObjects.PhoneNumber {
 	return u.phoneNumber
 }
 
@@ -123,11 +125,11 @@ func (u *User) SetRole(role UserRole) error {
 	return nil
 }
 
-func (u *User) UpdateEmail(email Email) {
+func (u *User) UpdateEmail(email valueObjects.Email) {
 	u.email = email
 }
 
-func (u *User) UpdatePhoneNumber(phoneNumber PhoneNumber) {
+func (u *User) UpdatePhoneNumber(phoneNumber valueObjects.PhoneNumber) {
 	u.phoneNumber = phoneNumber
 }
 

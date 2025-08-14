@@ -9,7 +9,7 @@ import (
 )
 
 type ChangeUserStatusCommand struct {
-	UserId user.UserId     `json:"user_id"`
+	UserId int             `json:"user_id"`
 	Status user.UserStatus `json:"status"`
 	CTX    context.Context `json:"ctx"`
 }
@@ -25,7 +25,7 @@ func NewChangeUserStatusHandler(userRepository userRepository.UserRepository) *C
 }
 
 func (h *ChangeUserStatusHandler) Handle(command ChangeUserStatusCommand) error {
-	if command.UserId.GetValue() == 0 {
+	if command.UserId == 0 {
 		return errors.New("user ID is required")
 	}
 
@@ -33,7 +33,7 @@ func (h *ChangeUserStatusHandler) Handle(command ChangeUserStatusCommand) error 
 		return errors.New("status is required")
 	}
 
-	user, err := h.userRepository.GetByIdWithProfile(command.CTX, command.UserId.GetValue())
+	user, err := h.userRepository.GetByIdWithProfile(command.CTX, command.UserId)
 	if err != nil {
 		return err
 	}

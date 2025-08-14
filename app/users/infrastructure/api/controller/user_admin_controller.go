@@ -71,12 +71,11 @@ func (c *UserAdminController) CreateUser(ctx *gin.Context) {
 }
 
 func (c *UserAdminController) BanUser(ctx *gin.Context) {
-	idInt, err := shared.ParseParamToInt(ctx, "id")
+	userId, err := shared.ParseParamToInt(ctx, "id")
 	if err != nil {
 		apiResponse.RequestURLParamError(ctx, err, "id", ctx.Param("id"))
 	}
 
-	userId, _ := user.NewUserId(idInt)
 	command := userCommand.ChangeUserStatusCommand{
 		UserId: userId,
 		Status: user.UserStatusBanned,
@@ -93,12 +92,11 @@ func (c *UserAdminController) BanUser(ctx *gin.Context) {
 }
 
 func (c *UserAdminController) UnBanUser(ctx *gin.Context) {
-	idInt, err := shared.ParseParamToInt(ctx, "id")
+	userId, err := shared.ParseParamToInt(ctx, "id")
 	if err != nil {
 		apiResponse.RequestURLParamError(ctx, err, "id", ctx.Param("id"))
 	}
 
-	userId, _ := user.NewUserId(idInt)
 	command := userCommand.ChangeUserStatusCommand{
 		UserId: userId,
 		Status: user.UserStatusActive,
@@ -115,12 +113,12 @@ func (c *UserAdminController) UnBanUser(ctx *gin.Context) {
 }
 
 func (c *UserAdminController) DeleteUser(ctx *gin.Context) {
-	idInt, err := shared.ParseParamToInt(ctx, "id")
+	userId, err := shared.ParseParamToInt(ctx, "id")
 	if err != nil {
 		apiResponse.RequestURLParamError(ctx, err, "id", ctx.Param("id"))
+		return
 	}
 
-	userId, _ := user.NewUserId(idInt)
 	command := userCommand.DeleteUserCommand{
 		UserId:     userId,
 		SoftDelete: true,

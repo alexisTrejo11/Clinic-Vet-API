@@ -30,6 +30,4 @@ func (c *UserQueryController) GetUserByPhone(ctx *gin.Context) {
 	}
 
 	apiResponse.Success(ctx, gin.H{"phone": phone})
-	return
-
 }

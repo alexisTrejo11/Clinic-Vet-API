@@ -4,18 +4,19 @@ import (
 	"context"
 	"time"
 
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/valueObjects"
 	user "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
 	userRepo "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain/repositories"
 )
 
 type ProfileUpdate struct {
-	UserId      user.UserId      `json:"user_id"`
-	Name        *user.PersonName `json:"name"`
-	Gender      *string          `json:"gender"`
-	ProfilePic  *string          `json:"profile_pic"`
-	Bio         *string          `json:"bio"`
-	DateOfBirth *time.Time       `json:"date_of_birth"`
-	Address     *user.Address    `json:"address"`
+	UserId      int                      `json:"user_id"`
+	Name        *valueObjects.PersonName `json:"name"`
+	Gender      *string                  `json:"gender"`
+	ProfilePic  *string                  `json:"profile_pic"`
+	Bio         *string                  `json:"bio"`
+	DateOfBirth *time.Time               `json:"date_of_birth"`
+	Address     *user.Address            `json:"address"`
 }
 
 type ProfileUseCases interface {
@@ -55,13 +56,13 @@ func (p *profileUseCasesImpl) GetUserProfile(ctx context.Context, userId int) (u
 }
 
 func (uc *UpdateUserProfileUseCase) Execute(ctx context.Context, request ProfileUpdate) error {
-	user, err := uc.repo.GetByIdWithProfile(ctx, request.UserId.GetValue())
+	user, err := uc.repo.GetByIdWithProfile(ctx, request.UserId)
 	if err != nil {
 		return err
 	}
 
 	applyProfileUpdates(user, request)
-	uc.repo.UpdateProfile(ctx, request.UserId.GetValue(), user.Profile())
+	uc.repo.UpdateProfile(ctx, request.UserId, user.Profile())
 	return nil
 }
 
@@ -77,7 +78,7 @@ func (uc *GetProfileByIdUseCase) Execute(ctx context.Context, userId int) (user.
 func applyProfileUpdates(userEntity *user.User, request ProfileUpdate) {
 	profile := userEntity.Profile()
 
-	if (request.Name != nil) && (*request.Name == user.PersonName{}) {
+	if (request.Name != nil) && (*request.Name == valueObjects.PersonName{}) {
 		profile.Name = *request.Name
 	}
 
@@ -94,7 +95,7 @@ func applyProfileUpdates(userEntity *user.User, request ProfileUpdate) {
 		profile.PhotoURL = *request.ProfilePic
 	}
 	if request.Gender != nil {
-		profile.Gender = user.NewGender(*request.Gender)
+		profile.Gender = valueObjects.NewGender(*request.Gender)
 	}
 
 	userEntity.SetProfile(&profile)

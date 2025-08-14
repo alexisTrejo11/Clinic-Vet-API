@@ -5,7 +5,6 @@ import (
 
 	authCmd "github.com/alexisTrejo11/Clinic-Vet-API/app/auth/application/command"
 	apiResponse "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/responses"
-	user "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )
@@ -105,7 +104,7 @@ func (c *AuthController) LogoutAll(ctx *gin.Context) {
 	}
 
 	command := authCmd.LogoutAllCommand{
-		UserId: user.NilUserId(),
+		UserId: 0,
 		CTX:    ctx.Request.Context(),
 	}
 	if err := c.logoutAllHandler.Handle(command); err != nil {

@@ -5,20 +5,21 @@ import (
 	"errors"
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/valueObjects"
 	user "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
 	userRepository "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain/repositories"
 )
 
 type ChangeEmailCommand struct {
-	UserId int             `json:"user_id"`
-	Email  user.Email      `json:"email"`
-	CTX    context.Context `json:"-"`
+	UserId int                `json:"user_id"`
+	Email  valueObjects.Email `json:"email"`
+	CTX    context.Context    `json:"-"`
 }
 
 type ChangePhoneCommand struct {
-	UserId int              `json:"user_id"`
-	Phone  user.PhoneNumber `json:"phone"`
-	CTX    context.Context  `json:"-"`
+	UserId int                      `json:"user_id"`
+	Phone  valueObjects.PhoneNumber `json:"phone"`
+	CTX    context.Context          `json:"-"`
 }
 
 type ChangeEmailHandler struct {

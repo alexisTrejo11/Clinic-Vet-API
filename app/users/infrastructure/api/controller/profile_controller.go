@@ -3,6 +3,7 @@ package userController
 import (
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
 	apiResponse "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/responses"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/valueObjects"
 	userApplication "github.com/alexisTrejo11/Clinic-Vet-API/app/users/application"
 	user "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
 	userDtos "github.com/alexisTrejo11/Clinic-Vet-API/app/users/infrastructure/api/dtos"
@@ -58,9 +59,7 @@ func (c *ProfileController) UpdateUserProfile(ctx *gin.Context) {
 	apiResponse.NoContent(ctx)
 }
 
-func mapRequestToProfileUpdate(request userDtos.UpdateProfileRequest, userIdInt int) userApplication.ProfileUpdate {
-	userId, _ := user.NewUserId(userIdInt)
-
+func mapRequestToProfileUpdate(request userDtos.UpdateProfileRequest, userId int) userApplication.ProfileUpdate {
 	updateData := userApplication.ProfileUpdate{
 		UserId:     userId,
 		Bio:        request.Bio,
@@ -68,7 +67,7 @@ func mapRequestToProfileUpdate(request userDtos.UpdateProfileRequest, userIdInt 
 	}
 
 	if request.Name != nil {
-		updateData.Name = &user.PersonName{
+		updateData.Name = &valueObjects.PersonName{
 			FirstName: *request.Name,
 			LastName:  *request.Name,
 		}

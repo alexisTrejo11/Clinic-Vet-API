@@ -3,14 +3,15 @@ package userQueries
 import (
 	"context"
 
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/valueObjects"
 	user "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
 	userRepo "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain/repositories"
 )
 
 type GetByEmailQuery struct {
-	Email          user.Email      `json:"email"`
-	IncludeProfile bool            `json:"include_profile"`
-	Ctx            context.Context `json:"-"`
+	Email          valueObjects.Email `json:"email"`
+	IncludeProfile bool               `json:"include_profile"`
+	Ctx            context.Context    `json:"-"`
 }
 
 type GetByEmailHandler interface {

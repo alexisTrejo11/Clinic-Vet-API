@@ -6,13 +6,13 @@ import (
 	"time"
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
-	user "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/valueObjects"
 	vetDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/veterinarians/domain"
 	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
 )
 
 func SqlcVetToDomain(sql sqlc.Veterinarian) *vetDomain.Veterinarian {
-	name, _ := user.NewPersonName(sql.FirstName, sql.LastName)
+	name, _ := valueObjects.NewPersonName(sql.FirstName, sql.LastName)
 
 	var isActive bool
 	if sql.IsActive.Valid {

@@ -3,6 +3,7 @@ package sqlcUserRepo
 import (
 	"context"
 
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/valueObjects"
 	user "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
 	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -40,7 +41,7 @@ func (r *SQLCProfileRepository) GetByUserId(ctx context.Context, userId int) (*u
 			}
 			return nil
 		}(),
-		Name:     user.PersonName{FirstName: "Jhon", LastName: "Doe"},
+		Name:     valueObjects.PersonName{FirstName: "Jhon", LastName: "Doe"},
 		PhotoURL: sqlRow.ProfilePic.String,
 		Bio:      sqlRow.Bio.String,
 		Address:  &user.Address{},

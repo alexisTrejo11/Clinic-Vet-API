@@ -1,7 +1,7 @@
 package user
 
 type UserRole string
-type Gender string
+
 type UserStatus string
 
 const (
@@ -11,33 +11,12 @@ const (
 	UserRoleReceptionist UserRole = "receptionist"
 )
 
-const (
-	MALE         Gender = "male"
-	Female       Gender = "female"
-	NotSpecified Gender = "not_specified"
-)
-
 func (r UserRole) IsValid() bool {
 	switch r {
 	case UserRoleAdmin, UserRoleVeterinarian, UserRoleOwner, UserRoleReceptionist:
 		return true
 	}
 	return false
-}
-
-func NewGender(value string) Gender {
-	switch value {
-	case "male":
-		return MALE
-	case "female":
-		return Female
-	case "not_specified":
-		return NotSpecified
-	case "":
-		return NotSpecified
-	default:
-		return NotSpecified
-	}
 }
 
 func UserRoleFromString(role string) UserRole {
@@ -51,23 +30,12 @@ func UserRoleFromString(role string) UserRole {
 	case "receptionist":
 		return UserRoleReceptionist
 	default:
-		return UserRoleOwner
+		return UserRoleAdmin
 	}
 }
 
-func (u UserRole) String() string {
-	switch u {
-	case UserRoleAdmin:
-		return "admin"
-	case UserRoleVeterinarian:
-		return "veterinarian"
-	case UserRoleOwner:
-		return "owner"
-	case UserRoleReceptionist:
-		return "receptionist"
-	default:
-		return "unknown"
-	}
+func (r UserRole) String() string {
+	return string(r)
 }
 
 const (

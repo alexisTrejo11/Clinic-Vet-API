@@ -4,7 +4,7 @@ import (
 	"time"
 
 	petDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/domain"
-	user "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/valueObjects"
 )
 
 type OwnerBuilder struct {
@@ -23,7 +23,7 @@ func (b *OwnerBuilder) WithId(id int) *OwnerBuilder {
 	return b
 }
 
-func (b *OwnerBuilder) WithFullName(fullName user.PersonName) *OwnerBuilder {
+func (b *OwnerBuilder) WithFullName(fullName valueObjects.PersonName) *OwnerBuilder {
 	b.owner.fullName = fullName
 	return b
 }
@@ -38,7 +38,7 @@ func (b *OwnerBuilder) WithPhoto(photo string) *OwnerBuilder {
 	return b
 }
 
-func (b *OwnerBuilder) WithGender(gender user.Gender) *OwnerBuilder {
+func (b *OwnerBuilder) WithGender(gender valueObjects.Gender) *OwnerBuilder {
 	b.owner.gender = gender
 	return b
 }

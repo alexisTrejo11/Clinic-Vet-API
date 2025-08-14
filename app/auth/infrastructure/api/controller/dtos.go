@@ -4,7 +4,7 @@ import (
 	"time"
 
 	authCmd "github.com/alexisTrejo11/Clinic-Vet-API/app/auth/application/command"
-	user "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/valueObjects"
 )
 
 type RequestSignup struct {
@@ -19,7 +19,7 @@ type RequestSignup struct {
 }
 
 func (r *RequestSignup) ToCommand() *authCmd.SignupCommand {
-	gender := user.NewGender(r.Gender)
+	gender := valueObjects.NewGender(r.Gender)
 
 	return &authCmd.SignupCommand{
 		Email:       r.Email,

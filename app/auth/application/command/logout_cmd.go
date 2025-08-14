@@ -5,12 +5,11 @@ import (
 	"errors"
 
 	sessionRepo "github.com/alexisTrejo11/Clinic-Vet-API/app/auth/domain/repositories"
-	user "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
 	userRepo "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain/repositories"
 )
 
 type LogoutCommand struct {
-	UserId       user.UserId
+	UserId       int
 	RefreshToken string
 	CTX          context.Context
 }
@@ -31,7 +30,7 @@ func NewLogoutCommandHandler(userRepository userRepo.UserRepository) LogoutHandl
 }
 
 func (h *logoutCommandHandler) Handle(command LogoutCommand) error {
-	user, err := h.userRepository.GetById(command.CTX, command.UserId.GetValue())
+	user, err := h.userRepository.GetById(command.CTX, command.UserId)
 	if err != nil {
 		return err
 	}
@@ -40,7 +39,7 @@ func (h *logoutCommandHandler) Handle(command LogoutCommand) error {
 		return errors.New("user not found")
 	}
 
-	err = h.sessionRepo.DeleteUserSession(command.CTX, command.UserId.String(), command.RefreshToken)
+	err = h.sessionRepo.DeleteUserSession(command.CTX, string(command.UserId), command.RefreshToken)
 	if err != nil {
 		return err
 	}

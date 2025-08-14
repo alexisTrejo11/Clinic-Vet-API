@@ -1,22 +1,23 @@
 package sqlcUserRepo
 
 import (
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/valueObjects"
 	user "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
 	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
 )
 
 func MapUserFromSQLC(sqlRow sqlc.User) (*user.User, error) {
-	userId, err := user.NewUserId(sqlRow.ID)
+	userId, err := valueObjects.NewUserId(sqlRow.ID)
 	if err != nil {
 		return nil, err
 	}
 
-	email, err := user.NewEmail(sqlRow.Email.String)
+	email, err := valueObjects.NewEmail(sqlRow.Email.String)
 	if err != nil {
 		return nil, err
 	}
 
-	phone, err := user.NewPhoneNumber(sqlRow.PhoneNumber.String)
+	phone, err := valueObjects.NewPhoneNumber(sqlRow.PhoneNumber.String)
 	if err != nil {
 		return nil, err
 	}
