@@ -45,5 +45,5 @@ func (h *deleteAppointmentHandler) Handle(ctx context.Context, command DeleteApp
 		return shared.FailureResult("failed to delete appointment", err)
 	}
 
-	return shared.SuccesResult(appointment.GetId().String(), "appointment deleted successfully")
+	return shared.SuccessResult(appointment.GetId().String(), "appointment deleted successfully")
 }

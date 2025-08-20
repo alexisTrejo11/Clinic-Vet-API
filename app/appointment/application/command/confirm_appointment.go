@@ -41,5 +41,5 @@ func (h *confirmAppointmentHandlerImpl) Handle(ctx context.Context, command Conf
 		return shared.FailureResult("failed to save confirmed appointment", err)
 	}
 
-	return shared.SuccesResult(appointment.GetId().String(), "appointment confirmed successfully")
+	return shared.SuccessResult(appointment.GetId().String(), "appointment confirmed successfully")
 }

@@ -6,7 +6,6 @@ import (
 	"sync"
 
 	ownerDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/domain"
-	petRepository "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application/repositories"
 	petDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/domain"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
@@ -14,10 +13,10 @@ import (
 
 type SqlcOwnerRepository struct {
 	queries       *sqlc.Queries
-	petRepository petRepository.PetRepository
+	petRepository petDomain.PetRepository
 }
 
-func NewSqlcOwnerRepository(queries *sqlc.Queries, petRepository petRepository.PetRepository) ownerDomain.OwnerRepository {
+func NewSqlcOwnerRepository(queries *sqlc.Queries, petRepository petDomain.PetRepository) ownerDomain.OwnerRepository {
 	return &SqlcOwnerRepository{
 		queries:       queries,
 		petRepository: petRepository,

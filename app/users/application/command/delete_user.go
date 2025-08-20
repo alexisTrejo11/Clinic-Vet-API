@@ -40,5 +40,5 @@ func (d *deleteUserHandler) Handle(cmd any) shared.CommandResult {
 		return shared.FailureResult("failed to delete user", err)
 	}
 
-	return shared.SuccesResult(strconv.Itoa(command.UserId), "user deleted successfully")
+	return shared.SuccessResult(strconv.Itoa(command.UserId), "user deleted successfully")
 }

@@ -13,14 +13,14 @@ func toCreateParams(owner ownerDomain.Owner) *sqlc.CreateOwnerParams {
 	createOwnerParam := &sqlc.CreateOwnerParams{
 		Photo:       owner.Photo(),
 		PhoneNumber: owner.PhoneNumber(),
-		Gender:      models.PersonGender(shared.AssertString(owner)),
 		DateOfBirth: pgtype.Date{Time: owner.DateOfBirth(), Valid: true},
+		Gender:      models.PersonGender(owner.Gender().String()),
 		FirstName:   owner.FullName().FirstName,
 		LastName:    owner.FullName().LastName,
 		IsActive:    owner.IsActive(),
 	}
 
-	if owner.Address != nil {
+	if owner.Address() != nil {
 		createOwnerParam.Address = pgtype.Text{String: *owner.Address(), Valid: true}
 	}
 

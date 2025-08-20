@@ -15,7 +15,7 @@ func FailureResult(message string, err error) CommandResult {
 	}
 }
 
-func SuccesResult(id, message string) CommandResult {
+func SuccessResult(id, message string) CommandResult {
 	return CommandResult{
 		IsSuccess: true,
 		Id:        id,

@@ -7,7 +7,7 @@ import (
 	mhDTOs "github.com/alexisTrejo11/Clinic-Vet-API/app/medical/application/dtos"
 	medHistRepo "github.com/alexisTrejo11/Clinic-Vet-API/app/medical/domain/repositories"
 	ownerDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/domain"
-	petRepo "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application/repositories"
+	petDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/domain"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 	vetRepo "github.com/alexisTrejo11/Clinic-Vet-API/app/veterinarians/application/repositories"
 )
@@ -16,11 +16,21 @@ type MedicalHistoryUseCase struct {
 	medHistRepo medHistRepo.MedicalHistoryRepository
 	ownerRepo   ownerDomain.OwnerRepository
 	vetRepo     vetRepo.VeterinarianRepository
-	petRepo     petRepo.PetRepository
+	petRepo     petDomain.PetRepository
 }
 
-func NewMedicalHistoryUseCase(medHistRepo medHistRepo.MedicalHistoryRepository, ownerRepo ownerDomain.OwnerRepository, vetRepo vetRepo.VeterinarianRepository, petRepo petRepo.PetRepository) *MedicalHistoryUseCase {
-	return &MedicalHistoryUseCase{medHistRepo: medHistRepo, ownerRepo: ownerRepo, vetRepo: vetRepo, petRepo: petRepo}
+func NewMedicalHistoryUseCase(
+	medHistRepo medHistRepo.MedicalHistoryRepository,
+	ownerRepo ownerDomain.OwnerRepository,
+	vetRepo vetRepo.VeterinarianRepository,
+	petRepo petDomain.PetRepository,
+) *MedicalHistoryUseCase {
+	return &MedicalHistoryUseCase{
+		medHistRepo: medHistRepo,
+		ownerRepo:   ownerRepo,
+		vetRepo:     vetRepo,
+		petRepo:     petRepo,
+	}
 }
 
 func (uc *MedicalHistoryUseCase) Search(ctx context.Context, searchParams mhDTOs.MedHistSearchParams) (page.Page[[]mhDTOs.MedHistResponse], error) {

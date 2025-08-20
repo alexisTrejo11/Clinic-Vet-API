@@ -49,7 +49,7 @@ func (h *deletePaymentHandler) Handle(context context.Context, command DeletePay
 		return shared.FailureResult("error deleting payment", err)
 	}
 
-	return shared.SuccesResult(
+	return shared.SuccessResult(
 		string(rune(command.paymentId)),
 		"payment deleted successfully",
 	)

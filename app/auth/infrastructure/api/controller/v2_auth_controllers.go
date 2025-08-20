@@ -10,26 +10,17 @@ import (
 )
 
 type AuthController struct {
-	validator        *validator.Validate
-	singupHandler    authCmd.SignupHandler
-	loginHandler     authCmd.LoginHandler
-	logoutHandler    authCmd.LogoutHandler
-	logoutAllHandler authCmd.LogoutAllHandler
+	validator      *validator.Validate
+	authCommandBus authCmd.AuthCommandBus
 }
 
 func NewAuthController(
 	validator *validator.Validate,
-	singupHandler authCmd.SignupHandler,
-	loginHandler authCmd.LoginHandler,
-	logoutHandler authCmd.LogoutHandler,
-	logoutAllHandler authCmd.LogoutAllHandler,
+	authCommandBus authCmd.AuthCommandBus,
 ) *AuthController {
 	return &AuthController{
-		validator:        validator,
-		singupHandler:    singupHandler,
-		loginHandler:     loginHandler,
-		logoutHandler:    logoutHandler,
-		logoutAllHandler: logoutAllHandler,
+		validator:      validator,
+		authCommandBus: authCommandBus,
 	}
 }
 
@@ -45,7 +36,9 @@ func (c *AuthController) Signup(ctx *gin.Context) {
 		return
 	}
 
-	result := c.singupHandler.Handle(singupRequest.ToCommand())
+	signupCommand := singupRequest.ToCommand()
+
+	result := c.authCommandBus.Dispatch(signupCommand)
 	if !result.IsSuccess {
 		apiResponse.ApplicationError(ctx, result.Error)
 		return
@@ -66,13 +59,15 @@ func (c *AuthController) Login(ctx *gin.Context) {
 		return
 	}
 
-	session, err := c.loginHandler.Handle(requestlogin.ToCommand())
-	if err != nil {
-		apiResponse.ApplicationError(ctx, err)
+	loginCommand := requestlogin.ToCommand()
+
+	result := c.authCommandBus.Dispatch(loginCommand)
+	if !result.IsSuccess {
+		apiResponse.ApplicationError(ctx, result.Error)
 		return
 	}
 
-	apiResponse.Created(ctx, session)
+	apiResponse.Success(ctx, result.Session)
 }
 
 func (c *AuthController) Logout(ctx *gin.Context) {
@@ -88,12 +83,15 @@ func (c *AuthController) Logout(ctx *gin.Context) {
 		return
 	}
 
-	if err := c.logoutHandler.Handle(*requestLogout.ToCommand()); err != nil {
-		apiResponse.ApplicationError(ctx, err)
+	logoutCommand := requestLogout.ToCommand()
+
+	result := c.authCommandBus.Dispatch(logoutCommand)
+	if !result.IsSuccess {
+		apiResponse.ApplicationError(ctx, result.Error)
 		return
 	}
 
-	apiResponse.NoContent(ctx)
+	apiResponse.Success(ctx, result.Message)
 }
 
 func (c *AuthController) LogoutAll(ctx *gin.Context) {
@@ -107,10 +105,12 @@ func (c *AuthController) LogoutAll(ctx *gin.Context) {
 		UserId: 0,
 		CTX:    ctx.Request.Context(),
 	}
-	if err := c.logoutAllHandler.Handle(command); err != nil {
-		apiResponse.ApplicationError(ctx, err)
+
+	result := c.authCommandBus.Dispatch(command)
+	if !result.IsSuccess {
+		apiResponse.ApplicationError(ctx, result.Error)
 		return
 	}
 
-	apiResponse.NoContent(ctx)
+	apiResponse.Success(ctx, result.Message)
 }

@@ -41,5 +41,5 @@ func (h *completeAppointmentHandler) Handle(ctx context.Context, command Complet
 		return shared.FailureResult("failed to save completed appointment", err)
 	}
 
-	return shared.SuccesResult(appointment.GetId().String(), "appointment completed successfully")
+	return shared.SuccessResult(appointment.GetId().String(), "appointment completed successfully")
 }

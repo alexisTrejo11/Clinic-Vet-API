@@ -26,6 +26,19 @@ func NewVeterinarianController(
 	}
 }
 
+// This package contains wrapper functions that hold the Swagger annotations.
+// They then delegate the actual work to the controller to keep it clean.
+
+// @Summary List all veterinarians
+// @Description Retrieves a list of all veterinarians with optional filtering and pagination.
+// @Tags Veterinarians
+// @Produce json
+// @Param page query int false "Page number for pagination"
+// @Param limit query int false "Number of items per page"
+// @Param specialty query string false "Filter by specialty"
+// @Success 200 {array} vetDtos.VetResponse "List of veterinarians"
+// @Failure 500 {object} apiResponse.APIResponse "Internal server error"
+// @Router /veterinarians [get]
 func (c *VeterinarianController) ListVeterinarians(ctx *gin.Context) {
 	listParams, err := fetchVetParams(ctx)
 	if err != nil {
@@ -42,6 +55,16 @@ func (c *VeterinarianController) ListVeterinarians(ctx *gin.Context) {
 	apiResponse.Success(ctx, vets)
 }
 
+// @Summary Get a veterinarian by ID
+// @Description Retrieves a single veterinarian by their unique ID.
+// @Tags Veterinarians
+// @Produce json
+// @Param id path int true "Veterinarian ID"
+// @Success 200 {object} vetDtos.VetResponse "Veterinarian details"
+// @Failure 400 {object} apiResponse.APIResponse "Invalid ID supplied"
+// @Failure 404 {object} apiResponse.APIResponse "Veterinarian not found"
+// @Failure 500 {object} apiResponse.APIResponse "Internal server error"
+// @Router /veterinarians/{id} [get]
 func (c *VeterinarianController) GetVeterinarianById(ctx *gin.Context) {
 	id, err := utils.ParseParamToInt(ctx, "id")
 	if err != nil {
@@ -58,6 +81,16 @@ func (c *VeterinarianController) GetVeterinarianById(ctx *gin.Context) {
 	apiResponse.Success(ctx, Veterinarian)
 }
 
+// @Summary Create a new veterinarian
+// @Description Creates a new veterinarian with the provided details.
+// @Tags Veterinarians
+// @Accept json
+// @Produce json
+// @Param vetCreate body vetDtos.VetCreate true "Veterinarian data"
+// @Success 201 {object} vetDtos.VetResponse "Veterinarian created"
+// @Failure 400 {object} apiResponse.APIResponse "Invalid request body"
+// @Failure 500 {object} apiResponse.APIResponse "Internal server error"
+// @Router /veterinarians [post]
 func (c *VeterinarianController) CreateVeterinarian(ctx *gin.Context) {
 	var vetCreate vetDtos.VetCreate
 
@@ -80,6 +113,18 @@ func (c *VeterinarianController) CreateVeterinarian(ctx *gin.Context) {
 	apiResponse.Created(ctx, vetCreated)
 }
 
+// @Summary Update an existing veterinarian
+// @Description Updates the details of an existing veterinarian by ID.
+// @Tags Veterinarians
+// @Accept json
+// @Produce json
+// @Param id path int true "Veterinarian ID"
+// @Param vetUpdate body vetDtos.VetUpdate true "Updated veterinarian data"
+// @Success 200 {object} vetDtos.VetResponse "Veterinarian updated"
+// @Failure 400 {object} apiResponse.APIResponse "Invalid request data or ID"
+// @Failure 404 {object} apiResponse.APIResponse "Veterinarian not found"
+// @Failure 500 {object} apiResponse.APIResponse "Internal server error"
+// @Router /veterinarians/{id} [patch]
 func (c *VeterinarianController) UpdateVeterinarian(ctx *gin.Context) {
 	id, err := utils.ParseParamToInt(ctx, "id")
 	if err != nil {
@@ -107,6 +152,16 @@ func (c *VeterinarianController) UpdateVeterinarian(ctx *gin.Context) {
 	apiResponse.Success(ctx, verUpdated)
 }
 
+// @Summary Delete a veterinarian
+// @Description Deletes a veterinarian from the system by ID.
+// @Tags Veterinarians
+// @Produce json
+// @Param id path int true "Veterinarian ID"
+// @Success 204 "No Content"
+// @Failure 400 {object} apiResponse.APIResponse "Invalid ID supplied"
+// @Failure 404 {object} apiResponse.APIResponse "Veterinarian not found"
+// @Failure 500 {object} apiResponse.APIResponse "Internal server error"
+// @Router /veterinarians/{id} [delete]
 func (c *VeterinarianController) DeleteVeterinarian(ctx *gin.Context) {
 	id, err := utils.ParseParamToInt(ctx, "id")
 	if err != nil {

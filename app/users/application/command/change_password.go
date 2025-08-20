@@ -40,7 +40,7 @@ func (c *ChangePasswordHandler) Handle(cmd any) shared.CommandResult {
 		return shared.FailureResult("failed to update user", err)
 	}
 
-	return shared.SuccesResult(user.Id().String(), "password changed successfully")
+	return shared.SuccessResult(user.Id().String(), "password changed successfully")
 }
 
 func (c *ChangePasswordHandler) changePassword(user *user.User, newPassword, oldPassword string) error {

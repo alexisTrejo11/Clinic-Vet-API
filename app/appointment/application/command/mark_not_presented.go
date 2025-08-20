@@ -39,5 +39,5 @@ func (h *markAsNotPresentedHandler) Handle(ctx context.Context, command MarkAsNo
 		return shared.FailureResult("failed to save appointment", err)
 	}
 
-	return shared.SuccesResult(appointment.GetId().String(), "appointment marked as not presented successfully")
+	return shared.SuccessResult(appointment.GetId().String(), "appointment marked as not presented successfully")
 }

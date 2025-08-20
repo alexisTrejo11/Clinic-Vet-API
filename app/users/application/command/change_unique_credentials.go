@@ -60,7 +60,7 @@ func (h ChangePhoneHandler) Handle(cmd any) shared.CommandResult {
 		return shared.FailureResult("failed to update user", err)
 	}
 
-	return shared.SuccesResult(user.Id().String(), "phone changed successfully")
+	return shared.SuccessResult(user.Id().String(), "phone changed successfully")
 }
 
 func (h ChangeEmailHandler) Handle(cmd any) shared.CommandResult {
@@ -81,7 +81,7 @@ func (h ChangeEmailHandler) Handle(cmd any) shared.CommandResult {
 		return shared.FailureResult("failed to update user", err)
 	}
 
-	return shared.SuccesResult(user.Id().String(), "email changed successfully")
+	return shared.SuccessResult(user.Id().String(), "email changed successfully")
 }
 
 func (h ChangeEmailHandler) validate(command ChangeEmailCommand, user user.User) error {

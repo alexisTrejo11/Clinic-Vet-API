@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"html/template"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/notifications/application"
+	notificationService "github.com/alexisTrejo11/Clinic-Vet-API/app/notifications/application"
 	notificationDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/notifications/domain"
 	"github.com/alexisTrejo11/Clinic-Vet-API/config"
 )
@@ -30,7 +30,7 @@ type emailSenderImpl struct {
 	templates map[string]*template.Template
 }
 
-func NewEmailSender(config config.EmailConfig) application.Sender {
+func NewEmailSender(config config.EmailConfig) notificationService.Sender {
 	sender := &emailSenderImpl{
 		config:    config,
 		templates: make(map[string]*template.Template),

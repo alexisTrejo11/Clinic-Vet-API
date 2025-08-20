@@ -1,4 +1,4 @@
-package application
+package notificationService
 
 import (
 	"context"
@@ -8,7 +8,7 @@ import (
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 )
 
-type NotificationFacade interface {
+type NotificationService interface {
 	SendNotification(ctx context.Context, notification *domain.Notification) error
 	ListNotificationByUserId(ctx context.Context, userId string, pagination page.PageData) (page.Page[[]NotificationResponse], error)
 	ListNotificationByType(ctx context.Context, notificationType string, pagination page.PageData) (page.Page[[]NotificationResponse], error)
@@ -22,7 +22,7 @@ type notificationServiceImpl struct {
 	senders          map[string]Sender
 }
 
-func NewNotificationService(notificationRepo domain.NotificationRepository, senders map[string]Sender) NotificationFacade {
+func NewNotificationService(notificationRepo domain.NotificationRepository, senders map[string]Sender) NotificationService {
 	return &notificationServiceImpl{
 		notificationRepo: notificationRepo,
 		senders:          senders,

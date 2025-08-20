@@ -3,16 +3,16 @@ package petUsecase
 import (
 	"context"
 
-	petDTOs "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application/dtos"
-	petMapper "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application/mapper"
-	petRepository "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application/repositories"
+	petDTOs "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application/usecase/dtos"
+	petMapper "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application/usecase/mapper"
+	petDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/domain"
 )
 
 type GetPetByIdUseCase struct {
-	repository petRepository.PetRepository
+	repository petDomain.PetRepository
 }
 
-func NewGetPetByIdUseCase(repository petRepository.PetRepository) *GetPetByIdUseCase {
+func NewGetPetByIdUseCase(repository petDomain.PetRepository) *GetPetByIdUseCase {
 	return &GetPetByIdUseCase{
 		repository: repository,
 	}

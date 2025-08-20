@@ -62,7 +62,7 @@ func (uc *CreateUserHandler) Handle(cmd any) shared.CommandResult {
 		return shared.FailureResult("an error ocurrred creating user", err)
 	}
 
-	return shared.SuccesResult(user.Id().String(), "user created successfully")
+	return shared.SuccessResult(user.Id().String(), "user created successfully")
 }
 
 func (uc *CreateUserHandler) validateBuissnessRules(ctx context.Context, userEntity user.User) error {

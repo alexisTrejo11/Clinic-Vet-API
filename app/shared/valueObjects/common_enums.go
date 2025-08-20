@@ -188,3 +188,7 @@ func NewGender(value string) Gender {
 		return NotSpecified
 	}
 }
+
+func (g Gender) String() string {
+	return string(g)
+}

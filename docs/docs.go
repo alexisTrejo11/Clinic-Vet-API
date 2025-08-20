@@ -9,12 +9,999 @@ const docTemplate = `{
     "info": {
         "description": "{{escape .Description}}",
         "title": "{{.Title}}",
-        "contact": {},
+        "termsOfService": "http://swagger.io/terms/",
+        "contact": {
+            "name": "Equipo de Soporte API",
+            "url": "http://www.swagger.io/support",
+            "email": "support@swagger.io"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
         "version": "{{.Version}}"
     },
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/api/v2/example-path": {
+            "get": {
+                "description": "Sends a 200 OK response with the provided data.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Send a success response",
+                "parameters": [
+                    {
+                        "description": "Data to be included in the response",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {}
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v2/example-path-app-error": {
+            "get": {
+                "description": "Sends a standardized error response based on the Go error type, with an appropriate HTTP status code.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Send a standardized application error response",
+                "parameters": [
+                    {
+                        "description": "The error object",
+                        "name": "err",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                ],
+                "responses": {
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v2/example-path-bad-request": {
+            "post": {
+                "description": "Sends a 400 Bad Request response, typically for invalid input.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Send a bad request error response",
+                "parameters": [
+                    {
+                        "description": "The error object",
+                        "name": "err",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                ],
+                "responses": {
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v2/example-path-body-error": {
+            "post": {
+                "description": "Sends a 400 Bad Request for malformed or invalid request body data.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Send a request body data error response",
+                "parameters": [
+                    {
+                        "description": "The error object",
+                        "name": "err",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                ],
+                "responses": {
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v2/example-path-conflict": {
+            "post": {
+                "description": "Sends a 409 Conflict response with an error message, e.g., for duplicate resources.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Send a conflict error response",
+                "parameters": [
+                    {
+                        "description": "The error object",
+                        "name": "err",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                ],
+                "responses": {
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v2/example-path-create": {
+            "post": {
+                "description": "Sends a 201 Created response with the provided data.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Send a created response",
+                "parameters": [
+                    {
+                        "description": "Data of the newly created resource",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {}
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v2/example-path-date-error": {
+            "get": {
+                "description": "Sends a 400 Bad Request when a date field has an invalid format.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Send an invalid date format error response",
+                "parameters": [
+                    {
+                        "description": "The field with the invalid date",
+                        "name": "field",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "The expected date format",
+                        "name": "format",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v2/example-path-delete": {
+            "delete": {
+                "description": "Sends a 204 No Content response, typically for successful deletions.",
+                "summary": "Send a no content response",
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    }
+                }
+            }
+        },
+        "/api/v2/example-path-forbidden": {
+            "get": {
+                "description": "Sends a 403 Forbidden response, for authorization failures.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Send a forbidden error response",
+                "parameters": [
+                    {
+                        "description": "The error object",
+                        "name": "err",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                ],
+                "responses": {
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v2/example-path-not-found": {
+            "get": {
+                "description": "Sends a 404 Not Found response with an error message.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Send a not found error response",
+                "parameters": [
+                    {
+                        "description": "The error object",
+                        "name": "err",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                ],
+                "responses": {
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v2/example-path-pagination": {
+            "get": {
+                "description": "Parses \"page\" and \"pageSize\" from the URL query and returns them.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Get pagination parameters",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Page number (default: 1)",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Number of items per page (default: 10)",
+                        "name": "pageSize",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Pagination parameters",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "integer"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v2/example-path-param-error/{id}": {
+            "get": {
+                "description": "Sends a 400 Bad Request for invalid URL parameters.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Send a URL parameter error response",
+                "parameters": [
+                    {
+                        "description": "The error object",
+                        "name": "err",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    {
+                        "description": "The field with the error",
+                        "name": "field",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "The invalid value",
+                        "name": "value",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v2/example-path-parse-error": {
+            "get": {
+                "description": "Sends a 400 Bad Request when data parsing fails for a specific field.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Send an invalid data parsing error response",
+                "parameters": [
+                    {
+                        "description": "The field with the parsing error",
+                        "name": "field",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "The invalid value",
+                        "name": "value",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "The error message",
+                        "name": "message",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v2/example-path-query-error": {
+            "get": {
+                "description": "Sends a 400 Bad Request for invalid URL query parameters.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Send a URL query error response",
+                "parameters": [
+                    {
+                        "description": "The error object",
+                        "name": "err",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                ],
+                "responses": {
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v2/example-path-server-error": {
+            "get": {
+                "description": "Sends a 500 Internal Server Error response for unexpected server issues.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Send a server error response",
+                "parameters": [
+                    {
+                        "description": "The error object",
+                        "name": "err",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                ],
+                "responses": {
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v2/example-path-unauthorized": {
+            "get": {
+                "description": "Sends a 401 Unauthorized response, for authentication failures.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Send an unauthorized error response",
+                "parameters": [
+                    {
+                        "description": "The error object",
+                        "name": "err",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                ],
+                "responses": {
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v2/example-path-with-meta": {
+            "get": {
+                "description": "Sends a 200 OK response with data and metadata.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Send a success response with metadata",
+                "parameters": [
+                    {
+                        "description": "Data to be included in the response",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {}
+                    },
+                    {
+                        "description": "Metadata to be included in the response",
+                        "name": "meta",
+                        "in": "body",
+                        "required": true,
+                        "schema": {}
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v2/veterinarians": {
+            "get": {
+                "description": "Retrieves a list of all veterinarians with optional filtering and pagination.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Veterinarians"
+                ],
+                "summary": "List all veterinarians",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Page number for pagination",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Number of items per page",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by specialty",
+                        "name": "specialty",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of veterinarians",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/vetDtos.VetResponse"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Creates a new veterinarian with the provided details.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Veterinarians"
+                ],
+                "summary": "Create a new veterinarian",
+                "parameters": [
+                    {
+                        "description": "Veterinarian data",
+                        "name": "vetCreate",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/vetDtos.VetCreate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Veterinarian created",
+                        "schema": {
+                            "$ref": "#/definitions/vetDtos.VetResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request body",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v2/veterinarians/{id}": {
+            "get": {
+                "description": "Retrieves a single veterinarian by their unique ID.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Veterinarians"
+                ],
+                "summary": "Get a veterinarian by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Veterinarian ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Veterinarian details",
+                        "schema": {
+                            "$ref": "#/definitions/vetDtos.VetResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid ID supplied",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Veterinarian not found",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Deletes a veterinarian from the system by ID.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Veterinarians"
+                ],
+                "summary": "Delete a veterinarian",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Veterinarian ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Invalid ID supplied",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Veterinarian not found",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "description": "Updates the details of an existing veterinarian by ID.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Veterinarians"
+                ],
+                "summary": "Update an existing veterinarian",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Veterinarian ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Updated veterinarian data",
+                        "name": "vetUpdate",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/vetDtos.VetUpdate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Veterinarian updated",
+                        "schema": {
+                            "$ref": "#/definitions/vetDtos.VetResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request data or ID",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Veterinarian not found",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/pets": {
+            "get": {
+                "description": "Retrieves a list of all pet records.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "pets"
+                ],
+                "summary": "List all pets",
+                "responses": {
+                    "200": {
+                        "description": "List of pets",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/petController.PetResponse"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Creates a new pet record with the provided data.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "pets"
+                ],
+                "summary": "Create a new pet",
+                "parameters": [
+                    {
+                        "description": "Pet creation request",
+                        "name": "pet",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/petController.PetInsertRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Pet created successfully",
+                        "schema": {
+                            "$ref": "#/definitions/petController.PetResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request body or validation error",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/pets/{id}": {
+            "get": {
+                "description": "Retrieves a single pet record by its unique ID.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "pets"
+                ],
+                "summary": "Get a pet by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Pet ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Pet found",
+                        "schema": {
+                            "$ref": "#/definitions/petController.PetResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid URL parameter",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Pet not found",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Updates a pet record by its ID with the provided data.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "pets"
+                ],
+                "summary": "Update an existing pet",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Pet ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Pet update request",
+                        "name": "pet",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/petController.PetInsertRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Pet updated successfully",
+                        "schema": {
+                            "$ref": "#/definitions/petController.PetResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid URL parameter or request body",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Pet not found",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Marks a pet record as inactive without permanently deleting it.",
+                "tags": [
+                    "pets"
+                ],
+                "summary": "Soft delete a pet",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Pet ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Invalid URL parameter",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Pet not found",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/ping": {
             "get": {
                 "description": "do ping",
@@ -38,17 +1025,525 @@ const docTemplate = `{
                 }
             }
         }
+    },
+    "definitions": {
+        "apiResponse.APIResponse": {
+            "description": "Standardized API response structure.",
+            "type": "object",
+            "properties": {
+                "data": {
+                    "description": "The data payload of the response for successful requests."
+                },
+                "error": {
+                    "description": "Details of the error if the request was not successful.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/apiResponse.ErrorInfo"
+                        }
+                    ]
+                },
+                "meta": {
+                    "description": "Additional metadata for the response, such as pagination info."
+                },
+                "request_id": {
+                    "description": "A unique identifier for the request.",
+                    "type": "string"
+                },
+                "success": {
+                    "description": "Indicates whether the request was successful.",
+                    "type": "boolean"
+                },
+                "timestamp": {
+                    "description": "The timestamp when the response was generated.",
+                    "type": "string"
+                }
+            }
+        },
+        "apiResponse.ErrorInfo": {
+            "description": "Detailed information about an error.",
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "The error code.",
+                    "type": "string"
+                },
+                "details": {
+                    "description": "A map of specific error details, often used for validation errors.",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "message": {
+                    "description": "A descriptive error message.",
+                    "type": "string"
+                },
+                "stack": {
+                    "description": "The error stack trace (for development purposes).",
+                    "type": "string"
+                },
+                "type": {
+                    "description": "The type of the error.",
+                    "type": "string"
+                }
+            }
+        },
+        "petController.PetInsertRequest": {
+            "description": "Represents the request body for creating a new pet.",
+            "type": "object",
+            "required": [
+                "name",
+                "owner_id",
+                "species"
+            ],
+            "properties": {
+                "age": {
+                    "description": "The age of the pet in years. (optional)",
+                    "type": "integer"
+                },
+                "allergies": {
+                    "description": "A list of the pet's known allergies. (optional, max 500)",
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "breed": {
+                    "description": "The breed of the pet. (optional, min 2, max 50)",
+                    "type": "string",
+                    "maxLength": 50,
+                    "minLength": 2
+                },
+                "color": {
+                    "description": "The color of the pet's fur/coat. (optional, min 2, max 50)",
+                    "type": "string",
+                    "maxLength": 50,
+                    "minLength": 2
+                },
+                "current_medications": {
+                    "description": "The pet's current medications. (optional, max 500)",
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "gender": {
+                    "description": "The gender of the pet. (optional, must be one of \"Male\", \"Female\", or \"Unknown\")",
+                    "type": "string",
+                    "enum": [
+                        "Male",
+                        "Female",
+                        "Unknown"
+                    ]
+                },
+                "is_active": {
+                    "description": "Indicates if the pet's record is active. (required)",
+                    "type": "boolean"
+                },
+                "is_neutered": {
+                    "description": "Indicates if the pet is neutered. (optional)",
+                    "type": "boolean"
+                },
+                "microchip": {
+                    "description": "The pet's microchip number. (optional, must be 15 digits)",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "The name of the pet. (required, min 2, max 100)",
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 2
+                },
+                "owner_id": {
+                    "description": "The unique ID of the pet's owner. (required, greater than 0)",
+                    "type": "integer"
+                },
+                "photo": {
+                    "description": "The URL of the pet's photo. (optional, must be a valid URL)",
+                    "type": "string"
+                },
+                "special_needs": {
+                    "description": "Any special needs the pet may have. (optional, max 500)",
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "species": {
+                    "description": "The species of the pet. (required, min 2, max 50)",
+                    "type": "string",
+                    "maxLength": 50,
+                    "minLength": 2
+                },
+                "weight": {
+                    "description": "The weight of the pet in kilograms. (optional, greater than 0, less than or equal to 1000)",
+                    "type": "number",
+                    "maximum": 1000
+                }
+            }
+        },
+        "petController.PetResponse": {
+            "description": "Represents the response structure for a pet.",
+            "type": "object",
+            "properties": {
+                "age": {
+                    "description": "The age of the pet in years.",
+                    "type": "integer"
+                },
+                "allergies": {
+                    "description": "A list of the pet's known allergies.",
+                    "type": "string"
+                },
+                "breed": {
+                    "description": "The breed of the pet.",
+                    "type": "string"
+                },
+                "color": {
+                    "description": "The color of the pet's fur/coat.",
+                    "type": "string"
+                },
+                "created_at": {
+                    "description": "The date and time when the pet's record was created.",
+                    "type": "string"
+                },
+                "current_medications": {
+                    "description": "The pet's current medications.",
+                    "type": "string"
+                },
+                "gender": {
+                    "description": "The gender of the pet.",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "The unique ID of the pet.",
+                    "type": "integer"
+                },
+                "is_active": {
+                    "description": "Indicates if the pet's record is active.",
+                    "type": "boolean"
+                },
+                "is_neutered": {
+                    "description": "Indicates if the pet is neutered.",
+                    "type": "boolean"
+                },
+                "microchip": {
+                    "description": "The pet's microchip number.",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "The name of the pet.",
+                    "type": "string"
+                },
+                "owner_id": {
+                    "description": "The unique ID of the pet's owner.",
+                    "type": "integer"
+                },
+                "photo": {
+                    "description": "The URL of the pet's photo.",
+                    "type": "string"
+                },
+                "special_needs": {
+                    "description": "Any special needs the pet may have.",
+                    "type": "string"
+                },
+                "species": {
+                    "description": "The species of the pet.",
+                    "type": "string"
+                },
+                "updated_at": {
+                    "description": "The date and time when the pet's record was last updated.",
+                    "type": "string"
+                },
+                "weight": {
+                    "description": "The weight of the pet in kilograms.",
+                    "type": "number"
+                }
+            }
+        },
+        "shared.Money": {
+            "type": "object"
+        },
+        "vetDomain.VetSpecialty": {
+            "type": "integer",
+            "enum": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12,
+                13,
+                14,
+                15,
+                16,
+                17,
+                18,
+                19,
+                20
+            ],
+            "x-enum-comments": {
+                "AnesthesiologySpecialty": "12",
+                "AvianMedicineSpecialty": "17",
+                "CardiologySpecialty": "7",
+                "DentistrySpecialty": "4",
+                "DermatologySpecialty": "5",
+                "EmergencyCriticalCareSpecialty": "11",
+                "EquineMedicineSpecialty": "16",
+                "ExoticAnimalMedicineSpecialty": "15",
+                "FoodAnimalMedicineSpecialty": "19",
+                "GeneralPracticeSpecialty": "1",
+                "InternalMedicineSpecialty": "3",
+                "NeurologySpecialty": "8",
+                "OncologySpecialty": "6",
+                "OphthalmologySpecialty": "9",
+                "PathologySpecialty": "13",
+                "PreventiveMedicineSpecialty": "14",
+                "PublicHealthSpecialty": "20",
+                "RadiologySpecialty": "10",
+                "SurgerySpecialty": "2",
+                "UnknownSpecialty": "0",
+                "ZooAnimalMedicineSpecialty": "18"
+            },
+            "x-enum-descriptions": [
+                "0",
+                "1",
+                "2",
+                "3",
+                "4",
+                "5",
+                "6",
+                "7",
+                "8",
+                "9",
+                "10",
+                "11",
+                "12",
+                "13",
+                "14",
+                "15",
+                "16",
+                "17",
+                "18",
+                "19",
+                "20"
+            ],
+            "x-enum-varnames": [
+                "UnknownSpecialty",
+                "GeneralPracticeSpecialty",
+                "SurgerySpecialty",
+                "InternalMedicineSpecialty",
+                "DentistrySpecialty",
+                "DermatologySpecialty",
+                "OncologySpecialty",
+                "CardiologySpecialty",
+                "NeurologySpecialty",
+                "OphthalmologySpecialty",
+                "RadiologySpecialty",
+                "EmergencyCriticalCareSpecialty",
+                "AnesthesiologySpecialty",
+                "PathologySpecialty",
+                "PreventiveMedicineSpecialty",
+                "ExoticAnimalMedicineSpecialty",
+                "EquineMedicineSpecialty",
+                "AvianMedicineSpecialty",
+                "ZooAnimalMedicineSpecialty",
+                "FoodAnimalMedicineSpecialty",
+                "PublicHealthSpecialty"
+            ]
+        },
+        "vetDtos.ScheduleInsert": {
+            "type": "object",
+            "properties": {
+                "day": {
+                    "description": "The day of the week for the schedule. (e.g., \"Monday\", \"Tuesday\")",
+                    "type": "string"
+                },
+                "departure_time": {
+                    "description": "The departure time of the work day in hours.",
+                    "type": "integer"
+                },
+                "end_break": {
+                    "description": "The end time of the break in hours.",
+                    "type": "integer"
+                },
+                "entry_time": {
+                    "description": "The start time of the work day in hours (e.g., 8 for 8:00 AM).",
+                    "type": "integer"
+                },
+                "start_break": {
+                    "description": "The start time of the break in hours.",
+                    "type": "integer"
+                }
+            }
+        },
+        "vetDtos.VetCreate": {
+            "type": "object",
+            "required": [
+                "first_name",
+                "last_name",
+                "license_number"
+            ],
+            "properties": {
+                "consultation_fee": {
+                    "description": "The fee for a consultation.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/shared.Money"
+                        }
+                    ]
+                },
+                "first_name": {
+                    "description": "The veterinarian's first name.",
+                    "type": "string"
+                },
+                "is_active": {
+                    "description": "Indicates if the veterinarian is currently active.",
+                    "type": "boolean"
+                },
+                "laboral_schedule": {
+                    "description": "The working schedule of the veterinarian.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/vetDtos.ScheduleInsert"
+                    }
+                },
+                "last_name": {
+                    "description": "The veterinarian's last name.",
+                    "type": "string"
+                },
+                "license_number": {
+                    "description": "The unique license number of the veterinarian.",
+                    "type": "string"
+                },
+                "photo": {
+                    "description": "URL for the veterinarian's photo.",
+                    "type": "string"
+                },
+                "specialty": {
+                    "description": "The veterinarian's medical specialty.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/vetDomain.VetSpecialty"
+                        }
+                    ]
+                },
+                "years_experience": {
+                    "description": "The number of years of professional experience.",
+                    "type": "integer"
+                }
+            }
+        },
+        "vetDtos.VetResponse": {
+            "description": "Represents the response structure for a veterinarian.",
+            "type": "object",
+            "properties": {
+                "consultation_fee": {
+                    "description": "The consultation fee charged by the veterinarian.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/shared.Money"
+                        }
+                    ]
+                },
+                "first_name": {
+                    "description": "The first name of the veterinarian.",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "The unique ID of the veterinarian.",
+                    "type": "integer"
+                },
+                "laboral_schedule": {
+                    "description": "The working schedule of the veterinarian.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/vetDtos.ScheduleInsert"
+                    }
+                },
+                "last_name": {
+                    "description": "The last name of the veterinarian.",
+                    "type": "string"
+                },
+                "license_number": {
+                    "description": "The license number of the veterinarian.",
+                    "type": "string"
+                },
+                "photo": {
+                    "description": "The URL of the veterinarian's photo.",
+                    "type": "string"
+                },
+                "specialty": {
+                    "description": "The specialty of the veterinarian.",
+                    "type": "string"
+                },
+                "years_experience": {
+                    "description": "The years of experience of the veterinarian.",
+                    "type": "integer"
+                }
+            }
+        },
+        "vetDtos.VetUpdate": {
+            "type": "object",
+            "properties": {
+                "consultation_fee": {
+                    "description": "The fee for a consultation.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/shared.Money"
+                        }
+                    ]
+                },
+                "first_name": {
+                    "description": "The veterinarian's first name.",
+                    "type": "string"
+                },
+                "is_active": {
+                    "description": "Indicates if the veterinarian is currently active.",
+                    "type": "boolean"
+                },
+                "laboral_schedule": {
+                    "description": "The working schedule of the veterinarian.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/vetDtos.ScheduleInsert"
+                    }
+                },
+                "last_name": {
+                    "description": "The veterinarian's last name.",
+                    "type": "string"
+                },
+                "license_number": {
+                    "description": "The unique license number of the veterinarian.",
+                    "type": "string"
+                },
+                "photo": {
+                    "description": "URL for the veterinarian's photo.",
+                    "type": "string"
+                },
+                "specialty": {
+                    "description": "The veterinarian's medical specialty.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/vetDomain.VetSpecialty"
+                        }
+                    ]
+                },
+                "years_experience": {
+                    "description": "The number of years of professional experience.",
+                    "type": "integer"
+                }
+            }
+        }
     }
 }`
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "",
-	Host:             "",
-	BasePath:         "",
+	Version:          "1.0",
+	Host:             "localhost:8080",
+	BasePath:         "/api/v2",
 	Schemes:          []string{},
-	Title:            "",
-	Description:      "",
+	Title:            "API Clínica Veterinaria",
+	Description:      "Esta es la documentación para la API de la clínica veterinaria.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

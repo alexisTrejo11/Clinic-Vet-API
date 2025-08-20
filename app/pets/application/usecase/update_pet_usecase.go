@@ -4,31 +4,31 @@ import (
 	"context"
 
 	ownerDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/domain"
-	petDTOs "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application/dtos"
-	petMapper "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application/mapper"
-	petRepository "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application/repositories"
+	petDTOs "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application/usecase/dtos"
+	petMapper "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application/usecase/mapper"
+	petDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/domain"
 )
 
 type UpdatePetUseCase struct {
-	petRepository   petRepository.PetRepository
+	petRepository   petDomain.PetRepository
 	ownerRepository ownerDomain.OwnerRepository
 }
 
-func NewUpdatePetUseCase(petRepository petRepository.PetRepository, ownerRepository ownerDomain.OwnerRepository) *UpdatePetUseCase {
+func NewUpdatePetUseCase(petRepository petDomain.PetRepository, ownerRepository ownerDomain.OwnerRepository) *UpdatePetUseCase {
 	return &UpdatePetUseCase{
 		petRepository:   petRepository,
 		ownerRepository: ownerRepository,
 	}
 }
 
-func (uc UpdatePetUseCase) Execute(ctx context.Context, petId int, petUpdate petDTOs.PetUpdate) (petDTOs.PetResponse, error) {
-	pet, err := uc.petRepository.GetById(ctx, petId)
+func (uc UpdatePetUseCase) Execute(ctx context.Context, petUpdate petDTOs.PetUpdate) (petDTOs.PetResponse, error) {
+	pet, err := uc.petRepository.GetById(ctx, petUpdate.PetId)
 	if err != nil {
 		return petDTOs.PetResponse{}, err
 	}
 
 	if petUpdate.OwnerID != nil {
-		if err := uc.validate_owner(ctx, petId); err != nil {
+		if err := uc.validate_owner(ctx, *petUpdate.OwnerID); err != nil {
 			return petDTOs.PetResponse{}, err
 		}
 	}

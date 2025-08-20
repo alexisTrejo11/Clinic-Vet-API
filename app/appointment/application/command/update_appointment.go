@@ -56,7 +56,7 @@ func (h *updateAppointmentHandler) Handle(ctx context.Context, command UpdateApp
 		return shared.FailureResult("failed to update appointment", err)
 	}
 
-	return shared.SuccesResult(appointment.GetId().String(), "appointment updated successfully")
+	return shared.SuccessResult(appointment.GetId().String(), "appointment updated successfully")
 }
 
 func (h *updateAppointmentHandler) updateFields(appointment *appointmentDomain.Appointment, command UpdateAppointmentCommand) error {

@@ -46,7 +46,7 @@ func (h *createAppointmentHandler) Handle(ctx context.Context, command CreateApp
 		return shared.FailureResult("failed to save appointment", err)
 	}
 
-	return shared.SuccesResult(appointment.GetId().String(), "appointment created successfully")
+	return shared.SuccessResult(appointment.GetId().String(), "appointment created successfully")
 }
 
 func (h *createAppointmentHandler) commandToDomain(command CreateAppointmentCommand) (*appointmentDomain.Appointment, error) {

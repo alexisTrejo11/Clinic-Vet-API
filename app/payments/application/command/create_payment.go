@@ -39,7 +39,7 @@ func (h *createPaymentHandler) Handle(ctx context.Context, command CreatePayment
 		return shared.FailureResult("failed to create payment", err)
 	}
 
-	return shared.SuccesResult(string(payment.GetId()), "payment created successfully")
+	return shared.SuccessResult(string(payment.GetId()), "payment created successfully")
 }
 
 func (req *createPaymentHandler) createCommandToDomain(command CreatePaymentCommand) *paymentDomain.Payment {

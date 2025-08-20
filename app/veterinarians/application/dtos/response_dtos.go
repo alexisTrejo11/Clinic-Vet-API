@@ -4,14 +4,24 @@ import (
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
 )
 
+// @Description Represents the response structure for a veterinarian.
 type VetResponse struct {
-	Id              int               `json:"id"`
-	FirstName       string            `json:"first_name"`
-	LastName        string            `json:"last_name"`
-	Photo           string            `json:"photo"`
-	LicenseNumber   string            `json:"license_number"`
-	YearsExperience int               `json:"years_experience"`
-	Specialty       string            `json:"specialty"`
-	ConsultationFee *shared.Money     `json:"consultation_fee"`
+	// The unique ID of the veterinarian.
+	Id int `json:"id"`
+	// The first name of the veterinarian.
+	FirstName string `json:"first_name"`
+	// The last name of the veterinarian.
+	LastName string `json:"last_name"`
+	// The URL of the veterinarian's photo.
+	Photo string `json:"photo"`
+	// The license number of the veterinarian.
+	LicenseNumber string `json:"license_number"`
+	// The years of experience of the veterinarian.
+	YearsExperience int `json:"years_experience"`
+	// The specialty of the veterinarian.
+	Specialty string `json:"specialty"`
+	// The consultation fee charged by the veterinarian.
+	ConsultationFee *shared.Money `json:"consultation_fee"`
+	// The working schedule of the veterinarian.
 	LaboralSchedule *[]ScheduleInsert `json:"laboral_schedule"`
 }

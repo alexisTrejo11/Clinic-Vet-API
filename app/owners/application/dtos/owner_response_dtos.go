@@ -3,7 +3,7 @@ package ownerDTOs
 import (
 	"time"
 
-	petDTOs "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application/dtos"
+	petDTOs "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application/usecase/dtos"
 )
 
 type OwnerResponse struct {

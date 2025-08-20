@@ -3,7 +3,7 @@ package petMapper
 import (
 	"time"
 
-	dtos "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application/dtos"
+	dtos "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application/usecase/dtos"
 	petDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/domain"
 )
 
@@ -11,7 +11,7 @@ func ToDomainFromCreate(dto dtos.PetCreate) *petDomain.Pet {
 	builder := petDomain.NewPetBuilder().
 		WithName(dto.Name).
 		WithSpecies(dto.Species).
-		WithOwnerID(dto.OwnerID).
+		WithOwnerID(dto.OwnerId).
 		WithIsActive(dto.IsActive).
 		WithCreatedAt(time.Now()).
 		WithUpdatedAt(time.Now())

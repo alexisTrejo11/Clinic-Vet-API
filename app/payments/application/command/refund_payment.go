@@ -51,5 +51,5 @@ func (h *refundPaymentHandler) Handle(ctx context.Context, command RefundPayment
 		return shared.FailureResult("failed to save refunded payment", err)
 	}
 
-	return shared.SuccesResult(string(payment.GetId()), "payment refunded successfully")
+	return shared.SuccessResult(string(payment.GetId()), "payment refunded successfully")
 }

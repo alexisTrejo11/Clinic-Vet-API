@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	petRepository "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application/repositories"
 	petDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/domain"
 	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
 )
@@ -13,7 +12,7 @@ type SqlcPetRepository struct {
 	queries *sqlc.Queries
 }
 
-func NewSqlcPetRepository(queries *sqlc.Queries) petRepository.PetRepository {
+func NewSqlcPetRepository(queries *sqlc.Queries) petDomain.PetRepository {
 	return &SqlcPetRepository{
 		queries: queries,
 	}

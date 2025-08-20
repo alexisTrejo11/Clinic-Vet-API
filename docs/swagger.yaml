@@ -1,6 +1,1050 @@
+basePath: /api/v2
+definitions:
+  apiResponse.APIResponse:
+    description: Standardized API response structure.
+    properties:
+      data:
+        description: The data payload of the response for successful requests.
+      error:
+        allOf:
+        - $ref: '#/definitions/apiResponse.ErrorInfo'
+        description: Details of the error if the request was not successful.
+      meta:
+        description: Additional metadata for the response, such as pagination info.
+      request_id:
+        description: A unique identifier for the request.
+        type: string
+      success:
+        description: Indicates whether the request was successful.
+        type: boolean
+      timestamp:
+        description: The timestamp when the response was generated.
+        type: string
+    type: object
+  apiResponse.ErrorInfo:
+    description: Detailed information about an error.
+    properties:
+      code:
+        description: The error code.
+        type: string
+      details:
+        additionalProperties: true
+        description: A map of specific error details, often used for validation errors.
+        type: object
+      message:
+        description: A descriptive error message.
+        type: string
+      stack:
+        description: The error stack trace (for development purposes).
+        type: string
+      type:
+        description: The type of the error.
+        type: string
+    type: object
+  petController.PetInsertRequest:
+    description: Represents the request body for creating a new pet.
+    properties:
+      age:
+        description: The age of the pet in years. (optional)
+        type: integer
+      allergies:
+        description: A list of the pet's known allergies. (optional, max 500)
+        maxLength: 500
+        type: string
+      breed:
+        description: The breed of the pet. (optional, min 2, max 50)
+        maxLength: 50
+        minLength: 2
+        type: string
+      color:
+        description: The color of the pet's fur/coat. (optional, min 2, max 50)
+        maxLength: 50
+        minLength: 2
+        type: string
+      current_medications:
+        description: The pet's current medications. (optional, max 500)
+        maxLength: 500
+        type: string
+      gender:
+        description: The gender of the pet. (optional, must be one of "Male", "Female",
+          or "Unknown")
+        enum:
+        - Male
+        - Female
+        - Unknown
+        type: string
+      is_active:
+        description: Indicates if the pet's record is active. (required)
+        type: boolean
+      is_neutered:
+        description: Indicates if the pet is neutered. (optional)
+        type: boolean
+      microchip:
+        description: The pet's microchip number. (optional, must be 15 digits)
+        type: string
+      name:
+        description: The name of the pet. (required, min 2, max 100)
+        maxLength: 100
+        minLength: 2
+        type: string
+      owner_id:
+        description: The unique ID of the pet's owner. (required, greater than 0)
+        type: integer
+      photo:
+        description: The URL of the pet's photo. (optional, must be a valid URL)
+        type: string
+      special_needs:
+        description: Any special needs the pet may have. (optional, max 500)
+        maxLength: 500
+        type: string
+      species:
+        description: The species of the pet. (required, min 2, max 50)
+        maxLength: 50
+        minLength: 2
+        type: string
+      weight:
+        description: The weight of the pet in kilograms. (optional, greater than 0,
+          less than or equal to 1000)
+        maximum: 1000
+        type: number
+    required:
+    - name
+    - owner_id
+    - species
+    type: object
+  petController.PetResponse:
+    description: Represents the response structure for a pet.
+    properties:
+      age:
+        description: The age of the pet in years.
+        type: integer
+      allergies:
+        description: A list of the pet's known allergies.
+        type: string
+      breed:
+        description: The breed of the pet.
+        type: string
+      color:
+        description: The color of the pet's fur/coat.
+        type: string
+      created_at:
+        description: The date and time when the pet's record was created.
+        type: string
+      current_medications:
+        description: The pet's current medications.
+        type: string
+      gender:
+        description: The gender of the pet.
+        type: string
+      id:
+        description: The unique ID of the pet.
+        type: integer
+      is_active:
+        description: Indicates if the pet's record is active.
+        type: boolean
+      is_neutered:
+        description: Indicates if the pet is neutered.
+        type: boolean
+      microchip:
+        description: The pet's microchip number.
+        type: string
+      name:
+        description: The name of the pet.
+        type: string
+      owner_id:
+        description: The unique ID of the pet's owner.
+        type: integer
+      photo:
+        description: The URL of the pet's photo.
+        type: string
+      special_needs:
+        description: Any special needs the pet may have.
+        type: string
+      species:
+        description: The species of the pet.
+        type: string
+      updated_at:
+        description: The date and time when the pet's record was last updated.
+        type: string
+      weight:
+        description: The weight of the pet in kilograms.
+        type: number
+    type: object
+  shared.Money:
+    type: object
+  vetDomain.VetSpecialty:
+    enum:
+    - 0
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+    - 13
+    - 14
+    - 15
+    - 16
+    - 17
+    - 18
+    - 19
+    - 20
+    type: integer
+    x-enum-comments:
+      AnesthesiologySpecialty: "12"
+      AvianMedicineSpecialty: "17"
+      CardiologySpecialty: "7"
+      DentistrySpecialty: "4"
+      DermatologySpecialty: "5"
+      EmergencyCriticalCareSpecialty: "11"
+      EquineMedicineSpecialty: "16"
+      ExoticAnimalMedicineSpecialty: "15"
+      FoodAnimalMedicineSpecialty: "19"
+      GeneralPracticeSpecialty: "1"
+      InternalMedicineSpecialty: "3"
+      NeurologySpecialty: "8"
+      OncologySpecialty: "6"
+      OphthalmologySpecialty: "9"
+      PathologySpecialty: "13"
+      PreventiveMedicineSpecialty: "14"
+      PublicHealthSpecialty: "20"
+      RadiologySpecialty: "10"
+      SurgerySpecialty: "2"
+      UnknownSpecialty: "0"
+      ZooAnimalMedicineSpecialty: "18"
+    x-enum-descriptions:
+    - "0"
+    - "1"
+    - "2"
+    - "3"
+    - "4"
+    - "5"
+    - "6"
+    - "7"
+    - "8"
+    - "9"
+    - "10"
+    - "11"
+    - "12"
+    - "13"
+    - "14"
+    - "15"
+    - "16"
+    - "17"
+    - "18"
+    - "19"
+    - "20"
+    x-enum-varnames:
+    - UnknownSpecialty
+    - GeneralPracticeSpecialty
+    - SurgerySpecialty
+    - InternalMedicineSpecialty
+    - DentistrySpecialty
+    - DermatologySpecialty
+    - OncologySpecialty
+    - CardiologySpecialty
+    - NeurologySpecialty
+    - OphthalmologySpecialty
+    - RadiologySpecialty
+    - EmergencyCriticalCareSpecialty
+    - AnesthesiologySpecialty
+    - PathologySpecialty
+    - PreventiveMedicineSpecialty
+    - ExoticAnimalMedicineSpecialty
+    - EquineMedicineSpecialty
+    - AvianMedicineSpecialty
+    - ZooAnimalMedicineSpecialty
+    - FoodAnimalMedicineSpecialty
+    - PublicHealthSpecialty
+  vetDtos.ScheduleInsert:
+    properties:
+      day:
+        description: The day of the week for the schedule. (e.g., "Monday", "Tuesday")
+        type: string
+      departure_time:
+        description: The departure time of the work day in hours.
+        type: integer
+      end_break:
+        description: The end time of the break in hours.
+        type: integer
+      entry_time:
+        description: The start time of the work day in hours (e.g., 8 for 8:00 AM).
+        type: integer
+      start_break:
+        description: The start time of the break in hours.
+        type: integer
+    type: object
+  vetDtos.VetCreate:
+    properties:
+      consultation_fee:
+        allOf:
+        - $ref: '#/definitions/shared.Money'
+        description: The fee for a consultation.
+      first_name:
+        description: The veterinarian's first name.
+        type: string
+      is_active:
+        description: Indicates if the veterinarian is currently active.
+        type: boolean
+      laboral_schedule:
+        description: The working schedule of the veterinarian.
+        items:
+          $ref: '#/definitions/vetDtos.ScheduleInsert'
+        type: array
+      last_name:
+        description: The veterinarian's last name.
+        type: string
+      license_number:
+        description: The unique license number of the veterinarian.
+        type: string
+      photo:
+        description: URL for the veterinarian's photo.
+        type: string
+      specialty:
+        allOf:
+        - $ref: '#/definitions/vetDomain.VetSpecialty'
+        description: The veterinarian's medical specialty.
+      years_experience:
+        description: The number of years of professional experience.
+        type: integer
+    required:
+    - first_name
+    - last_name
+    - license_number
+    type: object
+  vetDtos.VetResponse:
+    description: Represents the response structure for a veterinarian.
+    properties:
+      consultation_fee:
+        allOf:
+        - $ref: '#/definitions/shared.Money'
+        description: The consultation fee charged by the veterinarian.
+      first_name:
+        description: The first name of the veterinarian.
+        type: string
+      id:
+        description: The unique ID of the veterinarian.
+        type: integer
+      laboral_schedule:
+        description: The working schedule of the veterinarian.
+        items:
+          $ref: '#/definitions/vetDtos.ScheduleInsert'
+        type: array
+      last_name:
+        description: The last name of the veterinarian.
+        type: string
+      license_number:
+        description: The license number of the veterinarian.
+        type: string
+      photo:
+        description: The URL of the veterinarian's photo.
+        type: string
+      specialty:
+        description: The specialty of the veterinarian.
+        type: string
+      years_experience:
+        description: The years of experience of the veterinarian.
+        type: integer
+    type: object
+  vetDtos.VetUpdate:
+    properties:
+      consultation_fee:
+        allOf:
+        - $ref: '#/definitions/shared.Money'
+        description: The fee for a consultation.
+      first_name:
+        description: The veterinarian's first name.
+        type: string
+      is_active:
+        description: Indicates if the veterinarian is currently active.
+        type: boolean
+      laboral_schedule:
+        description: The working schedule of the veterinarian.
+        items:
+          $ref: '#/definitions/vetDtos.ScheduleInsert'
+        type: array
+      last_name:
+        description: The veterinarian's last name.
+        type: string
+      license_number:
+        description: The unique license number of the veterinarian.
+        type: string
+      photo:
+        description: URL for the veterinarian's photo.
+        type: string
+      specialty:
+        allOf:
+        - $ref: '#/definitions/vetDomain.VetSpecialty'
+        description: The veterinarian's medical specialty.
+      years_experience:
+        description: The number of years of professional experience.
+        type: integer
+    type: object
+host: localhost:8080
 info:
-  contact: {}
+  contact:
+    email: support@swagger.io
+    name: Equipo de Soporte API
+    url: http://www.swagger.io/support
+  description: Esta es la documentación para la API de la clínica veterinaria.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: API Clínica Veterinaria
+  version: "1.0"
 paths:
+  /api/v2/example-path:
+    get:
+      description: Sends a 200 OK response with the provided data.
+      parameters:
+      - description: Data to be included in the response
+        in: body
+        name: data
+        required: true
+        schema: {}
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+      summary: Send a success response
+  /api/v2/example-path-app-error:
+    get:
+      description: Sends a standardized error response based on the Go error type,
+        with an appropriate HTTP status code.
+      parameters:
+      - description: The error object
+        in: body
+        name: err
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+      summary: Send a standardized application error response
+  /api/v2/example-path-bad-request:
+    post:
+      description: Sends a 400 Bad Request response, typically for invalid input.
+      parameters:
+      - description: The error object
+        in: body
+        name: err
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+      summary: Send a bad request error response
+  /api/v2/example-path-body-error:
+    post:
+      description: Sends a 400 Bad Request for malformed or invalid request body data.
+      parameters:
+      - description: The error object
+        in: body
+        name: err
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+      summary: Send a request body data error response
+  /api/v2/example-path-conflict:
+    post:
+      description: Sends a 409 Conflict response with an error message, e.g., for
+        duplicate resources.
+      parameters:
+      - description: The error object
+        in: body
+        name: err
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+      summary: Send a conflict error response
+  /api/v2/example-path-create:
+    post:
+      description: Sends a 201 Created response with the provided data.
+      parameters:
+      - description: Data of the newly created resource
+        in: body
+        name: data
+        required: true
+        schema: {}
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+      summary: Send a created response
+  /api/v2/example-path-date-error:
+    get:
+      description: Sends a 400 Bad Request when a date field has an invalid format.
+      parameters:
+      - description: The field with the invalid date
+        in: body
+        name: field
+        required: true
+        schema:
+          type: string
+      - description: The expected date format
+        in: body
+        name: format
+        required: true
+        schema:
+          type: string
+      produces:
+      - application/json
+      responses:
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+      summary: Send an invalid date format error response
+  /api/v2/example-path-delete:
+    delete:
+      description: Sends a 204 No Content response, typically for successful deletions.
+      responses:
+        "204":
+          description: No Content
+      summary: Send a no content response
+  /api/v2/example-path-forbidden:
+    get:
+      description: Sends a 403 Forbidden response, for authorization failures.
+      parameters:
+      - description: The error object
+        in: body
+        name: err
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+      summary: Send a forbidden error response
+  /api/v2/example-path-not-found:
+    get:
+      description: Sends a 404 Not Found response with an error message.
+      parameters:
+      - description: The error object
+        in: body
+        name: err
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+      summary: Send a not found error response
+  /api/v2/example-path-pagination:
+    get:
+      description: Parses "page" and "pageSize" from the URL query and returns them.
+      parameters:
+      - description: 'Page number (default: 1)'
+        in: query
+        name: page
+        type: integer
+      - description: 'Number of items per page (default: 10)'
+        in: query
+        name: pageSize
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Pagination parameters
+          schema:
+            additionalProperties:
+              type: integer
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+      summary: Get pagination parameters
+  /api/v2/example-path-param-error/{id}:
+    get:
+      description: Sends a 400 Bad Request for invalid URL parameters.
+      parameters:
+      - description: The error object
+        in: body
+        name: err
+        required: true
+        schema:
+          type: object
+      - description: The field with the error
+        in: body
+        name: field
+        required: true
+        schema:
+          type: string
+      - description: The invalid value
+        in: body
+        name: value
+        required: true
+        schema:
+          type: string
+      produces:
+      - application/json
+      responses:
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+      summary: Send a URL parameter error response
+  /api/v2/example-path-parse-error:
+    get:
+      description: Sends a 400 Bad Request when data parsing fails for a specific
+        field.
+      parameters:
+      - description: The field with the parsing error
+        in: body
+        name: field
+        required: true
+        schema:
+          type: string
+      - description: The invalid value
+        in: body
+        name: value
+        required: true
+        schema:
+          type: string
+      - description: The error message
+        in: body
+        name: message
+        required: true
+        schema:
+          type: string
+      produces:
+      - application/json
+      responses:
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+      summary: Send an invalid data parsing error response
+  /api/v2/example-path-query-error:
+    get:
+      description: Sends a 400 Bad Request for invalid URL query parameters.
+      parameters:
+      - description: The error object
+        in: body
+        name: err
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+      summary: Send a URL query error response
+  /api/v2/example-path-server-error:
+    get:
+      description: Sends a 500 Internal Server Error response for unexpected server
+        issues.
+      parameters:
+      - description: The error object
+        in: body
+        name: err
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+      summary: Send a server error response
+  /api/v2/example-path-unauthorized:
+    get:
+      description: Sends a 401 Unauthorized response, for authentication failures.
+      parameters:
+      - description: The error object
+        in: body
+        name: err
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+      summary: Send an unauthorized error response
+  /api/v2/example-path-with-meta:
+    get:
+      description: Sends a 200 OK response with data and metadata.
+      parameters:
+      - description: Data to be included in the response
+        in: body
+        name: data
+        required: true
+        schema: {}
+      - description: Metadata to be included in the response
+        in: body
+        name: meta
+        required: true
+        schema: {}
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+      summary: Send a success response with metadata
+  /api/v2/veterinarians:
+    get:
+      description: Retrieves a list of all veterinarians with optional filtering and
+        pagination.
+      parameters:
+      - description: Page number for pagination
+        in: query
+        name: page
+        type: integer
+      - description: Number of items per page
+        in: query
+        name: limit
+        type: integer
+      - description: Filter by specialty
+        in: query
+        name: specialty
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of veterinarians
+          schema:
+            items:
+              $ref: '#/definitions/vetDtos.VetResponse'
+            type: array
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+      summary: List all veterinarians
+      tags:
+      - Veterinarians
+    post:
+      consumes:
+      - application/json
+      description: Creates a new veterinarian with the provided details.
+      parameters:
+      - description: Veterinarian data
+        in: body
+        name: vetCreate
+        required: true
+        schema:
+          $ref: '#/definitions/vetDtos.VetCreate'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Veterinarian created
+          schema:
+            $ref: '#/definitions/vetDtos.VetResponse'
+        "400":
+          description: Invalid request body
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+      summary: Create a new veterinarian
+      tags:
+      - Veterinarians
+  /api/v2/veterinarians/{id}:
+    delete:
+      description: Deletes a veterinarian from the system by ID.
+      parameters:
+      - description: Veterinarian ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Invalid ID supplied
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+        "404":
+          description: Veterinarian not found
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+      summary: Delete a veterinarian
+      tags:
+      - Veterinarians
+    get:
+      description: Retrieves a single veterinarian by their unique ID.
+      parameters:
+      - description: Veterinarian ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Veterinarian details
+          schema:
+            $ref: '#/definitions/vetDtos.VetResponse'
+        "400":
+          description: Invalid ID supplied
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+        "404":
+          description: Veterinarian not found
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+      summary: Get a veterinarian by ID
+      tags:
+      - Veterinarians
+    patch:
+      consumes:
+      - application/json
+      description: Updates the details of an existing veterinarian by ID.
+      parameters:
+      - description: Veterinarian ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated veterinarian data
+        in: body
+        name: vetUpdate
+        required: true
+        schema:
+          $ref: '#/definitions/vetDtos.VetUpdate'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Veterinarian updated
+          schema:
+            $ref: '#/definitions/vetDtos.VetResponse'
+        "400":
+          description: Invalid request data or ID
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+        "404":
+          description: Veterinarian not found
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+      summary: Update an existing veterinarian
+      tags:
+      - Veterinarians
+  /pets:
+    get:
+      description: Retrieves a list of all pet records.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of pets
+          schema:
+            items:
+              $ref: '#/definitions/petController.PetResponse'
+            type: array
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+      summary: List all pets
+      tags:
+      - pets
+    post:
+      consumes:
+      - application/json
+      description: Creates a new pet record with the provided data.
+      parameters:
+      - description: Pet creation request
+        in: body
+        name: pet
+        required: true
+        schema:
+          $ref: '#/definitions/petController.PetInsertRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Pet created successfully
+          schema:
+            $ref: '#/definitions/petController.PetResponse'
+        "400":
+          description: Invalid request body or validation error
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+      summary: Create a new pet
+      tags:
+      - pets
+  /pets/{id}:
+    delete:
+      description: Marks a pet record as inactive without permanently deleting it.
+      parameters:
+      - description: Pet ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Invalid URL parameter
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+        "404":
+          description: Pet not found
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+      summary: Soft delete a pet
+      tags:
+      - pets
+    get:
+      description: Retrieves a single pet record by its unique ID.
+      parameters:
+      - description: Pet ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Pet found
+          schema:
+            $ref: '#/definitions/petController.PetResponse'
+        "400":
+          description: Invalid URL parameter
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+        "404":
+          description: Pet not found
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+      summary: Get a pet by ID
+      tags:
+      - pets
+    put:
+      consumes:
+      - application/json
+      description: Updates a pet record by its ID with the provided data.
+      parameters:
+      - description: Pet ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Pet update request
+        in: body
+        name: pet
+        required: true
+        schema:
+          $ref: '#/definitions/petController.PetInsertRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Pet updated successfully
+          schema:
+            $ref: '#/definitions/petController.PetResponse'
+        "400":
+          description: Invalid URL parameter or request body
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+        "404":
+          description: Pet not found
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+      summary: Update an existing pet
+      tags:
+      - pets
   /ping:
     get:
       consumes:

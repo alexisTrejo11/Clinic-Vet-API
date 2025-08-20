@@ -6,7 +6,7 @@ import (
 	ownerDTOs "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/application/dtos"
 	ownerMappers "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/application/mappers"
 	ownerDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/domain"
-	petMapper "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application/mapper"
+	petMapper "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application/usecase/mapper"
 )
 
 type GetOwnerByIdUseCase struct {

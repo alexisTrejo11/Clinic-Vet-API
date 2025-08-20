@@ -1,17 +1,17 @@
 package notificationController
 
 import (
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/notifications/application"
+	notificationService "github.com/alexisTrejo11/Clinic-Vet-API/app/notifications/application"
 	"github.com/gin-gonic/gin"
 )
 
 type NotificationAdminController struct {
-	notificationFacade application.NotificationFacade
+	notificationService notificationService.NotificationService
 }
 
-func NewNotificationAdminController(notificationFacade application.NotificationFacade) *NotificationAdminController {
+func NewNotificationAdminController(notificationService notificationService.NotificationService) *NotificationAdminController {
 	controller := &NotificationAdminController{
-		notificationFacade: notificationFacade,
+		notificationService: notificationService,
 	}
 	return controller
 }

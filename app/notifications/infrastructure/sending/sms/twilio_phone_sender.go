@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/notifications/application"
+	notificationService "github.com/alexisTrejo11/Clinic-Vet-API/app/notifications/application"
 	notificationDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/notifications/domain"
 	"github.com/twilio/twilio-go"
 	twilioApi "github.com/twilio/twilio-go/rest/api/v2010"
@@ -16,7 +16,7 @@ type TwilioPhoneSender struct {
 	twilioPhoneNumber string
 }
 
-func NewTwilioPhoneSender(client *twilio.RestClient, twilioPhoneNumber string) application.Sender {
+func NewTwilioPhoneSender(client *twilio.RestClient, twilioPhoneNumber string) notificationService.Sender {
 	return &TwilioPhoneSender{client: client, twilioPhoneNumber: twilioPhoneNumber}
 }
 

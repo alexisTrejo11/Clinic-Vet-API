@@ -1,4 +1,4 @@
-package auth_routes
+package authRoutes
 
 import (
 	authController "github.com/alexisTrejo11/Clinic-Vet-API/app/auth/infrastructure/api/controller"

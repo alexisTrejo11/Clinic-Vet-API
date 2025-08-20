@@ -3,6 +3,8 @@ package paymentAPI
 import (
 	paymentDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/payments/domain"
 	paymentRoutes "github.com/alexisTrejo11/Clinic-Vet-API/app/payments/infrastructure/api/routes"
+	paymentRepo "github.com/alexisTrejo11/Clinic-Vet-API/app/payments/infrastructure/persistence"
+	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )
@@ -62,8 +64,8 @@ func (b *PaymentAPIBuilder) WithValidator(validator *validator.Validate) *Paymen
 }
 
 // WithPaymentRepository sets the payment repository
-func (b *PaymentAPIBuilder) WithPaymentRepository(repo paymentDomain.PaymentRepository) *PaymentAPIBuilder {
-	b.paymentRepo = repo
+func (b *PaymentAPIBuilder) WithPaymentRepository(queries *sqlc.Queries) *PaymentAPIBuilder {
+	b.paymentRepo = paymentRepo.NewSQLCPaymentRepository(queries)
 	return b
 }
 
@@ -121,11 +123,12 @@ func (b *PaymentAPIBuilder) registerRoutes(factory *PaymentAPI) {
 	}
 }
 
-func SetupPaymentAPI(router *gin.Engine, validator *validator.Validate, paymentRepo paymentDomain.PaymentRepository) (*PaymentAPI, error) {
+func SetupPaymentAPI(router *gin.Engine, validator *validator.Validate, queries *sqlc.Queries) (*PaymentAPI, error) {
+
 	return NewPaymentAPIBuilder().
 		WithRouter(router).
 		WithValidator(validator).
-		WithPaymentRepository(paymentRepo).
+		WithPaymentRepository(queries).
 		WithConfig(&PaymentAPIConfig{
 			EnableAdminRoutes:   true,
 			EnableClientRoutes:  true,

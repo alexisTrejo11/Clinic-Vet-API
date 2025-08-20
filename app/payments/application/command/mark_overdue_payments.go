@@ -64,7 +64,7 @@ func (h *markOverduePaymentsHandler) Handle(ctx context.Context, command MarkOve
 		}
 	}
 
-	return shared.SuccesResult("", fmt.Sprintf("Updated %d overdue payments", updatedCount))
+	return shared.SuccessResult("", fmt.Sprintf("Updated %d overdue payments", updatedCount))
 }
 
 func (h *markOverduePaymentsHandler) UpdatePaymentOverdued(ctx context.Context, payment *paymentDomain.Payment) error {

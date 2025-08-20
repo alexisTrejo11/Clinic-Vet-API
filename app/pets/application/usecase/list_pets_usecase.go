@@ -3,16 +3,16 @@ package petUsecase
 import (
 	"context"
 
-	petDTOs "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application/dtos"
-	petMapper "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application/mapper"
-	petRepository "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application/repositories"
+	petDTOs "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application/usecase/dtos"
+	petMapper "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application/usecase/mapper"
+	petDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/domain"
 )
 
 type ListPetsUseCase struct {
-	repository petRepository.PetRepository
+	repository petDomain.PetRepository
 }
 
-func NewListPetsUseCase(repository petRepository.PetRepository) *ListPetsUseCase {
+func NewListPetsUseCase(repository petDomain.PetRepository) *ListPetsUseCase {
 	return &ListPetsUseCase{
 		repository: repository,
 	}
@@ -28,10 +28,10 @@ func (uc *ListPetsUseCase) Execute(ctx context.Context) ([]petDTOs.PetResponse, 
 }
 
 type ListPetsByOwnerIdUseCase struct {
-	repository petRepository.PetRepository
+	repository petDomain.PetRepository
 }
 
-func NewListPetByOwnerAndIdUseCase(repository petRepository.PetRepository) *ListPetsByOwnerIdUseCase {
+func NewListPetByOwnerAndIdUseCase(repository petDomain.PetRepository) *ListPetsByOwnerIdUseCase {
 	return &ListPetsByOwnerIdUseCase{
 		repository: repository,
 	}

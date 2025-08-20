@@ -6,37 +6,62 @@ import (
 	custom_error "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/errors"
 )
 
+// @Description Standardized API response structure.
 type APIResponse struct {
-	Success   bool        `json:"success"`
-	Data      interface{} `json:"data,omitempty"`
-	Error     *ErrorInfo  `json:"error,omitempty"`
-	Meta      interface{} `json:"meta,omitempty"`
-	Timestamp time.Time   `json:"timestamp"`
-	RequestID string      `json:"request_id,omitempty"`
+	// Indicates whether the request was successful.
+	Success bool `json:"success"`
+	// The data payload of the response for successful requests.
+	Data interface{} `json:"data,omitempty"`
+	// Details of the error if the request was not successful.
+	Error *ErrorInfo `json:"error,omitempty"`
+	// Additional metadata for the response, such as pagination info.
+	Meta interface{} `json:"meta,omitempty"`
+	// The timestamp when the response was generated.
+	Timestamp time.Time `json:"timestamp"`
+	// A unique identifier for the request.
+	RequestID string `json:"request_id,omitempty"`
 }
 
+// @Description Detailed information about an error.
 type ErrorInfo struct {
-	Code    string                 `json:"code"`
-	Type    string                 `json:"type"`
-	Message string                 `json:"message"`
+	// The error code.
+	Code string `json:"code"`
+	// The type of the error.
+	Type string `json:"type"`
+	// A descriptive error message.
+	Message string `json:"message"`
+	// A map of specific error details, often used for validation errors.
 	Details map[string]interface{} `json:"details,omitempty"`
-	Stack   string                 `json:"stack,omitempty"` // Develop Only
+	// The error stack trace (for development purposes).
+	Stack string `json:"stack,omitempty"` // Develop Only
 }
 
+// @Description Metadata for a generic list response.
 type Meta struct {
-	Page       int `json:"page,omitempty"`
-	PageSize   int `json:"page_size,omitempty"`
-	Total      int `json:"total,omitempty"`
+	// The current page number.
+	Page int `json:"page,omitempty"`
+	// The number of items per page.
+	PageSize int `json:"page_size,omitempty"`
+	// The total number of items.
+	Total int `json:"total,omitempty"`
+	// The total number of pages.
 	TotalPages int `json:"total_pages,omitempty"`
 }
 
+// @Description Detailed pagination metadata.
 type PaginationMeta struct {
-	CurrentPage int  `json:"current_page"`
-	PageSize    int  `json:"page_size"`
-	Total       int  `json:"total"`
-	TotalPages  int  `json:"total_pages"`
-	HasNext     bool `json:"has_next"`
-	HasPrev     bool `json:"has_prev"`
+	// The current page number.
+	CurrentPage int `json:"current_page"`
+	// The number of items per page.
+	PageSize int `json:"page_size"`
+	// The total number of items.
+	Total int `json:"total"`
+	// The total number of pages.
+	TotalPages int `json:"total_pages"`
+	// Indicates if there is a next page.
+	HasNext bool `json:"has_next"`
+	// Indicates if there is a previous page.
+	HasPrev bool `json:"has_prev"`
 }
 
 func (r *APIResponse) SuccessRequest(data interface{}) {

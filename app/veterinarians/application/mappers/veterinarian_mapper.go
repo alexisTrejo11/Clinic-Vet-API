@@ -84,7 +84,7 @@ func ToResponse(vet *vetDomain.Veterinarian) *vetDtos.VetResponse {
 		scheduleResponsesSlice := make([]vetDtos.ScheduleInsert, len(days))
 		for i, day := range days {
 			shcedule := vetDtos.ScheduleInsert{
-				Day:           day.Day,
+				Day:           day.Day.String(),
 				EntryTime:     day.StartHour,
 				DepartureTime: day.EndHour,
 				StartBreak:    day.Breaks.StartHour,

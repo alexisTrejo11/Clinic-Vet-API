@@ -42,5 +42,5 @@ func (h *rescheduleAppointmentHandler) Handle(ctx context.Context, command Resch
 		return shared.FailureResult("failed to save rescheduled appointment", err)
 	}
 
-	return shared.SuccesResult(appointment.GetId().String(), "appointment rescheduled successfully")
+	return shared.SuccessResult(appointment.GetId().String(), "appointment rescheduled successfully")
 }

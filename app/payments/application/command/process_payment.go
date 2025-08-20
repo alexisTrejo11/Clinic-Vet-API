@@ -51,5 +51,5 @@ func (h *processPaymentHandler) Handle(ctx context.Context, command ProcessPayme
 		return shared.FailureResult("failed to save processed payment", err)
 	}
 
-	return shared.SuccesResult(string(payment.GetId()), "payment processed successfully")
+	return shared.SuccessResult(string(payment.GetId()), "payment processed successfully")
 }

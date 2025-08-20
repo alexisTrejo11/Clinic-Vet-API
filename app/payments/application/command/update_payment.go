@@ -49,7 +49,7 @@ func (h *updatePaymentHandler) Handle(ctx context.Context, cmd UpdatePaymentComm
 		return shared.FailureResult("error saving payment", err)
 	}
 
-	return shared.SuccesResult(
+	return shared.SuccessResult(
 		string(rune(cmd.PaymentId)),
 		"payment updated successfully",
 	)

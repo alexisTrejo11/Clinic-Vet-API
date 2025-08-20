@@ -64,3 +64,14 @@ type Notification struct {
 	NType     NotificationType    `bson:"n_type"`
 	Channel   NotificationChannel `bson:"channel"`
 }
+
+func NewActivateAccountNotification(userID, userEmail string) Notification {
+	return Notification{
+		UserID:    userID,
+		UserEmail: userEmail,
+		Subject:   "Activate your account",
+		Message:   "Please click the link below to activate your account.",
+		NType:     ActivationToken,
+		Channel:   Email,
+	}
+}

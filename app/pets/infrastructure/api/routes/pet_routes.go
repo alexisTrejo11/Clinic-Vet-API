@@ -1,4 +1,4 @@
-package routes
+package petRoutes
 
 import (
 	petController "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/infrastructure/api/controller"
@@ -11,5 +11,5 @@ func PetsRoutes(app *gin.Engine, petController *petController.PetController) {
 	path.GET("/:id", petController.GetPetById)
 	path.POST("/", petController.CreatePet)
 	path.PATCH("/:id", petController.UpdatePet)
-	path.DELETE("/:id", petController.DeletePet)
+	path.DELETE("/:id", petController.SoftDeletePet)
 }

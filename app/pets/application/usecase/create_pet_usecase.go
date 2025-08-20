@@ -5,17 +5,20 @@ import (
 
 	ownerDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/domain"
 	petApplicationError "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application"
-	petDTOs "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application/dtos"
-	petMapper "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application/mapper"
-	petRepository "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application/repositories"
+	petDTOs "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application/usecase/dtos"
+	petMapper "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application/usecase/mapper"
+	petDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/domain"
 )
 
 type CreatePetUseCase struct {
-	petRepository   petRepository.PetRepository
+	petRepository   petDomain.PetRepository
 	ownerRepository ownerDomain.OwnerRepository
 }
 
-func NewCreatePetUseCase(petRepository petRepository.PetRepository, ownerRepository ownerDomain.OwnerRepository) *CreatePetUseCase {
+func NewCreatePetUseCase(
+	petRepository petDomain.PetRepository,
+	ownerRepository ownerDomain.OwnerRepository,
+) *CreatePetUseCase {
 	return &CreatePetUseCase{
 		petRepository:   petRepository,
 		ownerRepository: ownerRepository,
@@ -23,7 +26,7 @@ func NewCreatePetUseCase(petRepository petRepository.PetRepository, ownerReposit
 }
 
 func (uc CreatePetUseCase) Execute(ctx context.Context, petCreate petDTOs.PetCreate) (petDTOs.PetResponse, error) {
-	if err := uc.validateOwner(ctx, petCreate.OwnerID); err != nil {
+	if err := uc.validateOwner(ctx, petCreate.OwnerId); err != nil {
 		return petDTOs.PetResponse{}, err
 	}
 

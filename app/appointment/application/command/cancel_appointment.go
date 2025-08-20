@@ -41,5 +41,5 @@ func (h *cancelAppointmentHandler) Handle(ctx context.Context, command CancelApp
 		return shared.FailureResult("failed to save cancelled appointment", err)
 	}
 
-	return shared.SuccesResult(appointment.GetId().String(), "appointment cancelled successfully")
+	return shared.SuccessResult(appointment.GetId().String(), "appointment cancelled successfully")
 }

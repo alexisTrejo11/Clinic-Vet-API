@@ -3,15 +3,14 @@ package petUsecase
 import (
 	"context"
 
-	petRepository "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application/repositories"
 	petDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/domain"
 )
 
 type DeletePetUseCase struct {
-	repository petRepository.PetRepository
+	repository petDomain.PetRepository
 }
 
-func NewDeletePetUseCase(repository petRepository.PetRepository) *DeletePetUseCase {
+func NewDeletePetUseCase(repository petDomain.PetRepository) *DeletePetUseCase {
 	return &DeletePetUseCase{
 		repository: repository,
 	}

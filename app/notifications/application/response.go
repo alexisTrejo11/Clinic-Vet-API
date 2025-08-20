@@ -1,4 +1,4 @@
-package application
+package notificationService
 
 import (
 	"time"
