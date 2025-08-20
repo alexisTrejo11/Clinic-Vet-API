@@ -48,6 +48,7 @@ func (f *VeterinarianModule) Bootstrap() error {
 		return err
 	}
 
+ f.components = &VeterinarianAPIComponents{}
 	vetRepo := sqlcVetRepo.NewSqlcVetRepository(f.config.Queries)
 
 	getVetUseCase := vetUsecase.NewGetVetByIdUseCase(vetRepo)

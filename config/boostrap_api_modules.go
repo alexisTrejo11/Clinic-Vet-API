@@ -7,6 +7,7 @@ import (
 	medHistoryAPI "github.com/alexisTrejo11/Clinic-Vet-API/app/medical/infrastructure/api"
 	ownerAPI "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/infrastructure/api"
 	petAPI "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/infrastructure/api"
+	sqlcPetRepository "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/infrastructure/persistence/repositories"
 	userAPI "github.com/alexisTrejo11/Clinic-Vet-API/app/users/infrastructure/api"
 	vetAPI "github.com/alexisTrejo11/Clinic-Vet-API/app/veterinarians/infrastructure/api"
 	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
@@ -19,6 +20,7 @@ func BootstrapAPIModules(
 	queries *sqlc.Queries,
 	validator *validator.Validate,
 ) error {
+	petRepository := sqlcPetRepository.NewSqlcPetRepository(queries)
 
 	// Bootstrap Vet Module
 	vetModule := vetAPI.NewVeterinarianModule(&vetAPI.VeterinarianAPIConfig{
@@ -36,6 +38,7 @@ func BootstrapAPIModules(
 		Router:    router,
 		Queries:   queries,
 		Validator: validator,
+		PetRepo:   petRepository,
 	})
 
 	if err := ownerModule.Bootstrap(); err != nil {
@@ -59,12 +62,6 @@ func BootstrapAPIModules(
 		return fmt.Errorf("failed to bootstrap pet module: %w", err)
 	}
 
-	// Get pet repository for medical history module
-	petRepo, err := petModule.GetRepository()
-	if err != nil {
-		return fmt.Errorf("failed to get pet repository: %w", err)
-	}
-
 	vetRepo, err := vetModule.GetRepository()
 	if err != nil {
 		return fmt.Errorf("failed to get vet repository: %w", err)
@@ -77,7 +74,7 @@ func BootstrapAPIModules(
 		Validator: validator,
 		OwnerRepo: ownerRepo,
 		VetRepo:   vetRepo,
-		PetRepo:   petRepo,
+		PetRepo:   petRepository,
 	})
 
 	if err := medHistoryModule.Bootstrap(); err != nil {
