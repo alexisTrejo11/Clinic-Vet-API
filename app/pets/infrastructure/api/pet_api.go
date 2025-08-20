@@ -1,8 +1,9 @@
 package petAPI
 
 import (
+	"fmt"
+
 	ownerDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/domain"
-	ownerRepository "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/infrastructure/persistence"
 	petUsecase "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application/usecase"
 	petDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/domain"
 	petController "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/infrastructure/api/controller"
@@ -13,59 +14,123 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-type PetAPI struct {
-	repository petDomain.PetRepository
-	useCases   petUsecase.PetUseCasesFacade
-	controller *petController.PetController
+type PetModuleConfig struct {
+	Router    *gin.Engine
+	Queries   *sqlc.Queries
+	Validator *validator.Validate
+	OwnerRepo ownerDomain.OwnerRepository
 }
 
-func NewPetAPI(
-	router *gin.Engine,
-	queries *sqlc.Queries,
-	dataValidator *validator.Validate,
-) *PetAPI {
-	petRepository := sqlcPetRepository.NewSqlcPetRepository(queries)
-	ownerRepo := ownerRepository.NewSqlcOwnerRepository(queries, petRepository)
+type PetModuleComponents struct {
+	Repository petDomain.PetRepository
+	UseCases   petUsecase.PetUseCasesFacade
+	Controller *petController.PetController
+}
 
-	repository := setUpRepository(queries)
-	useCases := setupApplication(repository, ownerRepo)
-	controller := setupController(dataValidator, useCases)
-	setupRoutes(router, controller)
-	return &PetAPI{
-		repository: repository,
-		useCases:   useCases,
-		controller: controller,
+type PetModule struct {
+	config     *PetModuleConfig
+	components *PetModuleComponents
+	isBuilt    bool
+}
+
+func NewPetModule(config *PetModuleConfig) *PetModule {
+	return &PetModule{
+		config:  config,
+		isBuilt: false,
 	}
 }
 
-func setupRoutes(app *gin.Engine, petController *petController.PetController) {
-	petRoutes.PetsRoutes(app, petController)
+func (m *PetModule) Bootstrap() error {
+	if m.isBuilt {
+		return nil
+	}
+
+	if err := m.validateConfig(); err != nil {
+		return err
+	}
+
+	repository := m.createRepository()
+
+	useCases := m.createUseCases(repository)
+
+	controller := m.createController(useCases)
+
+	m.registerRoutes(controller)
+
+	m.components = &PetModuleComponents{
+		Repository: repository,
+		UseCases:   useCases,
+		Controller: controller,
+	}
+
+	m.isBuilt = true
+	return nil
 }
 
-func setUpRepository(queries *sqlc.Queries) petDomain.PetRepository {
-	return sqlcPetRepository.NewSqlcPetRepository(queries)
+func (m *PetModule) createRepository() petDomain.PetRepository {
+	return sqlcPetRepository.NewSqlcPetRepository(m.config.Queries)
 }
 
-func setupApplication(repository petDomain.PetRepository, ownerRepo ownerDomain.OwnerRepository) petUsecase.PetUseCasesFacade {
-	return petUsecase.NewPetUseCasesFacade(repository, ownerRepo)
+func (m *PetModule) createUseCases(repository petDomain.PetRepository) petUsecase.PetUseCasesFacade {
+	return petUsecase.NewPetUseCasesFacade(repository, m.config.OwnerRepo)
 }
 
-func setupController(validator *validator.Validate, facade petUsecase.PetUseCasesFacade) *petController.PetController {
-	return petController.NewPetController(validator, facade)
+func (m *PetModule) createController(useCases petUsecase.PetUseCasesFacade) *petController.PetController {
+	return petController.NewPetController(m.config.Validator, useCases)
 }
 
-func RegisterRoutes(app *gin.Engine, petController *petController.PetController) {
-	petRoutes.PetsRoutes(app, petController)
+func (m *PetModule) registerRoutes(controller *petController.PetController) {
+	petRoutes.PetsRoutes(m.config.Router, controller)
 }
 
-func (api *PetAPI) GetUseCases() petUsecase.PetUseCasesFacade {
-	return api.useCases
+func (m *PetModule) validateConfig() error {
+	if m.config == nil {
+		return fmt.Errorf("pet module configuration cannot be nil")
+	}
+	if m.config.Router == nil {
+		return fmt.Errorf("router cannot be nil")
+	}
+	if m.config.Queries == nil {
+		return fmt.Errorf("queries cannot be nil")
+	}
+	if m.config.Validator == nil {
+		return fmt.Errorf("validator cannot be nil")
+	}
+	if m.config.OwnerRepo == nil {
+		return fmt.Errorf("owner repository cannot be nil")
+	}
+	return nil
 }
 
-func (api *PetAPI) GetController() *petController.PetController {
-	return api.controller
+func (m *PetModule) GetComponents() (*PetModuleComponents, error) {
+	if !m.isBuilt {
+		if err := m.Bootstrap(); err != nil {
+			return nil, err
+		}
+	}
+	return m.components, nil
 }
 
-func (api *PetAPI) GetRepository() petDomain.PetRepository {
-	return api.repository
+func (m *PetModule) GetRepository() (petDomain.PetRepository, error) {
+	components, err := m.GetComponents()
+	if err != nil {
+		return nil, err
+	}
+	return components.Repository, nil
+}
+
+func (m *PetModule) GetUseCases() (petUsecase.PetUseCasesFacade, error) {
+	components, err := m.GetComponents()
+	if err != nil {
+		return nil, err
+	}
+	return components.UseCases, nil
+}
+
+func (m *PetModule) GetController() (*petController.PetController, error) {
+	components, err := m.GetComponents()
+	if err != nil {
+		return nil, err
+	}
+	return components.Controller, nil
 }

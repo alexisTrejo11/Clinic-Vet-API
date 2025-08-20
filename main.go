@@ -2,21 +2,14 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
 
-	appointmentAPI "github.com/alexisTrejo11/Clinic-Vet-API/app/appointment/infrastructure/api"
 	authApi "github.com/alexisTrejo11/Clinic-Vet-API/app/auth/infrastructure/api"
 	mhDTOs "github.com/alexisTrejo11/Clinic-Vet-API/app/medical/application/dtos"
-	medHistoryAPI "github.com/alexisTrejo11/Clinic-Vet-API/app/medical/infrastructure/api"
-	notificationApi "github.com/alexisTrejo11/Clinic-Vet-API/app/notifications/infrastructure/api"
-	ownerAPI "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/infrastructure/api"
-	paymentAPI "github.com/alexisTrejo11/Clinic-Vet-API/app/payments/infrastructure/api"
-	petAPI "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/infrastructure/api"
-	userAPI "github.com/alexisTrejo11/Clinic-Vet-API/app/users/infrastructure/api"
-
-	vetAPI "github.com/alexisTrejo11/Clinic-Vet-API/app/veterinarians/infrastructure/api"
+	notification_api "github.com/alexisTrejo11/Clinic-Vet-API/app/notifications/infrastructure/api"
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/config"
 	"github.com/alexisTrejo11/Clinic-Vet-API/middleware"
@@ -52,13 +45,13 @@ func main() {
 	}
 
 	config.InitTwilio()
+	config.InitRedis(os.Getenv("REDIS_URL"))
 	mongoClient := config.InitMongoDB()
 	emailConfig := config.InitEmailConfig()
-	config.InitRedis(os.Getenv("REDIS_URL"))
 	dbConn := config.PostgresConn(os.Getenv("DATABASE_URL"))
 	dataValidator := validator.New()
-
 	ctx := context.Background()
+
 	defer dbConn.Close(ctx)
 
 	router := gin.Default()
@@ -73,15 +66,12 @@ func main() {
 		v.RegisterValidation("validPetCondition", mhDTOs.IsValidPetCondition)
 	}
 
-	vetAPI := vetAPI.NewVeterinarianAPI(queries, router, dataValidator)
-	petAPI := petAPI.NewPetAPI(router, queries, dataValidator)
-	ownerAPI := ownerAPI.NewOwnerAPI(router, dataValidator, queries, petAPI.GetRepository())
-	medHistoryAPI.NewMedicalHistoryAPI(queries, router, dataValidator, ownerAPI.GetRepository(), vetAPI.GetRepository(), petAPI.GetRepository())
-	paymentAPI.SetupPaymentAPI(router, dataValidator, queries)
-	userAPI.NewUserAPI(queries, dataValidator, router)
-	appointmentAPI.SetupAppointmentAPI(router, queries, dataValidator, ownerAPI.GetRepository())
-	notificationApi.SetupNotificationModule(router, mongoClient, emailConfig, config.GetTwilioClient())
 	authApi.SetupAuthModule(router, dataValidator, config.RedisClient)
+	notification_api.SetupNotificationModule(router, mongoClient, emailConfig, config.GetTwilioClient())
+
+	if err := config.BootstrapAPIModules(router, queries, dataValidator); err != nil {
+		panic(fmt.Sprintf("Failed to bootstrap modules: %v", err))
+	}
 
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 	router.GET("/ping", Ping)
