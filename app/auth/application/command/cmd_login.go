@@ -8,8 +8,7 @@ import (
 	jwtService "github.com/alexisTrejo11/Clinic-Vet-API/app/auth/application/jwt"
 	session "github.com/alexisTrejo11/Clinic-Vet-API/app/auth/domain"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
-	user "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
-	userRepository "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain/repositories"
+	userDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
 )
 
 type LoginCommand struct {
@@ -23,13 +22,13 @@ type LoginCommand struct {
 }
 
 type loginHandler struct {
-	userRepo    userRepository.UserRepository
+	userRepo    userDomain.UserRepository
 	sessionRepo session.SessionRepository
 	jwtService  jwtService.JWTService
 }
 
 func NewLoginHandler(
-	userRepo userRepository.UserRepository,
+	userRepo userDomain.UserRepository,
 	sessionRepo session.SessionRepository,
 	jwtService jwtService.JWTService,
 ) *loginHandler {
@@ -79,7 +78,7 @@ func (h *loginHandler) Handle(cmd LoginCommand) AuthCommandResult {
 	}
 }
 
-func (h *loginHandler) Authenticate(cmd *LoginCommand) (*user.User, error) {
+func (h *loginHandler) Authenticate(cmd *LoginCommand) (*userDomain.User, error) {
 	user, err := h.userRepo.GetByEmail(cmd.CTX, cmd.Identifier)
 	if err == nil {
 		return user, nil

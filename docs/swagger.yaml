@@ -41,6 +41,151 @@ definitions:
         description: The type of the error.
         type: string
     type: object
+  appointDomain.AppointmentStatus:
+    enum:
+    - pending
+    - cancelled
+    - completed
+    - rescheduled
+    - confirmed
+    - not_presented
+    type: string
+    x-enum-varnames:
+    - StatusPending
+    - StatusCancelled
+    - StatusCompleted
+    - StatusRescheduled
+    - StatusConfirmed
+    - StatusNotPresented
+  appointDomain.ClinicService:
+    enum:
+    - general_consultation
+    - vaccination
+    - surgery
+    - dental_care
+    - emergency_care
+    - grooming
+    - nutrition_consult
+    - behavior_consult
+    - wellness_exam
+    - other
+    type: string
+    x-enum-varnames:
+    - ServiceGeneralConsultation
+    - ServiceVaccination
+    - ServiceSurgery
+    - ServiceDentalCare
+    - ServiceEmergencyCare
+    - ServiceGrooming
+    - ServiceNutritionConsult
+    - ServiceBehaviorConsult
+    - ServiceWellnessExam
+    - ServiceOther
+  appointmentCmd.CreateAppointmentCommand:
+    properties:
+      date_time:
+        type: string
+      is_emergency:
+        type: boolean
+      notes:
+        type: string
+      owner_id:
+        type: integer
+      pet_id:
+        type: integer
+      reason:
+        type: string
+      service:
+        $ref: '#/definitions/appointDomain.ClinicService'
+      status:
+        $ref: '#/definitions/appointDomain.AppointmentStatus'
+      vet_id:
+        type: integer
+    required:
+    - date_time
+    - owner_id
+    - pet_id
+    - reason
+    - service
+    type: object
+  appointmentCmd.RescheduleAppointmentCommand:
+    properties:
+      date_time:
+        type: string
+      id:
+        type: integer
+      reason:
+        type: string
+    required:
+    - date_time
+    - id
+    type: object
+  appointmentCmd.UpdateAppointmentCommand:
+    properties:
+      appoinment_id:
+        type: integer
+      is_emergency:
+        type: boolean
+      notes:
+        type: string
+      reason:
+        type: string
+      service:
+        $ref: '#/definitions/appointDomain.ClinicService'
+      status:
+        $ref: '#/definitions/appointDomain.AppointmentStatus'
+      vet_id:
+        type: integer
+    required:
+    - appoinment_id
+    type: object
+  appointmentController.CompleteAppointmentRequest:
+    properties:
+      notes:
+        type: string
+    type: object
+  appointmentController.PaginationMetadata:
+    properties:
+      current_page:
+        example: 1
+        type: integer
+      page_size:
+        example: 10
+        type: integer
+      total_pages:
+        example: 5
+        type: integer
+      total_records:
+        example: 42
+        type: integer
+    type: object
+  appointmentQuery.AppointmentResponse:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      is_emergency:
+        type: boolean
+      notes:
+        type: string
+      owner_id:
+        type: integer
+      pet_id:
+        type: integer
+      reason:
+        type: string
+      scheduled_date:
+        type: string
+      service:
+        $ref: '#/definitions/appointDomain.ClinicService'
+      status:
+        $ref: '#/definitions/appointDomain.AppointmentStatus'
+      updated_at:
+        type: string
+      vet_id:
+        type: integer
+    type: object
   petController.PetInsertRequest:
     description: Represents the request body for creating a new pet.
     properties:
@@ -171,6 +316,58 @@ definitions:
         type: number
     type: object
   shared.Money:
+    type: object
+  userDtos.CreateUserRequest:
+    description: Represents the request body for creating a new userDomain.
+    properties:
+      address:
+        description: The user's address. (required)
+        type: string
+      date_of_birth:
+        description: The user's date of birth. (required)
+        type: string
+      email:
+        description: The user's email address. (required, must be a valid email format)
+        type: string
+      gender:
+        description: The user's gender. (required, must be "male", "female", or "other")
+        enum:
+        - male
+        type: string
+      location:
+        description: The user's location. (required)
+        type: string
+      owner_id:
+        description: The unique ID of the owner. (required)
+        type: integer
+      password:
+        description: The user's password. (required, minimum 8 characters)
+        minLength: 8
+        type: string
+      phone_number:
+        description: The user's phone number. (required)
+        type: string
+      role:
+        description: The role of the user (e.g., "customer", "veterinarian", "admin").
+          (required)
+        enum:
+        - customer
+        - veterinarian
+        - admin
+        type: string
+      veterinarian_id:
+        description: The unique ID of the veterinarian. (optional)
+        type: integer
+    required:
+    - address
+    - date_of_birth
+    - email
+    - gender
+    - location
+    - owner_id
+    - password
+    - phone_number
+    - role
     type: object
   vetDomain.VetSpecialty:
     enum:
@@ -400,194 +597,1073 @@ info:
   title: API Clínica Veterinaria
   version: "1.0"
 paths:
-  /api/v2/example-path:
+  /appointments:
     get:
-      description: Sends a 200 OK response with the provided data.
+      consumes:
+      - application/json
+      description: Retrieves a paginated list of all appointments
       parameters:
-      - description: Data to be included in the response
+      - default: 1
+        description: Page number
+        in: query
+        name: page_number
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of appointments
+          schema:
+            allOf:
+            - $ref: '#/definitions/apiResponse.APIResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/appointmentQuery.AppointmentResponse'
+                  type: array
+                metadata:
+                  $ref: '#/definitions/appointmentController.PaginationMetadata'
+              type: object
+        "400":
+          description: Invalid pagination parameters
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+      summary: Get all appointments
+      tags:
+      - appointments-query
+    post:
+      consumes:
+      - application/json
+      description: Creates a new appointment for a pet with a veterinarian
+      parameters:
+      - description: Appointment details
         in: body
-        name: data
+        name: appointment
         required: true
-        schema: {}
+        schema:
+          $ref: '#/definitions/appointmentCmd.CreateAppointmentCommand'
+      produces:
+      - application/json
+      responses:
+        "400":
+          description: Invalid input data
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+        "422":
+          description: Business rule validation failed
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+      summary: Create a new veterinary appointment
+      tags:
+      - appointments
+  /appointments/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Removes an appointment from the system
+      parameters:
+      - description: Appointment ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "400":
+          description: Invalid appointment ID
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+        "404":
+          description: Appointment not found
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+        "422":
+          description: Cannot delete appointment
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+      summary: Delete an appointment
+      tags:
+      - appointments
+    get:
+      consumes:
+      - application/json
+      description: Retrieves detailed information about a specific appointment
+      parameters:
+      - description: Appointment ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Appointment details
+          schema:
+            $ref: '#/definitions/appointmentQuery.AppointmentResponse'
+        "400":
+          description: Invalid appointment ID
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+        "404":
+          description: Appointment not found
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+      summary: Get appointment by ID
+      tags:
+      - appointments-query
+    put:
+      consumes:
+      - application/json
+      description: Updates the details of an existing veterinary appointment
+      parameters:
+      - description: Appointment ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated appointment details
+        in: body
+        name: appointment
+        required: true
+        schema:
+          $ref: '#/definitions/appointmentCmd.UpdateAppointmentCommand'
+      produces:
+      - application/json
+      responses:
+        "400":
+          description: Invalid input data
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+        "404":
+          description: Appointment not found
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+        "422":
+          description: Business rule validation failed
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+      summary: Update an existing appointment
+      tags:
+      - appointments
+  /appointments/{id}/complete:
+    put:
+      consumes:
+      - application/json
+      description: Marks an appointment as completed and adds optional notes
+      parameters:
+      - description: Appointment ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Completion notes
+        in: body
+        name: notes
+        required: true
+        schema:
+          $ref: '#/definitions/appointmentController.CompleteAppointmentRequest'
+      produces:
+      - application/json
+      responses:
+        "400":
+          description: Invalid input
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+        "401":
+          description: Unauthorized - Veterinarian not authenticated
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+        "403":
+          description: Forbidden - Not assigned to this appointment
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+        "404":
+          description: Appointment not found
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+        "422":
+          description: Cannot complete appointment
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Complete an appointment
+      tags:
+      - appointments
+  /appointments/{id}/confirm:
+    put:
+      consumes:
+      - application/json
+      description: Confirms an appointment by a veterinarian
+      parameters:
+      - description: Appointment ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "400":
+          description: Invalid appointment ID
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+        "401":
+          description: Unauthorized - Veterinarian not authenticated
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+        "403":
+          description: Forbidden - Not assigned to this appointment
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+        "404":
+          description: Appointment not found
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+        "422":
+          description: Cannot confirm appointment
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Confirm an appointment
+      tags:
+      - appointments
+  /appointments/{id}/no-show:
+    put:
+      consumes:
+      - application/json
+      description: Marks an appointment as no-show when the client doesn't attend
+      parameters:
+      - description: Appointment ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "400":
+          description: Invalid appointment ID
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+        "404":
+          description: Appointment not found
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+        "422":
+          description: Cannot mark as no-show
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+      summary: Mark appointment as no-show
+      tags:
+      - appointments
+  /appointments/{id}/reschedule:
+    put:
+      consumes:
+      - application/json
+      description: Changes the date and time of an existing appointment
+      parameters:
+      - description: Appointment ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: New appointment time details
+        in: body
+        name: reschedule
+        required: true
+        schema:
+          $ref: '#/definitions/appointmentCmd.RescheduleAppointmentCommand'
+      produces:
+      - application/json
+      responses:
+        "400":
+          description: Invalid input data
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+        "404":
+          description: Appointment not found
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+        "422":
+          description: Invalid time slot or scheduling conflict
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+      summary: Reschedule an appointment
+      tags:
+      - appointments
+  /appointments/date-range:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves appointments within a specified date range
+      parameters:
+      - description: Start date (YYYY-MM-DD)
+        format: date
+        in: query
+        name: start_date
+        required: true
+        type: string
+      - description: End date (YYYY-MM-DD)
+        format: date
+        in: query
+        name: end_date
+        required: true
+        type: string
+      - default: 1
+        description: Page number
+        in: query
+        name: page_number
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of appointments
+          schema:
+            allOf:
+            - $ref: '#/definitions/apiResponse.APIResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/appointmentQuery.AppointmentResponse'
+                  type: array
+                metadata:
+                  $ref: '#/definitions/appointmentController.PaginationMetadata'
+              type: object
+        "400":
+          description: Invalid date range or pagination parameters
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+      summary: Get appointments by date range
+      tags:
+      - appointments-query
+  /appointments/owner/{ownerId}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves all appointments for a specific pet owner
+      parameters:
+      - description: Owner ID
+        in: path
+        name: ownerId
+        required: true
+        type: integer
+      - default: 1
+        description: Page number
+        in: query
+        name: page_number
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of appointments
+          schema:
+            allOf:
+            - $ref: '#/definitions/apiResponse.APIResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/appointmentQuery.AppointmentResponse'
+                  type: array
+                metadata:
+                  $ref: '#/definitions/appointmentController.PaginationMetadata'
+              type: object
+        "400":
+          description: Invalid owner ID or pagination parameters
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+        "404":
+          description: Owner not found
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+      summary: Get appointments by owner
+      tags:
+      - appointments-query
+  /appointments/pet/{petId}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves all appointments for a specific pet
+      parameters:
+      - description: Pet ID
+        in: path
+        name: petId
+        required: true
+        type: integer
+      - default: 1
+        description: Page number
+        in: query
+        name: page_number
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of appointments
+          schema:
+            allOf:
+            - $ref: '#/definitions/apiResponse.APIResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/appointmentQuery.AppointmentResponse'
+                  type: array
+                metadata:
+                  $ref: '#/definitions/appointmentController.PaginationMetadata'
+              type: object
+        "400":
+          description: Invalid pet ID or pagination parameters
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+        "404":
+          description: Pet not found
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+      summary: Get appointments by pet
+      tags:
+      - appointments-query
+  /appointments/stats:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves statistical information about appointments
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Appointment statistics
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+      summary: Get appointment statistics
+      tags:
+      - appointments-query
+  /appointments/vet/{vetId}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves all appointments assigned to a specific veterinarian
+      parameters:
+      - description: Veterinarian ID
+        in: path
+        name: vetId
+        required: true
+        type: integer
+      - default: 1
+        description: Page number
+        in: query
+        name: page_number
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of appointments
+          schema:
+            allOf:
+            - $ref: '#/definitions/apiResponse.APIResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/appointmentQuery.AppointmentResponse'
+                  type: array
+                metadata:
+                  $ref: '#/definitions/appointmentController.PaginationMetadata'
+              type: object
+        "400":
+          description: Invalid veterinarian ID or pagination parameters
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+        "404":
+          description: Veterinarian not found
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+      summary: Get appointments by veterinarian
+      tags:
+      - appointments-query
+  /owner/appointments:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves a list of all appointments for the authenticated owner
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - BearerAuth: []
+      summary: Get owner's appointments
+      tags:
+      - owner-appointments
+    post:
+      consumes:
+      - application/json
+      description: Owner creates a new appointment request for their pet
+      parameters:
+      - description: Appointment details
+        in: body
+        name: appointment
+        required: true
+        schema:
+          $ref: '#/definitions/appointmentCmd.CreateAppointmentCommand'
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - BearerAuth: []
+      summary: Request a new appointment
+      tags:
+      - owner-appointments
+  /owner/appointments/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves details of a specific appointment for the authenticated
+        owner
+      parameters:
+      - description: Appointment ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - BearerAuth: []
+      summary: Get specific appointment details
+      tags:
+      - owner-appointments
+  /owner/appointments/{id}/cancel:
+    put:
+      consumes:
+      - application/json
+      description: Owner cancels their existing appointment
+      parameters:
+      - description: Appointment ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - BearerAuth: []
+      summary: Cancel an appointment
+      tags:
+      - owner-appointments
+  /owner/appointments/{id}/reschedule:
+    put:
+      consumes:
+      - application/json
+      description: Owner reschedules their existing appointment
+      parameters:
+      - description: Appointment ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: New appointment time
+        in: body
+        name: reschedule
+        required: true
+        schema:
+          $ref: '#/definitions/appointmentCmd.RescheduleAppointmentCommand'
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - BearerAuth: []
+      summary: Reschedule an appointment
+      tags:
+      - owner-appointments
+  /owner/appointments/pet/{petId}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves all appointments for a specific pet owned by the authenticated
+        owner
+      parameters:
+      - description: Pet ID
+        in: path
+        name: petId
+        required: true
+        type: integer
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - BearerAuth: []
+      summary: Get appointments for a specific pet
+      tags:
+      - owner-appointments
+  /owner/appointments/upcoming:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves upcoming appointments for the authenticated owner within
+        a date range
+      parameters:
+      - description: Start date (YYYY-MM-DD)
+        format: date
+        in: query
+        name: start_date
+        type: string
+      - description: End date (YYYY-MM-DD)
+        format: date
+        in: query
+        name: end_date
+        type: string
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - BearerAuth: []
+      summary: Get upcoming appointments
+      tags:
+      - owner-appointments
+  /pets:
+    get:
+      description: Retrieves a list of all pet records.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of pets
+          schema:
+            items:
+              $ref: '#/definitions/petController.PetResponse'
+            type: array
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+      summary: List all pets
+      tags:
+      - Pet Management
+    post:
+      consumes:
+      - application/json
+      description: Creates a new pet record with the provided data.
+      parameters:
+      - description: Pet creation request
+        in: body
+        name: pet
+        required: true
+        schema:
+          $ref: '#/definitions/petController.PetInsertRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Pet created successfully
+          schema:
+            $ref: '#/definitions/petController.PetResponse'
+        "400":
+          description: Invalid request body or validation error
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+      summary: Create a new pet
+      tags:
+      - Pet Management
+  /pets/{id}:
+    delete:
+      description: Marks a pet record as inactive without permanently deleting it.
+      parameters:
+      - description: Pet ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Invalid URL parameter
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+        "404":
+          description: Pet not found
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+      summary: Soft delete a pet
+      tags:
+      - Pet Management
+    get:
+      description: Retrieves a single pet record by its unique ID.
+      parameters:
+      - description: Pet ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Pet found
+          schema:
+            $ref: '#/definitions/petController.PetResponse'
+        "400":
+          description: Invalid URL parameter
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+        "404":
+          description: Pet not found
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+      summary: Get a pet by ID
+      tags:
+      - Pet Management
+    put:
+      consumes:
+      - application/json
+      description: Updates a pet record by its ID with the provided data.
+      parameters:
+      - description: Pet ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Pet update request
+        in: body
+        name: pet
+        required: true
+        schema:
+          $ref: '#/definitions/petController.PetInsertRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Pet updated successfully
+          schema:
+            $ref: '#/definitions/petController.PetResponse'
+        "400":
+          description: Invalid URL parameter or request body
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+        "404":
+          description: Pet not found
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+      summary: Update an existing pet
+      tags:
+      - Pet Management
+  /ping:
+    get:
+      consumes:
+      - application/json
+      description: do ping
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/apiResponse.APIResponse'
-      summary: Send a success response
-  /api/v2/example-path-app-error:
-    get:
-      description: Sends a standardized error response based on the Go error type,
-        with an appropriate HTTP status code.
+            type: string
+      summary: ping example
+      tags:
+      - example
+  /v1/admin/users/{id}:
+    delete:
+      description: Soft deletes a user record by marking it as deleted.
       parameters:
-      - description: The error object
-        in: body
-        name: err
+      - description: User ID
+        in: path
+        name: id
         required: true
-        schema:
-          type: object
-      produces:
-      - application/json
+        type: integer
       responses:
-        "404":
-          description: Not Found
+        "200":
+          description: User soft deleted successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/apiResponse.APIResponse'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "400":
+          description: Invalid URL parameter
           schema:
             $ref: '#/definitions/apiResponse.APIResponse'
         "500":
-          description: Internal Server Error
+          description: Internal server error
           schema:
             $ref: '#/definitions/apiResponse.APIResponse'
-      summary: Send a standardized application error response
-  /api/v2/example-path-bad-request:
+      summary: Soft delete a user
+      tags:
+      - admin
+  /v1/admin/users/{id}/ban:
     post:
-      description: Sends a 400 Bad Request response, typically for invalid input.
+      description: Bans a user by setting their status to 'banned'.
       parameters:
-      - description: The error object
-        in: body
-        name: err
+      - description: User ID
+        in: path
+        name: id
         required: true
-        schema:
-          type: object
-      produces:
-      - application/json
+        type: integer
       responses:
+        "200":
+          description: User banned successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/apiResponse.APIResponse'
+            - properties:
+                data:
+                  type: string
+              type: object
         "400":
-          description: Bad Request
+          description: Invalid URL parameter
           schema:
             $ref: '#/definitions/apiResponse.APIResponse'
-      summary: Send a bad request error response
-  /api/v2/example-path-body-error:
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+      summary: Ban a user
+      tags:
+      - admin
+  /v1/admin/users/{id}/unban:
     post:
-      description: Sends a 400 Bad Request for malformed or invalid request body data.
+      description: Unbans a user by setting their status to 'active'.
       parameters:
-      - description: The error object
-        in: body
-        name: err
+      - description: User ID
+        in: path
+        name: id
         required: true
-        schema:
-          type: object
-      produces:
-      - application/json
+        type: integer
       responses:
+        "200":
+          description: User unbanned successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/apiResponse.APIResponse'
+            - properties:
+                data:
+                  type: string
+              type: object
         "400":
-          description: Bad Request
+          description: Invalid URL parameter
           schema:
             $ref: '#/definitions/apiResponse.APIResponse'
-      summary: Send a request body data error response
-  /api/v2/example-path-conflict:
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+      summary: Unban a user
+      tags:
+      - admin
+  /v1/users:
     post:
-      description: Sends a 409 Conflict response with an error message, e.g., for
-        duplicate resources.
+      consumes:
+      - application/json
+      description: Creates a new user record with the provided data.
       parameters:
-      - description: The error object
+      - description: User creation request
         in: body
-        name: err
+        name: user
         required: true
         schema:
-          type: object
-      produces:
-      - application/json
-      responses:
-        "409":
-          description: Conflict
-          schema:
-            $ref: '#/definitions/apiResponse.APIResponse'
-      summary: Send a conflict error response
-  /api/v2/example-path-create:
-    post:
-      description: Sends a 201 Created response with the provided data.
-      parameters:
-      - description: Data of the newly created resource
-        in: body
-        name: data
-        required: true
-        schema: {}
+          $ref: '#/definitions/userDtos.CreateUserRequest'
       produces:
       - application/json
       responses:
         "201":
-          description: Created
+          description: User created successfully
           schema:
-            $ref: '#/definitions/apiResponse.APIResponse'
-      summary: Send a created response
-  /api/v2/example-path-date-error:
-    get:
-      description: Sends a 400 Bad Request when a date field has an invalid format.
-      parameters:
-      - description: The field with the invalid date
-        in: body
-        name: field
-        required: true
-        schema:
-          type: string
-      - description: The expected date format
-        in: body
-        name: format
-        required: true
-        schema:
-          type: string
-      produces:
-      - application/json
-      responses:
+            allOf:
+            - $ref: '#/definitions/apiResponse.APIResponse'
+            - properties:
+                id:
+                  type: integer
+                message:
+                  type: string
+              type: object
         "400":
-          description: Bad Request
+          description: Invalid request body or validation error
           schema:
             $ref: '#/definitions/apiResponse.APIResponse'
-      summary: Send an invalid date format error response
-  /api/v2/example-path-delete:
-    delete:
-      description: Sends a 204 No Content response, typically for successful deletions.
-      responses:
-        "204":
-          description: No Content
-      summary: Send a no content response
-  /api/v2/example-path-forbidden:
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+      summary: Create a new user
+      tags:
+      - users
+  /v1/users/{id}:
     get:
-      description: Sends a 403 Forbidden response, for authorization failures.
+      description: Retrieves a single user record by their unique ID.
       parameters:
-      - description: The error object
-        in: body
-        name: err
+      - description: User ID
+        in: path
+        name: id
         required: true
-        schema:
-          type: object
+        type: integer
       produces:
       - application/json
       responses:
-        "403":
-          description: Forbidden
+        "200":
+          description: User found
+          schema:
+            allOf:
+            - $ref: '#/definitions/apiResponse.APIResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "400":
+          description: Invalid URL parameter
           schema:
             $ref: '#/definitions/apiResponse.APIResponse'
-      summary: Send a forbidden error response
-  /api/v2/example-path-not-found:
+      summary: Get a user by ID
+      tags:
+      - users
+  /vet/appointments:
     get:
-      description: Sends a 404 Not Found response with an error message.
-      parameters:
-      - description: The error object
-        in: body
-        name: err
-        required: true
-        schema:
-          type: object
-      produces:
+      consumes:
       - application/json
-      responses:
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/apiResponse.APIResponse'
-      summary: Send a not found error response
-  /api/v2/example-path-pagination:
-    get:
-      description: Parses "page" and "pageSize" from the URL query and returns them.
+      description: Retrieves all appointments assigned to the authenticated veterinarian
       parameters:
-      - description: 'Page number (default: 1)'
+      - default: 1
+        description: Page number
         in: query
         name: page
         type: integer
-      - description: 'Number of items per page (default: 10)'
+      - default: 10
+        description: Items per page
         in: query
         name: pageSize
         type: integer
@@ -595,155 +1671,289 @@ paths:
       - application/json
       responses:
         "200":
-          description: Pagination parameters
+          description: List of appointments
           schema:
-            additionalProperties:
-              type: integer
-            type: object
+            $ref: '#/definitions/apiResponse.APIResponse'
         "400":
-          description: Bad Request
+          description: Invalid pagination parameters
           schema:
             $ref: '#/definitions/apiResponse.APIResponse'
-      summary: Get pagination parameters
-  /api/v2/example-path-param-error/{id}:
-    get:
-      description: Sends a 400 Bad Request for invalid URL parameters.
-      parameters:
-      - description: The error object
-        in: body
-        name: err
-        required: true
-        schema:
-          type: object
-      - description: The field with the error
-        in: body
-        name: field
-        required: true
-        schema:
-          type: string
-      - description: The invalid value
-        in: body
-        name: value
-        required: true
-        schema:
-          type: string
-      produces:
-      - application/json
-      responses:
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/apiResponse.APIResponse'
-      summary: Send a URL parameter error response
-  /api/v2/example-path-parse-error:
-    get:
-      description: Sends a 400 Bad Request when data parsing fails for a specific
-        field.
-      parameters:
-      - description: The field with the parsing error
-        in: body
-        name: field
-        required: true
-        schema:
-          type: string
-      - description: The invalid value
-        in: body
-        name: value
-        required: true
-        schema:
-          type: string
-      - description: The error message
-        in: body
-        name: message
-        required: true
-        schema:
-          type: string
-      produces:
-      - application/json
-      responses:
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/apiResponse.APIResponse'
-      summary: Send an invalid data parsing error response
-  /api/v2/example-path-query-error:
-    get:
-      description: Sends a 400 Bad Request for invalid URL query parameters.
-      parameters:
-      - description: The error object
-        in: body
-        name: err
-        required: true
-        schema:
-          type: object
-      produces:
-      - application/json
-      responses:
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/apiResponse.APIResponse'
-      summary: Send a URL query error response
-  /api/v2/example-path-server-error:
-    get:
-      description: Sends a 500 Internal Server Error response for unexpected server
-        issues.
-      parameters:
-      - description: The error object
-        in: body
-        name: err
-        required: true
-        schema:
-          type: object
-      produces:
-      - application/json
-      responses:
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/apiResponse.APIResponse'
-      summary: Send a server error response
-  /api/v2/example-path-unauthorized:
-    get:
-      description: Sends a 401 Unauthorized response, for authentication failures.
-      parameters:
-      - description: The error object
-        in: body
-        name: err
-        required: true
-        schema:
-          type: object
-      produces:
-      - application/json
-      responses:
         "401":
-          description: Unauthorized
+          description: Unauthorized - Veterinarian not authenticated
           schema:
             $ref: '#/definitions/apiResponse.APIResponse'
-      summary: Send an unauthorized error response
-  /api/v2/example-path-with-meta:
-    get:
-      description: Sends a 200 OK response with data and metadata.
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Get veterinarian's appointments
+      tags:
+      - vet-appointments
+  /vet/appointments/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Cancels an appointment by the authenticated veterinarian
       parameters:
-      - description: Data to be included in the response
-        in: body
-        name: data
+      - description: Appointment ID
+        in: path
+        name: id
         required: true
-        schema: {}
-      - description: Metadata to be included in the response
-        in: body
-        name: meta
+        type: integer
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - BearerAuth: []
+      summary: Cancel an appointment
+      tags:
+      - vet-appointments
+  /vet/appointments/{id}/complete:
+    put:
+      consumes:
+      - application/json
+      description: Marks an appointment as completed by the authenticated veterinarian
+      parameters:
+      - description: Appointment ID
+        in: path
+        name: id
         required: true
-        schema: {}
+        type: integer
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - BearerAuth: []
+      summary: Complete an appointment
+      tags:
+      - vet-appointments
+  /vet/appointments/{id}/confirm:
+    put:
+      consumes:
+      - application/json
+      description: Confirms a pending appointment by the authenticated veterinarian
+      parameters:
+      - description: Appointment ID
+        in: path
+        name: id
+        required: true
+        type: integer
       produces:
       - application/json
       responses:
         "200":
-          description: OK
+          description: Appointment confirmed successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/apiResponse.APIResponse'
+            - properties:
+                message:
+                  type: string
+              type: object
+        "400":
+          description: Invalid appointment ID
           schema:
             $ref: '#/definitions/apiResponse.APIResponse'
-      summary: Send a success response with metadata
-  /api/v2/veterinarians:
+        "401":
+          description: Unauthorized - Veterinarian not authenticated
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+        "403":
+          description: Forbidden - Not assigned to this appointment
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+        "404":
+          description: Appointment not found
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+        "422":
+          description: Cannot confirm appointment
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Confirm an appointment
+      tags:
+      - vet-appointments
+  /vet/appointments/{id}/no-show:
+    put:
+      consumes:
+      - application/json
+      description: Marks an appointment as no-show when the client doesn't attend
+      parameters:
+      - description: Appointment ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Appointment marked as no-show
+          schema:
+            allOf:
+            - $ref: '#/definitions/apiResponse.APIResponse'
+            - properties:
+                message:
+                  type: string
+              type: object
+        "400":
+          description: Invalid appointment ID
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+        "401":
+          description: Unauthorized - Veterinarian not authenticated
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+        "403":
+          description: Forbidden - Not assigned to this appointment
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+        "404":
+          description: Appointment not found
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+        "422":
+          description: Cannot mark as no-show
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Mark appointment as no-show
+      tags:
+      - vet-appointments
+  /vet/appointments/{id}/reschedule:
+    put:
+      consumes:
+      - application/json
+      description: Allows a veterinarian to reschedule their assigned appointment
+      parameters:
+      - description: Appointment ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: New appointment time details
+        in: body
+        name: reschedule
+        required: true
+        schema:
+          $ref: '#/definitions/appointmentCmd.RescheduleAppointmentCommand'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Appointment rescheduled successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/apiResponse.APIResponse'
+            - properties:
+                message:
+                  type: string
+              type: object
+        "400":
+          description: Invalid input data
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+        "401":
+          description: Unauthorized - Veterinarian not authenticated
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+        "403":
+          description: Forbidden - Not assigned to this appointment
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+        "404":
+          description: Appointment not found
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+        "422":
+          description: Invalid time slot or scheduling conflict
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Reschedule an appointment
+      tags:
+      - vet-appointments
+  /vet/appointments/stats:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves statistical information about appointments for the authenticated
+        veterinarian
+      parameters:
+      - description: Start date (YYYY-MM-DD)
+        format: date
+        in: query
+        name: start_date
+        type: string
+      - description: End date (YYYY-MM-DD)
+        format: date
+        in: query
+        name: end_date
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Appointment statistics
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+        "400":
+          description: Invalid date parameters
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+        "401":
+          description: Unauthorized - Veterinarian not authenticated
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Get appointment statistics
+      tags:
+      - vet-appointments
+  /vet/appointments/today:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves all appointments scheduled for today for the authenticated
+        veterinarian
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Today's appointments
+          schema:
+            allOf:
+            - $ref: '#/definitions/apiResponse.APIResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/appointmentQuery.AppointmentResponse'
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized - Veterinarian not authenticated
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/apiResponse.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Get today's appointments
+      tags:
+      - vet-appointments
+  /veterinarians:
     get:
       description: Retrieves a list of all veterinarians with optional filtering and
         pagination.
@@ -805,7 +2015,7 @@ paths:
       summary: Create a new veterinarian
       tags:
       - Veterinarians
-  /api/v2/veterinarians/{id}:
+  /veterinarians/{id}:
     delete:
       description: Deletes a veterinarian from the system by ID.
       parameters:
@@ -902,162 +2112,4 @@ paths:
       summary: Update an existing veterinarian
       tags:
       - Veterinarians
-  /pets:
-    get:
-      description: Retrieves a list of all pet records.
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: List of pets
-          schema:
-            items:
-              $ref: '#/definitions/petController.PetResponse'
-            type: array
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/apiResponse.APIResponse'
-      summary: List all pets
-      tags:
-      - pets
-    post:
-      consumes:
-      - application/json
-      description: Creates a new pet record with the provided data.
-      parameters:
-      - description: Pet creation request
-        in: body
-        name: pet
-        required: true
-        schema:
-          $ref: '#/definitions/petController.PetInsertRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Pet created successfully
-          schema:
-            $ref: '#/definitions/petController.PetResponse'
-        "400":
-          description: Invalid request body or validation error
-          schema:
-            $ref: '#/definitions/apiResponse.APIResponse'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/apiResponse.APIResponse'
-      summary: Create a new pet
-      tags:
-      - pets
-  /pets/{id}:
-    delete:
-      description: Marks a pet record as inactive without permanently deleting it.
-      parameters:
-      - description: Pet ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      responses:
-        "204":
-          description: No Content
-        "400":
-          description: Invalid URL parameter
-          schema:
-            $ref: '#/definitions/apiResponse.APIResponse'
-        "404":
-          description: Pet not found
-          schema:
-            $ref: '#/definitions/apiResponse.APIResponse'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/apiResponse.APIResponse'
-      summary: Soft delete a pet
-      tags:
-      - pets
-    get:
-      description: Retrieves a single pet record by its unique ID.
-      parameters:
-      - description: Pet ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Pet found
-          schema:
-            $ref: '#/definitions/petController.PetResponse'
-        "400":
-          description: Invalid URL parameter
-          schema:
-            $ref: '#/definitions/apiResponse.APIResponse'
-        "404":
-          description: Pet not found
-          schema:
-            $ref: '#/definitions/apiResponse.APIResponse'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/apiResponse.APIResponse'
-      summary: Get a pet by ID
-      tags:
-      - pets
-    put:
-      consumes:
-      - application/json
-      description: Updates a pet record by its ID with the provided data.
-      parameters:
-      - description: Pet ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Pet update request
-        in: body
-        name: pet
-        required: true
-        schema:
-          $ref: '#/definitions/petController.PetInsertRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Pet updated successfully
-          schema:
-            $ref: '#/definitions/petController.PetResponse'
-        "400":
-          description: Invalid URL parameter or request body
-          schema:
-            $ref: '#/definitions/apiResponse.APIResponse'
-        "404":
-          description: Pet not found
-          schema:
-            $ref: '#/definitions/apiResponse.APIResponse'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/apiResponse.APIResponse'
-      summary: Update an existing pet
-      tags:
-      - pets
-  /ping:
-    get:
-      consumes:
-      - application/json
-      description: do ping
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            type: string
-      summary: ping example
-      tags:
-      - example
 swagger: "2.0"

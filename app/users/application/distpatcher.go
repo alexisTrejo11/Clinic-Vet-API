@@ -6,7 +6,7 @@ import (
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
 	userCommand "github.com/alexisTrejo11/Clinic-Vet-API/app/users/application/command"
-	userRepository "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain/repositories"
+	userDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
 )
 
 type CommandHandler interface {
@@ -39,7 +39,7 @@ func (d *CommandDispatcher) Dispatch(command any) shared.CommandResult {
 	return handler.Handle(command)
 }
 
-func (d *CommandDispatcher) RegisterCurrentCommands(userRepo userRepository.UserRepository) {
+func (d *CommandDispatcher) RegisterCurrentCommands(userRepo userDomain.UserRepository) {
 	d.Register(userCommand.ChangePasswordCommand{}, userCommand.NewChangePasswordHandler(userRepo))
 	d.Register(userCommand.ChangeEmailCommand{}, userCommand.NewChangeEmailHandler(userRepo))
 	d.Register(userCommand.ChangePasswordCommand{}, userCommand.NewChangePasswordHandler(userRepo))

@@ -29,6 +29,7 @@ func (c *AuthController) Signup(ctx *gin.Context) {
 
 	if err := ctx.ShouldBindBodyWithJSON(&singupRequest); err != nil {
 		apiResponse.RequestBodyDataError(ctx, err)
+		return
 	}
 
 	if err := c.validator.Struct(&singupRequest); err != nil {

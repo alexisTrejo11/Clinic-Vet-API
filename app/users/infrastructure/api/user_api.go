@@ -1,10 +1,11 @@
-package userAPI
+package userDomainAPI
 
 import (
 	"fmt"
 
 	userApplication "github.com/alexisTrejo11/Clinic-Vet-API/app/users/application"
-	userRepository "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain/repositories"
+	userDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
+
 	userController "github.com/alexisTrejo11/Clinic-Vet-API/app/users/infrastructure/api/controller"
 	userRoutes "github.com/alexisTrejo11/Clinic-Vet-API/app/users/infrastructure/api/routes"
 	sqlcUserRepo "github.com/alexisTrejo11/Clinic-Vet-API/app/users/infrastructure/persistence/repository"
@@ -14,7 +15,7 @@ import (
 )
 
 type UserAPIComponents struct {
-	repository        userRepository.UserRepository
+	repository        userDomain.UserRepository
 	adminController   userController.UserAdminController
 	profileController userController.ProfileController
 	dispatcher        userApplication.CommandDispatcher
@@ -58,10 +59,12 @@ func (u *UserAPIModule) Bootstrap() error {
 	}
 
 	userRepo := sqlcUserRepo.NewSQLCUserRepository(u.config.Queries)
+	profileRepo := sqlcUserRepo.NewSQLCProfileRepository(u.config.Queries)
+
 	userDispatcher := userApplication.NewCommandDispatcher()
 	userDispatcher.RegisterCurrentCommands(userRepo)
 	userControllers := userController.NewUserAdminController(u.config.DataValidator, userDispatcher)
-	profileUseCases := userApplication.NewProfileUseCases(userRepo)
+	profileUseCases := userApplication.NewProfileUseCases(profileRepo)
 	profileController := userController.NewProfileController(profileUseCases)
 
 	userRoutes.UserRoutes(u.config.Router, userControllers)

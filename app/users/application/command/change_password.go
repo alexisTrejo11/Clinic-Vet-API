@@ -1,12 +1,12 @@
-package userCommand
+package userDomainCommand
 
 import (
 	"context"
 	"errors"
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
-	user "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
-	userRepository "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain/repositories"
+
+	userDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
 )
 
 type ChangePasswordCommand struct {
@@ -17,17 +17,17 @@ type ChangePasswordCommand struct {
 }
 
 type ChangePasswordHandler struct {
-	userRepository userRepository.UserRepository
+	userRepository userDomain.UserRepository
 }
 
-func NewChangePasswordHandler(userRepo userRepository.UserRepository) *ChangePasswordHandler {
+func NewChangePasswordHandler(userRepo userDomain.UserRepository) *ChangePasswordHandler {
 	return &ChangePasswordHandler{userRepository: userRepo}
 }
 
 func (c *ChangePasswordHandler) Handle(cmd any) shared.CommandResult {
 	command := cmd.(ChangePasswordCommand)
 
-	user, err := c.userRepository.GetByIdWithProfile(command.CTX, command.UserId)
+	user, err := c.userRepository.GetById(command.CTX, command.UserId)
 	if err != nil {
 		return shared.FailureResult("failed to find user", err)
 	}
@@ -43,7 +43,7 @@ func (c *ChangePasswordHandler) Handle(cmd any) shared.CommandResult {
 	return shared.SuccessResult(user.Id().String(), "password changed successfully")
 }
 
-func (c *ChangePasswordHandler) changePassword(user *user.User, newPassword, oldPassword string) error {
+func (c *ChangePasswordHandler) changePassword(user *userDomain.User, newPassword, oldPassword string) error {
 	err := shared.CheckPassword(user.Password(), oldPassword)
 	if err != nil {
 		return errors.New("invalid old password")

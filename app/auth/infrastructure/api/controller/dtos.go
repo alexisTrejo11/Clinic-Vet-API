@@ -8,7 +8,7 @@ import (
 )
 
 type RequestSignup struct {
-	Email       *string   `json:"email"`
+	Email       string    `json:"email" binding:"required,email"`
 	Password    string    `json:"password" binding:"required,min=8"`
 	Phone       *string   `json:"phone"`
 	FirstName   string    `json:"first_name" binding:"required,min=2,max=50"`
@@ -22,7 +22,7 @@ func (r *RequestSignup) ToCommand() *authCmd.SignupCommand {
 	gender := valueObjects.NewGender(r.Gender)
 
 	return &authCmd.SignupCommand{
-		Email:       r.Email,
+		Email:       &r.Email,
 		Password:    r.Password,
 		PhoneNumber: r.Phone,
 		FirstName:   r.FirstName,

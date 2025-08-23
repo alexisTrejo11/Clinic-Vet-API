@@ -1,3 +1,4 @@
+// Package appointmentController handles appointment-related HTTP endpoints
 package appointmentController
 
 import (
@@ -10,6 +11,13 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// OwnerAppointmentController handles owner-specific appointment operations
+// @title Veterinary Clinic API - Owner Appointment Management
+// @version 1.0
+// @description This controller manages appointment operations specific to pet owners including scheduling, rescheduling, and viewing appointments
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
 type OwnerAppointmentController struct {
 	commandBus appointmentCmd.CommandBus
 	queryBus   appointmentQuery.QueryBus
@@ -22,7 +30,15 @@ func NewOwnerAppointmentController(commandBus appointmentCmd.CommandBus, queryBu
 	}
 }
 
-// RequestAppointment - Owner requests a new appointment
+// RequestAppointment godoc
+// @Summary Request a new appointment
+// @Description Owner creates a new appointment request for their pet
+// @Tags owner-appointments
+// @Accept json
+// @Produce json
+// @Param appointment body appointmentCmd.CreateAppointmentCommand true "Appointment details"
+// @Security BearerAuth
+// @Router /owner/appointments [post]
 func (controller *OwnerAppointmentController) RequestAppointment(ctx *gin.Context) {
 	var command appointmentCmd.CreateAppointmentCommand
 	if err := ctx.ShouldBindJSON(&command); err != nil {
@@ -54,7 +70,16 @@ func (controller *OwnerAppointmentController) RequestAppointment(ctx *gin.Contex
 	ctx.JSON(http.StatusCreated, gin.H{"message": result.Message, "appointment_id": result.Id})
 }
 
-// GetMyAppointments - Owner retrieves their appointments
+// GetMyAppointments godoc
+// @Summary Get owner's appointments
+// @Description Retrieves a list of all appointments for the authenticated owner
+// @Tags owner-appointments
+// @Accept json
+// @Produce json
+// @Param page query int false "Page number" default(1)
+// @Param limit query int false "Items per page" default(10)
+// @Security BearerAuth
+// @Router /owner/appointments [get]
 func (controller *OwnerAppointmentController) GetMyAppointments(ctx *gin.Context) {
 	// Get owner ID from context (should be set by auth middleware)
 	ownerIdStr, exists := ctx.Get("owner_id")
@@ -95,7 +120,15 @@ func (controller *OwnerAppointmentController) GetMyAppointments(ctx *gin.Context
 	ctx.JSON(http.StatusOK, response)
 }
 
-// GetAppointmentById - Owner retrieves a specific appointment by ID (only their own)
+// GetAppointmentById godoc
+// @Summary Get specific appointment details
+// @Description Retrieves details of a specific appointment for the authenticated owner
+// @Tags owner-appointments
+// @Accept json
+// @Produce json
+// @Param id path int true "Appointment ID"
+// @Security BearerAuth
+// @Router /owner/appointments/{id} [get]
 func (controller *OwnerAppointmentController) GetAppointmentById(ctx *gin.Context) {
 	idParam := ctx.Param("id")
 	id, err := strconv.Atoi(idParam)
@@ -123,7 +156,16 @@ func (controller *OwnerAppointmentController) GetAppointmentById(ctx *gin.Contex
 	ctx.JSON(http.StatusOK, response)
 }
 
-// RescheduleAppointment - Owner reschedules their appointment
+// RescheduleAppointment godoc
+// @Summary Reschedule an appointment
+// @Description Owner reschedules their existing appointment
+// @Tags owner-appointments
+// @Accept json
+// @Produce json
+// @Param id path int true "Appointment ID"
+// @Param reschedule body appointmentCmd.RescheduleAppointmentCommand true "New appointment time"
+// @Security BearerAuth
+// @Router /owner/appointments/{id}/reschedule [put]
 func (controller *OwnerAppointmentController) RescheduleAppointment(ctx *gin.Context) {
 	idParam := ctx.Param("id")
 	id, err := strconv.Atoi(idParam)
@@ -150,6 +192,15 @@ func (controller *OwnerAppointmentController) RescheduleAppointment(ctx *gin.Con
 }
 
 // CancelAppointment - Owner cancels their appointment
+// CancelAppointment godoc
+// @Summary Cancel an appointment
+// @Description Owner cancels their existing appointment
+// @Tags owner-appointments
+// @Accept json
+// @Produce json
+// @Param id path int true "Appointment ID"
+// @Security BearerAuth
+// @Router /owner/appointments/{id}/cancel [put]
 func (controller *OwnerAppointmentController) CancelAppointment(ctx *gin.Context) {
 	idParam := ctx.Param("id")
 	id, err := strconv.Atoi(idParam)
@@ -171,7 +222,17 @@ func (controller *OwnerAppointmentController) CancelAppointment(ctx *gin.Context
 	ctx.JSON(http.StatusOK, gin.H{"message": result.Message})
 }
 
-// GetAppointmentsByPet - Owner retrieves appointments for a specific pet
+// GetAppointmentsByPet godoc
+// @Summary Get appointments for a specific pet
+// @Description Retrieves all appointments for a specific pet owned by the authenticated owner
+// @Tags owner-appointments
+// @Accept json
+// @Produce json
+// @Param petId path int true "Pet ID"
+// @Param page query int false "Page number" default(1)
+// @Param limit query int false "Items per page" default(10)
+// @Security BearerAuth
+// @Router /owner/appointments/pet/{petId} [get]
 func (controller *OwnerAppointmentController) GetAppointmentsByPet(ctx *gin.Context) {
 	petIdParam := ctx.Param("petId")
 	petId, err := strconv.Atoi(petIdParam)
@@ -205,7 +266,18 @@ func (controller *OwnerAppointmentController) GetAppointmentsByPet(ctx *gin.Cont
 	ctx.JSON(http.StatusOK, response)
 }
 
-// GetUpcomingAppointments - Owner retrieves upcoming appointments within date range
+// GetUpcomingAppointments godoc
+// @Summary Get upcoming appointments
+// @Description Retrieves upcoming appointments for the authenticated owner within a date range
+// @Tags owner-appointments
+// @Accept json
+// @Produce json
+// @Param start_date query string false "Start date (YYYY-MM-DD)" format(date)
+// @Param end_date query string false "End date (YYYY-MM-DD)" format(date)
+// @Param page query int false "Page number" default(1)
+// @Param limit query int false "Items per page" default(10)
+// @Security BearerAuth
+// @Router /owner/appointments/upcoming [get]
 func (controller *OwnerAppointmentController) GetUpcomingAppointments(ctx *gin.Context) {
 	// Get owner ID from context (should be set by auth middleware)
 
@@ -248,6 +320,5 @@ func (controller *OwnerAppointmentController) GetUpcomingAppointments(ctx *gin.C
 		return
 	}
 
-	// TODO: Filter results by owner_id if needed at application level
 	ctx.JSON(http.StatusOK, response)
 }

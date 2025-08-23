@@ -3,21 +3,13 @@ package authCmd
 import (
 	"context"
 	"errors"
-	"strconv"
 	"sync"
 	"time"
 
-	session "github.com/alexisTrejo11/Clinic-Vet-API/app/auth/domain"
-	notificationService "github.com/alexisTrejo11/Clinic-Vet-API/app/notifications/application"
-	notificationDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/notifications/domain"
-	ownerDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/domain"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/valueObjects"
-	userApplication "github.com/alexisTrejo11/Clinic-Vet-API/app/users/application"
-	userCommand "github.com/alexisTrejo11/Clinic-Vet-API/app/users/application/command"
-	user "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
-	userRepository "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain/repositories"
-	vetRepo "github.com/alexisTrejo11/Clinic-Vet-API/app/veterinarians/application/repositories"
+	userDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
+
 	vetDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/veterinarians/domain"
 )
 
@@ -35,7 +27,7 @@ type SignupCommand struct {
 	DateOfBirth    time.Time           `json:"date_of_birth"`
 	Location       string              `json:"location"`
 	Address        string              `json:"address"`
-	Role           user.UserRole       `json:"role"`
+	Role           userDomain.UserRole `json:"role"`
 	ProfilePicture string              `json:"profile_picture"`
 	Bio            string              `json:"bio"`
 
@@ -53,30 +45,14 @@ type SignupCommand struct {
 }
 
 type signupHandler struct {
-	userRepo            userRepository.UserRepository
-	dispatcher          *userApplication.CommandDispatcher
-	sessionRepo         session.SessionRepository
-	ownerRepo           ownerDomain.OwnerRepository
-	notificationService notificationService.NotificationService
-	vetRepo             vetRepo.VeterinarianRepository
+	userRepo userDomain.UserRepository
 }
 
 func NewSignupCommandHandler(
-	userRepo userRepository.UserRepository,
-	dispatcher *userApplication.CommandDispatcher,
-	ownerRepo ownerDomain.OwnerRepository,
-	sessionRepo session.SessionRepository,
-	notificationService notificationService.NotificationService,
-	vetRepo vetRepo.VeterinarianRepository,
-
+	userRepo userDomain.UserRepository,
 ) *signupHandler {
 	return &signupHandler{
-		userRepo:            userRepo,
-		dispatcher:          dispatcher,
-		sessionRepo:         sessionRepo,
-		ownerRepo:           ownerRepo,
-		vetRepo:             vetRepo,
-		notificationService: notificationService,
+		userRepo: userRepo,
 	}
 }
 
@@ -85,14 +61,16 @@ func (h *signupHandler) Handle(cmd SignupCommand) AuthCommandResult {
 		return AuthCommandResult{CommandResult: shared.FailureResult("an conflict ocurred", err)}
 	}
 
-	userId, err := h.createUser(&cmd)
+	user, err := toDomain(cmd)
 	if err != nil {
+		return AuthCommandResult{CommandResult: shared.FailureResult("an error ocurred while converting to domain", err)}
+	}
+
+	if err := h.userRepo.Save(cmd.CTX, &user); err != nil {
 		return AuthCommandResult{CommandResult: shared.FailureResult("an error ocurred while creating user", err)}
 	}
 
-	go h.SendActivationEmail(cmd.CTX, strconv.Itoa(userId), *cmd.Email)
-
-	return AuthCommandResult{CommandResult: shared.SuccessResult(strconv.Itoa(userId), "User created successfully")}
+	return AuthCommandResult{CommandResult: shared.SuccessResult(user.Id().String(), "User created successfully")}
 
 }
 
@@ -102,10 +80,6 @@ func (h *signupHandler) validateCredentials(cmd *SignupCommand) error {
 	}
 
 	if err := h.validateUniqueCredentials(cmd); err != nil {
-		return err
-	}
-
-	if err := user.ValidatePassword(cmd.Password); err != nil {
 		return err
 	}
 
@@ -158,123 +132,18 @@ func (h *signupHandler) validateUniqueCredentials(cmd *SignupCommand) error {
 	return nil
 }
 
-func (h *signupHandler) createUser(cmd *SignupCommand) (int, error) {
-	var wg sync.WaitGroup
-	errChan := make(chan error, 3)
+func toDomain(cmd SignupCommand) (userDomain.User, error) {
+	user, err := userDomain.NewUserBuilder().
+		WithId(cmd.UserId).
+		WithPassword(cmd.Password).
+		WithRole(cmd.Role).
+		WithPhoneNumber(*cmd.PhoneNumber).
+		WithEmail(*cmd.Email).
+		Build()
 
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		userCreateCommand := toCreateUserCommand(*cmd)
-		result := h.dispatcher.Dispatch(userCreateCommand)
-		if !result.IsSuccess {
-			errChan <- errors.New(result.Message)
-		}
-	}()
-
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		if err := h.createOwner(*cmd, cmd.UserId); err != nil {
-			errChan <- err
-		}
-	}()
-
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		if err := h.createVet(*cmd); err != nil {
-			errChan <- err
-		}
-	}()
-
-	wg.Wait()
-	close(errChan)
-
-	for err := range errChan {
-		if err != nil {
-			return 0, err
-		}
-	}
-
-	return cmd.UserId, nil
-}
-
-func (h *signupHandler) createOwner(cmd SignupCommand, userId int) error {
-	if cmd.Role != user.UserRoleOwner {
-		return nil
-	}
-
-	name, err := valueObjects.NewPersonName(cmd.FirstName, cmd.LastName)
 	if err != nil {
-		return err
+		return userDomain.User{}, err
 	}
 
-	newUserOwner := &ownerDomain.Owner{}
-	newUserOwner.SetFullName(name)
-	newUserOwner.SetUserId(userId)
-	newUserOwner.SetPhoto(cmd.ProfilePicture)
-	newUserOwner.SetGender(cmd.Gender)
-	newUserOwner.SetDateOfBirth(cmd.DateOfBirth)
-	newUserOwner.SetAddress(cmd.Address)
-
-	if err := h.ownerRepo.Save(cmd.CTX, newUserOwner); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (h *signupHandler) createVet(cmd SignupCommand) error {
-	name, err := valueObjects.NewPersonName(cmd.FirstName, cmd.LastName)
-	if err != nil {
-		return err
-	}
-
-	builder := vetDomain.NewVeterinarianBuilder().
-		WithName(name).
-		WithPhoto(cmd.ProfilePicture).
-		WithIsActive(true).
-		WithUserID(func(v int) *int { return &v }(cmd.UserId))
-
-	if cmd.LicenseNumber != nil {
-		builder.WithLicenseNumber(*cmd.LicenseNumber)
-	}
-	if cmd.Specialty != nil {
-		builder.WithSpecialty(*cmd.Specialty)
-	}
-	if cmd.YearsExperience != nil {
-		builder.WithYearsExperience(*cmd.YearsExperience)
-	}
-
-	vet := builder.Build()
-
-	if err := h.vetRepo.Save(cmd.CTX, vet); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func toCreateUserCommand(cmd SignupCommand) userCommand.CreateUserCommand {
-	command := userCommand.CreateUserCommand{
-		Password: cmd.Password,
-		Address:  cmd.Address,
-		Role:     cmd.Role.String(),
-		Status:   user.UserStatusPending,
-	}
-
-	if cmd.Email != nil {
-		command.Email = *cmd.Email
-	}
-	if cmd.PhoneNumber != nil {
-		command.PhoneNumber = *cmd.PhoneNumber
-	}
-
-	return command
-}
-
-func (h *signupHandler) SendActivationEmail(ctx context.Context, userId, email string) error {
-	notification := notificationDomain.NewActivateAccountNotification(userId, email)
-	return h.notificationService.SendNotification(ctx, &notification)
+	return user, nil
 }

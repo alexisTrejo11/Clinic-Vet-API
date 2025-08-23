@@ -1,9 +1,9 @@
-package userQueries
+package userDomainQueries
 
 import (
 	"context"
 
-	userRepository "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain/repositories"
+	userDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
 )
 
 type GetUserByIdQuery struct {
@@ -17,10 +17,10 @@ type GetUserByIdHandler interface {
 }
 
 type GetUserByIdHandlerImpl struct {
-	userRepository userRepository.UserRepository
+	userRepository userDomain.UserRepository
 }
 
-func NewGetUserByIdHandler(userRepository userRepository.UserRepository) GetUserByIdHandler {
+func NewGetUserByIdHandler(userRepository userDomain.UserRepository) GetUserByIdHandler {
 	return &GetUserByIdHandlerImpl{
 		userRepository: userRepository,
 	}

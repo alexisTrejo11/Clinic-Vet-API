@@ -1,8 +1,8 @@
-package userQueries
+package userDomainQueries
 
 import (
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
-	user "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
+	userDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
 )
 
 type UserResponse struct {
@@ -26,7 +26,7 @@ type ProfileResponse struct {
 	JoinedAt    string `json:"joined_at"`
 }
 
-func toResponse(user user.User) *UserResponse {
+func toResponse(user userDomain.User) *UserResponse {
 	return &UserResponse{
 		Id:          user.Id().String(),
 		Email:       user.Email().String(),
@@ -38,7 +38,7 @@ func toResponse(user user.User) *UserResponse {
 	}
 }
 
-func toResponsePage(userPage page.Page[[]user.User]) page.Page[[]UserResponse] {
+func toResponsePage(userPage page.Page[[]userDomain.User]) page.Page[[]UserResponse] {
 	var userResponses []UserResponse
 
 	users := userPage.Data

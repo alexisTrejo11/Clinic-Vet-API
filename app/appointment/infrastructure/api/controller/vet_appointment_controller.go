@@ -1,3 +1,4 @@
+// Package appointmentController handles appointment-related HTTP endpoints
 package appointmentController
 
 import (
@@ -8,10 +9,17 @@ import (
 
 	appointmentCmd "github.com/alexisTrejo11/Clinic-Vet-API/app/appointment/application/command"
 	appointmentQuery "github.com/alexisTrejo11/Clinic-Vet-API/app/appointment/application/queries"
-	responses "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/responses"
+	response "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/responses"
 	"github.com/gin-gonic/gin"
 )
 
+// VetAppointmentController handles veterinarian-specific appointment operations
+// @title Veterinary Clinic API - Veterinarian Appointment Management
+// @version 1.0
+// @description This controller manages appointment operations specific to veterinarians including viewing, confirming, completing, and managing appointments
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
 type VetAppointmentController struct {
 	commandBus appointmentCmd.CommandBus
 	queryBus   appointmentQuery.QueryBus
@@ -24,8 +32,20 @@ func NewVetAppointmentController(commandBus appointmentCmd.CommandBus, queryBus 
 	}
 }
 
-// GetMyAppointments retrieves all appointments assigned to the current veterinarian
-// GET /vet/appointments
+// GetMyAppointments godoc
+// @Summary Get veterinarian's appointments
+// @Description Retrieves all appointments assigned to the authenticated veterinarian
+// @Tags vet-appointments
+// @Accept json
+// @Produce json
+// @Param page query int false "Page number" default(1)
+// @Param pageSize query int false "Items per page" default(10)
+// @Security BearerAuth
+// @Success 200 {object} response.APIResponse "List of appointments"
+// @Failure 400 {object} response.APIResponse "Invalid pagination parameters"
+// @Failure 401 {object} response.APIResponse "Unauthorized - Veterinarian not authenticated"
+// @Failure 500 {object} response.APIResponse "Internal server error"
+// @Router /vet/appointments [get]
 func (c *VetAppointmentController) GetMyAppointments(ctx *gin.Context) {
 	// Parse pagination parameters
 	page, _ := strconv.Atoi(ctx.DefaultQuery("page", "1"))
@@ -34,28 +54,37 @@ func (c *VetAppointmentController) GetMyAppointments(ctx *gin.Context) {
 	// Get vet id from JWT context (assuming it's set by auth middleware)
 	vetIdInterface, exists := ctx.Get("vet_id")
 	if !exists {
-		responses.Unauthorized(ctx, errors.New("vet id not found in context"))
+		response.Unauthorized(ctx, errors.New("vet id not found in context"))
 		return
 	}
 
 	vetId, ok := vetIdInterface.(int)
 	if !ok {
-		responses.BadRequest(ctx, errors.New("invalid vet id format"))
+		response.BadRequest(ctx, errors.New("invalid vet id format"))
 		return
 	}
 
 	query := appointmentQuery.NewGetAppointmentsByVetQuery(vetId, page, pageSize)
 	result, err := c.queryBus.Execute(context.Background(), query)
 	if err != nil {
-		responses.ApplicationError(ctx, err)
+		response.ApplicationError(ctx, err)
 		return
 	}
 
-	responses.Success(ctx, result)
+	response.Success(ctx, result)
 }
 
-// GetTodayAppointments retrieves today's appointments for the current veterinarian
-// GET /vet/appointments/today
+// GetTodayAppointments godoc
+// @Summary Get today's appointments
+// @Description Retrieves all appointments scheduled for today for the authenticated veterinarian
+// @Tags vet-appointments
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} response.APIResponse{data=[]appointmentQuery.AppointmentResponse} "Today's appointments"
+// @Failure 401 {object} response.APIResponse "Unauthorized - Veterinarian not authenticated"
+// @Failure 500 {object} response.APIResponse "Internal server error"
+// @Router /vet/appointments/today [get]
 func (c *VetAppointmentController) GetTodayAppointments(ctx *gin.Context) {
 	// Get today's date range
 	now := time.Now()
@@ -67,48 +96,88 @@ func (c *VetAppointmentController) GetTodayAppointments(ctx *gin.Context) {
 	)
 	result, err := c.queryBus.Execute(context.Background(), query)
 	if err != nil {
-		responses.ApplicationError(ctx, err)
+		response.ApplicationError(ctx, err)
 		return
 	}
 
-	responses.Success(ctx, result)
+	response.Success(ctx, result)
 }
 
-// ConfirmAppointment allows veterinarians to confirm pending appointments
-// PUT /vet/appointments/:id/confirm
+// ConfirmAppointment godoc
+// @Summary Confirm an appointment
+// @Description Confirms a pending appointment by the authenticated veterinarian
+// @Tags vet-appointments
+// @Accept json
+// @Produce json
+// @Param id path int true "Appointment ID"
+// @Security BearerAuth
+// @Success 200 {object} response.APIResponse{message=string} "Appointment confirmed successfully"
+// @Failure 400 {object} response.APIResponse "Invalid appointment ID"
+// @Failure 401 {object} response.APIResponse "Unauthorized - Veterinarian not authenticated"
+// @Failure 403 {object} response.APIResponse "Forbidden - Not assigned to this appointment"
+// @Failure 404 {object} response.APIResponse "Appointment not found"
+// @Failure 422 {object} response.APIResponse "Cannot confirm appointment"
+// @Router /vet/appointments/{id}/confirm [put]
 func (c *VetAppointmentController) ConfirmAppointment(ctx *gin.Context) {
 
 }
 
-// CompleteAppointment allows veterinarians to mark appointments as completed
-// PUT /vet/appointments/:id/complete
+// CompleteAppointment godoc
+// @Summary Complete an appointment
+// @Description Marks an appointment as completed by the authenticated veterinarian
+// @Tags vet-appointments
+// @Accept json
+// @Produce json
+// @Param id path int true "Appointment ID"
+// @Security BearerAuth
+// @Router /vet/appointments/{id}/complete [put]
 func (c *VetAppointmentController) CompleteAppointment(ctx *gin.Context) {
 }
 
-// CancelAppointment allows veterinarians to cancel appointments
-// DELETE /vet/appointments/:id
+// CancelAppointment godoc
+// @Summary Cancel an appointment
+// @Description Cancels an appointment by the authenticated veterinarian
+// @Tags vet-appointments
+// @Accept json
+// @Produce json
+// @Param id path int true "Appointment ID"
+// @Security BearerAuth
+// @Router /vet/appointments/{id} [delete]
 func (c *VetAppointmentController) CancelAppointment(ctx *gin.Context) {
 }
 
-// MarkAsNoShow allows veterinarians to mark appointments as no-show
-// PUT /vet/appointments/:id/no-show
+// MarkAsNoShow godoc
+// @Summary Mark appointment as no-show
+// @Description Marks an appointment as no-show when the client doesn't attend
+// @Tags vet-appointments
+// @Accept json
+// @Produce json
+// @Param id path int true "Appointment ID"
+// @Security BearerAuth
+// @Success 200 {object} response.APIResponse{message=string} "Appointment marked as no-show"
+// @Failure 400 {object} response.APIResponse "Invalid appointment ID"
+// @Failure 401 {object} response.APIResponse "Unauthorized - Veterinarian not authenticated"
+// @Failure 403 {object} response.APIResponse "Forbidden - Not assigned to this appointment"
+// @Failure 404 {object} response.APIResponse "Appointment not found"
+// @Failure 422 {object} response.APIResponse "Cannot mark as no-show"
+// @Router /vet/appointments/{id}/no-show [put]
 func (c *VetAppointmentController) MarkAsNoShow(ctx *gin.Context) {
 	appointmentId, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
-		responses.RequestURLQueryError(ctx, err)
+		response.RequestURLQueryError(ctx, err)
 		return
 	}
 
 	// Get vet id from JWT context to verify the appointment belongs to this vet
 	vetIdInterface, exists := ctx.Get("vet_id")
 	if !exists {
-		responses.Unauthorized(ctx, errors.New("vet id not found in context"))
+		response.Unauthorized(ctx, errors.New("vet id not found in context"))
 		return
 	}
 
 	vetId, ok := vetIdInterface.(int)
 	if !ok {
-		responses.BadRequest(ctx, errors.New("invalid vet id format"))
+		response.BadRequest(ctx, errors.New("invalid vet id format"))
 		return
 	}
 
@@ -116,14 +185,14 @@ func (c *VetAppointmentController) MarkAsNoShow(ctx *gin.Context) {
 	getQuery := appointmentQuery.NewGetAppointmentByIdQuery(appointmentId)
 	getResult, err := c.queryBus.Execute(context.Background(), getQuery)
 	if err != nil {
-		responses.ApplicationError(ctx, err)
+		response.ApplicationError(ctx, err)
 		return
 	}
 
 	appointment := getResult.(*appointmentQuery.AppointmentResponse)
 
 	if appointment.VetId == nil || *appointment.VetId != vetId {
-		responses.Forbidden(ctx, errors.New("access denied: you can only mark your own appointments as no-show"))
+		response.Forbidden(ctx, errors.New("access denied: you can only mark your own appointments as no-show"))
 		return
 	}
 
@@ -133,26 +202,38 @@ func (c *VetAppointmentController) MarkAsNoShow(ctx *gin.Context) {
 
 	result := c.commandBus.Execute(context.Background(), command)
 	if !result.IsSuccess {
-		responses.ApplicationError(ctx, result.Error)
+		response.ApplicationError(ctx, result.Error)
 		return
 	}
 
-	responses.Success(ctx, result)
+	response.Success(ctx, result)
 }
 
-// GetAppointmentStats retrieves appointment statistics for the veterinarian
-// GET /vet/appointments/stats
+// GetAppointmentStats godoc
+// @Summary Get appointment statistics
+// @Description Retrieves statistical information about appointments for the authenticated veterinarian
+// @Tags vet-appointments
+// @Accept json
+// @Produce json
+// @Param start_date query string false "Start date (YYYY-MM-DD)" format(date)
+// @Param end_date query string false "End date (YYYY-MM-DD)" format(date)
+// @Security BearerAuth
+// @Success 200 {object} response.APIResponse"Appointment statistics"
+// @Failure 400 {object} response.APIResponse "Invalid date parameters"
+// @Failure 401 {object} response.APIResponse "Unauthorized - Veterinarian not authenticated"
+// @Failure 500 {object} response.APIResponse "Internal server error"
+// @Router /vet/appointments/stats [get]
 func (c *VetAppointmentController) GetAppointmentStats(ctx *gin.Context) {
 	// Get vet id from JWT context
 	vetIdInterface, exists := ctx.Get("vet_id")
 	if !exists {
-		responses.Unauthorized(ctx, errors.New("vet id not found in context"))
+		response.Unauthorized(ctx, errors.New("vet id not found in context"))
 		return
 	}
 
 	vetId, ok := vetIdInterface.(int)
 	if !ok {
-		responses.BadRequest(ctx, errors.New("invalid vet id format"))
+		response.BadRequest(ctx, errors.New("invalid vet id format"))
 		return
 	}
 
@@ -172,25 +253,39 @@ func (c *VetAppointmentController) GetAppointmentStats(ctx *gin.Context) {
 	query := appointmentQuery.NewGetAppointmentStatsQuery(&vetId, nil, startDate, endDate)
 	result, err := c.queryBus.Execute(context.Background(), query)
 	if err != nil {
-		responses.ApplicationError(ctx, err)
+		response.ApplicationError(ctx, err)
 		return
 	}
 
-	responses.Success(ctx, result)
+	response.Success(ctx, result)
 }
 
-// RescheduleAppointment allows veterinarians to reschedule appointments
-// PUT /vet/appointments/:id/reschedule
+// RescheduleAppointment godoc
+// @Summary Reschedule an appointment
+// @Description Allows a veterinarian to reschedule their assigned appointment
+// @Tags vet-appointments
+// @Accept json
+// @Produce json
+// @Param id path int true "Appointment ID"
+// @Param reschedule body appointmentCmd.RescheduleAppointmentCommand true "New appointment time details"
+// @Security BearerAuth
+// @Success 200 {object} response.APIResponse{message=string} "Appointment rescheduled successfully"
+// @Failure 400 {object} response.APIResponse "Invalid input data"
+// @Failure 401 {object} response.APIResponse "Unauthorized - Veterinarian not authenticated"
+// @Failure 403 {object} response.APIResponse "Forbidden - Not assigned to this appointment"
+// @Failure 404 {object} response.APIResponse "Appointment not found"
+// @Failure 422 {object} response.APIResponse "Invalid time slot or scheduling conflict"
+// @Router /vet/appointments/{id}/reschedule [put]
 func (c *VetAppointmentController) RescheduleAppointment(ctx *gin.Context) {
 	appointmentId, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
-		responses.RequestURLQueryError(ctx, err)
+		response.RequestURLQueryError(ctx, err)
 		return
 	}
 
 	var command appointmentCmd.RescheduleAppointmentCommand
 	if err := ctx.ShouldBindJSON(&command); err != nil {
-		responses.RequestBodyDataError(ctx, err)
+		response.RequestBodyDataError(ctx, err)
 		return
 	}
 
@@ -199,13 +294,13 @@ func (c *VetAppointmentController) RescheduleAppointment(ctx *gin.Context) {
 	// Get vet id from JWT context to verify the appointment belongs to this vet
 	vetIdInterface, exists := ctx.Get("vet_id")
 	if !exists {
-		responses.Unauthorized(ctx, errors.New("vet id not found in context"))
+		response.Unauthorized(ctx, errors.New("vet id not found in context"))
 		return
 	}
 
 	vetId, ok := vetIdInterface.(int)
 	if !ok {
-		responses.BadRequest(ctx, errors.New("invalid vet id format"))
+		response.BadRequest(ctx, errors.New("invalid vet id format"))
 		return
 	}
 
@@ -213,22 +308,22 @@ func (c *VetAppointmentController) RescheduleAppointment(ctx *gin.Context) {
 	getQuery := appointmentQuery.NewGetAppointmentByIdQuery(appointmentId)
 	getResult, err := c.queryBus.Execute(context.Background(), getQuery)
 	if err != nil {
-		responses.ApplicationError(ctx, err)
+		response.ApplicationError(ctx, err)
 		return
 	}
 
 	appointment := getResult.(*appointmentQuery.AppointmentResponse)
 
 	if appointment.VetId == nil || *appointment.VetId != vetId {
-		responses.Forbidden(ctx, errors.New("acccess denied: you can only reschedule your own appointments"))
+		response.Forbidden(ctx, errors.New("acccess denied: you can only reschedule your own appointments"))
 		return
 	}
 
 	result := c.commandBus.Execute(context.Background(), command)
 	if !result.IsSuccess {
-		responses.ApplicationError(ctx, result.Error)
+		response.ApplicationError(ctx, result.Error)
 		return
 	}
 
-	responses.Success(ctx, result)
+	response.Success(ctx, result)
 }

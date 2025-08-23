@@ -24,206 +24,197 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/api/v2/example-path": {
+        "/appointments": {
             "get": {
-                "description": "Sends a 200 OK response with the provided data.",
+                "description": "Retrieves a paginated list of all appointments",
+                "consumes": [
+                    "application/json"
+                ],
                 "produces": [
                     "application/json"
                 ],
-                "summary": "Send a success response",
+                "tags": [
+                    "appointments-query"
+                ],
+                "summary": "Get all appointments",
                 "parameters": [
                     {
-                        "description": "Data to be included in the response",
-                        "name": "data",
-                        "in": "body",
-                        "required": true,
-                        "schema": {}
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number",
+                        "name": "page_number",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Items per page",
+                        "name": "page_size",
+                        "in": "query"
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "List of appointments",
                         "schema": {
-                            "$ref": "#/definitions/apiResponse.APIResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/apiResponse.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/appointmentQuery.AppointmentResponse"
+                                            }
+                                        },
+                                        "metadata": {
+                                            "$ref": "#/definitions/appointmentController.PaginationMetadata"
+                                        }
+                                    }
+                                }
+                            ]
                         }
-                    }
-                }
-            }
-        },
-        "/api/v2/example-path-app-error": {
-            "get": {
-                "description": "Sends a standardized error response based on the Go error type, with an appropriate HTTP status code.",
-                "produces": [
-                    "application/json"
-                ],
-                "summary": "Send a standardized application error response",
-                "parameters": [
-                    {
-                        "description": "The error object",
-                        "name": "err",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "object"
-                        }
-                    }
-                ],
-                "responses": {
-                    "404": {
-                        "description": "Not Found",
+                    },
+                    "400": {
+                        "description": "Invalid pagination parameters",
                         "schema": {
                             "$ref": "#/definitions/apiResponse.APIResponse"
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "Internal server error",
                         "schema": {
                             "$ref": "#/definitions/apiResponse.APIResponse"
                         }
                     }
                 }
-            }
-        },
-        "/api/v2/example-path-bad-request": {
+            },
             "post": {
-                "description": "Sends a 400 Bad Request response, typically for invalid input.",
+                "description": "Creates a new appointment for a pet with a veterinarian",
+                "consumes": [
+                    "application/json"
+                ],
                 "produces": [
                     "application/json"
                 ],
-                "summary": "Send a bad request error response",
+                "tags": [
+                    "appointments"
+                ],
+                "summary": "Create a new veterinary appointment",
                 "parameters": [
                     {
-                        "description": "The error object",
-                        "name": "err",
+                        "description": "Appointment details",
+                        "name": "appointment",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object"
+                            "$ref": "#/definitions/appointmentCmd.CreateAppointmentCommand"
                         }
                     }
                 ],
                 "responses": {
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Invalid input data",
                         "schema": {
                             "$ref": "#/definitions/apiResponse.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v2/example-path-body-error": {
-            "post": {
-                "description": "Sends a 400 Bad Request for malformed or invalid request body data.",
-                "produces": [
-                    "application/json"
-                ],
-                "summary": "Send a request body data error response",
-                "parameters": [
-                    {
-                        "description": "The error object",
-                        "name": "err",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "object"
-                        }
-                    }
-                ],
-                "responses": {
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/apiResponse.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v2/example-path-conflict": {
-            "post": {
-                "description": "Sends a 409 Conflict response with an error message, e.g., for duplicate resources.",
-                "produces": [
-                    "application/json"
-                ],
-                "summary": "Send a conflict error response",
-                "parameters": [
-                    {
-                        "description": "The error object",
-                        "name": "err",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "object"
-                        }
-                    }
-                ],
-                "responses": {
-                    "409": {
-                        "description": "Conflict",
-                        "schema": {
-                            "$ref": "#/definitions/apiResponse.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v2/example-path-create": {
-            "post": {
-                "description": "Sends a 201 Created response with the provided data.",
-                "produces": [
-                    "application/json"
-                ],
-                "summary": "Send a created response",
-                "parameters": [
-                    {
-                        "description": "Data of the newly created resource",
-                        "name": "data",
-                        "in": "body",
-                        "required": true,
-                        "schema": {}
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "$ref": "#/definitions/apiResponse.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v2/example-path-date-error": {
-            "get": {
-                "description": "Sends a 400 Bad Request when a date field has an invalid format.",
-                "produces": [
-                    "application/json"
-                ],
-                "summary": "Send an invalid date format error response",
-                "parameters": [
-                    {
-                        "description": "The field with the invalid date",
-                        "name": "field",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
                         }
                     },
-                    {
-                        "description": "The expected date format",
-                        "name": "format",
-                        "in": "body",
-                        "required": true,
+                    "422": {
+                        "description": "Business rule validation failed",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/apiResponse.APIResponse"
                         }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/appointments/date-range": {
+            "get": {
+                "description": "Retrieves appointments within a specified date range",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "appointments-query"
+                ],
+                "summary": "Get appointments by date range",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "date",
+                        "description": "Start date (YYYY-MM-DD)",
+                        "name": "start_date",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "format": "date",
+                        "description": "End date (YYYY-MM-DD)",
+                        "name": "end_date",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number",
+                        "name": "page_number",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Items per page",
+                        "name": "page_size",
+                        "in": "query"
                     }
                 ],
                 "responses": {
+                    "200": {
+                        "description": "List of appointments",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/apiResponse.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/appointmentQuery.AppointmentResponse"
+                                            }
+                                        },
+                                        "metadata": {
+                                            "$ref": "#/definitions/appointmentController.PaginationMetadata"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Invalid date range or pagination parameters",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
                         "schema": {
                             "$ref": "#/definitions/apiResponse.APIResponse"
                         }
@@ -231,282 +222,1501 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v2/example-path-delete": {
-            "delete": {
-                "description": "Sends a 204 No Content response, typically for successful deletions.",
-                "summary": "Send a no content response",
-                "responses": {
-                    "204": {
-                        "description": "No Content"
-                    }
-                }
-            }
-        },
-        "/api/v2/example-path-forbidden": {
+        "/appointments/owner/{ownerId}": {
             "get": {
-                "description": "Sends a 403 Forbidden response, for authorization failures.",
+                "description": "Retrieves all appointments for a specific pet owner",
+                "consumes": [
+                    "application/json"
+                ],
                 "produces": [
                     "application/json"
                 ],
-                "summary": "Send a forbidden error response",
-                "parameters": [
-                    {
-                        "description": "The error object",
-                        "name": "err",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "object"
-                        }
-                    }
+                "tags": [
+                    "appointments-query"
                 ],
-                "responses": {
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/apiResponse.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v2/example-path-not-found": {
-            "get": {
-                "description": "Sends a 404 Not Found response with an error message.",
-                "produces": [
-                    "application/json"
-                ],
-                "summary": "Send a not found error response",
-                "parameters": [
-                    {
-                        "description": "The error object",
-                        "name": "err",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "object"
-                        }
-                    }
-                ],
-                "responses": {
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/apiResponse.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v2/example-path-pagination": {
-            "get": {
-                "description": "Parses \"page\" and \"pageSize\" from the URL query and returns them.",
-                "produces": [
-                    "application/json"
-                ],
-                "summary": "Get pagination parameters",
+                "summary": "Get appointments by owner",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "Page number (default: 1)",
+                        "description": "Owner ID",
+                        "name": "ownerId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number",
+                        "name": "page_number",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Items per page",
+                        "name": "page_size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of appointments",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/apiResponse.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/appointmentQuery.AppointmentResponse"
+                                            }
+                                        },
+                                        "metadata": {
+                                            "$ref": "#/definitions/appointmentController.PaginationMetadata"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid owner ID or pagination parameters",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Owner not found",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/appointments/pet/{petId}": {
+            "get": {
+                "description": "Retrieves all appointments for a specific pet",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "appointments-query"
+                ],
+                "summary": "Get appointments by pet",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Pet ID",
+                        "name": "petId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number",
+                        "name": "page_number",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Items per page",
+                        "name": "page_size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of appointments",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/apiResponse.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/appointmentQuery.AppointmentResponse"
+                                            }
+                                        },
+                                        "metadata": {
+                                            "$ref": "#/definitions/appointmentController.PaginationMetadata"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid pet ID or pagination parameters",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Pet not found",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/appointments/stats": {
+            "get": {
+                "description": "Retrieves statistical information about appointments",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "appointments-query"
+                ],
+                "summary": "Get appointment statistics",
+                "responses": {
+                    "200": {
+                        "description": "Appointment statistics",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/appointments/vet/{vetId}": {
+            "get": {
+                "description": "Retrieves all appointments assigned to a specific veterinarian",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "appointments-query"
+                ],
+                "summary": "Get appointments by veterinarian",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Veterinarian ID",
+                        "name": "vetId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number",
+                        "name": "page_number",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Items per page",
+                        "name": "page_size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of appointments",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/apiResponse.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/appointmentQuery.AppointmentResponse"
+                                            }
+                                        },
+                                        "metadata": {
+                                            "$ref": "#/definitions/appointmentController.PaginationMetadata"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid veterinarian ID or pagination parameters",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Veterinarian not found",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/appointments/{id}": {
+            "get": {
+                "description": "Retrieves detailed information about a specific appointment",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "appointments-query"
+                ],
+                "summary": "Get appointment by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Appointment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Appointment details",
+                        "schema": {
+                            "$ref": "#/definitions/appointmentQuery.AppointmentResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid appointment ID",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Appointment not found",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Updates the details of an existing veterinary appointment",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "appointments"
+                ],
+                "summary": "Update an existing appointment",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Appointment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Updated appointment details",
+                        "name": "appointment",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/appointmentCmd.UpdateAppointmentCommand"
+                        }
+                    }
+                ],
+                "responses": {
+                    "400": {
+                        "description": "Invalid input data",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Appointment not found",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    },
+                    "422": {
+                        "description": "Business rule validation failed",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Removes an appointment from the system",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "appointments"
+                ],
+                "summary": "Delete an appointment",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Appointment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "400": {
+                        "description": "Invalid appointment ID",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Appointment not found",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    },
+                    "422": {
+                        "description": "Cannot delete appointment",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/appointments/{id}/complete": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Marks an appointment as completed and adds optional notes",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "appointments"
+                ],
+                "summary": "Complete an appointment",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Appointment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Completion notes",
+                        "name": "notes",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/appointmentController.CompleteAppointmentRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "400": {
+                        "description": "Invalid input",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - Veterinarian not authenticated",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden - Not assigned to this appointment",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Appointment not found",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    },
+                    "422": {
+                        "description": "Cannot complete appointment",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/appointments/{id}/confirm": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Confirms an appointment by a veterinarian",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "appointments"
+                ],
+                "summary": "Confirm an appointment",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Appointment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "400": {
+                        "description": "Invalid appointment ID",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - Veterinarian not authenticated",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden - Not assigned to this appointment",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Appointment not found",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    },
+                    "422": {
+                        "description": "Cannot confirm appointment",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/appointments/{id}/no-show": {
+            "put": {
+                "description": "Marks an appointment as no-show when the client doesn't attend",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "appointments"
+                ],
+                "summary": "Mark appointment as no-show",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Appointment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "400": {
+                        "description": "Invalid appointment ID",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Appointment not found",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    },
+                    "422": {
+                        "description": "Cannot mark as no-show",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/appointments/{id}/reschedule": {
+            "put": {
+                "description": "Changes the date and time of an existing appointment",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "appointments"
+                ],
+                "summary": "Reschedule an appointment",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Appointment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "New appointment time details",
+                        "name": "reschedule",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/appointmentCmd.RescheduleAppointmentCommand"
+                        }
+                    }
+                ],
+                "responses": {
+                    "400": {
+                        "description": "Invalid input data",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Appointment not found",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    },
+                    "422": {
+                        "description": "Invalid time slot or scheduling conflict",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/owner/appointments": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieves a list of all appointments for the authenticated owner",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "owner-appointments"
+                ],
+                "summary": "Get owner's appointments",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number",
                         "name": "page",
                         "in": "query"
                     },
                     {
                         "type": "integer",
-                        "description": "Number of items per page (default: 10)",
+                        "default": 10,
+                        "description": "Items per page",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {}
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Owner creates a new appointment request for their pet",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "owner-appointments"
+                ],
+                "summary": "Request a new appointment",
+                "parameters": [
+                    {
+                        "description": "Appointment details",
+                        "name": "appointment",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/appointmentCmd.CreateAppointmentCommand"
+                        }
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/owner/appointments/pet/{petId}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieves all appointments for a specific pet owned by the authenticated owner",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "owner-appointments"
+                ],
+                "summary": "Get appointments for a specific pet",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Pet ID",
+                        "name": "petId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Items per page",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/owner/appointments/upcoming": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieves upcoming appointments for the authenticated owner within a date range",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "owner-appointments"
+                ],
+                "summary": "Get upcoming appointments",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "date",
+                        "description": "Start date (YYYY-MM-DD)",
+                        "name": "start_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "format": "date",
+                        "description": "End date (YYYY-MM-DD)",
+                        "name": "end_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Items per page",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/owner/appointments/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieves details of a specific appointment for the authenticated owner",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "owner-appointments"
+                ],
+                "summary": "Get specific appointment details",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Appointment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/owner/appointments/{id}/cancel": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Owner cancels their existing appointment",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "owner-appointments"
+                ],
+                "summary": "Cancel an appointment",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Appointment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/owner/appointments/{id}/reschedule": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Owner reschedules their existing appointment",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "owner-appointments"
+                ],
+                "summary": "Reschedule an appointment",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Appointment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "New appointment time",
+                        "name": "reschedule",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/appointmentCmd.RescheduleAppointmentCommand"
+                        }
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/pets": {
+            "get": {
+                "description": "Retrieves a list of all pet records.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Pet Management"
+                ],
+                "summary": "List all pets",
+                "responses": {
+                    "200": {
+                        "description": "List of pets",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/petController.PetResponse"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Creates a new pet record with the provided data.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Pet Management"
+                ],
+                "summary": "Create a new pet",
+                "parameters": [
+                    {
+                        "description": "Pet creation request",
+                        "name": "pet",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/petController.PetInsertRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Pet created successfully",
+                        "schema": {
+                            "$ref": "#/definitions/petController.PetResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request body or validation error",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/pets/{id}": {
+            "get": {
+                "description": "Retrieves a single pet record by its unique ID.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Pet Management"
+                ],
+                "summary": "Get a pet by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Pet ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Pet found",
+                        "schema": {
+                            "$ref": "#/definitions/petController.PetResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid URL parameter",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Pet not found",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Updates a pet record by its ID with the provided data.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Pet Management"
+                ],
+                "summary": "Update an existing pet",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Pet ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Pet update request",
+                        "name": "pet",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/petController.PetInsertRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Pet updated successfully",
+                        "schema": {
+                            "$ref": "#/definitions/petController.PetResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid URL parameter or request body",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Pet not found",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Marks a pet record as inactive without permanently deleting it.",
+                "tags": [
+                    "Pet Management"
+                ],
+                "summary": "Soft delete a pet",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Pet ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Invalid URL parameter",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Pet not found",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/ping": {
+            "get": {
+                "description": "do ping",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "example"
+                ],
+                "summary": "ping example",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/admin/users/{id}": {
+            "delete": {
+                "description": "Soft deletes a user record by marking it as deleted.",
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Soft delete a user",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User soft deleted successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/apiResponse.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid URL parameter",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/admin/users/{id}/ban": {
+            "post": {
+                "description": "Bans a user by setting their status to 'banned'.",
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Ban a user",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User banned successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/apiResponse.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid URL parameter",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/admin/users/{id}/unban": {
+            "post": {
+                "description": "Unbans a user by setting their status to 'active'.",
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Unban a user",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User unbanned successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/apiResponse.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid URL parameter",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/users": {
+            "post": {
+                "description": "Creates a new user record with the provided data.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Create a new user",
+                "parameters": [
+                    {
+                        "description": "User creation request",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/userDtos.CreateUserRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "User created successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/apiResponse.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request body or validation error",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/users/{id}": {
+            "get": {
+                "description": "Retrieves a single user record by their unique ID.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Get a user by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User found",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/apiResponse.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid URL parameter",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/vet/appointments": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieves all appointments assigned to the authenticated veterinarian",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "vet-appointments"
+                ],
+                "summary": "Get veterinarian's appointments",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Items per page",
                         "name": "pageSize",
                         "in": "query"
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Pagination parameters",
+                        "description": "List of appointments",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "integer"
-                            }
+                            "$ref": "#/definitions/apiResponse.APIResponse"
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Invalid pagination parameters",
                         "schema": {
                             "$ref": "#/definitions/apiResponse.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v2/example-path-param-error/{id}": {
-            "get": {
-                "description": "Sends a 400 Bad Request for invalid URL parameters.",
-                "produces": [
-                    "application/json"
-                ],
-                "summary": "Send a URL parameter error response",
-                "parameters": [
-                    {
-                        "description": "The error object",
-                        "name": "err",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "object"
                         }
                     },
-                    {
-                        "description": "The field with the error",
-                        "name": "field",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "description": "The invalid value",
-                        "name": "value",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "responses": {
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/apiResponse.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v2/example-path-parse-error": {
-            "get": {
-                "description": "Sends a 400 Bad Request when data parsing fails for a specific field.",
-                "produces": [
-                    "application/json"
-                ],
-                "summary": "Send an invalid data parsing error response",
-                "parameters": [
-                    {
-                        "description": "The field with the parsing error",
-                        "name": "field",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "description": "The invalid value",
-                        "name": "value",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "description": "The error message",
-                        "name": "message",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "responses": {
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/apiResponse.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v2/example-path-query-error": {
-            "get": {
-                "description": "Sends a 400 Bad Request for invalid URL query parameters.",
-                "produces": [
-                    "application/json"
-                ],
-                "summary": "Send a URL query error response",
-                "parameters": [
-                    {
-                        "description": "The error object",
-                        "name": "err",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "object"
-                        }
-                    }
-                ],
-                "responses": {
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/apiResponse.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v2/example-path-server-error": {
-            "get": {
-                "description": "Sends a 500 Internal Server Error response for unexpected server issues.",
-                "produces": [
-                    "application/json"
-                ],
-                "summary": "Send a server error response",
-                "parameters": [
-                    {
-                        "description": "The error object",
-                        "name": "err",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "object"
-                        }
-                    }
-                ],
-                "responses": {
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/apiResponse.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v2/example-path-unauthorized": {
-            "get": {
-                "description": "Sends a 401 Unauthorized response, for authentication failures.",
-                "produces": [
-                    "application/json"
-                ],
-                "summary": "Send an unauthorized error response",
-                "parameters": [
-                    {
-                        "description": "The error object",
-                        "name": "err",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "object"
-                        }
-                    }
-                ],
-                "responses": {
                     "401": {
-                        "description": "Unauthorized",
+                        "description": "Unauthorized - Veterinarian not authenticated",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
                         "schema": {
                             "$ref": "#/definitions/apiResponse.APIResponse"
                         }
@@ -514,32 +1724,61 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v2/example-path-with-meta": {
+        "/vet/appointments/stats": {
             "get": {
-                "description": "Sends a 200 OK response with data and metadata.",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieves statistical information about appointments for the authenticated veterinarian",
+                "consumes": [
+                    "application/json"
+                ],
                 "produces": [
                     "application/json"
                 ],
-                "summary": "Send a success response with metadata",
+                "tags": [
+                    "vet-appointments"
+                ],
+                "summary": "Get appointment statistics",
                 "parameters": [
                     {
-                        "description": "Data to be included in the response",
-                        "name": "data",
-                        "in": "body",
-                        "required": true,
-                        "schema": {}
+                        "type": "string",
+                        "format": "date",
+                        "description": "Start date (YYYY-MM-DD)",
+                        "name": "start_date",
+                        "in": "query"
                     },
                     {
-                        "description": "Metadata to be included in the response",
-                        "name": "meta",
-                        "in": "body",
-                        "required": true,
-                        "schema": {}
+                        "type": "string",
+                        "format": "date",
+                        "description": "End date (YYYY-MM-DD)",
+                        "name": "end_date",
+                        "in": "query"
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Appointment statistics",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid date parameters",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - Veterinarian not authenticated",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
                         "schema": {
                             "$ref": "#/definitions/apiResponse.APIResponse"
                         }
@@ -547,7 +1786,368 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v2/veterinarians": {
+        "/vet/appointments/today": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieves all appointments scheduled for today for the authenticated veterinarian",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "vet-appointments"
+                ],
+                "summary": "Get today's appointments",
+                "responses": {
+                    "200": {
+                        "description": "Today's appointments",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/apiResponse.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/appointmentQuery.AppointmentResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - Veterinarian not authenticated",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/vet/appointments/{id}": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Cancels an appointment by the authenticated veterinarian",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "vet-appointments"
+                ],
+                "summary": "Cancel an appointment",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Appointment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/vet/appointments/{id}/complete": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Marks an appointment as completed by the authenticated veterinarian",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "vet-appointments"
+                ],
+                "summary": "Complete an appointment",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Appointment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/vet/appointments/{id}/confirm": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Confirms a pending appointment by the authenticated veterinarian",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "vet-appointments"
+                ],
+                "summary": "Confirm an appointment",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Appointment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Appointment confirmed successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/apiResponse.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid appointment ID",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - Veterinarian not authenticated",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden - Not assigned to this appointment",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Appointment not found",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    },
+                    "422": {
+                        "description": "Cannot confirm appointment",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/vet/appointments/{id}/no-show": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Marks an appointment as no-show when the client doesn't attend",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "vet-appointments"
+                ],
+                "summary": "Mark appointment as no-show",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Appointment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Appointment marked as no-show",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/apiResponse.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid appointment ID",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - Veterinarian not authenticated",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden - Not assigned to this appointment",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Appointment not found",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    },
+                    "422": {
+                        "description": "Cannot mark as no-show",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/vet/appointments/{id}/reschedule": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Allows a veterinarian to reschedule their assigned appointment",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "vet-appointments"
+                ],
+                "summary": "Reschedule an appointment",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Appointment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "New appointment time details",
+                        "name": "reschedule",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/appointmentCmd.RescheduleAppointmentCommand"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Appointment rescheduled successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/apiResponse.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid input data",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - Veterinarian not authenticated",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden - Not assigned to this appointment",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Appointment not found",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    },
+                    "422": {
+                        "description": "Invalid time slot or scheduling conflict",
+                        "schema": {
+                            "$ref": "#/definitions/apiResponse.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/veterinarians": {
             "get": {
                 "description": "Retrieves a list of all veterinarians with optional filtering and pagination.",
                 "produces": [
@@ -640,7 +2240,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v2/veterinarians/{id}": {
+        "/veterinarians/{id}": {
             "get": {
                 "description": "Retrieves a single veterinarian by their unique ID.",
                 "produces": [
@@ -785,245 +2385,6 @@ const docTemplate = `{
                     }
                 }
             }
-        },
-        "/pets": {
-            "get": {
-                "description": "Retrieves a list of all pet records.",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "pets"
-                ],
-                "summary": "List all pets",
-                "responses": {
-                    "200": {
-                        "description": "List of pets",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/petController.PetResponse"
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "$ref": "#/definitions/apiResponse.APIResponse"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "description": "Creates a new pet record with the provided data.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "pets"
-                ],
-                "summary": "Create a new pet",
-                "parameters": [
-                    {
-                        "description": "Pet creation request",
-                        "name": "pet",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/petController.PetInsertRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Pet created successfully",
-                        "schema": {
-                            "$ref": "#/definitions/petController.PetResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid request body or validation error",
-                        "schema": {
-                            "$ref": "#/definitions/apiResponse.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "$ref": "#/definitions/apiResponse.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/pets/{id}": {
-            "get": {
-                "description": "Retrieves a single pet record by its unique ID.",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "pets"
-                ],
-                "summary": "Get a pet by ID",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Pet ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Pet found",
-                        "schema": {
-                            "$ref": "#/definitions/petController.PetResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid URL parameter",
-                        "schema": {
-                            "$ref": "#/definitions/apiResponse.APIResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Pet not found",
-                        "schema": {
-                            "$ref": "#/definitions/apiResponse.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "$ref": "#/definitions/apiResponse.APIResponse"
-                        }
-                    }
-                }
-            },
-            "put": {
-                "description": "Updates a pet record by its ID with the provided data.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "pets"
-                ],
-                "summary": "Update an existing pet",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Pet ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Pet update request",
-                        "name": "pet",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/petController.PetInsertRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Pet updated successfully",
-                        "schema": {
-                            "$ref": "#/definitions/petController.PetResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid URL parameter or request body",
-                        "schema": {
-                            "$ref": "#/definitions/apiResponse.APIResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Pet not found",
-                        "schema": {
-                            "$ref": "#/definitions/apiResponse.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "$ref": "#/definitions/apiResponse.APIResponse"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "description": "Marks a pet record as inactive without permanently deleting it.",
-                "tags": [
-                    "pets"
-                ],
-                "summary": "Soft delete a pet",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Pet ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "No Content"
-                    },
-                    "400": {
-                        "description": "Invalid URL parameter",
-                        "schema": {
-                            "$ref": "#/definitions/apiResponse.APIResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Pet not found",
-                        "schema": {
-                            "$ref": "#/definitions/apiResponse.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "$ref": "#/definitions/apiResponse.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/ping": {
-            "get": {
-                "description": "do ping",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "example"
-                ],
-                "summary": "ping example",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
         }
     },
     "definitions": {
@@ -1083,6 +2444,208 @@ const docTemplate = `{
                 "type": {
                     "description": "The type of the error.",
                     "type": "string"
+                }
+            }
+        },
+        "appointDomain.AppointmentStatus": {
+            "type": "string",
+            "enum": [
+                "pending",
+                "cancelled",
+                "completed",
+                "rescheduled",
+                "confirmed",
+                "not_presented"
+            ],
+            "x-enum-varnames": [
+                "StatusPending",
+                "StatusCancelled",
+                "StatusCompleted",
+                "StatusRescheduled",
+                "StatusConfirmed",
+                "StatusNotPresented"
+            ]
+        },
+        "appointDomain.ClinicService": {
+            "type": "string",
+            "enum": [
+                "general_consultation",
+                "vaccination",
+                "surgery",
+                "dental_care",
+                "emergency_care",
+                "grooming",
+                "nutrition_consult",
+                "behavior_consult",
+                "wellness_exam",
+                "other"
+            ],
+            "x-enum-varnames": [
+                "ServiceGeneralConsultation",
+                "ServiceVaccination",
+                "ServiceSurgery",
+                "ServiceDentalCare",
+                "ServiceEmergencyCare",
+                "ServiceGrooming",
+                "ServiceNutritionConsult",
+                "ServiceBehaviorConsult",
+                "ServiceWellnessExam",
+                "ServiceOther"
+            ]
+        },
+        "appointmentCmd.CreateAppointmentCommand": {
+            "type": "object",
+            "required": [
+                "date_time",
+                "owner_id",
+                "pet_id",
+                "reason",
+                "service"
+            ],
+            "properties": {
+                "date_time": {
+                    "type": "string"
+                },
+                "is_emergency": {
+                    "type": "boolean"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "owner_id": {
+                    "type": "integer"
+                },
+                "pet_id": {
+                    "type": "integer"
+                },
+                "reason": {
+                    "type": "string"
+                },
+                "service": {
+                    "$ref": "#/definitions/appointDomain.ClinicService"
+                },
+                "status": {
+                    "$ref": "#/definitions/appointDomain.AppointmentStatus"
+                },
+                "vet_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "appointmentCmd.RescheduleAppointmentCommand": {
+            "type": "object",
+            "required": [
+                "date_time",
+                "id"
+            ],
+            "properties": {
+                "date_time": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "reason": {
+                    "type": "string"
+                }
+            }
+        },
+        "appointmentCmd.UpdateAppointmentCommand": {
+            "type": "object",
+            "required": [
+                "appoinment_id"
+            ],
+            "properties": {
+                "appoinment_id": {
+                    "type": "integer"
+                },
+                "is_emergency": {
+                    "type": "boolean"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "reason": {
+                    "type": "string"
+                },
+                "service": {
+                    "$ref": "#/definitions/appointDomain.ClinicService"
+                },
+                "status": {
+                    "$ref": "#/definitions/appointDomain.AppointmentStatus"
+                },
+                "vet_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "appointmentController.CompleteAppointmentRequest": {
+            "type": "object",
+            "properties": {
+                "notes": {
+                    "type": "string"
+                }
+            }
+        },
+        "appointmentController.PaginationMetadata": {
+            "type": "object",
+            "properties": {
+                "current_page": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "page_size": {
+                    "type": "integer",
+                    "example": 10
+                },
+                "total_pages": {
+                    "type": "integer",
+                    "example": 5
+                },
+                "total_records": {
+                    "type": "integer",
+                    "example": 42
+                }
+            }
+        },
+        "appointmentQuery.AppointmentResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_emergency": {
+                    "type": "boolean"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "owner_id": {
+                    "type": "integer"
+                },
+                "pet_id": {
+                    "type": "integer"
+                },
+                "reason": {
+                    "type": "string"
+                },
+                "scheduled_date": {
+                    "type": "string"
+                },
+                "service": {
+                    "$ref": "#/definitions/appointDomain.ClinicService"
+                },
+                "status": {
+                    "$ref": "#/definitions/appointDomain.AppointmentStatus"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "vet_id": {
+                    "type": "integer"
                 }
             }
         },
@@ -1254,6 +2817,72 @@ const docTemplate = `{
         },
         "shared.Money": {
             "type": "object"
+        },
+        "userDtos.CreateUserRequest": {
+            "description": "Represents the request body for creating a new userDomain.",
+            "type": "object",
+            "required": [
+                "address",
+                "date_of_birth",
+                "email",
+                "gender",
+                "location",
+                "owner_id",
+                "password",
+                "phone_number",
+                "role"
+            ],
+            "properties": {
+                "address": {
+                    "description": "The user's address. (required)",
+                    "type": "string"
+                },
+                "date_of_birth": {
+                    "description": "The user's date of birth. (required)",
+                    "type": "string"
+                },
+                "email": {
+                    "description": "The user's email address. (required, must be a valid email format)",
+                    "type": "string"
+                },
+                "gender": {
+                    "description": "The user's gender. (required, must be \"male\", \"female\", or \"other\")",
+                    "type": "string",
+                    "enum": [
+                        "male"
+                    ]
+                },
+                "location": {
+                    "description": "The user's location. (required)",
+                    "type": "string"
+                },
+                "owner_id": {
+                    "description": "The unique ID of the owner. (required)",
+                    "type": "integer"
+                },
+                "password": {
+                    "description": "The user's password. (required, minimum 8 characters)",
+                    "type": "string",
+                    "minLength": 8
+                },
+                "phone_number": {
+                    "description": "The user's phone number. (required)",
+                    "type": "string"
+                },
+                "role": {
+                    "description": "The role of the user (e.g., \"customer\", \"veterinarian\", \"admin\"). (required)",
+                    "type": "string",
+                    "enum": [
+                        "customer",
+                        "veterinarian",
+                        "admin"
+                    ]
+                },
+                "veterinarian_id": {
+                    "description": "The unique ID of the veterinarian. (optional)",
+                    "type": "integer"
+                }
+            }
         },
         "vetDomain.VetSpecialty": {
             "type": "integer",

@@ -1,25 +1,24 @@
-package userQueries
+package userDomainQueries
 
 import (
 	"context"
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
-	user "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
-	userRepo "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain/repositories"
+	userDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
 )
 
 type UserSearchQuery struct {
-	EmailLike       string          `json:"email_like"`
-	PhoneLike       string          `json:"phone_like"`
-	Role            user.UserRole   `json:"role"`
-	JoindedAfter    string          `json:"joined_after"`
-	JoinedBefore    string          `json:"joined_before"`
-	LastLoginAtter  string          `json:"last_login_after"`
-	LastLoginBefore string          `json:"last_login_before"`
-	FirstNameLike   string          `json:"first_name_like"`
-	LastNameLike    string          `json:"last_name_like"`
-	Pagination      page.PageData   `json:"pagination"`
-	Ctx             context.Context `json:"-"`
+	EmailLike       string              `json:"email_like"`
+	PhoneLike       string              `json:"phone_like"`
+	Role            userDomain.UserRole `json:"role"`
+	JoindedAfter    string              `json:"joined_after"`
+	JoinedBefore    string              `json:"joined_before"`
+	LastLoginAtter  string              `json:"last_login_after"`
+	LastLoginBefore string              `json:"last_login_before"`
+	FirstNameLike   string              `json:"first_name_like"`
+	LastNameLike    string              `json:"last_name_like"`
+	Pagination      page.PageData       `json:"pagination"`
+	Ctx             context.Context     `json:"-"`
 }
 
 func (q *UserSearchQuery) ToMap() map[string]interface{} {
@@ -61,10 +60,10 @@ type SearchUserHandler interface {
 }
 
 type searchUserHander struct {
-	repository userRepo.UserRepository
+	repository userDomain.UserRepository
 }
 
-func NewSearchUserHandler(repository userRepo.UserRepository) SearchUserHandler {
+func NewSearchUserHandler(repository userDomain.UserRepository) SearchUserHandler {
 	return &searchUserHander{
 		repository: repository,
 	}

@@ -7,8 +7,7 @@ import (
 	jwtService "github.com/alexisTrejo11/Clinic-Vet-API/app/auth/application/jwt"
 	session "github.com/alexisTrejo11/Clinic-Vet-API/app/auth/domain"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
-
-	userRepo "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain/repositories"
+	userDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
 )
 
 type RefreshSessionCommand struct {
@@ -18,13 +17,13 @@ type RefreshSessionCommand struct {
 }
 
 type refreshSessionHandler struct {
-	userRepo    userRepo.UserRepository
+	userRepo    userDomain.UserRepository
 	sessionRepo session.SessionRepository
 	jwtService  jwtService.JWTService
 }
 
 func NewRefreshSessionHandler(
-	userRepo userRepo.UserRepository,
+	userRepo userDomain.UserRepository,
 	sessionRepo session.SessionRepository,
 	jwtService jwtService.JWTService,
 ) *refreshSessionHandler {

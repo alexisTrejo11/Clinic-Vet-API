@@ -6,8 +6,10 @@ import (
 
 	"errors"
 
+	jwtService "github.com/alexisTrejo11/Clinic-Vet-API/app/auth/application/jwt"
 	session "github.com/alexisTrejo11/Clinic-Vet-API/app/auth/domain"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
+	userDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
 )
 
 type AuthCommandBus interface {
@@ -19,19 +21,19 @@ type authCommandBus struct {
 	handlers map[reflect.Type]shared.CommandHandler
 }
 
-func NewAuthCommandBus(sessionRepo session.SessionRepository) AuthCommandBus {
+func NewAuthCommandBus(
+	sessionRepo session.SessionRepository,
+	userRepo userDomain.UserRepository,
+	jwtService jwtService.JWTService,
+) AuthCommandBus {
 	bus := &authCommandBus{
 		handlers: make(map[reflect.Type]shared.CommandHandler),
 	}
 
-	registerHandlers(sessionRepo)
+	bus.Register(reflect.TypeOf(RefreshSessionCommand{}), NewRefreshSessionHandler(userRepo, sessionRepo, jwtService))
+	bus.Register(reflect.TypeOf(SignupCommand{}), NewSignupCommandHandler(userRepo))
 
 	return bus
-}
-
-func registerHandlers(sessionRepo session.SessionRepository) {
-	//bus.Register(reflect.TypeOf(RefreshSessionCommand{}), NewRefreshSessionHandler(sessionRepo))
-
 }
 
 func (bus *authCommandBus) Register(commandType reflect.Type, handler shared.CommandHandler) error {

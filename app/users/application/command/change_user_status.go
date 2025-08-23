@@ -1,24 +1,23 @@
-package userCommand
+package userDomainCommand
 
 import (
 	"context"
 	"errors"
 
-	user "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
-	userRepository "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain/repositories"
+	userDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
 )
 
 type ChangeUserStatusCommand struct {
-	UserId int             `json:"user_id"`
-	Status user.UserStatus `json:"status"`
-	CTX    context.Context `json:"ctx"`
+	UserId int                   `json:"user_id"`
+	Status userDomain.UserStatus `json:"status"`
+	CTX    context.Context       `json:"ctx"`
 }
 
 type ChangeUserStatusHandler struct {
-	userRepository userRepository.UserRepository
+	userRepository userDomain.UserRepository
 }
 
-func NewChangeUserStatusHandler(userRepository userRepository.UserRepository) *ChangeUserStatusHandler {
+func NewChangeUserStatusHandler(userRepository userDomain.UserRepository) *ChangeUserStatusHandler {
 	return &ChangeUserStatusHandler{
 		userRepository: userRepository,
 	}
@@ -33,7 +32,7 @@ func (h *ChangeUserStatusHandler) Handle(command ChangeUserStatusCommand) error 
 		return errors.New("status is required")
 	}
 
-	user, err := h.userRepository.GetByIdWithProfile(command.CTX, command.UserId)
+	user, err := h.userRepository.GetById(command.CTX, command.UserId)
 	if err != nil {
 		return err
 	}

@@ -28,7 +28,7 @@ func (r *RedisSessionRepository) sessionKey(id string) string {
 	return fmt.Sprintf("session:%s", id)
 }
 
-// userSessionsKey returns the Redis key for a set of sessions for a specific user.
+// userSessionsKey returns the Redis key for a set of sessions for a specific userDomain.
 // Example: "user_sessions:123"
 func (r *RedisSessionRepository) userSessionsKey(userId string) string {
 	return fmt.Sprintf("user_sessions:%s", userId)

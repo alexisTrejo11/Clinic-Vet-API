@@ -1,4 +1,4 @@
-package userRoutes
+package userDomainRoutes
 
 import (
 	userController "github.com/alexisTrejo11/Clinic-Vet-API/app/users/infrastructure/api/controller"

@@ -1,4 +1,4 @@
-package userController
+package userDomainController
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 	apiResponse "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/responses"
 	userApplication "github.com/alexisTrejo11/Clinic-Vet-API/app/users/application"
 	userCommand "github.com/alexisTrejo11/Clinic-Vet-API/app/users/application/command"
-	user "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
+	userDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
 	userDtos "github.com/alexisTrejo11/Clinic-Vet-API/app/users/infrastructure/api/dtos"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -44,7 +44,7 @@ func (c *UserAdminController) GetUserById(ctx *gin.Context) {
 	apiResponse.Success(ctx, gin.H{"user_id": userId})
 }
 
-// CreateUser creates a new user.
+// CreateUser creates a new userDomain.
 // @Summary Create a new user
 // @Description Creates a new user record with the provided data.
 // @Tags users
@@ -87,7 +87,7 @@ func (c *UserAdminController) CreateUser(ctx *gin.Context) {
 	ctx.JSON(201, gin.H{"message": result.Message, "id": result.Id})
 }
 
-// BanUser bans a user.
+// BanUser bans a userDomain.
 // @Summary Ban a user
 // @Description Bans a user by setting their status to 'banned'.
 // @Tags admin
@@ -104,7 +104,7 @@ func (c *UserAdminController) BanUser(ctx *gin.Context) {
 
 	command := userCommand.ChangeUserStatusCommand{
 		UserId: userId,
-		Status: user.UserStatusBanned,
+		Status: userDomain.UserStatusBanned,
 		CTX:    context.Background(),
 	}
 
@@ -117,7 +117,7 @@ func (c *UserAdminController) BanUser(ctx *gin.Context) {
 	apiResponse.Success(ctx, result.Message)
 }
 
-// UnBanUser unbans a user.
+// UnBanUser unbans a userDomain.
 // @Summary Unban a user
 // @Description Unbans a user by setting their status to 'active'.
 // @Tags admin
@@ -134,7 +134,7 @@ func (c *UserAdminController) UnBanUser(ctx *gin.Context) {
 
 	command := userCommand.ChangeUserStatusCommand{
 		UserId: userId,
-		Status: user.UserStatusActive,
+		Status: userDomain.UserStatusActive,
 		CTX:    context.Background(),
 	}
 
@@ -147,7 +147,7 @@ func (c *UserAdminController) UnBanUser(ctx *gin.Context) {
 	apiResponse.Success(ctx, result.Message)
 }
 
-// DeleteUser soft deletes a user.
+// DeleteUser soft deletes a userDomain.
 // @Summary Soft delete a user
 // @Description Soft deletes a user record by marking it as deleted.
 // @Tags admin

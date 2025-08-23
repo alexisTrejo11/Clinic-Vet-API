@@ -1,8 +1,8 @@
-package userDtos
+package userDomainDtos
 
 import "time"
 
-// @Description Represents the request body for creating a new user.
+// @Description Represents the request body for creating a new userDomain.
 type CreateUserRequest struct {
 	// The user's email address. (required, must be a valid email format)
 	Email string `json:"email" validate:"required,email"`
@@ -28,19 +28,19 @@ type CreateUserRequest struct {
 
 // @Description Represents the request body for updating a user's profile.
 type UpdateProfileRequest struct {
-	// The unique ID of the user. (required)
+	// The unique ID of the userDomain. (required)
 	UserId int `json:"user_id" validate:"required"`
-	// A brief biography of the user. (optional, max 500 characters)
+	// A brief biography of the userDomain. (optional, max 500 characters)
 	Bio *string `json:"bio" validate:"min=0,max=500"`
 	// The URL of the user's profile photo. (optional, must be a valid URL)
 	PhotoURL *string `json:"photo_url" validate:"omitempty,url"`
-	// The name of the user. (optional)
+	// The name of the userDomain. (optional)
 	Name *string `json:"name" validate:"omitempty"`
 	// The user's address. (optional)
 	Address *AddressRequest `json:"address" validate:"omitempty"`
 }
 
-// @Description Represents the address details for a user.
+// @Description Represents the address details for a userDomain.
 type AddressRequest struct {
 	// The street name. (required)
 	Street string `json:"street" validate:"required"`

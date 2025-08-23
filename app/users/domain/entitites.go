@@ -1,46 +1,34 @@
-package user
+package userDomain
 
 import (
 	"errors"
-	"regexp"
-	"strconv"
 	"time"
-
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/valueObjects"
-)
-
-const (
-	MIN_PASSWORD_LENGTH = 8
-	MAX_PASSWORD_LENGTH = 100
 )
 
 type User struct {
-	id           valueObjects.UserId
-	email        valueObjects.Email
-	phoneNumber  valueObjects.PhoneNumber
-	password     string
-	role         UserRole
-	status       UserStatus
-	lastLoginAt  time.Time
-	joinedAt     time.Time
-	profile      *Profile
-	is2FAEnabled bool
+	id            UserId
+	email         Email
+	phoneNumber   PhoneNumber
+	password      string
+	role          UserRole
+	status        UserStatus
+	lastLoginAt   time.Time
+	joinedAt      time.Time
+	twoFactorAuth TwoFactorAuth
 }
 
 type Profile struct {
 	UserId         int
 	OwnerId        *int
 	VeterinarianId *int
-	Name           valueObjects.PersonName
 	PhotoURL       string
 	Bio            string
-	Gender         valueObjects.Gender
 	Address        *Address
 	DateOfBirth    *time.Time
 	JoinedAt       time.Time
 }
 
-func NewUser(id valueObjects.UserId, email valueObjects.Email, phoneNumber valueObjects.PhoneNumber, password string, role UserRole, status UserStatus, profile *Profile) (*User, error) {
+func NewUser(id UserId, email Email, phoneNumber PhoneNumber, password string, role UserRole, status UserStatus, profile *Profile) (*User, error) {
 	if !role.IsValid() {
 		return nil, ErrInvalidUserRole(string(role))
 	}
@@ -50,7 +38,6 @@ func NewUser(id valueObjects.UserId, email valueObjects.Email, phoneNumber value
 
 	if profile == nil {
 		profile = &Profile{
-			Name:        valueObjects.PersonName{},
 			PhotoURL:    "",
 			Bio:         "",
 			Address:     &Address{},
@@ -65,19 +52,18 @@ func NewUser(id valueObjects.UserId, email valueObjects.Email, phoneNumber value
 		password:    password,
 		role:        role,
 		status:      status,
-		profile:     profile,
 	}, nil
 }
 
-func (u *User) Id() valueObjects.UserId {
+func (u *User) Id() UserId {
 	return u.id
 }
 
-func (u *User) Email() valueObjects.Email {
+func (u *User) Email() Email {
 	return u.email
 }
 
-func (u *User) PhoneNumber() valueObjects.PhoneNumber {
+func (u *User) PhoneNumber() PhoneNumber {
 	return u.phoneNumber
 }
 
@@ -97,16 +83,8 @@ func (u *User) LastLoginAt() time.Time {
 	return u.lastLoginAt
 }
 
-func (u *User) Profile() Profile {
-	return *u.profile
-}
-
 func (u *User) SetLastLoginAt(t time.Time) {
 	u.lastLoginAt = t
-}
-
-func (u *User) SetProfile(profile *Profile) {
-	u.profile = profile
 }
 
 func (u *User) SetStatus(status UserStatus) error {
@@ -125,11 +103,11 @@ func (u *User) SetRole(role UserRole) error {
 	return nil
 }
 
-func (u *User) UpdateEmail(email valueObjects.Email) {
+func (u *User) UpdateEmail(email Email) {
 	u.email = email
 }
 
-func (u *User) UpdatePhoneNumber(phoneNumber valueObjects.PhoneNumber) {
+func (u *User) UpdatePhoneNumber(phoneNumber PhoneNumber) {
 	u.phoneNumber = phoneNumber
 }
 
@@ -142,25 +120,7 @@ func (u *User) JoinedAt() time.Time {
 }
 
 func (u *User) ChangePassword(newPassword string) error {
-	if err := ValidatePassword(newPassword); err != nil {
-		return err
-	}
 	u.password = newPassword
-	return nil
-}
-
-func ValidatePassword(password string) error {
-	if len(password) < MIN_PASSWORD_LENGTH {
-		return ErrPasswordTooShort(strconv.Itoa(MIN_PASSWORD_LENGTH))
-	}
-	if len(password) > MAX_PASSWORD_LENGTH {
-		return ErrPasswordTooLong(strconv.Itoa(MAX_PASSWORD_LENGTH))
-	}
-
-	passwordRegex := regexp.MustCompile(`^[a-zA-Z0-9!@#$%^&*()_+={}\[\]:;"'<>,.?/\\|-]+$`).MatchString(password)
-	if !passwordRegex {
-		return ErrPasswordInvalidFormat("Password must contain only alphanumeric characters and special symbols !@#$%^&*()_+={}[]:;\"'<>,.?/\\\\|-")
-	}
 	return nil
 }
 
@@ -204,5 +164,20 @@ func (u *User) ValidateStatusTransition(newStatus UserStatus) error {
 }
 
 func (u *User) Is2FAEnabled() bool {
-	return u.is2FAEnabled
+	return u.twoFactorAuth.IsEnabled
+}
+
+func (u *User) Set2FAuth(secret string) {
+	if secret == "" {
+		u.twoFactorAuth = TwoFactorAuth{
+			IsEnabled: false,
+			Secret:    "",
+		}
+		return
+	}
+
+	u.twoFactorAuth = TwoFactorAuth{
+		IsEnabled: true,
+		Secret:    secret,
+	}
 }

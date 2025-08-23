@@ -66,7 +66,12 @@ func main() {
 		v.RegisterValidation("validPetCondition", mhDTOs.IsValidPetCondition)
 	}
 
-	authApi.SetupAuthModule(router, dataValidator, config.RedisClient)
+	jwtSecret := os.Getenv("JWT_SECRET")
+	if jwtSecret == "" {
+		log.Fatal("JWT_SECRET environment variable is not set")
+	}
+
+	authApi.SetupAuthModule(router, dataValidator, config.RedisClient, queries, jwtSecret)
 	notification_api.SetupNotificationModule(router, mongoClient, emailConfig, config.GetTwilioClient())
 
 	if err := config.BootstrapAPIModules(router, queries, dataValidator); err != nil {

@@ -45,7 +45,7 @@ func (m *MockQuerier) ActivateUser(ctx context.Context, id int32) error {
 	return ret0
 }
 
-// ActivateUser indicates an expected call of ActivateUser.
+// ActivateUser indicates an expected call of ActivateuserDomain.
 func (mr *MockQuerierMockRecorder) ActivateUser(ctx, id interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ActivateUser", reflect.TypeOf((*MockQuerier)(nil).ActivateUser), ctx, id)
@@ -104,7 +104,7 @@ func (m *MockQuerier) DeactivateUser(ctx context.Context, id int32) error {
 	return ret0
 }
 
-// DeactivateUser indicates an expected call of DeactivateUser.
+// DeactivateUser indicates an expected call of DeactivateuserDomain.
 func (mr *MockQuerierMockRecorder) DeactivateUser(ctx, id interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeactivateUser", reflect.TypeOf((*MockQuerier)(nil).DeactivateUser), ctx, id)

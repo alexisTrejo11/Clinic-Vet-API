@@ -6,7 +6,7 @@ import (
 
 	session "github.com/alexisTrejo11/Clinic-Vet-API/app/auth/domain"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
-	userRepository "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain/repositories"
+	userDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
 )
 
 type LogoutAllCommand struct {
@@ -15,12 +15,12 @@ type LogoutAllCommand struct {
 }
 
 type logoutAllHandler struct {
-	userRepository    userRepository.UserRepository
+	userRepository    userDomain.UserRepository
 	sessionRepository session.SessionRepository
 }
 
 func NewLogoutAllHandler(
-	userRepository userRepository.UserRepository,
+	userRepository userDomain.UserRepository,
 	sessionRepository session.SessionRepository,
 ) *logoutAllHandler {
 	return &logoutAllHandler{

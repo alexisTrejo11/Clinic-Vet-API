@@ -1,11 +1,11 @@
-package userController
+package userDomainController
 
 import (
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
 	apiResponse "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/responses"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/valueObjects"
 	userApplication "github.com/alexisTrejo11/Clinic-Vet-API/app/users/application"
-	user "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
+	userDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
 	userDtos "github.com/alexisTrejo11/Clinic-Vet-API/app/users/infrastructure/api/dtos"
 	"github.com/gin-gonic/gin"
 )
@@ -74,18 +74,18 @@ func mapRequestToProfileUpdate(request userDtos.UpdateProfileRequest, userId int
 	}
 
 	if request.Address != nil {
-		country := user.Country(request.Address.Country)
+		country := userDomain.Country(request.Address.Country)
 		if !country.IsValid() {
-			country = user.Mexico
+			country = userDomain.Mexico
 		}
 
-		updateData.Address = &user.Address{
+		updateData.Address = &userDomain.Address{
 			Street:              request.Address.Street,
 			City:                request.Address.City,
 			State:               request.Address.State,
 			ZipCode:             request.Address.ZipCode,
 			Country:             country,
-			BuildingType:        user.BuildingType(request.Address.BuildingType),
+			BuildingType:        userDomain.BuildingType(request.Address.BuildingType),
 			BuildingOuterNumber: request.Address.BuildingOuterNumber,
 			BuildingInnerNumber: request.Address.BuildingInnerNumber,
 		}
