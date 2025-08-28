@@ -2,7 +2,7 @@ package shared
 
 type CommandResult struct {
 	IsSuccess bool
-	Id        string
+	ID        string
 	Message   string
 	Error     error
 }
@@ -18,7 +18,7 @@ func FailureResult(message string, err error) CommandResult {
 func SuccessResult(id, message string) CommandResult {
 	return CommandResult{
 		IsSuccess: true,
-		Id:        id,
+		ID:        id,
 		Message:   message,
 		Error:     nil,
 	}

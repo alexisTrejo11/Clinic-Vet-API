@@ -7,7 +7,9 @@ import (
 
 type Command interface{}
 
-type CommandHandler interface{}
+type CommandHandler interface {
+	Handle(command Command) CommandResult
+}
 
 type CommandBus interface {
 	Register(commandType reflect.Type, handler CommandHandler) error
