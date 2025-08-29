@@ -1,15 +1,24 @@
-package appointmentCmd
+package command
 
 import (
 	"context"
 
-	appointmentDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/appointment/domain"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
+	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/service"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
 )
 
 type CancelAppointmentCommand struct {
-	AppointmentId int    `json:"id" binding:"required"`
-	Reason        string `json:"reason" binding:"required"`
+	AppointmentID valueobject.AppointmentID `json:"id" binding:"required"`
+	Reason        string                    `json:"reason" binding:"required"`
+}
+
+func NewCancelAppointmentCommand(appointmentID valueobject.AppointmentID, reason string) *CancelAppointmentCommand {
+	return &CancelAppointmentCommand{
+		AppointmentID: appointmentID,
+		Reason:        reason,
+	}
 }
 
 type CancelAppointmentHandler interface {
@@ -17,23 +26,25 @@ type CancelAppointmentHandler interface {
 }
 
 type cancelAppointmentHandler struct {
-	appointmentRepo appointmentDomain.AppointmentRepository
+	appointmentRepo   repository.AppointmentRepository
+	appointmenService *service.AppointmentService
 }
 
-func NewCancelAppointmentHandler(appointmentRepo appointmentDomain.AppointmentRepository) CancelAppointmentHandler {
+func NewCancelAppointmentHandler(appointmentRepo repository.AppointmentRepository) CancelAppointmentHandler {
 	return &cancelAppointmentHandler{
-		appointmentRepo: appointmentRepo,
+		appointmentRepo:   appointmentRepo,
+		appointmenService: &service.AppointmentService{},
 	}
 }
 
 func (h *cancelAppointmentHandler) Handle(ctx context.Context, command CancelAppointmentCommand) shared.CommandResult {
 	// Get existing appointment
-	appointment, err := h.appointmentRepo.GetById(ctx, command.AppointmentId)
+	appointment, err := h.appointmentRepo.GetByID(ctx, command.AppointmentID)
 	if err != nil {
 		return shared.FailureResult("appointment not found", err)
 	}
 
-	if err := appointment.Cancel(); err != nil {
+	if err := h.appointmenService.Cancel(&appointment); err != nil {
 		return shared.FailureResult("failed to cancel appointment", err)
 	}
 
@@ -41,5 +52,5 @@ func (h *cancelAppointmentHandler) Handle(ctx context.Context, command CancelApp
 		return shared.FailureResult("failed to save cancelled appointment", err)
 	}
 
-	return shared.SuccessResult(appointment.GetId().String(), "appointment cancelled successfully")
+	return shared.SuccessResult(appointment.GetID().String(), "appointment cancelled successfully")
 }

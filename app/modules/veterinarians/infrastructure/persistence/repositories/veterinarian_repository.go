@@ -4,10 +4,11 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
+	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/veterinarians/application/dto"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
-	vetDtos "github.com/alexisTrejo11/Clinic-Vet-API/app/veterinarians/application/dtos"
-	vetRepo "github.com/alexisTrejo11/Clinic-Vet-API/app/veterinarians/application/repositories"
-	vetDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/veterinarians/domain"
 	"github.com/alexisTrejo11/Clinic-Vet-API/db/models"
 	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -17,11 +18,13 @@ type SqlcVetRepository struct {
 	queries *sqlc.Queries
 }
 
-func NewSqlcVetRepository(queries *sqlc.Queries) vetRepo.VeterinarianRepository {
+func NewSqlcVetRepository(queries *sqlc.Queries) repository.VetRepository {
 	return &SqlcVetRepository{queries: queries}
 }
 
-func (r *SqlcVetRepository) List(ctx context.Context, searchParams vetDtos.VetSearchParams) ([]vetDomain.Veterinarian, error) {
+func (r *SqlcVetRepository) List(ctx context.Context, searchParams interface{}) ([]entity.Veterinarian, error) {
+	searchParam := searchParams.(dto.VetSearchParams)
+
 	params := sqlc.ListVeterinariansParams{
 		FirstName:           "%",
 		LastName:            "%",
@@ -30,36 +33,36 @@ func (r *SqlcVetRepository) List(ctx context.Context, searchParams vetDtos.VetSe
 		YearsOfExperience:   0,
 		YearsOfExperience_2: 0,
 		IsActive:            pgtype.Bool{Bool: false, Valid: false},
-		Limit:               int32(searchParams.PageSize),
-		Offset:              int32(searchParams.PageNumber - 1),
+		Limit:               int32(searchParam.PageSize),
+		Offset:              int32(searchParam.PageNumber - 1),
 	}
 
 	// Apply Filters
-	if searchParams.Filters.Name != nil {
-		name := "%" + *searchParams.Filters.Name + "%"
+	if searchParam.Filters.Name != nil {
+		name := "%" + *searchParam.Filters.Name + "%"
 		params.FirstName = name
 		params.LastName = name
 	}
 
-	if searchParams.Filters.LicenseNumber != nil {
-		params.LicenseNumber = "%" + *searchParams.Filters.LicenseNumber + "%"
+	if searchParam.Filters.LicenseNumber != nil {
+		params.LicenseNumber = "%" + *searchParam.Filters.LicenseNumber + "%"
 	}
 
-	if searchParams.Filters.Specialty != nil {
-		params.Speciality = models.VeterinarianSpeciality(searchParams.Filters.Specialty.String())
+	if searchParam.Filters.Specialty != nil {
+		params.Speciality = models.VeterinarianSpeciality(searchParam.Filters.Specialty.String())
 	}
 
-	if searchParams.Filters.YearsExperience != nil {
-		if searchParams.Filters.YearsExperience.Min != nil {
-			params.YearsOfExperience = int32(*searchParams.Filters.YearsExperience.Min)
+	if searchParam.Filters.YearsExperience != nil {
+		if searchParam.Filters.YearsExperience.Min != nil {
+			params.YearsOfExperience = int32(*searchParam.Filters.YearsExperience.Min)
 		}
-		if searchParams.Filters.YearsExperience.Max != nil {
-			params.YearsOfExperience_2 = int32(*searchParams.Filters.YearsExperience.Max)
+		if searchParam.Filters.YearsExperience.Max != nil {
+			params.YearsOfExperience_2 = int32(*searchParam.Filters.YearsExperience.Max)
 		}
 	}
 
-	if searchParams.Filters.IsActive != nil {
-		params.IsActive = pgtype.Bool{Bool: *searchParams.Filters.IsActive, Valid: true}
+	if searchParam.Filters.IsActive != nil {
+		params.IsActive = pgtype.Bool{Bool: *searchParam.Filters.IsActive, Valid: true}
 	}
 
 	// Ordering Config
@@ -68,27 +71,27 @@ func (r *SqlcVetRepository) List(ctx context.Context, searchParams vetDtos.VetSe
 		orderParams[i] = false
 	}
 
-	switch searchParams.OrderBy {
+	switch searchParam.OrderBy {
 	case "name":
-		if searchParams.SortDirection == page.ASC {
+		if searchParam.SortDirection == page.ASC {
 			orderParams[0] = true // $8: Order by first_name ASC
 		} else {
 			orderParams[1] = true // $9: Order by first_name DESC
 		}
 	case "specialty":
-		if searchParams.SortDirection == page.ASC {
+		if searchParam.SortDirection == page.ASC {
 			orderParams[2] = true // $10: Order by speciality ASC
 		} else {
 			orderParams[3] = true // $11: Order by speciality DESC
 		}
 	case "years_experience":
-		if searchParams.SortDirection == page.ASC {
+		if searchParam.SortDirection == page.ASC {
 			orderParams[4] = true // $12: Order by years_of_experience ASC
 		} else {
 			orderParams[5] = true // $13: Order by years_of_experience DESC
 		}
 	case "created_at":
-		if searchParams.SortDirection == page.ASC {
+		if searchParam.SortDirection == page.ASC {
 			orderParams[6] = true // $14: Order by created_at ASC
 		} else {
 			orderParams[7] = true // $15: Order by created_at DESC
@@ -112,7 +115,7 @@ func (r *SqlcVetRepository) List(ctx context.Context, searchParams vetDtos.VetSe
 		return nil, fmt.Errorf("failed to list veterinarians: %w", err)
 	}
 
-	vets := make([]vetDomain.Veterinarian, len(sqlVets))
+	vets := make([]entity.Veterinarian, len(sqlVets))
 	for i, sqlVet := range sqlVets {
 		vet, err := SqlcVetToDomain(sqlVet)
 		if err != nil {
@@ -124,34 +127,34 @@ func (r *SqlcVetRepository) List(ctx context.Context, searchParams vetDtos.VetSe
 	return vets, nil
 }
 
-func (c *SqlcVetRepository) GetById(ctx context.Context, id int) (vetDomain.Veterinarian, error) {
-	sqlVet, err := c.queries.GetVeterinarianById(ctx, int32(id))
+func (c *SqlcVetRepository) GetByID(ctx context.Context, id valueobject.VetID) (entity.Veterinarian, error) {
+	sqlVet, err := c.queries.GetVeterinarianById(ctx, int32(id.GetValue()))
 	if err != nil {
-		return vetDomain.Veterinarian{}, err
+		return entity.Veterinarian{}, err
 	}
 
 	vet, err := SqlcVetToDomain(sqlVet)
 	if err != nil {
-		return vetDomain.Veterinarian{}, err
+		return entity.Veterinarian{}, err
 	}
 
 	return *vet, nil
 }
 
-func (c *SqlcVetRepository) GetByUserId(ctx context.Context, id int) (vetDomain.Veterinarian, error) {
-	sqlVet, err := c.queries.GetVeterinarianById(ctx, int32(id))
+func (c *SqlcVetRepository) GetByUserID(ctx context.Context, userID valueobject.UserID) (entity.Veterinarian, error) {
+	sqlVet, err := c.queries.GetVeterinarianById(ctx, int32(userID.GetValue()))
 	if err != nil {
-		return vetDomain.Veterinarian{}, err
+		return entity.Veterinarian{}, err
 	}
 
 	vet, err := SqlcVetToDomain(sqlVet)
 	if err != nil {
-		return vetDomain.Veterinarian{}, err
+		return entity.Veterinarian{}, err
 	}
 	return *vet, nil
 }
 
-func (c *SqlcVetRepository) Save(ctx context.Context, vet *vetDomain.Veterinarian) error {
+func (c *SqlcVetRepository) Save(ctx context.Context, vet *entity.Veterinarian) error {
 	if vet.GetID() == 0 {
 		if err := c.create(ctx, vet); err != nil {
 			return err
@@ -164,15 +167,15 @@ func (c *SqlcVetRepository) Save(ctx context.Context, vet *vetDomain.Veterinaria
 	return nil
 }
 
-func (c *SqlcVetRepository) SoftDelete(ctx context.Context, id int) error {
-	if err := c.queries.SoftDeleteVeterinarian(ctx, int32(id)); err != nil {
+func (c *SqlcVetRepository) SoftDelete(ctx context.Context, id valueobject.VetID) error {
+	if err := c.queries.SoftDeleteVeterinarian(ctx, int32(id.GetValue())); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (c *SqlcVetRepository) Exists(ctx context.Context, vetId int) (bool, error) {
-	_, err := c.queries.GetVeterinarianById(ctx, int32(vetId))
+func (c *SqlcVetRepository) Exists(ctx context.Context, id valueobject.VetID) (bool, error) {
+	_, err := c.queries.GetVeterinarianById(ctx, int32(id.GetValue()))
 	if err != nil {
 		if err.Error() == "sql: no rows in result set" {
 			return false, nil
@@ -184,7 +187,7 @@ func (c *SqlcVetRepository) Exists(ctx context.Context, vetId int) (bool, error)
 	return true, nil
 }
 
-func (c *SqlcVetRepository) create(ctx context.Context, vet *vetDomain.Veterinarian) error {
+func (c *SqlcVetRepository) create(ctx context.Context, vet *entity.Veterinarian) error {
 	createParams := sqlc.CreateVeterinarianParams{
 		FirstName:         vet.GetName().FirstName,
 		LastName:          vet.GetName().LastName,
@@ -207,7 +210,7 @@ func (c *SqlcVetRepository) create(ctx context.Context, vet *vetDomain.Veterinar
 	return nil
 }
 
-func (c *SqlcVetRepository) update(ctx context.Context, vet *vetDomain.Veterinarian) error {
+func (c *SqlcVetRepository) update(ctx context.Context, vet *entity.Veterinarian) error {
 	updateParams := sqlc.UpdateVeterinarianParams{
 		ID:                int32(vet.GetID()),
 		FirstName:         vet.GetName().FirstName,

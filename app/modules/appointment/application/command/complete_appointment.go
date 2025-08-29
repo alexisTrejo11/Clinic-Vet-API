@@ -1,14 +1,16 @@
-package appointmentCmd
+package command
 
 import (
 	"context"
 
-	appointmentDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/appointment/domain"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
+	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/service"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
 )
 
 type CompleteAppointmentCommand struct {
-	Id int `json:"id" binding:"required"`
+	ID valueobject.AppointmentID `json:"id" binding:"required"`
 
 	Notes *string `json:"notes,omitempty"`
 }
@@ -18,22 +20,24 @@ type CompleteAppointmentHandler interface {
 }
 
 type completeAppointmentHandler struct {
-	appointmentRepo appointmentDomain.AppointmentRepository
+	appointmentRepo repository.AppointmentRepository
+	service         *service.AppointmentService
 }
 
-func NewCompleteAppointmentHandler(appointmentRepo appointmentDomain.AppointmentRepository) CompleteAppointmentHandler {
+func NewCompleteAppointmentHandler(appointmentRepo repository.AppointmentRepository) CompleteAppointmentHandler {
 	return &completeAppointmentHandler{
 		appointmentRepo: appointmentRepo,
+		service:         &service.AppointmentService{},
 	}
 }
 
 func (h *completeAppointmentHandler) Handle(ctx context.Context, command CompleteAppointmentCommand) shared.CommandResult {
-	appointment, err := h.appointmentRepo.GetById(ctx, command.Id)
+	appointment, err := h.appointmentRepo.GetByID(ctx, command.ID)
 	if err != nil {
 		return shared.FailureResult("appointment not found", err)
 	}
 
-	if err := appointment.Complete(); err != nil {
+	if err := h.service.Complete(&appointment); err != nil {
 		return shared.FailureResult("failed to complete appointment", err)
 	}
 
@@ -41,5 +45,5 @@ func (h *completeAppointmentHandler) Handle(ctx context.Context, command Complet
 		return shared.FailureResult("failed to save completed appointment", err)
 	}
 
-	return shared.SuccessResult(appointment.GetId().String(), "appointment completed successfully")
+	return shared.SuccessResult(appointment.GetID().String(), "appointment completed successfully")
 }

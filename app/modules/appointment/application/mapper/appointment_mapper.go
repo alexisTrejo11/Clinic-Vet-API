@@ -1,12 +1,12 @@
-package appointmentMapper
+package mapper
 
 import (
 	"time"
 
-	appointmentDTOs "github.com/alexisTrejo11/Clinic-Vet-API/app/appointment/application/dtos"
-	appointDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/appointment/domain"
-	petDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/domain"
-	vetDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/veterinarians/domain"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/enum"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/appointment/application/dto"
 )
 
 type AppointmentMapper struct{}
@@ -15,19 +15,19 @@ func NewAppointmentMapper() *AppointmentMapper {
 	return &AppointmentMapper{}
 }
 
-// ToAppointmentResponseDTO converts domain appointment to response DTO
-func (m *AppointmentMapper) ToAppointmentResponseDTO(appointment *appointDomain.Appointment) appointmentDTOs.AppointmentResponseDTO {
-	var vetId *int
-	if appointment.GetVetId() != nil {
-		id := appointment.GetVetId().GetValue()
-		vetId = &id
+// ToAppointmentResponse converts domain appointment to response
+func (m *AppointmentMapper) ToAppointmentResponse(appointment *entity.Appointment) dto.AppointmentResponse {
+	var vetID *int
+	if appointment.GetVetID() != nil {
+		v := appointment.GetVetID().GetValue()
+		vetID = &v
 	}
 
-	return appointmentDTOs.AppointmentResponseDTO{
-		Id:            appointment.GetId().GetValue(),
-		PetId:         appointment.GetPetId().GetValue(),
-		OwnerId:       appointment.GetOwnerId(),
-		VetId:         vetId,
+	return dto.AppointmentResponse{
+		ID:            appointment.GetID().GetValue(),
+		PetID:         appointment.GetPetID().GetValue(),
+		OwnerID:       appointment.GetOwnerID(),
+		VetID:         vetID,
 		Service:       appointment.GetService(),
 		ScheduledDate: appointment.GetScheduledDate(),
 		Status:        appointment.GetStatus(),
@@ -36,10 +36,15 @@ func (m *AppointmentMapper) ToAppointmentResponseDTO(appointment *appointDomain.
 	}
 }
 
-// ToAppointmentDetailDTO converts domain appointment to detailed response DTO
-func (m *AppointmentMapper) ToAppointmentDetailDTO(appointment *appointDomain.Appointment, pet *appointmentDTOs.PetSummaryDTO, owner *appointmentDTOs.OwnerSummaryDTO, vet *appointmentDTOs.VetSummaryDTO) appointmentDTOs.AppointmentDetailDTO {
-	return appointmentDTOs.AppointmentDetailDTO{
-		Id:            appointment.GetId().GetValue(),
+// ToAppointmentDetail converts domain appointment to detailed response
+func (m *AppointmentMapper) ToAppointmentDetail(
+	appointment *entity.Appointment,
+	pet *dto.PetSummary,
+	owner *dto.OwnerSummary,
+	vet *dto.VetSummary,
+) dto.AppointmentDetail {
+	return dto.AppointmentDetail{
+		ID:            appointment.GetID().GetValue(),
 		Pet:           pet,
 		Owner:         owner,
 		Veterinarian:  vet,
@@ -51,33 +56,33 @@ func (m *AppointmentMapper) ToAppointmentDetailDTO(appointment *appointDomain.Ap
 	}
 }
 
-// RequestDTOToDomain converts request DTO to domain appointment
-func (m *AppointmentMapper) RequestDTOToDomain(dto appointmentDTOs.AppointmentCreateDTO) (*appointDomain.Appointment, error) {
-	appointmentId := appointDomain.NilAppointmentId()
+// RequestToDomain converts request  to domain appointment
+func (m *AppointmentMapper) RequestToDomain(dto dto.AppointmentCreate) (*entity.Appointment, error) {
+	appointmentID := entity.NilAppointmentID()
 
-	petId, err := petDomain.NewPetId(dto.PetId)
+	petID, err := valueobject.NewPetID(dto.PetID)
 	if err != nil {
 		return nil, err
 	}
 
-	var vetId *vetDomain.VetId
-	if dto.VetId != nil {
-		id, err := vetDomain.NewVeterinarianId(*dto.VetId)
+	var vetID *valueobject.VetID
+	if dto.VetID != nil {
+		id, err := valueobject.NewVetID(*dto.VetID)
 		if err != nil {
 			return nil, err
 		}
-		vetId = &id
+		vetID = &id
 	}
 
 	now := time.Now()
-	appointment := appointDomain.NewAppointment(
-		appointmentId,
-		petId,
-		dto.PetId,
-		vetId,
+	appointment := entity.NewAppointment(
+		appointmentID,
+		petID,
+		dto.PetID,
+		vetID,
 		dto.Service,
 		dto.ScheduledDate,
-		appointDomain.StatusPending,
+		enum.StatusPending,
 		now,
 		now,
 	)
@@ -85,17 +90,17 @@ func (m *AppointmentMapper) RequestDTOToDomain(dto appointmentDTOs.AppointmentCr
 	return appointment, nil
 }
 
-// UpdateDTOToDomain applies update DTO to existing domain appointment
-func (m *AppointmentMapper) UpdateDTOToDomain(appointment *appointDomain.Appointment, dto appointmentDTOs.AppointmentUpdateDTO) error {
-	if dto.VetId != nil {
-		if *dto.VetId != 0 {
-			vetId, err := vetDomain.NewVeterinarianId(*dto.VetId)
+// UpdateToDomain applies update  to existing domain appointment
+func (m *AppointmentMapper) UpdateToDomain(appointment *entity.Appointment, dto dto.AppointmentUpdate) error {
+	if dto.VetID != nil {
+		if *dto.VetID != 0 {
+			vetID, err := valueobject.NewVetID(*dto.VetID)
 			if err != nil {
 				return err
 			}
-			appointment.SetVetId(&vetId)
+			appointment.SetVetID(&vetID)
 		} else {
-			appointment.SetVetId(nil)
+			appointment.SetVetID(nil)
 		}
 	}
 
@@ -111,8 +116,8 @@ func (m *AppointmentMapper) UpdateDTOToDomain(appointment *appointDomain.Appoint
 	return nil
 }
 
-// OwnerUpdateDTOToDomain applies owner update DTO to existing domain appointment
-func (m *AppointmentMapper) OwnerUpdateDTOToDomain(appointment *appointDomain.Appointment, dto appointmentDTOs.AppointmentOwnerUpdateDTO) error {
+// OwnerUpdateToDomain applies owner update  to existing domain appointment
+func (m *AppointmentMapper) OwnerUpdateToDomain(appointment *entity.Appointment, dto dto.AppointmentOwnerUpdate) error {
 	if dto.Service != nil {
 		appointment.SetService(*dto.Service)
 	}
@@ -125,42 +130,42 @@ func (m *AppointmentMapper) OwnerUpdateDTOToDomain(appointment *appointDomain.Ap
 	return nil
 }
 
-// VetUpdateDTOToDomain applies vet update DTO to existing domain appointment
-func (m *AppointmentMapper) VetUpdateDTOToDomain(appointment *appointDomain.Appointment, dto appointmentDTOs.AppointmentVetUpdateDTO) {
+// VetUpdateToDomain applies vet update  to existing domain appointment
+func (m *AppointmentMapper) VetUpdateToDomain(appointment *entity.Appointment, dto dto.AppointmentVetUpdate) {
 	appointment.SetStatus(dto.Status)
 	appointment.SetUpdatedAt(time.Now())
 }
 
 // ToCreateAppointmentResponse creates a response for appointment creation
-func (m *AppointmentMapper) ToCreateAppointmentResponse(appointment *appointDomain.Appointment) appointmentDTOs.CreateAppointmentResponseDTO {
-	return appointmentDTOs.CreateAppointmentResponseDTO{
-		Appointment: m.ToAppointmentResponseDTO(appointment),
+func (m *AppointmentMapper) ToCreateAppointmentResponse(appointment *entity.Appointment) dto.CreateAppointmentResponse {
+	return dto.CreateAppointmentResponse{
+		Appointment: m.ToAppointmentResponse(appointment),
 		Message:     "Appointment requested successfully",
 	}
 }
 
 // ToCancelAppointmentResponse creates a response for appointment cancellation
-func (m *AppointmentMapper) ToCancelAppointmentResponse(appointmentId int) appointmentDTOs.CancelAppointmentResponseDTO {
-	return appointmentDTOs.CancelAppointmentResponseDTO{
-		AppointmentId: appointmentId,
-		Status:        string(appointDomain.StatusCancelled),
-		Message:       "Appointment cancelled successfully",
+func (m *AppointmentMapper) ToCancelAppointmentResponse(appointmentID valueobject.AppointmentID) dto.CancelAppointmentResponse {
+	return dto.CancelAppointmentResponse{
+		AppointmentID: appointmentID.GetValue(),
+		Status:        string(enum.StatusCancelled),
+		Message:       "App",
 		CancelledAt:   time.Now(),
 	}
 }
 
-// ToSearchCriteria converts search DTO to repository search criteria
-func (m *AppointmentMapper) ToSearchCriteria(dto appointmentDTOs.AppointmentSearchDTO) map[string]interface{} {
+// ToSearchCriteria converts search  to repository search criteria
+func (m *AppointmentMapper) ToSearchCriteria(dto dto.AppointmentSearch) map[string]interface{} {
 	criteria := make(map[string]interface{})
 
-	if dto.OwnerId != nil {
-		criteria["owner_id"] = *dto.OwnerId
+	if dto.OwnerID != nil {
+		criteria["owner_id"] = *dto.OwnerID
 	}
-	if dto.PetId != nil {
-		criteria["pet_id"] = *dto.PetId
+	if dto.PetID != nil {
+		criteria["pet_id"] = *dto.PetID
 	}
-	if dto.VetId != nil {
-		criteria["vet_id"] = *dto.VetId
+	if dto.VetID != nil {
+		criteria["vet_id"] = *dto.VetID
 	}
 	if dto.Status != nil {
 		criteria["status"] = *dto.Status

@@ -23,6 +23,10 @@ type VetValidatorService struct {
 	vet *entity.Veterinarian
 }
 
+func NewVetValidatorService(vet *entity.Veterinarian) *VetValidatorService {
+	return &VetValidatorService{vet: vet}
+}
+
 func (v *VetValidatorService) ValidateVetCreation() error {
 	var errs []error
 

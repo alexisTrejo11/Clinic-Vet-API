@@ -1,10 +1,10 @@
-package appointmentQuery
+package query
 
 import (
 	"context"
 	"time"
 
-	appointmentDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/appointment/domain"
+	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 )
 
@@ -30,10 +30,10 @@ type GetAppointmentsByDateRangeHandler interface {
 }
 
 type getAppointmentsByDateRangeHandler struct {
-	appointmentRepo appointmentDomain.AppointmentRepository
+	appointmentRepo repository.AppointmentRepository
 }
 
-func NewGetAppointmentsByDateRangeHandler(appointmentRepo appointmentDomain.AppointmentRepository) GetAppointmentsByDateRangeHandler {
+func NewGetAppointmentsByDateRangeHandler(appointmentRepo repository.AppointmentRepository) GetAppointmentsByDateRangeHandler {
 	return &getAppointmentsByDateRangeHandler{
 		appointmentRepo: appointmentRepo,
 	}

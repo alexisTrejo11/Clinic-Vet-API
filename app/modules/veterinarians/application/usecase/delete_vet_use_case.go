@@ -1,35 +1,35 @@
-package vetUsecase
+package usecase
 
 import (
 	"context"
-	"strconv"
 
-	vetaApplication "github.com/alexisTrejo11/Clinic-Vet-API/app/veterinarians/application"
-	vetRepo "github.com/alexisTrejo11/Clinic-Vet-API/app/veterinarians/application/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
+	domainerr "github.com/alexisTrejo11/Clinic-Vet-API/app/core/errors"
+	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 )
 
 type DeleteVetUseCase struct {
-	vetRepository vetRepo.VeterinarianRepository
+	vetRepository repository.VetRepository
 }
 
-func NewDeleteVetUseCase(vetRepository vetRepo.VeterinarianRepository) *DeleteVetUseCase {
+func NewDeleteVetUseCase(vetRepository repository.VetRepository) *DeleteVetUseCase {
 	return &DeleteVetUseCase{
 		vetRepository: vetRepository,
 	}
 }
 
-func (uc *DeleteVetUseCase) Execute(ctx context.Context, vetId int) error {
+func (uc *DeleteVetUseCase) Execute(ctx context.Context, vetId valueobject.VetID) error {
 	exists, err := uc.vetRepository.Exists(ctx, vetId)
 	if err != nil {
-		return vetaApplication.VetDBErr("search", err)
+		return err
 	}
 
 	if !exists {
-		return vetaApplication.VetNotFoundErr("id", strconv.Itoa(vetId))
+		return domainerr.NewEntityNotFoundError("veterinarians", vetId.String())
 	}
 
-	if err := uc.vetRepository.SoftDelete(ctx, vetId); err != nil {
-		return vetaApplication.VetDBErr("delete", err)
+	if err = uc.vetRepository.SoftDelete(ctx, vetId); err != nil {
+		return err
 	}
 
 	return nil

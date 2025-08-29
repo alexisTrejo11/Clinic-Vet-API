@@ -1,25 +1,27 @@
-package appointmentCmd
+package command
 
 import (
 	"context"
 	"time"
 
-	appointmentDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/appointment/domain"
-	petDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/domain"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/enum"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
+	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/service"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
-	vetDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/veterinarians/domain"
 )
 
 type CreateAppointmentCommand struct {
-	OwnerId     int                                  `json:"owner_id" binding:"required"`
-	PetId       int                                  `json:"pet_id" binding:"required"`
-	VetId       *int                                 `json:"vet_id,omitempty"`
-	Service     appointmentDomain.ClinicService      `json:"service" binding:"required"`
-	DateTime    time.Time                            `json:"date_time" binding:"required"`
-	Status      *appointmentDomain.AppointmentStatus `json:"status,omitempty"`
-	Reason      string                               `json:"reason" binding:"required"`
-	Notes       *string                              `json:"notes,omitempty"`
-	IsEmergency bool                                 `json:"is_emergency"`
+	OwnerID     int                     `json:"owner_id" binding:"required"`
+	PetID       valueobject.PetID       `json:"pet_id" binding:"required"`
+	VetID       *valueobject.VetID      `json:"vet_id,omitempty"`
+	Service     enum.ClinicService      `json:"service" binding:"required"`
+	DateTime    time.Time               `json:"date_time" binding:"required"`
+	Status      *enum.AppointmentStatus `json:"status,omitempty"`
+	Reason      string                  `json:"reason" binding:"required"`
+	Notes       *string                 `json:"notes,omitempty"`
+	IsEmergency bool                    `json:"is_emergency"`
 }
 
 type CreateAppointmentHandler interface {
@@ -27,12 +29,14 @@ type CreateAppointmentHandler interface {
 }
 
 type createAppointmentHandler struct {
-	appointmentRepo appointmentDomain.AppointmentRepository
+	appointmentRepo repository.AppointmentRepository
+	service         service.AppointmentService
 }
 
-func NewCreateAppointmentHandler(appointmentRepo appointmentDomain.AppointmentRepository) CreateAppointmentHandler {
+func NewCreateAppointmentHandler(appointmentRepo repository.AppointmentRepository) CreateAppointmentHandler {
 	return &createAppointmentHandler{
 		appointmentRepo: appointmentRepo,
+		service:         service.AppointmentService{},
 	}
 }
 
@@ -46,40 +50,26 @@ func (h *createAppointmentHandler) Handle(ctx context.Context, command CreateApp
 		return shared.FailureResult("failed to save appointment", err)
 	}
 
-	return shared.SuccessResult(appointment.GetId().String(), "appointment created successfully")
+	return shared.SuccessResult(appointment.GetID().String(), "appointment created successfully")
 }
 
-func (h *createAppointmentHandler) commandToDomain(command CreateAppointmentCommand) (*appointmentDomain.Appointment, error) {
-	appointmentId, err := appointmentDomain.NewAppointmentId(0)
+func (h *createAppointmentHandler) commandToDomain(command CreateAppointmentCommand) (*entity.Appointment, error) {
+	appointmentID, err := valueobject.NewAppointmentID(0)
 	if err != nil {
 		return nil, err
 	}
 
-	petId, err := petDomain.NewPetId(command.PetId)
-	if err != nil {
-		return nil, err
-	}
-
-	var vetId *vetDomain.VetId
-	if command.VetId != nil {
-		vet, err := vetDomain.NewVeterinarianId(*command.VetId)
-		if err != nil {
-			return nil, err
-		}
-		vetId = &vet
-	}
-
-	status := appointmentDomain.StatusPending
+	status := enum.StatusPending
 	if command.Status != nil {
 		status = *command.Status
 	}
 
 	now := time.Now()
-	appointment := appointmentDomain.NewAppointment(
-		appointmentId,
-		petId,
-		command.OwnerId,
-		vetId,
+	appointment := entity.NewAppointment(
+		appointmentID,
+		command.PetID,
+		command.OwnerID,
+		command.VetID,
 		command.Service,
 		command.DateTime,
 		status,
@@ -87,7 +77,7 @@ func (h *createAppointmentHandler) commandToDomain(command CreateAppointmentComm
 		now,
 	)
 
-	if err := appointment.ValidateRequestSchedule(); err != nil {
+	if err := h.service.ValidateRequestSchedule(appointment); err != nil {
 		return nil, err
 	}
 

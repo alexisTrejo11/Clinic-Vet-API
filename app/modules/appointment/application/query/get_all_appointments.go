@@ -1,9 +1,9 @@
-package appointmentQuery
+package query
 
 import (
 	"context"
 
-	appointmentDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/appointment/domain"
+	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 )
 
@@ -25,10 +25,10 @@ type GetAllAppointmentsHandler interface {
 }
 
 type getAllAppointmentsHandler struct {
-	appointmentRepo appointmentDomain.AppointmentRepository
+	appointmentRepo repository.AppointmentRepository
 }
 
-func NewGetAllAppointmentsHandler(appointmentRepo appointmentDomain.AppointmentRepository) GetAllAppointmentsHandler {
+func NewGetAllAppointmentsHandler(appointmentRepo repository.AppointmentRepository) GetAllAppointmentsHandler {
 	return &getAllAppointmentsHandler{
 		appointmentRepo: appointmentRepo,
 	}

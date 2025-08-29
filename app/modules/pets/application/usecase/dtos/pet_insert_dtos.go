@@ -1,4 +1,4 @@
-package petDTOs
+package dto
 
 type PetCreate struct {
 	Name               string

@@ -1,7 +1,6 @@
-package med_hist_controller
+package controller
 
-type UserMedHistoryController struct {
-}
+type UserMedHistoryController struct{}
 
 func NewUserMedHistoryController() *UserMedHistoryController {
 	return &UserMedHistoryController{}

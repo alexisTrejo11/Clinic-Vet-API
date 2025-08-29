@@ -1,13 +1,12 @@
-package authCmd
+package command
 
 import (
 	"errors"
 	"fmt"
 	"reflect"
 
-	jwtService "github.com/alexisTrejo11/Clinic-Vet-API/app/auth/application/jwt"
-	session "github.com/alexisTrejo11/Clinic-Vet-API/app/auth/domain"
-	userDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
+	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/auth/application/jwt"
 )
 
 type AuthCommandHandler interface {
@@ -24,9 +23,9 @@ type authCommandBus struct {
 }
 
 func NewAuthCommandBus(
-	sessionRepo session.SessionRepository,
-	userRepo userDomain.UserRepository,
-	jwtService jwtService.JWTService,
+	sessionRepo repository.SessionRepository,
+	userRepo repository.UserRepository,
+	jwtService jwt.JWTService,
 ) AuthCommandBus {
 	bus := &authCommandBus{
 		handlers: make(map[reflect.Type]AuthCommandHandler),

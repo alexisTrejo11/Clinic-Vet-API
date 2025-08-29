@@ -1,45 +1,43 @@
-package mhDTOs
+package dto
 
 import (
 	"time"
 
-	mhDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/medical/domain"
-	ownerDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/domain"
-
-	petDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/domain"
-	vetDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/veterinarians/domain"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/enum"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
 )
 
-func FromCreateDTO(dto MedicalHistoryCreate) (mhDomain.MedicalHistory, error) {
-	PetId, err := petDomain.NewPetId(dto.PetId)
+func FromCreateDTO(dto MedicalHistoryCreate) (entity.MedicalHistory, error) {
+	PetID, err := valueobject.NewPetID(dto.PetID)
 	if err != nil {
-		return mhDomain.MedicalHistory{}, err
+		return entity.MedicalHistory{}, err
 	}
 
-	VetId, err := vetDomain.NewVeterinarianId(dto.VetId)
+	VetID, err := valueobject.NewVetID(dto.VetID)
 	if err != nil {
-		return mhDomain.MedicalHistory{}, err
+		return entity.MedicalHistory{}, err
 	}
 
-	visitReason, err := mhDomain.NewVisitReason(string(dto.VisitReason))
+	visitReason, err := enum.NewVisitReason(string(dto.VisitReason))
 	if err != nil {
-		return mhDomain.MedicalHistory{}, err
+		return entity.MedicalHistory{}, err
 	}
 
-	visitType, err := mhDomain.NewVisitType(string(dto.VisitType))
+	visitType, err := enum.NewVisitType(string(dto.VisitType))
 	if err != nil {
-		return mhDomain.MedicalHistory{}, err
+		return entity.MedicalHistory{}, err
 	}
 
-	condition, err := mhDomain.NewPetCondition(string(dto.Condition))
+	condition, err := enum.NewPetCondition(string(dto.Condition))
 	if err != nil {
-		return mhDomain.MedicalHistory{}, err
+		return entity.MedicalHistory{}, err
 	}
 
-	return mhDomain.MedicalHistory{
-		PetId:       PetId,
-		VetId:       VetId,
-		OwnerId:     dto.OwnerId,
+	return entity.MedicalHistory{
+		PetID:       PetID,
+		VetID:       VetID,
+		OwnerID:     dto.OwnerID,
 		VisitDate:   dto.Date,
 		Diagnosis:   dto.Diagnosis,
 		Treatment:   dto.Treatment,
@@ -53,13 +51,13 @@ func FromCreateDTO(dto MedicalHistoryCreate) (mhDomain.MedicalHistory, error) {
 }
 
 // ADD MISSING FIELDS
-func FromUpdateDTO(dto MedicalHistoryUpdate, existingMedHis mhDomain.MedicalHistory) (mhDomain.MedicalHistory, error) {
-	if dto.PetId != nil {
-		petId, err := petDomain.NewPetId(*dto.PetId)
+func FromUpdateDTO(dto MedicalHistoryUpdate, existingMedHis entity.MedicalHistory) (entity.MedicalHistory, error) {
+	if dto.PetID != nil {
+		petID, err := valueobject.NewPetID(*dto.PetID)
 		if err != nil {
-			return mhDomain.MedicalHistory{}, err
+			return entity.MedicalHistory{}, err
 		}
-		existingMedHis.PetId = petId
+		existingMedHis.PetID = petID
 	}
 
 	if dto.Date != nil {
@@ -71,32 +69,32 @@ func FromUpdateDTO(dto MedicalHistoryUpdate, existingMedHis mhDomain.MedicalHist
 	}
 
 	if dto.VisitReason != nil {
-		reason, err := mhDomain.NewVisitReason(string(*dto.VisitReason))
+		reason, err := enum.NewVisitReason(string(*dto.VisitReason))
 		if err != nil {
-			return mhDomain.MedicalHistory{}, err
+			return entity.MedicalHistory{}, err
 		}
 		existingMedHis.VisitReason = reason
 	}
 
 	if dto.VisitType != nil {
-		visitType, err := mhDomain.NewVisitType(string(*dto.VisitType))
+		visitType, err := enum.NewVisitType(string(*dto.VisitType))
 		if err != nil {
-			return mhDomain.MedicalHistory{}, err
+			return entity.MedicalHistory{}, err
 		}
 
 		existingMedHis.VisitType = visitType
 	}
 
-	if dto.OwnerId != nil {
-		existingMedHis.OwnerId = *dto.OwnerId
+	if dto.OwnerID != nil {
+		existingMedHis.OwnerID = *dto.OwnerID
 	}
 
-	if dto.VetId != nil {
-		vetId, err := vetDomain.NewVeterinarianId(*dto.VetId)
+	if dto.VetID != nil {
+		vetID, err := valueobject.NewVetID(*dto.VetID)
 		if err != nil {
-			return mhDomain.MedicalHistory{}, err
+			return entity.MedicalHistory{}, err
 		}
-		existingMedHis.VetId = vetId
+		existingMedHis.VetID = vetID
 	}
 
 	existingMedHis.UpdatedAt = time.Now()
@@ -104,11 +102,11 @@ func FromUpdateDTO(dto MedicalHistoryUpdate, existingMedHis mhDomain.MedicalHist
 	return existingMedHis, nil
 }
 
-func ToResponse(medHistory mhDomain.MedicalHistory) MedHistResponse {
+func ToResponse(medHistory entity.MedicalHistory) MedHistResponse {
 	return MedHistResponse{
-		Id:          medHistory.Id.GetValue(),
-		PetId:       medHistory.PetId.GetValue(),
-		OwnerId:     medHistory.OwnerId,
+		ID:          medHistory.ID,
+		PetID:       medHistory.PetID,
+		OwnerID:     medHistory.OwnerID(),
 		Date:        medHistory.VisitDate,
 		Notes:       medHistory.Notes,
 		Diagnosis:   medHistory.Diagnosis,
@@ -116,13 +114,13 @@ func ToResponse(medHistory mhDomain.MedicalHistory) MedHistResponse {
 		VisitType:   medHistory.VisitType.ToString(),
 		VisitReason: medHistory.VisitReason.ToString(),
 		Treatment:   medHistory.Treatment,
-		VetId:       medHistory.VetId.GetValue(),
+		VetID:       medHistory.VetID.GetValue(),
 		CreatedAt:   medHistory.CreatedAt,
 		UpdatedAt:   medHistory.UpdatedAt,
 	}
 }
 
-func ListToResponse(medHistories []mhDomain.MedicalHistory) []MedHistResponse {
+func ListToResponse(medHistories []entity.MedicalHistory) []MedHistResponse {
 	var response []MedHistResponse
 
 	if len(medHistories) == 0 {
@@ -135,9 +133,14 @@ func ListToResponse(medHistories []mhDomain.MedicalHistory) []MedHistResponse {
 	return response
 }
 
-func ToResponseDetail(medHistory mhDomain.MedicalHistory, owner ownerDomain.Owner, vet vetDomain.Veterinarian, pet petDomain.Pet) MedHistResponseDetail {
+func ToResponseDetail(
+	medHistory entity.MedicalHistory,
+	owner entity.Owner,
+	vet entity.Veterinarian,
+	pet entity.Pet,
+) MedHistResponseDetail {
 	petDetail := &PetDetails{
-		Id:      pet.GetID(),
+		ID:      medHistory.ID().GetValue(),
 		Name:    pet.GetName(),
 		Species: pet.GetSpecies(),
 	}
@@ -157,10 +160,10 @@ func ToResponseDetail(medHistory mhDomain.MedicalHistory, owner ownerDomain.Owne
 	}
 
 	detail := &MedHistResponseDetail{
-		Id:  medHistory.Id.GetValue(),
+		ID:  medHistory.ID.GetValue(),
 		Pet: *petDetail,
 		Owner: OwnerDetails{
-			Id:        owner.Id(),
+			ID:        owner.ID(),
 			FirstName: owner.FullName().FirstName,
 			LastName:  owner.FullName().LastName,
 		},
@@ -168,7 +171,7 @@ func ToResponseDetail(medHistory mhDomain.MedicalHistory, owner ownerDomain.Owne
 		Diagnosis: medHistory.Diagnosis,
 		Treatment: medHistory.Treatment,
 		Veterinarian: VetDetails{
-			Id:        vet.GetID(),
+			ID:        vet.GetID(),
 			FirstName: vet.GetName().FirstName,
 			Specialty: vet.GetSpecialty().String(),
 			LastName:  vet.GetName().LastName,

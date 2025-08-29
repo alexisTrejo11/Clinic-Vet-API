@@ -1,12 +1,11 @@
-package appointmentQuery
+package query
 
 import (
 	"context"
 	"fmt"
 	"reflect"
 
-	appointmentDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/appointment/domain"
-	ownerDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/domain"
+	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 	appError "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/errors/application"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 )
@@ -27,8 +26,8 @@ type appointmentQueryBus struct {
 }
 
 func NewAppointmentQueryBus(
-	appointmentRepo appointmentDomain.AppointmentRepository,
-	ownerRepo ownerDomain.OwnerRepository,
+	appointmentRepo repository.AppointmentRepository,
+	ownerRepo repository.OwnerRepository,
 ) QueryBus {
 	bus := &appointmentQueryBus{
 		handlers: make(map[reflect.Type]interface{}),
@@ -37,8 +36,8 @@ func NewAppointmentQueryBus(
 	return bus
 }
 
-func (bus *appointmentQueryBus) registerHandlers(appointmentRepo appointmentDomain.AppointmentRepository, ownerRepo ownerDomain.OwnerRepository) {
-	bus.Register(reflect.TypeOf(GetAppointmentByIdQuery{}), NewGetAppointmentByIdHandler(appointmentRepo))
+func (bus *appointmentQueryBus) registerHandlers(appointmentRepo repository.AppointmentRepository, ownerRepo repository.OwnerRepository) {
+	bus.Register(reflect.TypeOf(GetAppointmentByIDQuery{}), NewGetAppointmentByIDHandler(appointmentRepo))
 	bus.Register(reflect.TypeOf(GetAllAppointmentsQuery{}), NewGetAllAppointmentsHandler(appointmentRepo))
 	bus.Register(reflect.TypeOf(GetAppointmentsByOwnerQuery{}), NewGetAppointmentsByOwnerHandler(appointmentRepo, ownerRepo))
 	bus.Register(reflect.TypeOf(GetAppointmentsByVetQuery{}), NewGetAppointmentsByVetHandler(appointmentRepo))
@@ -57,8 +56,8 @@ func (bus *appointmentQueryBus) Execute(ctx context.Context, query Query) (inter
 
 	// Type switch to handle different types of response
 	switch q := query.(type) {
-	case GetAppointmentByIdQuery:
-		h := handler.(GetAppointmentByIdHandler)
+	case GetAppointmentByIDQuery:
+		h := handler.(GetAppointmentByIDHandler)
 		return h.Handle(ctx, q)
 
 	case GetAllAppointmentsQuery:
@@ -100,17 +99,17 @@ func (bus *appointmentQueryBus) Register(queryType reflect.Type, handler interfa
 
 type AppointmentQueryService struct {
 	queryBus        QueryBus
-	appointmentRepo appointmentDomain.AppointmentRepository
+	appointmentRepo repository.AppointmentRepository
 }
 
-func NewAppointmentQueryService(queryBus QueryBus, appointmentRepo appointmentDomain.AppointmentRepository) *AppointmentQueryService {
+func NewAppointmentQueryService(queryBus QueryBus, appointmentRepo repository.AppointmentRepository) *AppointmentQueryService {
 	return &AppointmentQueryService{
 		queryBus:        queryBus,
 		appointmentRepo: appointmentRepo,
 	}
 }
 
-func (s *AppointmentQueryService) GetAppointmentById(query GetAppointmentByIdQuery) (*AppointmentResponse, error) {
+func (s *AppointmentQueryService) GetAppointmentByID(query GetAppointmentByIDQuery) (*AppointmentResponse, error) {
 	result, err := s.queryBus.Execute(context.Background(), query)
 	if err != nil {
 		return nil, err

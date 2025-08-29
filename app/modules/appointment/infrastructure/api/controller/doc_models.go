@@ -1,4 +1,4 @@
-package appointmentController
+package controller
 
 // PaginationMetadata represents metadata for paginated responses
 type PaginationMetadata struct {

@@ -1,14 +1,16 @@
-package appointmentCmd
+package command
 
 import (
 	"context"
 
-	appointmentDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/appointment/domain"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
+	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/service"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
 )
 
 type MarkAsNotPresentedCommand struct {
-	Id int `json:"id" binding:"required"`
+	ID valueobject.AppointmentID `json:"id" binding:"required"`
 }
 
 type MarkAsNotPresentedHandler interface {
@@ -16,22 +18,24 @@ type MarkAsNotPresentedHandler interface {
 }
 
 type markAsNotPresentedHandler struct {
-	appointmentRepo appointmentDomain.AppointmentRepository
+	appointmentRepo repository.AppointmentRepository
+	service         *service.AppointmentService
 }
 
-func NewMarkAsNotPresentedHandler(appointmentRepo appointmentDomain.AppointmentRepository) MarkAsNotPresentedHandler {
+func NewMarkAsNotPresentedHandler(appointmentRepo repository.AppointmentRepository) MarkAsNotPresentedHandler {
 	return &markAsNotPresentedHandler{
 		appointmentRepo: appointmentRepo,
+		service:         &service.AppointmentService{},
 	}
 }
 
 func (h *markAsNotPresentedHandler) Handle(ctx context.Context, command MarkAsNotPresentedCommand) shared.CommandResult {
-	appointment, err := h.appointmentRepo.GetById(ctx, command.Id)
+	appointment, err := h.appointmentRepo.GetByID(ctx, command.ID)
 	if err != nil {
 		return shared.FailureResult("appointment not found", err)
 	}
 
-	if err := appointment.NotPresented(); err != nil {
+	if err := h.service.NotPresented(&appointment); err != nil {
 		return shared.FailureResult("failed to mark appointment as not presented", err)
 	}
 
@@ -39,5 +43,5 @@ func (h *markAsNotPresentedHandler) Handle(ctx context.Context, command MarkAsNo
 		return shared.FailureResult("failed to save appointment", err)
 	}
 
-	return shared.SuccessResult(appointment.GetId().String(), "appointment marked as not presented successfully")
+	return shared.SuccessResult(appointment.GetID().String(), "appointment marked as not presented successfully")
 }

@@ -1,7 +1,7 @@
-package vetDtos
+package dto
 
 import (
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
 )
 
 // @Description Represents the response structure for a veterinarian.
@@ -21,7 +21,7 @@ type VetResponse struct {
 	// The specialty of the veterinarian.
 	Specialty string `json:"specialty"`
 	// The consultation fee charged by the veterinarian.
-	ConsultationFee *shared.Money `json:"consultation_fee"`
+	ConsultationFee *valueobject.Money `json:"consultation_fee"`
 	// The working schedule of the veterinarian.
 	LaboralSchedule *[]ScheduleInsert `json:"laboral_schedule"`
 }

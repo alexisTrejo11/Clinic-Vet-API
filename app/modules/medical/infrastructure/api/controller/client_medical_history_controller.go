@@ -1,4 +1,4 @@
-package med_hist_controller
+package controller
 
 /*
 import (

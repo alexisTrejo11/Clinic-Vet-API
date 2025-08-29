@@ -1,4 +1,4 @@
-package jwtService
+package jwt
 
 import (
 	"errors"
@@ -63,7 +63,6 @@ func (s *jwtService) ValidateToken(tokenString string) (*Claims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte(s.secretKey), nil
 	})
-
 	if err != nil {
 		return nil, err
 	}

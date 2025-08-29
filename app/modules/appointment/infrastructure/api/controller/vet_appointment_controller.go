@@ -1,5 +1,5 @@
-// Package appointmentController handles appointment-related HTTP endpoints
-package appointmentController
+// Package controller handles appointment-related HTTP endpoints
+package controller
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"time"
 
-	appointmentCmd "github.com/alexisTrejo11/Clinic-Vet-API/app/appointment/application/command"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/appointment/application/command"
 	appointmentQuery "github.com/alexisTrejo11/Clinic-Vet-API/app/appointment/application/queries"
 	response "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/responses"
 	"github.com/gin-gonic/gin"
@@ -21,11 +21,11 @@ import (
 // @in header
 // @name Authorization
 type VetAppointmentController struct {
-	commandBus appointmentCmd.CommandBus
+	commandBus command.CommandBus
 	queryBus   appointmentQuery.QueryBus
 }
 
-func NewVetAppointmentController(commandBus appointmentCmd.CommandBus, queryBus appointmentQuery.QueryBus) *VetAppointmentController {
+func NewVetAppointmentController(commandBus command.CommandBus, queryBus appointmentQuery.QueryBus) *VetAppointmentController {
 	return &VetAppointmentController{
 		commandBus: commandBus,
 		queryBus:   queryBus,
@@ -119,7 +119,6 @@ func (c *VetAppointmentController) GetTodayAppointments(ctx *gin.Context) {
 // @Failure 422 {object} response.APIResponse "Cannot confirm appointment"
 // @Router /vet/appointments/{id}/confirm [put]
 func (c *VetAppointmentController) ConfirmAppointment(ctx *gin.Context) {
-
 }
 
 // CompleteAppointment godoc
@@ -196,7 +195,7 @@ func (c *VetAppointmentController) MarkAsNoShow(ctx *gin.Context) {
 		return
 	}
 
-	command := appointmentCmd.MarkAsNotPresentedCommand{
+	command := command.MarkAsNotPresentedCommand{
 		Id: appointmentId,
 	}
 
@@ -267,7 +266,7 @@ func (c *VetAppointmentController) GetAppointmentStats(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path int true "Appointment ID"
-// @Param reschedule body appointmentCmd.RescheduleAppointmentCommand true "New appointment time details"
+// @Param reschedule body command.RescheduleAppointmentCommand true "New appointment time details"
 // @Security BearerAuth
 // @Success 200 {object} response.APIResponse{message=string} "Appointment rescheduled successfully"
 // @Failure 400 {object} response.APIResponse "Invalid input data"
@@ -283,7 +282,7 @@ func (c *VetAppointmentController) RescheduleAppointment(ctx *gin.Context) {
 		return
 	}
 
-	var command appointmentCmd.RescheduleAppointmentCommand
+	var command command.RescheduleAppointmentCommand
 	if err := ctx.ShouldBindJSON(&command); err != nil {
 		response.RequestBodyDataError(ctx, err)
 		return

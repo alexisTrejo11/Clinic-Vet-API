@@ -1,4 +1,4 @@
-package ownerDTOs
+package dto
 
 import (
 	"time"

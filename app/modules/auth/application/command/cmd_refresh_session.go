@@ -1,12 +1,12 @@
-package authCmd
+package command
 
 import (
 	"context"
 	"strconv"
 
-	jwtService "github.com/alexisTrejo11/Clinic-Vet-API/app/auth/application/jwt"
-	session "github.com/alexisTrejo11/Clinic-Vet-API/app/auth/domain"
-	userDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
+	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/auth/application/jwt"
 )
 
 type RefreshSessionCommand struct {
@@ -16,15 +16,15 @@ type RefreshSessionCommand struct {
 }
 
 type refreshSessionHandler struct {
-	userRepo    userDomain.UserRepository
-	sessionRepo session.SessionRepository
-	jwtService  jwtService.JWTService
+	userRepo    repository.UserRepository
+	sessionRepo repository.SessionRepository
+	jwtService  jwt.JWTService
 }
 
 func NewRefreshSessionHandler(
-	userRepo userDomain.UserRepository,
-	sessionRepo session.SessionRepository,
-	jwtService jwtService.JWTService,
+	userRepo repository.UserRepository,
+	sessionRepo repository.SessionRepository,
+	jwtService jwt.JWTService,
 ) AuthCommandHandler {
 	return &refreshSessionHandler{
 		userRepo:    userRepo,
@@ -54,7 +54,7 @@ func (h *refreshSessionHandler) Handle(cmd any) AuthCommandResult {
 	return SuccessAuthResult(&response, entity.Id, "session successfully refreshed")
 }
 
-func getSessionResponse(entity session.Session, access string) SessionResponse {
+func getSessionResponse(entity entity.Session, access string) SessionResponse {
 	sessionResponse := &SessionResponse{
 		UserID:       entity.UserId,
 		AccessToken:  access,

@@ -1,23 +1,22 @@
-package appointmentQuery
+package query
 
 import (
 	"context"
 	"strconv"
 
-	appointmentDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/appointment/domain"
-	ownerDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/domain"
+	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 	appError "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/errors/application"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 )
 
 type GetAppointmentsByOwnerQuery struct {
-	OwnerId   int `json:"owner_id"`
+	OwnerID   int `json:"owner_id"`
 	PageInput page.PageData
 }
 
-func NewGetAppointmentsByOwnerQuery(ownerId, pageNumber, pageSize int) GetAppointmentsByOwnerQuery {
+func NewGetAppointmentsByOwnerQuery(ownerID, pageNumber, pageSize int) GetAppointmentsByOwnerQuery {
 	return GetAppointmentsByOwnerQuery{
-		OwnerId: ownerId,
+		OwnerID: ownerID,
 		PageInput: page.PageData{
 			PageNumber: pageNumber,
 			PageSize:   pageSize,
@@ -30,13 +29,13 @@ type GetAppointmentsByOwnerHandler interface {
 }
 
 type getAppointmentsByOwnerHandler struct {
-	appointmentRepo appointmentDomain.AppointmentRepository
-	ownerRepo       ownerDomain.OwnerRepository
+	appointmentRepo repository.AppointmentRepository
+	ownerRepo       repository.OwnerRepository
 }
 
 func NewGetAppointmentsByOwnerHandler(
-	appointmentRepo appointmentDomain.AppointmentRepository,
-	ownerRepo ownerDomain.OwnerRepository,
+	appointmentRepo repository.AppointmentRepository,
+	ownerRepo repository.OwnerRepository,
 ) GetAppointmentsByOwnerHandler {
 	return &getAppointmentsByOwnerHandler{
 		appointmentRepo: appointmentRepo,
@@ -45,11 +44,11 @@ func NewGetAppointmentsByOwnerHandler(
 }
 
 func (h *getAppointmentsByOwnerHandler) Handle(ctx context.Context, query GetAppointmentsByOwnerQuery) (page.Page[[]AppointmentResponse], error) {
-	if err := h.validateExistingOwner(ctx, query.OwnerId); err != nil {
+	if err := h.validateExistingOwner(ctx, query.OwnerID); err != nil {
 		return page.Page[[]AppointmentResponse]{}, err
 	}
 
-	appointmentsPage, err := h.appointmentRepo.ListByOwnerId(ctx, query.OwnerId, query.PageInput)
+	appointmentsPage, err := h.appointmentRepo.ListByOwnerID(ctx, query.OwnerID, query.PageInput)
 	if err != nil {
 		return page.Page[[]AppointmentResponse]{}, err
 	}
@@ -60,11 +59,11 @@ func (h *getAppointmentsByOwnerHandler) Handle(ctx context.Context, query GetApp
 	), nil
 }
 
-func (h *getAppointmentsByOwnerHandler) validateExistingOwner(ctx context.Context, ownerId int) error {
-	if exists, err := h.ownerRepo.ExistsByID(ctx, ownerId); err != nil {
+func (h *getAppointmentsByOwnerHandler) validateExistingOwner(ctx context.Context, ownerID int) error {
+	if exists, err := h.ownerRepo.ExistsByID(ctx, ownerID); err != nil {
 		return err
 	} else if !exists {
-		return appError.NewEntityNotFoundError("owner", strconv.Itoa(ownerId))
+		return appError.NewEntityNotFoundError("owner", strconv.Itoa(ownerID))
 	} else {
 		return nil
 	}

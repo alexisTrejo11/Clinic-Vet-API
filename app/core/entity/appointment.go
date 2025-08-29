@@ -47,23 +47,23 @@ func NewAppointment(
 	}
 }
 
-func NilAppointmentId() valueobject.AppointmentID {
+func NilAppointmentID() valueobject.AppointmentID {
 	return valueobject.AppointmentID{IntegerId: shared.NilIntegerId()}
 }
 
-func (a *Appointment) GetId() valueobject.AppointmentID {
+func (a *Appointment) GetID() valueobject.AppointmentID {
 	return a.id
 }
 
-func (a *Appointment) GetPetId() valueobject.PetID {
+func (a *Appointment) GetPetID() valueobject.PetID {
 	return a.petID
 }
 
-func (a *Appointment) GetOwnerId() int {
+func (a *Appointment) GetOwnerID() int {
 	return a.ownerID
 }
 
-func (a *Appointment) GetVetId() *valueobject.VetID {
+func (a *Appointment) GetVetID() *valueobject.VetID {
 	return a.vetID
 }
 
@@ -95,7 +95,7 @@ func (a *Appointment) GetNotes() *string {
 	return a.notes
 }
 
-func (a *Appointment) SetVetId(vetID *valueobject.VetID) {
+func (a *Appointment) SetVetID(vetID *valueobject.VetID) {
 	a.vetID = vetID
 }
 
@@ -127,7 +127,7 @@ func (a *Appointment) SetNotes(notes *string) {
 	}
 }
 
-func (a *Appointment) SetId(id valueobject.AppointmentID) {
+func (a *Appointment) SetID(id valueobject.AppointmentID) {
 	a.id = id
 }
 

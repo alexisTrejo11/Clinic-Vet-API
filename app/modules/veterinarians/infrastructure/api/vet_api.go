@@ -1,4 +1,4 @@
-package vetAPI
+package api
 
 import (
 	"errors"
@@ -48,7 +48,7 @@ func (f *VeterinarianModule) Bootstrap() error {
 		return err
 	}
 
- f.components = &VeterinarianAPIComponents{}
+	f.components = &VeterinarianAPIComponents{}
 	vetRepo := sqlcVetRepo.NewSqlcVetRepository(f.config.Queries)
 
 	getVetUseCase := vetUsecase.NewGetVetByIdUseCase(vetRepo)

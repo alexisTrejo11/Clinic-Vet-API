@@ -1,39 +1,39 @@
-package appointmentRepository
+package sqlcrepository
 
 import (
-	appointDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/appointment/domain"
-	petDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/domain"
-	vetDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/veterinarians/domain"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/enum"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
 	"github.com/alexisTrejo11/Clinic-Vet-API/db/models"
 	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-func sqlRowToDomain(row sqlc.Appoinment) (*appointDomain.Appointment, error) {
-	builder := &appointDomain.AppointmentBuilder{}
-	id, err := appointDomain.NewAppointmentId(row.ID)
+func sqlRowToDomain(row sqlc.Appoinment) (*entity.Appointment, error) {
+	builder := &entity.AppointmentBuilder{}
+	id, err := valueobject.NewAppointmentID(row.ID)
 	if err != nil {
 		return nil, err
 	}
 
-	vetId, err := vetDomain.NewVeterinarianId(int(row.VeterinarianID.Int32))
+	vetID, err := valueobject.NewVetID(int(row.VeterinarianID.Int32))
 	if err != nil {
 		return nil, err
 	}
-	petId, err := petDomain.NewPetId(int(row.PetID))
+	petID, err := valueobject.NewPetID(int(row.PetID))
 	if err != nil {
 		return nil, err
 	}
 
-	statusEnum, err := appointDomain.NewAppointmentStatus(string(row.Status))
+	statusEnum, err := enum.NewAppointmentStatus(string(row.Status))
 	if err != nil {
 		return nil, err
 	}
 
 	builder.WithID(id)
 	builder.WithOwnerID(int(row.OwnerID))
-	builder.WithVetID(&vetId)
-	builder.WithPetID(petId)
+	builder.WithVetID(&vetID)
+	builder.WithPetID(petID)
 	builder.WithStatus(statusEnum)
 	builder.WithScheduledDate(row.ScheduleDate.Time)
 	builder.WithTimestamps(row.CreatedAt.Time, row.UpdatedAt.Time)
@@ -46,11 +46,11 @@ func sqlRowToDomain(row sqlc.Appoinment) (*appointDomain.Appointment, error) {
 	return builder.Build()
 }
 
-func sqlRowsToDomainList(rows []sqlc.Appoinment) ([]appointDomain.Appointment, error) {
-	var appointments []appointDomain.Appointment
+func sqlRowsToDomainList(rows []sqlc.Appoinment) ([]entity.Appointment, error) {
+	var appointments []entity.Appointment
 
 	if len(rows) == 0 {
-		return []appointDomain.Appointment{}, nil
+		return []entity.Appointment{}, nil
 	}
 
 	for _, row := range rows {
@@ -63,23 +63,23 @@ func sqlRowsToDomainList(rows []sqlc.Appoinment) ([]appointDomain.Appointment, e
 	return appointments, nil
 }
 
-func domainToCreateParams(appointment *appointDomain.Appointment) sqlc.CreateAppoinmentParams {
+func domainToCreateParams(appointment *entity.Appointment) sqlc.CreateAppoinmentParams {
 	return sqlc.CreateAppoinmentParams{
-		OwnerID:        int32(appointment.GetOwnerId()),
-		VeterinarianID: pgtype.Int4{Int32: int32(appointment.GetVetId().GetValue()), Valid: appointment.GetVetId().IsValid()},
-		PetID:          int32(appointment.GetPetId().GetValue()),
+		OwnerID:        int32(appointment.GetOwnerID()),
+		VeterinarianID: pgtype.Int4{Int32: int32(appointment.GetVetID().GetValue()), Valid: appointment.GetVetID().IsValid()},
+		PetID:          int32(appointment.GetPetID().GetValue()),
 		ScheduleDate:   pgtype.Timestamptz{Time: appointment.GetScheduledDate(), Valid: true},
 		Notes:          pgtype.Text{String: *appointment.GetNotes(), Valid: appointment.GetNotes() != nil},
 		Status:         models.AppointmentStatus(string(appointment.GetStatus())),
 	}
 }
 
-func domainToUpdateParams(appointment *appointDomain.Appointment) sqlc.UpdateAppoinmentParams {
+func domainToUpdateParams(appointment *entity.Appointment) sqlc.UpdateAppoinmentParams {
 	return sqlc.UpdateAppoinmentParams{
-		ID:             int32(appointment.GetId().GetValue()),
-		OwnerID:        int32(appointment.GetOwnerId()),
-		VeterinarianID: pgtype.Int4{Int32: int32(appointment.GetVetId().GetValue()), Valid: appointment.GetVetId().IsValid()},
-		PetID:          int32(appointment.GetPetId().GetValue()),
+		ID:             int32(appointment.GetID().GetValue()),
+		OwnerID:        int32(appointment.GetOwnerID()),
+		VeterinarianID: pgtype.Int4{Int32: int32(appointment.GetVetID().GetValue()), Valid: appointment.GetVetID().IsValid()},
+		PetID:          int32(appointment.GetPetID().GetValue()),
 		ScheduleDate:   pgtype.Timestamptz{Time: appointment.GetScheduledDate(), Valid: true},
 		Notes:          pgtype.Text{String: *appointment.GetNotes(), Valid: appointment.GetNotes() != nil},
 		Status:         models.AppointmentStatus(string(appointment.GetStatus())),

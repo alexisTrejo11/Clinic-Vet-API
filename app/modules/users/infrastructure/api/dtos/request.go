@@ -1,4 +1,4 @@
-package userDomainDtos
+package dto
 
 import "time"
 

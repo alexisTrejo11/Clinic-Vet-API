@@ -1,25 +1,27 @@
-package appointmentQuery
+package query
 
 import (
 	"context"
 	"fmt"
 	"time"
 
-	appointmentDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/appointment/domain"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/enum"
+	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 )
 
 type GetAppointmentStatsQuery struct {
-	VetId     *int       `json:"vet_id,omitempty"`
-	OwnerId   *int       `json:"owner_id,omitempty"`
+	VetID     *int       `json:"vet_id,omitempty"`
+	OwnerID   *int       `json:"owner_id,omitempty"`
 	StartDate *time.Time `json:"start_date,omitempty"`
 	EndDate   *time.Time `json:"end_date,omitempty"`
 }
 
-func NewGetAppointmentStatsQuery(vetId, ownerId *int, startDate, endDate *time.Time) GetAppointmentStatsQuery {
+func NewGetAppointmentStatsQuery(vetID, ownerID *int, startDate, endDate *time.Time) GetAppointmentStatsQuery {
 	return GetAppointmentStatsQuery{
-		VetId:     vetId,
-		OwnerId:   ownerId,
+		VetID:     vetID,
+		OwnerID:   ownerID,
 		StartDate: startDate,
 		EndDate:   endDate,
 	}
@@ -30,17 +32,17 @@ type GetAppointmentStatsHandler interface {
 }
 
 type getAppointmentStatsHandler struct {
-	appointmentRepo appointmentDomain.AppointmentRepository
+	appointmentRepo repository.AppointmentRepository
 }
 
-func NewGetAppointmentStatsHandler(appointmentRepo appointmentDomain.AppointmentRepository) GetAppointmentStatsHandler {
+func NewGetAppointmentStatsHandler(appointmentRepo repository.AppointmentRepository) GetAppointmentStatsHandler {
 	return &getAppointmentStatsHandler{
 		appointmentRepo: appointmentRepo,
 	}
 }
 
 func (h *getAppointmentStatsHandler) Handle(ctx context.Context, query GetAppointmentStatsQuery) (*AppointmentStatsResponse, error) {
-	var appointments []appointmentDomain.Appointment
+	var appointments []entity.Appointment
 	var err error
 	maxPage := page.PageData{
 		PageNumber: 1,
@@ -63,19 +65,19 @@ func (h *getAppointmentStatsHandler) Handle(ctx context.Context, query GetAppoin
 	}
 
 	// Apply additional filters
-	var filteredAppointments []appointmentDomain.Appointment
+	var filteredAppointments []entity.Appointment
 	for _, appointment := range appointments {
 		includeAppointment := true
 
 		// Filter by vet ID
-		if query.VetId != nil {
-			if appointment.GetVetId() == nil || appointment.GetVetId().GetValue() != *query.VetId {
+		if query.VetID != nil {
+			if appointment.GetVetID() == nil || appointment.GetVetID().GetValue() != *query.VetID {
 				includeAppointment = false
 			}
 		}
 
 		// Filter by owner ID
-		if query.OwnerId != nil && appointment.GetOwnerId() != *query.OwnerId {
+		if query.OwnerID != nil && appointment.GetOwnerID() != *query.OwnerID {
 			includeAppointment = false
 		}
 
@@ -90,7 +92,7 @@ func (h *getAppointmentStatsHandler) Handle(ctx context.Context, query GetAppoin
 	return &stats, nil
 }
 
-func (h *getAppointmentStatsHandler) calculateStats(appointments []appointmentDomain.Appointment, query GetAppointmentStatsQuery) AppointmentStatsResponse {
+func (h *getAppointmentStatsHandler) calculateStats(appointments []entity.Appointment, query GetAppointmentStatsQuery) AppointmentStatsResponse {
 	totalAppointments := len(appointments)
 	pendingCount := 0
 	confirmedCount := 0
@@ -99,8 +101,8 @@ func (h *getAppointmentStatsHandler) calculateStats(appointments []appointmentDo
 	noShowCount := 0
 	emergencyCount := 0
 
-	statusBreakdown := make(map[appointmentDomain.AppointmentStatus]int)
-	serviceBreakdown := make(map[appointmentDomain.ClinicService]int)
+	statusBreakdown := make(map[enum.AppointmentStatus]int)
+	serviceBreakdown := make(map[enum.ClinicService]int)
 
 	for _, appointment := range appointments {
 		// Count by status
@@ -108,13 +110,13 @@ func (h *getAppointmentStatsHandler) calculateStats(appointments []appointmentDo
 		statusBreakdown[status]++
 
 		switch status {
-		case appointmentDomain.StatusPending:
+		case enum.StatusPending:
 			pendingCount++
-		case appointmentDomain.StatusCompleted:
+		case enum.StatusCompleted:
 			completedCount++
-		case appointmentDomain.StatusCancelled:
+		case enum.StatusCancelled:
 			cancelledCount++
-		case appointmentDomain.StatusNotPresented:
+		case enum.StatusNotPresented:
 			noShowCount++
 		}
 

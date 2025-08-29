@@ -1,4 +1,4 @@
-package appointmentRepository
+package sqlcrepository
 
 import (
 	"net/http"

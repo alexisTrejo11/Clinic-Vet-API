@@ -1,20 +1,20 @@
-package appointmentQuery
+package query
 
 import (
 	"context"
 
-	appointmentDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/appointment/domain"
+	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 )
 
 type GetAppointmentsByVetQuery struct {
-	VetId     int `json:"vet_id"`
+	VetID     int `json:"vet_id"`
 	pageInput page.PageData
 }
 
-func NewGetAppointmentsByVetQuery(vetId, pageNumber, pageSize int) GetAppointmentsByVetQuery {
+func NewGetAppointmentsByVetQuery(vetID, pageNumber, pageSize int) GetAppointmentsByVetQuery {
 	return GetAppointmentsByVetQuery{
-		VetId: vetId,
+		VetID: vetID,
 		pageInput: page.PageData{
 			PageNumber: pageNumber,
 			PageSize:   pageSize,
@@ -27,17 +27,17 @@ type GetAppointmentsByVetHandler interface {
 }
 
 type getAppointmentsByVetHandler struct {
-	appointmentRepo appointmentDomain.AppointmentRepository
+	appointmentRepo repository.AppointmentRepository
 }
 
-func NewGetAppointmentsByVetHandler(appointmentRepo appointmentDomain.AppointmentRepository) GetAppointmentsByVetHandler {
+func NewGetAppointmentsByVetHandler(appointmentRepo repository.AppointmentRepository) GetAppointmentsByVetHandler {
 	return &getAppointmentsByVetHandler{
 		appointmentRepo: appointmentRepo,
 	}
 }
 
 func (h *getAppointmentsByVetHandler) Handle(ctx context.Context, query GetAppointmentsByVetQuery) (page.Page[[]AppointmentResponse], error) {
-	appointmentsPage, err := h.appointmentRepo.ListByVetId(ctx, query.VetId, query.pageInput)
+	appointmentsPage, err := h.appointmentRepo.ListByVetID(ctx, query.VetID, query.pageInput)
 	if err != nil {
 		return page.Page[[]AppointmentResponse]{}, err
 	}

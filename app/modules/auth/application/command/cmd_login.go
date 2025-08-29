@@ -1,14 +1,14 @@
-package authCmd
+package command
 
 import (
 	"context"
 	"errors"
 	"time"
 
-	jwtService "github.com/alexisTrejo11/Clinic-Vet-API/app/auth/application/jwt"
-	session "github.com/alexisTrejo11/Clinic-Vet-API/app/auth/domain"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
+	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/auth/application/jwt"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
-	userDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
 )
 
 type LoginCommand struct {
@@ -22,15 +22,15 @@ type LoginCommand struct {
 }
 
 type loginHandler struct {
-	userRepo    userDomain.UserRepository
-	sessionRepo session.SessionRepository
-	jwtService  jwtService.JWTService
+	userRepo    repository.UserRepository
+	sessionRepo repository.SessionRepository
+	jwtService  jwt.JWTService
 }
 
 func NewLoginHandler(
-	userRepo userDomain.UserRepository,
-	sessionRepo session.SessionRepository,
-	jwtService jwtService.JWTService,
+	userRepo repository.UserRepository,
+	sessionRepo repository.SessionRepository,
+	jwtService jwt.JWTService,
 ) AuthCommandHandler {
 	return &loginHandler{
 		userRepo:    userRepo,
@@ -69,7 +69,7 @@ func (h *loginHandler) Handle(cmd any) AuthCommandResult {
 	return SuccessAuthResult(&response, session.Id, "login successfully processed")
 }
 
-func (h *loginHandler) Authenticate(command *LoginCommand) (userDomain.User, error) {
+func (h *loginHandler) Authenticate(command *LoginCommand) (entity.User, error) {
 	user, err := h.userRepo.GetByEmail(command.CTX, command.Identifier)
 	if err == nil {
 		return user, nil
@@ -84,16 +84,16 @@ func (h *loginHandler) Authenticate(command *LoginCommand) (userDomain.User, err
 		return user, nil
 	}
 
-	return userDomain.User{}, errors.New("user not found with provided credentials, please check your email/phone-number and password")
+	return entity.User{}, errors.New("user not found with provided credentials, please check your email/phone-number and password")
 }
 
-func (h *loginHandler) createSession(userId string, command LoginCommand) (session.Session, error) {
+func (h *loginHandler) createSession(userId string, command LoginCommand) (entity.Session, error) {
 	refresh, err := h.jwtService.GenerateRefreshToken(userId)
 	if err != nil {
-		return session.Session{}, err
+		return entity.Session{}, err
 	}
 
-	newSession := session.Session{
+	newSession := entity.Session{
 		UserId:       userId,
 		IpAddress:    command.IP,
 		RefreshToken: refresh,
@@ -104,7 +104,7 @@ func (h *loginHandler) createSession(userId string, command LoginCommand) (sessi
 	}
 
 	if err := h.sessionRepo.Create(command.CTX, &newSession); err != nil {
-		return session.Session{}, err
+		return entity.Session{}, err
 	}
 
 	return newSession, nil

@@ -1,9 +1,9 @@
-package vetDtos
+package dto
 
 import (
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/enum"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
-	vetDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/veterinarians/domain"
 )
 
 // VetCreate represents the data transfer object for creating a new veterinarian.
@@ -21,9 +21,9 @@ type VetCreate struct {
 	// Indicates if the veterinarian is currently active.
 	IsActive bool `json:"is_active"`
 	// The veterinarian's medical specialty.
-	Specialty vetDomain.VetSpecialty `json:"specialty"`
+	Specialty enum.VetSpecialty `json:"specialty"`
 	// The fee for a consultation.
-	ConsultationFee *shared.Money `json:"consultation_fee"`
+	ConsultationFee *valueobject.Money `json:"consultation_fee"`
 	// The working schedule of the veterinarian.
 	LaboralSchedule []ScheduleInsert `json:"laboral_schedule"`
 }
@@ -55,11 +55,11 @@ type VetUpdate struct {
 	// The number of years of professional experience.
 	YearsExperience *int `json:"years_experience"`
 	// The veterinarian's medical specialty.
-	Specialty *vetDomain.VetSpecialty `json:"specialty"`
+	Specialty *enum.VetSpecialty `json:"specialty"`
 	// Indicates if the veterinarian is currently active.
 	IsActive *bool `json:"is_active"`
 	// The fee for a consultation.
-	ConsultationFee *shared.Money `json:"consultation_fee"`
+	ConsultationFee *valueobject.Money `json:"consultation_fee"`
 	// The working schedule of the veterinarian.
 	LaboralSchedule *[]ScheduleInsert `json:"laboral_schedule"`
 }
@@ -81,7 +81,7 @@ type VetFilters struct {
 	// Filter by the veterinarian's license number.
 	LicenseNumber *string `json:"license_number"`
 	// Filter by the veterinarian's medical specialty.
-	Specialty *vetDomain.VetSpecialty `json:"specialty"`
+	Specialty *enum.VetSpecialty `json:"specialty"`
 	// Filter by a range of years of experience.
 	YearsExperience *struct {
 		Min *int `json:"min"`

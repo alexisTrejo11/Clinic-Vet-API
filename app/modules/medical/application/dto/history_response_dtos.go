@@ -1,10 +1,10 @@
-package mhDTOs
+package dto
 
 import "time"
 
 type MedHistResponse struct {
-	Id          int
-	PetId       int
+	ID          int
+	PetID       int
 	Date        time.Time
 	Diagnosis   string
 	VisitType   string
@@ -12,14 +12,14 @@ type MedHistResponse struct {
 	Notes       *string
 	Condition   string
 	Treatment   string
-	VetId       int
-	OwnerId     int
+	VetID       int
+	OwnerID     int
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 }
 
 type MedHistResponseDetail struct {
-	Id           int
+	ID           int
 	Pet          PetDetails
 	Owner        OwnerDetails
 	Date         time.Time
@@ -32,20 +32,20 @@ type MedHistResponseDetail struct {
 }
 
 type OwnerDetails struct {
-	Id        int
+	ID        int
 	FirstName string
 	LastName  string
 }
 
 type VetDetails struct {
-	Id        int
+	ID        int
 	FirstName string
 	Specialty string
 	LastName  string
 }
 
 type PetDetails struct {
-	Id      int
+	ID      int
 	Name    string
 	Species string
 	Breed   string

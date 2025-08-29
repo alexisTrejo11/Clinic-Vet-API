@@ -1,4 +1,4 @@
-package appControllerDTO
+package controller
 
 import (
 	"encoding/json"
@@ -25,7 +25,6 @@ func (r *PaginationRequest) SetDefaultsIfNotProvided() {
 	if r.PageSize <= 0 {
 		r.PageSize = 10
 	}
-
 }
 
 type CustomDate struct {

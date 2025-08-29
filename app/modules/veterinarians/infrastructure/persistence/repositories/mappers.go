@@ -5,31 +5,32 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/enum"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/valueObjects"
-	vetDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/veterinarians/domain"
 	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
 )
 
-func SqlcVetToDomain(sql sqlc.Veterinarian) (*vetDomain.Veterinarian, error) {
-	name, err := valueObjects.NewPersonName(sql.FirstName, sql.LastName)
+func SqlcVetToDomain(sql sqlc.Veterinarian) (*entity.Veterinarian, error) {
+	name, err := valueobject.NewPersonName(sql.FirstName, sql.LastName)
 	if err != nil {
 		return nil, fmt.Errorf("error al crear el nombre de la persona: %w", err)
 	}
 
 	schedule, err := UnmarshalVetSchedule(sql.ScheduleJson)
 	if err != nil {
-		schedule = &vetDomain.Schedule{}
+		schedule = &valueobject.Schedule{}
 	}
 
 	// Utiliza el builder para construir el objeto del dominio
-	builder := vetDomain.NewVeterinarianBuilder().
+	builder := entity.NewVeterinarianBuilder().
 		WithID(int(sql.ID)).
 		WithName(name).
 		WithPhoto(sql.Photo).
 		WithLicenseNumber(sql.LicenseNumber).
 		WithYearsExperience(int(sql.YearsOfExperience)).
-		WithSpecialty(vetDomain.VetSpecialtyFromString(shared.AssertString(sql.Speciality))).
+		WithSpecialty(enum.VetSpecialtyFromString(shared.AssertString(sql.Speciality))).
 		WithSchedule(schedule).
 		WithScheduleJSON(string(sql.ScheduleJson))
 
@@ -78,13 +79,13 @@ type postgresDaySchedule struct {
 	Break string `json:"break,omitempty"`
 }
 
-func parseScheduleFromPostgres(jsonData []byte) (*vetDomain.Schedule, error) {
+func parseScheduleFromPostgres(jsonData []byte) (*valueobject.Schedule, error) {
 	var pgSchedule postgresSchedule
 	if err := json.Unmarshal(jsonData, &pgSchedule); err != nil {
 		return nil, fmt.Errorf("error al parsear JSON de PostgreSQL: %v", err)
 	}
 
-	schedule := &vetDomain.Schedule{WorkDays: make([]vetDomain.WorkDaySchedule, 0)}
+	schedule := &valueobject.Schedule{WorkDays: make([]valueobject.WorkDaySchedule, 0)}
 
 	// Mapear cada día
 	if pgSchedule.Monday != nil {
@@ -112,11 +113,11 @@ func parseScheduleFromPostgres(jsonData []byte) (*vetDomain.Schedule, error) {
 	return schedule, nil
 }
 
-func parseDaySchedule(day time.Weekday, pgDay *postgresDaySchedule) vetDomain.WorkDaySchedule {
+func parseDaySchedule(day time.Weekday, pgDay *postgresDaySchedule) valueobject.WorkDaySchedule {
 	startHour := parseHourToInt(pgDay.Start)
 	endHour := parseHourToInt(pgDay.End)
 
-	workDay := vetDomain.WorkDaySchedule{
+	workDay := valueobject.WorkDaySchedule{
 		Day:       day,
 		StartHour: startHour,
 		EndHour:   endHour,
@@ -138,21 +139,21 @@ func parseHourToInt(timeStr string) int {
 	return h
 }
 
-func parseBreak(breakStr string) *vetDomain.Break {
+func parseBreak(breakStr string) *valueobject.Break {
 	var startH, startM, endH, endM int
 	_, err := fmt.Sscanf(breakStr, "%d:%d-%d:%d", &startH, &startM, &endH, &endM)
 	if err != nil {
 		return nil
 	}
-	return &vetDomain.Break{
+	return &valueobject.Break{
 		StartHour: startH,
 		EndHour:   endH,
 	}
 }
 
-func UnmarshalVetSchedule(sqlJSON []byte) (*vetDomain.Schedule, error) {
+func UnmarshalVetSchedule(sqlJSON []byte) (*valueobject.Schedule, error) {
 	if sqlJSON == nil {
-		return &vetDomain.Schedule{}, nil
+		return &valueobject.Schedule{}, nil
 	}
 
 	return parseScheduleFromPostgres(sqlJSON)

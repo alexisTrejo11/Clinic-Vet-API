@@ -120,46 +120,6 @@ func isDayDuplicated(dayNumber time.Weekday, vetDaysWorked map[time.Weekday]bool
 	return vetDaysWorked[dayNumber]
 }
 
-type VetId struct {
-	intId shared.IntegerId
-}
-
-func NewVeterinarianId(value any) (VetId, error) {
-	id, err := shared.NewIntegerId(value)
-	if err != nil {
-		return VetId{}, fmt.Errorf("invalid VetId: %w", err)
-	}
-
-	return VetId{intId: id}, nil
-}
-
-func (v VetId) GetValue() int {
-	return v.intId.GetValue()
-}
-
-func (v VetId) String() string {
-	return v.intId.String()
-}
-
-func (v VetId) Equals(other VetId) bool {
-	return v.intId.Equals(other.intId)
-}
-
-func (v VetId) IsValid() bool {
-	return v.intId.GetValue() > 0
-}
-
-func (v VetId) IsZero() bool {
-	return v.intId.GetValue() == 0
-}
-
-func (v VetId) Validate() error {
-	if !v.IsValid() {
-		return fmt.Errorf("invalid VetId: %d", v.GetValue())
-	}
-	return nil
-}
-
 type VetID struct {
 	id shared.IntegerId
 }
@@ -175,6 +135,10 @@ func NewVetID(value any) (VetID, error) {
 
 func (p VetID) GetValue() int {
 	return p.id.GetValue()
+}
+
+func (p VetID) IsValid() bool {
+	return p.id.GetValue() == 0
 }
 
 func (p VetID) String() string {

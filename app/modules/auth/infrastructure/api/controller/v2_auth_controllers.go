@@ -1,9 +1,9 @@
-package authController
+package controller
 
 import (
 	"fmt"
 
-	authCmd "github.com/alexisTrejo11/Clinic-Vet-API/app/auth/application/command"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/auth/application/command"
 	apiResponse "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/responses"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -11,12 +11,12 @@ import (
 
 type AuthController struct {
 	validator      *validator.Validate
-	authCommandBus authCmd.AuthCommandBus
+	authCommandBus command.AuthCommandBus
 }
 
 func NewAuthController(
 	validator *validator.Validate,
-	authCommandBus authCmd.AuthCommandBus,
+	authCommandBus command.AuthCommandBus,
 ) *AuthController {
 	return &AuthController{
 		validator:      validator,
@@ -102,7 +102,7 @@ func (c *AuthController) LogoutAll(ctx *gin.Context) {
 		return
 	}
 
-	command := authCmd.LogoutAllCommand{
+	command := command.LogoutAllCommand{
 		UserId: 0,
 		CTX:    ctx.Request.Context(),
 	}

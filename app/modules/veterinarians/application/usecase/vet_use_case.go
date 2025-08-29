@@ -1,14 +1,15 @@
-package vetUsecase
+package usecase
 
 import (
 	"context"
 
-	vetDtos "github.com/alexisTrejo11/Clinic-Vet-API/app/veterinarians/application/dtos"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/veterinarians/application/dto"
 )
 
 type VeterinarianUseCases struct {
 	listVetsUseCase   ListVetUseCase
-	getVetByIdUseCase GetVetByIdUseCase
+	getVetByIDUseCase GetVetByIDUseCase
 	createVetUseCase  CreateVetUseCase
 	updateVetUseCase  UpdateVetUseCase
 	deleteVetUseCase  DeleteVetUseCase
@@ -16,36 +17,36 @@ type VeterinarianUseCases struct {
 
 func NewVetUseCase(
 	listVetsUseCase ListVetUseCase,
-	getVetByIdUseCase GetVetByIdUseCase,
+	getVetByIDUseCase GetVetByIDUseCase,
 	createVetUseCase CreateVetUseCase,
 	updateVetUseCase UpdateVetUseCase,
 	deleteVetUseCase DeleteVetUseCase,
 ) *VeterinarianUseCases {
 	return &VeterinarianUseCases{
 		listVetsUseCase:   listVetsUseCase,
-		getVetByIdUseCase: getVetByIdUseCase,
+		getVetByIDUseCase: getVetByIDUseCase,
 		createVetUseCase:  createVetUseCase,
 		updateVetUseCase:  updateVetUseCase,
 		deleteVetUseCase:  deleteVetUseCase,
 	}
 }
 
-func (uc *VeterinarianUseCases) ListVetUseCase(ctx context.Context, searchParams vetDtos.VetSearchParams) ([]vetDtos.VetResponse, error) {
+func (uc *VeterinarianUseCases) ListVetUseCase(ctx context.Context, searchParams dto.VetSearchParams) ([]dto.VetResponse, error) {
 	return uc.listVetsUseCase.Execute(ctx, searchParams)
 }
 
-func (uc *VeterinarianUseCases) GetVetByIdUseCase(ctx context.Context, vetId int) (vetDtos.VetResponse, error) {
-	return uc.getVetByIdUseCase.Execute(ctx, vetId)
+func (uc *VeterinarianUseCases) GetVetByIDUseCase(ctx context.Context, vetID valueobject.VetID) (dto.VetResponse, error) {
+	return uc.getVetByIDUseCase.Execute(ctx, vetID)
 }
 
-func (uc *VeterinarianUseCases) CreateVetUseCase(ctx context.Context, vetCreateData vetDtos.VetCreate) (vetDtos.VetResponse, error) {
+func (uc *VeterinarianUseCases) CreateVetUseCase(ctx context.Context, vetCreateData dto.VetCreate) (dto.VetResponse, error) {
 	return uc.createVetUseCase.Execute(ctx, vetCreateData)
 }
 
-func (uc *VeterinarianUseCases) UpdateVetUseCase(ctx context.Context, vetId int, vetCreateData vetDtos.VetUpdate) (vetDtos.VetResponse, error) {
-	return uc.updateVetUseCase.Execute(ctx, vetId, vetCreateData)
+func (uc *VeterinarianUseCases) UpdateVetUseCase(ctx context.Context, vetID valueobject.VetID, vetCreateData dto.VetUpdate) (dto.VetResponse, error) {
+	return uc.updateVetUseCase.Execute(ctx, vetID, vetCreateData)
 }
 
-func (uc *VeterinarianUseCases) DeleteVetUseCase(ctx context.Context, vetId int) error {
-	return uc.deleteVetUseCase.Execute(ctx, vetId)
+func (uc *VeterinarianUseCases) DeleteVetUseCase(ctx context.Context, vetID valueobject.VetID) error {
+	return uc.deleteVetUseCase.Execute(ctx, vetID)
 }

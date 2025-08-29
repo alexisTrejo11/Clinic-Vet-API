@@ -1,36 +1,34 @@
-package vetUsecase
+package usecase
 
 import (
 	"context"
-	"strconv"
 
-	vetApplication "github.com/alexisTrejo11/Clinic-Vet-API/app/veterinarians/application"
-	vetDtos "github.com/alexisTrejo11/Clinic-Vet-API/app/veterinarians/application/dtos"
-	vetMapper "github.com/alexisTrejo11/Clinic-Vet-API/app/veterinarians/application/mappers"
-	vetRepo "github.com/alexisTrejo11/Clinic-Vet-API/app/veterinarians/application/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
+	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/veterinarians/application/dto"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/veterinarians/application/mapper"
 )
 
 type UpdateVetUseCase struct {
-	vetRepository vetRepo.VeterinarianRepository
+	vetRepository repository.VetRepository
 }
 
-func NewUpdateVetUseCase(vetRepository vetRepo.VeterinarianRepository) *UpdateVetUseCase {
+func NewUpdateVetUseCase(vetRepository repository.VetRepository) *UpdateVetUseCase {
 	return &UpdateVetUseCase{
 		vetRepository: vetRepository,
 	}
 }
 
-func (uc *UpdateVetUseCase) Execute(ctx context.Context, vetId int, vetUpdateData vetDtos.VetUpdate) (vetDtos.VetResponse, error) {
-	veterinarian, err := uc.vetRepository.GetById(ctx, vetId)
+func (uc *UpdateVetUseCase) Execute(ctx context.Context, vetId valueobject.VetID, vetUpdateData dto.VetUpdate) (dto.VetResponse, error) {
+	veterinarian, err := uc.vetRepository.GetByID(ctx, vetId)
 	if err != nil {
-		return vetDtos.VetResponse{}, vetApplication.VetNotFoundErr("id", strconv.Itoa(vetId))
+		return dto.VetResponse{}, err
 	}
 
-	vetMapper.UpdateFromDTO(&veterinarian, vetUpdateData)
+	mapper.UpdateFromDTO(&veterinarian, vetUpdateData)
 	if err := uc.vetRepository.Save(ctx, &veterinarian); err != nil {
-		return vetDtos.VetResponse{}, vetApplication.VetDBErr("update", err)
-
+		return dto.VetResponse{}, err
 	}
 
-	return vetDtos.VetResponse{}, nil
+	return mapper.ToResponse(&veterinarian), nil
 }

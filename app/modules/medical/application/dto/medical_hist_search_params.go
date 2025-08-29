@@ -1,4 +1,4 @@
-package mhDTOs
+package dto
 
 import (
 	"time"

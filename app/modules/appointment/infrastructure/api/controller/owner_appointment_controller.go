@@ -1,13 +1,14 @@
-// Package appointmentController handles appointment-related HTTP endpoints
-package appointmentController
+// Package controller handles appointment-related HTTP endpoints
+package controller
 
 import (
 	"net/http"
 	"strconv"
 	"time"
 
-	appointmentCmd "github.com/alexisTrejo11/Clinic-Vet-API/app/appointment/application/command"
-	appointmentQuery "github.com/alexisTrejo11/Clinic-Vet-API/app/appointment/application/queries"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/appointment/application/command"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/appointment/application/query"
 	"github.com/gin-gonic/gin"
 )
 
@@ -19,11 +20,11 @@ import (
 // @in header
 // @name Authorization
 type OwnerAppointmentController struct {
-	commandBus appointmentCmd.CommandBus
-	queryBus   appointmentQuery.QueryBus
+	commandBus command.CommandBus
+	queryBus   query.QueryBus
 }
 
-func NewOwnerAppointmentController(commandBus appointmentCmd.CommandBus, queryBus appointmentQuery.QueryBus) *OwnerAppointmentController {
+func NewOwnerAppointmentController(commandBus command.CommandBus, queryBus query.QueryBus) *OwnerAppointmentController {
 	return &OwnerAppointmentController{
 		commandBus: commandBus,
 		queryBus:   queryBus,
@@ -36,30 +37,30 @@ func NewOwnerAppointmentController(commandBus appointmentCmd.CommandBus, queryBu
 // @Tags owner-appointments
 // @Accept json
 // @Produce json
-// @Param appointment body appointmentCmd.CreateAppointmentCommand true "Appointment details"
+// @Param appointment body command.CreateAppointmentCommand true "Appointment details"
 // @Security BearerAuth
 // @Router /owner/appointments [post]
 func (controller *OwnerAppointmentController) RequestAppointment(ctx *gin.Context) {
-	var command appointmentCmd.CreateAppointmentCommand
+	var command command.CreateAppointmentCommand
 	if err := ctx.ShouldBindJSON(&command); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	// Get owner ID from context (should be set by auth middleware)
-	ownerIdStr, exists := ctx.Get("owner_id")
+	ownerIDStr, exists := ctx.Get("owner_id")
 	if !exists {
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Owner ID not found in context"})
 		return
 	}
 
-	ownerId, ok := ownerIdStr.(int)
+	ownerID, ok := ownerIDStr.(int)
 	if !ok {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid owner ID format"})
 		return
 	}
 
-	command.OwnerId = ownerId
+	command.OwnerID = ownerID
 
 	result := controller.commandBus.Execute(ctx, command)
 	if !result.IsSuccess {
@@ -82,13 +83,13 @@ func (controller *OwnerAppointmentController) RequestAppointment(ctx *gin.Contex
 // @Router /owner/appointments [get]
 func (controller *OwnerAppointmentController) GetMyAppointments(ctx *gin.Context) {
 	// Get owner ID from context (should be set by auth middleware)
-	ownerIdStr, exists := ctx.Get("owner_id")
+	ownerIDStr, exists := ctx.Get("owner_id")
 	if !exists {
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Owner ID not found in context"})
 		return
 	}
 
-	ownerId, ok := ownerIdStr.(int)
+	ownerID, ok := ownerIDStr.(int)
 	if !ok {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid owner ID format"})
 		return
@@ -109,7 +110,7 @@ func (controller *OwnerAppointmentController) GetMyAppointments(ctx *gin.Context
 		return
 	}
 
-	query := appointmentQuery.NewGetAppointmentsByOwnerQuery(ownerId, page, limit)
+	query := query.NewGetAppointmentsByOwnerQuery(ownerID, page, limit)
 
 	response, err := controller.queryBus.Execute(ctx, query)
 	if err != nil {
@@ -120,7 +121,7 @@ func (controller *OwnerAppointmentController) GetMyAppointments(ctx *gin.Context
 	ctx.JSON(http.StatusOK, response)
 }
 
-// GetAppointmentById godoc
+// GetAppointmentByID godoc
 // @Summary Get specific appointment details
 // @Description Retrieves details of a specific appointment for the authenticated owner
 // @Tags owner-appointments
@@ -129,7 +130,7 @@ func (controller *OwnerAppointmentController) GetMyAppointments(ctx *gin.Context
 // @Param id path int true "Appointment ID"
 // @Security BearerAuth
 // @Router /owner/appointments/{id} [get]
-func (controller *OwnerAppointmentController) GetAppointmentById(ctx *gin.Context) {
+func (controller *OwnerAppointmentController) GetAppointmentByID(ctx *gin.Context) {
 	idParam := ctx.Param("id")
 	id, err := strconv.Atoi(idParam)
 	if err != nil {
@@ -139,9 +140,13 @@ func (controller *OwnerAppointmentController) GetAppointmentById(ctx *gin.Contex
 
 	// Get owner ID from context (should be set by auth middleware)
 
-	query := appointmentQuery.GetAppointmentByIdQuery{
-		AppointmentId: id,
+	appointmentID, err := valueobject.NewAppointmentID(id)
+	if err != nil {
+		ctx.JSON(400, gin.H{"error": err.Error()})
+		return
 	}
+
+	query := query.NewGetAppointmentByIDQuery(appointmentID)
 
 	response, err := controller.queryBus.Execute(ctx, query)
 	if err != nil {
@@ -163,7 +168,7 @@ func (controller *OwnerAppointmentController) GetAppointmentById(ctx *gin.Contex
 // @Accept json
 // @Produce json
 // @Param id path int true "Appointment ID"
-// @Param reschedule body appointmentCmd.RescheduleAppointmentCommand true "New appointment time"
+// @Param reschedule body command.RescheduleAppointmentCommand true "New appointment time"
 // @Security BearerAuth
 // @Router /owner/appointments/{id}/reschedule [put]
 func (controller *OwnerAppointmentController) RescheduleAppointment(ctx *gin.Context) {
@@ -174,13 +179,19 @@ func (controller *OwnerAppointmentController) RescheduleAppointment(ctx *gin.Con
 		return
 	}
 
-	var command appointmentCmd.RescheduleAppointmentCommand
+	appointmentID, err := valueobject.NewAppointmentID(id)
+	if err != nil {
+		ctx.JSON(400, gin.H{"error": err.Error()})
+		return
+	}
+
+	var command command.RescheduleAppointmentCommand
 	if err := ctx.ShouldBindJSON(&command); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	command.AppointmentId = id
+	command.AppointmentID = appointmentID
 
 	result := controller.commandBus.Execute(ctx, command)
 	if !result.IsSuccess {
@@ -209,9 +220,13 @@ func (controller *OwnerAppointmentController) CancelAppointment(ctx *gin.Context
 		return
 	}
 
-	command := appointmentCmd.CancelAppointmentCommand{
-		AppointmentId: id,
+	appointmentID, err := valueobject.NewAppointmentID(id)
+	if err != nil {
+		ctx.JSON(400, gin.H{"error": err.Error()})
+		return
 	}
+
+	command := command.NewCancelAppointmentCommand(appointmentID, "")
 
 	result := controller.commandBus.Execute(ctx, command)
 	if !result.IsSuccess {
@@ -228,14 +243,14 @@ func (controller *OwnerAppointmentController) CancelAppointment(ctx *gin.Context
 // @Tags owner-appointments
 // @Accept json
 // @Produce json
-// @Param petId path int true "Pet ID"
+// @Param petID path int true "Pet ID"
 // @Param page query int false "Page number" default(1)
 // @Param limit query int false "Items per page" default(10)
 // @Security BearerAuth
-// @Router /owner/appointments/pet/{petId} [get]
+// @Router /owner/appointments/pet/{petID} [get]
 func (controller *OwnerAppointmentController) GetAppointmentsByPet(ctx *gin.Context) {
-	petIdParam := ctx.Param("petId")
-	petId, err := strconv.Atoi(petIdParam)
+	petIDParam := ctx.Param("petID")
+	petID, err := strconv.Atoi(petIDParam)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid pet ID"})
 		return
@@ -256,7 +271,7 @@ func (controller *OwnerAppointmentController) GetAppointmentsByPet(ctx *gin.Cont
 		return
 	}
 
-	query := appointmentQuery.NewGetAppointmentsByPetQuery(petId, page, limit)
+	query := query.NewGetAppointmentsByPetQuery(petID, page, limit)
 	response, err := controller.queryBus.Execute(ctx, query)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -312,7 +327,7 @@ func (controller *OwnerAppointmentController) GetUpcomingAppointments(ctx *gin.C
 		return
 	}
 
-	query := appointmentQuery.NewGetAppointmentsByDateRangeQuery(startDate, endDate, page, limit)
+	query := query.NewGetAppointmentsByDateRangeQuery(startDate, endDate, page, limit)
 
 	response, err := controller.queryBus.Execute(ctx, query)
 	if err != nil {

@@ -1,4 +1,4 @@
-package authCmd
+package command
 
 import (
 	"time"

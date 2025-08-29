@@ -1,9 +1,9 @@
-package authController
+package controller
 
 import (
 	"time"
 
-	authCmd "github.com/alexisTrejo11/Clinic-Vet-API/app/auth/application/command"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/auth/application/command"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/valueObjects"
 )
 
@@ -18,10 +18,10 @@ type RequestSignup struct {
 	DateOfBirth time.Time `json:"date_of_birth" binding:"required"`
 }
 
-func (r *RequestSignup) ToCommand() *authCmd.SignupCommand {
+func (r *RequestSignup) ToCommand() *command.SignupCommand {
 	gender := valueObjects.NewGender(r.Gender)
 
-	return &authCmd.SignupCommand{
+	return &command.SignupCommand{
 		Email:       &r.Email,
 		Password:    r.Password,
 		PhoneNumber: r.Phone,
@@ -38,8 +38,8 @@ type RequestLogin struct {
 	Password   string `json:"password" binding:"required,min=8"`
 }
 
-func (r *RequestLogin) ToCommand() *authCmd.LoginCommand {
-	return &authCmd.LoginCommand{
+func (r *RequestLogin) ToCommand() *command.LoginCommand {
+	return &command.LoginCommand{
 		Identifier: r.Identifier,
 		Password:   r.Password,
 	}
@@ -49,8 +49,8 @@ type RequestLogout struct {
 	RefreshToken string `json:"refresh_token" binding:"required"`
 }
 
-func (r *RequestLogout) ToCommand() *authCmd.LogoutCommand {
-	return &authCmd.LogoutCommand{
+func (r *RequestLogout) ToCommand() *command.LogoutCommand {
+	return &command.LogoutCommand{
 		RefreshToken: r.RefreshToken,
 	}
 }

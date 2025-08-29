@@ -11,12 +11,14 @@ import (
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
 )
 
+type AppointmentService struct{}
+
 const (
 	MIN_DAYS_TO_SCHEDULE = 3
 	MAX_DAYS_TO_SCHEDULE = 30
 )
 
-func ValidateFields(a *entity.Appointment) error {
+func (v *AppointmentService) ValidateFields(a *entity.Appointment) error {
 	if a.GetId().Equals(shared.NilIntegerId()) {
 		return errors.New("appointment ID cannot be nil")
 	}
@@ -33,13 +35,13 @@ func ValidateFields(a *entity.Appointment) error {
 		return errors.New("scheduled date cannot be zero")
 	}
 
-	if err := ValidateRequestSchedule(a); err != nil {
+	if err := v.ValidateRequestSchedule(a); err != nil {
 		return err
 	}
 	return nil
 }
 
-func RescheduleAppointment(a *entity.Appointment, newDate time.Time) error {
+func (v *AppointmentService) RescheduleAppointment(a *entity.Appointment, newDate time.Time) error {
 	if a.GetStatus() == enum.StatusCompleted {
 		return domainerr.AppointmentStatusValidationErr("completed", "cannot reschedule completed appointment")
 	}
@@ -59,7 +61,7 @@ func RescheduleAppointment(a *entity.Appointment, newDate time.Time) error {
 	return nil
 }
 
-func Cancel(a *entity.Appointment) error {
+func (v *AppointmentService) Cancel(a *entity.Appointment) error {
 	if err := validateCanBeCancel(a); err != nil {
 		return err
 	}
@@ -69,8 +71,8 @@ func Cancel(a *entity.Appointment) error {
 	return nil
 }
 
-func Complete(a *entity.Appointment) error {
-	if err := validateCanBeCompleted(a); err != nil {
+func (v *AppointmentService) Complete(a *entity.Appointment) error {
+	if err := v.validateCanBeCompleted(a); err != nil {
 		return err
 	}
 
@@ -80,7 +82,7 @@ func Complete(a *entity.Appointment) error {
 	return nil
 }
 
-func NotPresented(a *entity.Appointment) error {
+func (v *AppointmentService) NotPresented(a *entity.Appointment) error {
 	if a.GetStatus() == enum.StatusNotPresented {
 		return domainerr.AppointmentStatusValidationErr(string(a.GetStatus()), "appointment is already marked as not presented")
 	}
@@ -98,7 +100,7 @@ func NotPresented(a *entity.Appointment) error {
 	return nil
 }
 
-func ValidateRequestSchedule(a *entity.Appointment) error {
+func (v *AppointmentService) ValidateRequestSchedule(a *entity.Appointment) error {
 	now := time.Now()
 
 	if a.GetScheduledDate().IsZero() {
@@ -120,7 +122,7 @@ func ValidateRequestSchedule(a *entity.Appointment) error {
 	return nil
 }
 
-func Confirm(vetID *valueobject.VetID, a *entity.Appointment) error {
+func (v *AppointmentService) Confirm(vetID *valueobject.VetID, a *entity.Appointment) error {
 	if a.GetStatus() != enum.StatusPending {
 		return domainerr.AppointmentStatusValidationErr(string(a.GetStatus()), "only pending appointments can be confirmed")
 	}
@@ -154,7 +156,7 @@ func validateCanBeCancel(a *entity.Appointment) error {
 	return nil
 }
 
-func validateCanBeCompleted(a *entity.Appointment) error {
+func (v *AppointmentService) validateCanBeCompleted(a *entity.Appointment) error {
 	if a.GetStatus() == enum.StatusCompleted {
 		return domainerr.AppointmentStatusValidationErr(string(a.GetStatus()), "appointment is already completed")
 	}

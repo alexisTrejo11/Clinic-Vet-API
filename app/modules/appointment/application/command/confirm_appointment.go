@@ -1,16 +1,17 @@
-package appointmentCmd
+package command
 
 import (
 	"context"
 
-	appointmentDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/appointment/domain"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
+	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/service"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
-	vetDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/veterinarians/domain"
 )
 
 type ConfirmAppointmentCommand struct {
-	Id    int              `json:"id" binding:"required"`
-	VetId *vetDomain.VetId `json:"vet_id,omitempty"`
+	ID    valueobject.AppointmentID `json:"id" binding:"required"`
+	VetID *valueobject.VetID        `json:"vet_id,omitempty"`
 }
 
 type ConfirmAppointmentHandler interface {
@@ -18,22 +19,24 @@ type ConfirmAppointmentHandler interface {
 }
 
 type confirmAppointmentHandlerImpl struct {
-	appointmentRepo appointmentDomain.AppointmentRepository
+	appointmentRepo repository.AppointmentRepository
+	service         *service.AppointmentService
 }
 
-func NewConfirmAppointmentHandler(appointmentRepo appointmentDomain.AppointmentRepository) ConfirmAppointmentHandler {
+func NewConfirmAppointmentHandler(appointmentRepo repository.AppointmentRepository) ConfirmAppointmentHandler {
 	return &confirmAppointmentHandlerImpl{
 		appointmentRepo: appointmentRepo,
+		service:         &service.AppointmentService{},
 	}
 }
 
 func (h *confirmAppointmentHandlerImpl) Handle(ctx context.Context, command ConfirmAppointmentCommand) shared.CommandResult {
-	appointment, err := h.appointmentRepo.GetById(ctx, command.Id)
+	appointment, err := h.appointmentRepo.GetByID(ctx, command.ID)
 	if err != nil {
 		return shared.FailureResult("appointment not found", err)
 	}
 
-	if err := appointment.Confirm(command.VetId); err != nil {
+	if err := h.service.Confirm(command.VetID, &appointment); err != nil {
 		return shared.FailureResult("failed to confirm appointment", err)
 	}
 
@@ -41,5 +44,5 @@ func (h *confirmAppointmentHandlerImpl) Handle(ctx context.Context, command Conf
 		return shared.FailureResult("failed to save confirmed appointment", err)
 	}
 
-	return shared.SuccessResult(appointment.GetId().String(), "appointment confirmed successfully")
+	return shared.SuccessResult(appointment.GetID().String(), "appointment confirmed successfully")
 }

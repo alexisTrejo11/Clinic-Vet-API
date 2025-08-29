@@ -1,11 +1,11 @@
-package appointmentCmd
+package command
 
 import (
 	"context"
 	"fmt"
 	"reflect"
 
-	appointmentDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/appointment/domain"
+	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
 )
 
@@ -22,7 +22,7 @@ type appointmentCommandBus struct {
 	handlers map[reflect.Type]CommandHandler
 }
 
-func NewAppointmentCommandBus(appointmentRepo appointmentDomain.AppointmentRepository) CommandBus {
+func NewAppointmentCommandBus(appointmentRepo repository.AppointmentRepository) CommandBus {
 	bus := &appointmentCommandBus{
 		handlers: make(map[reflect.Type]CommandHandler),
 	}
@@ -31,7 +31,7 @@ func NewAppointmentCommandBus(appointmentRepo appointmentDomain.AppointmentRepos
 	return bus
 }
 
-func (bus *appointmentCommandBus) registerHandlers(appointmentRepo appointmentDomain.AppointmentRepository) {
+func (bus *appointmentCommandBus) registerHandlers(appointmentRepo repository.AppointmentRepository) {
 	bus.Register(reflect.TypeOf(CreateAppointmentCommand{}), NewCreateAppointmentHandler(appointmentRepo))
 	bus.Register(reflect.TypeOf(UpdateAppointmentCommand{}), NewUpdateAppointmentHandler(appointmentRepo))
 	bus.Register(reflect.TypeOf(DeleteAppointmentCommand{}), NewDeleteAppointmentHandler(appointmentRepo))
@@ -102,10 +102,10 @@ func (bus *appointmentCommandBus) Execute(ctx context.Context, command Command) 
 
 type AppointmentCommandService struct {
 	commandBus      CommandBus
-	appointmentRepo appointmentDomain.AppointmentRepository
+	appointmentRepo repository.AppointmentRepository
 }
 
-func NewAppointmentCommandService(commandBus CommandBus, appointmentRepo appointmentDomain.AppointmentRepository) *AppointmentCommandService {
+func NewAppointmentCommandService(commandBus CommandBus, appointmentRepo repository.AppointmentRepository) *AppointmentCommandService {
 	return &AppointmentCommandService{
 		commandBus:      commandBus,
 		appointmentRepo: appointmentRepo,

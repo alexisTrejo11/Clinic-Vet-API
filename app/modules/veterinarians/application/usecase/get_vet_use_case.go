@@ -1,29 +1,29 @@
-package vetUsecase
+package usecase
 
 import (
 	"context"
 
-	dto "github.com/alexisTrejo11/Clinic-Vet-API/app/veterinarians/application/dtos"
-	vetMapper "github.com/alexisTrejo11/Clinic-Vet-API/app/veterinarians/application/mappers"
-	vetRepo "github.com/alexisTrejo11/Clinic-Vet-API/app/veterinarians/application/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
+	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/veterinarians/application/dto"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/veterinarians/application/mapper"
 )
 
-type GetVetByIdUseCase struct {
-	vetRepository vetRepo.VeterinarianRepository
+type GetVetByIDUseCase struct {
+	repository repository.VetRepository
 }
 
-func NewGetVetByIdUseCase(vetRepository vetRepo.VeterinarianRepository) *GetVetByIdUseCase {
-	return &GetVetByIdUseCase{
-		vetRepository: vetRepository,
+func NewGetVetByIDUseCase(repository repository.VetRepository) *GetVetByIDUseCase {
+	return &GetVetByIDUseCase{
+		repository: repository,
 	}
 }
 
-func (uc *GetVetByIdUseCase) Execute(ctx context.Context, vetId int) (dto.VetResponse, error) {
-	veterinarian, err := uc.vetRepository.GetById(ctx, vetId)
+func (uc *GetVetByIDUseCase) Execute(ctx context.Context, vetID valueobject.VetID) (dto.VetResponse, error) {
+	veterinarian, err := uc.repository.GetByID(ctx, vetID)
 	if err != nil {
 		return dto.VetResponse{}, err
 	}
 
-	vetResponse := vetMapper.ToResponse(&veterinarian)
-	return *vetResponse, nil
+	return mapper.ToResponse(&veterinarian), nil
 }

@@ -1,4 +1,4 @@
-package authApi
+package api
 
 import (
 	authCmd "github.com/alexisTrejo11/Clinic-Vet-API/app/auth/application/command"

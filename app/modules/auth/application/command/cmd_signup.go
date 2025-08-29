@@ -1,4 +1,4 @@
-package authCmd
+package command
 
 import (
 	"context"
@@ -6,10 +6,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/enum"
+	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/valueObjects"
-	userDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
-
-	vetDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/veterinarians/domain"
 )
 
 type SignupCommand struct {
@@ -26,13 +26,13 @@ type SignupCommand struct {
 	DateOfBirth    time.Time           `json:"date_of_birth"`
 	Location       string              `json:"location"`
 	Address        string              `json:"address"`
-	Role           userDomain.UserRole `json:"role"`
+	Role           enum.UserRole       `json:"role"`
 	ProfilePicture string              `json:"profile_picture"`
 	Bio            string              `json:"bio"`
 
 	// Veterinarian details
 	LicenseNumber   *string
-	Specialty       *vetDomain.VetSpecialty
+	Specialty       *enum.VetSpecialty
 	YearsExperience *int
 
 	CTX context.Context `json:"-"`
@@ -44,11 +44,11 @@ type SignupCommand struct {
 }
 
 type signupHandler struct {
-	userRepo userDomain.UserRepository
+	userRepo repository.UserRepository
 }
 
 func NewSignupCommandHandler(
-	userRepo userDomain.UserRepository,
+	userRepo repository.UserRepository,
 ) AuthCommandHandler {
 	return &signupHandler{
 		userRepo: userRepo,
@@ -132,8 +132,8 @@ func (h *signupHandler) validateUniqueCredentials(command *SignupCommand) error 
 	return nil
 }
 
-func toDomain(command SignupCommand) (userDomain.User, error) {
-	user, err := userDomain.NewUserBuilder().
+func toDomain(command SignupCommand) (entity.User, error) {
+	user, err := entity.NewUserBuilder().
 		WithId(command.UserId).
 		WithPassword(command.Password).
 		WithRole(command.Role).
@@ -141,7 +141,7 @@ func toDomain(command SignupCommand) (userDomain.User, error) {
 		WithEmail(*command.Email).
 		Build()
 	if err != nil {
-		return userDomain.User{}, err
+		return entity.User{}, err
 	}
 
 	return user, nil

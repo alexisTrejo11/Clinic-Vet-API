@@ -1,4 +1,4 @@
-package sessionRepository
+package persistence
 
 import (
 	"context"
@@ -48,13 +48,13 @@ func (r *RedisSessionRepository) Create(ctx context.Context, sess *sessionDomain
 		pipe.SAdd(ctx, r.userSessionsKey(sess.UserId), sess.Id)
 		return nil
 	})
-
 	if err != nil {
 		return fmt.Errorf("failed to create session in Redis: %w", err)
 	}
 
 	return nil
 }
+
 func (r *RedisSessionRepository) GetById(ctx context.Context, sessionId string) (sessionDomain.Session, error) {
 	sessionJSON, err := r.redisClient.Get(ctx, r.sessionKey(sessionId)).Bytes()
 	if err != nil {
@@ -83,7 +83,6 @@ func (r *RedisSessionRepository) GetByUserAndId(ctx context.Context, userId, tok
 
 	// Then, retrieve the session data itself
 	return r.GetById(ctx, token)
-
 }
 
 func (r *RedisSessionRepository) GetByUserId(ctx context.Context, userId string) ([]sessionDomain.Session, error) {
@@ -127,7 +126,6 @@ func (r *RedisSessionRepository) DeleteUserSession(ctx context.Context, userId, 
 		pipe.SRem(ctx, r.userSessionsKey(userId), sessionId)
 		return nil
 	})
-
 	if err != nil {
 		return fmt.Errorf("failed to delete session from Redis: %w", err)
 	}
@@ -148,7 +146,6 @@ func (r *RedisSessionRepository) DeleteAllUserSessions(ctx context.Context, user
 		pipe.Del(ctx, r.userSessionsKey(userID))
 		return nil
 	})
-
 	if err != nil {
 		return fmt.Errorf("failed to delete all sessions for user %s: %w", userID, err)
 	}

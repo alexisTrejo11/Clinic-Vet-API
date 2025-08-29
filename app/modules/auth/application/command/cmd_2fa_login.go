@@ -1,1 +1,1 @@
-package authCmd
+package command

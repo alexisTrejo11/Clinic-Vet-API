@@ -10,14 +10,14 @@ import (
 )
 
 type AppointmentRepository interface {
-	GetById(ctx context.Context, id valueobject.AppointmentID) (entity.Appointment, error)
+	GetByID(ctx context.Context, id valueobject.AppointmentID) (entity.Appointment, error)
 	Search(ctx context.Context, pageInput page.PageData, searchCriteria map[string]interface{}) (page.Page[[]entity.Appointment], error)
 	ListAll(ctx context.Context, pageInput page.PageData) (page.Page[[]entity.Appointment], error)
-	ListByVetId(ctx context.Context, ownerId int, pageInput page.PageData) (page.Page[[]entity.Appointment], error)
-	ListByPetId(ctx context.Context, ownerId int, pageInput page.PageData) (page.Page[[]entity.Appointment], error)
-	ListByOwnerId(ctx context.Context, ownerId int, pageInput page.PageData) (page.Page[[]entity.Appointment], error)
+	ListByVetID(ctx context.Context, ownerId int, pageInput page.PageData) (page.Page[[]entity.Appointment], error)
+	ListByPetID(ctx context.Context, ownerId int, pageInput page.PageData) (page.Page[[]entity.Appointment], error)
+	ListByOwnerID(ctx context.Context, ownerId int, pageInput page.PageData) (page.Page[[]entity.Appointment], error)
 	ListByDateRange(ctx context.Context, startDate, endDate time.Time, pageInput page.PageData) (page.Page[[]entity.Appointment], error)
 
 	Save(ctx context.Context, appointment *entity.Appointment) error
-	Delete(appointmentId int) error
+	Delete(id valueobject.AppointmentID) error
 }

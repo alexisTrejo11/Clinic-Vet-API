@@ -1,10 +1,9 @@
-package authCmd
+package command
 
 import (
 	"context"
 
-	session "github.com/alexisTrejo11/Clinic-Vet-API/app/auth/domain"
-	userDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
+	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 )
 
 type LogoutCommand struct {
@@ -14,13 +13,13 @@ type LogoutCommand struct {
 }
 
 type logoutHandler struct {
-	userRepository userDomain.UserRepository
-	sessionRepo    session.SessionRepository
+	userRepository repository.UserRepository
+	sessionRepo    repository.SessionRepository
 }
 
 func NewLogoutHandler(
-	userRepository userDomain.UserRepository,
-	sessionRepo session.SessionRepository,
+	userRepository repository.UserRepository,
+	sessionRepo repository.SessionRepository,
 ) AuthCommandHandler {
 	return &logoutHandler{
 		userRepository: userRepository,
