@@ -2,19 +2,19 @@ package query
 
 import (
 	"context"
-	"strconv"
 
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 	appError "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/errors/application"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 )
 
 type GetAppointmentsByOwnerQuery struct {
-	OwnerID   int `json:"owner_id"`
+	OwnerID   valueobject.OwnerID `json:"owner_id"`
 	PageInput page.PageData
 }
 
-func NewGetAppointmentsByOwnerQuery(ownerID, pageNumber, pageSize int) GetAppointmentsByOwnerQuery {
+func NewGetAppointmentsByOwnerQuery(ownerID valueobject.OwnerID, pageNumber, pageSize int) GetAppointmentsByOwnerQuery {
 	return GetAppointmentsByOwnerQuery{
 		OwnerID: ownerID,
 		PageInput: page.PageData{
@@ -59,11 +59,11 @@ func (h *getAppointmentsByOwnerHandler) Handle(ctx context.Context, query GetApp
 	), nil
 }
 
-func (h *getAppointmentsByOwnerHandler) validateExistingOwner(ctx context.Context, ownerID int) error {
+func (h *getAppointmentsByOwnerHandler) validateExistingOwner(ctx context.Context, ownerID valueobject.OwnerID) error {
 	if exists, err := h.ownerRepo.ExistsByID(ctx, ownerID); err != nil {
 		return err
 	} else if !exists {
-		return appError.NewEntityNotFoundError("owner", strconv.Itoa(ownerID))
+		return appError.NewEntityNotFoundError("owner", ownerID.String())
 	} else {
 		return nil
 	}

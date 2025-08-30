@@ -9,9 +9,9 @@ import (
 type MedHistSearchParams struct {
 	Page       page.PageData
 	SortBy     string
-	VetId      int
-	OwnerId    int
-	PetId      int
+	VetID      int
+	OwnerID    int
+	PetID      int
 	BeforeAt   time.Time
 	AfterAt    time.Time
 	ReasonLike string

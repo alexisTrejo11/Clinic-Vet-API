@@ -1,4 +1,4 @@
-package paymentCmd
+package command
 
 import (
 	"context"
@@ -10,8 +10,7 @@ import (
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 )
 
-type MarkOverduePaymentsCommand struct {
-}
+type MarkOverduePaymentsCommand struct{}
 
 type MarkOverduePaymentsHandler interface {
 	Handle(ctx context.Context, command MarkOverduePaymentsCommand) shared.CommandResult
@@ -83,6 +82,7 @@ func (h *markOverduePaymentsHandler) UpdatePaymentOverdued(ctx context.Context, 
 func (h *markOverduePaymentsHandler) IsLastPage(pagination page.PageData, totalPages int) bool {
 	return pagination.PageNumber >= totalPages
 }
+
 func (h *markOverduePaymentsHandler) IsEmptyList(payments []paymentDomain.Payment) bool {
 	return len(payments) == 0
 }

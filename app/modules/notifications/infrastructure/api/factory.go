@@ -1,14 +1,14 @@
-package notification_api
+package api
 
 import (
 	"os"
 
-	notificationService "github.com/alexisTrejo11/Clinic-Vet-API/app/notifications/application"
-	notificationController "github.com/alexisTrejo11/Clinic-Vet-API/app/notifications/infrastructure/api/controller"
-	notificationRoutes "github.com/alexisTrejo11/Clinic-Vet-API/app/notifications/infrastructure/api/routes"
-	notificationRepo "github.com/alexisTrejo11/Clinic-Vet-API/app/notifications/infrastructure/persistence"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/notifications/infrastructure/sending/email"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/notifications/infrastructure/sending/sms"
+	service "github.com/alexisTrejo11/Clinic-Vet-API/app/modules/notifications/application"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/notifications/infrastructure/api/controller"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/notifications/infrastructure/api/routes"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/notifications/infrastructure/persistence"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/notifications/infrastructure/sending/email"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/notifications/infrastructure/sending/sms"
 	"github.com/alexisTrejo11/Clinic-Vet-API/config"
 	"github.com/gin-gonic/gin"
 	"github.com/twilio/twilio-go"
@@ -16,15 +16,15 @@ import (
 )
 
 func SetupNotificationModule(app *gin.Engine, mongoClient *mongo.Client, emailConfig config.EmailConfig, twilioClient *twilio.RestClient) {
-	notificationRepo := notificationRepo.NewMongoNotificationRepository(mongoClient)
+	notificationRepo := persistence.NewMongoNotificationRepository(mongoClient)
 	emailSender := email.NewEmailSender(emailConfig)
 	smsSender := sms.NewTwilioPhoneSender(twilioClient, os.Getenv("TWILIO_PHONE_NUMBER"))
 
-	notificationService := notificationService.NewNotificationService(notificationRepo, map[string]notificationService.Sender{
+	notificationService := service.NewNotificationService(notificationRepo, map[string]service.Sender{
 		"email": emailSender,
 		"sms":   smsSender,
 	})
 
-	controller := notificationController.NewNotificationAdminController(notificationService)
-	notificationRoutes.SetupNotificationRoutes(app, controller)
+	controller := controller.NewNotificationAdminController(notificationService)
+	routes.SetupNotificationRoutes(app, controller)
 }

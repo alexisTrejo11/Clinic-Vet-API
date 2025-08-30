@@ -12,13 +12,13 @@ import (
 )
 
 type UpdateAppointmentCommand struct {
-	AppointmentID int                     `json:"appoinment_id" binding:"required"`
-	VetID         *int                    `json:"vet_id,omitempty"`
-	Service       *enum.ClinicService     `json:"service,omitempty"`
-	Status        *enum.AppointmentStatus `json:"status,omitempty"`
-	Reason        *string                 `json:"reason,omitempty"`
-	Notes         *string                 `json:"notes,omitempty"`
-	IsEmergency   *bool                   `json:"is_emergency,omitempty"`
+	AppointmentID valueobject.AppointmentID `json:"appoinment_id" binding:"required"`
+	VetID         *int                      `json:"vet_id,omitempty"`
+	Service       *enum.ClinicService       `json:"service,omitempty"`
+	Status        *enum.AppointmentStatus   `json:"status,omitempty"`
+	Reason        *string                   `json:"reason,omitempty"`
+	Notes         *string                   `json:"notes,omitempty"`
+	IsEmergency   *bool                     `json:"is_emergency,omitempty"`
 }
 
 type UpdateAppointmentHandler interface {
@@ -38,12 +38,7 @@ func NewUpdateAppointmentHandler(appointmentRepo repository.AppointmentRepositor
 }
 
 func (h *updateAppointmentHandler) Handle(ctx context.Context, command UpdateAppointmentCommand) shared.CommandResult {
-	appointmentID, err := valueobject.NewAppointmentID(command.AppointmentID)
-	if err != nil {
-		return shared.FailureResult("invalid appointment ID", err)
-	}
-
-	appointment, err := h.appointmentRepo.GetByID(ctx, appointmentID)
+	appointment, err := h.appointmentRepo.GetByID(ctx, command.AppointmentID)
 	if err != nil {
 		return shared.FailureResult("appointment not found", err)
 	}

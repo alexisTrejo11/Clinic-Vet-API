@@ -3,12 +3,12 @@ package appointmentAPI
 import (
 	"fmt"
 
-	appointmentCmd "github.com/alexisTrejo11/Clinic-Vet-API/app/appointment/application/command"
-	appointmentQuery "github.com/alexisTrejo11/Clinic-Vet-API/app/appointment/application/queries"
-	appointmentController "github.com/alexisTrejo11/Clinic-Vet-API/app/appointment/infrastructure/api/controller"
-	appointmentRoutes "github.com/alexisTrejo11/Clinic-Vet-API/app/appointment/infrastructure/api/routes"
-	appointmentRepo "github.com/alexisTrejo11/Clinic-Vet-API/app/appointment/infrastructure/persistence/repositories"
-	ownerDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/domain"
+	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/appointment/application/command"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/appointment/application/query"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/appointment/infrastructure/api/controller"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/appointment/infrastructure/api/routes"
+	sqlcrepository "github.com/alexisTrejo11/Clinic-Vet-API/app/modules/appointment/infrastructure/persistence/repositories"
 	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -19,24 +19,24 @@ type AppointmentAPIConfig struct {
 	Router    *gin.Engine
 	Queries   *sqlc.Queries
 	Validator *validator.Validate
-	OwnerRepo ownerDomain.OwnerRepository
+	OwnerRepo repository.OwnerRepository
 }
 
 // AppointmentAPIComponents holds all created components
 type AppointmentAPIComponents struct {
-	Repository  interface{} // Your appointment repository interface
-	CommandBus  *appointmentCmd.CommandBus
-	QueryBus    *appointmentQuery.QueryBus
+	Repository  repository.AppointmentRepository // Your appointment repository interface
+	CommandBus  *command.CommandBus
+	QueryBus    *query.QueryBus
 	Controllers *AppointmentControllers
-	Routes      *appointmentRoutes.AppointmentRoutes
+	Routes      *routes.AppointmentRoutes
 }
 
 // AppointmentControllers holds all appointment controllers
 type AppointmentControllers struct {
-	Command *appointmentController.AppointmentCommandController
-	Query   *appointmentController.AppointmentQueryController
-	Owner   *appointmentController.OwnerAppointmentController
-	Vet     *appointmentController.VetAppointmentController
+	Command *controller.AppointmentCommandController
+	Query   *controller.AppointmentQueryController
+	Owner   *controller.OwnerAppointmentController
+	Vet     *controller.VetAppointmentController
 }
 
 // AppointmentAPIBuilder creates and manages appointment API components
@@ -65,11 +65,11 @@ func (f *AppointmentAPIBuilder) Build() error {
 	}
 
 	// Create repository (single instance)
-	repository := appointmentRepo.NewSQLCAppointmentRepository(f.config.Queries)
+	repository := sqlcrepository.NewSQLCAppointmentRepository(f.config.Queries)
 
 	// Create buses
-	commandBus := appointmentCmd.NewAppointmentCommandBus(repository)
-	queryBus := appointmentQuery.NewAppointmentQueryBus(repository, f.config.OwnerRepo)
+	commandBus := command.NewAppointmentCommandBus(repository)
+	queryBus := query.NewAppointmentQueryBus(repository, f.config.OwnerRepo)
 
 	// Create controllers
 	controllers := f.createControllers(&commandBus, &queryBus)
@@ -92,20 +92,20 @@ func (f *AppointmentAPIBuilder) Build() error {
 
 // createControllers creates all appointment controllers
 func (f *AppointmentAPIBuilder) createControllers(
-	commandBus *appointmentCmd.CommandBus,
-	queryBus *appointmentQuery.QueryBus,
+	commandBus *command.CommandBus,
+	queryBus *query.QueryBus,
 ) *AppointmentControllers {
 	return &AppointmentControllers{
-		Command: appointmentController.NewAppointmentCommandController(*commandBus, f.config.Validator),
-		Query:   appointmentController.NewAppointmentQueryController(*queryBus, f.config.Validator),
-		Owner:   appointmentController.NewOwnerAppointmentController(*commandBus, *queryBus),
-		Vet:     appointmentController.NewVetAppointmentController(*commandBus, *queryBus),
+		Command: controller.NewAppointmentCommandController(*commandBus, f.config.Validator),
+		Query:   controller.NewAppointmentQueryController(*queryBus, f.config.Validator),
+		Owner:   controller.NewOwnerAppointmentController(*commandBus, *queryBus),
+		Vet:     controller.NewVetAppointmentController(*commandBus, *queryBus),
 	}
 }
 
 // createRoutes creates routes and registers them
-func (f *AppointmentAPIBuilder) createRoutes(controllers *AppointmentControllers) *appointmentRoutes.AppointmentRoutes {
-	routes := appointmentRoutes.NewAppointmentRoutes(
+func (f *AppointmentAPIBuilder) createRoutes(controllers *AppointmentControllers) *routes.AppointmentRoutes {
+	routes := routes.NewAppointmentRoutes(
 		controllers.Command,
 		controllers.Query,
 		controllers.Owner,

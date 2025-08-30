@@ -4,8 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"time"
-
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
 )
 
 type Schedule struct {
@@ -118,33 +116,4 @@ func getWeekDayMap() map[time.Weekday]bool {
 
 func isDayDuplicated(dayNumber time.Weekday, vetDaysWorked map[time.Weekday]bool) bool {
 	return vetDaysWorked[dayNumber]
-}
-
-type VetID struct {
-	id shared.IntegerId
-}
-
-func NewVetID(value any) (VetID, error) {
-	id, err := shared.NewIntegerId(value)
-	if err != nil {
-		return VetID{}, err
-	}
-
-	return VetID{id: id}, nil
-}
-
-func (p VetID) GetValue() int {
-	return p.id.GetValue()
-}
-
-func (p VetID) IsValid() bool {
-	return p.id.GetValue() == 0
-}
-
-func (p VetID) String() string {
-	return p.id.String()
-}
-
-func (p VetID) Equals(other VetID) bool {
-	return p.id.GetValue() == other.id.GetValue()
 }

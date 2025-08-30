@@ -1,32 +1,28 @@
-package ownerUsecase
+package usecase
 
 import (
 	"context"
 
-	ownerDTOs "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/application/dtos"
-	ownerMappers "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/application/mappers"
-	ownerDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/domain"
-	petMapper "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application/usecase/mapper"
+	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/owners/application/dto"
+	mapper "github.com/alexisTrejo11/Clinic-Vet-API/app/modules/owners/application/mappers"
 )
 
-type GetOwnerByIdUseCase struct {
-	ownerRepo ownerDomain.OwnerRepository
+type GetOwnerByIDUseCase struct {
+	ownerRepo repository.OwnerRepository
 }
 
-func NewGetOwnerByIdUseCase(ownerRepo ownerDomain.OwnerRepository) *GetOwnerByIdUseCase {
-	return &GetOwnerByIdUseCase{
+func NewGetOwnerByIDUseCase(ownerRepo repository.OwnerRepository) *GetOwnerByIDUseCase {
+	return &GetOwnerByIDUseCase{
 		ownerRepo: ownerRepo,
 	}
 }
 
-func (uc *GetOwnerByIdUseCase) Execute(ctx context.Context, id int) (ownerDTOs.OwnerResponse, error) {
+func (uc *GetOwnerByIDUseCase) Execute(ctx context.Context, id int) (dto.OwnerDetail, error) {
 	owner, err := uc.ownerRepo.GetById(ctx, id)
 	if err != nil {
-		return ownerDTOs.OwnerResponse{}, ownerDomain.HandleGetByIdError(err, id)
+		return dto.OwnerDetail{}, err
 	}
 
-	ownerResponse := ownerMappers.ToResponse(&owner)
-	ownerResponse.Pets = petMapper.ToResponseList(owner.Pets())
-
-	return ownerResponse, nil
+	return mapper.ToResponse(&owner), nil
 }

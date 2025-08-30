@@ -1,22 +1,22 @@
-package appointmentRoutes
+package routes
 
 import (
-	appointmentController "github.com/alexisTrejo11/Clinic-Vet-API/app/appointment/infrastructure/api/controller"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/appointment/infrastructure/api/controller"
 	"github.com/gin-gonic/gin"
 )
 
 type AppointmentRoutes struct {
-	appointmentCommandController *appointmentController.AppointmentCommandController
-	appointmentQueryController   *appointmentController.AppointmentQueryController
-	ownerAppointmentController   *appointmentController.OwnerAppointmentController
-	vetAppointmentController     *appointmentController.VetAppointmentController
+	appointmentCommandController *controller.AppointmentCommandController
+	appointmentQueryController   *controller.AppointmentQueryController
+	ownerAppointmentController   *controller.OwnerAppointmentController
+	vetAppointmentController     *controller.VetAppointmentController
 }
 
 func NewAppointmentRoutes(
-	appointmentCommandController *appointmentController.AppointmentCommandController,
-	appointmentQueryController *appointmentController.AppointmentQueryController,
-	ownerAppointmentController *appointmentController.OwnerAppointmentController,
-	vetAppointmentController *appointmentController.VetAppointmentController,
+	appointmentCommandController *controller.AppointmentCommandController,
+	appointmentQueryController *controller.AppointmentQueryController,
+	ownerAppointmentController *controller.OwnerAppointmentController,
+	vetAppointmentController *controller.VetAppointmentController,
 ) *AppointmentRoutes {
 	return &AppointmentRoutes{
 		appointmentCommandController: appointmentCommandController,
@@ -38,11 +38,11 @@ func (r *AppointmentRoutes) RegisterAdminRoutes(router *gin.Engine) {
 
 		// Query operations (admin access)
 		appointmentGroup.GET("", r.appointmentQueryController.GetAllAppointments)
-		appointmentGroup.GET("/:id", r.appointmentQueryController.GetAppointmentById)
+		appointmentGroup.GET("/:id", r.appointmentQueryController.GetAppointmentByID)
 		appointmentGroup.GET("/date-range", r.appointmentQueryController.GetAppointmentsByDateRange)
-		appointmentGroup.GET("/owner/:ownerId", r.appointmentQueryController.GetAppointmentsByOwner)
-		appointmentGroup.GET("/vet/:vetId", r.appointmentQueryController.GetAppointmentsByVet)
-		appointmentGroup.GET("/pet/:petId", r.appointmentQueryController.GetAppointmentsByPet)
+		appointmentGroup.GET("/owner/:ownerID", r.appointmentQueryController.GetAppointmentsByOwner)
+		appointmentGroup.GET("/vet/:vetID", r.appointmentQueryController.GetAppointmentsByVet)
+		appointmentGroup.GET("/pet/:petID", r.appointmentQueryController.GetAppointmentsByPet)
 		appointmentGroup.GET("/stats", r.appointmentQueryController.GetAppointmentStats)
 	}
 
@@ -52,12 +52,12 @@ func (r *AppointmentRoutes) RegisterAdminRoutes(router *gin.Engine) {
 		// Owner appointment management
 		ownerGroup.POST("/appointments", r.ownerAppointmentController.RequestAppointment)
 		ownerGroup.GET("/appointments", r.ownerAppointmentController.GetMyAppointments)
-		ownerGroup.GET("/appointments/:id", r.ownerAppointmentController.GetAppointmentById)
+		ownerGroup.GET("/appointments/:id", r.ownerAppointmentController.GetAppointmentByID)
 		ownerGroup.PUT("/appointments/:id/reschedule", r.ownerAppointmentController.RescheduleAppointment)
 		ownerGroup.DELETE("/appointments/:id", r.ownerAppointmentController.CancelAppointment)
 
 		// Pet-specific appointments for owners
-		ownerGroup.GET("/pets/:petId/appointments", r.ownerAppointmentController.GetAppointmentsByPet)
+		ownerGroup.GET("/pets/:petID/appointments", r.ownerAppointmentController.GetAppointmentsByPet)
 	}
 
 	// Veterinarian-specific appointment routes
@@ -83,10 +83,10 @@ func (r *AppointmentRoutes) RegisterOwnerRoutes(router *gin.Engine) {
 	{
 		ownerGroup.POST("/appointments", r.ownerAppointmentController.RequestAppointment)
 		ownerGroup.GET("/appointments", r.ownerAppointmentController.GetMyAppointments)
-		ownerGroup.GET("/appointments/:id", r.ownerAppointmentController.GetAppointmentById)
+		ownerGroup.GET("/appointments/:id", r.ownerAppointmentController.GetAppointmentByID)
 		ownerGroup.PUT("/appointments/:id/reschedule", r.ownerAppointmentController.RescheduleAppointment)
 		ownerGroup.DELETE("/appointments/:id", r.ownerAppointmentController.CancelAppointment)
-		ownerGroup.GET("/pets/:petId/appointments", r.ownerAppointmentController.GetAppointmentsByPet)
+		ownerGroup.GET("/pets/:petID/appointments", r.ownerAppointmentController.GetAppointmentsByPet)
 	}
 }
 

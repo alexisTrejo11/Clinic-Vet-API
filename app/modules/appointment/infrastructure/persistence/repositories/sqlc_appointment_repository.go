@@ -84,9 +84,9 @@ func (r *SQLCAppointmentRepository) Search(ctx context.Context, pageInput page.P
 	return page.NewPage(appointments, *pageMetadata), nil
 }
 
-func (r *SQLCAppointmentRepository) ListByVetID(ctx context.Context, ownerID int, pageInput page.PageData) (page.Page[[]entity.Appointment], error) {
+func (r *SQLCAppointmentRepository) ListByVetID(ctx context.Context, vetID valueobject.VetID, pageInput page.PageData) (page.Page[[]entity.Appointment], error) {
 	sqlRows, err := r.queries.ListAppoinmentsByVeterinarianID(ctx, sqlc.ListAppoinmentsByVeterinarianIDParams{
-		VeterinarianID: pgtype.Int4{Int32: int32(ownerID), Valid: true},
+		VeterinarianID: pgtype.Int4{Int32: int32(vetID.GetValue()), Valid: true},
 		Offset:         int32(pageInput.PageNumber-1) * int32(pageInput.PageSize),
 		Limit:          int32(pageInput.PageNumber),
 	})
@@ -99,7 +99,7 @@ func (r *SQLCAppointmentRepository) ListByVetID(ctx context.Context, ownerID int
 		return page.Page[[]entity.Appointment]{}, AppointmentDBError(err.Error())
 	}
 
-	queryTotalCount, err := r.queries.CountAppoinmentsByVeterinarianID(ctx, pgtype.Int4{Int32: int32(ownerID), Valid: true})
+	queryTotalCount, err := r.queries.CountAppoinmentsByVeterinarianID(ctx, pgtype.Int4{Int32: int32(vetID.GetValue()), Valid: true})
 	if err != nil {
 		return page.Page[[]entity.Appointment]{}, AppointmentDBError(err.Error())
 	}
@@ -108,9 +108,9 @@ func (r *SQLCAppointmentRepository) ListByVetID(ctx context.Context, ownerID int
 	return page.NewPage(appointments, *pageMetadata), nil
 }
 
-func (r *SQLCAppointmentRepository) ListByPetID(ctx context.Context, ownerID int, pageInput page.PageData) (page.Page[[]entity.Appointment], error) {
+func (r *SQLCAppointmentRepository) ListByPetID(ctx context.Context, petID valueobject.PetID, pageInput page.PageData) (page.Page[[]entity.Appointment], error) {
 	sqlRows, err := r.queries.ListAppoinmentsByVeterinarianID(ctx, sqlc.ListAppoinmentsByVeterinarianIDParams{
-		VeterinarianID: pgtype.Int4{Int32: int32(ownerID), Valid: true},
+		VeterinarianID: pgtype.Int4{Int32: int32(petID.GetValue()), Valid: true},
 		Offset:         int32(pageInput.PageNumber-1) * int32(pageInput.PageSize),
 		Limit:          int32(pageInput.PageNumber),
 	})
@@ -123,7 +123,7 @@ func (r *SQLCAppointmentRepository) ListByPetID(ctx context.Context, ownerID int
 		return page.Page[[]entity.Appointment]{}, AppointmentDBError(err.Error())
 	}
 
-	queryTotalCount, err := r.queries.CountAppoinmentsByVeterinarianID(ctx, pgtype.Int4{Int32: int32(ownerID), Valid: true})
+	queryTotalCount, err := r.queries.CountAppoinmentsByVeterinarianID(ctx, pgtype.Int4{Int32: int32(petID.GetValue()), Valid: true})
 	if err != nil {
 		return page.Page[[]entity.Appointment]{}, AppointmentDBError(err.Error())
 	}
@@ -132,9 +132,9 @@ func (r *SQLCAppointmentRepository) ListByPetID(ctx context.Context, ownerID int
 	return page.NewPage(appointments, *pageMetadata), nil
 }
 
-func (r *SQLCAppointmentRepository) ListByOwnerID(ctx context.Context, ownerID int, pageInput page.PageData) (page.Page[[]entity.Appointment], error) {
+func (r *SQLCAppointmentRepository) ListByOwnerID(ctx context.Context, ownerID valueobject.OwnerID, pageInput page.PageData) (page.Page[[]entity.Appointment], error) {
 	sqlRows, err := r.queries.ListAppoinmentsByOwnerID(ctx, sqlc.ListAppoinmentsByOwnerIDParams{
-		OwnerID: int32(ownerID),
+		OwnerID: int32(ownerID.GetValue()),
 		Offset:  int32(pageInput.PageNumber-1) * int32(pageInput.PageSize),
 		Limit:   int32(pageInput.PageSize),
 	})
@@ -147,7 +147,7 @@ func (r *SQLCAppointmentRepository) ListByOwnerID(ctx context.Context, ownerID i
 		return page.Page[[]entity.Appointment]{}, AppointmentDBError(err.Error())
 	}
 
-	queryTotalCount, err := r.queries.CountAppoinmentsByVeterinarianID(ctx, pgtype.Int4{Int32: int32(ownerID), Valid: true})
+	queryTotalCount, err := r.queries.CountAppoinmentsByVeterinarianID(ctx, pgtype.Int4{Int32: int32(ownerID.GetValue()), Valid: true})
 	if err != nil {
 		return page.Page[[]entity.Appointment]{}, AppointmentDBError(err.Error())
 	}
@@ -204,7 +204,7 @@ func (r *SQLCAppointmentRepository) create(ctx context.Context, appointment *ent
 		return AppointmentInsertDBErr(err.Error())
 	}
 
-	appointmentID, err := valueobject.NewAppointmentID(result.ID)
+	appointmentID, err := valueobject.NewAppointmentID(int(result.ID))
 	if err != nil {
 		return err
 	}

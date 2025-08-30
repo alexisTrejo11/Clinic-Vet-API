@@ -8,11 +8,11 @@ import (
 	"net/smtp"
 	"strings"
 
-	notificationDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/notifications/domain"
-	emailTemplates "github.com/alexisTrejo11/Clinic-Vet-API/app/notifications/infrastructure/sending/email/templates"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
+	emailTemplates "github.com/alexisTrejo11/Clinic-Vet-API/app/modules/notifications/infrastructure/sending/email/templates"
 )
 
-func (s *emailSenderImpl) assignTemplate(notification *notificationDomain.Notification) (*template.Template, error) {
+func (s *emailSenderImpl) assignTemplate(notification *entity.Notification) (*template.Template, error) {
 	templateName := s.getTemplateName(notification)
 	tmpl, exists := s.templates[templateName]
 	if !exists {
@@ -53,7 +53,7 @@ func (s *emailSenderImpl) loadTemplates() {
 	}
 }
 
-func (s *emailSenderImpl) getTemplateName(notification *notificationDomain.Notification) string {
+func (s *emailSenderImpl) getTemplateName(notification *entity.Notification) string {
 	switch {
 	case strings.Contains(strings.ToLower(notification.Subject), "activación") ||
 		strings.Contains(strings.ToLower(notification.Subject), "activation"):
@@ -67,7 +67,7 @@ func (s *emailSenderImpl) getTemplateName(notification *notificationDomain.Notif
 	}
 }
 
-func (s *emailSenderImpl) prepareTemplateData(notification *notificationDomain.Notification) EmailTemplateData {
+func (s *emailSenderImpl) prepareTemplateData(notification *entity.Notification) EmailTemplateData {
 	return EmailTemplateData{
 		ProjectName: s.config.ProjectName,
 		LogoURL:     s.config.LogoURL,

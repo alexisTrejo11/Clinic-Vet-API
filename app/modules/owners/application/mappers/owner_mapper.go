@@ -1,15 +1,15 @@
-package ownerMappers
+package mapper
 
 import (
-	ownerDTOs "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/application/dtos"
-	ownerDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/domain"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/owners/application/dto"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/valueObjects"
 )
 
-func FromRequestCreate(ownerCreate ownerDTOs.OwnerCreate) *ownerDomain.Owner {
+func FromRequestCreate(ownerCreate dto.OwnerCreate) *entity.Owner {
 	fullName, _ := valueObjects.NewPersonName(ownerCreate.FirstName, ownerCreate.LastName)
 
-	builder := ownerDomain.NewOwnerBuilder().
+	builder := entity.NewOwnerBuilder().
 		WithFullName(fullName).
 		WithIsActive(true).
 		WithPhoneNumber(ownerCreate.PhoneNumber).
@@ -26,9 +26,9 @@ func FromRequestCreate(ownerCreate ownerDTOs.OwnerCreate) *ownerDomain.Owner {
 	return newOwner
 }
 
-func ToResponse(owner *ownerDomain.Owner) ownerDTOs.OwnerResponse {
-	response := &ownerDTOs.OwnerResponse{
-		Id:          owner.Id(),
+func ToResponse(owner *entity.Owner) dto.OwnerDetail {
+	response := &dto.OwnerDetail{
+		ID:          owner.ID(),
 		Photo:       owner.Photo(),
 		Name:        owner.FullName().FullName(),
 		PhoneNumber: owner.PhoneNumber(),
@@ -38,8 +38,8 @@ func ToResponse(owner *ownerDomain.Owner) ownerDTOs.OwnerResponse {
 	return *response
 }
 
-func ToResponseList(owners []ownerDomain.Owner) []ownerDTOs.OwnerResponse {
-	responses := make([]ownerDTOs.OwnerResponse, len(owners))
+func ToResponseList(owners []entity.Owner) []dto.OwnerDetail {
+	responses := make([]dto.OwnerDetail, len(owners))
 	for i, owner := range owners {
 		responses[i] = ToResponse(&owner)
 	}

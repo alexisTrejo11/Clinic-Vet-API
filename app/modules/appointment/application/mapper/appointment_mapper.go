@@ -57,37 +57,39 @@ func (m *AppointmentMapper) ToAppointmentDetail(
 }
 
 // RequestToDomain converts request  to domain appointment
-func (m *AppointmentMapper) RequestToDomain(dto dto.AppointmentCreate) (*entity.Appointment, error) {
-	appointmentID := entity.NilAppointmentID()
-
+func (m *AppointmentMapper) RequestToDomain(dto dto.AppointmentCreate) (entity.Appointment, error) {
 	petID, err := valueobject.NewPetID(dto.PetID)
 	if err != nil {
-		return nil, err
+		return entity.Appointment{}, err
 	}
 
 	var vetID *valueobject.VetID
 	if dto.VetID != nil {
 		id, err := valueobject.NewVetID(*dto.VetID)
 		if err != nil {
-			return nil, err
+			return entity.Appointment{}, err
 		}
 		vetID = &id
 	}
 
 	now := time.Now()
-	appointment := entity.NewAppointment(
-		appointmentID,
-		petID,
-		dto.PetID,
-		vetID,
-		dto.Service,
-		dto.ScheduledDate,
-		enum.StatusPending,
-		now,
-		now,
-	)
 
-	return appointment, nil
+	appointment, err := entity.
+		NewAppointmentBuilder().
+		WithPetID(petID).
+		WithNotes(dto.Notes).
+		WithOwnerID(dto.OwnerID).
+		WithReason(*dto.Notes).
+		WithTimestamps(now, now).
+		WithScheduledDate(dto.ScheduledDate).
+		WithVetID(vetID).
+		WithService(dto.Service).
+		Build()
+	if err != nil {
+		return entity.Appointment{}, err
+	}
+
+	return *appointment, nil
 }
 
 // UpdateToDomain applies update  to existing domain appointment

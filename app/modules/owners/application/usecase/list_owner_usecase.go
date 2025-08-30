@@ -1,34 +1,32 @@
-package ownerUsecase
+package usecase
 
 import (
 	"context"
 
-	DTOs "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/application/dtos"
-	ownerMappers "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/application/mappers"
-	ownerDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/domain"
+	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/owners/application/dto"
+	mapper "github.com/alexisTrejo11/Clinic-Vet-API/app/modules/owners/application/mappers"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 )
 
 type ListOwnersUseCase struct {
-	ownerRepo ownerDomain.OwnerRepository
+	ownerRepo repository.OwnerRepository
 }
 
-func NewListOwnersUseCase(ownerRepo ownerDomain.OwnerRepository) *ListOwnersUseCase {
+func NewListOwnersUseCase(ownerRepo repository.OwnerRepository) *ListOwnersUseCase {
 	return &ListOwnersUseCase{
 		ownerRepo: ownerRepo,
 	}
 }
 
-func (uc *ListOwnersUseCase) Execute(ctx context.Context, dto DTOs.GetOwnersRequest) (page.Page[[]DTOs.OwnerResponse], error) {
-	ownersPage, err := uc.ownerRepo.List(ctx, dto.Page)
+func (uc *ListOwnersUseCase) Execute(ctx context.Context, queryData dto.GetOwnersRequest) (page.Page[[]dto.OwnerDetail], error) {
+	ownersPage, err := uc.ownerRepo.List(ctx, queryData.Page)
 	if err != nil {
-		return page.Page[[]DTOs.OwnerResponse]{}, err
+		return page.EmptyPage[[]dto.OwnerDetail](), err
 	}
 
-	ownerResponses := ownerMappers.ToResponseList(ownersPage.Data)
-
-	pageResponse := page.NewPage(ownerResponses, ownersPage.Metadata)
-	return pageResponse, nil
+	ownerResponses := mapper.ToResponseList(ownersPage.Data)
+	return page.NewPage(ownerResponses, ownersPage.Metadata), nil
 }
 
 type OwnerStatsResponse struct {

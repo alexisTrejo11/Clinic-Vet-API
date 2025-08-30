@@ -1,10 +1,10 @@
-package notificationService
+package service
 
 import (
 	"context"
 	"fmt"
 
-	domain "github.com/alexisTrejo11/Clinic-Vet-API/app/notifications/domain"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
 )
 
 type Notifier struct {
@@ -12,14 +12,14 @@ type Notifier struct {
 }
 
 type Sender interface {
-	Send(ctx context.Context, notification *domain.Notification) error
+	Send(ctx context.Context, notification *entity.Notification) error
 }
 
 func (n *Notifier) SetSender(sender Sender) {
 	n.sender = sender
 }
 
-func (n *Notifier) SendNotification(ctx context.Context, notification *domain.Notification) error {
+func (n *Notifier) SendNotification(ctx context.Context, notification *entity.Notification) error {
 	if n.sender == nil {
 		return fmt.Errorf("no sender strategy set")
 	}
@@ -27,5 +27,5 @@ func (n *Notifier) SendNotification(ctx context.Context, notification *domain.No
 }
 
 type EmailSender interface {
-	Send(ctx context.Context, notification *domain.Notification) error
+	Send(ctx context.Context, notification *entity.Notification) error
 }

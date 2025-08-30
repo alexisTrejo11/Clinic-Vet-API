@@ -8,7 +8,6 @@ import (
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/enum"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
 	domainerr "github.com/alexisTrejo11/Clinic-Vet-API/app/core/errors"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
 )
 
 type AppointmentService struct{}
@@ -19,15 +18,7 @@ const (
 )
 
 func (v *AppointmentService) ValidateFields(a *entity.Appointment) error {
-	if a.GetId().Equals(shared.NilIntegerId()) {
-		return errors.New("appointment ID cannot be nil")
-	}
-
-	if a.GetPetId().Equals(valueobject.PetID{}) {
-		return errors.New("pet ID cannot be nil")
-	}
-
-	if a.GetOwnerId() <= 0 {
+	if a.GetOwnerID() <= 0 {
 		return errors.New("owner ID must be greater than zero")
 	}
 
@@ -127,7 +118,7 @@ func (v *AppointmentService) Confirm(vetID *valueobject.VetID, a *entity.Appoint
 		return domainerr.AppointmentStatusValidationErr(string(a.GetStatus()), "only pending appointments can be confirmed")
 	}
 
-	a.SetVetId(vetID)
+	a.SetVetID(vetID)
 	a.SetStatus(enum.StatusConfirmed)
 	a.SetUpdatedAt(time.Now())
 	return nil

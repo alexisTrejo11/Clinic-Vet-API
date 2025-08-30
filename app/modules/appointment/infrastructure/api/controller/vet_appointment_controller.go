@@ -4,11 +4,15 @@ package controller
 import (
 	"context"
 	"errors"
+	"net/http"
 	"strconv"
 	"time"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/appointment/application/command"
-	appointmentQuery "github.com/alexisTrejo11/Clinic-Vet-API/app/appointment/application/queries"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/appointment/application/command"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/appointment/application/query"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
+	apiResponse "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/responses"
 	response "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/responses"
 	"github.com/gin-gonic/gin"
 )
@@ -22,10 +26,10 @@ import (
 // @name Authorization
 type VetAppointmentController struct {
 	commandBus command.CommandBus
-	queryBus   appointmentQuery.QueryBus
+	queryBus   query.QueryBus
 }
 
-func NewVetAppointmentController(commandBus command.CommandBus, queryBus appointmentQuery.QueryBus) *VetAppointmentController {
+func NewVetAppointmentController(commandBus command.CommandBus, queryBus query.QueryBus) *VetAppointmentController {
 	return &VetAppointmentController{
 		commandBus: commandBus,
 		queryBus:   queryBus,
@@ -52,19 +56,19 @@ func (c *VetAppointmentController) GetMyAppointments(ctx *gin.Context) {
 	pageSize, _ := strconv.Atoi(ctx.DefaultQuery("pageSize", "10"))
 
 	// Get vet id from JWT context (assuming it's set by auth middleware)
-	vetIdInterface, exists := ctx.Get("vet_id")
+	vetIDInterface, exists := ctx.Get("vet_id")
 	if !exists {
 		response.Unauthorized(ctx, errors.New("vet id not found in context"))
 		return
 	}
 
-	vetId, ok := vetIdInterface.(int)
-	if !ok {
-		response.BadRequest(ctx, errors.New("invalid vet id format"))
+	vetID, err := valueobject.NewVetID(vetIDInterface.(int))
+	if err != nil {
+		response.BadRequest(ctx, err)
 		return
 	}
 
-	query := appointmentQuery.NewGetAppointmentsByVetQuery(vetId, page, pageSize)
+	query := query.NewGetAppointmentsByVetQuery(vetID, page, pageSize)
 	result, err := c.queryBus.Execute(context.Background(), query)
 	if err != nil {
 		response.ApplicationError(ctx, err)
@@ -81,7 +85,7 @@ func (c *VetAppointmentController) GetMyAppointments(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Success 200 {object} response.APIResponse{data=[]appointmentQuery.AppointmentResponse} "Today's appointments"
+// @Success 200 {object} response.APIResponse{data=[]query.AppointmentResponse} "Today's appointments"
 // @Failure 401 {object} response.APIResponse "Unauthorized - Veterinarian not authenticated"
 // @Failure 500 {object} response.APIResponse "Internal server error"
 // @Router /vet/appointments/today [get]
@@ -91,7 +95,7 @@ func (c *VetAppointmentController) GetTodayAppointments(ctx *gin.Context) {
 	startOfDay := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
 	endOfDay := startOfDay.Add(24 * time.Hour).Add(-time.Nanosecond)
 
-	query := appointmentQuery.NewGetAppointmentsByDateRangeQuery(
+	query := query.NewGetAppointmentsByDateRangeQuery(
 		startOfDay, endOfDay, 1, 5000,
 	)
 	result, err := c.queryBus.Execute(context.Background(), query)
@@ -161,42 +165,23 @@ func (c *VetAppointmentController) CancelAppointment(ctx *gin.Context) {
 // @Failure 422 {object} response.APIResponse "Cannot mark as no-show"
 // @Router /vet/appointments/{id}/no-show [put]
 func (c *VetAppointmentController) MarkAsNoShow(ctx *gin.Context) {
-	appointmentId, err := strconv.Atoi(ctx.Param("id"))
+	entityID, err := shared.ParseParamToEntityID(ctx, "id", "appointment")
 	if err != nil {
-		response.RequestURLQueryError(ctx, err)
+		apiResponse.RequestURLParamError(ctx, err, "appointmentID", ctx.Param("id"))
+		return
+	}
+
+	appointmentID, valid := entityID.(valueobject.AppointmentID)
+	if !valid {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "invalid id entity parse"})
 		return
 	}
 
 	// Get vet id from JWT context to verify the appointment belongs to this vet
-	vetIdInterface, exists := ctx.Get("vet_id")
-	if !exists {
-		response.Unauthorized(ctx, errors.New("vet id not found in context"))
-		return
-	}
-
-	vetId, ok := vetIdInterface.(int)
-	if !ok {
-		response.BadRequest(ctx, errors.New("invalid vet id format"))
-		return
-	}
 
 	// Verify the appointment belongs to this vet
-	getQuery := appointmentQuery.NewGetAppointmentByIdQuery(appointmentId)
-	getResult, err := c.queryBus.Execute(context.Background(), getQuery)
-	if err != nil {
-		response.ApplicationError(ctx, err)
-		return
-	}
-
-	appointment := getResult.(*appointmentQuery.AppointmentResponse)
-
-	if appointment.VetId == nil || *appointment.VetId != vetId {
-		response.Forbidden(ctx, errors.New("access denied: you can only mark your own appointments as no-show"))
-		return
-	}
-
 	command := command.MarkAsNotPresentedCommand{
-		Id: appointmentId,
+		ID: appointmentID,
 	}
 
 	result := c.commandBus.Execute(context.Background(), command)
@@ -224,13 +209,13 @@ func (c *VetAppointmentController) MarkAsNoShow(ctx *gin.Context) {
 // @Router /vet/appointments/stats [get]
 func (c *VetAppointmentController) GetAppointmentStats(ctx *gin.Context) {
 	// Get vet id from JWT context
-	vetIdInterface, exists := ctx.Get("vet_id")
+	vetIDInterface, exists := ctx.Get("vet_id")
 	if !exists {
 		response.Unauthorized(ctx, errors.New("vet id not found in context"))
 		return
 	}
 
-	vetId, ok := vetIdInterface.(int)
+	vetID, ok := vetIDInterface.(int)
 	if !ok {
 		response.BadRequest(ctx, errors.New("invalid vet id format"))
 		return
@@ -249,7 +234,7 @@ func (c *VetAppointmentController) GetAppointmentStats(ctx *gin.Context) {
 		}
 	}
 
-	query := appointmentQuery.NewGetAppointmentStatsQuery(&vetId, nil, startDate, endDate)
+	query := query.NewGetAppointmentStatsQuery(&vetID, nil, startDate, endDate)
 	result, err := c.queryBus.Execute(context.Background(), query)
 	if err != nil {
 		response.ApplicationError(ctx, err)
@@ -276,9 +261,15 @@ func (c *VetAppointmentController) GetAppointmentStats(ctx *gin.Context) {
 // @Failure 422 {object} response.APIResponse "Invalid time slot or scheduling conflict"
 // @Router /vet/appointments/{id}/reschedule [put]
 func (c *VetAppointmentController) RescheduleAppointment(ctx *gin.Context) {
-	appointmentId, err := strconv.Atoi(ctx.Param("id"))
+	entityID, err := shared.ParseParamToEntityID(ctx, "id", "appointment")
 	if err != nil {
-		response.RequestURLQueryError(ctx, err)
+		apiResponse.RequestURLParamError(ctx, err, "appointmentID", ctx.Param("id"))
+		return
+	}
+
+	appointmentID, valid := entityID.(valueobject.AppointmentID)
+	if !valid {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "invalid id entity parse"})
 		return
 	}
 
@@ -288,32 +279,32 @@ func (c *VetAppointmentController) RescheduleAppointment(ctx *gin.Context) {
 		return
 	}
 
-	command.AppointmentId = appointmentId
+	command.AppointmentID = appointmentID
 
 	// Get vet id from JWT context to verify the appointment belongs to this vet
-	vetIdInterface, exists := ctx.Get("vet_id")
+	vetIDInterface, exists := ctx.Get("vet_id")
 	if !exists {
 		response.Unauthorized(ctx, errors.New("vet id not found in context"))
 		return
 	}
 
-	vetId, ok := vetIdInterface.(int)
+	vetID, ok := vetIDInterface.(int)
 	if !ok {
 		response.BadRequest(ctx, errors.New("invalid vet id format"))
 		return
 	}
 
 	// Verify the appointment belongs to this vet
-	getQuery := appointmentQuery.NewGetAppointmentByIdQuery(appointmentId)
+	getQuery := query.NewGetAppointmentByIDQuery(appointmentID)
 	getResult, err := c.queryBus.Execute(context.Background(), getQuery)
 	if err != nil {
 		response.ApplicationError(ctx, err)
 		return
 	}
 
-	appointment := getResult.(*appointmentQuery.AppointmentResponse)
+	appointment := getResult.(*query.AppointmentResponse)
 
-	if appointment.VetId == nil || *appointment.VetId != vetId {
+	if appointment.VetID == nil || *appointment.VetID != vetID {
 		response.Forbidden(ctx, errors.New("acccess denied: you can only reschedule your own appointments"))
 		return
 	}

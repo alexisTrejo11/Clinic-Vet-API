@@ -89,11 +89,13 @@ func (controller *OwnerAppointmentController) GetMyAppointments(ctx *gin.Context
 		return
 	}
 
-	ownerID, ok := ownerIDStr.(int)
+	idint, ok := ownerIDStr.(int)
 	if !ok {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid owner ID format"})
 		return
 	}
+
+	ownerID, _ := valueobject.NewOwnerID(idint)
 
 	pageParam := ctx.DefaultQuery("page", "1")
 	limitParam := ctx.DefaultQuery("limit", "10")
@@ -250,7 +252,7 @@ func (controller *OwnerAppointmentController) CancelAppointment(ctx *gin.Context
 // @Router /owner/appointments/pet/{petID} [get]
 func (controller *OwnerAppointmentController) GetAppointmentsByPet(ctx *gin.Context) {
 	petIDParam := ctx.Param("petID")
-	petID, err := strconv.Atoi(petIDParam)
+	idInt, err := strconv.Atoi(petIDParam)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid pet ID"})
 		return
@@ -271,6 +273,7 @@ func (controller *OwnerAppointmentController) GetAppointmentsByPet(ctx *gin.Cont
 		return
 	}
 
+	petID, _ := valueobject.NewPetID(idInt)
 	query := query.NewGetAppointmentsByPetQuery(petID, page, limit)
 	response, err := controller.queryBus.Execute(ctx, query)
 	if err != nil {

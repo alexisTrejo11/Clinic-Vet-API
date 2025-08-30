@@ -103,38 +103,6 @@ func (ctlr AdminMedicalHistoryController) CreateMedicalHistories(c *gin.Context)
 	c.JSON(201, gin.H{"message": "Medical history created successfully"})
 }
 
-func (ctlr AdminMedicalHistoryController) UpdateMedicalHistories(c *gin.Context) {
-	id := c.Param("id")
-	if id == "" {
-		c.JSON(400, gin.H{"error": "ID parameter is required"})
-		return
-	}
-
-	idInt, err := strconv.Atoi(id)
-	if err != nil {
-		c.JSON(400, gin.H{"error": "Invalid ID format"})
-		return
-	}
-
-	var updateData dto.MedicalHistoryUpdate
-	if err := c.ShouldBindJSON(&updateData); err != nil {
-		c.JSON(400, gin.H{"error": "Invalid input", "details": err.Error()})
-		return
-	}
-
-	if err := ctlr.validator.Struct(updateData); err != nil {
-		c.JSON(400, gin.H{"error": "Validation failed", "details": err.Error()})
-		return
-	}
-
-	if err := ctlr.usecase.Update(c.Request.Context(), idInt, updateData); err != nil {
-		c.JSON(500, gin.H{"error": "Failed to update medical history", "details": err.Error()})
-		return
-	}
-
-	c.JSON(200, gin.H{"message": "Update Medical Histories"})
-}
-
 func (ctlr AdminMedicalHistoryController) DeleteMedicalHistories(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {

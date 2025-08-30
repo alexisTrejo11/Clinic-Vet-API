@@ -1,12 +1,14 @@
-package paymentCmd
+package command
 
 import (
 	"context"
 	"fmt"
 	"reflect"
-	"time"
 
-	paymentDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/payments/domain"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
+	domainerr "github.com/alexisTrejo11/Clinic-Vet-API/app/core/errors"
+	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 )
@@ -24,7 +26,7 @@ type paymentCommandBus struct {
 	handlers map[reflect.Type]CommandHandler
 }
 
-func NewPaymentCommandBus(paymentRepo paymentDomain.PaymentRepository) CommandBus {
+func NewPaymentCommandBus(paymentRepo repository.PaymentRepository) CommandBus {
 	bus := &paymentCommandBus{
 		handlers: make(map[reflect.Type]CommandHandler),
 	}
@@ -33,7 +35,7 @@ func NewPaymentCommandBus(paymentRepo paymentDomain.PaymentRepository) CommandBu
 	return bus
 }
 
-func (bus *paymentCommandBus) registerHandlers(paymentRepo paymentDomain.PaymentRepository) {
+func (bus *paymentCommandBus) registerHandlers(paymentRepo repository.PaymentRepository) {
 	bus.Register(reflect.TypeOf(CreatePaymentCommand{}), NewCreatePaymentHandler(paymentRepo))
 	bus.Register(reflect.TypeOf(ProcessPaymentCommand{}), NewProcessPaymentHandler(paymentRepo))
 	bus.Register(reflect.TypeOf(RefundPaymentCommand{}), NewRefundPaymentHandler(paymentRepo))
@@ -99,20 +101,19 @@ func (bus *paymentCommandBus) Execute(ctx context.Context, command Command) shar
 
 type PaymentCommandService struct {
 	commandBus  CommandBus
-	paymentRepo paymentDomain.PaymentRepository
+	paymentRepo repository.PaymentRepository
 }
 
-func NewPaymentCommandService(ctx context.Context, commandBus CommandBus, paymentRepo paymentDomain.PaymentRepository) *PaymentCommandService {
+func NewPaymentCommandService(ctx context.Context, commandBus CommandBus, paymentRepo repository.PaymentRepository) *PaymentCommandService {
 	return &PaymentCommandService{
 		commandBus:  commandBus,
 		paymentRepo: paymentRepo,
 	}
 }
 
-func (s *PaymentCommandService) ProcessPayment(payment *paymentDomain.Payment) shared.CommandResult {
+func (s *PaymentCommandService) ProcessPayment(payment *entity.Payment) shared.CommandResult {
 	cmd := NewProcessPaymentCommand(payment.GetId(), *payment.GetTransactionId())
 	return s.commandBus.Execute(context.Background(), cmd)
-
 }
 
 func (s *PaymentCommandService) RefundPayment(paymentId int, reason string) shared.CommandResult {
@@ -120,41 +121,36 @@ func (s *PaymentCommandService) RefundPayment(paymentId int, reason string) shar
 	return s.commandBus.Execute(context.Background(), cmd)
 }
 
-func (s *PaymentCommandService) ValidatePayment(payment *paymentDomain.Payment) error {
+func (s *PaymentCommandService) ValidatePayment(payment *entity.Payment) error {
 	if payment == nil {
-		return paymentDomain.NewPaymentError("INVALID_PAYMENT", "payment cannot be nil", 0, "")
+		return domainerr.NewPaymentError("INVALID_PAYMENT", "payment cannot be nil", 0, "")
 	}
 
 	if payment.GetAmount().IsZero() || payment.GetAmount().IsNegative() {
-		return paymentDomain.ErrInvalidAmount
+		return domainerr.ErrInvalidAmount
 	}
 
 	if !payment.GetPaymentMethod().IsValid() {
-		return paymentDomain.ErrInvalidPaymentMethod
+		return domainerr.ErrInvalidPaymentMethod
 	}
 
 	if !payment.GetStatus().IsValid() {
-		return paymentDomain.ErrInvalidPaymentStatus
+		return domainerr.ErrInvalidPaymentStatus
 	}
 
 	return nil
 }
 
-func (s *PaymentCommandService) CalculateTotal(appointmentId int) (paymentDomain.Money, error) {
-	return paymentDomain.NewMoney(0, "USD"), fmt.Errorf("not implemented")
+func (s *PaymentCommandService) CalculateTotal(appointmentId int) (valueobject.Money, error) {
+	return valueobject.NewMoney(0, "USD"), fmt.Errorf("not implemented")
 }
 
-func (s *PaymentCommandService) GetPaymentHistory(ownerId int) (page.Page[[]paymentDomain.Payment], error) {
-	return page.Page[[]paymentDomain.Payment]{}, fmt.Errorf("use query handler for read operations")
+func (s *PaymentCommandService) GetPaymentHistory(ownerId int) (page.Page[[]entity.Payment], error) {
+	return page.Page[[]entity.Payment]{}, fmt.Errorf("use query handler for read operations")
 }
 
 func (s *PaymentCommandService) MarkOverduePayments() shared.CommandResult {
 	cmd := MarkOverduePaymentsCommand{}
 
 	return s.commandBus.Execute(context.Background(), cmd)
-
-}
-
-func (s *PaymentCommandService) GeneratePaymentReport(startDate, endDate time.Time) (paymentDomain.PaymentReport, error) {
-	return paymentDomain.PaymentReport{}, fmt.Errorf("use query handler for read operations")
 }

@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
-
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
 )
 
 type (
@@ -38,34 +36,6 @@ const (
 type TwoFactorAuth struct {
 	IsEnabled bool
 	Secret    string
-}
-
-type UserID struct {
-	id shared.IntegerId
-}
-
-func NilUserID() UserID {
-	return UserID{id: shared.NilIntegerId()}
-}
-
-func NewUserID(id any) (UserID, error) {
-	userID, err := shared.NewIntegerId(id)
-	if err != nil {
-		return UserID{}, fmt.Errorf("invalid UserID: %w", err)
-	}
-	return UserID{id: userID}, nil
-}
-
-func (u UserID) GetValue() int {
-	return u.id.GetValue()
-}
-
-func (u UserID) String() string {
-	return u.id.String()
-}
-
-func (u UserID) Equals(other UserID) bool {
-	return u.id.Equals(other.id)
 }
 
 type Email struct {

@@ -15,7 +15,7 @@ type Owner struct {
 	dateOfBirth time.Time
 	phoneNumber string
 	address     *string
-	userId      *int
+	userID      *int
 	isActive    bool
 	pets        []Pet
 }
@@ -44,7 +44,7 @@ func NewOwner(
 }
 
 // --- Getters ---
-func (o *Owner) Id() int {
+func (o *Owner) ID() int {
 	return o.id
 }
 
@@ -72,8 +72,8 @@ func (o *Owner) Address() *string {
 	return o.address
 }
 
-func (o *Owner) UserId() *int {
-	return o.userId
+func (o *Owner) UserID() *int {
+	return o.userID
 }
 
 func (o *Owner) IsActive() bool {
@@ -85,7 +85,7 @@ func (o *Owner) Pets() []Pet {
 }
 
 // --- Setters ---
-func (o *Owner) SetId(id int) {
+func (o *Owner) SetID(id int) {
 	o.id = id
 }
 
@@ -117,15 +117,15 @@ func (o *Owner) SetDateOfBirth(dateOfBirth time.Time) {
 	o.dateOfBirth = dateOfBirth
 }
 
-func (o *Owner) SetUserId(userId int) {
-	o.userId = &userId
+func (o *Owner) SetUserID(userID int) {
+	o.userID = &userID
 }
 
 func (o *Owner) SetPets(pets []Pet) {
 	o.pets = pets
 }
 
-func (o *Owner) GetId() int {
+func (o *Owner) GetID() int {
 	return o.id
 }
 
@@ -144,7 +144,7 @@ func NewOwnerBuilder() *OwnerBuilder {
 	return &OwnerBuilder{owner: owner}
 }
 
-func (b *OwnerBuilder) WithId(id int) *OwnerBuilder {
+func (b *OwnerBuilder) WithID(id int) *OwnerBuilder {
 	b.owner.id = id
 	return b
 }
@@ -184,8 +184,8 @@ func (b *OwnerBuilder) WithPets(pets []Pet) *OwnerBuilder {
 	return b
 }
 
-func (b *OwnerBuilder) WithUserId(userId int) *OwnerBuilder {
-	b.owner.userId = &userId
+func (b *OwnerBuilder) WithUserID(userID int) *OwnerBuilder {
+	b.owner.userID = &userID
 	return b
 }
 

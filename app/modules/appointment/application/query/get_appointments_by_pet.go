@@ -3,16 +3,17 @@ package query
 import (
 	"context"
 
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 )
 
 type GetAppointmentsByPetQuery struct {
-	PetID     int `json:"pet_id"`
+	PetID     valueobject.PetID `json:"pet_id"`
 	PageInput page.PageData
 }
 
-func NewGetAppointmentsByPetQuery(petID, pageNumber, pageSize int) GetAppointmentsByPetQuery {
+func NewGetAppointmentsByPetQuery(petID valueobject.PetID, pageNumber, pageSize int) GetAppointmentsByPetQuery {
 	return GetAppointmentsByPetQuery{
 		PetID: petID,
 		PageInput: page.PageData{

@@ -4,10 +4,11 @@ import (
 	"errors"
 	"strconv"
 
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
 	"github.com/gin-gonic/gin"
 )
 
-func ParseParamToInt(c *gin.Context, param_name string) (int, error) {
+func ParseParamToInt(c *gin.Context, paramName string) (int, error) {
 	idStr := c.Param(param_name)
 	if idStr == "" {
 		return 0, errors.New("empty id")
@@ -23,4 +24,18 @@ func ParseParamToInt(c *gin.Context, param_name string) (int, error) {
 	}
 
 	return int(intValue), nil
+}
+
+func ParseParamToEntityID(c *gin.Context, idParam string, entity string) (valueobject.IntegerID, error) {
+	intValue, err := ParseParamToInt(c, idParam)
+	if err != nil {
+		return nil, err
+	}
+
+	entityID, err := valueobject.NewIDFactory(intValue, entity)
+	if err != nil {
+		return nil, err
+	}
+
+	return entityID, nil
 }

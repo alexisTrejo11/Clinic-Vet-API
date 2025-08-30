@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/medical/application/dto"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
@@ -110,7 +111,7 @@ func (uc *MedicalHistoryUseCase) Create(ctx context.Context, createData dto.Medi
 		return err
 	}
 
-	if err := uc.validateCreation(ctx, &createData); err != nil {
+	if err := uc.validateCreation(ctx, &medHistory); err != nil {
 		return err
 	}
 
@@ -119,32 +120,6 @@ func (uc *MedicalHistoryUseCase) Create(ctx context.Context, createData dto.Medi
 	}
 
 	if err := uc.medHistRepo.Create(ctx, &medHistory); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (uc *MedicalHistoryUseCase) Update(ctx context.Context, id int, dto dto.MedicalHistoryUpdate) error {
-	medHistory, err := uc.medHistRepo.GetByID(ctx, id)
-	if err != nil {
-		return err
-	}
-
-	if err := uc.validateUpdate(ctx, &dto); err != nil {
-		return err
-	}
-
-	medHistoryUpdated, err := dto.FromUpdateDTO(dto, *medHistory)
-	if err != nil {
-		return err
-	}
-
-	if err := medHistoryUpdated.ValidateBusinessRules(); err != nil {
-		return err
-	}
-
-	if err := uc.medHistRepo.Update(ctx, &medHistoryUpdated); err != nil {
 		return err
 	}
 
@@ -160,16 +135,15 @@ func (uc *MedicalHistoryUseCase) Delete(ctx context.Context, id int, isSoftDelet
 	return uc.medHistRepo.Delete(ctx, id, isSoftDelete)
 }
 
-func (uc *MedicalHistoryUseCase) validateCreation(ctx context.Context, createData *dto.MedicalHistoryCreate) error {
-	owner, err := uc.ownerRepo.GetByID(ctx, medHistory.OwnerID)
+func (uc *MedicalHistoryUseCase) validateCreation(ctx context.Context, medHistory *entity.MedicalHistory) error {
+	owner, err := uc.ownerRepo.GetByID(ctx, medHistory.OwnerID())
 	if err != nil {
 		return err
 	}
 
 	petFound := false
 	for _, pet := range owner.Pets() {
-		if pet.GetID().GetValue() == medHistory.PetID {
-			createData.PetID = pet.GetID().GetValue()
+		if medHistory.PetID().Equals(pet.GetID().GetValue()) {
 			petFound = true
 			break
 		}
@@ -179,40 +153,8 @@ func (uc *MedicalHistoryUseCase) validateCreation(ctx context.Context, createDat
 		return errors.New("pet not found in owner's pets")
 	}
 
-	if _, err := uc.vetRepo.GetByID(ctx, createData.VetID); err != nil {
+	if _, err := uc.vetRepo.GetByID(ctx, medHistory.VetID()); err != nil {
 		return err
-	}
-
-	return nil
-}
-
-func (uc *MedicalHistoryUseCase) validateUpdate(ctx context.Context, updateData *dto.MedicalHistoryUpdate) error {
-	if updateData.OwnerID != nil {
-		owner, err := uc.ownerRepo.GetByID(ctx, *updateData.OwnerID)
-		if err != nil {
-			return err
-		}
-
-		if updateData.PetID == nil {
-			petFound := false
-			for _, pet := range owner.Pets() {
-				if pet.GetID() == *updateData.PetID {
-					petFound = true
-					break
-				}
-			}
-
-			if !petFound {
-				return errors.New("pet not found in owner's pets")
-			}
-		}
-
-	}
-
-	if updateData.VetID != nil {
-		if _, err := uc.vetRepo.GetByID(ctx, *updateData.VetID); err != nil {
-			return err
-		}
 	}
 
 	return nil

@@ -1,35 +1,36 @@
-package notificationService
+package service
 
 import (
 	"context"
 	"fmt"
 
-	domain "github.com/alexisTrejo11/Clinic-Vet-API/app/notifications/domain"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
+	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 )
 
 type NotificationService interface {
-	SendNotification(ctx context.Context, notification *domain.Notification) error
-	ListNotificationByUserId(ctx context.Context, userId string, pagination page.PageData) (page.Page[[]NotificationResponse], error)
+	SendNotification(ctx context.Context, notification *entity.Notification) error
+	ListNotificationByUserID(ctx context.Context, userID string, pagination page.PageData) (page.Page[[]NotificationResponse], error)
 	ListNotificationByType(ctx context.Context, notificationType string, pagination page.PageData) (page.Page[[]NotificationResponse], error)
 	ListNotificationByChannel(ctx context.Context, channel string, pagination page.PageData) (page.Page[[]NotificationResponse], error)
-	GenerateSummary(ctx context.Context, senderID string) ([]domain.Notification, error)
-	GetNotificationByID(ctx context.Context, id string) (domain.Notification, error)
+	GenerateSummary(ctx context.Context, senderID string) ([]entity.Notification, error)
+	GetNotificationByID(ctx context.Context, id string) (entity.Notification, error)
 }
 
 type notificationServiceImpl struct {
-	notificationRepo domain.NotificationRepository
+	notificationRepo repository.NotificationRepository
 	senders          map[string]Sender
 }
 
-func NewNotificationService(notificationRepo domain.NotificationRepository, senders map[string]Sender) NotificationService {
+func NewNotificationService(notificationRepo repository.NotificationRepository, senders map[string]Sender) NotificationService {
 	return &notificationServiceImpl{
 		notificationRepo: notificationRepo,
 		senders:          senders,
 	}
 }
 
-func (s *notificationServiceImpl) SendNotification(ctx context.Context, notification *domain.Notification) error {
+func (s *notificationServiceImpl) SendNotification(ctx context.Context, notification *entity.Notification) error {
 	typeStr := notification.NType.String()
 	if s.senders[typeStr] == nil {
 		return fmt.Errorf("no sender registered for notification type: %s", typeStr)
@@ -37,8 +38,8 @@ func (s *notificationServiceImpl) SendNotification(ctx context.Context, notifica
 	return s.senders[typeStr].Send(ctx, notification)
 }
 
-func (s *notificationServiceImpl) ListNotificationByUserId(ctx context.Context, userId string, pagination page.PageData) (page.Page[[]NotificationResponse], error) {
-	notificationPage, err := s.notificationRepo.ListByUser(ctx, userId, pagination)
+func (s *notificationServiceImpl) ListNotificationByUserID(ctx context.Context, userID string, pagination page.PageData) (page.Page[[]NotificationResponse], error) {
+	notificationPage, err := s.notificationRepo.ListByUser(ctx, userID, pagination)
 	if err != nil {
 		return page.Page[[]NotificationResponse]{}, err
 	}
@@ -47,8 +48,8 @@ func (s *notificationServiceImpl) ListNotificationByUserId(ctx context.Context, 
 	return responsePage, nil
 }
 
-func (s *notificationServiceImpl) GetNotificationByID(ctx context.Context, id string) (domain.Notification, error) {
-	return s.notificationRepo.GetById(ctx, id)
+func (s *notificationServiceImpl) GetNotificationByID(ctx context.Context, id string) (entity.Notification, error) {
+	return s.notificationRepo.GetByID(ctx, id)
 }
 
 func (s *notificationServiceImpl) ListNotificationByType(ctx context.Context, notificationType string, pagination page.PageData) (page.Page[[]NotificationResponse], error) {
@@ -71,7 +72,7 @@ func (s *notificationServiceImpl) ListNotificationByChannel(ctx context.Context,
 	return responsePage, nil
 }
 
-func (s *notificationServiceImpl) GenerateSummary(ctx context.Context, senderID string) ([]domain.Notification, error) {
+func (s *notificationServiceImpl) GenerateSummary(ctx context.Context, senderID string) ([]entity.Notification, error) {
 	// return s.notificationRepo.GetBySender(ctx, senderID)
-	return []domain.Notification{}, nil
+	return []entity.Notification{}, nil
 }

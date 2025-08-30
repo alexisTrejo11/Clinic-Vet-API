@@ -1,12 +1,12 @@
 package api
 
 import (
-	authCmd "github.com/alexisTrejo11/Clinic-Vet-API/app/auth/application/command"
-	jwtService "github.com/alexisTrejo11/Clinic-Vet-API/app/auth/application/jwt"
-	authController "github.com/alexisTrejo11/Clinic-Vet-API/app/auth/infrastructure/api/controller"
-	authRoutes "github.com/alexisTrejo11/Clinic-Vet-API/app/auth/infrastructure/api/routes"
-	sessionRepository "github.com/alexisTrejo11/Clinic-Vet-API/app/auth/infrastructure/persistence"
-	sqlcUserRepo "github.com/alexisTrejo11/Clinic-Vet-API/app/users/infrastructure/persistence/repository"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/auth/application/command"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/auth/application/jwt"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/auth/infrastructure/api/controller"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/auth/infrastructure/api/routes"
+	authPersistence "github.com/alexisTrejo11/Clinic-Vet-API/app/modules/auth/infrastructure/persistence"
+	userPersistence "github.com/alexisTrejo11/Clinic-Vet-API/app/modules/users/infrastructure/persistence/repository"
 	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
 
 	"github.com/gin-gonic/gin"
@@ -21,11 +21,11 @@ func SetupAuthModule(
 	queries *sqlc.Queries,
 	secretKet string,
 ) {
-	userRepo := sqlcUserRepo.NewSQLCUserRepository(queries)
-	jwtService := jwtService.NewJWTService(secretKet)
+	userRepo := userPersistence.NewSQLCUserRepository(queries)
+	jwtService := jwt.NewJWTService(secretKet)
 
-	session := sessionRepository.NewRedisSessionRepository(client)
-	authCMDBus := authCmd.NewAuthCommandBus(session, userRepo, jwtService)
-	authController := authController.NewAuthController(validator, authCMDBus)
-	authRoutes.AuthRoutes(r, *authController)
+	session := authPersistence.NewRedisSessionRepository(client)
+	authCMDBus := command.NewAuthCommandBus(session, userRepo, jwtService)
+	authController := controller.NewAuthController(validator, authCMDBus)
+	routes.AuthRoutes(r, *authController)
 }

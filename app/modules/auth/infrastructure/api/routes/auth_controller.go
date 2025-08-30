@@ -1,4 +1,4 @@
-package controller
+package routes
 
 import (
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/auth/infrastructure/api/controller"

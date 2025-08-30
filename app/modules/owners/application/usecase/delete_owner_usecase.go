@@ -1,16 +1,17 @@
-package ownerUsecase
+package usecase
 
 import (
 	"context"
 
-	ownerDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/domain"
+	domainerr "github.com/alexisTrejo11/Clinic-Vet-API/app/core/errors"
+	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 )
 
 type SoftDeleteOwnerUseCase struct {
-	ownerRepo ownerDomain.OwnerRepository
+	ownerRepo repository.OwnerRepository
 }
 
-func NewSoftDeleteOwnerUseCase(ownerRepo ownerDomain.OwnerRepository) *SoftDeleteOwnerUseCase {
+func NewSoftDeleteOwnerUseCase(ownerRepo repository.OwnerRepository) *SoftDeleteOwnerUseCase {
 	return &SoftDeleteOwnerUseCase{
 		ownerRepo: ownerRepo,
 	}
@@ -20,7 +21,7 @@ func (uc *SoftDeleteOwnerUseCase) Execute(ctx context.Context, id int) error {
 	if exists, err := uc.ownerRepo.ExistsByID(ctx, id); err != nil {
 		return err
 	} else if !exists {
-		return ownerDomain.HandleGetByIdError(err, id)
+		return domainerr.HandleGetByIdError(err, id)
 	}
 
 	if err := uc.ownerRepo.SoftDelete(ctx, id); err != nil {

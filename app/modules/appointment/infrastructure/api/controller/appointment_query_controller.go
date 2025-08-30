@@ -1,12 +1,14 @@
-// Package appointmentController handles all appointment-related HTTP endpoints
-package appointmentController
+// Package controller handles all appointment-related HTTP endpoints
+package controller
 
 import (
 	"errors"
+	"net/http"
 
-	appointmentQuery "github.com/alexisTrejo11/Clinic-Vet-API/app/appointment/application/queries"
-	appControllerDTO "github.com/alexisTrejo11/Clinic-Vet-API/app/appointment/infrastructure/api/dto"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/appointment/application/query"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
+	apiResponse "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/responses"
 	response "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/responses"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -17,12 +19,12 @@ import (
 // @version 1.0
 // @description This controller manages appointment queries including retrieving appointments by various criteria
 type AppointmentQueryController struct {
-	queryBus appointmentQuery.QueryBus
+	queryBus query.QueryBus
 	validate *validator.Validate
 }
 
 func NewAppointmentQueryController(
-	queryBus appointmentQuery.QueryBus,
+	queryBus query.QueryBus,
 	validate *validator.Validate,
 ) *AppointmentQueryController {
 	return &AppointmentQueryController{
@@ -31,28 +33,33 @@ func NewAppointmentQueryController(
 	}
 }
 
-// GetAppointmentById godoc
+// GetAppointmentByID godoc
 // @Summary Get appointment by ID
 // @Description Retrieves detailed information about a specific appointment
 // @Tags appointments-query
 // @Accept json
 // @Produce json
 // @Param id path int true "Appointment ID"
-// @Success 200 {object} appointmentQuery.AppointmentResponse "Appointment details"
+// @Success 200 {object} query.AppointmentResponse "Appointment details"
 // @Failure 400 {object} response.APIResponse "Invalid appointment ID"
 // @Failure 404 {object} response.APIResponse "Appointment not found"
 // @Failure 500 {object} response.APIResponse "Internal server error"
 // @Router /appointments/{id} [get]
-func (controller *AppointmentQueryController) GetAppointmentById(ctx *gin.Context) {
-	appointmentId, err := shared.ParseParamToInt(ctx, "id")
+func (controller *AppointmentQueryController) GetAppointmentByID(ctx *gin.Context) {
+	entityID, err := shared.ParseParamToEntityID(ctx, "id", "appointment")
 	if err != nil {
-		response.RequestURLQueryError(ctx, err)
+		apiResponse.RequestURLParamError(ctx, err, "appointmentID", ctx.Param("id"))
 		return
 	}
 
-	query := appointmentQuery.NewGetAppointmentByIdQuery(appointmentId)
+	appointmentID, valid := entityID.(valueobject.AppointmentID)
+	if !valid {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "invalid id entity parse"})
+		return
+	}
 
-	appointmentResponse, err := controller.queryBus.Execute(ctx, query)
+	appointmentQuery := query.NewGetAppointmentByIDQuery(appointmentID)
+	appointmentResponse, err := controller.queryBus.Execute(ctx, appointmentQuery)
 	if err != nil {
 		response.ApplicationError(ctx, err)
 		return
@@ -69,12 +76,12 @@ func (controller *AppointmentQueryController) GetAppointmentById(ctx *gin.Contex
 // @Produce json
 // @Param page_number query int false "Page number" default(1)
 // @Param page_size query int false "Items per page" default(10)
-// @Success 200 {object} response.APIResponse{data=[]appointmentQuery.AppointmentResponse,metadata=PaginationMetadata} "List of appointments"
+// @Success 200 {object} response.APIResponse{data=[]query.AppointmentResponse,metadata=PaginationMetadata} "List of appointments"
 // @Failure 400 {object} response.APIResponse "Invalid pagination parameters"
 // @Failure 500 {object} response.APIResponse "Internal server error"
 // @Router /appointments [get]
 func (controller *AppointmentQueryController) GetAllAppointments(ctx *gin.Context) {
-	var pageParams appControllerDTO.PaginationRequest
+	var pageParams PaginationRequest
 
 	if err := ctx.ShouldBindQuery(&pageParams); err != nil {
 		response.RequestURLQueryError(ctx, err)
@@ -82,7 +89,7 @@ func (controller *AppointmentQueryController) GetAllAppointments(ctx *gin.Contex
 	}
 
 	pageParams.SetDefaultsIfNotProvided()
-	query := appointmentQuery.NewGetAllAppointmentsQuery(pageParams.PageNumber, pageParams.PageNumber)
+	query := query.NewGetAllAppointmentsQuery(pageParams.PageNumber, pageParams.PageNumber)
 
 	pageInterface, err := controller.queryBus.Execute(ctx, query)
 	if err != nil {
@@ -103,12 +110,12 @@ func (controller *AppointmentQueryController) GetAllAppointments(ctx *gin.Contex
 // @Param end_date query string true "End date (YYYY-MM-DD)" format(date)
 // @Param page_number query int false "Page number" default(1)
 // @Param page_size query int false "Items per page" default(10)
-// @Success 200 {object} response.APIResponse{data=[]appointmentQuery.AppointmentResponse,metadata=PaginationMetadata} "List of appointments"
+// @Success 200 {object} response.APIResponse{data=[]query.AppointmentResponse,metadata=PaginationMetadata} "List of appointments"
 // @Failure 400 {object} response.APIResponse "Invalid date range or pagination parameters"
 // @Failure 500 {object} response.APIResponse "Internal server error"
 // @Router /appointments/date-range [get]
 func (controller *AppointmentQueryController) GetAppointmentsByDateRange(ctx *gin.Context) {
-	var queryParams appControllerDTO.GetAppointmentsByDateRangeRequest
+	var queryParams GetAppointmentsByDateRangeRequest
 
 	if err := ctx.ShouldBindQuery(&queryParams); err != nil {
 		response.RequestURLQueryError(ctx, err)
@@ -120,7 +127,7 @@ func (controller *AppointmentQueryController) GetAppointmentsByDateRange(ctx *gi
 		return
 	}
 
-	query := appointmentQuery.NewGetAppointmentsByDateRangeQuery(
+	query := query.NewGetAppointmentsByDateRangeQuery(
 		queryParams.StartDate.Time,
 		queryParams.EndDate.Time,
 		queryParams.PageNumber,
@@ -142,29 +149,34 @@ func (controller *AppointmentQueryController) GetAppointmentsByDateRange(ctx *gi
 // @Tags appointments-query
 // @Accept json
 // @Produce json
-// @Param ownerId path int true "Owner ID"
+// @Param ownerID path int true "Owner ID"
 // @Param page_number query int false "Page number" default(1)
 // @Param page_size query int false "Items per page" default(10)
-// @Success 200 {object} response.APIResponse{data=[]appointmentQuery.AppointmentResponse,metadata=PaginationMetadata} "List of appointments"
+// @Success 200 {object} response.APIResponse{data=[]query.AppointmentResponse,metadata=PaginationMetadata} "List of appointments"
 // @Failure 400 {object} response.APIResponse "Invalid owner ID or pagination parameters"
 // @Failure 404 {object} response.APIResponse "Owner not found"
 // @Failure 500 {object} response.APIResponse "Internal server error"
-// @Router /appointments/owner/{ownerId} [get]
+// @Router /appointments/owner/{id} [get]
 func (controller *AppointmentQueryController) GetAppointmentsByOwner(ctx *gin.Context) {
-	ownerId, err := shared.ParseParamToInt(ctx, "ownerId")
+	entityID, err := shared.ParseParamToEntityID(ctx, "id", "owner")
 	if err != nil {
-		response.RequestURLParamError(ctx, err, "ownerId", ctx.Param("ownerId"))
+		response.RequestURLParamError(ctx, err, "id", ctx.Param("ownerID"))
 		return
 	}
 
-	var pageParams appControllerDTO.PaginationRequest
+	ownerID, valid := entityID.(valueobject.OwnerID)
+	if !valid {
+		response.InvalidParseDataError(ctx, "id", entityID.String(), "can't parse owner ID")
+	}
+
+	var pageParams PaginationRequest
 	if err := ctx.ShouldBindQuery(&pageParams); err != nil {
 		response.RequestURLQueryError(ctx, err)
 		return
 	}
 
 	pageParams.SetDefaultsIfNotProvided()
-	query := appointmentQuery.NewGetAppointmentsByOwnerQuery(ownerId, pageParams.PageNumber, pageParams.PageSize)
+	query := query.NewGetAppointmentsByOwnerQuery(ownerID, pageParams.PageNumber, pageParams.PageSize)
 
 	pageInterface, err := controller.queryBus.Execute(ctx, query)
 	if err != nil {
@@ -181,30 +193,32 @@ func (controller *AppointmentQueryController) GetAppointmentsByOwner(ctx *gin.Co
 // @Tags appointments-query
 // @Accept json
 // @Produce json
-// @Param vetId path int true "Veterinarian ID"
+// @Param vetID path int true "Veterinarian ID"
 // @Param page_number query int false "Page number" default(1)
 // @Param page_size query int false "Items per page" default(10)
-// @Success 200 {object} response.APIResponse{data=[]appointmentQuery.AppointmentResponse,metadata=PaginationMetadata} "List of appointments"
+// @Success 200 {object} response.APIResponse{data=[]query.AppointmentResponse,metadata=PaginationMetadata} "List of appointments"
 // @Failure 400 {object} response.APIResponse "Invalid veterinarian ID or pagination parameters"
 // @Failure 404 {object} response.APIResponse "Veterinarian not found"
 // @Failure 500 {object} response.APIResponse "Internal server error"
-// @Router /appointments/vet/{vetId} [get]
+// @Router /appointments/vet/{id} [get]
 func (controller *AppointmentQueryController) GetAppointmentsByVet(ctx *gin.Context) {
-	vetId, err := shared.ParseParamToInt(ctx, "vetId")
+	entityID, err := shared.ParseParamToEntityID(ctx, "id", "veterinarian")
 	if err != nil {
-		response.RequestURLParamError(ctx, err, "vetId", ctx.Param("vetId"))
+		response.RequestURLParamError(ctx, err, "vetID", ctx.Param("vetID"))
 		return
 	}
 
-	var pageParams appControllerDTO.PaginationRequest
+	vetID := entityID.(valueobject.VetID)
+
+	var pageParams PaginationRequest
 	if err := ctx.ShouldBindQuery(&pageParams); err != nil {
 		response.RequestURLQueryError(ctx, err)
 		return
 	}
 	pageParams.SetDefaultsIfNotProvided()
 
-	query := appointmentQuery.NewGetAppointmentsByVetQuery(
-		vetId,
+	query := query.NewGetAppointmentsByVetQuery(
+		vetID,
 		pageParams.PageNumber,
 		pageParams.PageSize,
 	)
@@ -224,30 +238,32 @@ func (controller *AppointmentQueryController) GetAppointmentsByVet(ctx *gin.Cont
 // @Tags appointments-query
 // @Accept json
 // @Produce json
-// @Param petId path int true "Pet ID"
+// @Param petID path int true "Pet ID"
 // @Param page_number query int false "Page number" default(1)
 // @Param page_size query int false "Items per page" default(10)
-// @Success 200 {object} response.APIResponse{data=[]appointmentQuery.AppointmentResponse,metadata=PaginationMetadata} "List of appointments"
+// @Success 200 {object} response.APIResponse{data=[]query.AppointmentResponse,metadata=PaginationMetadata} "List of appointments"
 // @Failure 400 {object} response.APIResponse "Invalid pet ID or pagination parameters"
 // @Failure 404 {object} response.APIResponse "Pet not found"
 // @Failure 500 {object} response.APIResponse "Internal server error"
-// @Router /appointments/pet/{petId} [get]
+// @Router /appointments/pet/{id} [get]
 func (controller *AppointmentQueryController) GetAppointmentsByPet(ctx *gin.Context) {
-	petId, err := shared.ParseParamToInt(ctx, "petId")
+	entityID, err := shared.ParseParamToEntityID(ctx, "id", "id")
 	if err != nil {
-		response.RequestURLParamError(ctx, err, "petId", ctx.Param("petId"))
+		response.RequestURLParamError(ctx, err, "petID", ctx.Param("id"))
 		return
 	}
 
-	var pageParams appControllerDTO.PaginationRequest
+	petID := entityID.(valueobject.PetID)
+
+	var pageParams PaginationRequest
 	if err := ctx.ShouldBindQuery(&pageParams); err != nil {
 		response.RequestURLQueryError(ctx, err)
 		return
 	}
 	pageParams.SetDefaultsIfNotProvided()
 
-	query := appointmentQuery.NewGetAppointmentsByPetQuery(
-		petId,
+	query := query.NewGetAppointmentsByPetQuery(
+		petID,
 		pageParams.PageNumber,
 		pageParams.PageSize,
 	)
@@ -271,7 +287,7 @@ func (controller *AppointmentQueryController) GetAppointmentsByPet(ctx *gin.Cont
 // @Failure 500 {object} response.APIResponse "Internal server error"
 // @Router /appointments/stats [get]
 func (controller *AppointmentQueryController) GetAppointmentStats(ctx *gin.Context) {
-	query := appointmentQuery.GetAppointmentStatsQuery{}
+	query := query.GetAppointmentStatsQuery{}
 
 	pageInterface, err := controller.queryBus.Execute(ctx, query)
 	if err != nil {
@@ -293,9 +309,9 @@ func HandlePaginatedResponse(ctx *gin.Context, pageResponseInterface interface{}
 	response.SuccessWithMeta(ctx, &appointmentPage.Data, metadata)
 }
 
-func mapInterfaceToPageResponse(query interface{}) (appointmentQuery.AppointmentPageResponse, error) {
-	if appointmentPage, ok := query.(appointmentQuery.AppointmentPageResponse); ok {
+func mapInterfaceToPageResponse(qry interface{}) (query.AppointmentPageResponse, error) {
+	if appointmentPage, ok := qry.(query.AppointmentPageResponse); ok {
 		return appointmentPage, nil
 	}
-	return appointmentQuery.AppointmentPageResponse{}, errors.New("invalid query type")
+	return query.AppointmentPageResponse{}, errors.New("invalid query type")
 }

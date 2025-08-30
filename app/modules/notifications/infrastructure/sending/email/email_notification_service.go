@@ -5,13 +5,14 @@ import (
 	"fmt"
 	"html/template"
 
-	notificationService "github.com/alexisTrejo11/Clinic-Vet-API/app/notifications/application"
-	notificationDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/notifications/domain"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
+	service "github.com/alexisTrejo11/Clinic-Vet-API/app/modules/notifications/application"
+
 	"github.com/alexisTrejo11/Clinic-Vet-API/config"
 )
 
 type EmailSender interface {
-	Send(ctx context.Context, notification *notificationDomain.Notification) error
+	Send(ctx context.Context, notification *entity.Notification) error
 }
 type EmailTemplateData struct {
 	ProjectName string
@@ -30,7 +31,7 @@ type emailSenderImpl struct {
 	templates map[string]*template.Template
 }
 
-func NewEmailSender(config config.EmailConfig) notificationService.Sender {
+func NewEmailSender(config config.EmailConfig) service.Sender {
 	sender := &emailSenderImpl{
 		config:    config,
 		templates: make(map[string]*template.Template),
@@ -39,7 +40,7 @@ func NewEmailSender(config config.EmailConfig) notificationService.Sender {
 	return sender
 }
 
-func (s *emailSenderImpl) Send(ctx context.Context, notification *notificationDomain.Notification) error {
+func (s *emailSenderImpl) Send(ctx context.Context, notification *entity.Notification) error {
 	tmpl, err := s.assignTemplate(notification)
 	if err != nil {
 		return fmt.Errorf("error assigning template: %w", err)

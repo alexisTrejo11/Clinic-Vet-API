@@ -1,15 +1,15 @@
-package notificationController
+package controller
 
 import (
-	notificationService "github.com/alexisTrejo11/Clinic-Vet-API/app/notifications/application"
+	service "github.com/alexisTrejo11/Clinic-Vet-API/app/modules/notifications/application"
 	"github.com/gin-gonic/gin"
 )
 
 type NotificationAdminController struct {
-	notificationService notificationService.NotificationService
+	notificationService service.NotificationService
 }
 
-func NewNotificationAdminController(notificationService notificationService.NotificationService) *NotificationAdminController {
+func NewNotificationAdminController(notificationService service.NotificationService) *NotificationAdminController {
 	controller := &NotificationAdminController{
 		notificationService: notificationService,
 	}
@@ -17,20 +17,16 @@ func NewNotificationAdminController(notificationService notificationService.Noti
 }
 
 func (c *NotificationAdminController) SendNotification(ctx *gin.Context) {
-
 }
 
 func (c *NotificationAdminController) GetNotificationByUserId(ctx *gin.Context) {
-
 }
 
 func (c *NotificationAdminController) GetNotificationById(ctx *gin.Context) {
-
 }
 
 func (c *NotificationAdminController) GetNotificationByType(ctx *gin.Context) {
 }
 
 func (c *NotificationAdminController) GetNotificationByStatus(ctx *gin.Context) {
-
 }

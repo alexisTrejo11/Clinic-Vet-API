@@ -1,34 +1,35 @@
-package ownerUsecase
+package usecase
 
 import (
 	"context"
 
-	ownerDTOs "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/application/dtos"
-	ownerMappers "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/application/mappers"
-	ownerDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/domain"
+	domainerr "github.com/alexisTrejo11/Clinic-Vet-API/app/core/errors"
+	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/owners/application/dto"
+	mapper "github.com/alexisTrejo11/Clinic-Vet-API/app/modules/owners/application/mappers"
 )
 
 type CreateOwnerUseCase struct {
-	ownerRepo ownerDomain.OwnerRepository
+	ownerRepo repository.OwnerRepository
 }
 
-func NewCreateOwnerUseCase(ownerRepo ownerDomain.OwnerRepository) *CreateOwnerUseCase {
+func NewCreateOwnerUseCase(ownerRepo repository.OwnerRepository) *CreateOwnerUseCase {
 	return &CreateOwnerUseCase{
 		ownerRepo: ownerRepo,
 	}
 }
 
-func (uc *CreateOwnerUseCase) Execute(ctx context.Context, dto ownerDTOs.OwnerCreate) (ownerDTOs.OwnerResponse, error) {
-	if exists, err := uc.ownerRepo.ExistsByPhone(ctx, dto.PhoneNumber); err != nil {
-		return ownerDTOs.OwnerResponse{}, err
+func (uc *CreateOwnerUseCase) Execute(ctx context.Context, createData dto.OwnerCreate) (dto.OwnerDetail, error) {
+	if exists, err := uc.ownerRepo.ExistsByPhone(ctx, createData.PhoneNumber); err != nil {
+		return dto.OwnerDetail{}, err
 	} else if exists {
-		return ownerDTOs.OwnerResponse{}, ownerDomain.HandlePhoneConflictError()
+		return dto.OwnerDetail{}, domainerr.HandlePhoneConflictError()
 	}
 
-	new_owner := ownerMappers.FromRequestCreate(dto)
-	if err := uc.ownerRepo.Save(ctx, new_owner); err != nil {
-		return ownerDTOs.OwnerResponse{}, err
+	owner := mapper.FromRequestCreate(createData)
+	if err := uc.ownerRepo.Save(ctx, owner); err != nil {
+		return dto.OwnerDetail{}, err
 	}
 
-	return ownerMappers.ToResponse(new_owner), nil
+	return mapper.ToResponse(owner), nil
 }

@@ -1,9 +1,8 @@
-// Package appointmentController handles all appointment-related HTTP endpoints
+// Package controller handles all appointment-related HTTP endpoints
 package controller
 
 import (
 	"context"
-	"errors"
 	"net/http"
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
@@ -74,9 +73,15 @@ func (controller *AppointmentCommandController) CreateAppointment(ctx *gin.Conte
 // @Failure 500 {object} apiResponse.APIResponse "Internal server error"
 // @Router /appointments/{id} [put]
 func (controller *AppointmentCommandController) UpdateAppointment(ctx *gin.Context) {
-	idInt, err := shared.ParseParamToInt(ctx, "id")
+	entityID, err := shared.ParseParamToEntityID(ctx, "id", "appointment")
 	if err != nil {
-		apiResponse.RequestURLParamError(ctx, err, "id", ctx.Param("id"))
+		apiResponse.RequestURLParamError(ctx, err, "appointmentID", ctx.Param("id"))
+		return
+	}
+
+	appointmentID, valid := entityID.(valueobject.AppointmentID)
+	if !valid {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "invalid id entity parse"})
 		return
 	}
 
@@ -91,7 +96,7 @@ func (controller *AppointmentCommandController) UpdateAppointment(ctx *gin.Conte
 		return
 	}
 
-	command.AppointmentID = idInt
+	command.AppointmentID = appointmentID
 	result := controller.commandBus.Execute(ctx, command)
 	if !result.IsSuccess {
 		apiResponse.ApplicationError(ctx, result.Error)
@@ -114,13 +119,19 @@ func (controller *AppointmentCommandController) UpdateAppointment(ctx *gin.Conte
 // @Failure 500 {object} apiResponse.APIResponse "Internal server error"
 // @Router /appointments/{id} [delete]
 func (controller *AppointmentCommandController) DeleteAppointment(ctx *gin.Context) {
-	idInt, err := shared.ParseParamToInt(ctx, "id")
+	entityID, err := shared.ParseParamToEntityID(ctx, "id", "appointment")
 	if err != nil {
-		apiResponse.RequestURLParamError(ctx, err, "id", ctx.Param("id"))
+		apiResponse.RequestURLParamError(ctx, err, "appointmentID", ctx.Param("id"))
 		return
 	}
 
-	command := command.NewDeleteAppointmentCommand(idInt)
+	appointmentID, valid := entityID.(valueobject.AppointmentID)
+	if !valid {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "invalid id entity parse"})
+		return
+	}
+
+	command := command.NewDeleteAppointmentCommand(appointmentID)
 
 	result := controller.commandBus.Execute(ctx, command)
 	if !result.IsSuccess {
@@ -145,9 +156,15 @@ func (controller *AppointmentCommandController) DeleteAppointment(ctx *gin.Conte
 // @Failure 500 {object} apiResponse.APIResponse "Internal server error"
 // @Router /appointments/{id}/reschedule [put]
 func (controller *AppointmentCommandController) RescheduleAppointment(ctx *gin.Context) {
-	appointmentID, err := shared.ParseParamToInt(ctx, "id")
+	entityID, err := shared.ParseParamToEntityID(ctx, "id", "appointment")
 	if err != nil {
-		apiResponse.RequestURLParamError(ctx, err, "id", ctx.Param("id"))
+		apiResponse.RequestURLParamError(ctx, err, "appointmentID", ctx.Param("id"))
+		return
+	}
+
+	appointmentID, valid := entityID.(valueobject.AppointmentID)
+	if !valid {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "invalid id entity parse"})
 		return
 	}
 
@@ -158,7 +175,6 @@ func (controller *AppointmentCommandController) RescheduleAppointment(ctx *gin.C
 	}
 
 	command.AppointmentID = appointmentID
-
 	result := controller.commandBus.Execute(context.Background(), command)
 	if !result.IsSuccess {
 		apiResponse.ApplicationError(ctx, result.Error)
@@ -181,9 +197,15 @@ func (controller *AppointmentCommandController) RescheduleAppointment(ctx *gin.C
 // @Failure 500 {object} apiResponse.APIResponse "Internal server error"
 // @Router /appointments/{id}/no-show [put]
 func (controller *AppointmentCommandController) MarkAsNoShow(ctx *gin.Context) {
-	appointmentID, err := shared.ParseParamToInt(ctx, "id")
+	entityID, err := shared.ParseParamToEntityID(ctx, "id", "appointment")
 	if err != nil {
-		apiResponse.RequestURLParamError(ctx, err, "id", ctx.Param("id"))
+		apiResponse.RequestURLParamError(ctx, err, "appointmentID", ctx.Param("id"))
+		return
+	}
+
+	appointmentID, valid := entityID.(valueobject.AppointmentID)
+	if !valid {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "invalid id entity parse"})
 		return
 	}
 
@@ -216,34 +238,22 @@ func (controller *AppointmentCommandController) MarkAsNoShow(ctx *gin.Context) {
 // @Failure 500 {object} apiResponse.APIResponse "Internal server error"
 // @Router /appointments/{id}/confirm [put]
 func (controller *AppointmentCommandController) ConfirmAppointment(ctx *gin.Context) {
-	appointmentID, err := shared.ParseParamToInt(ctx, "id")
+	entityID, err := shared.ParseParamToEntityID(ctx, "id", "appointment")
 	if err != nil {
-		apiResponse.RequestURLParamError(ctx, err, "id", ctx.Param("id"))
+		apiResponse.RequestURLParamError(ctx, err, "appointmentID", ctx.Param("id"))
+		return
+	}
+
+	appointmentID, valid := entityID.(valueobject.AppointmentID)
+	if !valid {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "invalid id entity parse"})
 		return
 	}
 
 	// Get vet id from context
-	vetIDInterface, exists := ctx.Get("vet_id")
-	if !exists {
-		apiResponse.Unauthorized(ctx, errors.New("vet id not found in context"))
-		return
-	}
-
-	vetIDInt, ok := vetIDInterface.(int)
-	if !ok {
-		apiResponse.BadRequest(ctx, errors.New("invalid vet id format"))
-		return
-	}
-
-	vetID, err := valueobject.NewVetID(vetIDInt)
-	if err != nil {
-		apiResponse.BadRequest(ctx, err)
-		return
-	}
-
 	command := command.ConfirmAppointmentCommand{
 		ID:    appointmentID,
-		VetID: &vetID,
+		VetID: &valueobject.VetID{},
 	}
 
 	result := controller.commandBus.Execute(context.Background(), command)
@@ -272,9 +282,15 @@ func (controller *AppointmentCommandController) ConfirmAppointment(ctx *gin.Cont
 // @Failure 500 {object} apiResponse.APIResponse "Internal server error"
 // @Router /appointments/{id}/complete [put]
 func (controller *AppointmentCommandController) CompleteAppointment(ctx *gin.Context) {
-	appointmentID, err := shared.ParseParamToInt(ctx, "id")
+	entityID, err := shared.ParseParamToEntityID(ctx, "id", "appointment")
 	if err != nil {
-		apiResponse.RequestURLParamError(ctx, err, "id", ctx.Param("id"))
+		apiResponse.RequestURLParamError(ctx, err, "appointmentID", ctx.Param("id"))
+		return
+	}
+
+	appointmentID, valid := entityID.(valueobject.AppointmentID)
+	if !valid {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "invalid id entity parse"})
 		return
 	}
 

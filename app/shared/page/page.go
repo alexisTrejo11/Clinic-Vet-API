@@ -7,8 +7,10 @@ import (
 
 type SortDirection string
 
-const ASC SortDirection = "ASC"
-const DESC SortDirection = "DESC"
+const (
+	ASC  SortDirection = "ASC"
+	DESC SortDirection = "DESC"
+)
 
 type PageData struct {
 	PageSize      int           `json:"page_limit" validate:"omitempty,min=1,max=100"`

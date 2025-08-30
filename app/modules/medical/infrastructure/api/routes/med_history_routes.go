@@ -12,6 +12,5 @@ func MedicalHistoryRoutes(router *gin.Engine, controller controller.AdminMedical
 	router.GET(path+"/:id/details", controller.GetMedicalHistoryDetails)
 
 	router.POST(path, controller.CreateMedicalHistories)
-	router.PUT(path+"/:id", controller.UpdateMedicalHistories)
 	router.DELETE(path+"/:id", controller.DeleteMedicalHistories)
 }

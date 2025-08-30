@@ -1,8 +1,9 @@
-package paymentCmd
+package command
 
 import (
 	"context"
 
+	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 	paymentDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/payments/domain"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
 )
@@ -24,10 +25,10 @@ type CancelPaymentHandler interface {
 }
 
 type cancelPaymentHandler struct {
-	paymentRepo paymentDomain.PaymentRepository
+	paymentRepo repository.PaymentRepository
 }
 
-func NewCancelPaymentHandler(paymentRepo paymentDomain.PaymentRepository) CancelPaymentHandler {
+func NewCancelPaymentHandler(paymentRepo repository.PaymentRepository) CancelPaymentHandler {
 	return &cancelPaymentHandler{
 		paymentRepo: paymentRepo,
 	}

@@ -1,4 +1,4 @@
-package sqlcUserRepo
+package persistence
 
 import (
 	userDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
@@ -38,13 +38,11 @@ func MapUserFromSQLC(sqlRow sqlc.User) (*userDomain.User, error) {
 		status,
 		nil,
 	)
-
 	if err != nil {
 		return nil, err
 	}
 
 	return user, nil
-
 }
 
 func MapUsersFromSQLC(sqlRows []sqlc.User) ([]userDomain.User, error) {

@@ -6,7 +6,6 @@ import (
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/enum"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
 )
 
 type Appointment struct {
@@ -45,10 +44,6 @@ func NewAppointment(
 		createdAt:     createdAt,
 		updatedAt:     updatedAt,
 	}
-}
-
-func NilAppointmentID() valueobject.AppointmentID {
-	return valueobject.AppointmentID{IntegerId: shared.NilIntegerId()}
 }
 
 func (a *Appointment) GetID() valueobject.AppointmentID {
@@ -213,10 +208,6 @@ func (ab *AppointmentBuilder) WithTimestamps(createdAt, updatedAt time.Time) *Ap
 
 func (ab *AppointmentBuilder) Build() (*Appointment, error) {
 	// Simple validation, you can add more complex logic here.
-	if ab.petID.Equals(valueobject.PetID{}) {
-		return nil, errors.New("pet ID cannot be nil")
-	}
-
 	if ab.ownerID <= 0 {
 		return nil, errors.New("owner ID must be greater than zero")
 	}

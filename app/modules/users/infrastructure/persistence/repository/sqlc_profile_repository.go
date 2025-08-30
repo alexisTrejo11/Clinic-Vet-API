@@ -1,4 +1,4 @@
-package sqlcUserRepo
+package persistence
 
 import (
 	"context"

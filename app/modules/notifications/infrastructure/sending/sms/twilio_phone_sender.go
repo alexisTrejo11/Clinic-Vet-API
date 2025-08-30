@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	notificationService "github.com/alexisTrejo11/Clinic-Vet-API/app/notifications/application"
-	notificationDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/notifications/domain"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
+	service "github.com/alexisTrejo11/Clinic-Vet-API/app/modules/notifications/application"
 	"github.com/twilio/twilio-go"
 	twilioApi "github.com/twilio/twilio-go/rest/api/v2010"
 )
@@ -16,11 +16,11 @@ type TwilioPhoneSender struct {
 	twilioPhoneNumber string
 }
 
-func NewTwilioPhoneSender(client *twilio.RestClient, twilioPhoneNumber string) notificationService.Sender {
+func NewTwilioPhoneSender(client *twilio.RestClient, twilioPhoneNumber string) service.Sender {
 	return &TwilioPhoneSender{client: client, twilioPhoneNumber: twilioPhoneNumber}
 }
 
-func (s *TwilioPhoneSender) Send(ctx context.Context, notification *notificationDomain.Notification) error {
+func (s *TwilioPhoneSender) Send(ctx context.Context, notification *entity.Notification) error {
 	params := &twilioApi.CreateMessageParams{}
 
 	if notification.UserPhone == "" {
@@ -44,9 +44,8 @@ func (s *TwilioPhoneSender) Send(ctx context.Context, notification *notification
 		fmt.Println("Response: " + string(response))
 		return nil
 	}
-
 }
 
-func (s *TwilioPhoneSender) GenerateBody(notification *notificationDomain.Notification) string {
+func (s *TwilioPhoneSender) GenerateBody(notification *entity.Notification) string {
 	return fmt.Sprintf("Hello from Clinic Vet! %s", notification.Message)
 }

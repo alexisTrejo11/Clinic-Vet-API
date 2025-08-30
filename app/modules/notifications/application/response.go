@@ -1,9 +1,9 @@
-package notificationService
+package service
 
 import (
 	"time"
 
-	domain "github.com/alexisTrejo11/Clinic-Vet-API/app/notifications/domain"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
 )
 
 type NotificationResponse struct {
@@ -20,7 +20,7 @@ type NotificationResponse struct {
 	Channel   string `json:"channel"`
 }
 
-func fromDomain(notification domain.Notification) NotificationResponse {
+func fromDomain(notification entity.Notification) NotificationResponse {
 	response := &NotificationResponse{
 		ID:        notification.ID,
 		UserID:    notification.UserID,
@@ -37,7 +37,7 @@ func fromDomain(notification domain.Notification) NotificationResponse {
 	return *response
 }
 
-func fromDomainList(notifications []domain.Notification) []NotificationResponse {
+func fromDomainList(notifications []entity.Notification) []NotificationResponse {
 	responses := make([]NotificationResponse, 0, len(notifications))
 	for i, notification := range notifications {
 		responses[i] = fromDomain(notification)

@@ -6,7 +6,8 @@ import (
 	"fmt"
 	"time"
 
-	sessionDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/auth/domain"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
+	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -16,7 +17,7 @@ type RedisSessionRepository struct {
 	redisClient *redis.Client
 }
 
-func NewRedisSessionRepository(redisClient *redis.Client) sessionDomain.SessionRepository {
+func NewRedisSessionRepository(redisClient *redis.Client) repository.SessionRepository {
 	return &RedisSessionRepository{
 		redisClient: redisClient,
 	}
@@ -34,7 +35,7 @@ func (r *RedisSessionRepository) userSessionsKey(userId string) string {
 	return fmt.Sprintf("user_sessions:%s", userId)
 }
 
-func (r *RedisSessionRepository) Create(ctx context.Context, sess *sessionDomain.Session) error {
+func (r *RedisSessionRepository) Create(ctx context.Context, sess *entity.Session) error {
 	sessionJSON, err := json.Marshal(sess)
 	if err != nil {
 		return fmt.Errorf("failed to marshal session to JSON: %w", err)
@@ -55,44 +56,44 @@ func (r *RedisSessionRepository) Create(ctx context.Context, sess *sessionDomain
 	return nil
 }
 
-func (r *RedisSessionRepository) GetById(ctx context.Context, sessionId string) (sessionDomain.Session, error) {
+func (r *RedisSessionRepository) GetById(ctx context.Context, sessionId string) (entity.Session, error) {
 	sessionJSON, err := r.redisClient.Get(ctx, r.sessionKey(sessionId)).Bytes()
 	if err != nil {
 		if err == redis.Nil {
-			return sessionDomain.Session{}, fmt.Errorf("session not found for ID: %s", sessionId)
+			return entity.Session{}, fmt.Errorf("session not found for ID: %s", sessionId)
 		}
-		return sessionDomain.Session{}, fmt.Errorf("failed to get session from Redis: %w", err)
+		return entity.Session{}, fmt.Errorf("failed to get session from Redis: %w", err)
 	}
 
-	var sess sessionDomain.Session
+	var sess entity.Session
 	if err := json.Unmarshal(sessionJSON, &sess); err != nil {
-		return sessionDomain.Session{}, fmt.Errorf("failed to unmarshal session JSON: %w", err)
+		return entity.Session{}, fmt.Errorf("failed to unmarshal session JSON: %w", err)
 	}
 
 	return sess, nil
 }
 
-func (r *RedisSessionRepository) GetByUserAndId(ctx context.Context, userId, token string) (sessionDomain.Session, error) {
+func (r *RedisSessionRepository) GetByUserAndId(ctx context.Context, userId, token string) (entity.Session, error) {
 	isMember, err := r.redisClient.SIsMember(ctx, r.userSessionsKey(userId), token).Result()
 	if err != nil {
-		return sessionDomain.Session{}, fmt.Errorf("failed to check session membership: %w", err)
+		return entity.Session{}, fmt.Errorf("failed to check session membership: %w", err)
 	}
 	if !isMember {
-		return sessionDomain.Session{}, fmt.Errorf("session with token %s not found for user %s", token, userId)
+		return entity.Session{}, fmt.Errorf("session with token %s not found for user %s", token, userId)
 	}
 
 	// Then, retrieve the session data itself
 	return r.GetById(ctx, token)
 }
 
-func (r *RedisSessionRepository) GetByUserId(ctx context.Context, userId string) ([]sessionDomain.Session, error) {
+func (r *RedisSessionRepository) GetByUserId(ctx context.Context, userId string) ([]entity.Session, error) {
 	sessionIds, err := r.redisClient.SMembers(ctx, r.userSessionsKey(userId)).Result()
 	if err != nil {
-		return []sessionDomain.Session{}, fmt.Errorf("failed to get session IDs for user %s: %w", userId, err)
+		return []entity.Session{}, fmt.Errorf("failed to get session IDs for user %s: %w", userId, err)
 	}
 
 	if len(sessionIds) == 0 {
-		return []sessionDomain.Session{}, nil
+		return []entity.Session{}, nil
 	}
 
 	sessionKeys := make([]string, len(sessionIds))
@@ -102,18 +103,18 @@ func (r *RedisSessionRepository) GetByUserId(ctx context.Context, userId string)
 
 	sessionData, err := r.redisClient.MGet(ctx, sessionKeys...).Result()
 	if err != nil {
-		return []sessionDomain.Session{}, fmt.Errorf("failed to get sessions from Redis: %w", err)
+		return []entity.Session{}, fmt.Errorf("failed to get sessions from Redis: %w", err)
 	}
 
-	sessions := make([]sessionDomain.Session, 0, len(sessionData))
+	sessions := make([]entity.Session, 0, len(sessionData))
 	for _, val := range sessionData {
 		if val == nil {
 			continue // Skip if a session key expired or was deleted
 		}
 
-		var sess sessionDomain.Session
+		var sess entity.Session
 		if err := json.Unmarshal([]byte(val.(string)), &sess); err != nil {
-			return []sessionDomain.Session{}, fmt.Errorf("failed to unmarshal session JSON: %w", err)
+			return []entity.Session{}, fmt.Errorf("failed to unmarshal session JSON: %w", err)
 		}
 		sessions = append(sessions, sess)
 	}

@@ -10,17 +10,22 @@ import (
 
 func ToDomain(sqlRow sqlc.MedicalHistory) (entity.MedicalHistory, error) {
 	// Mapeo de Value Objects y Enums.
-	medHistId, err := valueobject.NewMedHistoryID(sqlRow.ID)
+	medHistId, err := valueobject.NewMedHistoryID(int(sqlRow.ID))
 	if err != nil {
 		return entity.MedicalHistory{}, err
 	}
 
-	petId, err := valueobject.NewPetID(sqlRow.PetID)
+	petId, err := valueobject.NewPetID(int(sqlRow.PetID))
 	if err != nil {
 		return entity.MedicalHistory{}, err
 	}
 
-	vetId, err := valueobject.NewVetID(sqlRow.VeterinarianID)
+	vetId, err := valueobject.NewVetID(int(sqlRow.VeterinarianID))
+	if err != nil {
+		return entity.MedicalHistory{}, err
+	}
+
+	ownerID, err := valueobject.NewOwnerID(int(sqlRow.OwnerID))
 	if err != nil {
 		return entity.MedicalHistory{}, err
 	}
@@ -48,7 +53,7 @@ func ToDomain(sqlRow sqlc.MedicalHistory) (entity.MedicalHistory, error) {
 	medicalHistory := entity.NewMedicalHistory(
 		medHistId,
 		petId,
-		int(sqlRow.OwnerID),
+		ownerID,
 		reason,
 		visitType,
 		sqlRow.VisitDate.Time,
@@ -86,7 +91,7 @@ func ToCreateParams(medHist entity.MedicalHistory) sqlc.CreateMedicalHistoryPara
 
 	params := sqlc.CreateMedicalHistoryParams{
 		PetID:          int32(medHist.PetID().GetValue()),
-		OwnerID:        int32(medHist.OwnerID()),
+		OwnerID:        int32(medHist.OwnerID().GetValue()),
 		VeterinarianID: int32(medHist.VetID().GetValue()),
 		VisitType:      medHist.VisitType().ToString(),
 		VisitDate:      pgtype.Timestamptz{Time: medHist.VisitDate(), Valid: true},

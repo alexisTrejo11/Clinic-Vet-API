@@ -1,4 +1,4 @@
-package paymentCmd
+package command
 
 import (
 	"context"

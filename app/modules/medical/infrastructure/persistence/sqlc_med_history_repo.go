@@ -131,7 +131,7 @@ func (r *SQLCMedHistRepository) Update(ctx context.Context, medHistory *entity.M
 	params := sqlc.UpdateMedicalHistoryParams{
 		ID:             int32(medHistory.ID().GetValue()),
 		PetID:          int32(medHistory.PetID().GetValue()),
-		OwnerID:        int32(medHistory.OwnerID()),
+		OwnerID:        int32(medHistory.OwnerID().GetValue()),
 		VeterinarianID: int32(medHistory.VetID().GetValue()),
 		VisitDate:      pgtype.Timestamptz{Time: medHistory.VisitDate(), Valid: true},
 		Diagnosis:      pgtype.Text{String: medHistory.Diagnosis(), Valid: true},

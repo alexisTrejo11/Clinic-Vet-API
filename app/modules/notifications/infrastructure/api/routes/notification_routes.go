@@ -1,11 +1,11 @@
-package notificationRoutes
+package routes
 
 import (
-	notificationController "github.com/alexisTrejo11/Clinic-Vet-API/app/notifications/infrastructure/api/controller"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/notifications/infrastructure/api/controller"
 	"github.com/gin-gonic/gin"
 )
 
-func SetupNotificationRoutes(app *gin.Engine, adminController *notificationController.NotificationAdminController) {
+func SetupNotificationRoutes(app *gin.Engine, adminController *controller.NotificationAdminController) {
 	notificationGroup := app.Group("api/v2/admin/notifications")
 	{
 		notificationGroup.POST("/send", adminController.SendNotification)
