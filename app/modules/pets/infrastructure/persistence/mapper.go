@@ -1,20 +1,31 @@
-package sqlcPetRepository
+package persistence
 
 import (
 	"fmt"
 	"strconv"
 
-	petDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/domain"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/enum"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
 	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-func ToDomainPet(sqlPet sqlc.Pet) (*petDomain.Pet, error) {
-	builder := petDomain.NewPetBuilder().
-		WithID(int(sqlPet.ID)).
+func ToDomainPet(sqlPet sqlc.Pet) (*entity.Pet, error) {
+	petID, err := valueobject.NewPetID(int(sqlPet.ID))
+	if err != nil {
+		return nil, err
+	}
+
+	ownerID, err := valueobject.NewOwnerID(int(sqlPet.OwnerID))
+	if err != nil {
+		return nil, err
+	}
+	builder := entity.NewPetBuilder().
+		WithID(petID).
 		WithName(sqlPet.Name).
 		WithSpecies(sqlPet.Species).
-		WithOwnerID(int(sqlPet.OwnerID)).
+		WithOwnerID(ownerID).
 		WithIsActive(sqlPet.IsActive)
 
 	if sqlPet.Photo.Valid {
@@ -28,7 +39,7 @@ func ToDomainPet(sqlPet sqlc.Pet) (*petDomain.Pet, error) {
 		builder.WithAge(&age)
 	}
 	if sqlPet.Gender.Valid {
-		genderVal := petDomain.Gender(sqlPet.Gender.String)
+		genderVal := enum.PetGender(sqlPet.Gender.String)
 		builder.WithGender(&genderVal)
 	}
 	if sqlPet.Weight.Valid {
@@ -67,7 +78,7 @@ func ToDomainPet(sqlPet sqlc.Pet) (*petDomain.Pet, error) {
 	return builder.Build(), nil
 }
 
-func ToSqlCreateParam(pet *petDomain.Pet) *sqlc.CreatePetParams {
+func ToSqlCreateParam(pet *entity.Pet) *sqlc.CreatePetParams {
 	return &sqlc.CreatePetParams{
 		Name:               pet.GetName(),
 		Photo:              toPgTypeText(pet.GetPhoto()),
@@ -79,7 +90,7 @@ func ToSqlCreateParam(pet *petDomain.Pet) *sqlc.CreatePetParams {
 		Color:              toPgTypeText(pet.GetColor()),
 		Microchip:          toPgTypeText(pet.GetMicrochip()),
 		IsNeutered:         toPgTypeBool(pet.GetIsNeutered()),
-		OwnerID:            int32(pet.GetOwnerID()),
+		OwnerID:            int32(pet.GetOwnerID().GetValue()),
 		Allergies:          toPgTypeText(pet.GetAllergies()),
 		CurrentMedications: toPgTypeText(pet.GetCurrentMedications()),
 		SpecialNeeds:       toPgTypeText(pet.GetSpecialNeeds()),
@@ -87,9 +98,9 @@ func ToSqlCreateParam(pet *petDomain.Pet) *sqlc.CreatePetParams {
 	}
 }
 
-func ToSqlUpdateParam(pet *petDomain.Pet) *sqlc.UpdatePetParams {
+func ToSqlUpdateParam(pet *entity.Pet) *sqlc.UpdatePetParams {
 	return &sqlc.UpdatePetParams{
-		ID:                 int32(pet.GetID()),
+		ID:                 int32(pet.GetID().GetValue()),
 		Name:               pet.GetName(),
 		Photo:              toPgTypeText(pet.GetPhoto()),
 		Species:            pet.GetSpecies(),
@@ -100,7 +111,7 @@ func ToSqlUpdateParam(pet *petDomain.Pet) *sqlc.UpdatePetParams {
 		Color:              toPgTypeText(pet.GetColor()),
 		Microchip:          toPgTypeText(pet.GetMicrochip()),
 		IsNeutered:         toPgTypeBool(pet.GetIsNeutered()),
-		OwnerID:            int32(pet.GetOwnerID()),
+		OwnerID:            int32(pet.GetOwnerID().GetValue()),
 		Allergies:          toPgTypeText(pet.GetAllergies()),
 		CurrentMedications: toPgTypeText(pet.GetCurrentMedications()),
 		SpecialNeeds:       toPgTypeText(pet.GetSpecialNeeds()),

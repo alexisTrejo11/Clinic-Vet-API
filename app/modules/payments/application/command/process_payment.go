@@ -3,19 +3,20 @@ package command
 import (
 	"context"
 
-	paymentDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/payments/domain"
+	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/service"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
 )
 
 type ProcessPaymentCommand struct {
-	paymentId     int
-	transactionId string
+	paymentID     int
+	transactionID string
 }
 
-func NewProcessPaymentCommand(paymentId int, transactionId string) ProcessPaymentCommand {
+func NewProcessPaymentCommand(paymentID int, transactionID string) ProcessPaymentCommand {
 	return ProcessPaymentCommand{
-		paymentId:     paymentId,
-		transactionId: transactionId,
+		paymentID:     paymentID,
+		transactionID: transactionID,
 	}
 }
 
@@ -24,32 +25,30 @@ type ProcessPaymentHandler interface {
 }
 
 type processPaymentHandler struct {
-	paymentRepo paymentDomain.PaymentRepository
+	paymentRepo      repository.PaymentRepository
+	paymentProccesor service.PaymentProccesorService
 }
 
-func NewProcessPaymentHandler(paymentRepo paymentDomain.PaymentRepository) ProcessPaymentHandler {
+func NewProcessPaymentHandler(paymentRepo repository.PaymentRepository) ProcessPaymentHandler {
 	return &processPaymentHandler{
-		paymentRepo: paymentRepo,
+		paymentRepo:      paymentRepo,
+		paymentProccesor: service.PaymentProccesorService{},
 	}
 }
 
 func (h *processPaymentHandler) Handle(ctx context.Context, command ProcessPaymentCommand) shared.CommandResult {
-	if command.paymentId == 0 {
-		return shared.FailureResult("payment_id is required", paymentDomain.InvalidPaymentIdErr(command.paymentId))
-	}
-
-	payment, err := h.paymentRepo.GetById(ctx, command.paymentId)
+	payment, err := h.paymentRepo.GetByID(ctx, command.paymentID)
 	if err != nil {
 		return shared.FailureResult("failed to retrieve payment", err)
 	}
 
-	if err := payment.Process(command.transactionId); err != nil {
+	if err := h.paymentProccesor.Process(&payment, command.transactionID); err != nil {
 		return shared.FailureResult("failed to process payment", err)
 	}
 
-	if err := h.paymentRepo.Save(ctx, payment); err != nil {
+	if err := h.paymentRepo.Save(ctx, &payment); err != nil {
 		return shared.FailureResult("failed to save processed payment", err)
 	}
 
-	return shared.SuccessResult(string(payment.GetId()), "payment processed successfully")
+	return shared.SuccessResult(string(payment.GetID()), "payment processed successfully")
 }

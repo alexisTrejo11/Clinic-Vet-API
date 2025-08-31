@@ -5,7 +5,9 @@ import (
 	"errors"
 	"fmt"
 
-	paymentDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/payments/domain"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/enum"
+	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 )
@@ -17,10 +19,10 @@ type MarkOverduePaymentsHandler interface {
 }
 
 type markOverduePaymentsHandler struct {
-	paymentRepo paymentDomain.PaymentRepository
+	paymentRepo repository.PaymentRepository
 }
 
-func NewMarkOverduePaymentsHandler(paymentRepo paymentDomain.PaymentRepository) MarkOverduePaymentsHandler {
+func NewMarkOverduePaymentsHandler(paymentRepo repository.PaymentRepository) MarkOverduePaymentsHandler {
 	return &markOverduePaymentsHandler{
 		paymentRepo: paymentRepo,
 	}
@@ -28,7 +30,7 @@ func NewMarkOverduePaymentsHandler(paymentRepo paymentDomain.PaymentRepository) 
 
 func (h *markOverduePaymentsHandler) Handle(ctx context.Context, command MarkOverduePaymentsCommand) shared.CommandResult {
 	searchCriteria := map[string]interface{}{
-		"status": paymentDomain.PENDING,
+		"status": enum.PENDING,
 	}
 
 	pagination := page.PageData{
@@ -50,7 +52,7 @@ func (h *markOverduePaymentsHandler) Handle(ctx context.Context, command MarkOve
 
 		for _, payment := range payments {
 			if err := h.UpdatePaymentOverdued(ctx, &payment); err != nil {
-				fmt.Printf("Error updating payment %d: %v\n", payment.GetId(), err)
+				fmt.Printf("Error updating payment %d: %v\n", payment.GetID(), err)
 				continue
 			}
 			updatedCount++
@@ -66,11 +68,11 @@ func (h *markOverduePaymentsHandler) Handle(ctx context.Context, command MarkOve
 	return shared.SuccessResult("", fmt.Sprintf("Updated %d overdue payments", updatedCount))
 }
 
-func (h *markOverduePaymentsHandler) UpdatePaymentOverdued(ctx context.Context, payment *paymentDomain.Payment) error {
+func (h *markOverduePaymentsHandler) UpdatePaymentOverdued(ctx context.Context, payment *entity.Payment) error {
 	if !payment.IsOverdue() {
 		return errors.New("payment is not overdue")
 	}
-	payment.MarkAsOverdue()
+	payment.SetStatus(enum.OVERDUE)
 
 	if err := h.paymentRepo.Save(ctx, payment); err != nil {
 		return err
@@ -83,6 +85,6 @@ func (h *markOverduePaymentsHandler) IsLastPage(pagination page.PageData, totalP
 	return pagination.PageNumber >= totalPages
 }
 
-func (h *markOverduePaymentsHandler) IsEmptyList(payments []paymentDomain.Payment) bool {
+func (h *markOverduePaymentsHandler) IsEmptyList(payments []entity.Payment) bool {
 	return len(payments) == 0
 }

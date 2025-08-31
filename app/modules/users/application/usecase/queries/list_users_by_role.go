@@ -3,21 +3,22 @@ package userDomainQueries
 import (
 	"context"
 
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/enum"
+	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
-	userDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
 )
 
 type ListUsersByRoleQuery struct {
-	Role       userDomain.UserRole `json:"role"`
-	Pagination page.PageData       `json:"pagination"`
-	Ctx        context.Context     `json:"-"`
+	Role       enum.UserRole   `json:"role"`
+	Pagination page.PageData   `json:"pagination"`
+	Ctx        context.Context `json:"-"`
 }
 
 type listUsersByRoleQueryHandler struct {
-	userRepository userDomain.UserRepository
+	userRepository repository.UserRepository
 }
 
-func NewListUsersByRoleQueryHandler(userRepository userDomain.UserRepository) *listUsersByRoleQueryHandler {
+func NewListUsersByRoleQueryHandler(userRepository repository.UserRepository) *listUsersByRoleQueryHandler {
 	return &listUsersByRoleQueryHandler{
 		userRepository: userRepository,
 	}

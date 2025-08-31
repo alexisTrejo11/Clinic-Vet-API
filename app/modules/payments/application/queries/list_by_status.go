@@ -1,18 +1,19 @@
-package paymentQuery
+package query
 
 import (
 	"context"
 
-	paymentDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/payments/domain"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/enum"
+	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 )
 
 type ListPaymentsByStatusQuery struct {
-	status     paymentDomain.PaymentStatus
+	status     enum.PaymentStatus
 	pagination page.PageData
 }
 
-func NewListPaymentsByStatusQuery(status paymentDomain.PaymentStatus, pagination page.PageData) ListPaymentsByStatusQuery {
+func NewListPaymentsByStatusQuery(status enum.PaymentStatus, pagination page.PageData) ListPaymentsByStatusQuery {
 	return ListPaymentsByStatusQuery{
 		status:     status,
 		pagination: pagination,
@@ -24,18 +25,14 @@ type ListPaymentsByStatusHandler interface {
 }
 
 type listPaymentsByStatusHandler struct {
-	repo paymentDomain.PaymentRepository
+	repo repository.PaymentRepository
 }
 
-func NewListPaymentsByStatusHandler(repo paymentDomain.PaymentRepository) ListPaymentsByStatusHandler {
+func NewListPaymentsByStatusHandler(repo repository.PaymentRepository) ListPaymentsByStatusHandler {
 	return &listPaymentsByStatusHandler{repo: repo}
 }
 
 func (h *listPaymentsByStatusHandler) Handle(ctx context.Context, query ListPaymentsByStatusQuery) (page.Page[[]PaymentResponse], error) {
-	if !query.status.IsValid() {
-		return page.Page[[]PaymentResponse]{}, paymentDomain.InvalidPaymentStatusErr(query.status)
-	}
-
 	paymentPage, err := h.repo.ListByStatus(ctx, query.status, query.pagination)
 	if err != nil {
 		return page.Page[[]PaymentResponse]{}, err

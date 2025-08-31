@@ -1,10 +1,11 @@
-package paymentController
+package controller
 
 import (
 	"context"
 
-	paymentDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/payments/domain"
-	paymentDTOs "github.com/alexisTrejo11/Clinic-Vet-API/app/payments/infrastructure/api/dtos"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/enum"
+	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
+	dto "github.com/alexisTrejo11/Clinic-Vet-API/app/modules/payments/infrastructure/api/dtos"
 	utils "github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
 	apiResponse "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/responses"
 	"github.com/gin-gonic/gin"
@@ -14,14 +15,13 @@ import (
 // TODO: Retrieve id from JWT or session instead URL
 type ClientPaymentController struct {
 	validator       *validator.Validate
-	paymentRepo     paymentDomain.PaymentRepository
-	paymentService  paymentDomain.PaymentService
+	paymentRepo     repository.PaymentRepository
 	queryController *PaymentQueryController
 }
 
 func NewClientPaymentController(
 	validator *validator.Validate,
-	paymentRepo paymentDomain.PaymentRepository,
+	paymentRepo repository.PaymentRepository,
 	queryController *PaymentQueryController,
 ) *ClientPaymentController {
 	return &ClientPaymentController{
@@ -38,19 +38,19 @@ func (c *ClientPaymentController) GetMyPayments(ctx *gin.Context) {
 
 // GetMyPayment retrieves a specific payment for the authenticated owner
 func (c *ClientPaymentController) GetMyPayment(ctx *gin.Context) {
-	paymentId, err := utils.ParseParamToInt(ctx, "payment_id")
+	paymentID, err := utils.ParseParamToInt(ctx, "payment_id")
 	if err != nil {
 		apiResponse.RequestURLParamError(ctx, err, "payment_id", ctx.Param("payment_id"))
 		return
 	}
 
-	payment, err := c.paymentRepo.GetById(context.TODO(), paymentId)
+	payment, err := c.paymentRepo.GetByID(context.TODO(), paymentID)
 	if err != nil {
 		apiResponse.ApplicationError(ctx, err)
 		return
 	}
 
-	response := paymentDTOs.ToPaymentResponse(payment)
+	response := dto.ToPaymentResponse(payment)
 	apiResponse.Success(ctx, response)
 }
 
@@ -61,9 +61,9 @@ func (c *ClientPaymentController) GetMyPaymentHistory(ctx *gin.Context) {
 
 // GetMyOverduePayments retrieves overdue payments for the authenticated owner
 func (c *ClientPaymentController) GetMyOverduePayments(ctx *gin.Context) {
-	searchReq := paymentDTOs.PaymentSearchRequest{
-		Status: func() *paymentDomain.PaymentStatus {
-			status := paymentDomain.OVERDUE
+	searchReq := dto.PaymentSearchRequest{
+		Status: func() *enum.PaymentStatus {
+			status := enum.OVERDUE
 			return &status
 		}(),
 		Page: c.queryController.parsePagination(ctx),
@@ -76,15 +76,15 @@ func (c *ClientPaymentController) GetMyOverduePayments(ctx *gin.Context) {
 		return
 	}
 
-	response := paymentDTOs.ToPaymentListResponse(payments)
+	response := dto.ToPaymentListResponse(payments)
 	apiResponse.Success(ctx, response)
 }
 
 // GetMyPendingPayments retrieves pending payments for the authenticated owner
 func (c *ClientPaymentController) GetMyPendingPayments(ctx *gin.Context) {
-	searchReq := paymentDTOs.PaymentSearchRequest{
-		Status: func() *paymentDomain.PaymentStatus {
-			status := paymentDomain.PENDING
+	searchReq := dto.PaymentSearchRequest{
+		Status: func() *enum.PaymentStatus {
+			status := enum.PENDING
 			return &status
 		}(),
 		Page: c.queryController.parsePagination(ctx),
@@ -97,6 +97,6 @@ func (c *ClientPaymentController) GetMyPendingPayments(ctx *gin.Context) {
 		return
 	}
 
-	response := paymentDTOs.ToPaymentListResponse(payments)
+	response := dto.ToPaymentListResponse(payments)
 	apiResponse.Success(ctx, response)
 }

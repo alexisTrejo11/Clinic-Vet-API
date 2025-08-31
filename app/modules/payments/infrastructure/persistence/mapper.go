@@ -3,27 +3,29 @@ package paymentRepo
 import (
 	"math/big"
 
-	paymentDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/payments/domain"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/enum"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
 	"github.com/alexisTrejo11/Clinic-Vet-API/db/models"
 	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-func mapSQLCPaymentToDomain(sqlcPayment sqlc.Payment) (*paymentDomain.Payment, error) {
-	status, err := paymentDomain.NewPaymentStatus(string(sqlcPayment.Status))
+func mapSQLCPaymentToDomain(sqlcPayment sqlc.Payment) (entity.Payment, error) {
+	status, err := enum.NewPaymentStatus(string(sqlcPayment.Status))
 	if err != nil {
-		return nil, err
+		return entity.Payment{}, err
 	}
 
-	method, err := paymentDomain.NewPaymentMethod(string(sqlcPayment.Method))
+	method, err := enum.NewPaymentMethod(string(sqlcPayment.Method))
 	if err != nil {
-		return nil, err
+		return entity.Payment{}, err
 	}
 
-	payment := &paymentDomain.Payment{}
+	payment := &entity.Payment{}
 
-	payment.SetId(int(sqlcPayment.ID))
-	payment.SetAmount(paymentDomain.Money{
+	payment.SetID(int(sqlcPayment.ID))
+	payment.SetAmount(valueobject.Money{
 		Amount:   sqlcPayment.Amount.Int.Int64(),
 		Currency: sqlcPayment.Currency,
 	})
@@ -33,7 +35,7 @@ func mapSQLCPaymentToDomain(sqlcPayment sqlc.Payment) (*paymentDomain.Payment, e
 	payment.SetUpdatedAt(sqlcPayment.UpdatedAt.Time)
 
 	if sqlcPayment.TransactionID.Valid {
-		payment.SetTransactionId(&sqlcPayment.TransactionID.String)
+		payment.SetTransactionID(&sqlcPayment.TransactionID.String)
 	}
 
 	if sqlcPayment.Description.Valid {
@@ -52,26 +54,26 @@ func mapSQLCPaymentToDomain(sqlcPayment sqlc.Payment) (*paymentDomain.Payment, e
 		payment.SetRefundedAt(&sqlcPayment.RefundedAt.Time)
 	}
 
-	return payment, nil
+	return *payment, nil
 }
 
-func mapSQLCPaymentListToDomain(sqlcPayments []sqlc.Payment) ([]paymentDomain.Payment, error) {
-	var payments []paymentDomain.Payment
+func mapSQLCPaymentListToDomain(sqlcPayments []sqlc.Payment) ([]entity.Payment, error) {
+	var payments []entity.Payment
 	for _, sqlcPayment := range sqlcPayments {
 		payment, err := mapSQLCPaymentToDomain(sqlcPayment)
 		if err != nil {
 			return nil, err
 		}
-		payments = append(payments, *payment)
+		payments = append(payments, payment)
 	}
 	return payments, nil
 }
 
-func mapDomainToCreateParams(payment *paymentDomain.Payment) sqlc.CreatePaymentParams {
+func mapDomainToCreateParams(payment *entity.Payment) sqlc.CreatePaymentParams {
 	return sqlc.CreatePaymentParams{
 		Amount:        pgtype.Numeric{Int: big.NewInt(payment.GetAmount().Amount), Valid: true},
 		Currency:      payment.GetAmount().Currency,
-		TransactionID: pgtype.Text{String: *payment.GetTransactionId(), Valid: payment.GetTransactionId() != nil},
+		TransactionID: pgtype.Text{String: *payment.GetTransactionID(), Valid: payment.GetTransactionID() != nil},
 		Status:        models.PaymentStatus(string(payment.GetStatus())),
 		Method:        models.PaymentMethod(string(payment.GetPaymentMethod())),
 		Description:   pgtype.Text{String: *payment.GetDescription(), Valid: payment.GetDescription() != nil},
@@ -81,15 +83,15 @@ func mapDomainToCreateParams(payment *paymentDomain.Payment) sqlc.CreatePaymentP
 	}
 }
 
-func mapDomainToUpdateParams(payment *paymentDomain.Payment) sqlc.UpdatePaymentParams {
+func mapDomainToUpdateParams(payment *entity.Payment) sqlc.UpdatePaymentParams {
 	return sqlc.UpdatePaymentParams{
-		ID:            int32(payment.GetId()),
+		ID:            int32(payment.GetID()),
 		Amount:        pgtype.Numeric{Int: big.NewInt(payment.GetAmount().Amount), Valid: true},
 		Currency:      payment.GetAmount().Currency,
-		TransactionID: pgtype.Text{String: *payment.GetTransactionId(), Valid: payment.GetTransactionId() != nil},
+		TransactionID: pgtype.Text{String: *payment.GetTransactionID(), Valid: payment.GetTransactionID() != nil},
 		Status:        models.PaymentStatus(string(payment.GetStatus())),
 		Method:        models.PaymentMethod(string(payment.GetPaymentMethod())),
-		UserID:        int32(payment.GetUserId()),
+		UserID:        int32(payment.GetUserID()),
 		Description:   pgtype.Text{String: *payment.GetDescription(), Valid: payment.GetDescription() != nil},
 		Duedate:       pgtype.Timestamptz{Time: *payment.GetDueDate(), Valid: payment.GetDueDate() != nil},
 		PaidAt:        pgtype.Timestamptz{Time: *payment.GetPaidAt(), Valid: payment.GetPaidAt() != nil},

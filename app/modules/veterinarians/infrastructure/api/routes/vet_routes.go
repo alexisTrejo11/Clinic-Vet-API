@@ -1,4 +1,4 @@
-package vetRoutes
+package routes
 
 import (
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/veterinarians/infrastructure/api/controller"
@@ -7,7 +7,7 @@ import (
 
 func VetRoutes(router *gin.Engine, vetController *controller.VeterinarianController) {
 	v2Router := router.Group("/api/v2/veterinarians")
-	v2Router.GET("/:id", vetController.GetVeterinarianById)
+	v2Router.GET("/:id", vetController.GetVeterinarianByID)
 	v2Router.GET("/", vetController.ListVeterinarians)
 	v2Router.POST("/", vetController.CreateVeterinarian)
 	v2Router.PATCH("/:id", vetController.UpdateVeterinarian)

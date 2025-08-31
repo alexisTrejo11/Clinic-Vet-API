@@ -1,11 +1,11 @@
-package paymentRoutes
+package routes
 
 import (
-	paymentController "github.com/alexisTrejo11/Clinic-Vet-API/app/payments/infrastructure/api/controller"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/payments/infrastructure/api/controller"
 	"github.com/gin-gonic/gin"
 )
 
-func RegisterAdminPaymentRoutes(router *gin.Engine, controller *paymentController.AdminPaymentController) {
+func RegisterAdminPaymentRoutes(router *gin.Engine, controller *controller.AdminPaymentController) {
 	adminGroup := router.Group("api/v2/admin/payments")
 	{
 		// Basic CRUD operations
@@ -27,11 +27,11 @@ func RegisterAdminPaymentRoutes(router *gin.Engine, controller *paymentControlle
 		adminGroup.GET("/overdue", controller.GetOverduePayments)
 		adminGroup.GET("/status/:status", controller.GetPaymentsByStatus)
 		adminGroup.GET("/date-range", controller.GetPaymentsByDateRange)
-		//adminGroup.GET("/report", controller.GeneratePaymentReport)
+		// adminGroup.GET("/report", controller.GeneratePaymentReport)
 	}
 }
 
-func RegisterClientPaymentRoutes(router *gin.Engine, controller *paymentController.ClientPaymentController) {
+func RegisterClientPaymentRoutes(router *gin.Engine, controller *controller.ClientPaymentController) {
 	clientGroup := router.Group("api/v2/client/payments")
 	{
 		// Owner payment operations
@@ -43,19 +43,19 @@ func RegisterClientPaymentRoutes(router *gin.Engine, controller *paymentControll
 	}
 }
 
-func RegisterPaymentQueryRoutes(router *gin.Engine, controller *paymentController.PaymentQueryController) {
+func RegisterPaymentQueryRoutes(router *gin.Engine, controller *controller.PaymentQueryController) {
 	queryGroup := router.Group("api/v2/payments")
 	{
 		queryGroup.GET("/search", controller.SearchPayments)
 		queryGroup.GET("/user/:user_id", controller.GetPaymentsByUser)
 		queryGroup.GET("/status/:status", controller.GetPaymentsByStatus)
 		queryGroup.GET("/overdue", controller.GetOverduePayments)
-		//queryGroup.GET("/report", controller.GeneratePaymentReport)
+		// queryGroup.GET("/report", controller.GeneratePaymentReport)
 		queryGroup.GET("/date-range", controller.GetPaymentsByDateRange)
 	}
 }
 
-func RegisterPaymentCommandRoutes(router *gin.Engine, controller *paymentController.PaymentController) {
+func RegisterPaymentCommandRoutes(router *gin.Engine, controller *controller.PaymentController) {
 	commandGroup := router.Group("api/v2/payments")
 	{
 		commandGroup.POST("/", controller.CreatePayment)

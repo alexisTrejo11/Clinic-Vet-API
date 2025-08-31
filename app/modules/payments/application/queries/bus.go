@@ -1,11 +1,11 @@
-package paymentQuery
+package query
 
 import (
 	"context"
 	"fmt"
 	"reflect"
 
-	paymentDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/payments/domain"
+	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 )
 
 type Query interface{}
@@ -23,7 +23,7 @@ type paymentQueryBus struct {
 	handlers map[reflect.Type]interface{}
 }
 
-func NewQueryBus(paymentRepo paymentDomain.PaymentRepository) QueryBus {
+func NewQueryBus(paymentRepo repository.PaymentRepository) QueryBus {
 	bus := &paymentQueryBus{
 		handlers: make(map[reflect.Type]interface{}),
 	}
@@ -31,13 +31,13 @@ func NewQueryBus(paymentRepo paymentDomain.PaymentRepository) QueryBus {
 	return bus
 }
 
-func (bus *paymentQueryBus) registerHandlers(paymentRepo paymentDomain.PaymentRepository) {
-	bus.Register(reflect.TypeOf(GetPaymentByIdQuery{}), NewGetPaymentByIdHandler(paymentRepo))
+func (bus *paymentQueryBus) registerHandlers(paymentRepo repository.PaymentRepository) {
+	bus.Register(reflect.TypeOf(GetPaymentByIDQuery{}), NewGetPaymentByIDHandler(paymentRepo))
 	bus.Register(reflect.TypeOf(ListPaymentsByUserQuery{}), NewListByUserHandler(paymentRepo))
 	bus.Register(reflect.TypeOf(ListPaymentsByStatusQuery{}), NewListPaymentsByStatusHandler(paymentRepo))
 	bus.Register(reflect.TypeOf(ListOverduePaymentsQuery{}), NewListOverduePaymentsHandler(paymentRepo))
 	bus.Register(reflect.TypeOf(SearchPaymentsQuery{}), NewSearchPaymentsHandler(paymentRepo))
-	//bus.Register(reflect.TypeOf(GetPaymentHistoryQuery{}), NewGetPaymentHistoryHandler(paymentRepo))
+	// bus.Register(reflect.TypeOf(GetPaymentHistoryQuery{}), NewGetPaymentHistoryHandler(paymentRepo))
 }
 
 func (bus *paymentQueryBus) Execute(ctx context.Context, query Query) (interface{}, error) {
@@ -50,8 +50,8 @@ func (bus *paymentQueryBus) Execute(ctx context.Context, query Query) (interface
 
 	// Type switch para manejar diferentes tipos de respuesta
 	switch q := query.(type) {
-	case GetPaymentByIdQuery:
-		h := handler.(GetPaymentByIdHandler)
+	case GetPaymentByIDQuery:
+		h := handler.(GetPaymentByIDHandler)
 		return h.Handle(ctx, q)
 
 	case ListPaymentsByUserQuery:

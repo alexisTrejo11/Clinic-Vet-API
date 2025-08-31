@@ -9,7 +9,7 @@ import (
 )
 
 func ParseParamToInt(c *gin.Context, paramName string) (int, error) {
-	idStr := c.Param(param_name)
+	idStr := c.Param(paramName)
 	if idStr == "" {
 		return 0, errors.New("empty id")
 	}

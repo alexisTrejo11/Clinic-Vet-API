@@ -1,17 +1,18 @@
-package petMapper
+package mapper
 
 import (
 	"time"
 
-	dtos "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application/usecase/dtos"
-	petDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/domain"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/enum"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/pets/application/dto"
 )
 
-func ToDomainFromCreate(dto dtos.PetCreate) *petDomain.Pet {
-	builder := petDomain.NewPetBuilder().
+func ToDomainFromCreate(dto dto.PetCreate) *entity.Pet {
+	builder := entity.NewPetBuilder().
 		WithName(dto.Name).
 		WithSpecies(dto.Species).
-		WithOwnerID(dto.OwnerId).
+		WithOwnerID(dto.OwnerID).
 		WithIsActive(dto.IsActive).
 		WithCreatedAt(time.Now()).
 		WithUpdatedAt(time.Now())
@@ -26,7 +27,7 @@ func ToDomainFromCreate(dto dtos.PetCreate) *petDomain.Pet {
 		builder.WithAge(dto.Age)
 	}
 	if dto.Gender != nil {
-		domainGender := petDomain.Gender(*dto.Gender)
+		domainGender := enum.PetGender(*dto.Gender)
 		builder.WithGender(&domainGender)
 	}
 	if dto.Weight != nil {
@@ -54,7 +55,7 @@ func ToDomainFromCreate(dto dtos.PetCreate) *petDomain.Pet {
 	return builder.Build()
 }
 
-func ToDomainFromUpdate(pet *petDomain.Pet, dto dtos.PetUpdate) {
+func ToDomainFromUpdate(pet *entity.Pet, dto dto.PetUpdate) {
 	if dto.Name != nil {
 		pet.SetName(*dto.Name)
 	}
@@ -71,7 +72,7 @@ func ToDomainFromUpdate(pet *petDomain.Pet, dto dtos.PetUpdate) {
 		pet.SetAge(dto.Age)
 	}
 	if dto.Gender != nil {
-		domainGender := petDomain.Gender(*dto.Gender)
+		domainGender := enum.PetGender(*dto.Gender)
 		pet.SetGender(&domainGender)
 	}
 	if dto.Weight != nil {
@@ -105,9 +106,9 @@ func ToDomainFromUpdate(pet *petDomain.Pet, dto dtos.PetUpdate) {
 	pet.SetUpdatedAt(time.Now())
 }
 
-func ToResponse(pet *petDomain.Pet) dtos.PetResponse {
-	response := dtos.PetResponse{
-		ID:                 pet.GetID(),
+func ToResponse(pet *entity.Pet) dto.PetResponse {
+	response := dto.PetResponse{
+		ID:                 pet.GetID().GetValue(),
 		Name:               pet.GetName(),
 		Photo:              pet.GetPhoto(),
 		Species:            pet.GetSpecies(),
@@ -116,31 +117,30 @@ func ToResponse(pet *petDomain.Pet) dtos.PetResponse {
 		Color:              pet.GetColor(),
 		Microchip:          pet.GetMicrochip(),
 		IsNeutered:         pet.GetIsNeutered(),
-		OwnerID:            pet.GetOwnerID(),
+		OwnerID:            pet.GetOwnerID().GetValue(),
 		Allergies:          pet.GetAllergies(),
 		CurrentMedications: pet.GetCurrentMedications(),
 		SpecialNeeds:       pet.GetSpecialNeeds(),
 		IsActive:           pet.GetIsActive(),
-		CreatedAt:          pet.GetCreatedAt(),
-		UpdatedAt:          pet.GetUpdatedAt(),
+		CreatedAt:          pet.GetCreatedAt().Format("2005-10-01 20:00:00"),
+		UpdatedAt:          pet.GetUpdatedAt().Format("2005-10-01 20:00:00"),
 	}
 
 	if pet.GetAge() != nil {
 		response.Age = pet.GetAge()
 	}
 	if pet.GetGender() != nil {
-		dtoGender := petDomain.Gender(*pet.GetGender())
-		response.Gender = &dtoGender
+		response.Gender = (*string)(pet.GetGender())
 	}
 
 	return response
 }
 
-func ToResponseList(pets []petDomain.Pet) []dtos.PetResponse {
+func ToResponseList(pets []entity.Pet) []dto.PetResponse {
 	if pets == nil {
-		return []dtos.PetResponse{}
+		return []dto.PetResponse{}
 	}
-	dtos := make([]dtos.PetResponse, len(pets))
+	dtos := make([]dto.PetResponse, len(pets))
 	for i, pet := range pets {
 		dtos[i] = ToResponse(&pet)
 	}

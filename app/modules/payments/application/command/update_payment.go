@@ -4,16 +4,18 @@ import (
 	"context"
 	"time"
 
-	paymentDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/payments/domain"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/enum"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
+	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
 )
 
 type UpdatePaymentCommand struct {
-	PaymentId     int                          `json:"payment_id"`
-	Amount        *paymentDomain.Money         `json:"amount,omitempty"`
-	PaymentMethod *paymentDomain.PaymentMethod `json:"payment_method,omitempty"`
-	Description   *string                      `json:"description,omitempty"`
-	DueDate       *time.Time                   `json:"due_date,omitempty"`
+	PaymentID     int                 `json:"payment_id"`
+	Amount        *valueobject.Money  `json:"amount,omitempty"`
+	PaymentMethod *enum.PaymentMethod `json:"payment_method,omitempty"`
+	Description   *string             `json:"description,omitempty"`
+	DueDate       *time.Time          `json:"due_date,omitempty"`
 }
 
 type UpdatePaymentHandler interface {
@@ -21,20 +23,17 @@ type UpdatePaymentHandler interface {
 }
 
 type updatePaymentHandler struct {
-	paymentRepo paymentDomain.PaymentRepository
+	paymentRepo repository.PaymentRepository
 }
 
-func NewUpdatePaymentHandler(paymentRepo paymentDomain.PaymentRepository) UpdatePaymentHandler {
+func NewUpdatePaymentHandler(paymentRepo repository.PaymentRepository) UpdatePaymentHandler {
 	return &updatePaymentHandler{
 		paymentRepo: paymentRepo,
 	}
 }
 
 func (h *updatePaymentHandler) Handle(ctx context.Context, cmd UpdatePaymentCommand) shared.CommandResult {
-	if cmd.PaymentId == 0 {
-		return shared.FailureResult("payment ID is zero", paymentDomain.InvalidPaymentIdErr(cmd.PaymentId))
-	}
-	payment, err := h.paymentRepo.GetById(ctx, cmd.PaymentId)
+	payment, err := h.paymentRepo.GetByID(ctx, cmd.PaymentID)
 	if err != nil {
 		return shared.FailureResult("error fetching payment", err)
 	}
@@ -44,13 +43,13 @@ func (h *updatePaymentHandler) Handle(ctx context.Context, cmd UpdatePaymentComm
 		return shared.FailureResult("error updating payment", err)
 	}
 
-	err = h.paymentRepo.Save(ctx, payment)
+	err = h.paymentRepo.Save(ctx, &payment)
 	if err != nil {
 		return shared.FailureResult("error saving payment", err)
 	}
 
 	return shared.SuccessResult(
-		string(rune(cmd.PaymentId)),
+		string(rune(cmd.PaymentID)),
 		"payment updated successfully",
 	)
 }

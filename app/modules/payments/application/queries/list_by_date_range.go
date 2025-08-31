@@ -1,10 +1,10 @@
-package paymentQuery
+package query
 
 import (
 	"context"
 	"time"
 
-	paymentDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/payments/domain"
+	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 	ApplicationError "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/errors/application"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 )
@@ -28,10 +28,10 @@ type ListPaymentsByDateRangeQueryHandler interface {
 }
 
 type listPaymentsByDateRangeHandler struct {
-	paymentRepository paymentDomain.PaymentRepository
+	paymentRepository repository.PaymentRepository
 }
 
-func NewListPaymentsByDateRangeHandler(paymentRepository paymentDomain.PaymentRepository) ListPaymentsByDateRangeQueryHandler {
+func NewListPaymentsByDateRangeHandler(paymentRepository repository.PaymentRepository) ListPaymentsByDateRangeQueryHandler {
 	return &listPaymentsByDateRangeHandler{
 		paymentRepository: paymentRepository,
 	}

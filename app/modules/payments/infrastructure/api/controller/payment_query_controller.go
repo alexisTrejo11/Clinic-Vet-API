@@ -1,13 +1,14 @@
-package paymentController
+package controller
 
 import (
 	"context"
 	"strconv"
 	"time"
 
-	paymentQuery "github.com/alexisTrejo11/Clinic-Vet-API/app/payments/application/queries"
-	paymentDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/payments/domain"
-	paymentDTOs "github.com/alexisTrejo11/Clinic-Vet-API/app/payments/infrastructure/api/dtos"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/enum"
+	domainerr "github.com/alexisTrejo11/Clinic-Vet-API/app/core/errors"
+	query "github.com/alexisTrejo11/Clinic-Vet-API/app/modules/payments/application/queries"
+	dto "github.com/alexisTrejo11/Clinic-Vet-API/app/modules/payments/infrastructure/api/dtos"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 	apiResponse "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/responses"
@@ -17,14 +18,12 @@ import (
 
 type PaymentQueryController struct {
 	validator *validator.Validate
-	queryBus  paymentQuery.QueryBus
+	queryBus  query.QueryBus
 }
 
 func NewPaymentQueryController(
 	validator *validator.Validate,
-	paymentRepo paymentDomain.PaymentRepository,
-	queryBus paymentQuery.QueryBus,
-
+	queryBus query.QueryBus,
 ) *PaymentQueryController {
 	return &PaymentQueryController{
 		validator: validator,
@@ -42,71 +41,70 @@ func (c *PaymentQueryController) SearchPayments(ctx *gin.Context) {
 		return
 	}
 
-	response := paymentDTOs.ToPaymentListResponse(payments)
+	response := dto.ToPaymentListResponse(payments)
 	apiResponse.Success(ctx, response)
 }
 
 func (c *PaymentQueryController) GetPayment(ctx *gin.Context) {
-	paymentId, err := shared.ParseParamToInt(ctx, ctx.Param("payment_id"))
+	paymentID, err := shared.ParseParamToInt(ctx, ctx.Param("payment_id"))
 	if err != nil {
 		apiResponse.RequestURLParamError(ctx, err, "payment_id", ctx.Param("payment_id"))
 		return
 	}
 
-	getPaymentQuery := paymentQuery.NewGetPaymentByIdQuery(paymentId)
+	getPaymentQuery := query.NewGetPaymentByIDQuery(paymentID)
 	payment, err := c.queryBus.Execute(context.TODO(), getPaymentQuery)
 	if err != nil {
 		apiResponse.ApplicationError(ctx, err)
 		return
 	}
 
-	response := paymentDTOs.ToPaymentResponse(payment)
+	response := dto.ToPaymentResponse(payment)
 	apiResponse.Success(ctx, response)
 }
 
 func (c *PaymentQueryController) GetPaymentsByUser(ctx *gin.Context) {
-	userId, err := shared.ParseParamToInt(ctx, ctx.Param("user_id"))
+	userID, err := shared.ParseParamToInt(ctx, ctx.Param("user_id"))
 	if err != nil {
 		apiResponse.RequestURLParamError(ctx, err, "user_id", ctx.Param("user_id"))
 		return
 	}
 
-	listByUserQuery := paymentQuery.NewListPaymentsByUserQuery(userId, c.parsePagination(ctx))
+	listByUserQuery := query.NewListPaymentsByUserQuery(userID, c.parsePagination(ctx))
 	paymentPage, err := c.queryBus.Execute(context.TODO(), listByUserQuery)
 	if err != nil {
 		apiResponse.ApplicationError(ctx, err)
 		return
 	}
 
-	response := paymentDTOs.ToPaymentListResponse(paymentPage)
+	response := dto.ToPaymentListResponse(paymentPage)
 	apiResponse.Success(ctx, response)
 }
 
 func (c *PaymentQueryController) GetPaymentsByStatus(ctx *gin.Context) {
 	statusStr := ctx.Param("status")
-	status := paymentDomain.PaymentStatus(statusStr)
+	status := enum.PaymentStatus(statusStr)
 	if !status.IsValid() {
-		apiResponse.RequestURLParamError(ctx, paymentDomain.ErrInvalidPaymentStatus, "status", statusStr)
+		apiResponse.RequestURLParamError(ctx, domainerr.ErrInvalidPaymentStatus, "status", statusStr)
 		return
 	}
 
 	payments, err := c.queryBus.Execute(
 		context.TODO(),
-		paymentQuery.NewListPaymentsByStatusQuery(status, c.parsePagination(ctx)),
+		query.NewListPaymentsByStatusQuery(status, c.parsePagination(ctx)),
 	)
-
 	if err != nil {
 		apiResponse.ApplicationError(ctx, err)
 		return
 	}
 
-	response := paymentDTOs.ToPaymentListResponse(payments)
+	response := dto.ToPaymentListResponse(payments)
 	apiResponse.Success(ctx, response)
 }
 
 func (c *PaymentQueryController) GetOverduePayments(ctx *gin.Context) {
 	pagination := c.parsePagination(ctx)
-	paymentOverdueQuery := paymentQuery.NewListOverduePaymentsQuery(pagination)
+	paymentOverdueQuery := query.NewListOverduePaymentsQuery(pagination)
 
 	payments, err := c.queryBus.Execute(context.TODO(), paymentOverdueQuery)
 	if err != nil {
@@ -114,7 +112,7 @@ func (c *PaymentQueryController) GetOverduePayments(ctx *gin.Context) {
 		return
 	}
 
-	response := paymentDTOs.ToPaymentListResponse(payments)
+	response := dto.ToPaymentListResponse(payments)
 	apiResponse.Success(ctx, response)
 }
 
@@ -145,7 +143,7 @@ func (c *PaymentQueryController) GetOverduePayments(ctx *gin.Context) {
 		return
 	}
 
-	response := paymentDTOs.ToPaymentReportResponse(report)
+	response := dto.ToPaymentReportResponse(report)
 	apiResponse.Success(ctx, response)
 } */
 
@@ -156,7 +154,7 @@ func (c *PaymentQueryController) GetPaymentsByDateRange(ctx *gin.Context) {
 		return
 	}
 
-	paymentsByDateRangeQuery := paymentQuery.NewListPaymentsByDateRangeQuery(startDate, endDate, c.parsePagination(ctx))
+	paymentsByDateRangeQuery := query.NewListPaymentsByDateRangeQuery(startDate, endDate, c.parsePagination(ctx))
 
 	payments, err := c.queryBus.Execute(context.TODO(), paymentsByDateRangeQuery)
 	if err != nil {
@@ -164,36 +162,36 @@ func (c *PaymentQueryController) GetPaymentsByDateRange(ctx *gin.Context) {
 		return
 	}
 
-	response := paymentDTOs.ToPaymentListResponse(payments)
+	response := dto.ToPaymentListResponse(payments)
 	apiResponse.Success(ctx, response)
 }
 
-func (c *PaymentQueryController) parseSearchRequest(ctx *gin.Context) paymentDTOs.PaymentSearchRequest {
-	req := paymentDTOs.PaymentSearchRequest{
+func (c *PaymentQueryController) parseSearchRequest(ctx *gin.Context) dto.PaymentSearchRequest {
+	req := dto.PaymentSearchRequest{
 		Page: c.parsePagination(ctx),
 	}
 
-	if UserIdStr := ctx.Query("owner_id"); UserIdStr != "" {
-		if UserId, err := strconv.Atoi(UserIdStr); err == nil {
-			req.UserId = &UserId
+	if UserIDStr := ctx.Query("owner_id"); UserIDStr != "" {
+		if UserID, err := strconv.Atoi(UserIDStr); err == nil {
+			req.UserID = &UserID
 		}
 	}
 
-	if appointmentIdStr := ctx.Query("appointment_id"); appointmentIdStr != "" {
-		if appointmentId, err := strconv.Atoi(appointmentIdStr); err == nil {
-			req.AppointmentId = &appointmentId
+	if appointmentIDStr := ctx.Query("appointment_id"); appointmentIDStr != "" {
+		if appointmentID, err := strconv.Atoi(appointmentIDStr); err == nil {
+			req.AppointmentID = &appointmentID
 		}
 	}
 
 	if statusStr := ctx.Query("status"); statusStr != "" {
-		status := paymentDomain.PaymentStatus(statusStr)
+		status := enum.PaymentStatus(statusStr)
 		if status.IsValid() {
 			req.Status = &status
 		}
 	}
 
 	if methodStr := ctx.Query("payment_method"); methodStr != "" {
-		method := paymentDomain.PaymentMethod(methodStr)
+		method := enum.PaymentMethod(methodStr)
 		if method.IsValid() {
 			req.PaymentMethod = &method
 		}
@@ -260,10 +258,10 @@ func (c *PaymentQueryController) parsePagination(ctx *gin.Context) page.PageData
 	}
 }
 
-func ToSearchComand(req paymentDTOs.PaymentSearchRequest) paymentQuery.SearchPaymentsQuery {
-	return paymentQuery.SearchPaymentsQuery{
-		UserId:        req.UserId,
-		AppointmentId: req.AppointmentId,
+func ToSearchComand(req dto.PaymentSearchRequest) query.SearchPaymentsQuery {
+	return query.SearchPaymentsQuery{
+		UserID:        req.UserID,
+		AppointmentID: req.AppointmentID,
 		Status:        req.Status,
 		PaymentMethod: req.PaymentMethod,
 		MinAmount:     req.MinAmount,
@@ -280,7 +278,7 @@ func parseStartEndDates(ctx *gin.Context) (time.Time, time.Time, error) {
 	endDateStr := ctx.Query("end_date")
 
 	if startDateStr == "" || endDateStr == "" {
-		return time.Time{}, time.Time{}, paymentDomain.NewPaymentError("MISSING_DATES", "start_date and end_date are required", 0, "")
+		return time.Time{}, time.Time{}, domainerr.NewPaymentError("MISSING_DATES", "start_date and end_date are required", 0, "")
 	}
 
 	startDate, err := time.Parse("2006-01-02", startDateStr)

@@ -112,12 +112,12 @@ func NewPaymentCommandService(ctx context.Context, commandBus CommandBus, paymen
 }
 
 func (s *PaymentCommandService) ProcessPayment(payment *entity.Payment) shared.CommandResult {
-	cmd := NewProcessPaymentCommand(payment.GetId(), *payment.GetTransactionId())
+	cmd := NewProcessPaymentCommand(payment.GetID(), *payment.GetTransactionID())
 	return s.commandBus.Execute(context.Background(), cmd)
 }
 
-func (s *PaymentCommandService) RefundPayment(paymentId int, reason string) shared.CommandResult {
-	cmd := NewRefundPaymentCommand(paymentId, reason)
+func (s *PaymentCommandService) RefundPayment(paymentID int, reason string) shared.CommandResult {
+	cmd := NewRefundPaymentCommand(paymentID, reason)
 	return s.commandBus.Execute(context.Background(), cmd)
 }
 
@@ -141,11 +141,11 @@ func (s *PaymentCommandService) ValidatePayment(payment *entity.Payment) error {
 	return nil
 }
 
-func (s *PaymentCommandService) CalculateTotal(appointmentId int) (valueobject.Money, error) {
+func (s *PaymentCommandService) CalculateTotal(appointmentID int) (valueobject.Money, error) {
 	return valueobject.NewMoney(0, "USD"), fmt.Errorf("not implemented")
 }
 
-func (s *PaymentCommandService) GetPaymentHistory(ownerId int) (page.Page[[]entity.Payment], error) {
+func (s *PaymentCommandService) GetPaymentHistory(ownerID int) (page.Page[[]entity.Payment], error) {
 	return page.Page[[]entity.Payment]{}, fmt.Errorf("use query handler for read operations")
 }
 

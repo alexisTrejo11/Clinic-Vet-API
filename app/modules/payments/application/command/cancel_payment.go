@@ -2,20 +2,21 @@ package command
 
 import (
 	"context"
+	"errors"
 
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
-	paymentDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/payments/domain"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/service"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
 )
 
 type CancelPaymentCommand struct {
-	paymentId int
+	paymentID int
 	reason    string
 }
 
-func NewCancelPaymentCommand(paymentId int, reason string) CancelPaymentCommand {
+func NewCancelPaymentCommand(paymentID int, reason string) CancelPaymentCommand {
 	return CancelPaymentCommand{
-		paymentId: paymentId,
+		paymentID: paymentID,
 		reason:    reason,
 	}
 }
@@ -25,35 +26,37 @@ type CancelPaymentHandler interface {
 }
 
 type cancelPaymentHandler struct {
-	paymentRepo repository.PaymentRepository
+	paymentRepo      repository.PaymentRepository
+	paymentProccesor service.PaymentProccesorService
 }
 
 func NewCancelPaymentHandler(paymentRepo repository.PaymentRepository) CancelPaymentHandler {
 	return &cancelPaymentHandler{
-		paymentRepo: paymentRepo,
+		paymentRepo:      paymentRepo,
+		paymentProccesor: service.PaymentProccesorService{},
 	}
 }
 
 func (h *cancelPaymentHandler) Handle(ctx context.Context, command CancelPaymentCommand) shared.CommandResult {
-	if command.paymentId == 0 {
+	if command.paymentID == 0 {
 		return shared.FailureResult(
 			"payment_id is required",
-			paymentDomain.InvalidPaymentIdErr(command.paymentId),
+			errors.New("payment id can't be 0"),
 		)
 	}
 
-	payment, err := h.paymentRepo.GetById(ctx, command.paymentId)
+	payment, err := h.paymentRepo.GetByID(ctx, command.paymentID)
 	if err != nil {
 		return shared.FailureResult("failed to retrieve payment", err)
 	}
 
-	if err := payment.Cancel(command.reason); err != nil {
+	if err := h.paymentProccesor.Cancel(&payment); err != nil {
 		return shared.FailureResult("failed to cancel payment", err)
 	}
 
-	if err := h.paymentRepo.Save(ctx, payment); err != nil {
+	if err := h.paymentRepo.Save(ctx, &payment); err != nil {
 		return shared.FailureResult("failed to save canceled payment", err)
 	}
 
-	return shared.SuccessResult(string(rune(payment.GetId())), "payment canceled successfully")
+	return shared.SuccessResult(string(rune(payment.GetID())), "payment canceled successfully")
 }

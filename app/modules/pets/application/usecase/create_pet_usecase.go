@@ -1,23 +1,23 @@
-package petUsecase
+package usecase
 
 import (
 	"context"
 
-	ownerDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/domain"
-	petApplicationError "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application"
-	petDTOs "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application/usecase/dtos"
-	petMapper "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application/usecase/mapper"
-	petDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/domain"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
+	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
+	petApplicationError "github.com/alexisTrejo11/Clinic-Vet-API/app/modules/pets/application"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/pets/application/dto"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/pets/application/mapper"
 )
 
 type CreatePetUseCase struct {
-	petRepository   petDomain.PetRepository
-	ownerRepository ownerDomain.OwnerRepository
+	petRepository   repository.PetRepository
+	ownerRepository repository.OwnerRepository
 }
 
 func NewCreatePetUseCase(
-	petRepository petDomain.PetRepository,
-	ownerRepository ownerDomain.OwnerRepository,
+	petRepository repository.PetRepository,
+	ownerRepository repository.OwnerRepository,
 ) *CreatePetUseCase {
 	return &CreatePetUseCase{
 		petRepository:   petRepository,
@@ -25,27 +25,27 @@ func NewCreatePetUseCase(
 	}
 }
 
-func (uc CreatePetUseCase) Execute(ctx context.Context, petCreate petDTOs.PetCreate) (petDTOs.PetResponse, error) {
-	if err := uc.validateOwner(ctx, petCreate.OwnerId); err != nil {
-		return petDTOs.PetResponse{}, err
+func (uc CreatePetUseCase) Execute(ctx context.Context, petCreate dto.PetCreate) (dto.PetResponse, error) {
+	if err := uc.validateOwner(ctx, petCreate.OwnerID); err != nil {
+		return dto.PetResponse{}, err
 	}
 
-	newPet := petMapper.ToDomainFromCreate(petCreate)
+	newPet := mapper.ToDomainFromCreate(petCreate)
 	if err := uc.petRepository.Save(ctx, newPet); err != nil {
-		return petDTOs.PetResponse{}, err
+		return dto.PetResponse{}, err
 	}
 
-	return petMapper.ToResponse(newPet), nil
+	return mapper.ToResponse(newPet), nil
 }
 
-func (uc CreatePetUseCase) validateOwner(ctx context.Context, ownerId int) error {
-	exists, err := uc.ownerRepository.ExistsByID(ctx, ownerId)
+func (uc CreatePetUseCase) validateOwner(ctx context.Context, ownerID valueobject.OwnerID) error {
+	exists, err := uc.ownerRepository.ExistsByID(ctx, ownerID)
 	if err != nil {
 		return err
 	}
 
 	if !exists {
-		petApplicationError.OwnerNotFoundError(ownerId)
+		petApplicationError.OwnerNotFoundError(ownerID.GetValue())
 	}
 
 	return nil

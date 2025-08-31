@@ -1,40 +1,42 @@
-package userDomainCommand
+package command
 
 import (
 	"context"
 	"errors"
 
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
+	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
-	userDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
 )
 
 type ChangeEmailCommand struct {
-	UserId int              `json:"user_id"`
-	Email  userDomain.Email `json:"email"`
-	CTX    context.Context  `json:"-"`
+	UserID valueobject.UserID `json:"user_id"`
+	Email  valueobject.Email  `json:"email"`
+	CTX    context.Context    `json:"-"`
 }
 
 type ChangePhoneCommand struct {
-	UserId int                    `json:"user_id"`
-	Phone  userDomain.PhoneNumber `json:"phone"`
-	CTX    context.Context        `json:"-"`
+	UserID valueobject.UserID      `json:"user_id"`
+	Phone  valueobject.PhoneNumber `json:"phone"`
+	CTX    context.Context         `json:"-"`
 }
 
 type ChangeEmailHandler struct {
-	userRepository userDomain.UserRepository
+	userRepository repository.UserRepository
 }
 
 type ChangePhoneHandler struct {
-	userRepository userDomain.UserRepository
+	userRepository repository.UserRepository
 }
 
-func NewChangePhoneHandler(userRepository userDomain.UserRepository) ChangePhoneHandler {
+func NewChangePhoneHandler(userRepository repository.UserRepository) ChangePhoneHandler {
 	return ChangePhoneHandler{
 		userRepository: userRepository,
 	}
 }
 
-func NewChangeEmailHandler(userRepository userDomain.UserRepository) ChangeEmailHandler {
+func NewChangeEmailHandler(userRepository repository.UserRepository) ChangeEmailHandler {
 	return ChangeEmailHandler{
 		userRepository: userRepository,
 	}
@@ -43,7 +45,7 @@ func NewChangeEmailHandler(userRepository userDomain.UserRepository) ChangeEmail
 func (h ChangePhoneHandler) Handle(cmd any) shared.CommandResult {
 	command := cmd.(ChangePhoneCommand)
 
-	user, err := h.userRepository.GetByID(command.CTX, command.UserId)
+	user, err := h.userRepository.GetByID(command.CTX, command.UserID)
 	if err != nil {
 		return shared.FailureResult("failed to find user", err)
 	}
@@ -58,13 +60,13 @@ func (h ChangePhoneHandler) Handle(cmd any) shared.CommandResult {
 		return shared.FailureResult("failed to update user", err)
 	}
 
-	return shared.SuccessResult(user.Id().String(), "phone changed successfully")
+	return shared.SuccessResult(user.ID().String(), "phone changed successfully")
 }
 
 func (h ChangeEmailHandler) Handle(cmd any) shared.CommandResult {
 	command := cmd.(ChangeEmailCommand)
 
-	user, err := h.userRepository.GetByID(command.CTX, command.UserId)
+	user, err := h.userRepository.GetByID(command.CTX, command.UserID)
 	if err != nil {
 		return shared.FailureResult("failed to find user", err)
 	}
@@ -79,10 +81,10 @@ func (h ChangeEmailHandler) Handle(cmd any) shared.CommandResult {
 		return shared.FailureResult("failed to update user", err)
 	}
 
-	return shared.SuccessResult(user.Id().String(), "email changed successfully")
+	return shared.SuccessResult(user.ID().String(), "email changed successfully")
 }
 
-func (h ChangeEmailHandler) validate(command ChangeEmailCommand, user userDomain.User) error {
+func (h ChangeEmailHandler) validate(command ChangeEmailCommand, user entity.User) error {
 	if user.Email().String() == command.Email.String() {
 		return nil
 	}
@@ -96,7 +98,7 @@ func (h ChangeEmailHandler) validate(command ChangeEmailCommand, user userDomain
 	return nil
 }
 
-func (h ChangePhoneHandler) validate(command ChangePhoneCommand, user userDomain.User) error {
+func (h ChangePhoneHandler) validate(command ChangePhoneCommand, user entity.User) error {
 	if user.PhoneNumber().String() == command.Phone.String() {
 		return nil
 	}

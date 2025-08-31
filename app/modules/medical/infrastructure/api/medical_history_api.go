@@ -17,9 +17,9 @@ type MedicalHistoryModuleConfig struct {
 	Router    *gin.Engine
 	Queries   *sqlc.Queries
 	Validator *validator.Validate
-	OwnerRepo repository.OwnerRepository
+	OwnerRepo *repository.OwnerRepository
 	VetRepo   *repository.VetRepository
-	PetRepo   repository.PetRepository
+	PetRepo   *repository.PetRepository
 }
 
 type MedicalHistoryModuleComponents struct {
@@ -75,9 +75,9 @@ func (m *MedicalHistoryModule) createRepository() repository.MedicalHistoryRepos
 func (m *MedicalHistoryModule) createUseCase(repository repository.MedicalHistoryRepository) *usecase.MedicalHistoryUseCase {
 	return usecase.NewMedicalHistoryUseCase(
 		repository,
-		m.config.OwnerRepo,
+		*m.config.OwnerRepo,
 		*m.config.VetRepo,
-		m.config.PetRepo,
+		*m.config.PetRepo,
 	)
 }
 

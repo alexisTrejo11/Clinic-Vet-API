@@ -1,30 +1,31 @@
-package ownerRepository
+package persistence
 
 import (
 	"context"
 	"fmt"
 	"sync"
 
-	ownerDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/domain"
-	petDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/domain"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
+	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
 )
 
 type SqlcOwnerRepository struct {
 	queries       *sqlc.Queries
-	petRepository petDomain.PetRepository
+	petRepository repository.PetRepository
 }
 
-func NewSqlcOwnerRepository(queries *sqlc.Queries, petRepository petDomain.PetRepository) ownerDomain.OwnerRepository {
+func NewSqlcOwnerRepository(queries *sqlc.Queries, petRepository repository.PetRepository) repository.OwnerRepository {
 	return &SqlcOwnerRepository{
 		queries:       queries,
 		petRepository: petRepository,
 	}
 }
 
-func (r *SqlcOwnerRepository) Save(ctx context.Context, owner *ownerDomain.Owner) error {
-	if owner.Id() == 0 {
+func (r *SqlcOwnerRepository) Save(ctx context.Context, owner *entity.Owner) error {
+	if owner.GetID().IsZero() {
 		if err := r.create(ctx, owner); err != nil {
 			return DBCreateError(err.Error())
 		}
@@ -38,33 +39,33 @@ func (r *SqlcOwnerRepository) Save(ctx context.Context, owner *ownerDomain.Owner
 	return nil
 }
 
-func (r *SqlcOwnerRepository) GetById(ctx context.Context, id int) (ownerDomain.Owner, error) {
+func (r *SqlcOwnerRepository) GetByID(ctx context.Context, id valueobject.OwnerID) (entity.Owner, error) {
 	petsChan := make(chan struct {
-		pets []petDomain.Pet
+		pets []entity.Pet
 		err  error
 	}, 1)
 
 	var wg sync.WaitGroup
 
-	ownerRow, err := r.queries.GetOwnerByID(ctx, int32(id))
+	ownerRow, err := r.queries.GetOwnerByID(ctx, int32(id.GetValue()))
 	if err != nil {
-		return ownerDomain.Owner{}, fmt.Errorf("failed to get owner by ID: %w", err)
+		return entity.Owner{}, fmt.Errorf("failed to get owner by ID: %w", err)
 	}
 
-	var pets []petDomain.Pet
+	var pets []entity.Pet
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		p, petErr := r.petRepository.ListByOwnerId(ctx, id)
+		p, petErr := r.petRepository.ListByOwnerID(ctx, id)
 		petsChan <- struct {
-			pets []petDomain.Pet
+			pets []entity.Pet
 			err  error
 		}{pets: p, err: petErr}
 	}()
 
 	petsResult := <-petsChan
 	if petsResult.err != nil {
-		return ownerDomain.Owner{}, fmt.Errorf("failed to list pets for owner: %w", petsResult.err)
+		return entity.Owner{}, fmt.Errorf("failed to list pets for owner: %w", petsResult.err)
 	}
 	pets = petsResult.pets
 
@@ -73,17 +74,17 @@ func (r *SqlcOwnerRepository) GetById(ctx context.Context, id int) (ownerDomain.
 	return owner, nil
 }
 
-func (r *SqlcOwnerRepository) GetByPhone(ctx context.Context, phone string) (ownerDomain.Owner, error) {
+func (r *SqlcOwnerRepository) GetByPhone(ctx context.Context, phone string) (entity.Owner, error) {
 	sqlRow, err := r.queries.GetOwnerByPhone(ctx, phone)
 	if err != nil {
-		return ownerDomain.Owner{}, err
+		return entity.Owner{}, err
 	}
 
 	return rowToOwner(sqlRow), nil
 }
 
 // Add Seacrh
-func (r *SqlcOwnerRepository) List(ctx context.Context, pagination page.PageData) (page.Page[[]ownerDomain.Owner], error) {
+func (r *SqlcOwnerRepository) List(ctx context.Context, pagination page.PageData) (page.Page[[]entity.Owner], error) {
 	pageParams := sqlc.ListOwnersParams{
 		Limit:  int32(pagination.PageSize),
 		Offset: int32((pagination.PageNumber - 1) * pagination.PageSize),
@@ -91,19 +92,19 @@ func (r *SqlcOwnerRepository) List(ctx context.Context, pagination page.PageData
 
 	ownerRow, err := r.queries.ListOwners(ctx, pageParams)
 	if err != nil {
-		return page.Page[[]ownerDomain.Owner]{}, err
+		return page.Page[[]entity.Owner]{}, err
 	}
 
 	owners, err := ListRowToOwner(ownerRow)
 	if err != nil {
-		return page.Page[[]ownerDomain.Owner]{}, err
+		return page.Page[[]entity.Owner]{}, err
 	}
 
 	return page.NewPage(owners, *page.GetPageMetadata(len(owners), pagination)), nil
 }
 
-func (r *SqlcOwnerRepository) SoftDelete(ctx context.Context, OwnerId int) error {
-	if err := r.queries.SoftDeleteOwner(ctx, int32(OwnerId)); err != nil {
+func (r *SqlcOwnerRepository) SoftDelete(ctx context.Context, id valueobject.OwnerID) error {
+	if err := r.queries.SoftDeleteOwner(ctx, int32(id.GetValue())); err != nil {
 		return DBDeleteError(err.Error())
 	}
 	return nil
@@ -118,8 +119,8 @@ func (r *SqlcOwnerRepository) ExistsByPhone(ctx context.Context, phone string) (
 	return exists, nil
 }
 
-func (r *SqlcOwnerRepository) ExistsByID(ctx context.Context, id int) (bool, error) {
-	exists, err := r.queries.ExistByID(ctx, int32(id))
+func (r *SqlcOwnerRepository) ExistsByID(ctx context.Context, id valueobject.OwnerID) (bool, error) {
+	exists, err := r.queries.ExistByID(ctx, int32(id.GetValue()))
 	if err != nil {
 		return false, DBSelectFoundError(err.Error())
 	}
@@ -140,7 +141,7 @@ func (r *SqlcOwnerRepository) DeactivateOwner(ctx context.Context, id int) error
 	return nil
 }
 
-func (r *SqlcOwnerRepository) create(ctx context.Context, owner *ownerDomain.Owner) error {
+func (r *SqlcOwnerRepository) create(ctx context.Context, owner *entity.Owner) error {
 	createParams := toCreateParams(*owner)
 
 	ownerCreated, err := r.queries.CreateOwner(ctx, *createParams)
@@ -148,11 +149,12 @@ func (r *SqlcOwnerRepository) create(ctx context.Context, owner *ownerDomain.Own
 		return err
 	}
 
-	owner.SetId(int(ownerCreated.ID))
+	ownerID, _ := valueobject.NewOwnerID(int(ownerCreated.ID))
+	owner.SetID(ownerID)
 	return nil
 }
 
-func (r *SqlcOwnerRepository) update(ctx context.Context, owner *ownerDomain.Owner) error {
+func (r *SqlcOwnerRepository) update(ctx context.Context, owner *entity.Owner) error {
 	params := toUpdateParams(*owner)
 
 	if err := r.queries.UpdateOwner(ctx, *params); err != nil {

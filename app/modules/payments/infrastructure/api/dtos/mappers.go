@@ -1,64 +1,66 @@
-package paymentDTOs
+package dto
 
 import (
-	paymentCmd "github.com/alexisTrejo11/Clinic-Vet-API/app/payments/application/command"
-	paymentDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/payments/domain"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/enum"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
+	cmd "github.com/alexisTrejo11/Clinic-Vet-API/app/modules/payments/application/command"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 )
 
-func (req CreatePaymentRequest) ToCreatePaymentCommand() paymentCmd.CreatePaymentCommand {
-	return paymentCmd.CreatePaymentCommand{
-		AppointmentId: req.AppointmentId,
-		UserId:        req.UserId,
+func (req CreatePaymentRequest) ToCreatePaymentCommand() cmd.CreatePaymentCommand {
+	return cmd.CreatePaymentCommand{
+		AppointmentID: req.AppointmentID,
+		UserID:        req.UserID,
 		Amount:        req.Amount,
 		Currency:      req.Currency,
 		PaymentMethod: req.PaymentMethod,
 		Description:   req.Description,
 		DueDate:       req.DueDate,
-		TransactionId: req.TransactionId,
+		TransactionID: req.TransactionID,
 	}
 }
 
-func (req UpdatePaymentRequest) ToUpdatePaymentCommand(paymentId int) paymentCmd.UpdatePaymentCommand {
-	command := paymentCmd.UpdatePaymentCommand{
-		PaymentId:     paymentId,
+func (req UpdatePaymentRequest) ToUpdatePaymentCommand(paymentID int) cmd.UpdatePaymentCommand {
+	command := cmd.UpdatePaymentCommand{
+		PaymentID:     paymentID,
 		PaymentMethod: req.PaymentMethod,
 		Description:   req.Description,
 		DueDate:       req.DueDate,
 	}
 
 	if req.Amount != nil && req.Currency != nil {
-		money := paymentDomain.NewMoney(*req.Amount, *req.Currency)
+		money := valueobject.NewMoney(*req.Amount, *req.Currency)
 		command.Amount = &money
 	}
 
 	return command
 }
 
-func (req ProcessPaymentRequest) ToProcessPaymentCommand(paymentId int) paymentCmd.ProcessPaymentCommand {
-	return paymentCmd.NewProcessPaymentCommand(paymentId, req.TransactionId)
+func (req ProcessPaymentRequest) ToProcessPaymentCommand(paymentID int) cmd.ProcessPaymentCommand {
+	return cmd.NewProcessPaymentCommand(paymentID, req.TransactionID)
 }
 
-func (req RefundPaymentRequest) ToRefundPaymentCommand(paymentId int) paymentCmd.RefundPaymentCommand {
-	return paymentCmd.NewRefundPaymentCommand(paymentId, req.Reason)
+func (req RefundPaymentRequest) ToRefundPaymentCommand(paymentID int) cmd.RefundPaymentCommand {
+	return cmd.NewRefundPaymentCommand(paymentID, req.Reason)
 }
 
-func (req CancelPaymentRequest) ToCancelPaymentCommand(paymentId int) paymentCmd.CancelPaymentCommand {
-	return paymentCmd.NewCancelPaymentCommand(paymentId, req.Reason)
+func (req CancelPaymentRequest) ToCancelPaymentCommand(paymentID int) cmd.CancelPaymentCommand {
+	return cmd.NewCancelPaymentCommand(paymentID, req.Reason)
 }
 
-func ToPaymentResponse(entity interface{}) PaymentResponse {
-	payment := entity.(*paymentDomain.Payment)
+func ToPaymentResponse(pay any) PaymentResponse {
+	payment := pay.(entity.Payment)
 
 	return PaymentResponse{
-		Id:            payment.GetId(),
-		AppointmentId: payment.GetAppointmentId(),
-		UserId:        payment.GetUserId(),
+		ID:            payment.GetID(),
+		AppointmentID: payment.GetAppointmentID(),
+		UserID:        payment.GetUserID(),
 		Amount:        payment.GetAmount().ToFloat(),
 		Currency:      payment.GetCurrency(),
 		PaymentMethod: payment.GetPaymentMethod(),
 		Status:        payment.GetStatus(),
-		TransactionId: payment.GetTransactionId(),
+		TransactionID: payment.GetTransactionID(),
 		Description:   payment.GetDescription(),
 		DueDate:       payment.GetDueDate(),
 		PaidAt:        payment.GetPaidAt(),
@@ -70,7 +72,7 @@ func ToPaymentResponse(entity interface{}) PaymentResponse {
 }
 
 func ToPaymentListResponse(data interface{}) PaymentListResponse {
-	paymentsPage := data.(page.Page[[]paymentDomain.Payment])
+	paymentsPage := data.(page.Page[[]entity.Payment])
 
 	responses := make([]PaymentResponse, len(paymentsPage.Data))
 	for i, payment := range paymentsPage.Data {
@@ -83,20 +85,20 @@ func ToPaymentListResponse(data interface{}) PaymentListResponse {
 	}
 }
 
-func ToPaymentReportResponse(report paymentDomain.PaymentReport) PaymentReportResponse {
-	paymentsByMethod := make(map[paymentDomain.PaymentMethod]PaymentSummary)
+func ToPaymentReportResponse(report PaymentReport) PaymentReportResponse {
+	paymentsByMethod := make(map[enum.PaymentMethod]PaymentSummary)
 	for method, summary := range report.PaymentsByMethod {
 		paymentsByMethod[method] = PaymentSummary{
 			Count:  summary.Count,
-			Amount: summary.Amount.ToFloat(),
+			Amount: summary.Amount,
 		}
 	}
 
-	paymentsByStatus := make(map[paymentDomain.PaymentStatus]PaymentSummary)
+	paymentsByStatus := make(map[enum.PaymentStatus]PaymentSummary)
 	for status, summary := range report.PaymentsByStatus {
 		paymentsByStatus[status] = PaymentSummary{
 			Count:  summary.Count,
-			Amount: summary.Amount.ToFloat(),
+			Amount: summary.Amount,
 		}
 	}
 
@@ -104,12 +106,12 @@ func ToPaymentReportResponse(report paymentDomain.PaymentReport) PaymentReportRe
 		StartDate:        report.StartDate,
 		EndDate:          report.EndDate,
 		TotalPayments:    report.TotalPayments,
-		TotalAmount:      report.TotalAmount.ToFloat(),
-		TotalCurrency:    report.TotalAmount.Currency,
-		PaidAmount:       report.PaidAmount.ToFloat(),
-		PendingAmount:    report.PendingAmount.ToFloat(),
-		RefundedAmount:   report.RefundedAmount.ToFloat(),
-		OverdueAmount:    report.OverdueAmount.ToFloat(),
+		TotalAmount:      report.TotalAmount,
+		TotalCurrency:    report.TotalCurrency,
+		PaidAmount:       report.PaidAmount,
+		PendingAmount:    report.PendingAmount,
+		RefundedAmount:   report.RefundedAmount,
+		OverdueAmount:    report.OverdueAmount,
 		PaymentsByMethod: paymentsByMethod,
 		PaymentsByStatus: paymentsByStatus,
 	}
@@ -118,11 +120,11 @@ func ToPaymentReportResponse(report paymentDomain.PaymentReport) PaymentReportRe
 func (req PaymentSearchRequest) ToSearchCriteria() map[string]interface{} {
 	criteria := make(map[string]interface{})
 
-	if req.UserId != nil {
-		criteria["owner_id"] = *req.UserId
+	if req.UserID != nil {
+		criteria["owner_id"] = *req.UserID
 	}
-	if req.AppointmentId != nil {
-		criteria["appointment_id"] = *req.AppointmentId
+	if req.AppointmentID != nil {
+		criteria["appointment_id"] = *req.AppointmentID
 	}
 	if req.Status != nil {
 		criteria["status"] = *req.Status

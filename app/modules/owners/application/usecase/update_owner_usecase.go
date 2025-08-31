@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
 	domainerr "github.com/alexisTrejo11/Clinic-Vet-API/app/core/errors"
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/owners/application/dto"
@@ -20,10 +21,10 @@ func NewUpdateOwnerUseCase(ownerRepo repository.OwnerRepository) *UpdateOwnerUse
 	}
 }
 
-func (uc *UpdateOwnerUseCase) Execute(ctx context.Context, id int, updateData dto.OwnerUpdate) (dto.OwnerDetail, error) {
-	owner, err := uc.ownerRepo.GetById(ctx, id)
+func (uc *UpdateOwnerUseCase) Execute(ctx context.Context, id valueobject.OwnerID, updateData dto.OwnerUpdate) (dto.OwnerDetail, error) {
+	owner, err := uc.ownerRepo.GetByID(ctx, id)
 	if err != nil {
-		return dto.OwnerDetail{}, domainerr.HandleGetByIdError(err, id)
+		return dto.OwnerDetail{}, domainerr.HandleGetByIdError(err, id.GetValue())
 	}
 
 	if updateData.PhoneNumber != nil && *updateData.PhoneNumber != owner.PhoneNumber() {

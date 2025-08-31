@@ -17,7 +17,7 @@ type SignupCommand struct {
 	Email       *string `json:"email"`
 	PhoneNumber *string `json:"phone_number"`
 	Password    string  `json:"password"`
-	UserId      int     `json:"user_id"`
+	UserID      int     `json:"user_id"`
 
 	// Personal details
 	FirstName      string              `json:"first_name"`
@@ -71,7 +71,7 @@ func (h *signupHandler) Handle(cmd any) AuthCommandResult {
 		return FailureAuthResult("an error ocurred saving user", err)
 	}
 
-	return SuccessAuthResult(nil, user.Id().String(), "User Successfully Created")
+	return SuccessAuthResult(nil, user.ID().String(), "User Successfully Created")
 }
 
 func (h *signupHandler) validateCredentials(command *SignupCommand) error {
@@ -134,7 +134,7 @@ func (h *signupHandler) validateUniqueCredentials(command *SignupCommand) error 
 
 func toDomain(command SignupCommand) (entity.User, error) {
 	user, err := entity.NewUserBuilder().
-		WithId(command.UserId).
+		WithID(command.UserID).
 		WithPassword(command.Password).
 		WithRole(command.Role).
 		WithPhoneNumber(*command.PhoneNumber).

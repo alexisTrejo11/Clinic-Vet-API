@@ -1,29 +1,29 @@
-package petUsecase
+package usecase
 
 import (
 	"context"
 
-	petDTOs "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application/usecase/dtos"
-	petMapper "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application/usecase/mapper"
-	petDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/domain"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
+	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/pets/application/dto"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/pets/application/mapper"
 )
 
-type GetPetByIdUseCase struct {
-	repository petDomain.PetRepository
+type GetPetByIDUseCase struct {
+	repository repository.PetRepository
 }
 
-func NewGetPetByIdUseCase(repository petDomain.PetRepository) *GetPetByIdUseCase {
-	return &GetPetByIdUseCase{
+func NewGetPetByIDUseCase(repository repository.PetRepository) *GetPetByIDUseCase {
+	return &GetPetByIDUseCase{
 		repository: repository,
 	}
 }
 
-func (uc *GetPetByIdUseCase) Execute(ctx context.Context, petId int) (petDTOs.PetResponse, error) {
-	pet, err := uc.repository.GetById(ctx, petId)
-
+func (uc *GetPetByIDUseCase) Execute(ctx context.Context, petID valueobject.PetID) (dto.PetResponse, error) {
+	pet, err := uc.repository.GetByID(ctx, petID)
 	if err != nil {
-		return petDTOs.PetResponse{}, err
+		return dto.PetResponse{}, err
 	}
 
-	return petMapper.ToResponse(&pet), nil
+	return mapper.ToResponse(&pet), nil
 }

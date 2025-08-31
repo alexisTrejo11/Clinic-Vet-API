@@ -1,4 +1,4 @@
-package ownerRepository
+package persistence
 
 import (
 	infraErr "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/errors/infrastructure"

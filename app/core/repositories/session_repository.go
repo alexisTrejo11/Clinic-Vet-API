@@ -8,9 +8,9 @@ import (
 
 type SessionRepository interface {
 	Create(ctx context.Context, session *entity.Session) error
-	GetById(ctx context.Context, sessionId string) (entity.Session, error)
-	GetByUserAndId(ctx context.Context, userId, token string) (entity.Session, error)
-	GetByUserId(ctx context.Context, userID string) ([]entity.Session, error)
-	DeleteUserSession(ctx context.Context, userId, sessionId string) error
+	GetByID(ctx context.Context, sessionID string) (entity.Session, error)
+	GetByUserAndID(ctx context.Context, userID, token string) (entity.Session, error)
+	GetByUserID(ctx context.Context, userID string) ([]entity.Session, error)
+	DeleteUserSession(ctx context.Context, userID, sessionID string) error
 	DeleteAllUserSessions(ctx context.Context, userID string) error
 }

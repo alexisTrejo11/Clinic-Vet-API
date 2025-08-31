@@ -7,9 +7,9 @@ import (
 	"net/http"
 	"os"
 
-	authApi "github.com/alexisTrejo11/Clinic-Vet-API/app/auth/infrastructure/api"
-	mhDTOs "github.com/alexisTrejo11/Clinic-Vet-API/app/medical/application/dtos"
-	notification_api "github.com/alexisTrejo11/Clinic-Vet-API/app/notifications/infrastructure/api"
+	authApi "github.com/alexisTrejo11/Clinic-Vet-API/app/modules/auth/infrastructure/api"
+	mhDTOs "github.com/alexisTrejo11/Clinic-Vet-API/app/modules/medical/application/dto"
+	notification_api "github.com/alexisTrejo11/Clinic-Vet-API/app/modules/notifications/infrastructure/api"
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/config"
 	"github.com/alexisTrejo11/Clinic-Vet-API/middleware"

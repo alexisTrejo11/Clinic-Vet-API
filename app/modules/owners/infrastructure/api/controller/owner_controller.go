@@ -3,8 +3,9 @@ package controller
 import (
 	"context"
 
-	ownerDTOs "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/application/dtos"
-	ownerUsecase "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/application/usecase"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/owners/application/dto"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/owners/application/usecase"
 	utils "github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
 	apiResponse "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/responses"
 	"github.com/gin-gonic/gin"
@@ -13,12 +14,12 @@ import (
 
 type OwnerController struct {
 	validator   *validator.Validate
-	ownerFacade ownerUsecase.OwnerServiceFacade
+	ownerFacade usecase.OwnerServiceFacade
 }
 
 func NewOwnerController(
 	validator *validator.Validate,
-	ownerFacade ownerUsecase.OwnerServiceFacade,
+	ownerFacade usecase.OwnerServiceFacade,
 ) *OwnerController {
 	return &OwnerController{
 		validator:   validator,
@@ -32,7 +33,7 @@ func (c *OwnerController) ListOwners(ctx *gin.Context) {
 	status := ctx.Query("status")
 	include_pets := ctx.Query("include_pets")
 
-	searchParams, err := ownerDTOs.NewOwnerSearch(limit, offset, status, include_pets)
+	searchParams, err := dto.NewOwnerSearch(limit, offset, status, include_pets)
 	if err != nil {
 		apiResponse.RequestURLQueryError(ctx, err)
 		return
@@ -47,14 +48,15 @@ func (c *OwnerController) ListOwners(ctx *gin.Context) {
 	apiResponse.Success(ctx, owners)
 }
 
-func (c *OwnerController) GetOwnerById(ctx *gin.Context) {
+func (c *OwnerController) GetOwnerByID(ctx *gin.Context) {
 	id, err := utils.ParseParamToInt(ctx, "id")
 	if err != nil {
 		apiResponse.RequestURLParamError(ctx, err, "owner_id", ctx.Param("id"))
 		return
 	}
 
-	owner, err := c.ownerFacade.GetOwnerById(context.TODO(), id)
+	ownerID, _ := valueobject.NewOwnerID(id)
+	owner, err := c.ownerFacade.GetOwnerByID(context.TODO(), ownerID)
 	if err != nil {
 		apiResponse.ApplicationError(ctx, err)
 		return
@@ -64,7 +66,7 @@ func (c *OwnerController) GetOwnerById(ctx *gin.Context) {
 }
 
 func (c *OwnerController) CreateOwner(ctx *gin.Context) {
-	var ownerCreate ownerDTOs.OwnerCreate
+	var ownerCreate dto.OwnerCreate
 
 	if err := ctx.ShouldBindBodyWithJSON(&ownerCreate); err != nil {
 		apiResponse.RequestBodyDataError(ctx, err)
@@ -92,7 +94,7 @@ func (c *OwnerController) UpdateOwner(ctx *gin.Context) {
 		return
 	}
 
-	var ownerUpdate ownerDTOs.OwnerUpdate
+	var ownerUpdate dto.OwnerUpdate
 	if err := ctx.ShouldBindBodyWithJSON(&ownerUpdate); err != nil {
 		apiResponse.RequestBodyDataError(ctx, err)
 		return
@@ -103,7 +105,8 @@ func (c *OwnerController) UpdateOwner(ctx *gin.Context) {
 		return
 	}
 
-	Owner, err := c.ownerFacade.UpdateOwner(context.TODO(), id, ownerUpdate)
+	ownerID, _ := valueobject.NewOwnerID(id)
+	Owner, err := c.ownerFacade.UpdateOwner(context.TODO(), ownerID, ownerUpdate)
 	if err != nil {
 		apiResponse.ApplicationError(ctx, err)
 		return
@@ -119,7 +122,8 @@ func (c *OwnerController) DeleteOwner(ctx *gin.Context) {
 		return
 	}
 
-	if err := c.ownerFacade.SoftDeleteOwner(context.TODO(), id); err != nil {
+	ownerID, _ := valueobject.NewOwnerID(id)
+	if err := c.ownerFacade.SoftDeleteOwner(context.TODO(), ownerID); err != nil {
 		apiResponse.ApplicationError(ctx, err)
 		return
 	}

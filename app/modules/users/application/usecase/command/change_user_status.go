@@ -1,30 +1,32 @@
-package userDomainCommand
+package command
 
 import (
 	"context"
 	"errors"
 
-	userDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/enum"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
+	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 )
 
 type ChangeUserStatusCommand struct {
-	UserId int                   `json:"user_id"`
-	Status userDomain.UserStatus `json:"status"`
-	CTX    context.Context       `json:"ctx"`
+	UserID valueobject.UserID `json:"user_id"`
+	Status enum.UserStatus    `json:"status"`
+	CTX    context.Context    `json:"ctx"`
 }
 
 type ChangeUserStatusHandler struct {
-	userRepository userDomain.UserRepository
+	userRepository repository.UserRepository
 }
 
-func NewChangeUserStatusHandler(userRepository userDomain.UserRepository) *ChangeUserStatusHandler {
+func NewChangeUserStatusHandler(userRepository repository.UserRepository) *ChangeUserStatusHandler {
 	return &ChangeUserStatusHandler{
 		userRepository: userRepository,
 	}
 }
 
 func (h *ChangeUserStatusHandler) Handle(command ChangeUserStatusCommand) error {
-	if command.UserId == 0 {
+	if command.UserID.IsZero() {
 		return errors.New("user ID is required")
 	}
 
@@ -32,7 +34,7 @@ func (h *ChangeUserStatusHandler) Handle(command ChangeUserStatusCommand) error 
 		return errors.New("status is required")
 	}
 
-	user, err := h.userRepository.GetByID(command.CTX, command.UserId)
+	user, err := h.userRepository.GetByID(command.CTX, command.UserID)
 	if err != nil {
 		return err
 	}

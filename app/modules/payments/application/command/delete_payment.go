@@ -3,17 +3,18 @@ package command
 import (
 	"context"
 
-	paymentDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/payments/domain"
+	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/service"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
 )
 
 type DeletePaymentCommand struct {
-	paymentId int
+	paymentID int
 }
 
-func NewDeletePaymentCommand(paymentId int) DeletePaymentCommand {
+func NewDeletePaymentCommand(paymentID int) DeletePaymentCommand {
 	return DeletePaymentCommand{
-		paymentId: paymentId,
+		paymentID: paymentID,
 	}
 }
 
@@ -22,35 +23,33 @@ type DeletePaymentHandler interface {
 }
 
 type deletePaymentHandler struct {
-	paymentRepo paymentDomain.PaymentRepository
+	paymentRepo      repository.PaymentRepository
+	paymentProccesor service.PaymentProccesorService
 }
 
-func NewDeletePaymentHandler(paymentRepo paymentDomain.PaymentRepository) DeletePaymentHandler {
+func NewDeletePaymentHandler(paymentRepo repository.PaymentRepository) DeletePaymentHandler {
 	return &deletePaymentHandler{
-		paymentRepo: paymentRepo,
+		paymentRepo:      paymentRepo,
+		paymentProccesor: service.PaymentProccesorService{},
 	}
 }
 
 func (h *deletePaymentHandler) Handle(context context.Context, command DeletePaymentCommand) shared.CommandResult {
-	if command.paymentId == 0 {
-		return shared.FailureResult("payment ID is zero", paymentDomain.InvalidPaymentIdErr(command.paymentId))
-	}
-
-	payment, err := h.paymentRepo.GetById(context, command.paymentId)
+	payment, err := h.paymentRepo.GetByID(context, command.paymentID)
 	if err != nil {
 		return shared.FailureResult("error fetching payment", err)
 	}
 
-	if err := payment.ValidateDelete(); err != nil {
+	if err := h.paymentProccesor.ValidateDelete(&payment); err != nil {
 		return shared.FailureResult("payment cannot be deleted", err)
 	}
 
-	if err := h.paymentRepo.SoftDelete(context, command.paymentId); err != nil {
+	if err := h.paymentRepo.SoftDelete(context, command.paymentID); err != nil {
 		return shared.FailureResult("error deleting payment", err)
 	}
 
 	return shared.SuccessResult(
-		string(rune(command.paymentId)),
+		string(rune(command.paymentID)),
 		"payment deleted successfully",
 	)
 }

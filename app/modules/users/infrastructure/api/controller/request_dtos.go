@@ -1,4 +1,4 @@
-package dto
+package controller
 
 import "time"
 
@@ -15,9 +15,9 @@ type CreateUserRequest struct {
 	// The user's address. (required)
 	Address string `json:"address" validate:"required"`
 	// The unique ID of the owner. (required)
-	OwnerId *int `json:"owner_id" validate:"required"`
+	OwnerID *int `json:"owner_id" validate:"required`
 	// The unique ID of the veterinarian. (optional)
-	VeterinarianId *int `json:"veterinarian_id" validate:"omitempty"`
+	VeterinarianID *int `json:"veterinarian_id" validate:"omitempty"`
 	// The user's gender. (required, must be "male", "female", or "other")
 	Gender *string `json:"gender" validate:"required,oneof=male, female, other"`
 	// The user's location. (required)
@@ -29,7 +29,7 @@ type CreateUserRequest struct {
 // @Description Represents the request body for updating a user's profile.
 type UpdateProfileRequest struct {
 	// The unique ID of the userDomain. (required)
-	UserId int `json:"user_id" validate:"required"`
+	UserID int `json:"user_id" validate:"required"`
 	// A brief biography of the userDomain. (optional, max 500 characters)
 	Bio *string `json:"bio" validate:"min=0,max=500"`
 	// The URL of the user's profile photo. (optional, must be a valid URL)

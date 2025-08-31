@@ -1,12 +1,17 @@
-package petController
+package controller
 
-import petDTOs "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application/usecase/dtos"
+import (
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/pets/application/dto"
+)
 
-func requestToCreatePet(requestData PetInsertRequest) petDTOs.PetCreate {
-	return petDTOs.PetCreate{
+func requestToCreatePet(requestData PetInsertRequest) dto.PetCreate {
+	ownerID, _ := valueobject.NewOwnerID(requestData.OwnerID)
+
+	return dto.PetCreate{
 		Name:               requestData.Name,
 		Photo:              requestData.Photo,
-		OwnerId:            requestData.OwnerId,
+		OwnerID:            ownerID,
 		Species:            requestData.Species,
 		Breed:              requestData.Breed,
 		Age:                requestData.Age,
@@ -20,9 +25,10 @@ func requestToCreatePet(requestData PetInsertRequest) petDTOs.PetCreate {
 	}
 }
 
-func requestToUpdatePet(requestData PetInsertRequest, petId int) petDTOs.PetUpdate {
-	petUpdate := petDTOs.PetUpdate{
-		PetId:              petId,
+func requestToUpdatePet(requestData PetInsertRequest, petIDInt int) dto.PetUpdate {
+	petID, _ := valueobject.NewPetID(petIDInt)
+	petUpdate := dto.PetUpdate{
+		PetID:              petID,
 		Photo:              requestData.Photo,
 		Breed:              requestData.Breed,
 		Age:                requestData.Age,
@@ -36,8 +42,9 @@ func requestToUpdatePet(requestData PetInsertRequest, petId int) petDTOs.PetUpda
 		SpecialNeeds:       requestData.SpecialNeeds,
 	}
 
-	if requestData.OwnerId != 0 {
-		petUpdate.OwnerID = &requestData.OwnerId
+	if requestData.OwnerID != 0 {
+		ownerID, _ := valueobject.NewOwnerID(requestData.OwnerID)
+		petUpdate.OwnerID = &ownerID
 	}
 
 	if requestData.Name != "" {

@@ -13,9 +13,9 @@ import (
 type PaymentRepository interface {
 	Save(ctx context.Context, payment *entity.Payment) error
 
-	Search(ctx context.Context, pagination page.PageData, searchCriteria interface{}) (page.Page[[]entity.Payment], error)
-	GetById(ctx context.Context, id int) (*entity.Payment, error)
-	ListByUserId(ctx context.Context, userId int, pagination page.PageData) (page.Page[[]entity.Payment], error)
+	Search(ctx context.Context, pagination page.PageData, searchCriteria map[string]any) (page.Page[[]entity.Payment], error)
+	GetByID(ctx context.Context, id int) (entity.Payment, error)
+	ListByUserID(ctx context.Context, userID int, pagination page.PageData) (page.Page[[]entity.Payment], error)
 	ListByStatus(ctx context.Context, status enum.PaymentStatus, pagination page.PageData) (page.Page[[]entity.Payment], error)
 	ListOverduePayments(ctx context.Context, pagination page.PageData) (page.Page[[]entity.Payment], error)
 	ListPaymentsByDateRange(ctx context.Context, startDate, endDate time.Time, pagination page.PageData) (page.Page[[]entity.Payment], error)
@@ -23,16 +23,16 @@ type PaymentRepository interface {
 	SoftDelete(ctx context.Context, id int) error
 
 	// GetTotalCount() (int, error)
-	GetByTransactionId(ctx context.Context, transactionId string) (entity.Payment, error)
+	GetByTransactionID(ctx context.Context, transactionID string) (entity.Payment, error)
 }
 
 type PaymentService interface {
 	ProcessPayment(payment *entity.Payment) error
-	RefundPayment(paymentId int, reason string) error
+	RefundPayment(paymentID int, reason string) error
 	ValidatePayment(payment *entity.Payment) error
-	CalculateTotal(appointmentId int) (valueobject.Money, error)
+	CalculateTotal(appointmentID int) (valueobject.Money, error)
 
-	GetPaymentHistory(ownerId int) (page.Page[[]entity.Payment], error)
+	GetPaymentHistory(ownerID int) (page.Page[[]entity.Payment], error)
 	MarkOverduePayments() error
 	GeneratePaymentReport(startDate, endDate time.Time) (PaymentReport, error)
 }

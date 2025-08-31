@@ -3,6 +3,7 @@ package controller
 import (
 	"fmt"
 
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/auth/application/command"
 	apiResponse "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/responses"
 	"github.com/gin-gonic/gin"
@@ -103,7 +104,7 @@ func (c *AuthController) LogoutAll(ctx *gin.Context) {
 	}
 
 	command := command.LogoutAllCommand{
-		UserId: 0,
+		UserID: valueobject.UserID{},
 		CTX:    ctx.Request.Context(),
 	}
 

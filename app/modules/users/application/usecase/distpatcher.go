@@ -1,12 +1,12 @@
-package userApplication
+package usecase
 
 import (
 	"fmt"
 	"reflect"
 
+	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/users/application/usecase/command"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
-	userCommand "github.com/alexisTrejo11/Clinic-Vet-API/app/users/application/command"
-	userDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
 )
 
 type CommandHandler interface {
@@ -39,10 +39,10 @@ func (d *CommandDispatcher) Dispatch(command any) shared.CommandResult {
 	return handler.Handle(command)
 }
 
-func (d *CommandDispatcher) RegisterCurrentCommands(userRepo userDomain.UserRepository) {
-	d.Register(userCommand.ChangePasswordCommand{}, userCommand.NewChangePasswordHandler(userRepo))
-	d.Register(userCommand.ChangeEmailCommand{}, userCommand.NewChangeEmailHandler(userRepo))
-	d.Register(userCommand.ChangePasswordCommand{}, userCommand.NewChangePasswordHandler(userRepo))
-	d.Register(userCommand.DeleteUserCommand{}, userCommand.NewDeleteUserHandler(userRepo))
-	d.Register(userCommand.CreateUserCommand{}, userCommand.NewCreateUserHandler(userRepo))
+func (d *CommandDispatcher) RegisterCurrentCommands(userRepo repository.UserRepository) {
+	d.Register(command.ChangePasswordCommand{}, command.NewChangePasswordHandler(userRepo))
+	d.Register(command.ChangeEmailCommand{}, command.NewChangeEmailHandler(userRepo))
+	d.Register(command.ChangePasswordCommand{}, command.NewChangePasswordHandler(userRepo))
+	d.Register(command.DeleteUserCommand{}, command.NewDeleteUserHandler(userRepo))
+	d.Register(command.CreateUserCommand{}, command.NewCreateUserHandler(userRepo))
 }

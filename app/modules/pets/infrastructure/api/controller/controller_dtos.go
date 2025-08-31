@@ -1,11 +1,11 @@
-package petController
+package controller
 
 // @Description Represents the request body for creating a new pet.
 type PetInsertRequest struct {
 	// The name of the pet. (required, min 2, max 100)
 	Name string `json:"name" validate:"required,min=2,max=100"`
 	// The unique ID of the pet's owner. (required, greater than 0)
-	OwnerId int `json:"owner_id" validate:"required,gt=0"`
+	OwnerID int `json:"owner_id" validate:"required,gt=0"`
 	// The species of the pet. (required, min 2, max 50)
 	Species string `json:"species" validate:"required,min=2,max=50"`
 	// The URL of the pet's photo. (optional, must be a valid URL)

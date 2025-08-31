@@ -1,47 +1,48 @@
-package petUsecase
+package usecase
 
 import (
 	"context"
 
-	petDTOs "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application/usecase/dtos"
-	petMapper "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application/usecase/mapper"
-	petDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/domain"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
+	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/pets/application/dto"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/pets/application/mapper"
 )
 
 type ListPetsUseCase struct {
-	repository petDomain.PetRepository
+	repository repository.PetRepository
 }
 
-func NewListPetsUseCase(repository petDomain.PetRepository) *ListPetsUseCase {
+func NewListPetsUseCase(repository repository.PetRepository) *ListPetsUseCase {
 	return &ListPetsUseCase{
 		repository: repository,
 	}
 }
 
-func (uc *ListPetsUseCase) Execute(ctx context.Context) ([]petDTOs.PetResponse, error) {
+func (uc *ListPetsUseCase) Execute(ctx context.Context) ([]dto.PetResponse, error) {
 	petList, err := uc.repository.List(ctx)
 	if err != nil {
-		return []petDTOs.PetResponse{}, err
+		return []dto.PetResponse{}, err
 	}
 
-	return petMapper.ToResponseList(petList), nil
+	return mapper.ToResponseList(petList), nil
 }
 
-type ListPetsByOwnerIdUseCase struct {
-	repository petDomain.PetRepository
+type ListPetsByOwnerIDUseCase struct {
+	repository repository.PetRepository
 }
 
-func NewListPetByOwnerAndIdUseCase(repository petDomain.PetRepository) *ListPetsByOwnerIdUseCase {
-	return &ListPetsByOwnerIdUseCase{
+func NewListPetByOwnerAndIDUseCase(repository repository.PetRepository) *ListPetsByOwnerIDUseCase {
+	return &ListPetsByOwnerIDUseCase{
 		repository: repository,
 	}
 }
 
-func (uc *ListPetsByOwnerIdUseCase) Execute(ctx context.Context, ownerId int) ([]petDTOs.PetResponse, error) {
-	petList, err := uc.repository.ListByOwnerId(ctx, ownerId)
+func (uc *ListPetsByOwnerIDUseCase) Execute(ctx context.Context, ownerID valueobject.OwnerID) ([]dto.PetResponse, error) {
+	petList, err := uc.repository.ListByOwnerID(ctx, ownerID)
 	if err != nil {
-		return []petDTOs.PetResponse{}, err
+		return []dto.PetResponse{}, err
 	}
 
-	return petMapper.ToResponseList(petList), nil
+	return mapper.ToResponseList(petList), nil
 }

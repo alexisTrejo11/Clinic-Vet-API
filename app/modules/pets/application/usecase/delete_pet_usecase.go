@@ -1,23 +1,25 @@
-package petUsecase
+package usecase
 
 import (
 	"context"
 
-	petDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/domain"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
+	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 )
 
 type DeletePetUseCase struct {
-	repository petDomain.PetRepository
+	repository repository.PetRepository
 }
 
-func NewDeletePetUseCase(repository petDomain.PetRepository) *DeletePetUseCase {
+func NewDeletePetUseCase(repository repository.PetRepository) *DeletePetUseCase {
 	return &DeletePetUseCase{
 		repository: repository,
 	}
 }
 
-func (uc *DeletePetUseCase) Execute(cxt context.Context, petId int, isSoftDelete bool) error {
-	pet, err := uc.repository.GetById(cxt, petId)
+func (uc *DeletePetUseCase) Execute(cxt context.Context, petID valueobject.PetID, isSoftDelete bool) error {
+	pet, err := uc.repository.GetByID(cxt, petID)
 	if err != nil {
 		return err
 	}
@@ -28,21 +30,21 @@ func (uc *DeletePetUseCase) Execute(cxt context.Context, petId int, isSoftDelete
 		}
 	}
 
-	if err := uc.delete(cxt, petId); err != nil {
+	if err := uc.delete(cxt, petID); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (uc *DeletePetUseCase) delete(cxt context.Context, petId int) error {
-	if err := uc.repository.Delete(cxt, petId); err != nil {
+func (uc *DeletePetUseCase) delete(cxt context.Context, petID valueobject.PetID) error {
+	if err := uc.repository.Delete(cxt, petID); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (uc *DeletePetUseCase) softDelete(cxt context.Context, pet petDomain.Pet) error {
+func (uc *DeletePetUseCase) softDelete(cxt context.Context, pet entity.Pet) error {
 	pet.SoftDelete()
 	if err := uc.repository.Save(cxt, &pet); err != nil {
 		return err

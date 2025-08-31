@@ -4,11 +4,11 @@ import (
 	"errors"
 	"fmt"
 
-	vetRepo "github.com/alexisTrejo11/Clinic-Vet-API/app/veterinarians/application/repositories"
-	vetUsecase "github.com/alexisTrejo11/Clinic-Vet-API/app/veterinarians/application/usecase"
-	vetController "github.com/alexisTrejo11/Clinic-Vet-API/app/veterinarians/infrastructure/api/controller"
-	vetRoutes "github.com/alexisTrejo11/Clinic-Vet-API/app/veterinarians/infrastructure/api/routes"
-	sqlcVetRepo "github.com/alexisTrejo11/Clinic-Vet-API/app/veterinarians/infrastructure/persistence/repositories"
+	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/veterinarians/application/usecase"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/veterinarians/infrastructure/api/controller"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/veterinarians/infrastructure/api/routes"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/veterinarians/infrastructure/persistence"
 	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -21,9 +21,9 @@ type VeterinarianAPIConfig struct {
 }
 
 type VeterinarianAPIComponents struct {
-	useCase    *vetUsecase.VeterinarianUseCases
-	controller *vetController.VeterinarianController
-	repository vetRepo.VeterinarianRepository
+	useCase    *usecase.VeterinarianUseCases
+	controller *controller.VeterinarianController
+	repository repository.VetRepository
 }
 
 type VeterinarianModule struct {
@@ -49,19 +49,19 @@ func (f *VeterinarianModule) Bootstrap() error {
 	}
 
 	f.components = &VeterinarianAPIComponents{}
-	vetRepo := sqlcVetRepo.NewSqlcVetRepository(f.config.Queries)
+	vetRepo := persistence.NewSqlcVetRepository(f.config.Queries)
 
-	getVetUseCase := vetUsecase.NewGetVetByIdUseCase(vetRepo)
-	listVetUseCase := vetUsecase.NewListVetUseCase(vetRepo)
-	createVetUseCase := vetUsecase.NewCreateVetUseCase(vetRepo)
-	updateVetUseCase := vetUsecase.NewUpdateVetUseCase(vetRepo)
-	deleteVetUseCase := vetUsecase.NewDeleteVetUseCase(vetRepo)
+	getVetUseCase := usecase.NewGetVetByIDUseCase(vetRepo)
+	listVetUseCase := usecase.NewListVetUseCase(vetRepo)
+	createVetUseCase := usecase.NewCreateVetUseCase(vetRepo)
+	updateVetUseCase := usecase.NewUpdateVetUseCase(vetRepo)
+	deleteVetUseCase := usecase.NewDeleteVetUseCase(vetRepo)
 
-	vetUseCaseContainer := vetUsecase.NewVetUseCase(*listVetUseCase, *getVetUseCase, *createVetUseCase, *updateVetUseCase, *deleteVetUseCase)
+	vetUseCaseContainer := usecase.NewVetUseCase(*listVetUseCase, *getVetUseCase, *createVetUseCase, *updateVetUseCase, *deleteVetUseCase)
 
-	vetControllers := vetController.NewVeterinarianController(f.config.DataValidator, *vetUseCaseContainer)
+	vetControllers := controller.NewVeterinarianController(f.config.DataValidator, *vetUseCaseContainer)
 
-	vetRoutes.VetRoutes(f.config.Router, vetControllers)
+	routes.VetRoutes(f.config.Router, vetControllers)
 
 	f.components.controller = vetControllers
 	f.components.useCase = vetUseCaseContainer
@@ -91,7 +91,7 @@ func (f *VeterinarianModule) validateConfig() error {
 	return nil
 }
 
-func (f *VeterinarianModule) GetRepository() (vetRepo.VeterinarianRepository, error) {
+func (f *VeterinarianModule) GetRepository() (repository.VetRepository, error) {
 	if !f.isBuilt {
 		return nil, errors.New("module not bootstrapped")
 	}

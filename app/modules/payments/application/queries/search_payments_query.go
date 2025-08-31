@@ -1,24 +1,25 @@
-package paymentQuery
+package query
 
 import (
 	"context"
 	"time"
 
-	paymentDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/payments/domain"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/enum"
+	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 )
 
 type SearchPaymentsQuery struct {
-	UserId        *int                         `json:"owner_id,omitempty"`
-	AppointmentId *int                         `json:"appointment_id,omitempty"`
-	Status        *paymentDomain.PaymentStatus `json:"status,omitempty"`
-	PaymentMethod *paymentDomain.PaymentMethod `json:"payment_method,omitempty"`
-	MinAmount     *float64                     `json:"min_amount,omitempty"`
-	MaxAmount     *float64                     `json:"max_amount,omitempty"`
-	Currency      *string                      `json:"currency,omitempty"`
-	StartDate     *time.Time                   `json:"start_date,omitempty"`
-	EndDate       *time.Time                   `json:"end_date,omitempty"`
-	Pagination    page.PageData                `json:"pagination"`
+	UserID        *int                `json:"owner_id,omitempty"`
+	AppointmentID *int                `json:"appointment_id,omitempty"`
+	Status        *enum.PaymentStatus `json:"status,omitempty"`
+	PaymentMethod *enum.PaymentMethod `json:"payment_method,omitempty"`
+	MinAmount     *float64            `json:"min_amount,omitempty"`
+	MaxAmount     *float64            `json:"max_amount,omitempty"`
+	Currency      *string             `json:"currency,omitempty"`
+	StartDate     *time.Time          `json:"start_date,omitempty"`
+	EndDate       *time.Time          `json:"end_date,omitempty"`
+	Pagination    page.PageData       `json:"pagination"`
 }
 
 type SearchPaymentsQueryHandler interface {
@@ -26,10 +27,10 @@ type SearchPaymentsQueryHandler interface {
 }
 
 type SearchPaymentsHandler struct {
-	repository paymentDomain.PaymentRepository
+	repository repository.PaymentRepository
 }
 
-func NewSearchPaymentsHandler(repository paymentDomain.PaymentRepository) *SearchPaymentsHandler {
+func NewSearchPaymentsHandler(repository repository.PaymentRepository) *SearchPaymentsHandler {
 	return &SearchPaymentsHandler{repository: repository}
 }
 
@@ -48,13 +49,13 @@ func (h *SearchPaymentsHandler) Handle(ctx context.Context, query SearchPayments
 	return page.NewPage(responses, paymentsPage.Metadata), nil
 }
 
-func toSearchCriteria(query SearchPaymentsQuery) map[string]interface{} {
-	criteria := make(map[string]interface{})
-	if query.UserId != nil {
-		criteria["owner_id"] = *query.UserId
+func toSearchCriteria(query SearchPaymentsQuery) map[string]any {
+	criteria := make(map[string]any)
+	if query.UserID != nil {
+		criteria["owner_id"] = *query.UserID
 	}
-	if query.AppointmentId != nil {
-		criteria["appointment_id"] = *query.AppointmentId
+	if query.AppointmentID != nil {
+		criteria["appointment_id"] = *query.AppointmentID
 	}
 	if query.Status != nil {
 		criteria["status"] = *query.Status

@@ -23,9 +23,9 @@ type User struct {
 }
 
 type Profile struct {
-	userID         valueobject.UserID
-	OwnerId        *int
-	VeterinarianId *int
+	UserID         valueobject.UserID
+	OwnerID        *int
+	VeterinarianID *int
 	PhotoURL       string
 	Bio            string
 	Address        *Address
@@ -68,7 +68,7 @@ func NewUser(
 	}, nil
 }
 
-func (u *User) Id() valueobject.UserID {
+func (u *User) ID() valueobject.UserID {
 	return u.id
 }
 
@@ -207,7 +207,7 @@ func NewUserBuilder() *UserBuilder {
 	}
 }
 
-func (b *UserBuilder) WithId(id int) *UserBuilder {
+func (b *UserBuilder) WithID(id int) *UserBuilder {
 	var err error
 	b.user.id, err = valueobject.NewUserID(id)
 	if err != nil {

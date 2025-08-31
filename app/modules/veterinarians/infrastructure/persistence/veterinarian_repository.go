@@ -1,4 +1,4 @@
-package sqlcVetRepo
+package persistence
 
 import (
 	"context"

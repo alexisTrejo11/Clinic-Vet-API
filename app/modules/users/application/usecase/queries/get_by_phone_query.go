@@ -3,13 +3,14 @@ package userDomainQueries
 import (
 	"context"
 
-	userDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
+	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 )
 
 type GetByPhoneQuery struct {
-	Phone          userDomain.PhoneNumber `json:"phone"`
-	Ctx            context.Context        `json:"-"`
-	IncludeProfile bool                   `json:"include_profile"`
+	Phone          valueobject.PhoneNumber `json:"phone"`
+	Ctx            context.Context         `json:"-"`
+	IncludeProfile bool                    `json:"include_profile"`
 }
 
 type GetByPhoneHandler interface {
@@ -17,10 +18,10 @@ type GetByPhoneHandler interface {
 }
 
 type getByPhoneHandler struct {
-	userRepository userDomain.UserRepository
+	userRepository repository.UserRepository
 }
 
-func NewGetByPhoneHandler(userRepository userDomain.UserRepository) GetByPhoneHandler {
+func NewGetByPhoneHandler(userRepository repository.UserRepository) GetByPhoneHandler {
 	return &getByPhoneHandler{
 		userRepository: userRepository,
 	}

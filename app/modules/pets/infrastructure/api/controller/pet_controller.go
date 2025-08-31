@@ -1,7 +1,8 @@
-package petController
+package controller
 
 import (
-	petUsecase "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application/usecase"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/pets/application/usecase"
 	utils "github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
 	apiResponse "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/responses"
 	"github.com/gin-gonic/gin"
@@ -10,13 +11,12 @@ import (
 
 type PetController struct {
 	validator   *validator.Validate
-	petUseCases petUsecase.PetUseCasesFacade
+	petUseCases usecase.PetUseCasesFacade
 }
 
 func NewPetController(
 	validator *validator.Validate,
-	petUseCases petUsecase.PetUseCasesFacade,
-
+	petUseCases usecase.PetUseCasesFacade,
 ) *PetController {
 	return &PetController{
 		validator:   validator,
@@ -42,7 +42,7 @@ func (c *PetController) ListPets(ctx *gin.Context) {
 	apiResponse.Success(ctx, pets)
 }
 
-// GetPetById retrieves a pet by its ID.
+// GetPetByID retrieves a pet by its ID.
 // @Summary Get a pet by ID
 // @Description Retrieves a single pet record by its unique ID.
 // @Tags Pet Management
@@ -53,14 +53,20 @@ func (c *PetController) ListPets(ctx *gin.Context) {
 // @Failure 404 {object} apiResponse.APIResponse "Pet not found"
 // @Failure 500 {object} apiResponse.APIResponse "Internal server error"
 // @Router /pets/{id} [get]
-func (c *PetController) GetPetById(ctx *gin.Context) {
+func (c *PetController) GetPetByID(ctx *gin.Context) {
 	id, err := utils.ParseParamToInt(ctx, "id")
 	if err != nil {
 		apiResponse.RequestURLParamError(ctx, err, "pet_id", ctx.Param("id"))
 		return
 	}
 
-	pet, err := c.petUseCases.GetPetById(ctx, id)
+	petID, err := valueobject.NewPetID(id)
+	if err != nil {
+		apiResponse.BadRequest(ctx, err)
+		return
+	}
+
+	pet, err := c.petUseCases.GetPetByID(ctx, petID)
 	if err != nil {
 		apiResponse.ApplicationError(ctx, err)
 		return
@@ -161,7 +167,13 @@ func (c *PetController) SoftDeletePet(ctx *gin.Context) {
 		return
 	}
 
-	if err := c.petUseCases.DeletePet(ctx, id, true); err != nil {
+	petID, err := valueobject.NewPetID(id)
+	if err != nil {
+		apiResponse.BadRequest(ctx, err)
+		return
+	}
+
+	if err := c.petUseCases.DeletePet(ctx, petID, true); err != nil {
 		apiResponse.ApplicationError(ctx, err)
 		return
 	}

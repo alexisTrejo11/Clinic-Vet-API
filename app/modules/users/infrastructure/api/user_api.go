@@ -1,24 +1,24 @@
-package userDomainAPI
+package api
 
 import (
 	"fmt"
 
-	userApplication "github.com/alexisTrejo11/Clinic-Vet-API/app/users/application"
-	userDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
+	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/users/application/usecase"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/users/infrastructure/api/controller"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/users/infrastructure/api/routes"
+	persistence "github.com/alexisTrejo11/Clinic-Vet-API/app/modules/users/infrastructure/persistence/repository"
 
-	userController "github.com/alexisTrejo11/Clinic-Vet-API/app/users/infrastructure/api/controller"
-	userRoutes "github.com/alexisTrejo11/Clinic-Vet-API/app/users/infrastructure/api/routes"
-	sqlcUserRepo "github.com/alexisTrejo11/Clinic-Vet-API/app/users/infrastructure/persistence/repository"
 	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )
 
 type UserAPIComponents struct {
-	repository        userDomain.UserRepository
-	adminController   userController.UserAdminController
-	profileController userController.ProfileController
-	dispatcher        userApplication.CommandDispatcher
+	repository        repository.UserRepository
+	adminController   controller.UserAdminController
+	profileController controller.ProfileController
+	dispatcher        usecase.CommandDispatcher
 }
 
 type UserAPIConfig struct {
@@ -58,16 +58,16 @@ func (u *UserAPIModule) Bootstrap() error {
 		return err
 	}
 
-	userRepo := sqlcUserRepo.NewSQLCUserRepository(u.config.Queries)
-	profileRepo := sqlcUserRepo.NewSQLCProfileRepository(u.config.Queries)
+	userRepo := persistence.NewSQLCUserRepository(u.config.Queries)
+	profileRepo := persistence.NewSQLCProfileRepository(u.config.Queries)
 
-	userDispatcher := userApplication.NewCommandDispatcher()
+	userDispatcher := usecase.NewCommandDispatcher()
 	userDispatcher.RegisterCurrentCommands(userRepo)
-	userControllers := userController.NewUserAdminController(u.config.DataValidator, userDispatcher)
-	profileUseCases := userApplication.NewProfileUseCases(profileRepo)
-	profileController := userController.NewProfileController(profileUseCases)
+	userControllers := controller.NewUserAdminController(u.config.DataValidator, userDispatcher)
+	profileUseCases := usecase.NewProfileUseCases(profileRepo)
+	profileController := controller.NewProfileController(profileUseCases)
 
-	userRoutes.UserRoutes(u.config.Router, userControllers)
+	routes.UserRoutes(u.config.Router, userControllers)
 
 	u.components = &UserAPIComponents{
 		repository:        userRepo,

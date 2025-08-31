@@ -3,8 +3,10 @@ package persistence
 import (
 	"context"
 
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
+	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
-	userDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/db/models"
 	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
@@ -15,89 +17,89 @@ type SQLCUserRepository struct {
 	queries *sqlc.Queries
 }
 
-func NewSQLCUserRepository(queries *sqlc.Queries) userDomain.UserRepository {
+func NewSQLCUserRepository(queries *sqlc.Queries) repository.UserRepository {
 	return &SQLCUserRepository{
 		queries: queries,
 	}
 }
 
-func (r *SQLCUserRepository) GetByID(ctx context.Context, id int) (userDomain.User, error) {
-	sqlRow, err := r.queries.GetUserByID(ctx, int32(id))
+func (r *SQLCUserRepository) GetByID(ctx context.Context, id valueobject.UserID) (entity.User, error) {
+	sqlRow, err := r.queries.GetUserByID(ctx, int32(id.GetValue()))
 	if err != nil {
-		return userDomain.User{}, err
+		return entity.User{}, err
 	}
 
 	user, err := MapUserFromSQLC(sqlRow)
 	if err != nil {
-		return userDomain.User{}, err
+		return entity.User{}, err
 	}
 
 	return *user, nil
 }
 
-func (r *SQLCUserRepository) GetByEmail(ctx context.Context, email string) (userDomain.User, error) {
+func (r *SQLCUserRepository) GetByEmail(ctx context.Context, email string) (entity.User, error) {
 	sqlRow, err := r.queries.GetUserByEmail(ctx, pgtype.Text{String: email, Valid: true})
 	if err != nil {
-		return userDomain.User{}, err
+		return entity.User{}, err
 	}
 
 	user, err := MapUserFromSQLC(sqlRow)
 	if err != nil {
-		return userDomain.User{}, err
+		return entity.User{}, err
 	}
 
 	return *user, nil
 }
 
-func (r *SQLCUserRepository) GetByPhone(ctx context.Context, phone string) (userDomain.User, error) {
+func (r *SQLCUserRepository) GetByPhone(ctx context.Context, phone string) (entity.User, error) {
 	sqlRow, err := r.queries.GetUserByPhoneNumber(ctx, pgtype.Text{String: phone, Valid: true})
 	if err != nil {
-		return userDomain.User{}, err
+		return entity.User{}, err
 	}
 
 	users, err := MapUserFromSQLC(sqlRow)
 	if err != nil {
-		return userDomain.User{}, err
+		return entity.User{}, err
 	}
 
 	return *users, nil
 }
 
-func (r *SQLCUserRepository) ListByRole(ctx context.Context, role string, pageInput page.PageData) (page.Page[[]userDomain.User], error) {
+func (r *SQLCUserRepository) ListByRole(ctx context.Context, role string, pageInput page.PageData) (page.Page[[]entity.User], error) {
 	sqlRows, err := r.queries.ListUsers(ctx, sqlc.ListUsersParams{
 		Limit:  10,
 		Offset: 0,
 	})
 	if err != nil {
-		return page.Page[[]userDomain.User]{}, err
+		return page.Page[[]entity.User]{}, err
 	}
 
 	users, err := MapUsersFromSQLC(sqlRows)
 	if err != nil {
-		return page.Page[[]userDomain.User]{}, err
+		return page.Page[[]entity.User]{}, err
 	}
 
-	return page.Page[[]userDomain.User]{
+	return page.Page[[]entity.User]{
 		Data:     users,
 		Metadata: *page.GetPageMetadata(len(users), pageInput),
 	}, nil
 }
 
-func (r *SQLCUserRepository) Search(ctx context.Context, filterParams map[string]interface{}, pageInput page.PageData) (page.Page[[]userDomain.User], error) {
+func (r *SQLCUserRepository) Search(ctx context.Context, filterParams any, pageInput page.PageData) (page.Page[[]entity.User], error) {
 	sqlRows, err := r.queries.ListUsers(ctx, sqlc.ListUsersParams{
 		Limit:  10,
 		Offset: 0,
 	})
 	if err != nil {
-		return page.Page[[]userDomain.User]{}, err
+		return page.Page[[]entity.User]{}, err
 	}
 
 	users, err := MapUsersFromSQLC(sqlRows)
 	if err != nil {
-		return page.Page[[]userDomain.User]{}, err
+		return page.Page[[]entity.User]{}, err
 	}
 
-	return page.Page[[]userDomain.User]{
+	return page.Page[[]entity.User]{
 		Data:     users,
 		Metadata: *page.GetPageMetadata(len(users), pageInput),
 	}, nil
@@ -120,8 +122,8 @@ func (r *SQLCUserRepository) ExistsByPhone(ctx context.Context, phone string) (b
 	return exist, nil
 }
 
-func (r *SQLCUserRepository) Save(ctx context.Context, user *userDomain.User) error {
-	if user.Id().GetValue() == 0 {
+func (r *SQLCUserRepository) Save(ctx context.Context, user *entity.User) error {
+	if user.ID().GetValue() == 0 {
 		return r.create(ctx, user)
 	}
 
@@ -135,29 +137,28 @@ func (r *SQLCUserRepository) UpdateLastLogin(ctx context.Context, id int) error 
 	return nil
 }
 
-func (r *SQLCUserRepository) Delete(ctx context.Context, id int, softDelete bool) error {
+func (r *SQLCUserRepository) Delete(ctx context.Context, id valueobject.UserID, softDelete bool) error {
 	if softDelete {
-		return r.softDelete(ctx, id, softDelete)
+		return r.softDelete(ctx, id.GetValue())
 	}
-
-	return r.hardDelete(ctx, id, softDelete)
+	return r.hardDelete(ctx, id.GetValue())
 }
 
-func (r *SQLCUserRepository) softDelete(ctx context.Context, id int, softDelete bool) error {
+func (r *SQLCUserRepository) softDelete(ctx context.Context, id int) error {
 	if err := r.queries.SoftDeleteUser(ctx, int32(id)); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (r *SQLCUserRepository) hardDelete(ctx context.Context, id int, softDelete bool) error {
+func (r *SQLCUserRepository) hardDelete(ctx context.Context, id int) error {
 	if err := r.queries.HardDeleteUser(ctx, int32(id)); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (r *SQLCUserRepository) create(ctx context.Context, user *userDomain.User) error {
+func (r *SQLCUserRepository) create(ctx context.Context, user *entity.User) error {
 	_, err := r.queries.CreateUser(ctx, sqlc.CreateUserParams{
 		Email:       pgtype.Text{String: user.Email().String(), Valid: true},
 		PhoneNumber: pgtype.Text{String: user.PhoneNumber().String(), Valid: true},
@@ -171,9 +172,9 @@ func (r *SQLCUserRepository) create(ctx context.Context, user *userDomain.User) 
 	return nil
 }
 
-func (r *SQLCUserRepository) update(ctx context.Context, user *userDomain.User) error {
+func (r *SQLCUserRepository) update(ctx context.Context, user *entity.User) error {
 	_, err := r.queries.UpdateUser(ctx, sqlc.UpdateUserParams{
-		ID:          int32(user.Id().GetValue()),
+		ID:          int32(user.ID().GetValue()),
 		Email:       pgtype.Text{String: user.Email().String(), Valid: true},
 		PhoneNumber: pgtype.Text{String: user.PhoneNumber().String(), Valid: true},
 		Password:    pgtype.Text{String: user.Password(), Valid: true},

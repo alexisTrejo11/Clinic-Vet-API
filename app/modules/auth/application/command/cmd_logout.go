@@ -3,11 +3,12 @@ package command
 import (
 	"context"
 
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 )
 
 type LogoutCommand struct {
-	UserId       int
+	UserID       valueobject.UserID
 	RefreshToken string
 	CTX          context.Context
 }
@@ -30,15 +31,15 @@ func NewLogoutHandler(
 func (h *logoutHandler) Handle(cmd any) AuthCommandResult {
 	command := cmd.(LogoutCommand)
 
-	user, err := h.userRepository.GetByID(command.CTX, command.UserId)
+	user, err := h.userRepository.GetByID(command.CTX, command.UserID)
 	if err != nil {
 		return FailureAuthResult("an error ocurred finding user", err)
 	}
 
-	err = h.sessionRepo.DeleteUserSession(command.CTX, string(command.UserId), command.RefreshToken)
+	err = h.sessionRepo.DeleteUserSession(command.CTX, command.UserID.String(), command.RefreshToken)
 	if err != nil {
 		return FailureAuthResult("an error ocurred deleting session", err)
 	}
 
-	return SuccessAuthResult(nil, user.Id().String(), "session successfully deleted")
+	return SuccessAuthResult(nil, user.ID().String(), "session successfully deleted")
 }

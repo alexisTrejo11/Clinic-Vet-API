@@ -1,37 +1,33 @@
 package entity
 
 import (
-	"errors"
 	"time"
 
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/valueObjects"
 )
 
 type Owner struct {
-	id          int
+	id          valueobject.OwnerID
 	photo       string
 	fullName    valueObjects.PersonName
 	gender      valueObjects.Gender
 	dateOfBirth time.Time
 	phoneNumber string
 	address     *string
-	userID      *int
+	userID      *valueobject.UserID
 	isActive    bool
 	pets        []Pet
 }
 
 func NewOwner(
-	id int,
+	id valueobject.OwnerID,
 	photo string,
 	fullName valueObjects.PersonName,
 	gender valueObjects.Gender,
 	dateOfBirth time.Time,
 	phoneNumber string,
 ) (*Owner, error) {
-	if id <= 0 {
-		return nil, errors.New("owner ID must be a positive integer")
-	}
-
 	return &Owner{
 		id:          id,
 		photo:       photo,
@@ -44,7 +40,7 @@ func NewOwner(
 }
 
 // --- Getters ---
-func (o *Owner) ID() int {
+func (o *Owner) ID() valueobject.OwnerID {
 	return o.id
 }
 
@@ -72,7 +68,7 @@ func (o *Owner) Address() *string {
 	return o.address
 }
 
-func (o *Owner) UserID() *int {
+func (o *Owner) UserID() *valueobject.UserID {
 	return o.userID
 }
 
@@ -85,7 +81,7 @@ func (o *Owner) Pets() []Pet {
 }
 
 // --- Setters ---
-func (o *Owner) SetID(id int) {
+func (o *Owner) SetID(id valueobject.OwnerID) {
 	o.id = id
 }
 
@@ -117,7 +113,7 @@ func (o *Owner) SetDateOfBirth(dateOfBirth time.Time) {
 	o.dateOfBirth = dateOfBirth
 }
 
-func (o *Owner) SetUserID(userID int) {
+func (o *Owner) SetUserID(userID valueobject.UserID) {
 	o.userID = &userID
 }
 
@@ -125,7 +121,7 @@ func (o *Owner) SetPets(pets []Pet) {
 	o.pets = pets
 }
 
-func (o *Owner) GetID() int {
+func (o *Owner) GetID() valueobject.OwnerID {
 	return o.id
 }
 
@@ -144,7 +140,7 @@ func NewOwnerBuilder() *OwnerBuilder {
 	return &OwnerBuilder{owner: owner}
 }
 
-func (b *OwnerBuilder) WithID(id int) *OwnerBuilder {
+func (b *OwnerBuilder) WithID(id valueobject.OwnerID) *OwnerBuilder {
 	b.owner.id = id
 	return b
 }
@@ -184,7 +180,7 @@ func (b *OwnerBuilder) WithPets(pets []Pet) *OwnerBuilder {
 	return b
 }
 
-func (b *OwnerBuilder) WithUserID(userID int) *OwnerBuilder {
+func (b *OwnerBuilder) WithUserID(userID valueobject.UserID) *OwnerBuilder {
 	b.owner.userID = &userID
 	return b
 }

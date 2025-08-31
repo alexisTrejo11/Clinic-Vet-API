@@ -3,18 +3,19 @@ package command
 import (
 	"context"
 
-	paymentDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/payments/domain"
+	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/service"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
 )
 
 type RefundPaymentCommand struct {
-	paymentId int
+	paymentID int
 	reason    string
 }
 
-func NewRefundPaymentCommand(paymentId int, reason string) RefundPaymentCommand {
+func NewRefundPaymentCommand(paymentID int, reason string) RefundPaymentCommand {
 	return RefundPaymentCommand{
-		paymentId: paymentId,
+		paymentID: paymentID,
 		reason:    reason,
 	}
 }
@@ -24,32 +25,29 @@ type RefundPaymentHandler interface {
 }
 
 type refundPaymentHandler struct {
-	paymentRepo paymentDomain.PaymentRepository
+	paymentRepo      repository.PaymentRepository
+	paymentProccesor service.PaymentProccesorService
 }
 
-func NewRefundPaymentHandler(paymentRepo paymentDomain.PaymentRepository) RefundPaymentHandler {
+func NewRefundPaymentHandler(paymentRepo repository.PaymentRepository) RefundPaymentHandler {
 	return &refundPaymentHandler{
 		paymentRepo: paymentRepo,
 	}
 }
 
 func (h *refundPaymentHandler) Handle(ctx context.Context, command RefundPaymentCommand) shared.CommandResult {
-	if command.paymentId == 0 {
-		return shared.FailureResult("payment_id is required", paymentDomain.InvalidPaymentIdErr(command.paymentId))
-	}
-
-	payment, err := h.paymentRepo.GetById(ctx, command.paymentId)
+	payment, err := h.paymentRepo.GetByID(ctx, command.paymentID)
 	if err != nil {
 		return shared.FailureResult("failed to retrieve payment", err)
 	}
 
-	if err := payment.Refund(command.reason); err != nil {
+	if err := h.paymentProccesor.Refund(&payment); err != nil {
 		return shared.FailureResult("failed to refund payment", err)
 	}
 
-	if err := h.paymentRepo.Save(ctx, payment); err != nil {
+	if err := h.paymentRepo.Save(ctx, &payment); err != nil {
 		return shared.FailureResult("failed to save refunded payment", err)
 	}
 
-	return shared.SuccessResult(string(payment.GetId()), "payment refunded successfully")
+	return shared.SuccessResult(string(payment.GetID()), "payment refunded successfully")
 }

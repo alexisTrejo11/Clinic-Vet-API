@@ -1,7 +1,8 @@
-package ownerRepository
+package persistence
 
 import (
-	ownerDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/domain"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/valueObjects"
 	"github.com/alexisTrejo11/Clinic-Vet-API/db/models"
@@ -9,7 +10,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-func toCreateParams(owner ownerDomain.Owner) *sqlc.CreateOwnerParams {
+func toCreateParams(owner entity.Owner) *sqlc.CreateOwnerParams {
 	createOwnerParam := &sqlc.CreateOwnerParams{
 		Photo:       owner.Photo(),
 		PhoneNumber: owner.PhoneNumber(),
@@ -24,16 +25,16 @@ func toCreateParams(owner ownerDomain.Owner) *sqlc.CreateOwnerParams {
 		createOwnerParam.Address = pgtype.Text{String: *owner.Address(), Valid: true}
 	}
 
-	if owner.UserId() != nil {
-		createOwnerParam.UserID = pgtype.Int4{Int32: int32(*owner.UserId())}
+	if owner.UserID() != nil {
+		createOwnerParam.UserID = pgtype.Int4{Int32: int32(owner.UserID().GetValue())}
 	}
 
 	return createOwnerParam
 }
 
-func toUpdateParams(owner ownerDomain.Owner) *sqlc.UpdateOwnerParams {
+func toUpdateParams(owner entity.Owner) *sqlc.UpdateOwnerParams {
 	updateOwnerParam := &sqlc.UpdateOwnerParams{
-		ID:          int32(owner.Id()),
+		ID:          int32(owner.ID().GetValue()),
 		Photo:       owner.Photo(),
 		PhoneNumber: owner.PhoneNumber(),
 		Gender:      models.PersonGender(shared.AssertString(owner)),
@@ -47,23 +48,25 @@ func toUpdateParams(owner ownerDomain.Owner) *sqlc.UpdateOwnerParams {
 		updateOwnerParam.Address = pgtype.Text{String: *owner.Address(), Valid: true}
 	}
 
-	if owner.UserId() != nil {
-		updateOwnerParam.UserID = pgtype.Int4{Int32: int32(*owner.UserId())}
+	if owner.UserID() != nil {
+		updateOwnerParam.UserID = pgtype.Int4{Int32: int32(owner.UserID().GetValue())}
 	}
 
 	return updateOwnerParam
 }
 
-func rowToOwner(row sqlc.Owner) ownerDomain.Owner {
+func rowToOwner(row sqlc.Owner) entity.Owner {
 	fullName, _ := valueObjects.NewPersonName(row.FirstName, row.LastName)
+	ownerID, _ := valueobject.NewOwnerID(int(row.ID))
+	userID, _ := valueobject.NewUserID(int(row.UserID.Int32))
 
-	owner := ownerDomain.NewOwnerBuilder().
-		WithId(int(row.ID)).
+	owner := entity.NewOwnerBuilder().
+		WithID(ownerID).
 		WithFullName(fullName).
 		WithPhoneNumber(row.PhoneNumber).
 		WithAddress(row.Address.String).
 		WithDateOfBirth(row.DateOfBirth.Time).
-		WithUserId(int(row.UserID.Int32)).
+		WithUserID(userID).
 		WithGender(valueObjects.Gender(shared.AssertString(row.Gender))).
 		WithIsActive(row.IsActive).
 		Build()
@@ -71,8 +74,8 @@ func rowToOwner(row sqlc.Owner) ownerDomain.Owner {
 	return *owner
 }
 
-func ListRowToOwner(rows []sqlc.Owner) ([]ownerDomain.Owner, error) {
-	owners := make([]ownerDomain.Owner, 0, len(rows))
+func ListRowToOwner(rows []sqlc.Owner) ([]entity.Owner, error) {
+	owners := make([]entity.Owner, 0, len(rows))
 	for i, row := range rows {
 		owner := rowToOwner(row)
 		owners[i] = owner

@@ -19,7 +19,7 @@ type Pet struct {
 	color              *string
 	microchip          *string
 	isNeutered         *bool
-	ownerId            int
+	ownerID            valueobject.OwnerID
 	allergies          *string
 	currentMedications *string
 	specialNeeds       *string
@@ -78,8 +78,8 @@ func (p *Pet) GetIsNeutered() *bool {
 	return p.isNeutered
 }
 
-func (p *Pet) GetOwnerID() int {
-	return p.ownerId
+func (p *Pet) GetOwnerID() valueobject.OwnerID {
+	return p.ownerID
 }
 
 func (p *Pet) GetAllergies() *string {
@@ -154,8 +154,8 @@ func (p *Pet) SetIsNeutered(isNeutered *bool) {
 	p.isNeutered = isNeutered
 }
 
-func (p *Pet) SetOwnerID(ownerId int) {
-	p.ownerId = ownerId
+func (p *Pet) SetOwnerID(ownerID valueobject.OwnerID) {
+	p.ownerID = ownerID
 }
 
 func (p *Pet) SetAllergies(allergies *string) {
@@ -245,8 +245,8 @@ func (pb *PetBuilder) WithIsNeutered(isNeutered *bool) *PetBuilder {
 	return pb
 }
 
-func (pb *PetBuilder) WithOwnerID(ownerId int) *PetBuilder {
-	pb.pet.ownerId = ownerId
+func (pb *PetBuilder) WithOwnerID(ownerID valueobject.OwnerID) *PetBuilder {
+	pb.pet.ownerID = ownerID
 	return pb
 }
 

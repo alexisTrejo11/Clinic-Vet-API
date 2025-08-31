@@ -31,8 +31,8 @@ func (r *RedisSessionRepository) sessionKey(id string) string {
 
 // userSessionsKey returns the Redis key for a set of sessions for a specific userDomain.
 // Example: "user_sessions:123"
-func (r *RedisSessionRepository) userSessionsKey(userId string) string {
-	return fmt.Sprintf("user_sessions:%s", userId)
+func (r *RedisSessionRepository) userSessionsKey(userID string) string {
+	return fmt.Sprintf("user_sessions:%s", userID)
 }
 
 func (r *RedisSessionRepository) Create(ctx context.Context, sess *entity.Session) error {
@@ -43,10 +43,10 @@ func (r *RedisSessionRepository) Create(ctx context.Context, sess *entity.Sessio
 
 	_, err = r.redisClient.TxPipelined(ctx, func(pipe redis.Pipeliner) error {
 		// Store the session data with an expiration time
-		pipe.Set(ctx, r.sessionKey(sess.Id), sessionJSON, sessionDuration)
+		pipe.Set(ctx, r.sessionKey(sess.ID), sessionJSON, sessionDuration)
 
 		// Add the session ID to the set of user sessions
-		pipe.SAdd(ctx, r.userSessionsKey(sess.UserId), sess.Id)
+		pipe.SAdd(ctx, r.userSessionsKey(sess.UserID), sess.ID)
 		return nil
 	})
 	if err != nil {
@@ -56,11 +56,11 @@ func (r *RedisSessionRepository) Create(ctx context.Context, sess *entity.Sessio
 	return nil
 }
 
-func (r *RedisSessionRepository) GetById(ctx context.Context, sessionId string) (entity.Session, error) {
-	sessionJSON, err := r.redisClient.Get(ctx, r.sessionKey(sessionId)).Bytes()
+func (r *RedisSessionRepository) GetByID(ctx context.Context, sessionID string) (entity.Session, error) {
+	sessionJSON, err := r.redisClient.Get(ctx, r.sessionKey(sessionID)).Bytes()
 	if err != nil {
 		if err == redis.Nil {
-			return entity.Session{}, fmt.Errorf("session not found for ID: %s", sessionId)
+			return entity.Session{}, fmt.Errorf("session not found for ID: %s", sessionID)
 		}
 		return entity.Session{}, fmt.Errorf("failed to get session from Redis: %w", err)
 	}
@@ -73,31 +73,31 @@ func (r *RedisSessionRepository) GetById(ctx context.Context, sessionId string) 
 	return sess, nil
 }
 
-func (r *RedisSessionRepository) GetByUserAndId(ctx context.Context, userId, token string) (entity.Session, error) {
-	isMember, err := r.redisClient.SIsMember(ctx, r.userSessionsKey(userId), token).Result()
+func (r *RedisSessionRepository) GetByUserAndID(ctx context.Context, userID, token string) (entity.Session, error) {
+	isMember, err := r.redisClient.SIsMember(ctx, r.userSessionsKey(userID), token).Result()
 	if err != nil {
 		return entity.Session{}, fmt.Errorf("failed to check session membership: %w", err)
 	}
 	if !isMember {
-		return entity.Session{}, fmt.Errorf("session with token %s not found for user %s", token, userId)
+		return entity.Session{}, fmt.Errorf("session with token %s not found for user %s", token, userID)
 	}
 
 	// Then, retrieve the session data itself
-	return r.GetById(ctx, token)
+	return r.GetByID(ctx, token)
 }
 
-func (r *RedisSessionRepository) GetByUserId(ctx context.Context, userId string) ([]entity.Session, error) {
-	sessionIds, err := r.redisClient.SMembers(ctx, r.userSessionsKey(userId)).Result()
+func (r *RedisSessionRepository) GetByUserID(ctx context.Context, userID string) ([]entity.Session, error) {
+	sessionIDs, err := r.redisClient.SMembers(ctx, r.userSessionsKey(userID)).Result()
 	if err != nil {
-		return []entity.Session{}, fmt.Errorf("failed to get session IDs for user %s: %w", userId, err)
+		return []entity.Session{}, fmt.Errorf("failed to get session IDs for user %s: %w", userID, err)
 	}
 
-	if len(sessionIds) == 0 {
+	if len(sessionIDs) == 0 {
 		return []entity.Session{}, nil
 	}
 
-	sessionKeys := make([]string, len(sessionIds))
-	for i, id := range sessionIds {
+	sessionKeys := make([]string, len(sessionIDs))
+	for i, id := range sessionIDs {
 		sessionKeys[i] = r.sessionKey(id)
 	}
 
@@ -121,10 +121,10 @@ func (r *RedisSessionRepository) GetByUserId(ctx context.Context, userId string)
 	return sessions, nil
 }
 
-func (r *RedisSessionRepository) DeleteUserSession(ctx context.Context, userId, sessionId string) error {
+func (r *RedisSessionRepository) DeleteUserSession(ctx context.Context, userID, sessionID string) error {
 	_, err := r.redisClient.TxPipelined(ctx, func(pipe redis.Pipeliner) error {
-		pipe.Del(ctx, r.sessionKey(sessionId))
-		pipe.SRem(ctx, r.userSessionsKey(userId), sessionId)
+		pipe.Del(ctx, r.sessionKey(sessionID))
+		pipe.SRem(ctx, r.userSessionsKey(userID), sessionID)
 		return nil
 	})
 	if err != nil {
@@ -135,14 +135,14 @@ func (r *RedisSessionRepository) DeleteUserSession(ctx context.Context, userId, 
 }
 
 func (r *RedisSessionRepository) DeleteAllUserSessions(ctx context.Context, userID string) error {
-	sessionIds, err := r.redisClient.SMembers(ctx, r.userSessionsKey(userID)).Result()
+	sessionIDs, err := r.redisClient.SMembers(ctx, r.userSessionsKey(userID)).Result()
 	if err != nil {
 		return fmt.Errorf("failed to get sessions for user: %w", err)
 	}
 
 	_, err = r.redisClient.TxPipelined(ctx, func(pipe redis.Pipeliner) error {
-		for _, sessionId := range sessionIds {
-			pipe.Del(ctx, r.sessionKey(sessionId))
+		for _, sessionID := range sessionIDs {
+			pipe.Del(ctx, r.sessionKey(sessionID))
 		}
 		pipe.Del(ctx, r.userSessionsKey(userID))
 		return nil

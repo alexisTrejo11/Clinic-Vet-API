@@ -1,41 +1,38 @@
-package paymentQuery
+package query
 
 import (
 	"context"
 
-	paymentDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/payments/domain"
+	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 )
 
-type GetPaymentByIdQuery struct {
-	id int `json:"id"`
+type GetPaymentByIDQuery struct {
+	id int
 }
 
-func NewGetPaymentByIdQuery(id int) GetPaymentByIdQuery {
-	return GetPaymentByIdQuery{id: id}
+func NewGetPaymentByIDQuery(id int) GetPaymentByIDQuery {
+	return GetPaymentByIDQuery{id: id}
 }
 
-type GetPaymentByIdHandler interface {
-	Handle(ctx context.Context, query GetPaymentByIdQuery) (*PaymentResponse, error)
+type GetPaymentByIDHandler interface {
+	Handle(ctx context.Context, query GetPaymentByIDQuery) (PaymentResponse, error)
 }
 
-type getPaymentByIdHandlerImpl struct {
-	repository paymentDomain.PaymentRepository
+type getPaymentByIDHandlerImpl struct {
+	repository repository.PaymentRepository
 }
 
-func NewGetPaymentByIdHandler(repository paymentDomain.PaymentRepository) GetPaymentByIdHandler {
-	return &getPaymentByIdHandlerImpl{repository: repository}
+func NewGetPaymentByIDHandler(repository repository.PaymentRepository) GetPaymentByIDHandler {
+	return &getPaymentByIDHandlerImpl{
+		repository: repository,
+	}
 }
 
-func (h *getPaymentByIdHandlerImpl) Handle(ctx context.Context, query GetPaymentByIdQuery) (*PaymentResponse, error) {
-	payment, err := h.repository.GetById(ctx, query.id)
+func (h *getPaymentByIDHandlerImpl) Handle(ctx context.Context, query GetPaymentByIDQuery) (PaymentResponse, error) {
+	payment, err := h.repository.GetByID(ctx, query.id)
 	if err != nil {
-		return nil, err
+		return PaymentResponse{}, err
 	}
 
-	if payment == nil {
-		return nil, paymentDomain.PaymentNotFoundErr(query.id)
-	}
-
-	response := NewPaymentResponse(payment)
-	return &response, nil
+	return NewPaymentResponse(&payment), nil
 }

@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"log"
 
-	medHistoryAPI "github.com/alexisTrejo11/Clinic-Vet-API/app/medical/infrastructure/api"
-	ownerAPI "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/infrastructure/api"
-	petAPI "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/infrastructure/api"
-	sqlcPetRepository "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/infrastructure/persistence/repositories"
-	userAPI "github.com/alexisTrejo11/Clinic-Vet-API/app/users/infrastructure/api"
-	vetAPI "github.com/alexisTrejo11/Clinic-Vet-API/app/veterinarians/infrastructure/api"
+	medHistoryAPI "github.com/alexisTrejo11/Clinic-Vet-API/app/modules/medical/infrastructure/api"
+	ownerAPI "github.com/alexisTrejo11/Clinic-Vet-API/app/modules/owners/infrastructure/api"
+	petAPI "github.com/alexisTrejo11/Clinic-Vet-API/app/modules/pets/infrastructure/api"
+	sqlcPetRepository "github.com/alexisTrejo11/Clinic-Vet-API/app/modules/pets/infrastructure/persistence"
+	userAPI "github.com/alexisTrejo11/Clinic-Vet-API/app/modules/users/infrastructure/api"
+	vetAPI "github.com/alexisTrejo11/Clinic-Vet-API/app/modules/veterinarians/infrastructure/api"
 	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -72,9 +72,9 @@ func BootstrapAPIModules(
 		Router:    router,
 		Queries:   queries,
 		Validator: validator,
-		OwnerRepo: ownerRepo,
-		VetRepo:   vetRepo,
-		PetRepo:   petRepository,
+		OwnerRepo: &ownerRepo,
+		VetRepo:   &vetRepo,
+		PetRepo:   &petRepository,
 	})
 
 	if err := medHistoryModule.Bootstrap(); err != nil {

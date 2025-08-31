@@ -1,9 +1,9 @@
-package paymentController
+package controller
 
 import (
 	"context"
 
-	paymentCmd "github.com/alexisTrejo11/Clinic-Vet-API/app/payments/application/command"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/payments/application/command"
 	apiResponse "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/responses"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -11,14 +11,13 @@ import (
 
 type AdminPaymentController struct {
 	validator         *validator.Validate
-	commandBus        paymentCmd.CommandBus
+	commandBus        command.CommandBus
 	queryController   *PaymentQueryController
 	paymentController *PaymentController
 }
 
 func NewAdminPaymentController(
 	validator *validator.Validate,
-
 	queryController *PaymentQueryController,
 	paymentController *PaymentController,
 ) *AdminPaymentController {
@@ -71,7 +70,7 @@ func (c *AdminPaymentController) CancelPayment(ctx *gin.Context) {
 
 // MarkOverduePayments marks all overdue payments
 func (c *AdminPaymentController) MarkOverduePayments(ctx *gin.Context) {
-	commandResult := c.commandBus.Execute(context.TODO(), paymentCmd.MarkOverduePaymentsCommand{})
+	commandResult := c.commandBus.Execute(context.TODO(), command.MarkOverduePaymentsCommand{})
 	if !commandResult.IsSuccess {
 		apiResponse.ApplicationError(ctx, commandResult.Error)
 		return

@@ -1,36 +1,38 @@
 package persistence
 
 import (
-	userDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/enum"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
 	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
 )
 
-func MapUserFromSQLC(sqlRow sqlc.User) (*userDomain.User, error) {
-	userId, err := userDomain.NewUserId(sqlRow.ID)
+func MapUserFromSQLC(sqlRow sqlc.User) (*entity.User, error) {
+	userID, err := valueobject.NewUserID(int(sqlRow.ID))
 	if err != nil {
 		return nil, err
 	}
 
-	email, err := userDomain.NewEmail(sqlRow.Email.String)
+	email, err := valueobject.NewEmail(sqlRow.Email.String)
 	if err != nil {
 		return nil, err
 	}
 
-	phone, err := userDomain.NewPhoneNumber(sqlRow.PhoneNumber.String)
+	phone, err := valueobject.NewPhoneNumber(sqlRow.PhoneNumber.String)
 	if err != nil {
 		return nil, err
 	}
 
 	roleVal, _ := sqlRow.Role.Value()
 	roleStr, _ := roleVal.(string)
-	role := userDomain.UserRoleFromString(roleStr)
+	role := enum.UserRoleFromString(roleStr)
 
 	statusVal, _ := sqlRow.Status.Value()
 	statusStr, _ := statusVal.(string)
-	status := userDomain.UserStatusFromString(statusStr)
+	status := enum.UserStatusFromString(statusStr)
 
-	user, err := userDomain.NewUser(
-		userId,
+	user, err := entity.NewUser(
+		userID,
 		email,
 		phone,
 		sqlRow.Password.String,
@@ -45,8 +47,8 @@ func MapUserFromSQLC(sqlRow sqlc.User) (*userDomain.User, error) {
 	return user, nil
 }
 
-func MapUsersFromSQLC(sqlRows []sqlc.User) ([]userDomain.User, error) {
-	users := make([]userDomain.User, 0, len(sqlRows))
+func MapUsersFromSQLC(sqlRows []sqlc.User) ([]entity.User, error) {
+	users := make([]entity.User, 0, len(sqlRows))
 	for i, sqlRow := range sqlRows {
 		user, err := MapUserFromSQLC(sqlRow)
 		if err != nil {

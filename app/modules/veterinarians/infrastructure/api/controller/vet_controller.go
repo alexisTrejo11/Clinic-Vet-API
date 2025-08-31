@@ -3,6 +3,7 @@ package controller
 import (
 	"context"
 
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/veterinarians/application/dto"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/veterinarians/application/usecase"
 	utils "github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
@@ -18,7 +19,7 @@ type VeterinarianController struct {
 
 func NewVeterinarianController(
 	validator *validator.Validate,
-	vetUseCases usecases.VeterinarianUseCases,
+	vetUseCases usecase.VeterinarianUseCases,
 ) *VeterinarianController {
 	return &VeterinarianController{
 		validator:   validator,
@@ -65,14 +66,15 @@ func (c *VeterinarianController) ListVeterinarians(ctx *gin.Context) {
 // @Failure 404 {object} apiResponse.APIResponse "Veterinarian not found"
 // @Failure 500 {object} apiResponse.APIResponse "Internal server error"
 // @Router /veterinarians/{id} [get]
-func (c *VeterinarianController) GetVeterinarianById(ctx *gin.Context) {
+func (c *VeterinarianController) GetVeterinarianByID(ctx *gin.Context) {
 	id, err := utils.ParseParamToInt(ctx, "id")
 	if err != nil {
 		apiResponse.RequestURLParamError(ctx, err, "Veterinarian_id", ctx.Param("id"))
 		return
 	}
 
-	Veterinarian, err := c.vetUseCases.GetVetByIdUseCase(context.TODO(), id)
+	vetID, _ := valueobject.NewVetID(id)
+	Veterinarian, err := c.vetUseCases.GetVetByIDUseCase(context.TODO(), vetID)
 	if err != nil {
 		apiResponse.ApplicationError(ctx, err)
 		return
@@ -143,7 +145,8 @@ func (c *VeterinarianController) UpdateVeterinarian(ctx *gin.Context) {
 		return
 	}
 
-	verUpdated, err := c.vetUseCases.UpdateVetUseCase(context.TODO(), id, vetUpdate)
+	vetID, _ := valueobject.NewVetID(id)
+	verUpdated, err := c.vetUseCases.UpdateVetUseCase(context.TODO(), vetID, vetUpdate)
 	if err != nil {
 		apiResponse.ApplicationError(ctx, err)
 		return
@@ -169,7 +172,8 @@ func (c *VeterinarianController) DeleteVeterinarian(ctx *gin.Context) {
 		return
 	}
 
-	if err := c.vetUseCases.DeleteVetUseCase(context.TODO(), id); err != nil {
+	vetID, _ := valueobject.NewVetID(id)
+	if err := c.vetUseCases.DeleteVetUseCase(context.TODO(), vetID); err != nil {
 		apiResponse.ApplicationError(ctx, err)
 		return
 	}

@@ -1,11 +1,14 @@
-package userDomainCommand
+package command
 
 import (
 	"context"
 	"time"
 
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/enum"
+	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/service"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
-	userDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
 )
 
 type CreateProfileCommand struct {
@@ -26,23 +29,23 @@ type CreateUserCommand struct {
 	Phone          string
 	Address        string
 	Role           string
-	OwnerId        *int
-	VeterinarianId *int
-	Status         userDomain.UserStatus
+	OwnerID        *int
+	VeterinarianID *int
+	Status         enum.UserStatus
 	DateOfBirth    time.Time
 	Profile        CreateProfileCommand
 	Ctx            context.Context
 }
 
 type CreateUserHandler struct {
-	repo            userDomain.UserRepository
-	securityService *userDomain.UseSecurityService
+	repo            repository.UserRepository
+	securityService *service.UseSecurityService
 }
 
-func NewCreateUserHandler(repo userDomain.UserRepository) *CreateUserHandler {
+func NewCreateUserHandler(repo repository.UserRepository) *CreateUserHandler {
 	return &CreateUserHandler{
 		repo:            repo,
-		securityService: userDomain.NewUseSecurityService(repo),
+		securityService: service.NewUseSecurityService(repo),
 	}
 }
 
@@ -66,9 +69,9 @@ func (uc *CreateUserHandler) Handle(cmd any) shared.CommandResult {
 		return shared.FailureResult("an error occurred saving user", err)
 	}
 
-	return shared.SuccessResult(user.Id().String(), "user created successfully")
+	return shared.SuccessResult(user.ID().String(), "user created successfully")
 }
 
-func FromCreateCommand(command CreateUserCommand) (*userDomain.User, error) {
-	return &userDomain.User{}, nil
+func FromCreateCommand(command CreateUserCommand) (*entity.User, error) {
+	return &entity.User{}, nil
 }

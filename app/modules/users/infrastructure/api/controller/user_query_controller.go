@@ -1,4 +1,4 @@
-package userDomainController
+package controller
 
 import (
 	"errors"

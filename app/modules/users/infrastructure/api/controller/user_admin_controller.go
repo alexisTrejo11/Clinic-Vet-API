@@ -1,31 +1,32 @@
-package userDomainController
+package controller
 
 import (
 	"context"
 
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/enum"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/users/application/usecase"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/users/application/usecase/command"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
 	apiResponse "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/responses"
-	userApplication "github.com/alexisTrejo11/Clinic-Vet-API/app/users/application"
-	userCommand "github.com/alexisTrejo11/Clinic-Vet-API/app/users/application/command"
-	userDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
-	userDtos "github.com/alexisTrejo11/Clinic-Vet-API/app/users/infrastructure/api/dtos"
+
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )
 
 type UserAdminController struct {
 	validator  *validator.Validate
-	dispatcher *userApplication.CommandDispatcher
+	dispatcher *usecase.CommandDispatcher
 }
 
-func NewUserAdminController(validator *validator.Validate, dispatcher *userApplication.CommandDispatcher) *UserAdminController {
+func NewUserAdminController(validator *validator.Validate, dispatcher *usecase.CommandDispatcher) *UserAdminController {
 	return &UserAdminController{
 		validator:  validator,
 		dispatcher: dispatcher,
 	}
 }
 
-// GetUserById retrieves a user by their ID.
+// GetUserByID retrieves a user by their ID.
 // @Summary Get a user by ID
 // @Description Retrieves a single user record by their unique ID.
 // @Tags users
@@ -34,29 +35,29 @@ func NewUserAdminController(validator *validator.Validate, dispatcher *userAppli
 // @Success 200 {object} apiResponse.APIResponse{data=object} "User found"
 // @Failure 400 {object} apiResponse.APIResponse "Invalid URL parameter"
 // @Router /v1/users/{id} [get]
-func (c *UserAdminController) GetUserById(ctx *gin.Context) {
-	userId, err := shared.ParseParamToInt(ctx, "id")
+func (c *UserAdminController) GetUserByID(ctx *gin.Context) {
+	userID, err := shared.ParseParamToInt(ctx, "id")
 	if err != nil {
 		apiResponse.RequestURLParamError(ctx, err, "id", ctx.Param("id"))
 		return
 	}
 
-	apiResponse.Success(ctx, gin.H{"user_id": userId})
+	apiResponse.Success(ctx, gin.H{"user_id": userID})
 }
 
-// CreateUser creates a new userDomain.
+// CreateUser creates a new user.
 // @Summary Create a new user
 // @Description Creates a new user record with the provided data.
 // @Tags users
 // @Accept json
 // @Produce json
-// @Param user body userDtos.CreateUserRequest true "User creation request"
+// @Param user body CreateUserRequest true "User creation request"
 // @Success 201 {object} apiResponse.APIResponse{message=string,id=int} "User created successfully"
 // @Failure 400 {object} apiResponse.APIResponse "Invalid request body or validation error"
 // @Failure 500 {object} apiResponse.APIResponse "Internal server error"
 // @Router /v1/users [post]
 func (c *UserAdminController) CreateUser(ctx *gin.Context) {
-	var request userDtos.CreateUserRequest
+	var request CreateUserRequest
 	if err := ctx.ShouldBindJSON(&request); err != nil {
 		ctx.JSON(400, gin.H{"error": err.Error()})
 		return
@@ -68,14 +69,14 @@ func (c *UserAdminController) CreateUser(ctx *gin.Context) {
 	}
 
 	// Handle missing fields fields
-	command := userCommand.CreateUserCommand{
+	command := command.CreateUserCommand{
 		Email:          request.Email,
 		Password:       request.Password,
 		PhoneNumber:    request.PhoneNumber,
 		Role:           request.Role,
 		Address:        request.Address,
-		OwnerId:        request.OwnerId,
-		VeterinarianId: request.VeterinarianId,
+		OwnerID:        request.OwnerID,
+		VeterinarianID: request.VeterinarianID,
 	}
 
 	result := c.dispatcher.Dispatch(command)
@@ -87,7 +88,7 @@ func (c *UserAdminController) CreateUser(ctx *gin.Context) {
 	ctx.JSON(201, gin.H{"message": result.Message, "id": result.ID})
 }
 
-// BanUser bans a userDomain.
+// BanUser bans a user..
 // @Summary Ban a user
 // @Description Bans a user by setting their status to 'banned'.
 // @Tags admin
@@ -97,14 +98,14 @@ func (c *UserAdminController) CreateUser(ctx *gin.Context) {
 // @Failure 500 {object} apiResponse.APIResponse "Internal server error"
 // @Router /v1/admin/users/{id}/ban [post]
 func (c *UserAdminController) BanUser(ctx *gin.Context) {
-	userId, err := shared.ParseParamToInt(ctx, "id")
+	userID, err := shared.ParseParamToEntityID(ctx, "id", "user")
 	if err != nil {
 		apiResponse.RequestURLParamError(ctx, err, "id", ctx.Param("id"))
 	}
 
-	command := userCommand.ChangeUserStatusCommand{
-		UserId: userId,
-		Status: userDomain.UserStatusBanned,
+	command := command.ChangeUserStatusCommand{
+		UserID: userID.(valueobject.UserID),
+		Status: enum.UserStatusBanned,
 		CTX:    context.Background(),
 	}
 
@@ -117,7 +118,7 @@ func (c *UserAdminController) BanUser(ctx *gin.Context) {
 	apiResponse.Success(ctx, result.Message)
 }
 
-// UnBanUser unbans a userDomain.
+// UnBanUser unbans a user.
 // @Summary Unban a user
 // @Description Unbans a user by setting their status to 'active'.
 // @Tags admin
@@ -127,14 +128,14 @@ func (c *UserAdminController) BanUser(ctx *gin.Context) {
 // @Failure 500 {object} apiResponse.APIResponse "Internal server error"
 // @Router /v1/admin/users/{id}/unban [post]
 func (c *UserAdminController) UnBanUser(ctx *gin.Context) {
-	userId, err := shared.ParseParamToInt(ctx, "id")
+	userID, err := shared.ParseParamToEntityID(ctx, "id", "user")
 	if err != nil {
 		apiResponse.RequestURLParamError(ctx, err, "id", ctx.Param("id"))
 	}
 
-	command := userCommand.ChangeUserStatusCommand{
-		UserId: userId,
-		Status: userDomain.UserStatusActive,
+	command := command.ChangeUserStatusCommand{
+		UserID: userID.(valueobject.UserID),
+		Status: enum.UserStatusActive,
 		CTX:    context.Background(),
 	}
 
@@ -147,9 +148,9 @@ func (c *UserAdminController) UnBanUser(ctx *gin.Context) {
 	apiResponse.Success(ctx, result.Message)
 }
 
-// DeleteUser soft deletes a userDomain.
+// DeleteUser soft deletes a user.
 // @Summary Soft delete a user
-// @Description Soft deletes a user record by marking it as deleted.
+// @Desc
 // @Tags admin
 // @Param id path int true "User ID"
 // @Success 200 {object} apiResponse.APIResponse{data=string} "User soft deleted successfully"
@@ -157,14 +158,15 @@ func (c *UserAdminController) UnBanUser(ctx *gin.Context) {
 // @Failure 500 {object} apiResponse.APIResponse "Internal server error"
 // @Router /v1/admin/users/{id} [delete]
 func (c *UserAdminController) DeleteUser(ctx *gin.Context) {
-	userId, err := shared.ParseParamToInt(ctx, "id")
+	id, err := shared.ParseParamToInt(ctx, "id")
 	if err != nil {
 		apiResponse.RequestURLParamError(ctx, err, "id", ctx.Param("id"))
 		return
 	}
 
-	command := userCommand.DeleteUserCommand{
-		UserId:     userId,
+	userID, _ := valueobject.NewUserID(id)
+	command := command.DeleteUserCommand{
+		UserID:     userID,
 		SoftDelete: true,
 		CTX:        context.Background(),
 	}

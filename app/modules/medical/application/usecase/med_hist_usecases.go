@@ -92,7 +92,7 @@ func (uc *MedicalHistoryUseCase) GetByIDWithDeatils(ctx context.Context, id int)
 		return dto.MedHistResponseDetail{}, err
 	}
 
-	pet, err := uc.petRepo.GetByID(ctx, medHistory.PetID().GetValue())
+	pet, err := uc.petRepo.GetByID(ctx, medHistory.PetID())
 	if err != nil {
 		return dto.MedHistResponseDetail{}, err
 	}

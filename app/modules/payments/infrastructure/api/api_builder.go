@@ -1,11 +1,12 @@
 package paymentAPI
 
 import (
-	paymentCmd "github.com/alexisTrejo11/Clinic-Vet-API/app/payments/application/command"
-	paymentQuery "github.com/alexisTrejo11/Clinic-Vet-API/app/payments/application/queries"
-	paymentDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/payments/domain"
-	paymentController "github.com/alexisTrejo11/Clinic-Vet-API/app/payments/infrastructure/api/controller"
-	paymentRoutes "github.com/alexisTrejo11/Clinic-Vet-API/app/payments/infrastructure/api/routes"
+	domainerr "github.com/alexisTrejo11/Clinic-Vet-API/app/core/errors"
+	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/payments/application/command"
+	query "github.com/alexisTrejo11/Clinic-Vet-API/app/modules/payments/application/queries"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/payments/infrastructure/api/controller"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/payments/infrastructure/api/routes"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )
@@ -13,21 +14,21 @@ import (
 type PaymentAPIConfig struct {
 	Router      *gin.Engine
 	Validator   *validator.Validate
-	PaymentRepo paymentDomain.PaymentRepository
+	PaymentRepo repository.PaymentRepository
 }
 
 type PaymentAPIComponents struct {
-	Repository  paymentDomain.PaymentRepository
-	CommandBus  *paymentCmd.CommandBus
-	QueryBus    *paymentQuery.QueryBus
+	Repository  repository.PaymentRepository
+	CommandBus  *command.CommandBus
+	QueryBus    *query.QueryBus
 	Controllers *PaymentControllers
 }
 
 type PaymentControllers struct {
-	Admin   *paymentController.AdminPaymentController
-	Client  *paymentController.ClientPaymentController
-	Query   *paymentController.PaymentQueryController
-	Command *paymentController.PaymentController
+	Admin   *controller.AdminPaymentController
+	Client  *controller.ClientPaymentController
+	Query   *controller.PaymentQueryController
+	Command *controller.PaymentController
 }
 
 type PaymentAPIBuilder struct {
@@ -52,8 +53,8 @@ func (f *PaymentAPIBuilder) Build() error {
 		return err
 	}
 
-	commandBus := paymentCmd.NewPaymentCommandBus(f.config.PaymentRepo)
-	queryBus := paymentQuery.NewQueryBus(f.config.PaymentRepo)
+	commandBus := command.NewPaymentCommandBus(f.config.PaymentRepo)
+	queryBus := query.NewQueryBus(f.config.PaymentRepo)
 
 	controllers := f.createControllers(&commandBus, &queryBus)
 
@@ -70,25 +71,24 @@ func (f *PaymentAPIBuilder) Build() error {
 	return nil
 }
 
-func (f *PaymentAPIBuilder) createControllers(commandBus *paymentCmd.CommandBus, queryBus *paymentQuery.QueryBus) *PaymentControllers {
-	queryController := paymentController.NewPaymentQueryController(
+func (f *PaymentAPIBuilder) createControllers(commandBus *command.CommandBus, queryBus *query.QueryBus) *PaymentControllers {
+	queryController := controller.NewPaymentQueryController(
 		f.config.Validator,
-		f.config.PaymentRepo,
 		*queryBus,
 	)
 
-	commandController := paymentController.NewPaymentController(
+	commandController := controller.NewPaymentController(
 		f.config.Validator,
 		*commandBus,
 	)
 
-	clientController := paymentController.NewClientPaymentController(
+	clientController := controller.NewClientPaymentController(
 		f.config.Validator,
 		f.config.PaymentRepo,
 		queryController,
 	)
 
-	adminController := paymentController.NewAdminPaymentController(
+	adminController := controller.NewAdminPaymentController(
 		f.config.Validator,
 		queryController,
 		commandController,
@@ -103,22 +103,22 @@ func (f *PaymentAPIBuilder) createControllers(commandBus *paymentCmd.CommandBus,
 }
 
 func (f *PaymentAPIBuilder) registerRoutes(controllers *PaymentControllers) {
-	paymentRoutes.RegisterAdminPaymentRoutes(f.config.Router, controllers.Admin)
-	paymentRoutes.RegisterClientPaymentRoutes(f.config.Router, controllers.Client)
+	routes.RegisterAdminPaymentRoutes(f.config.Router, controllers.Admin)
+	routes.RegisterClientPaymentRoutes(f.config.Router, controllers.Client)
 }
 
 func (f *PaymentAPIBuilder) validateConfig() error {
 	if f.config == nil {
-		return paymentDomain.NewPaymentError("INVALID_API_CONFIG", "configuration cannot be nil", 0, "")
+		return domainerr.NewPaymentError("INVALID_API_CONFIG", "configuration cannot be nil", 0, "")
 	}
 	if f.config.Router == nil {
-		return paymentDomain.NewPaymentError("INVALID_API_CONFIG", "router cannot be nil", 0, "")
+		return domainerr.NewPaymentError("INVALID_API_CONFIG", "router cannot be nil", 0, "")
 	}
 	if f.config.Validator == nil {
-		return paymentDomain.NewPaymentError("INVALID_API_CONFIG", "validator cannot be nil", 0, "")
+		return domainerr.NewPaymentError("INVALID_API_CONFIG", "validator cannot be nil", 0, "")
 	}
 	if f.config.PaymentRepo == nil {
-		return paymentDomain.NewPaymentError("INVALID_API_CONFIG", "payment repository cannot be nil", 0, "")
+		return domainerr.NewPaymentError("INVALID_API_CONFIG", "payment repository cannot be nil", 0, "")
 	}
 	return nil
 }

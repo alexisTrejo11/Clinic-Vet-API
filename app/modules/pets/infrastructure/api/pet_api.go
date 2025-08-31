@@ -1,14 +1,13 @@
-package petAPI
+package api
 
 import (
 	"fmt"
 
-	ownerDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/domain"
-	petUsecase "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/application/usecase"
-	petDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/domain"
-	petController "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/infrastructure/api/controller"
-	petRoutes "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/infrastructure/api/routes"
-	sqlcPetRepository "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/infrastructure/persistence/repositories"
+	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/pets/application/usecase"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/pets/infrastructure/api/controller"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/pets/infrastructure/api/routes"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/pets/infrastructure/persistence"
 	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -18,13 +17,13 @@ type PetModuleConfig struct {
 	Router    *gin.Engine
 	Queries   *sqlc.Queries
 	Validator *validator.Validate
-	OwnerRepo ownerDomain.OwnerRepository
+	OwnerRepo repository.OwnerRepository
 }
 
 type PetModuleComponents struct {
-	Repository petDomain.PetRepository
-	UseCases   petUsecase.PetUseCasesFacade
-	Controller *petController.PetController
+	Repository repository.PetRepository
+	UseCases   usecase.PetUseCasesFacade
+	Controller *controller.PetController
 }
 
 type PetModule struct {
@@ -67,20 +66,20 @@ func (m *PetModule) Bootstrap() error {
 	return nil
 }
 
-func (m *PetModule) createRepository() petDomain.PetRepository {
-	return sqlcPetRepository.NewSqlcPetRepository(m.config.Queries)
+func (m *PetModule) createRepository() repository.PetRepository {
+	return persistence.NewSqlcPetRepository(m.config.Queries)
 }
 
-func (m *PetModule) createUseCases(repository petDomain.PetRepository) petUsecase.PetUseCasesFacade {
-	return petUsecase.NewPetUseCasesFacade(repository, m.config.OwnerRepo)
+func (m *PetModule) createUseCases(repository repository.PetRepository) usecase.PetUseCasesFacade {
+	return usecase.NewPetUseCasesFacade(repository, m.config.OwnerRepo)
 }
 
-func (m *PetModule) createController(useCases petUsecase.PetUseCasesFacade) *petController.PetController {
-	return petController.NewPetController(m.config.Validator, useCases)
+func (m *PetModule) createController(useCases usecase.PetUseCasesFacade) *controller.PetController {
+	return controller.NewPetController(m.config.Validator, useCases)
 }
 
-func (m *PetModule) registerRoutes(controller *petController.PetController) {
-	petRoutes.PetsRoutes(m.config.Router, controller)
+func (m *PetModule) registerRoutes(controller *controller.PetController) {
+	routes.PetsRoutes(m.config.Router, controller)
 }
 
 func (m *PetModule) validateConfig() error {
@@ -111,7 +110,7 @@ func (m *PetModule) GetComponents() (*PetModuleComponents, error) {
 	return m.components, nil
 }
 
-func (m *PetModule) GetRepository() (petDomain.PetRepository, error) {
+func (m *PetModule) GetRepository() (repository.PetRepository, error) {
 	components, err := m.GetComponents()
 	if err != nil {
 		return nil, err
@@ -119,7 +118,7 @@ func (m *PetModule) GetRepository() (petDomain.PetRepository, error) {
 	return components.Repository, nil
 }
 
-func (m *PetModule) GetUseCases() (petUsecase.PetUseCasesFacade, error) {
+func (m *PetModule) GetUseCases() (usecase.PetUseCasesFacade, error) {
 	components, err := m.GetComponents()
 	if err != nil {
 		return nil, err
@@ -127,7 +126,7 @@ func (m *PetModule) GetUseCases() (petUsecase.PetUseCasesFacade, error) {
 	return components.UseCases, nil
 }
 
-func (m *PetModule) GetController() (*petController.PetController, error) {
+func (m *PetModule) GetController() (*controller.PetController, error) {
 	components, err := m.GetComponents()
 	if err != nil {
 		return nil, err

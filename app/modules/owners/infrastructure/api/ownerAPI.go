@@ -1,12 +1,11 @@
 package ownerAPI
 
 import (
-	ownerUsecase "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/application/usecase"
-	ownerDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/domain"
-	ownerController "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/infrastructure/api/controller"
-	ownerRoutes "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/infrastructure/api/routes"
-	sqlcOwnerRepository "github.com/alexisTrejo11/Clinic-Vet-API/app/owners/infrastructure/persistence"
-	petDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/pets/domain"
+	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/owners/application/usecase"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/owners/infrastructure/api/controller"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/owners/infrastructure/api/routes"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/owners/infrastructure/persistence"
 	appError "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/errors/application"
 	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
 	"github.com/gin-gonic/gin"
@@ -17,13 +16,13 @@ type OwnerAPIConfig struct {
 	Router    *gin.Engine
 	Validator *validator.Validate
 	Queries   *sqlc.Queries
-	PetRepo   petDomain.PetRepository
+	PetRepo   repository.PetRepository
 }
 
 type OwnerAPIComponents struct {
-	Repository ownerDomain.OwnerRepository
-	UseCase    ownerUsecase.OwnerServiceFacade
-	Controller *ownerController.OwnerController
+	Repository repository.OwnerRepository
+	UseCase    usecase.OwnerServiceFacade
+	Controller *controller.OwnerController
 }
 
 type OwnerAPIModule struct {
@@ -49,16 +48,16 @@ func (f *OwnerAPIModule) Bootstrap() error {
 	}
 
 	// Create repository
-	ownerRepo := sqlcOwnerRepository.NewSqlcOwnerRepository(f.config.Queries, f.config.PetRepo)
+	ownerRepo := persistence.NewSqlcOwnerRepository(f.config.Queries, f.config.PetRepo)
 
 	// Create use cases
 	useCases := f.createUseCases(ownerRepo)
 
 	// Create controller
-	controller := ownerController.NewOwnerController(f.config.Validator, useCases)
+	controller := controller.NewOwnerController(f.config.Validator, useCases)
 
 	// Register routes
-	ownerRoutes.OwnerRoutes(f.config.Router, controller)
+	routes.OwnerRoutes(f.config.Router, controller)
 
 	// Store components
 	f.components = &OwnerAPIComponents{
@@ -72,14 +71,14 @@ func (f *OwnerAPIModule) Bootstrap() error {
 }
 
 // createUseCases creates and wires all use cases
-func (f *OwnerAPIModule) createUseCases(repo ownerDomain.OwnerRepository) ownerUsecase.OwnerServiceFacade {
-	getUseCase := ownerUsecase.NewGetOwnerByIdUseCase(repo)
-	listUseCase := ownerUsecase.NewListOwnersUseCase(repo)
-	createUseCase := ownerUsecase.NewCreateOwnerUseCase(repo)
-	updateUseCase := ownerUsecase.NewUpdateOwnerUseCase(repo)
-	deleteUseCase := ownerUsecase.NewSoftDeleteOwnerUseCase(repo)
+func (f *OwnerAPIModule) createUseCases(repo repository.OwnerRepository) usecase.OwnerServiceFacade {
+	getUseCase := usecase.NewGetOwnerByIDUseCase(repo)
+	listUseCase := usecase.NewListOwnersUseCase(repo)
+	createUseCase := usecase.NewCreateOwnerUseCase(repo)
+	updateUseCase := usecase.NewUpdateOwnerUseCase(repo)
+	deleteUseCase := usecase.NewSoftDeleteOwnerUseCase(repo)
 
-	return ownerUsecase.NewOwnerUseCases(getUseCase, listUseCase, createUseCase, updateUseCase, deleteUseCase)
+	return usecase.NewOwnerUseCases(getUseCase, listUseCase, createUseCase, updateUseCase, deleteUseCase)
 }
 
 // validateConfig validates the Module configuration
@@ -111,7 +110,7 @@ func (f *OwnerAPIModule) GetComponents() (*OwnerAPIComponents, error) {
 	return f.components, nil
 }
 
-func (f *OwnerAPIModule) GetRepository() (ownerDomain.OwnerRepository, error) {
+func (f *OwnerAPIModule) GetRepository() (repository.OwnerRepository, error) {
 	components, err := f.GetComponents()
 	if err != nil {
 		return nil, err
@@ -119,7 +118,7 @@ func (f *OwnerAPIModule) GetRepository() (ownerDomain.OwnerRepository, error) {
 	return components.Repository, nil
 }
 
-func (f *OwnerAPIModule) GetUseCase() (ownerUsecase.OwnerServiceFacade, error) {
+func (f *OwnerAPIModule) GetUseCase() (usecase.OwnerServiceFacade, error) {
 	components, err := f.GetComponents()
 	if err != nil {
 		return nil, err
@@ -127,7 +126,7 @@ func (f *OwnerAPIModule) GetUseCase() (ownerUsecase.OwnerServiceFacade, error) {
 	return components.UseCase, nil
 }
 
-func (f *OwnerAPIModule) GetController() (*ownerController.OwnerController, error) {
+func (f *OwnerAPIModule) GetController() (*controller.OwnerController, error) {
 	components, err := f.GetComponents()
 	if err != nil {
 		return nil, err

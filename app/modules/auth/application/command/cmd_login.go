@@ -55,18 +55,18 @@ func (h *loginHandler) Handle(cmd any) AuthCommandResult {
 		return FailureAuthResult("2FA is enabled for this user, please complete the 2FA process", errors.New("2FA is enabled"))
 	}
 
-	session, err := h.createSession(user.Id().String(), command)
+	session, err := h.createSession(user.ID().String(), command)
 	if err != nil {
 		return FailureAuthResult("failed to create session", err)
 	}
 
-	accesToken, err := h.jwtService.GenerateAccessToken(user.Id().String())
+	accesToken, err := h.jwtService.GenerateAccessToken(user.ID().String())
 	if err != nil {
 		return FailureAuthResult("failed to generate access token", err)
 	}
 
 	response := getSessionResponse(session, accesToken)
-	return SuccessAuthResult(&response, session.Id, "login successfully processed")
+	return SuccessAuthResult(&response, session.ID, "login successfully processed")
 }
 
 func (h *loginHandler) Authenticate(command *LoginCommand) (entity.User, error) {
@@ -87,14 +87,14 @@ func (h *loginHandler) Authenticate(command *LoginCommand) (entity.User, error) 
 	return entity.User{}, errors.New("user not found with provided credentials, please check your email/phone-number and password")
 }
 
-func (h *loginHandler) createSession(userId string, command LoginCommand) (entity.Session, error) {
-	refresh, err := h.jwtService.GenerateRefreshToken(userId)
+func (h *loginHandler) createSession(userID string, command LoginCommand) (entity.Session, error) {
+	refresh, err := h.jwtService.GenerateRefreshToken(userID)
 	if err != nil {
 		return entity.Session{}, err
 	}
 
 	newSession := entity.Session{
-		UserId:       userId,
+		UserID:       userID,
 		IpAddress:    command.IP,
 		RefreshToken: refresh,
 		CreatedAt:    time.Now(),

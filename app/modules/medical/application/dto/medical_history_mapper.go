@@ -88,7 +88,7 @@ func ToResponseDetail(
 		ID:  medHistory.ID().GetValue(),
 		Pet: *petDetail,
 		Owner: OwnerDetails{
-			ID:        owner.ID(),
+			ID:        owner.ID().GetValue(),
 			FirstName: owner.FullName().FirstName,
 			LastName:  owner.FullName().LastName,
 		},

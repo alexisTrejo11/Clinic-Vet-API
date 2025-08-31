@@ -28,7 +28,7 @@ func FromRequestCreate(ownerCreate dto.OwnerCreate) *entity.Owner {
 
 func ToResponse(owner *entity.Owner) dto.OwnerDetail {
 	response := &dto.OwnerDetail{
-		ID:          owner.ID(),
+		ID:          owner.ID().GetValue(),
 		Photo:       owner.Photo(),
 		Name:        owner.FullName().FullName(),
 		PhoneNumber: owner.PhoneNumber(),

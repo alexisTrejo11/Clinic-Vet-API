@@ -1,20 +1,20 @@
-package paymentQuery
+package query
 
 import (
 	"time"
 
-	paymentDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/payments/domain"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
 )
 
 type PaymentResponse struct {
-	Id            int     `json:"id"`
-	AppointmentId int     `json:"appointment_id"`
-	UserId        int     `json:"owner_id"`
+	ID            int     `json:"id"`
+	AppointmentID int     `json:"appointment_id"`
+	UserID        int     `json:"owner_id"`
 	Amount        float64 `json:"amount"`
 	Currency      string  `json:"currency"`
 	PaymentMethod string  `json:"payment_method"`
 	Status        string  `json:"status"`
-	TransactionId *string `json:"transaction_id,omitempty"`
+	TransactionID *string `json:"transaction_id,omitempty"`
 	Description   *string `json:"description,omitempty"`
 	DueDate       *string `json:"due_date,omitempty"`
 	PaidAt        *string `json:"paid_at,omitempty"`
@@ -24,16 +24,16 @@ type PaymentResponse struct {
 	UpdatedAt     string  `json:"updated_at"`
 }
 
-func NewPaymentResponse(payment *paymentDomain.Payment) PaymentResponse {
+func NewPaymentResponse(payment *entity.Payment) PaymentResponse {
 	return PaymentResponse{
-		Id:            payment.GetId(),
-		AppointmentId: payment.GetAppointmentId(),
-		UserId:        payment.GetUserId(),
+		ID:            payment.GetID(),
+		AppointmentID: payment.GetAppointmentID(),
+		UserID:        payment.GetUserID(),
 		Amount:        payment.GetAmount().ToFloat(),
 		Currency:      payment.GetCurrency(),
 		PaymentMethod: string(payment.GetPaymentMethod()),
 		Status:        string(payment.GetStatus()),
-		TransactionId: payment.GetTransactionId(),
+		TransactionID: payment.GetTransactionID(),
 		Description:   payment.GetDescription(),
 		DueDate:       formatTime(payment.GetDueDate()),
 		PaidAt:        formatTime(payment.GetPaidAt()),
@@ -52,7 +52,7 @@ func formatTime(t *time.Time) *string {
 	return &formatted
 }
 
-func mapPaymentsToResponses(payments []paymentDomain.Payment) []PaymentResponse {
+func mapPaymentsToResponses(payments []entity.Payment) []PaymentResponse {
 	var responses []PaymentResponse
 	for _, payment := range payments {
 		responses = append(responses, NewPaymentResponse(&payment))

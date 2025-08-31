@@ -1,46 +1,48 @@
-package userApplication
+package usecase
 
 import (
 	"context"
 	"time"
 
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
+	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/valueObjects"
-	userDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
 )
 
 type ProfileUpdate struct {
-	UserId      int                      `json:"user_id"`
+	UserID      valueobject.UserID       `json:"user_id"`
 	Name        *valueObjects.PersonName `json:"name"`
 	Gender      *string                  `json:"gender"`
 	ProfilePic  *string                  `json:"profile_pic"`
 	Bio         *string                  `json:"bio"`
 	DateOfBirth *time.Time               `json:"date_of_birth"`
-	Address     *userDomain.Address      `json:"address"`
+	Address     *entity.Address          `json:"address"`
 }
 
 type ProfileUseCases interface {
-	GetUserProfile(ctx context.Context, userId int) (userDomain.Profile, error)
+	GetUserProfile(ctx context.Context, userID valueobject.UserID) (entity.Profile, error)
 	UpdateProfileUseCase(ctx context.Context, request ProfileUpdate) error
 }
 
-type GetProfileByIdUseCase struct {
-	repo userDomain.ProfileRepository
+type GetProfileByIDUseCase struct {
+	repo repository.ProfileRepository
 }
 
 type UpdateUserProfileUseCase struct {
-	repo userDomain.ProfileRepository
+	repo repository.ProfileRepository
 }
 
 type profileUseCasesImpl struct {
-	getProfile    *GetProfileByIdUseCase
+	getProfile    *GetProfileByIDUseCase
 	updateProfile *UpdateUserProfileUseCase
 }
 
 func NewProfileUseCases(
-	repo userDomain.ProfileRepository,
+	repo repository.ProfileRepository,
 ) ProfileUseCases {
 	return &profileUseCasesImpl{
-		getProfile:    &GetProfileByIdUseCase{repo: repo},
+		getProfile:    &GetProfileByIDUseCase{repo: repo},
 		updateProfile: &UpdateUserProfileUseCase{repo: repo},
 	}
 }
@@ -49,12 +51,12 @@ func (p *profileUseCasesImpl) UpdateProfileUseCase(ctx context.Context, request 
 	return p.updateProfile.Execute(ctx, request)
 }
 
-func (p *profileUseCasesImpl) GetUserProfile(ctx context.Context, userId int) (userDomain.Profile, error) {
-	return p.getProfile.Execute(ctx, userId)
+func (p *profileUseCasesImpl) GetUserProfile(ctx context.Context, userID valueobject.UserID) (entity.Profile, error) {
+	return p.getProfile.Execute(ctx, userID)
 }
 
 func (uc *UpdateUserProfileUseCase) Execute(ctx context.Context, request ProfileUpdate) error {
-	profile, err := uc.repo.GetByUserID(ctx, request.UserId)
+	profile, err := uc.repo.GetByUserID(ctx, request.UserID)
 	if err != nil {
 		return err
 	}
@@ -64,15 +66,15 @@ func (uc *UpdateUserProfileUseCase) Execute(ctx context.Context, request Profile
 	return nil
 }
 
-func (uc *GetProfileByIdUseCase) Execute(ctx context.Context, userId int) (userDomain.Profile, error) {
-	profile, err := uc.repo.GetByUserID(ctx, userId)
+func (uc *GetProfileByIDUseCase) Execute(ctx context.Context, userID valueobject.UserID) (entity.Profile, error) {
+	profile, err := uc.repo.GetByUserID(ctx, userID)
 	if err != nil {
-		return userDomain.Profile{}, err
+		return entity.Profile{}, err
 	}
 	return profile, nil
 }
 
-func applyProfileUpdates(profile *userDomain.Profile, request ProfileUpdate) {
+func applyProfileUpdates(profile *entity.Profile, request ProfileUpdate) {
 	if request.Address != nil {
 		profile.Address = request.Address
 	}

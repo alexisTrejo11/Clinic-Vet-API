@@ -1,33 +1,34 @@
-package userDomainCommand
+package command
 
 import (
 	"context"
 	"errors"
 
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
+	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
-
-	userDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/users/domain"
 )
 
 type ChangePasswordCommand struct {
-	UserId      int
+	UserID      valueobject.UserID
 	OldPassword string
 	NewPassword string
 	CTX         context.Context
 }
 
 type ChangePasswordHandler struct {
-	userRepository userDomain.UserRepository
+	userRepository repository.UserRepository
 }
 
-func NewChangePasswordHandler(userRepo userDomain.UserRepository) *ChangePasswordHandler {
+func NewChangePasswordHandler(userRepo repository.UserRepository) *ChangePasswordHandler {
 	return &ChangePasswordHandler{userRepository: userRepo}
 }
 
 func (c *ChangePasswordHandler) Handle(cmd any) shared.CommandResult {
 	command := cmd.(ChangePasswordCommand)
 
-	user, err := c.userRepository.GetByID(command.CTX, command.UserId)
+	user, err := c.userRepository.GetByID(command.CTX, command.UserID)
 	if err != nil {
 		return shared.FailureResult("failed to find user", err)
 	}
@@ -40,10 +41,10 @@ func (c *ChangePasswordHandler) Handle(cmd any) shared.CommandResult {
 		return shared.FailureResult("failed to update user", err)
 	}
 
-	return shared.SuccessResult(user.Id().String(), "password changed successfully")
+	return shared.SuccessResult(user.ID().String(), "password changed successfully")
 }
 
-func (c *ChangePasswordHandler) changePassword(user *userDomain.User, newPassword, oldPassword string) error {
+func (c *ChangePasswordHandler) changePassword(user *entity.User, newPassword, oldPassword string) error {
 	err := shared.CheckPassword(user.Password(), oldPassword)
 	if err != nil {
 		return errors.New("invalid old password")

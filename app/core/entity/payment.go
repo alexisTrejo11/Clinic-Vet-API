@@ -9,13 +9,13 @@ import (
 
 type Payment struct {
 	id            int
-	appointmentId int
-	userId        int
+	appointmentID int
+	userID        int
 	amount        valueobject.Money
 	currency      string
 	paymentMethod enum.PaymentMethod
 	status        enum.PaymentStatus
-	transactionId *string
+	transactionID *string
 	description   *string
 	dueDate       *time.Time
 	paidAt        *time.Time
@@ -25,28 +25,57 @@ type Payment struct {
 	updatedAt     time.Time
 }
 
-func (p *Payment) GetId() int {
+func (p *Payment) Update(amount *valueobject.Money, paymentMethod *enum.PaymentMethod, description *string, dueDate *time.Time) error {
+	if amount != nil {
+		p.amount = *amount
+	}
+	if paymentMethod != nil {
+		p.paymentMethod = *paymentMethod
+	}
+
+	p.description = description
+	p.dueDate = dueDate
+	return nil
+}
+
+func (p *Payment) IsOverdue() bool {
+	if p.status == enum.OVERDUE {
+		return true
+	}
+
+	if p.paidAt != nil && p.paidAt.IsZero() {
+		return false
+	}
+
+	if p.dueDate != nil && time.Now().Before(*p.dueDate) {
+		return true
+	}
+
+	return false
+}
+
+func (p *Payment) GetID() int {
 	return p.id
 }
 
-func (p *Payment) SetId(id int) {
+func (p *Payment) SetID(id int) {
 	p.id = id
 }
 
-func (p *Payment) GetAppointmentId() int {
-	return p.appointmentId
+func (p *Payment) GetAppointmentID() int {
+	return p.appointmentID
 }
 
-func (p *Payment) SetAppointmentId(appointmentId int) {
-	p.appointmentId = appointmentId
+func (p *Payment) SetAppointmentID(appointmentID int) {
+	p.appointmentID = appointmentID
 }
 
-func (p *Payment) GetUserId() int {
-	return p.userId
+func (p *Payment) GetUserID() int {
+	return p.userID
 }
 
-func (p *Payment) SetUserId(userId int) {
-	p.userId = userId
+func (p *Payment) SetUserID(userID int) {
+	p.userID = userID
 }
 
 func (p *Payment) GetAmount() valueobject.Money {
@@ -81,12 +110,12 @@ func (p *Payment) SetStatus(status enum.PaymentStatus) {
 	p.status = status
 }
 
-func (p *Payment) GetTransactionId() *string {
-	return p.transactionId
+func (p *Payment) GetTransactionID() *string {
+	return p.transactionID
 }
 
-func (p *Payment) SetTransactionId(transactionId *string) {
-	p.transactionId = transactionId
+func (p *Payment) SetTransactionID(transactionID *string) {
+	p.transactionID = transactionID
 }
 
 func (p *Payment) GetDescription() *string {
@@ -153,18 +182,18 @@ func NewPaymentBuilder() *PaymentBuilder {
 	return &PaymentBuilder{payment: &Payment{}}
 }
 
-func (pb *PaymentBuilder) WithId(id int) *PaymentBuilder {
+func (pb *PaymentBuilder) WithID(id int) *PaymentBuilder {
 	pb.payment.id = id
 	return pb
 }
 
-func (pb *PaymentBuilder) WithAppointmentId(appointmentId int) *PaymentBuilder {
-	pb.payment.appointmentId = appointmentId
+func (pb *PaymentBuilder) WithAppointmentID(appointmentID int) *PaymentBuilder {
+	pb.payment.appointmentID = appointmentID
 	return pb
 }
 
-func (pb *PaymentBuilder) WithUserId(userId int) *PaymentBuilder {
-	pb.payment.userId = userId
+func (pb *PaymentBuilder) WithUserID(userID int) *PaymentBuilder {
+	pb.payment.userID = userID
 	return pb
 }
 
@@ -188,8 +217,8 @@ func (pb *PaymentBuilder) WithStatus(status enum.PaymentStatus) *PaymentBuilder 
 	return pb
 }
 
-func (pb *PaymentBuilder) WithTransactionId(transactionId *string) *PaymentBuilder {
-	pb.payment.transactionId = transactionId
+func (pb *PaymentBuilder) WithTransactionID(transactionID *string) *PaymentBuilder {
+	pb.payment.transactionID = transactionID
 	return pb
 }
 
@@ -230,4 +259,18 @@ func (pb *PaymentBuilder) WithUpdatedAt(updatedAt time.Time) *PaymentBuilder {
 
 func (pb *PaymentBuilder) Build() *Payment {
 	return pb.payment
+}
+
+type PaymentReport struct {
+	StartDate        time.Time                  `json:"start_date"`
+	EndDate          time.Time                  `json:"end_date"`
+	TotalPayments    int                        `json:"total_payments"`
+	TotalAmount      float64                    `json:"total_amount"`
+	TotalCurrency    string                     `json:"total_currency"`
+	PaidAmount       float64                    `json:"paid_amount"`
+	PendingAmount    float64                    `json:"pending_amount"`
+	RefundedAmount   float64                    `json:"refunded_amount"`
+	OverdueAmount    float64                    `json:"overdue_amount"`
+	PaymentsByMethod map[enum.PaymentMethod]any `json:"payments_by_method"`
+	PaymentsByStatus map[enum.PaymentStatus]any `json:"payments_by_status"`
 }

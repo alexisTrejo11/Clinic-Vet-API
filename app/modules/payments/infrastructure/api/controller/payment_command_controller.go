@@ -1,11 +1,10 @@
-package paymentController
+package controller
 
 import (
 	"context"
 
-	paymentCmd "github.com/alexisTrejo11/Clinic-Vet-API/app/payments/application/command"
-	paymentDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/payments/domain"
-	paymentDTOs "github.com/alexisTrejo11/Clinic-Vet-API/app/payments/infrastructure/api/dtos"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/payments/application/command"
+	dto "github.com/alexisTrejo11/Clinic-Vet-API/app/modules/payments/infrastructure/api/dtos"
 	utils "github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
 	apiResponse "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/responses"
 	"github.com/gin-gonic/gin"
@@ -13,14 +12,14 @@ import (
 )
 
 type PaymentController struct {
-	validator      *validator.Validate
-	commandBus     paymentCmd.CommandBus
-	paymentService paymentDomain.PaymentService
+	validator  *validator.Validate
+	commandBus command.CommandBus
 }
 
 func NewPaymentController(
 	validator *validator.Validate,
-	commandBus paymentCmd.CommandBus) *PaymentController {
+	commandBus command.CommandBus,
+) *PaymentController {
 	return &PaymentController{
 		validator:  validator,
 		commandBus: commandBus,
@@ -29,7 +28,7 @@ func NewPaymentController(
 
 // CreatePayment creates a new payment
 func (c *PaymentController) CreatePayment(ctx *gin.Context) {
-	var req paymentDTOs.CreatePaymentRequest
+	var req dto.CreatePaymentRequest
 
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		apiResponse.RequestBodyDataError(ctx, err)
@@ -59,7 +58,7 @@ func (c *PaymentController) UpdatePayment(ctx *gin.Context) {
 		return
 	}
 
-	var req paymentDTOs.UpdatePaymentRequest
+	var req dto.UpdatePaymentRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		apiResponse.RequestBodyDataError(ctx, err)
 		return
@@ -89,7 +88,7 @@ func (c *PaymentController) DeletePayment(ctx *gin.Context) {
 		return
 	}
 
-	deleteCommand := paymentCmd.NewDeletePaymentCommand(id)
+	deleteCommand := command.NewDeletePaymentCommand(id)
 
 	commandResult := c.commandBus.Execute(context.TODO(), deleteCommand)
 	if !commandResult.IsSuccess {
@@ -108,7 +107,7 @@ func (c *PaymentController) ProcessPayment(ctx *gin.Context) {
 		return
 	}
 
-	var req paymentDTOs.ProcessPaymentRequest
+	var req dto.ProcessPaymentRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		apiResponse.RequestBodyDataError(ctx, err)
 		return
@@ -119,7 +118,7 @@ func (c *PaymentController) ProcessPayment(ctx *gin.Context) {
 		return
 	}
 
-	proccessPaymentCommand := paymentCmd.NewProcessPaymentCommand(id, req.TransactionId)
+	proccessPaymentCommand := command.NewProcessPaymentCommand(id, req.TransactionID)
 
 	commandResult := c.commandBus.Execute(context.TODO(), proccessPaymentCommand)
 	if !commandResult.IsSuccess {
@@ -138,7 +137,7 @@ func (c *PaymentController) RefundPayment(ctx *gin.Context) {
 		return
 	}
 
-	var req paymentDTOs.RefundPaymentRequest
+	var req dto.RefundPaymentRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		apiResponse.RequestBodyDataError(ctx, err)
 		return
@@ -149,7 +148,7 @@ func (c *PaymentController) RefundPayment(ctx *gin.Context) {
 		return
 	}
 
-	refundPaymentCommand := paymentCmd.NewRefundPaymentCommand(id, req.Reason)
+	refundPaymentCommand := command.NewRefundPaymentCommand(id, req.Reason)
 
 	commandResult := c.commandBus.Execute(context.TODO(), refundPaymentCommand)
 	if !commandResult.IsSuccess {
@@ -168,7 +167,7 @@ func (c *PaymentController) CancelPayment(ctx *gin.Context) {
 		return
 	}
 
-	var req paymentDTOs.CancelPaymentRequest
+	var req dto.CancelPaymentRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		apiResponse.RequestBodyDataError(ctx, err)
 		return
@@ -179,7 +178,7 @@ func (c *PaymentController) CancelPayment(ctx *gin.Context) {
 		return
 	}
 
-	cancelPaymentCommand := paymentCmd.NewCancelPaymentCommand(id, req.Reason)
+	cancelPaymentCommand := command.NewCancelPaymentCommand(id, req.Reason)
 
 	commandResult := c.commandBus.Execute(context.TODO(), cancelPaymentCommand)
 	if !commandResult.IsSuccess {

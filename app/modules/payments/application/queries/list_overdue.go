@@ -1,9 +1,9 @@
-package paymentQuery
+package query
 
 import (
 	"context"
 
-	paymentDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/payments/domain"
+	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 )
 
@@ -12,7 +12,7 @@ type ListOverduePaymentsHandler interface {
 }
 
 type listOverduePaymentsHandlerImpl struct {
-	paymentRepository paymentDomain.PaymentRepository
+	paymentRepository repository.PaymentRepository
 }
 
 type ListOverduePaymentsQuery struct {
@@ -25,7 +25,7 @@ func NewListOverduePaymentsQuery(pagination page.PageData) ListOverduePaymentsQu
 	}
 }
 
-func NewListOverduePaymentsHandler(paymentRepository paymentDomain.PaymentRepository) ListOverduePaymentsHandler {
+func NewListOverduePaymentsHandler(paymentRepository repository.PaymentRepository) ListOverduePaymentsHandler {
 	return &listOverduePaymentsHandlerImpl{
 		paymentRepository: paymentRepository,
 	}
