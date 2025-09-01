@@ -1,4 +1,4 @@
-package infraErr
+package infraerr
 
 import "net/http"
 
@@ -14,7 +14,7 @@ func NewExternalServiceError(service, message string) *ExternalServiceError {
 			Type:       "infrastructure",
 			Message:    message,
 			StatusCode: http.StatusBadGateway,
-			Data: map[string]interface{}{
+			Data: map[string]any{
 				"service": service,
 			},
 		},

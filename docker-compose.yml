@@ -7,11 +7,16 @@ services:
       POSTGRES_PASSWORD: root
       POSTGRES_DB: vet_database
     ports:
-      - "5431:5432"
+      - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     networks:
       - vet_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
   postgres12_test:
     container_name: postgres12_test
@@ -21,11 +26,54 @@ services:
       POSTGRES_PASSWORD: root
       POSTGRES_DB: vet_database_test
     ports:
-      - "5430:5432"
+      - "5433:5432" # Different external port
     volumes:
       - pgdata_test:/var/lib/postgresql/data
     networks:
       - vet_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # MongoDB Service
+  mongodb:
+    container_name: mongodb
+    image: mongo:7.0
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: mongopassword
+      MONGO_INITDB_DATABASE: vet_mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    networks:
+      - vet_network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Redis Service
+  redis:
+    container_name: redis
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - vet_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    command: redis-server --appendonly yes --requirepass redispassword
 
   api:
     container_name: clinical_vet_api
@@ -35,14 +83,51 @@ services:
     ports:
       - "8000:8000"
     depends_on:
-      - postgres12
-      - postgres12_test
+      postgres12:
+        condition: service_healthy
+      postgres12_test:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      # PostgreSQL
+      - DB_HOST=postgres12
+      - DB_PORT=5432
+      - DB_NAME=vet_database
+      - DB_USER=postgres
+      - DB_PASSWORD=root
+
+      # Test PostgreSQL
+      - TEST_DB_HOST=postgres12_test
+      - TEST_DB_PORT=5432
+      - TEST_DB_NAME=vet_database_test
+      - TEST_DB_USER=postgres
+      - TEST_DB_PASSWORD=root
+
+      # MongoDB
+      - MONGODB_URI=mongodb://admin:mongopassword@mongodb:27017/vet_mongodb?authSource=admin
+      - MONGODB_DATABASE=vet_mongodb
+
+      # Redis
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=redispassword
     networks:
       - vet_network
+    restart: unless-stopped
 
 networks:
   vet_network:
+    driver: bridge
 
 volumes:
   pgdata:
+    driver: local
   pgdata_test:
+    driver: local
+  mongodb_data:
+    driver: local
+  redis_data:
+    driver: local

@@ -1,4 +1,5 @@
-package authError
+// Package autherror for application security errors
+package autherror
 
 import (
 	"net/http"
@@ -10,8 +11,7 @@ type AuthenticationError struct {
 	applicationErr ApplicationError.BaseApplicationError
 }
 
-func NewAuthenticationError(message string) *AuthenticationError {
-
+func UnauthorizedError(message string) *AuthenticationError {
 	return &AuthenticationError{
 		applicationErr: ApplicationError.BaseApplicationError{
 			Code:       "AUTHENTICATION_FAILED",
@@ -28,7 +28,7 @@ type AuthorizationError struct {
 	UserRole     string `json:"user_role"`
 }
 
-func NewAuthorizationError(requiredRole, userRole string) *AuthorizationError {
+func ForbbidenError(requiredRole, userRole string) *AuthorizationError {
 	return &AuthorizationError{
 		BaseApplicationError: ApplicationError.BaseApplicationError{
 			Code:       "AUTHORIZATION_FAILED",

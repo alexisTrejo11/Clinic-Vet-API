@@ -1,4 +1,5 @@
-package custom_error
+// Package customerror containes base structs to create custom errors
+package customerror
 
 type DomainError interface {
 	error

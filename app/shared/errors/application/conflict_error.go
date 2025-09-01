@@ -1,6 +1,4 @@
-package appError
-
-import "net/http"
+package apperror
 
 type ConflictError struct {
 	BaseApplicationError
@@ -13,8 +11,8 @@ func NewConflictError(resource, message string) *ConflictError {
 			Code:       "RESOURCE_CONFLICT",
 			Type:       "application",
 			Message:    message,
-			StatusCode: http.StatusConflict,
-			Data: map[string]interface{}{
+			StatusCode: 409,
+			Data: map[string]any{
 				"resource": resource,
 			},
 		},

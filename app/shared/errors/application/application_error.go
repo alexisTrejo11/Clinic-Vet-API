@@ -1,11 +1,12 @@
-package appError
+// Package apperror contains all the common app errors to be used on application layer
+package apperror
 
 type BaseApplicationError struct {
-	Code       string                 `json:"code"`
-	Type       string                 `json:"type"`
-	Message    string                 `json:"message"`
-	Data       map[string]interface{} `json:"details,omitempty"`
-	StatusCode int                    `json:"-"`
+	Code       string         `json:"code"`
+	Type       string         `json:"type"`
+	Message    string         `json:"message"`
+	Data       map[string]any `json:"details,omitempty"`
+	StatusCode int            `json:"-"`
 }
 
 func (e BaseApplicationError) Error() string {
@@ -20,7 +21,7 @@ func (e BaseApplicationError) ErrorType() string {
 	return e.Type
 }
 
-func (e BaseApplicationError) Details() map[string]interface{} {
+func (e BaseApplicationError) Details() map[string]any {
 	return e.Data
 }
 
