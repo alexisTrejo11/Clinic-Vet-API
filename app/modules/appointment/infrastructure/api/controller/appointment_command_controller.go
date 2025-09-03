@@ -3,12 +3,13 @@ package controller
 
 import (
 	"context"
-	"net/http"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/appointment/application/command"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
-	apiResponse "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/responses"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/appointment/infrastructure/api/dto"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
+	httpError "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/infrastructure/http"
+	ginUtils "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/gin_utils"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/response"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )
@@ -18,12 +19,12 @@ import (
 // @version 1.0
 // @description This controller manages veterinary appointments including creation, updates, rescheduling, and status changes
 type AppointmentCommandController struct {
-	commandBus command.CommandBus
+	commandBus cqrs.CommandBus
 	validate   *validator.Validate
 }
 
 func NewAppointmentCommandController(
-	commandBus command.CommandBus,
+	commandBus cqrs.CommandBus,
 	validate *validator.Validate,
 ) *AppointmentCommandController {
 	return &AppointmentCommandController{
@@ -39,24 +40,24 @@ func NewAppointmentCommandController(
 // @Accept json
 // @Produce json
 // @Param appointment body command.CreateAppointmentCommand true "Appointment details"
-// @Failure 400 {object} apiResponse.APIResponse "Invalid input data"
-// @Failure 422 {object} apiResponse.APIResponse "Business rule validation failed"
-// @Failure 500 {object} apiResponse.APIResponse "Internal server error"
+// @Failure 400 {object} response.APIResponse "Invalid input data"
+// @Failure 422 {object} response.APIResponse "Business rule validation failed"
+// @Failure 500 {object} response.APIResponse "Internal server error"
 // @Router /appointments [post]
-func (controller *AppointmentCommandController) CreateAppointment(ctx *gin.Context) {
-	var command command.CreateAppointmentCommand
-	if err := ctx.ShouldBindJSON(&command); err != nil {
-		apiResponse.RequestBodyDataError(ctx, err)
+func (controller *AppointmentCommandController) CreateAppointment(c *gin.Context) {
+	var createCommand command.CreateAppointmentCommand
+	if err := c.ShouldBindJSON(&createCommand); err != nil {
+		response.BadRequest(c, httpError.RequestBodyDataError(err))
 		return
 	}
 
-	result := controller.commandBus.Execute(ctx, command)
+	result := controller.commandBus.Execute(createCommand)
 	if !result.IsSuccess {
-		apiResponse.ApplicationError(ctx, result.Error)
+		response.ApplicationError(c, result.Error)
 		return
 	}
 
-	apiResponse.Created(ctx, gin.H{"message": result.Message, "appointment_id": result.ID})
+	response.Created(c, result.ToMap())
 }
 
 // UpdateAppointment godoc
@@ -67,43 +68,36 @@ func (controller *AppointmentCommandController) CreateAppointment(ctx *gin.Conte
 // @Produce json
 // @Param id path int true "Appointment ID"
 // @Param appointment body command.UpdateAppointmentCommand true "Updated appointment details"
-// @Failure 400 {object} apiResponse.APIResponse "Invalid input data"
-// @Failure 404 {object} apiResponse.APIResponse "Appointment not found"
-// @Failure 422 {object} apiResponse.APIResponse "Business rule validation failed"
-// @Failure 500 {object} apiResponse.APIResponse "Internal server error"
+// @Failure 400 {object} response.APIResponse "Invalid input data"
+// @Failure 404 {object} response.APIResponse "Appointment not found"
+// @Failure 422 {object} response.APIResponse "Business rule validation failed"
+// @Failure 500 {object} response.APIResponse "Internal server error"
 // @Router /appointments/{id} [put]
-func (controller *AppointmentCommandController) UpdateAppointment(ctx *gin.Context) {
-	entityID, err := shared.ParseParamToEntityID(ctx, "id", "appointment")
+func (controller *AppointmentCommandController) UpdateAppointment(c *gin.Context) {
+	var updateAppointData *dto.UpdateAppointmentRequest
+	if err := c.ShouldBindJSON(&updateAppointData); err != nil {
+		response.BadRequest(c, httpError.RequestBodyDataError(err))
+		return
+	}
+
+	if err := controller.validate.Struct(&updateAppointData); err != nil {
+		response.BadRequest(c, httpError.InvalidDataError(err))
+		return
+	}
+
+	updateCommand, err := updateAppointData.ToCommand(context.TODO())
 	if err != nil {
-		apiResponse.RequestURLParamError(ctx, err, "appointmentID", ctx.Param("id"))
+		response.ApplicationError(c, err)
 		return
 	}
 
-	appointmentID, valid := entityID.(valueobject.AppointmentID)
-	if !valid {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "invalid id entity parse"})
-		return
-	}
-
-	var command command.UpdateAppointmentCommand
-	if err := ctx.ShouldBindJSON(&command); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	if err := controller.validate.Struct(command); err != nil {
-		apiResponse.RequestBodyDataError(ctx, err)
-		return
-	}
-
-	command.AppointmentID = appointmentID
-	result := controller.commandBus.Execute(ctx, command)
+	result := controller.commandBus.Execute(updateCommand)
 	if !result.IsSuccess {
-		apiResponse.ApplicationError(ctx, result.Error)
+		response.ApplicationError(c, result.Error)
 		return
 	}
 
-	apiResponse.Success(ctx, result.Message)
+	response.Success(c, result.ToMap())
 }
 
 // DeleteAppointment godoc
@@ -113,33 +107,32 @@ func (controller *AppointmentCommandController) UpdateAppointment(ctx *gin.Conte
 // @Accept json
 // @Produce json
 // @Param id path int true "Appointment ID"
-// @Failure 400 {object} apiResponse.APIResponse "Invalid appointment ID"
-// @Failure 404 {object} apiResponse.APIResponse "Appointment not found"
-// @Failure 422 {object} apiResponse.APIResponse "Cannot delete appointment"
-// @Failure 500 {object} apiResponse.APIResponse "Internal server error"
+// @Failure 400 {object} response.APIResponse "Invalid appointment ID"
+// @Failure 404 {object} response.APIResponse "Appointment not found"
+// @Failure 422 {object} response.APIResponse "Cannot delete appointment"
+// @Failure 500 {object} response.APIResponse "Internal server error"
 // @Router /appointments/{id} [delete]
-func (controller *AppointmentCommandController) DeleteAppointment(ctx *gin.Context) {
-	entityID, err := shared.ParseParamToEntityID(ctx, "id", "appointment")
+func (controller *AppointmentCommandController) DeleteAppointment(c *gin.Context) {
+	entityID, err := ginUtils.ParseParamToInt(c, "id")
 	if err != nil {
-		apiResponse.RequestURLParamError(ctx, err, "appointmentID", ctx.Param("id"))
+		response.BadRequest(c, httpError.RequestURLParamError(err, "id", c.Param("id")))
 		return
 	}
 
-	appointmentID, valid := entityID.(valueobject.AppointmentID)
-	if !valid {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "invalid id entity parse"})
+	ctx := context.Background()
+	deleteCommand, err := command.NewDeleteAppointmentCommand(entityID, ctx)
+	if err != nil {
+		response.ApplicationError(c, err)
 		return
 	}
 
-	command := command.NewDeleteAppointmentCommand(appointmentID)
-
-	result := controller.commandBus.Execute(ctx, command)
+	result := controller.commandBus.Execute(deleteCommand)
 	if !result.IsSuccess {
-		apiResponse.ApplicationError(ctx, result.Error)
+		response.ApplicationError(c, result.Error)
 		return
 	}
 
-	apiResponse.Success(ctx, result.Message)
+	response.Success(c, result.ToMap())
 }
 
 // RescheduleAppointment godoc
@@ -150,38 +143,30 @@ func (controller *AppointmentCommandController) DeleteAppointment(ctx *gin.Conte
 // @Produce json
 // @Param id path int true "Appointment ID"
 // @Param reschedule body command.RescheduleAppointmentCommand true "New appointment time details"
-// @Failure 400 {object} apiResponse.APIResponse "Invalid input data"
-// @Failure 404 {object} apiResponse.APIResponse "Appointment not found"
-// @Failure 422 {object} apiResponse.APIResponse "Invalid time slot or scheduling conflict"
-// @Failure 500 {object} apiResponse.APIResponse "Internal server error"
+// @Failure 400 {object} response.APIResponse "Invalid input data"
+// @Failure 404 {object} response.APIResponse "Appointment not found"
+// @Failure 422 {object} response.APIResponse "Invalid time slot or scheduling conflict"
+// @Failure 500 {object} response.APIResponse "Internal server error"
 // @Router /appointments/{id}/reschedule [put]
-func (controller *AppointmentCommandController) RescheduleAppointment(ctx *gin.Context) {
-	entityID, err := shared.ParseParamToEntityID(ctx, "id", "appointment")
+func (controller *AppointmentCommandController) RescheduleAppointment(c *gin.Context) {
+	var rescheduleAppointData dto.RescheduleAppointmentRequest
+	if err := c.ShouldBindJSON(&rescheduleAppointData); err != nil {
+		response.BadRequest(c, httpError.RequestBodyDataError(err))
+		return
+	}
+
+	rescheduleCommand, err := rescheduleAppointData.ToCommand(context.Background())
 	if err != nil {
-		apiResponse.RequestURLParamError(ctx, err, "appointmentID", ctx.Param("id"))
-		return
+		response.ApplicationError(c, err)
 	}
 
-	appointmentID, valid := entityID.(valueobject.AppointmentID)
-	if !valid {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "invalid id entity parse"})
-		return
-	}
-
-	var command command.RescheduleAppointmentCommand
-	if err := ctx.ShouldBindJSON(&command); err != nil {
-		apiResponse.RequestBodyDataError(ctx, err)
-		return
-	}
-
-	command.AppointmentID = appointmentID
-	result := controller.commandBus.Execute(context.Background(), command)
+	result := controller.commandBus.Execute(rescheduleCommand)
 	if !result.IsSuccess {
-		apiResponse.ApplicationError(ctx, result.Error)
+		response.ApplicationError(c, result.Error)
 		return
 	}
 
-	apiResponse.Success(ctx, result.Message)
+	response.Success(c, result.ToMap())
 }
 
 // MarkAsNoShow godoc
@@ -191,35 +176,32 @@ func (controller *AppointmentCommandController) RescheduleAppointment(ctx *gin.C
 // @Accept json
 // @Produce json
 // @Param id path int true "Appointment ID"
-// @Failure 400 {object} apiResponse.APIResponse "Invalid appointment ID"
-// @Failure 404 {object} apiResponse.APIResponse "Appointment not found"
-// @Failure 422 {object} apiResponse.APIResponse "Cannot mark as no-show"
-// @Failure 500 {object} apiResponse.APIResponse "Internal server error"
+// @Failure 400 {object} response.APIResponse "Invalid appointment ID"
+// @Failure 404 {object} response.APIResponse "Appointment not found"
+// @Failure 422 {object} response.APIResponse "Cannot mark as no-show"
+// @Failure 500 {object} response.APIResponse "Internal server error"
 // @Router /appointments/{id}/no-show [put]
-func (controller *AppointmentCommandController) MarkAsNoShow(ctx *gin.Context) {
-	entityID, err := shared.ParseParamToEntityID(ctx, "id", "appointment")
+func (controller *AppointmentCommandController) NotAttend(c *gin.Context) {
+	appointmentID, err := ginUtils.ParseParamToInt(c, "id")
 	if err != nil {
-		apiResponse.RequestURLParamError(ctx, err, "appointmentID", ctx.Param("id"))
+		response.BadRequest(c, httpError.RequestURLParamError(err, "id", c.Param("id")))
 		return
 	}
 
-	appointmentID, valid := entityID.(valueobject.AppointmentID)
-	if !valid {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "invalid id entity parse"})
+	ctx := context.Background()
+	notAttendCommand, err := command.NewNotAttendAppointmentCommand(ctx, appointmentID)
+	if err != nil {
+		response.ApplicationError(c, err)
 		return
 	}
 
-	command := command.MarkAsNotPresentedCommand{
-		ID: appointmentID,
-	}
-
-	result := controller.commandBus.Execute(context.Background(), command)
+	result := controller.commandBus.Execute(notAttendCommand)
 	if !result.IsSuccess {
-		apiResponse.ApplicationError(ctx, result.Error)
+		response.ApplicationError(c, result.Error)
 		return
 	}
 
-	apiResponse.Success(ctx, result)
+	response.Success(c, result.ToMap())
 }
 
 // ConfirmAppointment godoc
@@ -230,39 +212,33 @@ func (controller *AppointmentCommandController) MarkAsNoShow(ctx *gin.Context) {
 // @Produce json
 // @Param id path int true "Appointment ID"
 // @Security BearerAuth
-// @Failure 400 {object} apiResponse.APIResponse "Invalid appointment ID"
-// @Failure 401 {object} apiResponse.APIResponse "Unauthorized - Veterinarian not authenticated"
-// @Failure 403 {object} apiResponse.APIResponse "Forbidden - Not assigned to this appointment"
-// @Failure 404 {object} apiResponse.APIResponse "Appointment not found"
-// @Failure 422 {object} apiResponse.APIResponse "Cannot confirm appointment"
-// @Failure 500 {object} apiResponse.APIResponse "Internal server error"
+// @Failure 400 {object} response.APIResponse "Invalid appointment ID"
+// @Failure 401 {object} response.APIResponse "Unauthorized - Veterinarian not authenticated"
+// @Failure 403 {object} response.APIResponse "Forbidden - Not assigned to this appointment"
+// @Failure 404 {object} response.APIResponse "Appointment not found"
+// @Failure 422 {object} response.APIResponse "Cannot confirm appointment"
+// @Failure 500 {object} response.APIResponse "Internal server error"
 // @Router /appointments/{id}/confirm [put]
-func (controller *AppointmentCommandController) ConfirmAppointment(ctx *gin.Context) {
-	entityID, err := shared.ParseParamToEntityID(ctx, "id", "appointment")
+func (controller *AppointmentCommandController) ConfirmAppointment(c *gin.Context) {
+	appointmentID, err := ginUtils.ParseParamToInt(c, "id")
 	if err != nil {
-		apiResponse.RequestURLParamError(ctx, err, "appointmentID", ctx.Param("id"))
+		response.BadRequest(c, httpError.RequestURLParamError(err, "id", c.Param("id")))
 		return
 	}
 
-	appointmentID, valid := entityID.(valueobject.AppointmentID)
-	if !valid {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "invalid id entity parse"})
-		return
+	// TODO: Retrieve VetID
+	confirmAppointmentCmd, err := command.NewConfirmAppointmentCommand(context.Background(), appointmentID, 0)
+	if err != nil {
+		response.ApplicationError(c, err)
 	}
 
-	// Get vet id from context
-	command := command.ConfirmAppointmentCommand{
-		ID:    appointmentID,
-		VetID: &valueobject.VetID{},
-	}
-
-	result := controller.commandBus.Execute(context.Background(), command)
+	result := controller.commandBus.Execute(confirmAppointmentCmd)
 	if !result.IsSuccess {
-		apiResponse.ApplicationError(ctx, result.Error)
+		response.ApplicationError(c, result.Error)
 		return
 	}
 
-	apiResponse.Success(ctx, result)
+	response.Success(c, result.ToMap())
 }
 
 // CompleteAppointment godoc
@@ -274,46 +250,37 @@ func (controller *AppointmentCommandController) ConfirmAppointment(ctx *gin.Cont
 // @Param id path int true "Appointment ID"
 // @Param notes body CompleteAppointmentRequest true "Completion notes"
 // @Security BearerAuth
-// @Failure 400 {object} apiResponse.APIResponse "Invalid input"
-// @Failure 401 {object} apiResponse.APIResponse "Unauthorized - Veterinarian not authenticated"
-// @Failure 403 {object} apiResponse.APIResponse "Forbidden - Not assigned to this appointment"
-// @Failure 404 {object} apiResponse.APIResponse "Appointment not found"
-// @Failure 422 {object} apiResponse.APIResponse "Cannot complete appointment"
-// @Failure 500 {object} apiResponse.APIResponse "Internal server error"
+// @Failure 400 {object} response.APIResponse "Invalid input"
+// @Failure 401 {object} response.APIResponse "Unauthorized - Veterinarian not authenticated"
+// @Failure 403 {object} response.APIResponse "Forbidden - Not assigned to this appointment"
+// @Failure 404 {object} response.APIResponse "Appointment not found"
+// @Failure 422 {object} response.APIResponse "Cannot complete appointment"
+// @Failure 500 {object} response.APIResponse "Internal server error"
 // @Router /appointments/{id}/complete [put]
-func (controller *AppointmentCommandController) CompleteAppointment(ctx *gin.Context) {
-	entityID, err := shared.ParseParamToEntityID(ctx, "id", "appointment")
+func (controller *AppointmentCommandController) CompleteAppointment(c *gin.Context) {
+	appointmentID, err := ginUtils.ParseParamToInt(c, "id")
 	if err != nil {
-		apiResponse.RequestURLParamError(ctx, err, "appointmentID", ctx.Param("id"))
+		response.BadRequest(c, httpError.RequestURLParamError(err, "id", c.Param("id")))
 		return
 	}
 
-	appointmentID, valid := entityID.(valueobject.AppointmentID)
-	if !valid {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "invalid id entity parse"})
+	var completeAppointData dto.CompleteAppointmentRequest
+	if err := c.ShouldBindJSON(&completeAppointData); err != nil {
+		response.BadRequest(c, httpError.RequestBodyDataError(err))
 		return
 	}
 
-	var requestBody *CompleteAppointmentRequest
-	if err := ctx.ShouldBindJSON(&requestBody); err != nil {
-		apiResponse.RequestBodyDataError(ctx, err)
+	completeAppointmentCmd, err := completeAppointData.ToCommand(context.Background(), appointmentID)
+	if err != nil {
+		response.ApplicationError(c, err)
 		return
 	}
 
-	command := command.CompleteAppointmentCommand{
-		ID:    appointmentID,
-		Notes: requestBody.Notes,
-	}
-
-	result := controller.commandBus.Execute(context.Background(), command)
+	result := controller.commandBus.Execute(completeAppointmentCmd)
 	if !result.IsSuccess {
-		apiResponse.ApplicationError(ctx, result.Error)
+		response.ApplicationError(c, result.Error)
 		return
 	}
 
-	apiResponse.Success(ctx, result)
-}
-
-type CompleteAppointmentRequest struct {
-	Notes *string `json:"notes,omitempty"`
+	response.Success(c, result.ToMap())
 }

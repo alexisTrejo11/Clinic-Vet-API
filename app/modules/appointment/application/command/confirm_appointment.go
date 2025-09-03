@@ -10,8 +10,29 @@ import (
 
 type ConfirmAppointmentCommand struct {
 	id    valueobject.AppointmentID
-	vetID *valueobject.VetID
+	vetID valueobject.VetID
 	ctx   context.Context
+}
+
+func NewConfirmAppointmentCommand(ctx context.Context, appointIDInt, vetIDInt int) (ConfirmAppointmentCommand, error) {
+	errorMessage := make([]string, 0)
+
+	appointmentID, err := valueobject.NewAppointmentID(appointIDInt)
+	if err != nil {
+		errorMessage = append(errorMessage, err.Error())
+	}
+
+	vetID, err := valueobject.NewVetID(vetIDInt)
+	if err != nil {
+		errorMessage = append(errorMessage, err.Error())
+	}
+
+	cmd := ConfirmAppointmentCommand{
+		ctx:   ctx,
+		vetID: vetID,
+		id:    appointmentID,
+	}
+	return cmd, nil
 }
 
 type ConfirmAppointmentHandler struct {

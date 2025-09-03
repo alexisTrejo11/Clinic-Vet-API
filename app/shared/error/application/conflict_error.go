@@ -1,21 +1,15 @@
 package apperror
 
-type ConflictError struct {
-	BaseApplicationError
-	Resource string `json:"resource"`
-}
+import "net/http"
 
-func NewConflictError(resource, message string) *ConflictError {
-	return &ConflictError{
-		BaseApplicationError: BaseApplicationError{
-			Code:       "RESOURCE_CONFLICT",
-			Type:       "application",
-			Message:    message,
-			StatusCode: 409,
-			Data: map[string]string{
-				"resource": resource,
-			},
+func ConflictError(resource, message string) error {
+	return &BaseApplicationError{
+		Code:       "RESOURCE_CONFLICT",
+		Type:       "application",
+		Message:    message,
+		StatusCode: http.StatusConflict,
+		Details: map[string]string{
+			"resource": resource,
 		},
-		Resource: resource,
 	}
 }

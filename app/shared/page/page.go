@@ -19,6 +19,20 @@ type PageData struct {
 	SortDirection SortDirection `json:"sort_direction" validate:"omitempty,min=0"`
 }
 
+func (p *PageData) SetDefaultsFieldsIfEmpty() {
+	if p.SortDirection == "" {
+		p.SortDirection = ASC
+	}
+
+	if p.PageNumber <= 0 {
+		p.PageNumber = 1
+	}
+
+	if p.PageSize <= 0 {
+		p.PageSize = 10
+	}
+}
+
 type PageMetadata struct {
 	TotalCount      int           `json:"total_count"`
 	TotalPages      int           `json:"total_pages"`

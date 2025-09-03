@@ -16,7 +16,7 @@ func FieldValidationError(field, value, message string) *FieldDataError {
 			Code:    "FIELD_DATA_ERROR",
 			Type:    "mapping",
 			Message: message,
-			Data: map[string]string{
+			Details: map[string]string{
 				"field": field,
 				"value": value,
 			},
@@ -31,7 +31,7 @@ func MappingError(errorMessage []string, from, to, entity string) *FieldDataErro
 			Code:    "FIELD_DATA_ERROR",
 			Type:    "mapping",
 			Message: "error courred while mapping " + from,
-			Data: map[string]string{
+			Details: map[string]string{
 				"errorsMessages": strings.Join(errorMessage, ","),
 				"from":           from,
 				"to":             to,
@@ -42,15 +42,30 @@ func MappingError(errorMessage []string, from, to, entity string) *FieldDataErro
 	}
 }
 
-func BuissnesRuleError(entity, ruleViolated string) *BaseApplicationError {
-	return &BaseApplicationError{
-		Code:    "BUISNESS_RULE_VIOLATED",
-		Type:    "Buisness Logic",
-		Message: fmt.Sprintf("Buisness logic fail for %s . RuleViolated: %v", entity, ruleViolated),
-		Data: map[string]string{
-			"entity":  entity,
-			"details": ruleViolated,
+func InvalidFieldFormatError(field, format string) error {
+	return BaseApplicationError{
+		Code:    "INVALID_DATE_FORMAT",
+		Type:    "DATE FORMAT",
+		Message: fmt.Sprintf("Invalid date format, expected format: %s", format),
+		Details: map[string]string{
+			"field":  field,
+			"format": format,
 		},
+		StatusCode: http.StatusUnprocessableEntity,
+	}
+}
+
+func InvalidParseFieldError(field string, value, meesage string) error {
+	return BaseApplicationError{
+		Code:    "INVALID_PARSE_DATA",
+		Type:    "DATA PARSING",
+		Message: fmt.Sprintf("Invalid data for field '%s': %s", field, value),
+		Details: map[string]string{
+			"field":   field,
+			"value":   value,
+			"message": meesage,
+		},
+
 		StatusCode: http.StatusUnprocessableEntity,
 	}
 }

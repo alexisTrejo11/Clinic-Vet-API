@@ -1,0 +1,47 @@
+package http
+
+import (
+	"net/http"
+
+	apperror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/application"
+)
+
+func RequestURLParamError(err error, field string, value string) error {
+	return apperror.BaseApplicationError{
+		Code:       "INVALID_URL_PARAM",
+		Type:       "ROUTING",
+		Message:    err.Error(),
+		Details:    map[string]string{},
+		StatusCode: http.StatusBadRequest,
+	}
+}
+
+func RequestURLQueryError(err error) error {
+	return apperror.BaseApplicationError{
+		Code:       "INVALID_URL_PARAM",
+		Type:       "ROUTING",
+		Message:    err.Error(),
+		Details:    map[string]string{},
+		StatusCode: http.StatusBadRequest,
+	}
+}
+
+func RequestBodyDataError(err error) error {
+	return apperror.BaseApplicationError{
+		Code:       "REQUEST_BODY_ERROR",
+		Type:       "BODY_FORMAT",
+		Message:    err.Error(),
+		Details:    map[string]string{},
+		StatusCode: http.StatusBadRequest,
+	}
+}
+
+func InvalidDataError(err error) error {
+	return apperror.BaseApplicationError{
+		Code:       "INVALID_DATA_VALUES",
+		Type:       "Data Validation",
+		Message:    err.Error(),
+		Details:    map[string]string{},
+		StatusCode: http.StatusUnprocessableEntity,
+	}
+}

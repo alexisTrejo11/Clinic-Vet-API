@@ -35,7 +35,7 @@ func ForbbidenError(requiredRole, userRole string) *AuthorizationError {
 			Type:       "application",
 			Message:    "Insufficient permissions to perform this action",
 			StatusCode: http.StatusForbidden,
-			Data: map[string]string{
+			Details: map[string]string{
 				"required_role": requiredRole,
 				"user_role":     userRole,
 			},

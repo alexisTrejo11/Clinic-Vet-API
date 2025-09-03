@@ -197,12 +197,12 @@ func (a *Appointment) ValidateRequestSchedule() error {
 	return nil
 }
 
-func (a *Appointment) Confirm(vetID *valueobject.VetID) error {
+func (a *Appointment) Confirm(vetID valueobject.VetID) error {
 	if err := a.validateStatusTranstion(enum.StatusConfirmed); err != nil {
 		return err
 	}
 
-	a.vetID = vetID
+	a.vetID = &vetID
 	a.status = enum.StatusConfirmed
 	a.updatedAt = time.Now()
 	return nil

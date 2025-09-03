@@ -5,7 +5,7 @@ type BaseApplicationError struct {
 	Code       string            `json:"code"`
 	Type       string            `json:"type"`
 	Message    string            `json:"message"`
-	Data       map[string]string `json:"details,omitempty"`
+	Details    map[string]string `json:"details,omitempty"`
 	StatusCode int               `json:"-"`
 }
 
@@ -21,8 +21,8 @@ func (e BaseApplicationError) ErrorType() string {
 	return e.Type
 }
 
-func (e BaseApplicationError) Details() map[string]string {
-	return e.Data
+func (e BaseApplicationError) DetailMap() map[string]string {
+	return e.Details
 }
 
 func (e BaseApplicationError) HTTPStatus() int {

@@ -62,11 +62,14 @@ func (h *ListAppointmentsByOwnerHandler) Handle(q cqrs.Query) (page.Page[[]Appoi
 }
 
 func (h *ListAppointmentsByOwnerHandler) validateExistingOwner(ctx context.Context, ownerID valueobject.OwnerID) error {
-	if exists, err := h.ownerRepo.ExistsByID(ctx, ownerID); err != nil {
+	exists, err := h.ownerRepo.ExistsByID(ctx, ownerID)
+	if err != nil {
 		return err
-	} else if !exists {
-		return apperror.NewEntityNotFoundError("owner", ownerID.String())
-	} else {
-		return nil
 	}
+
+	if !exists {
+		return apperror.EntityValidationError("owner", "id", ownerID.String())
+	}
+
+	return nil
 }

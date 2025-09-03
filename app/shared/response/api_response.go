@@ -108,7 +108,7 @@ func (r *APIResponse) ErrorRequest(err error) *APIResponse {
 		errorInfo.Code = e.ErrorCode()
 		errorInfo.Type = e.ErrorType()
 		errorInfo.Message = e.Error()
-		errorInfo.Details = e.Details()
+		errorInfo.Details = e.DetailMap()
 	case domainerr.BaseDomainError:
 		errorInfo.Code = e.ErrorCode()
 		errorInfo.Type = e.ErrorType()

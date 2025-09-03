@@ -100,15 +100,6 @@ func NewEntityNotFoundError(entityType, entityID string) *EntityNotFoundError {
 	}
 }
 
-func NewInternalServerError() *BaseDomainError {
-	return &BaseDomainError{
-		Code:       "INTERNAL_SERVER_ERROR",
-		Type:       "server",
-		Message:    "Internal server error",
-		StatusCode: 500,
-	}
-}
-
 type ConflictError struct {
 	BaseDomainError
 	Resource string `json:"resource"`
