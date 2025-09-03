@@ -6,46 +6,50 @@ import (
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/enum"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
 )
 
 type DeleteAppointmentCommand struct {
-	appointmentID valueobject.AppointmentID `json:"id" binding:"required"`
+	appointmentID valueobject.AppointmentID
+	ctx           context.Context
 }
 
-func NewDeleteAppointmentCommand(appointmentID valueobject.AppointmentID) DeleteAppointmentCommand {
-	return DeleteAppointmentCommand{
-		appointmentID: appointmentID,
+func NewDeleteAppointmentCommand(id int, ctx context.Context) (*DeleteAppointmentCommand, error) {
+	appointmentID, err := valueobject.NewAppointmentID(id)
+	if err != nil {
+		return nil, err
 	}
+
+	return &DeleteAppointmentCommand{
+		appointmentID: appointmentID,
+		ctx:           ctx,
+	}, nil
 }
 
-type DeleteAppointmentHandler interface {
-	Handle(ctx context.Context, command DeleteAppointmentCommand) shared.CommandResult
-}
-
-type deleteAppointmentHandler struct {
+type DeleteAppointmentHandler struct {
 	appointmentRepo repository.AppointmentRepository
 }
 
-func NewDeleteAppointmentHandler(appointmentRepo repository.AppointmentRepository) DeleteAppointmentHandler {
-	return &deleteAppointmentHandler{
+func NewDeleteAppointmentHandler(appointmentRepo repository.AppointmentRepository) cqrs.CommandHandler {
+	return &DeleteAppointmentHandler{
 		appointmentRepo: appointmentRepo,
 	}
 }
 
-func (h *deleteAppointmentHandler) Handle(ctx context.Context, command DeleteAppointmentCommand) shared.CommandResult {
-	appointment, err := h.appointmentRepo.GetByID(ctx, command.appointmentID)
+func (h *DeleteAppointmentHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
+	command := cmd.(DeleteAppointmentCommand)
+	appointment, err := h.appointmentRepo.GetByID(command.ctx, command.appointmentID)
 	if err != nil {
-		return shared.FailureResult("appointment not found", err)
+		return cqrs.FailureResult("error finding appointment", err)
 	}
 
 	if appointment.GetStatus() == enum.StatusCompleted {
-		return shared.FailureResult("cannot delete completed appointment", nil)
+		return cqrs.FailureResult("cannot delete completed appointment", nil)
 	}
 
 	if err := h.appointmentRepo.Delete(command.appointmentID); err != nil {
-		return shared.FailureResult("failed to delete appointment", err)
+		return cqrs.FailureResult("failed to delete appointment", err)
 	}
 
-	return shared.SuccessResult(appointment.GetID().String(), "appointment deleted successfully")
+	return cqrs.SuccessResult(appointment.GetID().String(), "appointment deleted successfully")
 }

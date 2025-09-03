@@ -1,3 +1,4 @@
+// Package entity contains all the domain entities to handle all the buissness logic
 package entity
 
 import (
@@ -6,6 +7,12 @@ import (
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/enum"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
+	domainerr "github.com/alexisTrejo11/Clinic-Vet-API/app/core/error"
+)
+
+const (
+	MinAllowedDaysToSchedule = 3
+	MaxAllowedDaysToSchedule = 30
 )
 
 type Appointment struct {
@@ -15,7 +22,7 @@ type Appointment struct {
 	status        enum.AppointmentStatus
 	reason        string
 	notes         *string
-	ownerID       int
+	ownerID       valueobject.OwnerID
 	vetID         *valueobject.VetID
 	petID         valueobject.PetID
 	createdAt     time.Time
@@ -25,7 +32,7 @@ type Appointment struct {
 func NewAppointment(
 	id valueobject.AppointmentID,
 	petID valueobject.PetID,
-	ownerID int,
+	ownerID valueobject.OwnerID,
 	vetID *valueobject.VetID,
 	service enum.ClinicService,
 	scheduledDate time.Time,
@@ -54,7 +61,7 @@ func (a *Appointment) GetPetID() valueobject.PetID {
 	return a.petID
 }
 
-func (a *Appointment) GetOwnerID() int {
+func (a *Appointment) GetOwnerID() valueobject.OwnerID {
 	return a.ownerID
 }
 
@@ -90,36 +97,119 @@ func (a *Appointment) GetNotes() *string {
 	return a.notes
 }
 
-func (a *Appointment) SetVetID(vetID *valueobject.VetID) {
-	a.vetID = vetID
+func (a *Appointment) ValidateFields() error {
+	if a.ownerID.IsZero() {
+		return errors.New("owner ID must be greater than zero")
+	}
+
+	if a.GetScheduledDate().IsZero() {
+		return domainerr.AppointmentScheduleDateZeroErr()
+	}
+
+	if err := a.ValidateRequestSchedule(); err != nil {
+		return err
+	}
+	return nil
 }
 
-func (a *Appointment) SetService(service enum.ClinicService) {
-	a.service = service
-}
-
-func (a *Appointment) SetScheduledDate(scheduledDate time.Time) {
-	a.scheduledDate = scheduledDate
-}
-
-func (a *Appointment) SetStatus(status enum.AppointmentStatus) {
-	a.status = status
-}
-
-func (a *Appointment) SetUpdatedAt(updatedAt time.Time) {
-	a.updatedAt = updatedAt
-}
-
-func (a *Appointment) SetReason(reason string) {
-	a.reason = reason
-}
-
-func (a *Appointment) SetNotes(notes *string) {
-	if notes != nil && *notes == "" {
-		a.notes = nil
-	} else {
+func (a *Appointment) Update(notes *string, vetID *valueobject.VetID, service *enum.ClinicService, reason *string) error {
+	if notes != nil {
 		a.notes = notes
 	}
+
+	if vetID != nil {
+		a.vetID = vetID
+	}
+
+	if service != nil {
+		a.service = *service
+	}
+
+	if reason != nil {
+		a.reason = *reason
+	}
+
+	return nil
+}
+
+func (a *Appointment) RescheduleAppointment(newDate time.Time) error {
+	if newDate.Before(time.Now()) {
+		return domainerr.AppointmentScheduleDateRuleErr("appointment date must be in the future")
+	}
+
+	a.scheduledDate = newDate
+	a.status = enum.StatusRescheduled
+	a.updatedAt = time.Now()
+
+	return nil
+}
+
+func (a *Appointment) Cancel() error {
+	if err := a.validateStatusTranstion(enum.StatusCancelled); err != nil {
+		return err
+	}
+
+	a.status = enum.StatusCancelled
+	a.updatedAt = time.Now()
+	return nil
+}
+
+func (a *Appointment) Complete() error {
+	if err := a.validateStatusTranstion(enum.StatusCompleted); err != nil {
+		return err
+	}
+
+	a.status = enum.StatusCompleted
+	a.updatedAt = time.Now()
+
+	return nil
+}
+
+func (a *Appointment) NotPresented() error {
+	if err := a.validateStatusTranstion(enum.StatusNotPresented); err != nil {
+		return err
+	}
+
+	a.status = enum.StatusNotPresented
+	a.updatedAt = time.Now()
+	return nil
+}
+
+func (a *Appointment) ValidateRequestSchedule() error {
+	now := time.Now()
+
+	if a.GetScheduledDate().IsZero() {
+		return domainerr.AppointmentScheduleDateZeroErr()
+	}
+
+	if a.GetScheduledDate().Before(now) {
+		return domainerr.AppointmentScheduleDateRuleErr("scheduled date cannot be in the past")
+	}
+
+	if a.GetScheduledDate().Before(now.AddDate(0, 0, MinAllowedDaysToSchedule)) {
+		return domainerr.AppointmentScheduleDateRuleErr("appointments must be scheduled at least 3 days in advance")
+	}
+
+	if a.GetScheduledDate().Weekday() == time.Saturday || a.GetScheduledDate().Weekday() == time.Sunday {
+		return domainerr.AppointmentScheduleDateRuleErr("appointments cannot be scheduled on weekends")
+	}
+
+	return nil
+}
+
+func (a *Appointment) Confirm(vetID *valueobject.VetID) error {
+	if err := a.validateStatusTranstion(enum.StatusConfirmed); err != nil {
+		return err
+	}
+
+	a.vetID = vetID
+	a.status = enum.StatusConfirmed
+	a.updatedAt = time.Now()
+	return nil
+}
+
+func (a *Appointment) validateStatusTranstion(toStatus enum.AppointmentStatus) error {
+	return nil
 }
 
 func (a *Appointment) SetID(id valueobject.AppointmentID) {
@@ -129,7 +219,7 @@ func (a *Appointment) SetID(id valueobject.AppointmentID) {
 type AppointmentBuilder struct {
 	id            valueobject.AppointmentID
 	petID         valueobject.PetID
-	ownerID       int
+	ownerID       valueobject.OwnerID
 	vetID         *valueobject.VetID
 	service       enum.ClinicService
 	scheduledDate time.Time
@@ -158,7 +248,7 @@ func (ab *AppointmentBuilder) WithPetID(petID valueobject.PetID) *AppointmentBui
 }
 
 // WithOwnerID sets the owner ID.
-func (ab *AppointmentBuilder) WithOwnerID(ownerID int) *AppointmentBuilder {
+func (ab *AppointmentBuilder) WithOwnerID(ownerID valueobject.OwnerID) *AppointmentBuilder {
 	ab.ownerID = ownerID
 	return ab
 }
@@ -206,13 +296,8 @@ func (ab *AppointmentBuilder) WithTimestamps(createdAt, updatedAt time.Time) *Ap
 	return ab
 }
 
-func (ab *AppointmentBuilder) Build() (*Appointment, error) {
-	// Simple validation, you can add more complex logic here.
-	if ab.ownerID <= 0 {
-		return nil, errors.New("owner ID must be greater than zero")
-	}
-
-	appointment := &Appointment{
+func (ab *AppointmentBuilder) Build() *Appointment {
+	return &Appointment{
 		id:            ab.id,
 		petID:         ab.petID,
 		ownerID:       ab.ownerID,
@@ -225,6 +310,4 @@ func (ab *AppointmentBuilder) Build() (*Appointment, error) {
 		createdAt:     ab.createdAt,
 		updatedAt:     ab.updatedAt,
 	}
-
-	return appointment, nil
 }

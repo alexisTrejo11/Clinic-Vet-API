@@ -1,3 +1,4 @@
+// Package page contains implementation to make paginate data queries
 package page
 
 import (

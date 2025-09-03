@@ -12,6 +12,8 @@ import (
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/appointment/application/command"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/appointment/application/query"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/response"
 	apiResponse "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/responses"
 	response "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/responses"
 	"github.com/gin-gonic/gin"
@@ -25,11 +27,11 @@ import (
 // @in header
 // @name Authorization
 type VetAppointmentController struct {
-	commandBus command.CommandBus
-	queryBus   query.QueryBus
+	commandBus cqrs.CommandBus
+	queryBus   cqrs.QueryBus
 }
 
-func NewVetAppointmentController(commandBus command.CommandBus, queryBus query.QueryBus) *VetAppointmentController {
+func NewVetAppointmentController(commandBus cqrs.CommandBus, queryBus cqrs.QueryBus) *VetAppointmentController {
 	return &VetAppointmentController{
 		commandBus: commandBus,
 		queryBus:   queryBus,
@@ -56,20 +58,19 @@ func (c *VetAppointmentController) GetMyAppointments(ctx *gin.Context) {
 	pageSize, _ := strconv.Atoi(ctx.DefaultQuery("pageSize", "10"))
 
 	// Get vet id from JWT context (assuming it's set by auth middleware)
-	vetIDInterface, exists := ctx.Get("vet_id")
+	vetID, exists := ctx.Get("vet_id")
 	if !exists {
 		response.Unauthorized(ctx, errors.New("vet id not found in context"))
 		return
 	}
 
-	vetID, err := valueobject.NewVetID(vetIDInterface.(int))
+	query, err := query.NewListAppointmentsByVetQuery(vetID, ctx)
 	if err != nil {
-		response.BadRequest(ctx, err)
+		response.ApplicationError(ctx, err)
 		return
 	}
 
-	query := query.NewGetAppointmentsByVetQuery(vetID, page, pageSize)
-	result, err := c.queryBus.Execute(context.Background(), query)
+	result, err := c.queryBus.Execute(query)
 	if err != nil {
 		response.ApplicationError(ctx, err)
 		return
@@ -179,12 +180,13 @@ func (c *VetAppointmentController) MarkAsNoShow(ctx *gin.Context) {
 
 	// Get vet id from JWT context to verify the appointment belongs to this vet
 
-	// Verify the appointment belongs to this vet
-	command := command.MarkAsNotPresentedCommand{
-		ID: appointmentID,
+	command, err := command.NewNotAttendAppointmentCommand(ctx, appointmentID)
+	if err != nil {
+		response.ApplicationError(ctx, err)
+		return
 	}
 
-	result := c.commandBus.Execute(context.Background(), command)
+	result := c.commandBus.Execute(command)
 	if !result.IsSuccess {
 		response.ApplicationError(ctx, result.Error)
 		return

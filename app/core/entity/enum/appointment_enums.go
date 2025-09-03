@@ -47,3 +47,7 @@ const (
 	ServiceWellnessExam        ClinicService = "wellness_exam"
 	ServiceOther               ClinicService = "other"
 )
+
+func NewClinicService(name string) (ClinicService, error) {
+	return ServiceBehaviorConsult, nil
+}

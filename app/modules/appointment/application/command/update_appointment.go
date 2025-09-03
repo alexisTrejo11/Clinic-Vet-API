@@ -3,90 +3,84 @@ package command
 import (
 	"context"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/enum"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/service"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
 )
 
 type UpdateAppointmentCommand struct {
-	AppointmentID valueobject.AppointmentID `json:"appoinment_id" binding:"required"`
-	VetID         *int                      `json:"vet_id,omitempty"`
-	Service       *enum.ClinicService       `json:"service,omitempty"`
-	Status        *enum.AppointmentStatus   `json:"status,omitempty"`
-	Reason        *string                   `json:"reason,omitempty"`
-	Notes         *string                   `json:"notes,omitempty"`
-	IsEmergency   *bool                     `json:"is_emergency,omitempty"`
+	ctx           context.Context
+	appointmentID valueobject.AppointmentID
+	vetID         *valueobject.VetID
+	status        *enum.AppointmentStatus
+	reason        *string
+	notes         *string
+	service       *enum.ClinicService
 }
 
-type UpdateAppointmentHandler interface {
-	Handle(ctx context.Context, command UpdateAppointmentCommand) shared.CommandResult
-}
-
-type updateAppointmentHandler struct {
-	appointmentRepo repository.AppointmentRepository
-	service         *service.AppointmentService
-}
-
-func NewUpdateAppointmentHandler(appointmentRepo repository.AppointmentRepository) UpdateAppointmentHandler {
-	return &updateAppointmentHandler{
-		appointmentRepo: appointmentRepo,
-		service:         &service.AppointmentService{},
-	}
-}
-
-func (h *updateAppointmentHandler) Handle(ctx context.Context, command UpdateAppointmentCommand) shared.CommandResult {
-	appointment, err := h.appointmentRepo.GetByID(ctx, command.AppointmentID)
+func NewUpdateAppointmentCommand(ctx context.Context, appointIDInt int, vetIDInt *int, status string, reason, notes, service *string) (*UpdateAppointmentCommand, error) {
+	appointmentID, err := valueobject.NewAppointmentID(appointIDInt)
 	if err != nil {
-		return shared.FailureResult("appointment not found", err)
+		return nil, err
 	}
 
-	if err := h.updateFields(&appointment, command); err != nil {
-		return shared.FailureResult("failed to update appointment fields", err)
+	var vetID *valueobject.VetID
+	if vetIDInt != nil {
+		vetIDObj, err := valueobject.NewVetID(*vetIDInt)
+		vetID = &vetIDObj
+
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	if err := h.service.ValidateFields(&appointment); err != nil {
-		return shared.FailureResult("appointment validation failed", err)
+	var clinicService *enum.ClinicService
+	if service != nil {
+		service, err := enum.NewClinicService(*service)
+		if err != nil {
+			return nil, err
+		}
+		clinicService = &service
 	}
 
-	if err := h.appointmentRepo.Save(ctx, &appointment); err != nil {
-		return shared.FailureResult("failed to update appointment", err)
-	}
-
-	return shared.SuccessResult(appointment.GetID().String(), "appointment updated successfully")
+	return &UpdateAppointmentCommand{
+		ctx:           ctx,
+		appointmentID: appointmentID,
+		vetID:         vetID,
+		service:       clinicService,
+		reason:        reason,
+		notes:         notes,
+	}, nil
 }
 
-func (h *updateAppointmentHandler) updateFields(appointment *entity.Appointment, command UpdateAppointmentCommand) error {
-	if command.VetID != nil {
-		vetID, err := valueobject.NewVetID(*command.VetID)
-		if err != nil {
-			return err
-		}
+type UpdateAppointmentHandler struct {
+	appointmentRepo repository.AppointmentRepository
+}
 
-		appointment.SetVetID(&vetID)
+func NewUpdateAppointmentHandler(appointmentRepo repository.AppointmentRepository) cqrs.CommandHandler {
+	return &UpdateAppointmentHandler{
+		appointmentRepo: appointmentRepo,
+	}
+}
+
+func (h *UpdateAppointmentHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
+	command := cmd.(UpdateAppointmentCommand)
+
+	appointment, err := h.appointmentRepo.GetByID(command.ctx, command.appointmentID)
+	if err != nil {
+		return cqrs.FailureResult("appointment not found", err)
 	}
 
-	if command.Service != nil {
-		appointment.SetService(*command.Service)
+	appointment.Update(command.notes, command.vetID, command.service, command.reason)
+
+	if err := appointment.ValidateFields(); err != nil {
+		return cqrs.FailureResult("appointment validation failed", err)
 	}
 
-	if command.Status != nil {
-		if command.IsEmergency != nil {
-			appointment.SetStatus(*command.Status)
-		} else {
-			appointment.SetStatus(*command.Status)
-		}
+	if err := h.appointmentRepo.Save(command.ctx, &appointment); err != nil {
+		return cqrs.FailureResult("failed to update appointment", err)
 	}
 
-	if command.Reason != nil {
-		appointment.SetReason(*command.Reason)
-	}
-
-	if command.Notes != nil {
-		appointment.SetNotes(command.Notes)
-	}
-
-	return nil
+	return cqrs.SuccessResult(appointment.GetID().String(), "appointment updated successfully")
 }

@@ -1,5 +1,7 @@
 package enum
 
+import "strings"
+
 type UserRole string
 
 type UserStatus string
@@ -71,29 +73,54 @@ func UserStatusFromString(status string) UserStatus {
 	}
 }
 
-type Gender string
+type PersonGender string
 
 const (
-	MALE         Gender = "male"
-	Female       Gender = "female"
-	NotSpecified Gender = "not_specified"
+	Male         PersonGender = "male"
+	Female       PersonGender = "female"
+	NotSpecified PersonGender = "not_specified"
 )
 
-func NewGender(value string) Gender {
-	switch value {
+var ValidPersonGenders = []PersonGender{Male, Female, NotSpecified}
+
+func (g PersonGender) String() string {
+	return string(g)
+}
+
+func NewGender(value string) PersonGender {
+	normalized := normalizeGenderInput(value)
+
+	switch normalized {
 	case "male":
-		return MALE
+		return Male
 	case "female":
 		return Female
-	case "not_specified":
-		return NotSpecified
-	case "":
+	case "not_specified", "not specified", "":
 		return NotSpecified
 	default:
 		return NotSpecified
 	}
 }
 
-func (g Gender) String() string {
-	return string(g)
+func normalizeGenderInput(input string) string {
+	input = strings.TrimSpace(strings.ToLower(input))
+	input = strings.ReplaceAll(input, " ", "_")
+	return input
+}
+
+func (g PersonGender) Values() []PersonGender {
+	return ValidPersonGenders
+}
+
+func (g PersonGender) DisplayName() string {
+	switch g {
+	case Male:
+		return "Male"
+	case Female:
+		return "Female"
+	case NotSpecified:
+		return "Not Specified"
+	default:
+		return "Unknown"
+	}
 }

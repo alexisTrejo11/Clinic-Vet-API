@@ -31,7 +31,7 @@ func NewAppointmentResponse(appointment *entity.Appointment) AppointmentResponse
 
 	return AppointmentResponse{
 		ID:            appointment.GetID().GetValue(),
-		OwnerID:       appointment.GetOwnerID(),
+		OwnerID:       appointment.GetOwnerID().GetValue(),
 		PetID:         appointment.GetPetID().GetValue(),
 		VetID:         vetID,
 		Service:       appointment.GetService(),

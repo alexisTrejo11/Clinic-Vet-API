@@ -1,0 +1,72 @@
+package query
+
+import (
+	"context"
+
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
+	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
+	apperror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/application"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
+)
+
+type ListAppointmentsByOwnerQuery struct {
+	ownerID   valueobject.OwnerID
+	ctx       context.Context
+	pageInput page.PageData
+}
+
+func NewListAppointmentsByOwnerQuery(id int, pageNumber, pageSize int) (*ListAppointmentsByOwnerQuery, error) {
+	ownerID, err := valueobject.NewOwnerID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	return &ListAppointmentsByOwnerQuery{
+		ownerID: ownerID,
+		pageInput: page.PageData{
+			PageNumber: pageNumber,
+			PageSize:   pageSize,
+		},
+	}, nil
+}
+
+type ListAppointmentsByOwnerHandler struct {
+	appointmentRepo repository.AppointmentRepository
+	ownerRepo       repository.OwnerRepository
+}
+
+func NewListAppointmentsByOwnerHandler(appointmentRepo repository.AppointmentRepository, ownerRepo repository.OwnerRepository) cqrs.QueryHandler[(page.Page[[]AppointmentResponse])] {
+	return &ListAppointmentsByOwnerHandler{
+		appointmentRepo: appointmentRepo,
+		ownerRepo:       ownerRepo,
+	}
+}
+
+func (h *ListAppointmentsByOwnerHandler) Handle(q cqrs.Query) (page.Page[[]AppointmentResponse], error) {
+	query := q.(ListAppointmentsByOwnerQuery)
+
+	if err := h.validateExistingOwner(query.ctx, query.ownerID); err != nil {
+		return page.Page[[]AppointmentResponse]{}, err
+	}
+
+	appointmentsPage, err := h.appointmentRepo.ListByOwnerID(query.ctx, query.ownerID, query.pageInput)
+	if err != nil {
+		return page.Page[[]AppointmentResponse]{}, err
+	}
+
+	return page.NewPage(
+		mapAppointmentsToResponses(appointmentsPage.Data),
+		appointmentsPage.Metadata,
+	), nil
+}
+
+func (h *ListAppointmentsByOwnerHandler) validateExistingOwner(ctx context.Context, ownerID valueobject.OwnerID) error {
+	if exists, err := h.ownerRepo.ExistsByID(ctx, ownerID); err != nil {
+		return err
+	} else if !exists {
+		return apperror.NewEntityNotFoundError("owner", ownerID.String())
+	} else {
+		return nil
+	}
+}

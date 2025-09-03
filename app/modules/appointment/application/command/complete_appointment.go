@@ -2,48 +2,56 @@ package command
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/service"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
+	apperror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/application"
 )
 
 type CompleteAppointmentCommand struct {
-	ID valueobject.AppointmentID `json:"id" binding:"required"`
-
-	Notes *string `json:"notes,omitempty"`
+	id    valueobject.AppointmentID
+	notes *string
+	ctx   *context.Context
 }
 
-type CompleteAppointmentHandler interface {
-	Handle(ctx context.Context, command CompleteAppointmentCommand) shared.CommandResult
-}
-
-type completeAppointmentHandler struct {
-	appointmentRepo repository.AppointmentRepository
-	service         *service.AppointmentService
-}
-
-func NewCompleteAppointmentHandler(appointmentRepo repository.AppointmentRepository) CompleteAppointmentHandler {
-	return &completeAppointmentHandler{
-		appointmentRepo: appointmentRepo,
-		service:         &service.AppointmentService{},
-	}
-}
-
-func (h *completeAppointmentHandler) Handle(ctx context.Context, command CompleteAppointmentCommand) shared.CommandResult {
-	appointment, err := h.appointmentRepo.GetByID(ctx, command.ID)
+func NewCompleteAppointmenCommand(ctx context.Context, id int, notes *string) (*CompleteAppointmentCommand, error) {
+	appointmentID, err := valueobject.NewAppointmentID(id)
 	if err != nil {
-		return shared.FailureResult("appointment not found", err)
+		return nil, apperror.FieldValidationError("appointmentID", strconv.Itoa(id), err.Error())
+	}
+	return &CompleteAppointmentCommand{
+		id:    appointmentID,
+		notes: notes,
+	}, nil
+}
+
+type CompleteAppointmentHandler struct {
+	appointmentRepo repository.AppointmentRepository
+}
+
+func NewCompleteAppointmentHandler(appointmentRepo repository.AppointmentRepository) cqrs.CommandHandler {
+	return &CompleteAppointmentHandler{
+		appointmentRepo: appointmentRepo,
+	}
+}
+
+func (h *CompleteAppointmentHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
+	command := cmd.(CompleteAppointmentCommand)
+
+	appointment, err := h.appointmentRepo.GetByID(*command.ctx, command.id)
+	if err != nil {
+		return cqrs.FailureResult("appointment not found", err)
 	}
 
-	if err := h.service.Complete(&appointment); err != nil {
-		return shared.FailureResult("failed to complete appointment", err)
+	if err := appointment.Complete(); err != nil {
+		return cqrs.FailureResult("failed to complete appointment", err)
 	}
 
-	if err := h.appointmentRepo.Save(ctx, &appointment); err != nil {
-		return shared.FailureResult("failed to save completed appointment", err)
+	if err := h.appointmentRepo.Save(*command.ctx, &appointment); err != nil {
+		return cqrs.FailureResult("failed to save completed appointment", err)
 	}
 
-	return shared.SuccessResult(appointment.GetID().String(), "appointment completed successfully")
+	return cqrs.SuccessResult(appointment.GetID().String(), "appointment completed successfully")
 }

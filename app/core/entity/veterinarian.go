@@ -23,7 +23,6 @@ type Veterinarian struct {
 	updatedAt       time.Time
 }
 
-// Getters
 func (v *Veterinarian) GetID() int {
 	return v.id
 }
@@ -76,7 +75,6 @@ func (v *Veterinarian) GetUpdatedAt() time.Time {
 	return v.updatedAt
 }
 
-// Setters
 func (v *Veterinarian) SetName(name valueobject.PersonName) {
 	v.name = name
 }

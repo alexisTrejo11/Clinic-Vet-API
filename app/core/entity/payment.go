@@ -1,6 +1,10 @@
 package entity
 
 import (
+	"errors"
+	"fmt"
+	"slices"
+	"strings"
 	"time"
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/enum"
@@ -20,7 +24,6 @@ type Payment struct {
 	dueDate       *time.Time
 	paidAt        *time.Time
 	refundedAt    *time.Time
-	isActive      bool
 	createdAt     time.Time
 	updatedAt     time.Time
 }
@@ -35,6 +38,66 @@ func (p *Payment) Update(amount *valueobject.Money, paymentMethod *enum.PaymentM
 
 	p.description = description
 	p.dueDate = dueDate
+	return nil
+}
+
+func (p *Payment) Cancel(reason string) error {
+	allowedStatuses := []enum.PaymentStatus{enum.PENDING, enum.PAID, enum.FAILED}
+
+	if !slices.Contains(allowedStatuses, p.status) {
+		return fmt.Errorf("cannot cancel payment with status '%s'. Allowed statuses: %v", p.status, allowedStatuses)
+	}
+
+	if strings.TrimSpace(reason) == "" {
+		return errors.New("cancellation reason cannot be empty")
+	}
+
+	p.status = enum.CANCELLED
+	p.updatedAt = time.Now()
+
+	return nil
+}
+
+func (p *Payment) Pay(transactionID string) error {
+	allowedStatuses := []enum.PaymentStatus{enum.FAILED, enum.PENDING}
+	if !slices.Contains(allowedStatuses, p.status) {
+		return fmt.Errorf("cannot cancel payment with status '%s'. Allowed statuses: %v", p.status, allowedStatuses)
+	}
+
+	p.updatedAt = time.Now()
+	p.status = enum.PAID
+	p.transactionID = &transactionID
+
+	return nil
+}
+
+func (p *Payment) Refund() error {
+	allowedStatuses := []enum.PaymentStatus{enum.PAID}
+	if !slices.Contains(allowedStatuses, p.status) {
+		return fmt.Errorf("cannot cancel payment with status '%s'. Allowed statuses: %v", p.status, allowedStatuses)
+	}
+
+	now := time.Now()
+
+	p.status = enum.CANCELLED
+	p.paidAt = nil
+	p.refundedAt = &now
+	p.updatedAt = now
+
+	return nil
+}
+
+func (p *Payment) Overdue() error {
+	allowedStatuses := []enum.PaymentStatus{enum.FAILED, enum.PENDING}
+	if !slices.Contains(allowedStatuses, p.status) {
+		return fmt.Errorf("cannot cancel payment with status '%s'. Allowed statuses: %v", p.status, allowedStatuses)
+	}
+
+	if p.dueDate != nil && time.Now().Before(*p.dueDate) {
+		return fmt.Errorf("can't set a payment as overdue before his overdue date")
+	}
+	p.updatedAt = time.Now()
+	p.status = enum.OVERDUE
 	return nil
 }
 
@@ -58,32 +121,16 @@ func (p *Payment) GetID() int {
 	return p.id
 }
 
-func (p *Payment) SetID(id int) {
-	p.id = id
-}
-
 func (p *Payment) GetAppointmentID() int {
 	return p.appointmentID
-}
-
-func (p *Payment) SetAppointmentID(appointmentID int) {
-	p.appointmentID = appointmentID
 }
 
 func (p *Payment) GetUserID() int {
 	return p.userID
 }
 
-func (p *Payment) SetUserID(userID int) {
-	p.userID = userID
-}
-
 func (p *Payment) GetAmount() valueobject.Money {
 	return p.amount
-}
-
-func (p *Payment) SetAmount(amount valueobject.Money) {
-	p.amount = amount
 }
 
 func (p *Payment) GetCurrency() string {
@@ -98,80 +145,36 @@ func (p *Payment) GetPaymentMethod() enum.PaymentMethod {
 	return p.paymentMethod
 }
 
-func (p *Payment) SetPaymentMethod(paymentMethod enum.PaymentMethod) {
-	p.paymentMethod = paymentMethod
-}
-
 func (p *Payment) GetStatus() enum.PaymentStatus {
 	return p.status
-}
-
-func (p *Payment) SetStatus(status enum.PaymentStatus) {
-	p.status = status
 }
 
 func (p *Payment) GetTransactionID() *string {
 	return p.transactionID
 }
 
-func (p *Payment) SetTransactionID(transactionID *string) {
-	p.transactionID = transactionID
-}
-
 func (p *Payment) GetDescription() *string {
 	return p.description
-}
-
-func (p *Payment) SetDescription(description *string) {
-	p.description = description
 }
 
 func (p *Payment) GetDueDate() *time.Time {
 	return p.dueDate
 }
 
-func (p *Payment) SetDueDate(dueDate *time.Time) {
-	p.dueDate = dueDate
-}
-
 func (p *Payment) GetPaidAt() *time.Time {
 	return p.paidAt
-}
-
-func (p *Payment) SetPaidAt(paidAt *time.Time) {
-	p.paidAt = paidAt
 }
 
 func (p *Payment) GetRefundedAt() *time.Time {
 	return p.refundedAt
 }
 
-func (p *Payment) SetRefundedAt(refundedAt *time.Time) {
-	p.refundedAt = refundedAt
-}
-
-func (p *Payment) GetIsActive() bool {
-	return p.isActive
-}
-
-func (p *Payment) SetIsActive(isActive bool) {
-	p.isActive = isActive
-}
-
 func (p *Payment) GetCreatedAt() time.Time {
 	return p.createdAt
 }
 
-func (p *Payment) SetCreatedAt(createdAt time.Time) {
-	p.createdAt = createdAt
-}
-
 func (p *Payment) GetUpdatedAt() time.Time {
 	return p.updatedAt
-}
-
-func (p *Payment) SetUpdatedAt(updatedAt time.Time) {
-	p.updatedAt = updatedAt
 }
 
 type PaymentBuilder struct {
@@ -239,11 +242,6 @@ func (pb *PaymentBuilder) WithPaidAt(paidAt *time.Time) *PaymentBuilder {
 
 func (pb *PaymentBuilder) WithRefundedAt(refundedAt *time.Time) *PaymentBuilder {
 	pb.payment.refundedAt = refundedAt
-	return pb
-}
-
-func (pb *PaymentBuilder) WithIsActive(isActive bool) *PaymentBuilder {
-	pb.payment.isActive = isActive
 	return pb
 }
 

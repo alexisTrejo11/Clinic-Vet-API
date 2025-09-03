@@ -8,40 +8,40 @@ import (
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/enum"
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 )
 
 type GetAppointmentStatsQuery struct {
-	VetID     *int       `json:"vet_id,omitempty"`
-	OwnerID   *int       `json:"owner_id,omitempty"`
-	StartDate *time.Time `json:"start_date,omitempty"`
-	EndDate   *time.Time `json:"end_date,omitempty"`
+	vetID     *int
+	ownerID   *int
+	startDate *time.Time
+	endDate   *time.Time
+	ctx       context.Context
 }
 
 func NewGetAppointmentStatsQuery(vetID, ownerID *int, startDate, endDate *time.Time) GetAppointmentStatsQuery {
 	return GetAppointmentStatsQuery{
-		VetID:     vetID,
-		OwnerID:   ownerID,
-		StartDate: startDate,
-		EndDate:   endDate,
+		vetID:     vetID,
+		ownerID:   ownerID,
+		startDate: startDate,
+		endDate:   endDate,
 	}
 }
 
-type GetAppointmentStatsHandler interface {
-	Handle(ctx context.Context, query GetAppointmentStatsQuery) (*AppointmentStatsResponse, error)
-}
-
-type getAppointmentStatsHandler struct {
+type GetAppointmentStatsHandler struct {
 	appointmentRepo repository.AppointmentRepository
 }
 
-func NewGetAppointmentStatsHandler(appointmentRepo repository.AppointmentRepository) GetAppointmentStatsHandler {
-	return &getAppointmentStatsHandler{
+func NewGetAppointmentStatsHandler(appointmentRepo repository.AppointmentRepository) cqrs.QueryHandler[AppointmentStatsResponse] {
+	return &GetAppointmentStatsHandler{
 		appointmentRepo: appointmentRepo,
 	}
 }
 
-func (h *getAppointmentStatsHandler) Handle(ctx context.Context, query GetAppointmentStatsQuery) (*AppointmentStatsResponse, error) {
+func (h *GetAppointmentStatsHandler) Handle(q cqrs.Query) (AppointmentStatsResponse, error) {
+	query := q.(GetAppointmentStatsQuery)
+
 	var appointments []entity.Appointment
 	var err error
 	maxPage := page.PageData{
@@ -50,19 +50,18 @@ func (h *getAppointmentStatsHandler) Handle(ctx context.Context, query GetAppoin
 	}
 
 	// Get appointments based on filters
-	if query.StartDate != nil && query.EndDate != nil {
-		appointmentsPage, dberr := h.appointmentRepo.ListByDateRange(ctx, *query.StartDate, *query.EndDate, maxPage)
+	if query.startDate != nil && query.endDate != nil {
+		appointmentsPage, dberr := h.appointmentRepo.ListByDateRange(query.ctx, *query.startDate, *query.endDate, maxPage)
 		appointments = appointmentsPage.Data
 		err = dberr
 	} else {
-		appointmentsPage, dberr := h.appointmentRepo.ListAll(ctx, maxPage)
+		appointmentsPage, dberr := h.appointmentRepo.ListAll(query.ctx, maxPage)
 		appointments = appointmentsPage.Data
 		err = dberr
 	}
 
 	if err != nil {
-		return nil, err
-	}
+		return AppointmentStatsResponse{}, err
 
 	// Apply additional filters
 	var filteredAppointments []entity.Appointment
@@ -70,14 +69,14 @@ func (h *getAppointmentStatsHandler) Handle(ctx context.Context, query GetAppoin
 		includeAppointment := true
 
 		// Filter by vet ID
-		if query.VetID != nil {
-			if appointment.GetVetID() == nil || appointment.GetVetID().GetValue() != *query.VetID {
+		if query.vetID != nil {
+			if appointment.GetVetID() == nil || appointment.GetVetID().GetValue() != *query.vetID {
 				includeAppointment = false
 			}
 		}
 
 		// Filter by owner ID
-		if query.OwnerID != nil && appointment.GetOwnerID() != *query.OwnerID {
+		if query.ownerID != nil && appointment.GetOwnerID().Equals(*query.ownerID) {
 			includeAppointment = false
 		}
 
@@ -89,10 +88,10 @@ func (h *getAppointmentStatsHandler) Handle(ctx context.Context, query GetAppoin
 	// Calculate statistics
 	stats := h.calculateStats(filteredAppointments, query)
 
-	return &stats, nil
+	return stats, nil
 }
 
-func (h *getAppointmentStatsHandler) calculateStats(appointments []entity.Appointment, query GetAppointmentStatsQuery) AppointmentStatsResponse {
+func (h *GetAppointmentStatsHandler) calculateStats(appointments []entity.Appointment, query GetAppointmentStatsQuery) AppointmentStatsResponse {
 	totalAppointments := len(appointments)
 	pendingCount := 0
 	confirmedCount := 0
@@ -131,10 +130,10 @@ func (h *getAppointmentStatsHandler) calculateStats(appointments []entity.Appoin
 
 	// Generate period string
 	var period *string
-	if query.StartDate != nil && query.EndDate != nil {
+	if query.startDate != nil && query.endDate != nil {
 		periodStr := fmt.Sprintf("%s to %s",
-			query.StartDate.Format("2006-01-02"),
-			query.EndDate.Format("2006-01-02"))
+			query.startDate.Format("2006-01-02"),
+			query.endDate.Format("2006-01-02"))
 		period = &periodStr
 	}
 

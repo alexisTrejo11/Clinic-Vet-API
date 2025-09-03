@@ -6,45 +6,41 @@ import (
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/service"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
 )
 
 type RescheduleAppointmentCommand struct {
-	AppointmentID valueobject.AppointmentID `json:"id" binding:"required"`
-	DateTime      time.Time                 `json:"date_time" binding:"required"`
-	Reason        *string                   `json:"reason,omitempty"`
+	ctx           context.Context
+	appointmentID valueobject.AppointmentID
+	datetime      time.Time
+	reason        *string
 }
 
-type RescheduleAppointmentHandler interface {
-	Handle(ctx context.Context, command RescheduleAppointmentCommand) shared.CommandResult
-}
-
-type rescheduleAppointmentHandler struct {
+type RescheduleAppointmentHandler struct {
 	appointmentRepo repository.AppointmentRepository
-	service         *service.AppointmentService
 }
 
-func NewRescheduleAppointmentHandler(appointmentRepo repository.AppointmentRepository) RescheduleAppointmentHandler {
-	return &rescheduleAppointmentHandler{
+func NewRescheduleAppointmentHandler(appointmentRepo repository.AppointmentRepository) cqrs.CommandHandler {
+	return &RescheduleAppointmentHandler{
 		appointmentRepo: appointmentRepo,
-		service:         &service.AppointmentService{},
 	}
 }
 
-func (h *rescheduleAppointmentHandler) Handle(ctx context.Context, command RescheduleAppointmentCommand) shared.CommandResult {
-	appointment, err := h.appointmentRepo.GetByID(ctx, command.AppointmentID)
+func (h *RescheduleAppointmentHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
+	command := cmd.(RescheduleAppointmentCommand)
+
+	appointment, err := h.appointmentRepo.GetByID(command.ctx, command.appointmentID)
 	if err != nil {
-		return shared.FailureResult("appointment not found", err)
+		return cqrs.FailureResult("appointment not found", err)
 	}
 
-	if err := h.service.RescheduleAppointment(&appointment, command.DateTime); err != nil {
-		return shared.FailureResult("failed to reschedule appointment", err)
+	if err := appointment.RescheduleAppointment(command.datetime); err != nil {
+		return cqrs.FailureResult("failed to reschedule appointment", err)
 	}
 
-	if err := h.appointmentRepo.Save(ctx, &appointment); err != nil {
-		return shared.FailureResult("failed to save rescheduled appointment", err)
+	if err := h.appointmentRepo.Save(command.ctx, &appointment); err != nil {
+		return cqrs.FailureResult("failed to save rescheduled appointment", err)
 	}
 
-	return shared.SuccessResult(appointment.GetID().String(), "appointment rescheduled successfully")
+	return cqrs.SuccessResult(appointment.GetID().String(), "appointment rescheduled successfully")
 }

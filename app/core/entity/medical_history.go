@@ -135,7 +135,6 @@ type MedicalHistoryBuilder struct {
 	errors         []error
 }
 
-// NewMedicalHistoryBuilder crea un nuevo builder
 func NewMedicalHistoryBuilder() *MedicalHistoryBuilder {
 	return &MedicalHistoryBuilder{
 		medicalHistory: MedicalHistory{},
@@ -143,7 +142,6 @@ func NewMedicalHistoryBuilder() *MedicalHistoryBuilder {
 	}
 }
 
-// Métodos para cada campo
 func (b *MedicalHistoryBuilder) WithID(id int) *MedicalHistoryBuilder {
 	medHistoryID, err := valueobject.NewMedHistoryID(id)
 	if err != nil {
@@ -178,12 +176,10 @@ func (b *MedicalHistoryBuilder) WithVetID(vetID int) *MedicalHistoryBuilder {
 }
 
 func (b *MedicalHistoryBuilder) WithOwnerID(ownerID int) *MedicalHistoryBuilder {
-	// Validación básica
 	if ownerID <= 0 {
 		b.errors = append(b.errors, errors.New("ownerID must be positive"))
 		return b
 	}
-	// Setter en la entidad
 	return b
 }
 
@@ -260,16 +256,15 @@ func (b *MedicalHistoryBuilder) WithNotes(notes *string) *MedicalHistoryBuilder 
 
 func (b *MedicalHistoryBuilder) WithTimestamps(createdAt, updatedAt time.Time) *MedicalHistoryBuilder {
 	if createdAt.IsZero() {
-		createdAt = time.Now()
+		b.medicalHistory.createdAt = time.Now()
 	}
 	if updatedAt.IsZero() {
-		updatedAt = time.Now()
+		b.medicalHistory.updatedAt = time.Now()
 	}
 	// Setters en la entidad
 	return b
 }
 
-// Build construye la entidad y valida
 func (b *MedicalHistoryBuilder) Build() (MedicalHistory, error) {
 	if len(b.errors) > 0 {
 		return MedicalHistory{}, b.combineErrors()
@@ -286,7 +281,6 @@ func (b *MedicalHistoryBuilder) combineErrors() error {
 	return errors.New(strings.Join(errorMessages, "; "))
 }
 
-// Métodos de utilidad
 func (b *MedicalHistoryBuilder) HasErrors() bool {
 	return len(b.errors) > 0
 }

@@ -1,56 +1,64 @@
+// Package command contains all the implementation to handle all the operations that change the state of the appoinment entity
 package command
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/service"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
+	apperror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/application"
 )
 
 type CancelAppointmentCommand struct {
-	AppointmentID valueobject.AppointmentID `json:"id" binding:"required"`
-	Reason        string                    `json:"reason" binding:"required"`
+	appointmentID valueobject.AppointmentID
+	reason        string
+	ctx           *context.Context
 }
 
-func NewCancelAppointmentCommand(appointmentID valueobject.AppointmentID, reason string) *CancelAppointmentCommand {
-	return &CancelAppointmentCommand{
-		AppointmentID: appointmentID,
-		Reason:        reason,
+func NewCancelAppointmentCommand(ctx *context.Context, id int, reason string) (*CancelAppointmentCommand, error) {
+	if ctx == nil {
+		return nil, apperror.FieldValidationError("context", "nil", "context is nil")
 	}
-}
 
-type CancelAppointmentHandler interface {
-	Handle(ctx context.Context, command CancelAppointmentCommand) shared.CommandResult
-}
-
-type cancelAppointmentHandler struct {
-	appointmentRepo   repository.AppointmentRepository
-	appointmenService *service.AppointmentService
-}
-
-func NewCancelAppointmentHandler(appointmentRepo repository.AppointmentRepository) CancelAppointmentHandler {
-	return &cancelAppointmentHandler{
-		appointmentRepo:   appointmentRepo,
-		appointmenService: &service.AppointmentService{},
-	}
-}
-
-func (h *cancelAppointmentHandler) Handle(ctx context.Context, command CancelAppointmentCommand) shared.CommandResult {
-	// Get existing appointment
-	appointment, err := h.appointmentRepo.GetByID(ctx, command.AppointmentID)
+	appointmentID, err := valueobject.NewAppointmentID(id)
 	if err != nil {
-		return shared.FailureResult("appointment not found", err)
+		return nil, apperror.FieldValidationError("appointmentID", strconv.Itoa(id), err.Error())
 	}
 
-	if err := h.appointmenService.Cancel(&appointment); err != nil {
-		return shared.FailureResult("failed to cancel appointment", err)
+	return &CancelAppointmentCommand{
+		appointmentID: appointmentID,
+		reason:        reason,
+		ctx:           ctx,
+	}, nil
+}
+
+type CancelAppointmentHandler struct {
+	appointmentRepo repository.AppointmentRepository
+}
+
+func NewCancelAppointmentHandler(appointmentRepo repository.AppointmentRepository) cqrs.CommandHandler {
+	return &CancelAppointmentHandler{
+		appointmentRepo: appointmentRepo,
+	}
+}
+
+func (h *CancelAppointmentHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
+	command := cmd.(CancelAppointmentCommand)
+
+	appointment, err := h.appointmentRepo.GetByID(*command.ctx, command.appointmentID)
+	if err != nil {
+		return cqrs.FailureResult("failed finding appointent", err)
 	}
 
-	if err := h.appointmentRepo.Save(ctx, &appointment); err != nil {
-		return shared.FailureResult("failed to save cancelled appointment", err)
+	if err := appointment.Cancel(); err != nil {
+		return cqrs.FailureResult("failed to cancel appointment", err)
 	}
 
-	return shared.SuccessResult(appointment.GetID().String(), "appointment cancelled successfully")
+	if err := h.appointmentRepo.Save(*command.ctx, &appointment); err != nil {
+		return cqrs.FailureResult("failed to save cancelled appointment", err)
+	}
+
+	return cqrs.SuccessResult(appointment.GetID().String(), "appointment cancelled successfully")
 }

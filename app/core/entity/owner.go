@@ -3,15 +3,15 @@ package entity
 import (
 	"time"
 
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/enum"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/valueObjects"
 )
 
 type Owner struct {
 	id          valueobject.OwnerID
 	photo       string
-	fullName    valueObjects.PersonName
-	gender      valueObjects.Gender
+	fullName    valueobject.PersonName
+	gender      enum.PersonGender
 	dateOfBirth time.Time
 	phoneNumber string
 	address     *string
@@ -23,8 +23,8 @@ type Owner struct {
 func NewOwner(
 	id valueobject.OwnerID,
 	photo string,
-	fullName valueObjects.PersonName,
-	gender valueObjects.Gender,
+	fullName valueobject.PersonName,
+	gender enum.PersonGender,
 	dateOfBirth time.Time,
 	phoneNumber string,
 ) (*Owner, error) {
@@ -39,7 +39,6 @@ func NewOwner(
 	}, nil
 }
 
-// --- Getters ---
 func (o *Owner) ID() valueobject.OwnerID {
 	return o.id
 }
@@ -48,11 +47,11 @@ func (o *Owner) Photo() string {
 	return o.photo
 }
 
-func (o *Owner) FullName() valueObjects.PersonName {
+func (o *Owner) FullName() valueobject.PersonName {
 	return o.fullName
 }
 
-func (o *Owner) Gender() valueObjects.Gender {
+func (o *Owner) Gender() enum.PersonGender {
 	return o.gender
 }
 
@@ -80,7 +79,6 @@ func (o *Owner) Pets() []Pet {
 	return o.pets
 }
 
-// --- Setters ---
 func (o *Owner) SetID(id valueobject.OwnerID) {
 	o.id = id
 }
@@ -105,7 +103,7 @@ func (o *Owner) SetActive(status bool) {
 	o.isActive = status
 }
 
-func (o *Owner) SetFullName(fullName valueObjects.PersonName) {
+func (o *Owner) SetFullName(fullName valueobject.PersonName) {
 	o.fullName = fullName
 }
 
@@ -125,7 +123,7 @@ func (o *Owner) GetID() valueobject.OwnerID {
 	return o.id
 }
 
-func (o *Owner) SetGender(gender valueObjects.Gender) {
+func (o *Owner) SetGender(gender enum.PersonGender) {
 	o.gender = gender
 }
 
@@ -145,7 +143,7 @@ func (b *OwnerBuilder) WithID(id valueobject.OwnerID) *OwnerBuilder {
 	return b
 }
 
-func (b *OwnerBuilder) WithFullName(fullName valueObjects.PersonName) *OwnerBuilder {
+func (b *OwnerBuilder) WithFullName(fullName valueobject.PersonName) *OwnerBuilder {
 	b.owner.fullName = fullName
 	return b
 }
@@ -160,7 +158,7 @@ func (b *OwnerBuilder) WithPhoto(photo string) *OwnerBuilder {
 	return b
 }
 
-func (b *OwnerBuilder) WithGender(gender valueObjects.Gender) *OwnerBuilder {
+func (b *OwnerBuilder) WithGender(gender enum.PersonGender) *OwnerBuilder {
 	b.owner.gender = gender
 	return b
 }

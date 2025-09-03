@@ -7,7 +7,7 @@ import (
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/enum"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
-	domainerr "github.com/alexisTrejo11/Clinic-Vet-API/app/core/errors"
+	domainerr "github.com/alexisTrejo11/Clinic-Vet-API/app/core/error"
 )
 
 type User struct {
@@ -47,15 +47,6 @@ func NewUser(
 	}
 	if !status.IsValid() {
 		return nil, domainerr.ErrInvalidUserStatus(string(status))
-	}
-
-	if profile == nil {
-		profile = &Profile{
-			PhotoURL:    "",
-			Bio:         "",
-			Address:     &Address{},
-			DateOfBirth: nil,
-		}
 	}
 
 	return &User{

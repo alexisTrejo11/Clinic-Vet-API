@@ -1,3 +1,4 @@
+// Package valueobject containes all the common valueobject provided to improve entity package
 package valueobject
 
 import (

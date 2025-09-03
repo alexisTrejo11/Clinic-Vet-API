@@ -5,43 +5,49 @@ import (
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/service"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
 )
 
-type MarkAsNotPresentedCommand struct {
-	ID valueobject.AppointmentID `json:"id" binding:"required"`
+type NotAttendAppointmentCommand struct {
+	ctx           context.Context
+	appointmentID valueobject.AppointmentID
 }
 
-type MarkAsNotPresentedHandler interface {
-	Handle(ctx context.Context, command MarkAsNotPresentedCommand) shared.CommandResult
-}
-
-type markAsNotPresentedHandler struct {
-	appointmentRepo repository.AppointmentRepository
-	service         *service.AppointmentService
-}
-
-func NewMarkAsNotPresentedHandler(appointmentRepo repository.AppointmentRepository) MarkAsNotPresentedHandler {
-	return &markAsNotPresentedHandler{
-		appointmentRepo: appointmentRepo,
-		service:         &service.AppointmentService{},
-	}
-}
-
-func (h *markAsNotPresentedHandler) Handle(ctx context.Context, command MarkAsNotPresentedCommand) shared.CommandResult {
-	appointment, err := h.appointmentRepo.GetByID(ctx, command.ID)
+func NewNotAttendAppointmentCommand(ctx context.Context, id int) (*NotAttendAppointmentCommand, error) {
+	appointmentID, err := valueobject.NewAppointmentID(id)
 	if err != nil {
-		return shared.FailureResult("appointment not found", err)
+		return nil, err
+	}
+	return &NotAttendAppointmentCommand{
+		ctx:           ctx,
+		appointmentID: appointmentID,
+	}, nil
+}
+
+type NotAttendAppointmentHandler struct {
+	appointmentRepo repository.AppointmentRepository
+}
+
+func NewNotAttendAppointmentHandler(appointmentRepo repository.AppointmentRepository) cqrs.CommandHandler {
+	return &NotAttendAppointmentHandler{
+		appointmentRepo: appointmentRepo,
+	}
+}
+
+func (h *NotAttendAppointmentHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
+	command := cmd.(NotAttendAppointmentCommand)
+	appointment, err := h.appointmentRepo.GetByID(command.ctx, command.appointmentID)
+	if err != nil {
+		return cqrs.FailureResult("appointment not found", err)
 	}
 
-	if err := h.service.NotPresented(&appointment); err != nil {
-		return shared.FailureResult("failed to mark appointment as not presented", err)
+	if err := appointment.NotPresented(); err != nil {
+		return cqrs.FailureResult("failed to mark appointment as not presented", err)
 	}
 
-	if err := h.appointmentRepo.Save(ctx, &appointment); err != nil {
-		return shared.FailureResult("failed to save appointment", err)
+	if err := h.appointmentRepo.Save(command.ctx, &appointment); err != nil {
+		return cqrs.FailureResult("failed to save appointment", err)
 	}
 
-	return shared.SuccessResult(appointment.GetID().String(), "appointment marked as not presented successfully")
+	return cqrs.SuccessResult(appointment.GetID().String(), "appointment marked as not presented successfully")
 }

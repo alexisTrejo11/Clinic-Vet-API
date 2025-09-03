@@ -1,3 +1,4 @@
+// Package mapper contains all the operations to map domain entity to output dtos
 package mapper
 
 import (
@@ -7,6 +8,7 @@ import (
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/enum"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/appointment/application/dto"
+	apperror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/application"
 )
 
 type AppointmentMapper struct{}
@@ -26,7 +28,7 @@ func (m *AppointmentMapper) ToAppointmentResponse(appointment *entity.Appointmen
 	return dto.AppointmentResponse{
 		ID:            appointment.GetID().GetValue(),
 		PetID:         appointment.GetPetID().GetValue(),
-		OwnerID:       appointment.GetOwnerID(),
+		OwnerID:       appointment.GetOwnerID().GetValue(),
 		VetID:         vetID,
 		Service:       appointment.GetService(),
 		ScheduledDate: appointment.GetScheduledDate(),
@@ -58,84 +60,47 @@ func (m *AppointmentMapper) ToAppointmentDetail(
 
 // RequestToDomain converts request  to domain appointment
 func (m *AppointmentMapper) RequestToDomain(dto dto.AppointmentCreate) (entity.Appointment, error) {
+	errorsMessages := make([]string, 0)
 	petID, err := valueobject.NewPetID(dto.PetID)
 	if err != nil {
-		return entity.Appointment{}, err
+		errorsMessages = append(errorsMessages, err.Error())
 	}
 
 	var vetID *valueobject.VetID
 	if dto.VetID != nil {
 		id, err := valueobject.NewVetID(*dto.VetID)
 		if err != nil {
-			return entity.Appointment{}, err
+			errorsMessages = append(errorsMessages, err.Error())
 		}
 		vetID = &id
 	}
 
+	ownerID, err := valueobject.NewOwnerID(dto.OwnerID)
+	if err != nil {
+		errorsMessages = append(errorsMessages, err.Error())
+	}
+
 	now := time.Now()
 
-	appointment, err := entity.
+	if err != nil {
+		errorsMessages = append(errorsMessages, err.Error())
+	}
+
+	if len(errorsMessages) > 0 {
+		return entity.Appointment{}, apperror.MappingError(errorsMessages, "createDTO", "domain", "appointment")
+	}
+
+	return *entity.
 		NewAppointmentBuilder().
 		WithPetID(petID).
 		WithNotes(dto.Notes).
-		WithOwnerID(dto.OwnerID).
+		WithOwnerID(ownerID).
 		WithReason(*dto.Notes).
 		WithTimestamps(now, now).
 		WithScheduledDate(dto.ScheduledDate).
 		WithVetID(vetID).
 		WithService(dto.Service).
-		Build()
-	if err != nil {
-		return entity.Appointment{}, err
-	}
-
-	return *appointment, nil
-}
-
-// UpdateToDomain applies update  to existing domain appointment
-func (m *AppointmentMapper) UpdateToDomain(appointment *entity.Appointment, dto dto.AppointmentUpdate) error {
-	if dto.VetID != nil {
-		if *dto.VetID != 0 {
-			vetID, err := valueobject.NewVetID(*dto.VetID)
-			if err != nil {
-				return err
-			}
-			appointment.SetVetID(&vetID)
-		} else {
-			appointment.SetVetID(nil)
-		}
-	}
-
-	if dto.Service != nil {
-		appointment.SetService(*dto.Service)
-	}
-
-	if dto.ScheduledDate != nil {
-		appointment.SetScheduledDate(*dto.ScheduledDate)
-	}
-
-	appointment.SetUpdatedAt(time.Now())
-	return nil
-}
-
-// OwnerUpdateToDomain applies owner update  to existing domain appointment
-func (m *AppointmentMapper) OwnerUpdateToDomain(appointment *entity.Appointment, dto dto.AppointmentOwnerUpdate) error {
-	if dto.Service != nil {
-		appointment.SetService(*dto.Service)
-	}
-
-	if dto.ScheduledDate != nil {
-		appointment.SetScheduledDate(*dto.ScheduledDate)
-	}
-
-	appointment.SetUpdatedAt(time.Now())
-	return nil
-}
-
-// VetUpdateToDomain applies vet update  to existing domain appointment
-func (m *AppointmentMapper) VetUpdateToDomain(appointment *entity.Appointment, dto dto.AppointmentVetUpdate) {
-	appointment.SetStatus(dto.Status)
-	appointment.SetUpdatedAt(time.Now())
+		Build(), nil
 }
 
 // ToCreateAppointmentResponse creates a response for appointment creation

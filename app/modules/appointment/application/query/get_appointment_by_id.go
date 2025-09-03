@@ -5,36 +5,38 @@ import (
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
 )
 
 type GetAppointmentByIDQuery struct {
-	AppointmentID valueobject.AppointmentID `json:"id"`
+	appointmentID valueobject.AppointmentID
+	ctx           context.Context
 }
 
-func NewGetAppointmentByIDQuery(id valueobject.AppointmentID) GetAppointmentByIDQuery {
-	return GetAppointmentByIDQuery{AppointmentID: id}
+func NewGetAppointmentByIDQuery(id int) (*GetAppointmentByIDQuery, error) {
+	appointmentID, err := valueobject.NewAppointmentID(id)
+	if err != nil {
+		return nil, err
+	}
+	return &GetAppointmentByIDQuery{appointmentID: appointmentID}, nil
 }
 
-type GetAppointmentByIDHandler interface {
-	Handle(ctx context.Context, query GetAppointmentByIDQuery) (*AppointmentResponse, error)
-}
-
-type getAppointmentByIDHandler struct {
+type GetAppointmentByIDHandler struct {
 	appointmentRepo repository.AppointmentRepository
 }
 
-func NewGetAppointmentByIDHandler(appointmentRepo repository.AppointmentRepository) GetAppointmentByIDHandler {
-	return &getAppointmentByIDHandler{
+func NewGetAppointmentByIDHandler(appointmentRepo repository.AppointmentRepository) cqrs.QueryHandler[AppointmentResponse] {
+	return &GetAppointmentByIDHandler{
 		appointmentRepo: appointmentRepo,
 	}
 }
 
-func (h *getAppointmentByIDHandler) Handle(ctx context.Context, query GetAppointmentByIDQuery) (*AppointmentResponse, error) {
-	appointment, err := h.appointmentRepo.GetByID(ctx, query.AppointmentID)
+func (h *GetAppointmentByIDHandler) Handle(c cqrs.Query) (AppointmentResponse, error) {
+	query := c.(GetAppointmentByIDQuery)
+	appointment, err := h.appointmentRepo.GetByID(query.ctx, query.appointmentID)
 	if err != nil {
-		return nil, err
+		return AppointmentResponse{}, err
 	}
 
-	response := NewAppointmentResponse(&appointment)
-	return &response, nil
+	return NewAppointmentResponse(&appointment), nil
 }
