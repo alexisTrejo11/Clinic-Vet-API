@@ -14,13 +14,14 @@ type SearchAppointmentsQuery struct {
 	searchCriteria map[string]any
 }
 
-func NewSearchAppointmentsQuery(pageNumber, pageSize int) *SearchAppointmentsQuery {
-	return &SearchAppointmentsQuery{
-		pageInput: page.PageData{
-			PageNumber: pageNumber,
-			PageSize:   pageSize,
-		},
+func NewSearchAppointmentsQuery(pageInput page.PageData) (SearchAppointmentsQuery, error) {
+	query := &SearchAppointmentsQuery{
+		pageInput:      pageInput,
+		ctx:            context.Background(),
+		searchCriteria: map[string]any{},
 	}
+
+	return *query, nil
 }
 
 type SearchAppointmentsHandler struct {

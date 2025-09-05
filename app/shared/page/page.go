@@ -1,4 +1,12 @@
-// Package page contains implementation to make paginate data queries
+// Package page provides utilities for paginating data queries in Go applications.
+// It offers a type-safe, generic approach to handle common pagination requirements
+// including page metadata calculation, sorting direction, and empty page handling.
+//
+// The package includes:
+// - Pagination input parameters with validation tags
+// - Page metadata with comprehensive pagination information
+// - Generic Page structure for type-safe paginated responses
+// - Utility functions for creating pages and calculating metadata
 package page
 
 import (
@@ -6,20 +14,29 @@ import (
 	"reflect"
 )
 
+// SortDirection defines the direction for sorting results.
 type SortDirection string
 
 const (
-	ASC  SortDirection = "ASC"
-	DESC SortDirection = "DESC"
+	ASC  SortDirection = "ASC"  // Ascending order
+	DESC SortDirection = "DESC" // Descending order
 )
 
-type PageData struct {
+// PageInput (consider renaming to PaginationRequest) contains parameters
+// for paginating and sorting query results.
+// Uses JSON tags for API serialization and validate tags for input validation.
+type PageInput struct {
 	PageSize      int           `json:"page_limit" validate:"omitempty,min=1,max=100"`
 	PageNumber    int           `json:"page_number" validate:"omitempty,min=1"`
 	SortDirection SortDirection `json:"sort_direction" validate:"omitempty,min=0"`
 }
 
-func (p *PageData) SetDefaultsFieldsIfEmpty() {
+// SetDefaultsFieldsIfEmpty sets default values for PageInput fields if they are empty or invalid.
+// Defaults:
+// - SortDirection: ASC (if empty)
+// - PageNumber: 1 (if ≤ 0)
+// - PageSize: 10 (if ≤ 0)
+func (p *PageInput) SetDefaultsFieldsIfEmpty() {
 	if p.SortDirection == "" {
 		p.SortDirection = ASC
 	}
@@ -33,21 +50,29 @@ func (p *PageData) SetDefaultsFieldsIfEmpty() {
 	}
 }
 
+func (p PageInput) Offset() int {
+	return (p.PageNumber - 1) * p.PageSize
+}
+
+// PageMetadata contains comprehensive information about the pagination state.
 type PageMetadata struct {
-	TotalCount      int           `json:"total_count"`
-	TotalPages      int           `json:"total_pages"`
-	CurrentPage     int           `json:"current_page"`
-	PageSize        int           `json:"page_limit"`
-	SortDirection   SortDirection `json:"sort_direction"`
-	HasNextPage     bool          `json:"has_next_page"`
-	HasPreviousPage bool          `json:"has_previous_page"`
+	TotalCount      int           `json:"total_count"`       // Total number of items across all pages
+	TotalPages      int           `json:"total_pages"`       // Total number of pages
+	CurrentPage     int           `json:"current_page"`      // Current page number
+	PageSize        int           `json:"page_limit"`        // Number of items per page
+	SortDirection   SortDirection `json:"sort_direction"`    // Sorting direction applied
+	HasNextPage     bool          `json:"has_next_page"`     // True if another page exists after current
+	HasPreviousPage bool          `json:"has_previous_page"` // True if a page exists before current
 }
 
+// Page represents a paginated response containing data and metadata.
+// Uses generics to provide type safety for the data field.
 type Page[T any] struct {
-	Data     T            `json:"data"`
-	Metadata PageMetadata `json:"metadata"`
+	Data     T            `json:"data"`     // The paginated data slice
+	Metadata PageMetadata `json:"metadata"` // Pagination metadata
 }
 
+// NewPage creates a new Page instance with the provided data and metadata.
 func NewPage[T any](data T, metadata PageMetadata) Page[T] {
 	page := &Page[T]{
 		Data:     data,
@@ -57,6 +82,8 @@ func NewPage[T any](data T, metadata PageMetadata) Page[T] {
 	return *page
 }
 
+// EmptyPage creates an empty Page instance with properly initialized empty data.
+// Handles slice types specially to ensure they're non-nil empty slices.
 func EmptyPage[T any]() Page[T] {
 	var zero T
 	if v := reflect.ValueOf(zero); v.Kind() == reflect.Slice {
@@ -74,7 +101,9 @@ func EmptyPage[T any]() Page[T] {
 	}
 }
 
-func GetPageMetadata(totalItems int, page PageData) *PageMetadata {
+// GetPageMetadata calculates pagination metadata based on total items and page input.
+// Returns a PageMetadata pointer with all pagination information populated.
+func GetPageMetadata(totalItems int, page PageInput) *PageMetadata {
 	var totalPages int
 	if page.PageSize > 0 {
 		totalPages = int(math.Ceil(float64(totalItems) / float64(page.PageSize)))

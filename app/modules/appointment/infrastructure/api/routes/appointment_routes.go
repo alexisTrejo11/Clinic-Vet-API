@@ -37,7 +37,7 @@ func (r *AppointmentRoutes) RegisterAdminRoutes(router *gin.Engine) {
 		appointmentGroup.DELETE("/:id", r.appointmentCommandController.DeleteAppointment)
 
 		// Query operations (admin access)
-		appointmentGroup.GET("", r.appointmentQueryController.GetAllAppointments)
+		appointmentGroup.GET("", r.appointmentQueryController.SearchAppointments)
 		appointmentGroup.GET("/:id", r.appointmentQueryController.GetAppointmentByID)
 		appointmentGroup.GET("/date-range", r.appointmentQueryController.GetAppointmentsByDateRange)
 		appointmentGroup.GET("/owner/:ownerID", r.appointmentQueryController.GetAppointmentsByOwner)

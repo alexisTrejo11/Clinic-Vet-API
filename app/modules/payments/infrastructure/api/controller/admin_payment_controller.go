@@ -1,17 +1,16 @@
 package controller
 
 import (
-	"context"
-
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/payments/application/command"
-	apiResponse "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/responses"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/response"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )
 
 type AdminPaymentController struct {
 	validator         *validator.Validate
-	commandBus        command.CommandBus
+	commandBus        cqrs.CommandBus
 	queryController   *PaymentQueryController
 	paymentController *PaymentController
 }
@@ -70,13 +69,13 @@ func (c *AdminPaymentController) CancelPayment(ctx *gin.Context) {
 
 // MarkOverduePayments marks all overdue payments
 func (c *AdminPaymentController) MarkOverduePayments(ctx *gin.Context) {
-	commandResult := c.commandBus.Execute(context.TODO(), command.MarkOverduePaymentsCommand{})
+	commandResult := c.commandBus.Execute(command.MarkOverduePaymentsCommand{})
 	if !commandResult.IsSuccess {
-		apiResponse.ApplicationError(ctx, commandResult.Error)
+		response.ApplicationError(ctx, commandResult.Error)
 		return
 	}
 
-	apiResponse.Success(ctx, commandResult)
+	response.Success(ctx, commandResult)
 }
 
 // GetOverduePayments delegates to query controller

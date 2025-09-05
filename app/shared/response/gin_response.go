@@ -15,14 +15,14 @@ func Success(ctx *gin.Context, data any) {
 	ctx.JSON(200, response)
 }
 
-func SuccessWithMeta(ctx *gin.Context, data string, meta any) {
+func SuccessWithMeta(ctx *gin.Context, data any, meta any) {
 	response := APIResponse{}
 	response.SuccessWithMeta(data, meta)
 
 	ctx.JSON(200, response)
 }
 
-func Created(ctx *gin.Context, data map[string]any) {
+func Created(ctx *gin.Context, data any) {
 	response := APIResponse{}
 	response.SuccessRequest(data)
 

@@ -44,7 +44,7 @@ func (h *GetAppointmentStatsHandler) Handle(q cqrs.Query) (AppointmentStatsRespo
 
 	var appointments []entity.Appointment
 	var err error
-	maxPage := page.PageData{
+	maxPage := page.PageInput{
 		PageNumber: 1,
 		PageSize:   10000,
 	}
@@ -62,7 +62,7 @@ func (h *GetAppointmentStatsHandler) Handle(q cqrs.Query) (AppointmentStatsRespo
 
 	if err != nil {
 		return AppointmentStatsResponse{}, err
-
+	}
 	// Apply additional filters
 	var filteredAppointments []entity.Appointment
 	for _, appointment := range appointments {

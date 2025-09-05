@@ -5,35 +5,35 @@ import (
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/enum"
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 )
 
 type ListPaymentsByStatusQuery struct {
 	status     enum.PaymentStatus
-	pagination page.PageData
+	pagination page.PageInput
+	ctx        context.Context
 }
 
-func NewListPaymentsByStatusQuery(status enum.PaymentStatus, pagination page.PageData) ListPaymentsByStatusQuery {
+func NewListPaymentsByStatusQuery(status enum.PaymentStatus, pagination page.PageInput) ListPaymentsByStatusQuery {
 	return ListPaymentsByStatusQuery{
 		status:     status,
 		pagination: pagination,
 	}
 }
 
-type ListPaymentsByStatusHandler interface {
-	Handle(ctx context.Context, query ListPaymentsByStatusQuery) (page.Page[[]PaymentResponse], error)
-}
-
-type listPaymentsByStatusHandler struct {
+type ListPaymentsByStatusHandler struct {
 	repo repository.PaymentRepository
 }
 
-func NewListPaymentsByStatusHandler(repo repository.PaymentRepository) ListPaymentsByStatusHandler {
-	return &listPaymentsByStatusHandler{repo: repo}
+func NewListPaymentsByStatusHandler(repo repository.PaymentRepository) cqrs.QueryHandler[page.Page[[]PaymentResponse]] {
+	return &ListPaymentsByStatusHandler{repo: repo}
 }
 
-func (h *listPaymentsByStatusHandler) Handle(ctx context.Context, query ListPaymentsByStatusQuery) (page.Page[[]PaymentResponse], error) {
-	paymentPage, err := h.repo.ListByStatus(ctx, query.status, query.pagination)
+func (h *ListPaymentsByStatusHandler) Handle(q cqrs.Query) (page.Page[[]PaymentResponse], error) {
+	query := q.(ListPaymentsByStatusQuery)
+
+	paymentPage, err := h.repo.ListByStatus(query.ctx, query.status, query.pagination)
 	if err != nil {
 		return page.Page[[]PaymentResponse]{}, err
 	}

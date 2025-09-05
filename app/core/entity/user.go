@@ -141,6 +141,10 @@ func (u *User) UpdateStatus(status enum.UserStatus) error {
 	return nil
 }
 
+func ValidateNotWeakPassword(requestedPassword string) error {
+	return nil
+}
+
 func (u *User) ValidateStatusTransition(newStatus enum.UserStatus) error {
 	switch u.status {
 	case enum.UserStatusPending:

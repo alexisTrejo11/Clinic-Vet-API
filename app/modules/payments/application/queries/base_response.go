@@ -1,3 +1,4 @@
+// Package query contains all the implementation for retriving data for payments
 package query
 
 import (
@@ -26,9 +27,9 @@ type PaymentResponse struct {
 
 func NewPaymentResponse(payment *entity.Payment) PaymentResponse {
 	return PaymentResponse{
-		ID:            payment.GetID(),
-		AppointmentID: payment.GetAppointmentID(),
-		UserID:        payment.GetUserID(),
+		ID:            payment.GetID().GetValue(),
+		AppointmentID: payment.GetAppointmentID().GetValue(),
+		UserID:        payment.GetUserID().GetValue(),
 		Amount:        payment.GetAmount().ToFloat(),
 		Currency:      payment.GetCurrency(),
 		PaymentMethod: string(payment.GetPaymentMethod()),
@@ -38,7 +39,6 @@ func NewPaymentResponse(payment *entity.Payment) PaymentResponse {
 		DueDate:       formatTime(payment.GetDueDate()),
 		PaidAt:        formatTime(payment.GetPaidAt()),
 		RefundedAt:    formatTime(payment.GetRefundedAt()),
-		IsActive:      payment.GetIsActive(),
 		CreatedAt:     payment.GetCreatedAt().Format(time.RFC3339),
 		UpdatedAt:     payment.GetUpdatedAt().Format(time.RFC3339),
 	}

@@ -7,6 +7,7 @@ import (
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/auth/application/jwt"
+	apperror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/application"
 )
 
 type RefreshSessionCommand struct {
@@ -15,7 +16,7 @@ type RefreshSessionCommand struct {
 	CTX          context.Context    `json:"-"`
 }
 
-type refreshSessionHandler struct {
+type RefreshSessionHandler struct {
 	userRepo    repository.UserRepository
 	sessionRepo repository.SessionRepository
 	jwtService  jwt.JWTService
@@ -26,18 +27,18 @@ func NewRefreshSessionHandler(
 	sessionRepo repository.SessionRepository,
 	jwtService jwt.JWTService,
 ) AuthCommandHandler {
-	return &refreshSessionHandler{
+	return &RefreshSessionHandler{
 		userRepo:    userRepo,
 		sessionRepo: sessionRepo,
 		jwtService:  jwtService,
 	}
 }
 
-func (h *refreshSessionHandler) Handle(cmd any) AuthCommandResult {
+func (h *RefreshSessionHandler) Handle(cmd any) AuthCommandResult {
 	command := cmd.(RefreshSessionCommand)
 
-	_, err := h.userRepo.GetByID(command.CTX, command.UserID)
-	if err != nil {
+	if err := h.validateExisitngUser(command); err != nil {
+		return FailureAuthResult("Error ocurred validatin user", err)
 	}
 
 	entity, err := h.sessionRepo.GetByUserAndID(command.CTX, command.UserID.String(), command.RefreshToken)
@@ -52,6 +53,19 @@ func (h *refreshSessionHandler) Handle(cmd any) AuthCommandResult {
 
 	response := getSessionResponse(entity, access)
 	return SuccessAuthResult(&response, entity.ID, "session successfully refreshed")
+}
+
+func (h *RefreshSessionHandler) validateExisitngUser(command RefreshSessionCommand) error {
+	exists, err := h.userRepo.ExistsByID(command.CTX, command.UserID)
+	if err != nil {
+		return err
+	}
+
+	if !exists {
+		return apperror.EntityValidationError("user", "id", command.UserID.String())
+	}
+
+	return nil
 }
 
 func getSessionResponse(entity entity.Session, access string) SessionResponse {

@@ -7,7 +7,7 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-func ShouldBindPageParams(requestPageParams *page.PageData, ctx *gin.Context, validator *validator.Validate) error {
+func ShouldBindPageParams(requestPageParams *page.PageInput, ctx *gin.Context, validator *validator.Validate) error {
 	if err := ctx.ShouldBindQuery(&requestPageParams); err != nil {
 		return htttpError.RequestURLQueryError(err)
 	}
@@ -17,5 +17,6 @@ func ShouldBindPageParams(requestPageParams *page.PageData, ctx *gin.Context, va
 	}
 
 	requestPageParams.SetDefaultsFieldsIfEmpty()
+
 	return nil
 }

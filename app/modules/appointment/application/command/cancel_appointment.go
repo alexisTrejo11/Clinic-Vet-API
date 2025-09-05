@@ -14,10 +14,10 @@ import (
 type CancelAppointmentCommand struct {
 	appointmentID valueobject.AppointmentID
 	reason        string
-	ctx           *context.Context
+	ctx           context.Context
 }
 
-func NewCancelAppointmentCommand(ctx *context.Context, id int, reason string) (*CancelAppointmentCommand, error) {
+func NewCancelAppointmentCommand(ctx context.Context, id int, reason string) (*CancelAppointmentCommand, error) {
 	if ctx == nil {
 		return nil, apperror.FieldValidationError("context", "nil", "context is nil")
 	}
@@ -47,7 +47,7 @@ func NewCancelAppointmentHandler(appointmentRepo repository.AppointmentRepositor
 func (h *CancelAppointmentHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
 	command := cmd.(CancelAppointmentCommand)
 
-	appointment, err := h.appointmentRepo.GetByID(*command.ctx, command.appointmentID)
+	appointment, err := h.appointmentRepo.GetByID(command.ctx, command.appointmentID)
 	if err != nil {
 		return cqrs.FailureResult("failed finding appointent", err)
 	}
@@ -56,7 +56,7 @@ func (h *CancelAppointmentHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
 		return cqrs.FailureResult("failed to cancel appointment", err)
 	}
 
-	if err := h.appointmentRepo.Save(*command.ctx, &appointment); err != nil {
+	if err := h.appointmentRepo.Save(command.ctx, &appointment); err != nil {
 		return cqrs.FailureResult("failed to save cancelled appointment", err)
 	}
 

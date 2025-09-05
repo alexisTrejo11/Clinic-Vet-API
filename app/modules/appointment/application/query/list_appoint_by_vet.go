@@ -12,10 +12,10 @@ import (
 type ListAppointmentsByVetQuery struct {
 	vetID     valueobject.VetID
 	ctx       context.Context
-	pageInput page.PageData
+	pageInput page.PageInput
 }
 
-func NewListAppointmentsByVetQuery(id int, ctx context.Context, pageInput page.PageData) (*ListAppointmentsByVetQuery, error) {
+func NewListAppointmentsByVetQuery(id int, ctx context.Context, pageInput page.PageInput) (*ListAppointmentsByVetQuery, error) {
 	vetID, err := valueobject.NewVetID(id)
 	if err != nil {
 		return nil, err

@@ -1,3 +1,4 @@
+// Package query contains all the query implementations for appointment query operations
 package query
 
 import (

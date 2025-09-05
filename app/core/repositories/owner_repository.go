@@ -10,7 +10,7 @@ import (
 
 type OwnerRepository interface {
 	Save(ctx context.Context, owner *entity.Owner) error
-	List(ctx context.Context, pagination page.PageData) (page.Page[[]entity.Owner], error)
+	List(ctx context.Context, pagination page.PageInput) (page.Page[[]entity.Owner], error)
 	GetByID(ctx context.Context, id valueobject.OwnerID) (entity.Owner, error)
 	GetByPhone(ctx context.Context, phone string) (entity.Owner, error)
 	SoftDelete(ctx context.Context, id valueobject.OwnerID) error

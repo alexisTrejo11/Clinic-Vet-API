@@ -3,8 +3,8 @@ package controller
 import (
 	"time"
 
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/enum"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/auth/application/command"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/valueObjects"
 )
 
 type RequestSignup struct {
@@ -19,7 +19,7 @@ type RequestSignup struct {
 }
 
 func (r *RequestSignup) ToCommand() *command.SignupCommand {
-	gender := valueObjects.NewGender(r.Gender)
+	gender := enum.NewGender(r.Gender)
 
 	return &command.SignupCommand{
 		Email:       &r.Email,

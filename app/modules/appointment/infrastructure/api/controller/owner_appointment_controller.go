@@ -9,6 +9,7 @@ import (
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/appointment/application/command"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/appointment/application/query"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
 	"github.com/gin-gonic/gin"
 )
 
@@ -20,11 +21,11 @@ import (
 // @in header
 // @name Authorization
 type OwnerAppointmentController struct {
-	commandBus command.CommandBus
-	queryBus   query.QueryBus
+	commandBus cqrs.CommandBus
+	queryBus   cqrs.QueryBus
 }
 
-func NewOwnerAppointmentController(commandBus command.CommandBus, queryBus query.QueryBus) *OwnerAppointmentController {
+func NewOwnerAppointmentController(commandBus cqrs.CommandBus, queryBus cqrs.QueryBus) *OwnerAppointmentController {
 	return &OwnerAppointmentController{
 		commandBus: commandBus,
 		queryBus:   queryBus,
@@ -82,39 +83,9 @@ func (controller *OwnerAppointmentController) RequestAppointment(ctx *gin.Contex
 // @Security BearerAuth
 // @Router /owner/appointments [get]
 func (controller *OwnerAppointmentController) GetMyAppointments(ctx *gin.Context) {
-	// Get owner ID from context (should be set by auth middleware)
-	ownerIDStr, exists := ctx.Get("owner_id")
-	if !exists {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Owner ID not found in context"})
-		return
-	}
+	getByOwnerQuery := query.NewGetAppointmentsByOwnerQuery(ownerID, page, limit)
 
-	idint, ok := ownerIDStr.(int)
-	if !ok {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid owner ID format"})
-		return
-	}
-
-	ownerID, _ := valueobject.NewOwnerID(idint)
-
-	pageParam := ctx.DefaultQuery("page", "1")
-	limitParam := ctx.DefaultQuery("limit", "10")
-
-	page, err := strconv.Atoi(pageParam)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid page number"})
-		return
-	}
-
-	limit, err := strconv.Atoi(limitParam)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid limit"})
-		return
-	}
-
-	query := query.NewGetAppointmentsByOwnerQuery(ownerID, page, limit)
-
-	response, err := controller.queryBus.Execute(ctx, query)
+	response, err := controller.queryBus.Execute(ctx, getByOwnerQuery)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -133,34 +104,6 @@ func (controller *OwnerAppointmentController) GetMyAppointments(ctx *gin.Context
 // @Security BearerAuth
 // @Router /owner/appointments/{id} [get]
 func (controller *OwnerAppointmentController) GetAppointmentByID(ctx *gin.Context) {
-	idParam := ctx.Param("id")
-	id, err := strconv.Atoi(idParam)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid appointment ID"})
-		return
-	}
-
-	// Get owner ID from context (should be set by auth middleware)
-
-	appointmentID, err := valueobject.NewAppointmentID(id)
-	if err != nil {
-		ctx.JSON(400, gin.H{"error": err.Error()})
-		return
-	}
-
-	query := query.NewGetAppointmentByIDQuery(appointmentID)
-
-	response, err := controller.queryBus.Execute(ctx, query)
-	if err != nil {
-		ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
-		return
-	}
-
-	// Verify appointment belongs to the owner
-	// This would require checking the appointment's owner_id
-	// For now, we'll return the appointment
-
-	ctx.JSON(http.StatusOK, response)
 }
 
 // RescheduleAppointment godoc

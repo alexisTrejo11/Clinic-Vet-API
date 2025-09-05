@@ -4,11 +4,10 @@ import (
 	"context"
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
-	domainerr "github.com/alexisTrejo11/Clinic-Vet-API/app/core/errors"
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/owners/application/dto"
 	mapper "github.com/alexisTrejo11/Clinic-Vet-API/app/modules/owners/application/mappers"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/valueObjects"
+	apperror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/application"
 )
 
 type UpdateOwnerUseCase struct {
@@ -24,14 +23,18 @@ func NewUpdateOwnerUseCase(ownerRepo repository.OwnerRepository) *UpdateOwnerUse
 func (uc *UpdateOwnerUseCase) Execute(ctx context.Context, id valueobject.OwnerID, updateData dto.OwnerUpdate) (dto.OwnerDetail, error) {
 	owner, err := uc.ownerRepo.GetByID(ctx, id)
 	if err != nil {
-		return dto.OwnerDetail{}, domainerr.HandleGetByIdError(err, id.GetValue())
+		return dto.OwnerDetail{}, nil
 	}
 
 	if updateData.PhoneNumber != nil && *updateData.PhoneNumber != owner.PhoneNumber() {
-		_, err := uc.ownerRepo.GetByPhone(ctx, *updateData.PhoneNumber)
-		if err == nil {
-			return dto.OwnerDetail{}, domainerr.HandlePhoneConflictError()
+		exists, err := uc.ownerRepo.ExistsByPhone(ctx, *updateData.PhoneNumber)
+		if err != nil {
+			return dto.OwnerDetail{}, err
 		}
+		if exists {
+			return dto.OwnerDetail{}, apperror.ConflictError("phoneNumber", "phoneNumber already taken")
+		}
+
 		owner.SetPhoneNumber(*updateData.PhoneNumber)
 	}
 
@@ -50,10 +53,7 @@ func (uc *UpdateOwnerUseCase) Execute(ctx context.Context, id valueobject.OwnerI
 			lastName = *updateData.LastName
 		}
 
-		fullName, err := valueObjects.NewPersonName(firstName, lastName)
-		if err != nil {
-			return dto.OwnerDetail{}, err
-		}
+		fullName, _ := valueobject.NewPersonName(firstName, lastName)
 		owner.SetFullName(fullName)
 	}
 

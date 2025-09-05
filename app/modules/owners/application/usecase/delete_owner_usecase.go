@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
-	domainerr "github.com/alexisTrejo11/Clinic-Vet-API/app/core/errors"
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 )
 
@@ -19,10 +18,8 @@ func NewSoftDeleteOwnerUseCase(ownerRepo repository.OwnerRepository) *SoftDelete
 }
 
 func (uc *SoftDeleteOwnerUseCase) Execute(ctx context.Context, id valueobject.OwnerID) error {
-	if exists, err := uc.ownerRepo.ExistsByID(ctx, id); err != nil {
+	if _, err := uc.ownerRepo.GetByID(ctx, id); err != nil {
 		return err
-	} else if !exists {
-		return domainerr.HandleGetByIdError(err, id.GetValue())
 	}
 
 	if err := uc.ownerRepo.SoftDelete(ctx, id); err != nil {

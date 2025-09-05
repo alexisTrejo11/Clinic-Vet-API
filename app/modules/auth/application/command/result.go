@@ -3,7 +3,7 @@ package command
 import (
 	"time"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
 )
 
 type SessionResponse struct {
@@ -15,13 +15,13 @@ type SessionResponse struct {
 }
 
 type AuthCommandResult struct {
-	result  shared.CommandResult
+	result  cqrs.CommandResult
 	session SessionResponse
 }
 
 func FailureAuthResult(message string, err error) AuthCommandResult {
 	result := &AuthCommandResult{
-		result:  shared.FailureResult(message, err),
+		result:  cqrs.FailureResult(message, err),
 		session: SessionResponse{},
 	}
 
@@ -30,7 +30,7 @@ func FailureAuthResult(message string, err error) AuthCommandResult {
 
 func SuccessAuthResult(session *SessionResponse, userid, message string) AuthCommandResult {
 	result := &AuthCommandResult{
-		result:  shared.SuccessResult(userid, message),
+		result:  cqrs.SuccessResult(userid, message),
 		session: *session,
 	}
 
@@ -50,5 +50,5 @@ func (r *AuthCommandResult) Message() string {
 }
 
 func (r *AuthCommandResult) Session() SessionResponse {
-	return r.Session()
+	return r.session
 }

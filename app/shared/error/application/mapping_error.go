@@ -25,7 +25,7 @@ func FieldValidationError(field, value, message string) *FieldDataError {
 	}
 }
 
-func MappingError(errorMessage []string, from, to, entity string) *FieldDataError {
+func MappingError(errorMessage []string, from, to, entityName string) *FieldDataError {
 	return &FieldDataError{
 		BaseApplicationError: BaseApplicationError{
 			Code:    "FIELD_DATA_ERROR",
@@ -35,7 +35,7 @@ func MappingError(errorMessage []string, from, to, entity string) *FieldDataErro
 				"errorsMessages": strings.Join(errorMessage, ","),
 				"from":           from,
 				"to":             to,
-				"entity":         entity,
+				"entity":         entityName,
 			},
 			StatusCode: http.StatusUnprocessableEntity,
 		},

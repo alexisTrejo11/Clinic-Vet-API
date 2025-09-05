@@ -4,35 +4,35 @@ import (
 	"context"
 
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 )
 
-type ListOverduePaymentsHandler interface {
-	Handle(ctx context.Context, query ListOverduePaymentsQuery) (page.Page[[]PaymentResponse], error)
-}
-
-type listOverduePaymentsHandlerImpl struct {
+type ListOverduePaymentsHandler struct {
 	paymentRepository repository.PaymentRepository
 }
 
 type ListOverduePaymentsQuery struct {
-	pagination page.PageData
+	pagination page.PageInput
+	ctx        context.Context
 }
 
-func NewListOverduePaymentsQuery(pagination page.PageData) ListOverduePaymentsQuery {
+func NewListOverduePaymentsQuery(pagination page.PageInput) ListOverduePaymentsQuery {
 	return ListOverduePaymentsQuery{
 		pagination: pagination,
 	}
 }
 
-func NewListOverduePaymentsHandler(paymentRepository repository.PaymentRepository) ListOverduePaymentsHandler {
-	return &listOverduePaymentsHandlerImpl{
+func NewListOverduePaymentsHandler(paymentRepository repository.PaymentRepository) cqrs.QueryHandler[page.Page[[]PaymentResponse]] {
+	return &ListOverduePaymentsHandler{
 		paymentRepository: paymentRepository,
 	}
 }
 
-func (h *listOverduePaymentsHandlerImpl) Handle(ctx context.Context, query ListOverduePaymentsQuery) (page.Page[[]PaymentResponse], error) {
-	paymentsPage, err := h.paymentRepository.ListOverduePayments(ctx, query.pagination)
+func (h *ListOverduePaymentsHandler) Handle(q cqrs.Query) (page.Page[[]PaymentResponse], error) {
+	query := q.(ListOverduePaymentsQuery)
+
+	paymentsPage, err := h.paymentRepository.ListOverduePayments(query.ctx, query.pagination)
 	if err != nil {
 		return page.Page[[]PaymentResponse]{}, err
 	}

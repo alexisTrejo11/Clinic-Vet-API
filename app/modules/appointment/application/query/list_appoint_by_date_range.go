@@ -6,6 +6,7 @@ import (
 
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
+	apperror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/application"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 )
 
@@ -13,15 +14,29 @@ type ListAppointmentsByDateRangeQuery struct {
 	startDate time.Time
 	endDate   time.Time
 	ctx       context.Context
-	pageInput page.PageData
+	pageInput page.PageInput
 }
 
-func NewListAppointmentsByDateRangeQuery(startDate, endDate time.Time, pageInput page.PageData) *ListAppointmentsByDateRangeQuery {
-	return &ListAppointmentsByDateRangeQuery{
+func NewListAppointmentsByDateRangeQuery(startDate, endDate time.Time, pageInput page.PageInput) (ListAppointmentsByDateRangeQuery, error) {
+	qry := &ListAppointmentsByDateRangeQuery{
 		startDate: startDate,
 		endDate:   endDate,
 		pageInput: pageInput,
 	}
+
+	if startDate.IsZero() {
+		return ListAppointmentsByDateRangeQuery{}, apperror.FieldValidationError("startDate", "zero", "startDate can't be zero")
+	}
+
+	if endDate.IsZero() {
+		return ListAppointmentsByDateRangeQuery{}, apperror.FieldValidationError("endDate", "zero", "endDate can't be zero")
+	}
+
+	if startDate.Before(endDate) {
+		return ListAppointmentsByDateRangeQuery{}, apperror.FieldValidationError("date-range", "", "startDate can't be before endDate")
+	}
+
+	return *qry, nil
 }
 
 type ListAppointmentsByDateRangeHandler struct {

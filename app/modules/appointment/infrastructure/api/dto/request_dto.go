@@ -1,3 +1,4 @@
+// Package dto contains all the data structures for HTTP requests
 package dto
 
 import (
@@ -7,13 +8,23 @@ import (
 	"time"
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/appointment/application/command"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/appointment/application/query"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 )
 
-type GetAppointmentsByDateRangeRequest struct {
-	StartDate       CustomDate `json:"start_date"  form:"start_date" binding:"required"`
-	EndDate         CustomDate `json:"end_date"  form:"end_date" binding:"required"`
-	paginationInput page.PageData
+type ListAppointmentsByDateRangeRequest struct {
+	StartDate CustomDate `json:"start_date"  form:"start_date" binding:"required"`
+	EndDate   CustomDate `json:"end_date"  form:"end_date" binding:"required"`
+	page.PageInput
+}
+
+func (r *ListAppointmentsByDateRangeRequest) ToQuery() (query.ListAppointmentsByDateRangeQuery, error) {
+	qry, err := query.NewListAppointmentsByDateRangeQuery(r.StartDate.Time, r.EndDate.Time, r.PageInput)
+	if err != nil {
+		return query.ListAppointmentsByDateRangeQuery{}, err
+	}
+
+	return qry, nil
 }
 
 type CustomDate struct {

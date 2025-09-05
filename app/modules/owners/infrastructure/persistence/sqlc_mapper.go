@@ -2,9 +2,9 @@ package persistence
 
 import (
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/enum"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/valueObjects"
+	appError "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/application"
 	"github.com/alexisTrejo11/Clinic-Vet-API/db/models"
 	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -32,12 +32,12 @@ func toCreateParams(owner entity.Owner) *sqlc.CreateOwnerParams {
 	return createOwnerParam
 }
 
-func toUpdateParams(owner entity.Owner) *sqlc.UpdateOwnerParams {
+func entityToUpdateParams(owner entity.Owner) *sqlc.UpdateOwnerParams {
 	updateOwnerParam := &sqlc.UpdateOwnerParams{
 		ID:          int32(owner.ID().GetValue()),
 		Photo:       owner.Photo(),
 		PhoneNumber: owner.PhoneNumber(),
-		Gender:      models.PersonGender(shared.AssertString(owner)),
+		Gender:      models.PersonGender(owner.Gender()),
 		DateOfBirth: pgtype.Date{Time: owner.DateOfBirth(), Valid: true},
 		FirstName:   owner.FullName().FirstName,
 		LastName:    owner.FullName().LastName,
@@ -55,10 +55,29 @@ func toUpdateParams(owner entity.Owner) *sqlc.UpdateOwnerParams {
 	return updateOwnerParam
 }
 
-func rowToOwner(row sqlc.Owner) entity.Owner {
-	fullName, _ := valueObjects.NewPersonName(row.FirstName, row.LastName)
-	ownerID, _ := valueobject.NewOwnerID(int(row.ID))
-	userID, _ := valueobject.NewUserID(int(row.UserID.Int32))
+func sqlRowToOwner(row sqlc.Owner) (entity.Owner, error) {
+	errorMessages := make([]string, 0)
+
+	fullName, err := valueobject.NewPersonName(row.FirstName, row.LastName)
+	if err != nil {
+		errorMessages = append(errorMessages, err.Error())
+	}
+
+	ownerID, err := valueobject.NewOwnerID(int(row.ID))
+	if err != nil {
+		errorMessages = append(errorMessages, err.Error())
+	}
+
+	userID, err := valueobject.NewUserID(int(row.UserID.Int32))
+	if err != nil {
+		errorMessages = append(errorMessages, err.Error())
+	}
+
+	if len(errorMessages) > 0 {
+		return entity.Owner{}, appError.MappingError(errorMessages, "sql", "domainEntity", "owner")
+	}
+
+	gender := enum.NewGender(string(row.Gender))
 
 	owner := entity.NewOwnerBuilder().
 		WithID(ownerID).
@@ -67,17 +86,20 @@ func rowToOwner(row sqlc.Owner) entity.Owner {
 		WithAddress(row.Address.String).
 		WithDateOfBirth(row.DateOfBirth.Time).
 		WithUserID(userID).
-		WithGender(valueObjects.Gender(shared.AssertString(row.Gender))).
+		WithGender(gender).
 		WithIsActive(row.IsActive).
 		Build()
 
-	return *owner
+	return *owner, nil
 }
 
 func ListRowToOwner(rows []sqlc.Owner) ([]entity.Owner, error) {
 	owners := make([]entity.Owner, 0, len(rows))
 	for i, row := range rows {
-		owner := rowToOwner(row)
+		owner, err := sqlRowToOwner(row)
+		if err != nil {
+			return []entity.Owner{}, err
+		}
 		owners[i] = owner
 	}
 	return owners, nil

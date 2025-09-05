@@ -1,6 +1,7 @@
-package paymentRepo
+package persistence
 
 import (
+	"fmt"
 	"math/big"
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
@@ -11,56 +12,46 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-func mapSQLCPaymentToDomain(sqlcPayment sqlc.Payment) (entity.Payment, error) {
+func sqlcToEntity(sqlcPayment sqlc.Payment) (entity.Payment, error) {
 	status, err := enum.NewPaymentStatus(string(sqlcPayment.Status))
 	if err != nil {
-		return entity.Payment{}, err
+		return entity.Payment{}, fmt.Errorf("invalid payment status: %w", err)
 	}
 
 	method, err := enum.NewPaymentMethod(string(sqlcPayment.Method))
 	if err != nil {
+		return entity.Payment{}, fmt.Errorf("invalid payment method: %w", err)
+	}
+
+	money, err := valueobject.NewMoney(float64(sqlcPayment.Amount.Int.Int64()), sqlcPayment.Currency)
+	if err != nil {
+		return entity.Payment{}, fmt.Errorf("invalid money amount: %w", err)
+	}
+
+	paymentID, err := valueobject.NewPaymentID(int(sqlcPayment.ID))
+	if err != nil {
 		return entity.Payment{}, err
 	}
 
-	payment := &entity.Payment{}
-
-	payment.SetID(int(sqlcPayment.ID))
-	payment.SetAmount(valueobject.Money{
-		Amount:   sqlcPayment.Amount.Int.Int64(),
-		Currency: sqlcPayment.Currency,
-	})
-	payment.SetStatus(status)
-	payment.SetPaymentMethod(method)
-	payment.SetCreatedAt(sqlcPayment.CreatedAt.Time)
-	payment.SetUpdatedAt(sqlcPayment.UpdatedAt.Time)
+	builder := entity.NewPaymentBuilder().
+		WithID(paymentID).
+		WithAmount(money).
+		WithStatus(status).
+		WithPaymentMethod(method).
+		WithCreatedAt(sqlcPayment.CreatedAt.Time).
+		WithUpdatedAt(sqlcPayment.UpdatedAt.Time)
 
 	if sqlcPayment.TransactionID.Valid {
-		payment.SetTransactionID(&sqlcPayment.TransactionID.String)
+		builder = builder.WithTransactionID(&sqlcPayment.TransactionID.String)
 	}
 
-	if sqlcPayment.Description.Valid {
-		payment.SetDescription(&sqlcPayment.Description.String)
-	}
-
-	if sqlcPayment.Duedate.Valid {
-		payment.SetDueDate(&sqlcPayment.Duedate.Time)
-	}
-
-	if sqlcPayment.PaidAt.Valid {
-		payment.SetPaidAt(&sqlcPayment.PaidAt.Time)
-	}
-
-	if sqlcPayment.RefundedAt.Valid {
-		payment.SetRefundedAt(&sqlcPayment.RefundedAt.Time)
-	}
-
-	return *payment, nil
+	return *builder.Build(), nil
 }
 
-func mapSQLCPaymentListToDomain(sqlcPayments []sqlc.Payment) ([]entity.Payment, error) {
+func sqlcToEntityList(sqlcPayments []sqlc.Payment) ([]entity.Payment, error) {
 	var payments []entity.Payment
 	for _, sqlcPayment := range sqlcPayments {
-		payment, err := mapSQLCPaymentToDomain(sqlcPayment)
+		payment, err := sqlcToEntity(sqlcPayment)
 		if err != nil {
 			return nil, err
 		}
@@ -69,7 +60,7 @@ func mapSQLCPaymentListToDomain(sqlcPayments []sqlc.Payment) ([]entity.Payment, 
 	return payments, nil
 }
 
-func mapDomainToCreateParams(payment *entity.Payment) sqlc.CreatePaymentParams {
+func entityToCreateParams(payment *entity.Payment) sqlc.CreatePaymentParams {
 	return sqlc.CreatePaymentParams{
 		Amount:        pgtype.Numeric{Int: big.NewInt(payment.GetAmount().Amount), Valid: true},
 		Currency:      payment.GetAmount().Currency,
@@ -85,13 +76,13 @@ func mapDomainToCreateParams(payment *entity.Payment) sqlc.CreatePaymentParams {
 
 func mapDomainToUpdateParams(payment *entity.Payment) sqlc.UpdatePaymentParams {
 	return sqlc.UpdatePaymentParams{
-		ID:            int32(payment.GetID()),
+		ID:            int32(payment.GetID().GetValue()),
 		Amount:        pgtype.Numeric{Int: big.NewInt(payment.GetAmount().Amount), Valid: true},
 		Currency:      payment.GetAmount().Currency,
 		TransactionID: pgtype.Text{String: *payment.GetTransactionID(), Valid: payment.GetTransactionID() != nil},
 		Status:        models.PaymentStatus(string(payment.GetStatus())),
 		Method:        models.PaymentMethod(string(payment.GetPaymentMethod())),
-		UserID:        int32(payment.GetUserID()),
+		UserID:        int32(payment.GetUserID().GetValue()),
 		Description:   pgtype.Text{String: *payment.GetDescription(), Valid: payment.GetDescription() != nil},
 		Duedate:       pgtype.Timestamptz{Time: *payment.GetDueDate(), Valid: payment.GetDueDate() != nil},
 		PaidAt:        pgtype.Timestamptz{Time: *payment.GetPaidAt(), Valid: payment.GetPaidAt() != nil},

@@ -11,9 +11,9 @@ import (
 
 type NotificationService interface {
 	SendNotification(ctx context.Context, notification *entity.Notification) error
-	ListNotificationByUserID(ctx context.Context, userID string, pagination page.PageData) (page.Page[[]NotificationResponse], error)
-	ListNotificationByType(ctx context.Context, notificationType string, pagination page.PageData) (page.Page[[]NotificationResponse], error)
-	ListNotificationByChannel(ctx context.Context, channel string, pagination page.PageData) (page.Page[[]NotificationResponse], error)
+	ListNotificationByUserID(ctx context.Context, userID string, pagination page.PageInput) (page.Page[[]NotificationResponse], error)
+	ListNotificationByType(ctx context.Context, notificationType string, pagination page.PageInput) (page.Page[[]NotificationResponse], error)
+	ListNotificationByChannel(ctx context.Context, channel string, pagination page.PageInput) (page.Page[[]NotificationResponse], error)
 	GenerateSummary(ctx context.Context, senderID string) ([]entity.Notification, error)
 	GetNotificationByID(ctx context.Context, id string) (entity.Notification, error)
 }
@@ -38,7 +38,7 @@ func (s *notificationServiceImpl) SendNotification(ctx context.Context, notifica
 	return s.senders[typeStr].Send(ctx, notification)
 }
 
-func (s *notificationServiceImpl) ListNotificationByUserID(ctx context.Context, userID string, pagination page.PageData) (page.Page[[]NotificationResponse], error) {
+func (s *notificationServiceImpl) ListNotificationByUserID(ctx context.Context, userID string, pagination page.PageInput) (page.Page[[]NotificationResponse], error) {
 	notificationPage, err := s.notificationRepo.ListByUser(ctx, userID, pagination)
 	if err != nil {
 		return page.Page[[]NotificationResponse]{}, err
@@ -52,7 +52,7 @@ func (s *notificationServiceImpl) GetNotificationByID(ctx context.Context, id st
 	return s.notificationRepo.GetByID(ctx, id)
 }
 
-func (s *notificationServiceImpl) ListNotificationByType(ctx context.Context, notificationType string, pagination page.PageData) (page.Page[[]NotificationResponse], error) {
+func (s *notificationServiceImpl) ListNotificationByType(ctx context.Context, notificationType string, pagination page.PageInput) (page.Page[[]NotificationResponse], error) {
 	notificationPage, err := s.notificationRepo.ListByType(ctx, notificationType, pagination)
 	if err != nil {
 		return page.Page[[]NotificationResponse]{}, err
@@ -62,7 +62,7 @@ func (s *notificationServiceImpl) ListNotificationByType(ctx context.Context, no
 	return responsePage, nil
 }
 
-func (s *notificationServiceImpl) ListNotificationByChannel(ctx context.Context, channel string, pagination page.PageData) (page.Page[[]NotificationResponse], error) {
+func (s *notificationServiceImpl) ListNotificationByChannel(ctx context.Context, channel string, pagination page.PageInput) (page.Page[[]NotificationResponse], error) {
 	notificationPage, err := s.notificationRepo.ListByChannel(ctx, channel, pagination)
 	if err != nil {
 		return page.Page[[]NotificationResponse]{}, err

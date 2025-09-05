@@ -42,7 +42,7 @@ func (r *MongoNotificationRepository) GetByID(ctx context.Context, id string) (e
 	return notification, nil
 }
 
-func (r *MongoNotificationRepository) ListByUser(ctx context.Context, userID string, pagination page.PageData) (page.Page[[]entity.Notification], error) {
+func (r *MongoNotificationRepository) ListByUser(ctx context.Context, userID string, pagination page.PageInput) (page.Page[[]entity.Notification], error) {
 	findOptions := r.paginateSearch(pagination)
 	queryFilter := bson.M{"user_id": userID}
 
@@ -59,7 +59,7 @@ func (r *MongoNotificationRepository) ListByUser(ctx context.Context, userID str
 	return page.NewPage(notifications, pageMetadata), nil
 }
 
-func (r *MongoNotificationRepository) ListByType(ctx context.Context, notificationType string, pagination page.PageData) (page.Page[[]entity.Notification], error) {
+func (r *MongoNotificationRepository) ListByType(ctx context.Context, notificationType string, pagination page.PageInput) (page.Page[[]entity.Notification], error) {
 	findOptions := r.paginateSearch(pagination)
 	queryFilter := bson.M{"type": notificationType}
 
@@ -76,7 +76,7 @@ func (r *MongoNotificationRepository) ListByType(ctx context.Context, notificati
 	return page.NewPage(notifications, pageMetadata), nil
 }
 
-func (r *MongoNotificationRepository) ListByChannel(ctx context.Context, channel string, pagination page.PageData) (page.Page[[]entity.Notification], error) {
+func (r *MongoNotificationRepository) ListByChannel(ctx context.Context, channel string, pagination page.PageInput) (page.Page[[]entity.Notification], error) {
 	findOptions := r.paginateSearch(pagination)
 	queryFilter := bson.M{"channel": channel}
 
@@ -93,7 +93,7 @@ func (r *MongoNotificationRepository) ListByChannel(ctx context.Context, channel
 	return page.NewPage(notifications, pageMetadata), nil
 }
 
-func (r *MongoNotificationRepository) paginateSearch(pagination page.PageData) *options.FindOptionsBuilder {
+func (r *MongoNotificationRepository) paginateSearch(pagination page.PageInput) *options.FindOptionsBuilder {
 	pageSize := int64(pagination.PageSize)
 	pageNumber := int64(pagination.PageNumber)
 
@@ -117,7 +117,7 @@ func (r *MongoNotificationRepository) countQueryTotalItems(ctx context.Context, 
 	return totalItems, nil
 }
 
-func (r *MongoNotificationRepository) getPaginationMetadata(ctx context.Context, queryFilter bson.M, pagination page.PageData) (page.PageMetadata, error) {
+func (r *MongoNotificationRepository) getPaginationMetadata(ctx context.Context, queryFilter bson.M, pagination page.PageInput) (page.PageMetadata, error) {
 	totalItems, err := r.countQueryTotalItems(ctx, queryFilter)
 	if err != nil {
 		return page.PageMetadata{}, err

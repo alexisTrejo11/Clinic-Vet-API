@@ -4,50 +4,50 @@ import (
 	"context"
 
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/service"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
 )
 
 type RefundPaymentCommand struct {
 	paymentID int
 	reason    string
+	ctx       context.Context
 }
 
-func NewRefundPaymentCommand(paymentID int, reason string) RefundPaymentCommand {
-	return RefundPaymentCommand{
+func NewRefundPaymentCommand(paymentID int, reason string) (RefundPaymentCommand, error) {
+	cmd := &RefundPaymentCommand{
 		paymentID: paymentID,
 		reason:    reason,
+		ctx:       context.Background(),
 	}
+
+	return *cmd, nil
 }
 
-type RefundPaymentHandler interface {
-	Handle(ctx context.Context, command RefundPaymentCommand) shared.CommandResult
+type RefundPaymentHandler struct {
+	paymentRepo repository.PaymentRepository
 }
 
-type refundPaymentHandler struct {
-	paymentRepo      repository.PaymentRepository
-	paymentProccesor service.PaymentProccesorService
-}
-
-func NewRefundPaymentHandler(paymentRepo repository.PaymentRepository) RefundPaymentHandler {
-	return &refundPaymentHandler{
+func NewRefundPaymentHandler(paymentRepo repository.PaymentRepository) cqrs.CommandHandler {
+	return &RefundPaymentHandler{
 		paymentRepo: paymentRepo,
 	}
 }
 
-func (h *refundPaymentHandler) Handle(ctx context.Context, command RefundPaymentCommand) shared.CommandResult {
-	payment, err := h.paymentRepo.GetByID(ctx, command.paymentID)
+func (h *RefundPaymentHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
+	command := cmd.(RefundPaymentCommand)
+
+	payment, err := h.paymentRepo.GetByID(command.ctx, command.paymentID)
 	if err != nil {
-		return shared.FailureResult("failed to retrieve payment", err)
+		return cqrs.FailureResult("failed to retrieve payment", err)
 	}
 
-	if err := h.paymentProccesor.Refund(&payment); err != nil {
-		return shared.FailureResult("failed to refund payment", err)
+	if err := payment.Refund(); err != nil {
+		return cqrs.FailureResult("failed to refund payment", err)
 	}
 
-	if err := h.paymentRepo.Save(ctx, &payment); err != nil {
-		return shared.FailureResult("failed to save refunded payment", err)
+	if err := h.paymentRepo.Save(command.ctx, &payment); err != nil {
+		return cqrs.FailureResult("failed to save refunded payment", err)
 	}
 
-	return shared.SuccessResult(string(payment.GetID()), "payment refunded successfully")
+	return cqrs.SuccessResult(payment.GetID().String(), "payment refunded successfully")
 }

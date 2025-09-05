@@ -3,52 +3,55 @@ package command
 import (
 	"context"
 
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/service"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
+	apperror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/application"
 )
 
 type ProcessPaymentCommand struct {
-	paymentID     int
+	paymentID     valueobject.PaymentID
 	transactionID string
+	ctx           context.Context
 }
 
-func NewProcessPaymentCommand(paymentID int, transactionID string) ProcessPaymentCommand {
-	return ProcessPaymentCommand{
+func NewProcessPaymentCommand(idInt int, transactionID string) (ProcessPaymentCommand, error) {
+	paymentID, err := valueobject.NewPaymentID(idInt)
+	if err != nil {
+		return ProcessPaymentCommand{}, apperror.MappingError([]string{err.Error()}, "constructor", "command", "payment")
+	}
+
+	cmd := &ProcessPaymentCommand{
 		paymentID:     paymentID,
 		transactionID: transactionID,
+		ctx:           context.Background(),
 	}
+
+	return *cmd, nil
 }
 
-type ProcessPaymentHandler interface {
-	Handle(ctx context.Context, command ProcessPaymentCommand) shared.CommandResult
+type ProcessPaymentHandler struct {
+	paymentRepo repository.PaymentRepository
 }
 
-type processPaymentHandler struct {
-	paymentRepo      repository.PaymentRepository
-	paymentProccesor service.PaymentProccesorService
+func NewProcessPaymentHandler(paymentRepo repository.PaymentRepository) cqrs.CommandHandler {
+	return &ProcessPaymentHandler{paymentRepo: paymentRepo}
 }
 
-func NewProcessPaymentHandler(paymentRepo repository.PaymentRepository) ProcessPaymentHandler {
-	return &processPaymentHandler{
-		paymentRepo:      paymentRepo,
-		paymentProccesor: service.PaymentProccesorService{},
-	}
-}
-
-func (h *processPaymentHandler) Handle(ctx context.Context, command ProcessPaymentCommand) shared.CommandResult {
-	payment, err := h.paymentRepo.GetByID(ctx, command.paymentID)
+func (h *ProcessPaymentHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
+	command := cmd.(ProcessPaymentCommand)
+	payment, err := h.paymentRepo.GetByID(command.ctx, command.paymentID.GetValue())
 	if err != nil {
-		return shared.FailureResult("failed to retrieve payment", err)
+		return cqrs.FailureResult("failed to retrieve payment", err)
 	}
 
-	if err := h.paymentProccesor.Process(&payment, command.transactionID); err != nil {
-		return shared.FailureResult("failed to process payment", err)
+	if err := payment.Pay(command.transactionID); err != nil {
+		return cqrs.FailureResult("failed to process payment", err)
 	}
 
-	if err := h.paymentRepo.Save(ctx, &payment); err != nil {
-		return shared.FailureResult("failed to save processed payment", err)
+	if err := h.paymentRepo.Save(command.ctx, &payment); err != nil {
+		return cqrs.FailureResult("failed to save processed payment", err)
 	}
 
-	return shared.SuccessResult(string(payment.GetID()), "payment processed successfully")
+	return cqrs.SuccessResult(payment.GetID().String(), "payment processed successfully")
 }

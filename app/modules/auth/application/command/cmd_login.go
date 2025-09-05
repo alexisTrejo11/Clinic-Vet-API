@@ -8,98 +8,127 @@ import (
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/auth/application/jwt"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
+	apperror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/application"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/password"
 )
 
+const (
+	ErrAuthenticationFailed  = "authentication failed"
+	ErrTwoFactorRequired     = "2FA is enabled for this user, please complete the 2FA process"
+	ErrSessionCreationFailed = "failed to create session"
+	ErrAccessTokenGenFailed  = "failed to generate access token"
+	ErrInvalidCredentials    = "user not found with provided credentials, please check your email/phone-number and password"
+	ErrTwoFactorAuthConflict = "user has TwoFactorAuth auth login method"
+
+	MsgLoginSuccess = "login successfully processed"
+
+	DefaultSessionDuration = 7 * 24 * time.Hour
+)
+
+// LoginCommand represents the login request data
 type LoginCommand struct {
-	Identifier string          `json:"identifier"`
-	Password   string          `json:"password"`
+	Identifier string          `json:"identifier" validate:"required"`
+	Password   string          `json:"password" validate:"required"`
 	RememberMe bool            `json:"remember_me"`
-	IP         string          `json:"ip"`
+	IP         string          `json:"ip" validate:"required"`
 	UserAgent  string          `json:"user_agent"`
 	DeviceInfo string          `json:"source"`
 	CTX        context.Context `json:"-"`
 }
 
+// loginHandler handles user authentication and session creation
 type loginHandler struct {
-	userRepo    repository.UserRepository
-	sessionRepo repository.SessionRepository
-	jwtService  jwt.JWTService
+	userRepo        repository.UserRepository
+	sessionRepo     repository.SessionRepository
+	jwtService      jwt.JWTService
+	passwordEncoder password.PasswordEncoder
 }
 
+// NewLoginHandler creates a new instance of loginHandler
 func NewLoginHandler(
 	userRepo repository.UserRepository,
 	sessionRepo repository.SessionRepository,
 	jwtService jwt.JWTService,
+	passwordEncoder password.PasswordEncoder,
 ) AuthCommandHandler {
 	return &loginHandler{
-		userRepo:    userRepo,
-		sessionRepo: sessionRepo,
-		jwtService:  jwtService,
+		userRepo:        userRepo,
+		sessionRepo:     sessionRepo,
+		jwtService:      jwtService,
+		passwordEncoder: passwordEncoder,
 	}
 }
 
+// Handle processes the login command and returns authentication result
 func (h *loginHandler) Handle(cmd any) AuthCommandResult {
-	command := cmd.(LoginCommand)
-
-	if command.Identifier == "" || command.Password == "" {
-		return FailureAuthResult("Identifier and password are required", errors.New("missing identifier or password"))
+	command, ok := cmd.(LoginCommand)
+	if !ok {
+		return FailureAuthResult(ErrAuthenticationFailed, errors.New("invalid command type"))
 	}
 
-	user, err := h.Authenticate(&command)
+	user, err := h.authenticate(&command)
 	if err != nil {
-		return FailureAuthResult("authentication failed", err)
+		return FailureAuthResult(ErrAuthenticationFailed, err)
 	}
 
 	if user.Is2FAEnabled() {
-		return FailureAuthResult("2FA is enabled for this user, please complete the 2FA process", errors.New("2FA is enabled"))
+		return FailureAuthResult(
+			ErrTwoFactorRequired,
+			apperror.ConflictError("TwoFactorAuth", ErrTwoFactorAuthConflict),
+		)
 	}
 
 	session, err := h.createSession(user.ID().String(), command)
 	if err != nil {
-		return FailureAuthResult("failed to create session", err)
+		return FailureAuthResult(ErrSessionCreationFailed, err)
 	}
 
-	accesToken, err := h.jwtService.GenerateAccessToken(user.ID().String())
+	accessToken, err := h.jwtService.GenerateAccessToken(user.ID().String())
 	if err != nil {
-		return FailureAuthResult("failed to generate access token", err)
+		return FailureAuthResult(ErrAccessTokenGenFailed, err)
 	}
 
-	response := getSessionResponse(session, accesToken)
-	return SuccessAuthResult(&response, session.ID, "login successfully processed")
+	response := getSessionResponse(session, accessToken)
+	return SuccessAuthResult(&response, session.ID, MsgLoginSuccess)
 }
 
-func (h *loginHandler) Authenticate(command *LoginCommand) (entity.User, error) {
+func (h *loginHandler) authenticate(command *LoginCommand) (entity.User, error) {
 	user, err := h.userRepo.GetByEmail(command.CTX, command.Identifier)
-	if err == nil {
-		return user, nil
+	if err != nil {
+		user, err = h.userRepo.GetByPhone(command.CTX, command.Identifier)
+		if err != nil {
+			return entity.User{}, errors.New(ErrInvalidCredentials)
+		}
 	}
 
-	user, err = h.userRepo.GetByPhone(command.CTX, command.Identifier)
-	if err == nil {
-		return user, nil
+	if err := h.passwordEncoder.CheckPassword(command.Password, user.Password()); err != nil {
+		return entity.User{}, errors.New(ErrInvalidCredentials)
 	}
 
-	if err := shared.CheckPassword(command.Password, user.Password()); err == nil {
-		return user, nil
-	}
-
-	return entity.User{}, errors.New("user not found with provided credentials, please check your email/phone-number and password")
+	return user, nil
 }
 
+// createSession creates and persists a new user session
 func (h *loginHandler) createSession(userID string, command LoginCommand) (entity.Session, error) {
-	refresh, err := h.jwtService.GenerateRefreshToken(userID)
+	refreshToken, err := h.jwtService.GenerateRefreshToken(userID)
 	if err != nil {
 		return entity.Session{}, err
 	}
 
+	now := time.Now()
+	sessionDuration := DefaultSessionDuration
+
+	if command.RememberMe {
+		sessionDuration = 30 * 24 * time.Hour // 30 days
+	}
+
 	newSession := entity.Session{
 		UserID:       userID,
-		IpAddress:    command.IP,
-		RefreshToken: refresh,
-		CreatedAt:    time.Now(),
+		IPAddress:    command.IP,
+		RefreshToken: refreshToken,
+		CreatedAt:    now,
+		ExpiresAt:    now.Add(sessionDuration),
 		DeviceInfo:   command.DeviceInfo,
-		ExpiresAt:    time.Now().Add(7 * 24 * time.Hour),
 		UserAgent:    command.UserAgent,
 	}
 

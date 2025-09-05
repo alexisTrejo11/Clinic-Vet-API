@@ -1,10 +1,10 @@
 package api
 
 import (
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/auth/application/command"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/auth/application/jwt"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/auth/infrastructure/api/controller"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/auth/infrastructure/api/routes"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/auth/infrastructure/cqrs"
 	authPersistence "github.com/alexisTrejo11/Clinic-Vet-API/app/modules/auth/infrastructure/persistence"
 	userPersistence "github.com/alexisTrejo11/Clinic-Vet-API/app/modules/users/infrastructure/persistence/repository"
 	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
@@ -25,7 +25,7 @@ func SetupAuthModule(
 	jwtService := jwt.NewJWTService(secretKet)
 
 	session := authPersistence.NewRedisSessionRepository(client)
-	authCMDBus := command.NewAuthCommandBus(session, userRepo, jwtService)
+	authCMDBus := cqrs.NewAuthCommandBus(session, userRepo, jwtService)
 	authController := controller.NewAuthController(validator, authCMDBus)
 	routes.AuthRoutes(r, *authController)
 }

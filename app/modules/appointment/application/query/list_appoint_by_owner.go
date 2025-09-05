@@ -13,22 +13,21 @@ import (
 type ListAppointmentsByOwnerQuery struct {
 	ownerID   valueobject.OwnerID
 	ctx       context.Context
-	pageInput page.PageData
+	pageInput page.PageInput
 }
 
-func NewListAppointmentsByOwnerQuery(id int, pageNumber, pageSize int) (*ListAppointmentsByOwnerQuery, error) {
+func NewListAppointmentsByOwnerQuery(id int, pageInput page.PageInput) (ListAppointmentsByOwnerQuery, error) {
 	ownerID, err := valueobject.NewOwnerID(id)
 	if err != nil {
-		return nil, err
+		return ListAppointmentsByOwnerQuery{}, err
 	}
 
-	return &ListAppointmentsByOwnerQuery{
-		ownerID: ownerID,
-		pageInput: page.PageData{
-			PageNumber: pageNumber,
-			PageSize:   pageSize,
-		},
-	}, nil
+	qry := &ListAppointmentsByOwnerQuery{
+		ownerID:   ownerID,
+		pageInput: pageInput,
+	}
+
+	return *qry, nil
 }
 
 type ListAppointmentsByOwnerHandler struct {

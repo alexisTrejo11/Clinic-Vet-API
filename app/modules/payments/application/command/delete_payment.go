@@ -3,53 +3,54 @@ package command
 import (
 	"context"
 
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/service"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
+	apperror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/application"
 )
 
 type DeletePaymentCommand struct {
-	paymentID int
+	paymentID valueobject.PaymentID
+	ctx       context.Context
 }
 
-func NewDeletePaymentCommand(paymentID int) DeletePaymentCommand {
-	return DeletePaymentCommand{
-		paymentID: paymentID,
-	}
-}
-
-type DeletePaymentHandler interface {
-	Handle(context context.Context, command DeletePaymentCommand) shared.CommandResult
-}
-
-type deletePaymentHandler struct {
-	paymentRepo      repository.PaymentRepository
-	paymentProccesor service.PaymentProccesorService
-}
-
-func NewDeletePaymentHandler(paymentRepo repository.PaymentRepository) DeletePaymentHandler {
-	return &deletePaymentHandler{
-		paymentRepo:      paymentRepo,
-		paymentProccesor: service.PaymentProccesorService{},
-	}
-}
-
-func (h *deletePaymentHandler) Handle(context context.Context, command DeletePaymentCommand) shared.CommandResult {
-	payment, err := h.paymentRepo.GetByID(context, command.paymentID)
+func NewDeletePaymentCommand(idInt int) (DeletePaymentCommand, error) {
+	paymentID, err := valueobject.NewPaymentID(idInt)
 	if err != nil {
-		return shared.FailureResult("error fetching payment", err)
+		return DeletePaymentCommand{}, apperror.MappingError([]string{err.Error()}, "constructor", "command", "payment")
 	}
 
-	if err := h.paymentProccesor.ValidateDelete(&payment); err != nil {
-		return shared.FailureResult("payment cannot be deleted", err)
+	cmd := &DeletePaymentCommand{
+		paymentID: paymentID,
+		ctx:       context.Background(),
 	}
 
-	if err := h.paymentRepo.SoftDelete(context, command.paymentID); err != nil {
-		return shared.FailureResult("error deleting payment", err)
+	return *cmd, nil
+}
+
+type DeletePaymentHandler struct {
+	paymentRepo repository.PaymentRepository
+}
+
+func NewDeletePaymentHandler(paymentRepo repository.PaymentRepository) cqrs.CommandHandler {
+	return &DeletePaymentHandler{
+		paymentRepo: paymentRepo,
+	}
+}
+
+func (h *DeletePaymentHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
+	command := cmd.(DeletePaymentCommand)
+	payment, err := h.paymentRepo.GetByID(command.ctx, command.paymentID.GetValue())
+	if err != nil {
+		return cqrs.FailureResult("error fetching payment", err)
 	}
 
-	return shared.SuccessResult(
-		string(rune(command.paymentID)),
+	if err := h.paymentRepo.SoftDelete(command.ctx, payment.GetID().GetValue()); err != nil {
+		return cqrs.FailureResult("error deleting payment", err)
+	}
+
+	return cqrs.SuccessResult(
+		command.paymentID.String(),
 		"payment deleted successfully",
 	)
 }

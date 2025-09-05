@@ -13,12 +13,12 @@ import (
 type PaymentRepository interface {
 	Save(ctx context.Context, payment *entity.Payment) error
 
-	Search(ctx context.Context, pagination page.PageData, searchCriteria map[string]any) (page.Page[[]entity.Payment], error)
+	Search(ctx context.Context, pagination page.PageInput, searchCriteria map[string]any) (page.Page[[]entity.Payment], error)
 	GetByID(ctx context.Context, id int) (entity.Payment, error)
-	ListByUserID(ctx context.Context, userID int, pagination page.PageData) (page.Page[[]entity.Payment], error)
-	ListByStatus(ctx context.Context, status enum.PaymentStatus, pagination page.PageData) (page.Page[[]entity.Payment], error)
-	ListOverduePayments(ctx context.Context, pagination page.PageData) (page.Page[[]entity.Payment], error)
-	ListPaymentsByDateRange(ctx context.Context, startDate, endDate time.Time, pagination page.PageData) (page.Page[[]entity.Payment], error)
+	ListByUserID(ctx context.Context, userID int, pagination page.PageInput) (page.Page[[]entity.Payment], error)
+	ListByStatus(ctx context.Context, status enum.PaymentStatus, pagination page.PageInput) (page.Page[[]entity.Payment], error)
+	ListOverduePayments(ctx context.Context, pagination page.PageInput) (page.Page[[]entity.Payment], error)
+	ListPaymentsByDateRange(ctx context.Context, startDate, endDate time.Time, pagination page.PageInput) (page.Page[[]entity.Payment], error)
 
 	SoftDelete(ctx context.Context, id int) error
 

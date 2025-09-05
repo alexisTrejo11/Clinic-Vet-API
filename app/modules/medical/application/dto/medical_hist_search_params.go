@@ -7,7 +7,7 @@ import (
 )
 
 type MedHistSearchParams struct {
-	Page       page.PageData
+	Page       page.PageInput
 	SortBy     string
 	VetID      int
 	OwnerID    int

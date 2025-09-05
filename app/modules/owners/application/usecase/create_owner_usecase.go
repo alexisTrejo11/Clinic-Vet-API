@@ -1,9 +1,10 @@
+// Package usecase contains all the implementation to handle all the business logic related to owner entity
 package usecase
 
 import (
 	"context"
 
-	domainerr "github.com/alexisTrejo11/Clinic-Vet-API/app/core/errors"
+	domainerr "github.com/alexisTrejo11/Clinic-Vet-API/app/core/error"
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/owners/application/dto"
 	mapper "github.com/alexisTrejo11/Clinic-Vet-API/app/modules/owners/application/mappers"

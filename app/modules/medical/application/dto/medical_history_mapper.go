@@ -96,7 +96,7 @@ func ToResponseDetail(
 		Diagnosis: medHistory.Diagnosis(),
 		Treatment: medHistory.Treatment(),
 		Veterinarian: VetDetails{
-			ID:        vet.GetID(),
+			ID:        vet.GetID().GetValue(),
 			FirstName: vet.GetName().FirstName,
 			Specialty: vet.GetSpecialty().String(),
 			LastName:  vet.GetName().LastName,
@@ -105,7 +105,7 @@ func ToResponseDetail(
 		UpdatedAt: medHistory.UpdatedAt(),
 	}
 
-	if medHistory.Notes != nil {
+	if medHistory.Notes() != nil {
 		detail.Notes = *medHistory.Notes()
 	}
 

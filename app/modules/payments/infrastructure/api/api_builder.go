@@ -1,12 +1,11 @@
 package paymentAPI
 
 import (
-	domainerr "github.com/alexisTrejo11/Clinic-Vet-API/app/core/errors"
+	domainerr "github.com/alexisTrejo11/Clinic-Vet-API/app/core/error"
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/payments/application/command"
-	query "github.com/alexisTrejo11/Clinic-Vet-API/app/modules/payments/application/queries"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/payments/infrastructure/api/controller"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/payments/infrastructure/api/routes"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/payments/infrastructure/bus"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )
@@ -19,8 +18,8 @@ type PaymentAPIConfig struct {
 
 type PaymentAPIComponents struct {
 	Repository  repository.PaymentRepository
-	CommandBus  *command.CommandBus
-	QueryBus    *query.QueryBus
+	CommandBus  *bus.PaymentCommandBus
+	QueryBus    *bus.PaymentQueryBus
 	Controllers *PaymentControllers
 }
 
@@ -53,17 +52,17 @@ func (f *PaymentAPIBuilder) Build() error {
 		return err
 	}
 
-	commandBus := command.NewPaymentCommandBus(f.config.PaymentRepo)
-	queryBus := query.NewQueryBus(f.config.PaymentRepo)
+	commandBus := bus.NewPaymentCommandBus(f.config.PaymentRepo)
+	queryBus := bus.NewQueryBus(f.config.PaymentRepo)
 
-	controllers := f.createControllers(&commandBus, &queryBus)
+	controllers := f.createControllers(commandBus, queryBus)
 
 	f.registerRoutes(controllers)
 
 	f.components = &PaymentAPIComponents{
 		Repository:  f.config.PaymentRepo,
-		CommandBus:  &commandBus,
-		QueryBus:    &queryBus,
+		CommandBus:  commandBus,
+		QueryBus:    queryBus,
 		Controllers: controllers,
 	}
 
@@ -71,7 +70,7 @@ func (f *PaymentAPIBuilder) Build() error {
 	return nil
 }
 
-func (f *PaymentAPIBuilder) createControllers(commandBus *command.CommandBus, queryBus *query.QueryBus) *PaymentControllers {
+func (f *PaymentAPIBuilder) createControllers(commandBus *bus.PaymentCommandBus, queryBus *bus.PaymentQueryBus) *PaymentControllers {
 	queryController := controller.NewPaymentQueryController(
 		f.config.Validator,
 		*queryBus,

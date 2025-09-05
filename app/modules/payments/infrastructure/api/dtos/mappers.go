@@ -1,51 +1,60 @@
 package dto
 
 import (
+	"context"
+
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/enum"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
 	cmd "github.com/alexisTrejo11/Clinic-Vet-API/app/modules/payments/application/command"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 )
 
-func (req CreatePaymentRequest) ToCreatePaymentCommand() cmd.CreatePaymentCommand {
-	return cmd.CreatePaymentCommand{
-		AppointmentID: req.AppointmentID,
-		UserID:        req.UserID,
-		Amount:        req.Amount,
-		Currency:      req.Currency,
-		PaymentMethod: req.PaymentMethod,
-		Description:   req.Description,
-		DueDate:       req.DueDate,
-		TransactionID: req.TransactionID,
+func (req CreatePaymentRequest) ToCreatePaymentCommand() (cmd.CreatePaymentCommand, error) {
+	c, err := cmd.NewCreatePaymentCommand(
+		context.Background(),
+		req.AppointmentID,
+		req.UserID,
+		req.Amount,
+		req.Currency,
+		req.PaymentMethod,
+		req.Description,
+		req.DueDate,
+		req.TransactionID,
+	)
+	if err != nil {
+		return cmd.CreatePaymentCommand{}, err
 	}
+
+	return c, nil
 }
 
-func (req UpdatePaymentRequest) ToUpdatePaymentCommand(paymentID int) cmd.UpdatePaymentCommand {
-	command := cmd.UpdatePaymentCommand{
-		PaymentID:     paymentID,
-		PaymentMethod: req.PaymentMethod,
-		Description:   req.Description,
-		DueDate:       req.DueDate,
+func (req UpdatePaymentRequest) ToUpdatePaymentCommand(ctx context.Context, paymentID int) (cmd.UpdatePaymentCommand, error) {
+	command, errors := cmd.NewUpdatePaymentCommand(
+		ctx,
+		paymentID,
+		req.Amount,
+		req.Currency,
+		req.PaymentMethod,
+		req.Description,
+		req.DueDate,
+	)
+
+	if errors != nil {
+		return cmd.UpdatePaymentCommand{}, errors
 	}
 
-	if req.Amount != nil && req.Currency != nil {
-		money := valueobject.NewMoney(*req.Amount, *req.Currency)
-		command.Amount = &money
-	}
-
-	return command
+	return command, nil
 }
 
-func (req ProcessPaymentRequest) ToProcessPaymentCommand(paymentID int) cmd.ProcessPaymentCommand {
+func (req ProcessPaymentRequest) ToProcessPaymentCommand(paymentID int) (cmd.ProcessPaymentCommand, error) {
 	return cmd.NewProcessPaymentCommand(paymentID, req.TransactionID)
 }
 
-func (req RefundPaymentRequest) ToRefundPaymentCommand(paymentID int) cmd.RefundPaymentCommand {
+func (req RefundPaymentRequest) ToRefundPaymentCommand(paymentID int) (cmd.RefundPaymentCommand, error) {
 	return cmd.NewRefundPaymentCommand(paymentID, req.Reason)
 }
 
-func (req CancelPaymentRequest) ToCancelPaymentCommand(paymentID int) cmd.CancelPaymentCommand {
+func (req CancelPaymentRequest) ToCancelPaymentCommand(paymentID int) (cmd.CancelPaymentCommand, error) {
 	return cmd.NewCancelPaymentCommand(paymentID, req.Reason)
 }
 
@@ -53,9 +62,9 @@ func ToPaymentResponse(pay any) PaymentResponse {
 	payment := pay.(entity.Payment)
 
 	return PaymentResponse{
-		ID:            payment.GetID(),
-		AppointmentID: payment.GetAppointmentID(),
-		UserID:        payment.GetUserID(),
+		ID:            payment.GetID().GetValue(),
+		AppointmentID: payment.GetAppointmentID().GetValue(),
+		UserID:        payment.GetUserID().GetValue(),
 		Amount:        payment.GetAmount().ToFloat(),
 		Currency:      payment.GetCurrency(),
 		PaymentMethod: payment.GetPaymentMethod(),
@@ -65,7 +74,6 @@ func ToPaymentResponse(pay any) PaymentResponse {
 		DueDate:       payment.GetDueDate(),
 		PaidAt:        payment.GetPaidAt(),
 		RefundedAt:    payment.GetRefundedAt(),
-		IsActive:      payment.GetIsActive(),
 		CreatedAt:     payment.GetCreatedAt(),
 		UpdatedAt:     payment.GetUpdatedAt(),
 	}

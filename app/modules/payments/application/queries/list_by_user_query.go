@@ -4,35 +4,35 @@ import (
 	"context"
 
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 )
 
-type ListPaymentsByUserHandler interface {
-	Handle(ctx context.Context, query ListPaymentsByUserQuery) (page.Page[[]PaymentResponse], error)
-}
-
 type ListPaymentsByUserQuery struct {
 	userID     int
-	pagination page.PageData
+	pagination page.PageInput
+	ctx        context.Context
 }
 
-func NewListPaymentsByUserQuery(userID int, pagination page.PageData) ListPaymentsByUserQuery {
+func NewListPaymentsByUserQuery(userID int, pagination page.PageInput) ListPaymentsByUserQuery {
 	return ListPaymentsByUserQuery{
 		userID:     userID,
 		pagination: pagination,
+		ctx:        context.Background(),
 	}
 }
 
-type listByUserHandlerImpl struct {
+type ListByUserHandler struct {
 	repository repository.PaymentRepository
 }
 
-func NewListByUserHandler(repository repository.PaymentRepository) ListPaymentsByUserHandler {
-	return &listByUserHandlerImpl{repository: repository}
+func NewListByUserHandler(repository repository.PaymentRepository) cqrs.QueryHandler[page.Page[[]PaymentResponse]] {
+	return &ListByUserHandler{repository: repository}
 }
 
-func (h *listByUserHandlerImpl) Handle(ctx context.Context, query ListPaymentsByUserQuery) (page.Page[[]PaymentResponse], error) {
-	paymentsPage, err := h.repository.ListByUserID(context.Background(), query.userID, query.pagination)
+func (h *ListByUserHandler) Handle(q cqrs.Query) (page.Page[[]PaymentResponse], error) {
+	query := q.(ListPaymentsByUserQuery)
+	paymentsPage, err := h.repository.ListByUserID(query.ctx, query.userID, query.pagination)
 	if err != nil {
 		return page.Page[[]PaymentResponse]{}, err
 	}

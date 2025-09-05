@@ -6,33 +6,33 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/enum"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/valueObjects"
 )
 
 type OwnerCreate struct {
-	Photo       string              `json:"photo" validate:"required"`
-	FirstName   string              `json:"first_name" validate:"required"`
-	LastName    string              `json:"last_name" validate:"required"`
-	Address     *string             `json:"address"`
-	Gender      valueObjects.Gender `json:"gender,omitempty" validate:"required,oneof=male female not_specified"`
-	DateOfBirth time.Time           `json:"date_of_birth" validate:"required"`
-	PhoneNumber string              `json:"phone_number" validate:"required"`
+	Photo       string            `json:"photo" validate:"required"`
+	FirstName   string            `json:"first_name" validate:"required"`
+	LastName    string            `json:"last_name" validate:"required"`
+	Address     *string           `json:"address"`
+	Gender      enum.PersonGender `json:"gender,omitempty" validate:"required,oneof=male female not_specified"`
+	DateOfBirth time.Time         `json:"date_of_birth" validate:"required"`
+	PhoneNumber string            `json:"phone_number" validate:"required"`
 }
 
 type OwnerUpdate struct {
-	Photo       *string              `json:"photo"`
-	FirstName   *string              `json:"first_name"`
-	LastName    *string              `json:"last_name"`
-	Address     *string              `json:"address"`
-	Notes       *string              `json:"notes"`
-	Gender      *valueObjects.Gender `json:"gender" validate:"omitempty,oneof=male female not_specified"`
-	DateOfBirth *time.Time           `json:"date_of_birth" validate:"required"`
-	PhoneNumber *string              `json:"phone_number"`
+	Photo       *string            `json:"photo"`
+	FirstName   *string            `json:"first_name"`
+	LastName    *string            `json:"last_name"`
+	Address     *string            `json:"address"`
+	Notes       *string            `json:"notes"`
+	Gender      *enum.PersonGender `json:"gender" validate:"omitempty,oneof=male female not_specified"`
+	DateOfBirth *time.Time         `json:"date_of_birth" validate:"required"`
+	PhoneNumber *string            `json:"phone_number"`
 }
 
 type GetOwnersRequest struct {
-	Page     page.PageData
+	Page     page.PageInput
 	Status   string `json:"status" validate:"omitempty,oneof=active inactive all"`
 	WithPets bool   `json:"with_pets" validate:"omitempty"`
 }
@@ -82,7 +82,7 @@ func NewOwnerSearch(limitStr, offsetStr, status, includePets string) (*GetOwners
 		return nil, errors.Join(errs...)
 	}
 
-	page := page.PageData{
+	page := page.PageInput{
 		PageSize:   limit,
 		PageNumber: offset + 1,
 	}

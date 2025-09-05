@@ -7,49 +7,113 @@ import (
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/enum"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
+	apperror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/application"
 )
 
 type UpdatePaymentCommand struct {
-	PaymentID     int                 `json:"payment_id"`
-	Amount        *valueobject.Money  `json:"amount,omitempty"`
-	PaymentMethod *enum.PaymentMethod `json:"payment_method,omitempty"`
-	Description   *string             `json:"description,omitempty"`
-	DueDate       *time.Time          `json:"due_date,omitempty"`
+	paymentID     valueobject.PaymentID
+	amount        *valueobject.Money
+	paymentMethod *enum.PaymentMethod
+	description   *string
+	dueDate       *time.Time
+	ctx           context.Context
 }
 
-type UpdatePaymentHandler interface {
-	Handle(ctx context.Context, command UpdatePaymentCommand) shared.CommandResult
+func NewUpdatePaymentCommand(
+	ctx context.Context,
+	idInt int,
+	amountValue *float64,
+	amountCurrency *string,
+	paymentMethodStr *string,
+	description *string,
+	dueDate *time.Time,
+) (UpdatePaymentCommand, error) {
+	var errors []string
+
+	paymentID, err := valueobject.NewPaymentID(idInt)
+	if err != nil {
+		errors = append(errors, err.Error())
+	}
+
+	var amount *valueobject.Money
+	if amountValue != nil {
+		if amountCurrency == nil {
+			errors = append(errors, "currency is required when amount is provided")
+		} else {
+			money, err := valueobject.NewMoney(*amountValue, *amountCurrency)
+			if err != nil {
+				errors = append(errors, err.Error())
+			} else {
+				amount = &money
+			}
+		}
+	} else if amountCurrency != nil {
+		errors = append(errors, "amount is required when currency is provided")
+	}
+
+	// Validate and create PaymentMethod if provided
+	var paymentMethod *enum.PaymentMethod
+	if paymentMethodStr != nil {
+		pm, err := enum.NewPaymentMethod(*paymentMethodStr)
+		if err != nil {
+			errors = append(errors, err.Error())
+		} else {
+			paymentMethod = &pm
+		}
+	}
+
+	if description != nil && len(*description) > 500 {
+		errors = append(errors, "description must be less than 500 characters")
+	}
+
+	if dueDate != nil && dueDate.Before(time.Now()) {
+		errors = append(errors, "due date must be in the future")
+	}
+
+	if len(errors) > 0 {
+		return UpdatePaymentCommand{}, apperror.MappingError(errors, "contructor", "command", "payment")
+	}
+
+	return UpdatePaymentCommand{
+		paymentID:     paymentID,
+		amount:        amount,
+		paymentMethod: paymentMethod,
+		description:   description,
+		dueDate:       dueDate,
+		ctx:           ctx,
+	}, nil
 }
 
-type updatePaymentHandler struct {
+type UpdatePaymentHandler struct {
 	paymentRepo repository.PaymentRepository
 }
 
-func NewUpdatePaymentHandler(paymentRepo repository.PaymentRepository) UpdatePaymentHandler {
-	return &updatePaymentHandler{
+func NewUpdatePaymentHandler(paymentRepo repository.PaymentRepository) cqrs.CommandHandler {
+	return &UpdatePaymentHandler{
 		paymentRepo: paymentRepo,
 	}
 }
 
-func (h *updatePaymentHandler) Handle(ctx context.Context, cmd UpdatePaymentCommand) shared.CommandResult {
-	payment, err := h.paymentRepo.GetByID(ctx, cmd.PaymentID)
+func (h *UpdatePaymentHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
+	command := cmd.(UpdatePaymentCommand)
+	payment, err := h.paymentRepo.GetByID(command.ctx, command.paymentID.GetValue())
 	if err != nil {
-		return shared.FailureResult("error fetching payment", err)
+		return cqrs.FailureResult("error fetching payment", err)
 	}
 
-	err = payment.Update(cmd.Amount, cmd.PaymentMethod, cmd.Description, cmd.DueDate)
+	err = payment.Update(command.amount, command.paymentMethod, command.description, command.dueDate)
 	if err != nil {
-		return shared.FailureResult("error updating payment", err)
+		return cqrs.FailureResult("error updating payment", err)
 	}
 
-	err = h.paymentRepo.Save(ctx, &payment)
+	err = h.paymentRepo.Save(command.ctx, &payment)
 	if err != nil {
-		return shared.FailureResult("error saving payment", err)
+		return cqrs.FailureResult("error saving payment", err)
 	}
 
-	return shared.SuccessResult(
-		string(rune(cmd.PaymentID)),
+	return cqrs.SuccessResult(
+		payment.GetID().String(),
 		"payment updated successfully",
 	)
 }

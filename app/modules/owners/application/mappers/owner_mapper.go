@@ -2,12 +2,12 @@ package mapper
 
 import (
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/owners/application/dto"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/valueObjects"
 )
 
 func FromRequestCreate(ownerCreate dto.OwnerCreate) *entity.Owner {
-	fullName, _ := valueObjects.NewPersonName(ownerCreate.FirstName, ownerCreate.LastName)
+	fullName, _ := valueobject.NewPersonName(ownerCreate.FirstName, ownerCreate.LastName)
 
 	builder := entity.NewOwnerBuilder().
 		WithFullName(fullName).

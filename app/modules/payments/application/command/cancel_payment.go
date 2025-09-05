@@ -1,62 +1,57 @@
+// Package command contains all the implemenation of the operations that persist the state of the payments module
 package command
 
 import (
 	"context"
-	"errors"
 
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/service"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
+	appError "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/application"
 )
 
 type CancelPaymentCommand struct {
-	paymentID int
+	paymentID valueobject.PaymentID
+	ctx       context.Context
 	reason    string
 }
 
-func NewCancelPaymentCommand(paymentID int, reason string) CancelPaymentCommand {
-	return CancelPaymentCommand{
+func NewCancelPaymentCommand(idInt int, reason string) (CancelPaymentCommand, error) {
+	paymentID, err := valueobject.NewPaymentID(idInt)
+	if err != nil {
+		return CancelPaymentCommand{}, appError.MappingError([]string{err.Error()}, "constructor", "command", "payment")
+	}
+
+	cmd := &CancelPaymentCommand{
 		paymentID: paymentID,
 		reason:    reason,
 	}
+	return *cmd, nil
 }
 
-type CancelPaymentHandler interface {
-	Handle(ctx context.Context, command CancelPaymentCommand) shared.CommandResult
+type CancelPaymentHandler struct {
+	paymentRepo repository.PaymentRepository
 }
 
-type cancelPaymentHandler struct {
-	paymentRepo      repository.PaymentRepository
-	paymentProccesor service.PaymentProccesorService
+func NewCancelPaymentHandler(paymentRepo repository.PaymentRepository) cqrs.CommandHandler {
+	return &CancelPaymentHandler{paymentRepo: paymentRepo}
 }
 
-func NewCancelPaymentHandler(paymentRepo repository.PaymentRepository) CancelPaymentHandler {
-	return &cancelPaymentHandler{
-		paymentRepo:      paymentRepo,
-		paymentProccesor: service.PaymentProccesorService{},
-	}
-}
+func (h *CancelPaymentHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
+	command := cmd.(CancelPaymentCommand)
 
-func (h *cancelPaymentHandler) Handle(ctx context.Context, command CancelPaymentCommand) shared.CommandResult {
-	if command.paymentID == 0 {
-		return shared.FailureResult(
-			"payment_id is required",
-			errors.New("payment id can't be 0"),
-		)
-	}
-
-	payment, err := h.paymentRepo.GetByID(ctx, command.paymentID)
+	payment, err := h.paymentRepo.GetByID(command.ctx, command.paymentID.GetValue())
 	if err != nil {
-		return shared.FailureResult("failed to retrieve payment", err)
+		return cqrs.FailureResult("failed to retrieve payment", err)
 	}
 
-	if err := h.paymentProccesor.Cancel(&payment); err != nil {
-		return shared.FailureResult("failed to cancel payment", err)
+	if err := payment.Cancel(command.reason); err != nil {
+		return cqrs.FailureResult("failed to cancel payment", err)
 	}
 
-	if err := h.paymentRepo.Save(ctx, &payment); err != nil {
-		return shared.FailureResult("failed to save canceled payment", err)
+	if err := h.paymentRepo.Save(command.ctx, &payment); err != nil {
+		return cqrs.FailureResult("failed to save canceled payment", err)
 	}
 
-	return shared.SuccessResult(string(rune(payment.GetID())), "payment canceled successfully")
+	return cqrs.SuccessResult(payment.GetID().String(), "payment canceled successfully")
 }

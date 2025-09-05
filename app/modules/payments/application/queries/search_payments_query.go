@@ -6,6 +6,7 @@ import (
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/enum"
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 )
 
@@ -19,22 +20,21 @@ type SearchPaymentsQuery struct {
 	Currency      *string             `json:"currency,omitempty"`
 	StartDate     *time.Time          `json:"start_date,omitempty"`
 	EndDate       *time.Time          `json:"end_date,omitempty"`
-	Pagination    page.PageData       `json:"pagination"`
-}
-
-type SearchPaymentsQueryHandler interface {
-	Handle(ctx context.Context, query SearchPaymentsQuery) (page.Page[[]PaymentResponse], error)
+	Pagination    page.PageInput      `json:"pagination"`
+	ctx           context.Context
 }
 
 type SearchPaymentsHandler struct {
 	repository repository.PaymentRepository
 }
 
-func NewSearchPaymentsHandler(repository repository.PaymentRepository) *SearchPaymentsHandler {
+func NewSearchPaymentsHandler(repository repository.PaymentRepository) cqrs.QueryHandler[page.Page[[]PaymentResponse]] {
 	return &SearchPaymentsHandler{repository: repository}
 }
 
-func (h *SearchPaymentsHandler) Handle(ctx context.Context, query SearchPaymentsQuery) (page.Page[[]PaymentResponse], error) {
+func (h *SearchPaymentsHandler) Handle(q cqrs.Query) (page.Page[[]PaymentResponse], error) {
+	query := q.(SearchPaymentsQuery)
+
 	criteria := toSearchCriteria(query)
 	paymentsPage, err := h.repository.Search(context.Background(), query.Pagination, criteria)
 	if err != nil {

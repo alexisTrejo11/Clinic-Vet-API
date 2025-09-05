@@ -12,9 +12,9 @@ import (
 )
 
 type Payment struct {
-	id            int
-	appointmentID int
-	userID        int
+	id            valueobject.PaymentID
+	appointmentID valueobject.AppointmentID
+	userID        valueobject.UserID
 	amount        valueobject.Money
 	currency      string
 	paymentMethod enum.PaymentMethod
@@ -117,15 +117,15 @@ func (p *Payment) IsOverdue() bool {
 	return false
 }
 
-func (p *Payment) GetID() int {
+func (p *Payment) GetID() valueobject.PaymentID {
 	return p.id
 }
 
-func (p *Payment) GetAppointmentID() int {
+func (p *Payment) GetAppointmentID() valueobject.AppointmentID {
 	return p.appointmentID
 }
 
-func (p *Payment) GetUserID() int {
+func (p *Payment) GetUserID() valueobject.UserID {
 	return p.userID
 }
 
@@ -185,17 +185,17 @@ func NewPaymentBuilder() *PaymentBuilder {
 	return &PaymentBuilder{payment: &Payment{}}
 }
 
-func (pb *PaymentBuilder) WithID(id int) *PaymentBuilder {
+func (pb *PaymentBuilder) WithID(id valueobject.PaymentID) *PaymentBuilder {
 	pb.payment.id = id
 	return pb
 }
 
-func (pb *PaymentBuilder) WithAppointmentID(appointmentID int) *PaymentBuilder {
+func (pb *PaymentBuilder) WithAppointmentID(appointmentID valueobject.AppointmentID) *PaymentBuilder {
 	pb.payment.appointmentID = appointmentID
 	return pb
 }
 
-func (pb *PaymentBuilder) WithUserID(userID int) *PaymentBuilder {
+func (pb *PaymentBuilder) WithUserID(userID valueobject.UserID) *PaymentBuilder {
 	pb.payment.userID = userID
 	return pb
 }

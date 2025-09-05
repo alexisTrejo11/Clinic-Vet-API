@@ -6,6 +6,7 @@ import (
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
+	apperror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/application"
 )
 
 type ConfirmAppointmentCommand struct {
@@ -25,6 +26,10 @@ func NewConfirmAppointmentCommand(ctx context.Context, appointIDInt, vetIDInt in
 	vetID, err := valueobject.NewVetID(vetIDInt)
 	if err != nil {
 		errorMessage = append(errorMessage, err.Error())
+	}
+
+	if len(errorMessage) > 0 {
+		return ConfirmAppointmentCommand{}, apperror.MappingError(errorMessage, "contructor", "command", "confirmAppointmentCommand")
 	}
 
 	cmd := ConfirmAppointmentCommand{

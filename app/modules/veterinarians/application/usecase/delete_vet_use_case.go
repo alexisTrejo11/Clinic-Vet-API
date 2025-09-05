@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
-	domainerr "github.com/alexisTrejo11/Clinic-Vet-API/app/core/errors"
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 )
 
@@ -19,16 +18,11 @@ func NewDeleteVetUseCase(vetRepository repository.VetRepository) *DeleteVetUseCa
 }
 
 func (uc *DeleteVetUseCase) Execute(ctx context.Context, vetId valueobject.VetID) error {
-	exists, err := uc.vetRepository.Exists(ctx, vetId)
+	vet, err := uc.vetRepository.GetByID(ctx, vetId)
 	if err != nil {
 		return err
 	}
-
-	if !exists {
-		return domainerr.NewEntityNotFoundError("veterinarians", vetId.String())
-	}
-
-	if err = uc.vetRepository.SoftDelete(ctx, vetId); err != nil {
+	if err = uc.vetRepository.SoftDelete(ctx, vet.GetID()); err != nil {
 		return err
 	}
 

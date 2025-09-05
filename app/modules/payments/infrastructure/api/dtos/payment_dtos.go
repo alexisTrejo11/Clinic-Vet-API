@@ -9,23 +9,23 @@ import (
 
 // CreatePaymentRequest represents the request to create a payment
 type CreatePaymentRequest struct {
-	AppointmentID int                `json:"appointment_id" validate:"required,min=1"`
-	UserID        int                `json:"owner_id" validate:"required,min=1"`
-	Amount        float64            `json:"amount" validate:"required,min=0.01"`
-	Currency      string             `json:"currency" validate:"required,len=3"`
-	PaymentMethod enum.PaymentMethod `json:"payment_method" validate:"required"`
-	Description   *string            `json:"description,omitempty"`
-	DueDate       *time.Time         `json:"due_date,omitempty"`
-	TransactionID *string            `json:"transaction_id,omitempty"`
+	AppointmentID int        `json:"appointment_id" validate:"required,min=1"`
+	UserID        int        `json:"owner_id" validate:"required,min=1"`
+	Amount        float64    `json:"amount" validate:"required,min=0.01"`
+	Currency      string     `json:"currency" validate:"required,len=3"`
+	PaymentMethod string     `json:"payment_method" validate:"required"`
+	Description   *string    `json:"description,omitempty"`
+	DueDate       *time.Time `json:"due_date,omitempty"`
+	TransactionID *string    `json:"transaction_id,omitempty"`
 }
 
 // UpdatePaymentRequest represents the request to update a payment
 type UpdatePaymentRequest struct {
-	Amount        *float64            `json:"amount,omitempty" validate:"omitempty,min=0.01"`
-	Currency      *string             `json:"currency,omitempty" validate:"omitempty,len=3"`
-	PaymentMethod *enum.PaymentMethod `json:"payment_method,omitempty"`
-	Description   *string             `json:"description,omitempty"`
-	DueDate       *time.Time          `json:"due_date,omitempty"`
+	Amount        *float64   `json:"amount,omitempty" validate:"omitempty,min=0.01"`
+	Currency      *string    `json:"currency,omitempty" validate:"omitempty,len=3"`
+	PaymentMethod *string    `json:"payment_method,omitempty"`
+	Description   *string    `json:"description,omitempty"`
+	DueDate       *time.Time `json:"due_date,omitempty"`
 }
 
 // ProcessPaymentRequest represents the request to process a payment
@@ -54,7 +54,7 @@ type PaymentSearchRequest struct {
 	Currency      *string             `json:"currency,omitempty"`
 	StartDate     *time.Time          `json:"start_date,omitempty"`
 	EndDate       *time.Time          `json:"end_date,omitempty"`
-	Page          page.PageData       `json:"page"`
+	Page          page.PageInput      `json:"page"`
 }
 
 // PaymentResponse represents the payment response

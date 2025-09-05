@@ -3,33 +3,41 @@ package query
 import (
 	"context"
 
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
+	apperror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/application"
 )
 
 type GetPaymentByIDQuery struct {
-	id int
+	id  valueobject.PaymentID
+	ctx context.Context
 }
 
-func NewGetPaymentByIDQuery(id int) GetPaymentByIDQuery {
-	return GetPaymentByIDQuery{id: id}
+func NewGetPaymentByIDQuery(idInt int) (GetPaymentByIDQuery, error) {
+	paymentID, err := valueobject.NewPaymentID(idInt)
+	if err != nil {
+		return GetPaymentByIDQuery{}, apperror.MappingError([]string{err.Error()}, "constructor", "command", "payment")
+	}
+
+	q := &GetPaymentByIDQuery{id: paymentID}
+
+	return *q, nil
 }
 
-type GetPaymentByIDHandler interface {
-	Handle(ctx context.Context, query GetPaymentByIDQuery) (PaymentResponse, error)
-}
-
-type getPaymentByIDHandlerImpl struct {
+type GetPaymentByIDHandler struct {
 	repository repository.PaymentRepository
 }
 
-func NewGetPaymentByIDHandler(repository repository.PaymentRepository) GetPaymentByIDHandler {
-	return &getPaymentByIDHandlerImpl{
+func NewGetPaymentByIDHandler(repository repository.PaymentRepository) cqrs.QueryHandler[PaymentResponse] {
+	return &GetPaymentByIDHandler{
 		repository: repository,
 	}
 }
 
-func (h *getPaymentByIDHandlerImpl) Handle(ctx context.Context, query GetPaymentByIDQuery) (PaymentResponse, error) {
-	payment, err := h.repository.GetByID(ctx, query.id)
+func (h *GetPaymentByIDHandler) Handle(q cqrs.Query) (PaymentResponse, error) {
+	query := q.(GetPaymentByIDQuery)
+	payment, err := h.repository.GetByID(query.ctx, query.id.GetValue())
 	if err != nil {
 		return PaymentResponse{}, err
 	}

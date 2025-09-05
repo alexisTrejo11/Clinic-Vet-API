@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/enum"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/appointment/application/query"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 )
 
@@ -67,32 +68,41 @@ type AppointmentSearch struct {
 	Service   *enum.ClinicService     `json:"service,omitempty"`
 	StartDate *time.Time              `json:"start_date,omitempty"`
 	EndDate   *time.Time              `json:"end_date,omitempty"`
-	Page      page.PageData           `json:"page"`
+	Page      page.PageInput          `json:"page"`
 }
 
-type GetAppointmentsByDateRangeRequest struct {
-	StartDate time.Time     `json:"start_date" validate:"required"`
-	EndDate   time.Time     `json:"end_date" validate:"required"`
-	Page      page.PageData `json:"page"`
+type ListAppointmentsByDateRangeRequest struct {
+	StartDate time.Time      `json:"start_date" validate:"required"`
+	EndDate   time.Time      `json:"end_date" validate:"required"`
+	Page      page.PageInput `json:"page"`
+}
+
+func (r *ListAppointmentsByDateRangeRequest) toQuery() (query.ListAppointmentsByDateRangeQuery, error) {
+	qry, err := query.NewListAppointmentsByDateRangeQuery(r.StartDate, r.EndDate, r.Page)
+	if err != nil {
+		return query.ListAppointmentsByDateRangeQuery{}, err
+	}
+
+	return qry, nil
 }
 
 type GetAllAppointmentsRequest struct {
-	Page page.PageData `json:"page"`
+	Page page.PageInput `json:"page"`
 }
 
 type GetAppointmentsByVetRequest struct {
-	VetID int           `json:"vet_id" validate:"required,min=1"`
-	Page  page.PageData `json:"page"`
+	VetID int            `json:"vet_id" validate:"required,min=1"`
+	Page  page.PageInput `json:"page"`
 }
 
 type GetAppointmentsByPetRequest struct {
-	PetID int           `json:"vet_id" validate:"required,min=1"`
-	Page  page.PageData `json:"page"`
+	PetID int            `json:"vet_id" validate:"required,min=1"`
+	Page  page.PageInput `json:"page"`
 }
 
 type GetAppointmentByOwner struct {
-	OwnerID int           `json:"owner_id" validate:"required,min=1"`
-	Page    page.PageData `json:"page"`
+	OwnerID int            `json:"owner_id" validate:"required,min=1"`
+	Page    page.PageInput `json:"page"`
 }
 
 type GetAppointmentStatsRequest struct {
