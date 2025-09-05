@@ -2,11 +2,13 @@
 package controller
 
 import (
-	"fmt"
+	"strconv"
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/auth/application/command"
+	autherror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/auth"
 	httpError "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/infrastructure/http"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/response"
+	"github.com/alexisTrejo11/Clinic-Vet-API/middleware"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )
@@ -40,7 +42,6 @@ func (controller *AuthController) Signup(c *gin.Context) {
 	}
 
 	signupCommand := singupRequest.ToCommand()
-
 	result := controller.authCommandBus.Dispatch(signupCommand)
 	if !result.IsSuccess() {
 		response.ApplicationError(c, result.Error())
@@ -75,6 +76,12 @@ func (controller *AuthController) Login(c *gin.Context) {
 }
 
 func (controller *AuthController) Logout(c *gin.Context) {
+	id, exists := middleware.GetUserIDFromContext(c)
+	if !exists {
+		response.Unauthorized(c, autherror.UnauthorizedCTXError())
+		return
+	}
+
 	var requestLogout RequestLogout
 
 	if err := c.ShouldBindBodyWithJSON(&requestLogout); err != nil {
@@ -88,7 +95,12 @@ func (controller *AuthController) Logout(c *gin.Context) {
 		return
 	}
 
-	logoutCommand := requestLogout.ToCommand()
+	userId, _ := strconv.Atoi(id)
+	logoutCommand, err := requestLogout.ToCommand(userId)
+	if err != nil {
+		response.ApplicationError(c, err)
+		return
+	}
 
 	result := controller.authCommandBus.Dispatch(logoutCommand)
 	if !result.IsSuccess() {
@@ -100,13 +112,19 @@ func (controller *AuthController) Logout(c *gin.Context) {
 }
 
 func (controller *AuthController) LogoutAll(c *gin.Context) {
-	authHeader := c.GetHeader("Authorization")
-	if authHeader == "" {
-		response.Unauthorized(c, fmt.Errorf("authorization header required"))
+	id, exists := middleware.GetUserIDFromContext(c)
+	if !exists {
+		response.Unauthorized(c, autherror.UnauthorizedCTXError())
 		return
 	}
 
-	logoutAllCommand := command.LogoutAllCommand{}
+	userId, _ := strconv.Atoi(id)
+	logoutAllCommand, err := command.NewLogoutAllCommand(userId)
+	if err != nil {
+		response.ApplicationError(c, err)
+		return
+	}
+
 	result := controller.authCommandBus.Dispatch(logoutAllCommand)
 	if !result.IsSuccess() {
 		response.ApplicationError(c, result.Error())

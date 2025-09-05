@@ -1,10 +1,10 @@
 package api
 
 import (
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/auth/application/jwt"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/auth/infrastructure/api/controller"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/auth/infrastructure/api/routes"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/auth/infrastructure/cqrs"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/auth/infrastructure/jwt"
 	authPersistence "github.com/alexisTrejo11/Clinic-Vet-API/app/modules/auth/infrastructure/persistence"
 	userPersistence "github.com/alexisTrejo11/Clinic-Vet-API/app/modules/users/infrastructure/persistence/repository"
 	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"

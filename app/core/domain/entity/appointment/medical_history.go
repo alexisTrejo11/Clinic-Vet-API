@@ -1,12 +1,12 @@
-package entity
+package appointment
 
 import (
 	"errors"
 	"strings"
 	"time"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/enum"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
 )
 
 type MedicalHistory struct {
@@ -184,7 +184,7 @@ func (b *MedicalHistoryBuilder) WithOwnerID(ownerID int) *MedicalHistoryBuilder 
 }
 
 func (b *MedicalHistoryBuilder) WithVisitReason(visitReason string) *MedicalHistoryBuilder {
-	reason, err := enum.NewVisitReason(visitReason)
+	reason, err := enum.ParseVisitReason(visitReason)
 	if err != nil {
 		b.errors = append(b.errors, err)
 		return b
@@ -195,7 +195,7 @@ func (b *MedicalHistoryBuilder) WithVisitReason(visitReason string) *MedicalHist
 }
 
 func (b *MedicalHistoryBuilder) WithVisitType(visitType string) *MedicalHistoryBuilder {
-	vt, err := enum.NewVisitType(visitType)
+	vt, err := enum.ParseVisitType(visitType)
 	if err != nil {
 		b.errors = append(b.errors, err)
 		return b
@@ -206,11 +206,12 @@ func (b *MedicalHistoryBuilder) WithVisitType(visitType string) *MedicalHistoryB
 }
 
 func (b *MedicalHistoryBuilder) WithCondition(condition string) *MedicalHistoryBuilder {
-	cond, err := enum.NewPetCondition(condition)
+	cond, err := enum.ParsePetCondition(condition)
 	if err != nil {
 		b.errors = append(b.errors, err)
 		return b
 	}
+
 	b.medicalHistory.condition = cond
 	return b
 }

@@ -28,3 +28,7 @@ func ForbbidenError(requiredRole, userRole string) error {
 		},
 	}
 }
+
+func UnauthorizedCTXError() error {
+	return UnauthorizedError("user not present in context")
+}

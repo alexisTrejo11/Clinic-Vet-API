@@ -132,12 +132,12 @@ func GetUserFromContext(c *gin.Context) (*UserContext, bool) {
 }
 
 // GetUserIDFromContext obtiene solo el ID del usuario
-func GetUserIDFromContext(c *gin.Context) (string, bool) {
+func GetUserIDFromContext(c *gin.Context) (int, bool) {
 	userID, exists := c.Get("userID")
 	if !exists {
-		return "", false
+		return 0, false
 	}
-	return userID.(string), true
+	return userID.(int), true
 }
 
 // GetUserEmailFromContext obtiene solo el email del usuario

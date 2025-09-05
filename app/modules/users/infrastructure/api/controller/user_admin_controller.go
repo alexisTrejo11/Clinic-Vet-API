@@ -8,7 +8,7 @@ import (
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/users/application/usecase"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/users/application/usecase/command"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
-	apiResponse "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/responses"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/response"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -32,17 +32,17 @@ func NewUserAdminController(validator *validator.Validate, dispatcher *usecase.C
 // @Tags users
 // @Produce json
 // @Param id path int true "User ID"
-// @Success 200 {object} apiResponse.APIResponse{data=object} "User found"
-// @Failure 400 {object} apiResponse.APIResponse "Invalid URL parameter"
+// @Success 200 {object} response.APIResponse{data=object} "User found"
+// @Failure 400 {object} response.APIResponse "Invalid URL parameter"
 // @Router /v1/users/{id} [get]
 func (c *UserAdminController) GetUserByID(ctx *gin.Context) {
 	userID, err := shared.ParseParamToInt(ctx, "id")
 	if err != nil {
-		apiResponse.RequestURLParamError(ctx, err, "id", ctx.Param("id"))
+		response.RequestURLParamError(ctx, err, "id", ctx.Param("id"))
 		return
 	}
 
-	apiResponse.Success(ctx, gin.H{"user_id": userID})
+	response.Success(ctx, gin.H{"user_id": userID})
 }
 
 // CreateUser creates a new user.
@@ -52,9 +52,9 @@ func (c *UserAdminController) GetUserByID(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param user body CreateUserRequest true "User creation request"
-// @Success 201 {object} apiResponse.APIResponse{message=string,id=int} "User created successfully"
-// @Failure 400 {object} apiResponse.APIResponse "Invalid request body or validation error"
-// @Failure 500 {object} apiResponse.APIResponse "Internal server error"
+// @Success 201 {object} response.APIResponse{message=string,id=int} "User created successfully"
+// @Failure 400 {object} response.APIResponse "Invalid request body or validation error"
+// @Failure 500 {object} response.APIResponse "Internal server error"
 // @Router /v1/users [post]
 func (c *UserAdminController) CreateUser(ctx *gin.Context) {
 	var request CreateUserRequest
@@ -93,14 +93,14 @@ func (c *UserAdminController) CreateUser(ctx *gin.Context) {
 // @Description Bans a user by setting their status to 'banned'.
 // @Tags admin
 // @Param id path int true "User ID"
-// @Success 200 {object} apiResponse.APIResponse{data=string} "User banned successfully"
-// @Failure 400 {object} apiResponse.APIResponse "Invalid URL parameter"
-// @Failure 500 {object} apiResponse.APIResponse "Internal server error"
+// @Success 200 {object} response.APIResponse{data=string} "User banned successfully"
+// @Failure 400 {object} response.APIResponse "Invalid URL parameter"
+// @Failure 500 {object} response.APIResponse "Internal server error"
 // @Router /v1/admin/users/{id}/ban [post]
 func (c *UserAdminController) BanUser(ctx *gin.Context) {
 	userID, err := shared.ParseParamToEntityID(ctx, "id", "user")
 	if err != nil {
-		apiResponse.RequestURLParamError(ctx, err, "id", ctx.Param("id"))
+		response.RequestURLParamError(ctx, err, "id", ctx.Param("id"))
 	}
 
 	command := command.ChangeUserStatusCommand{
@@ -111,11 +111,11 @@ func (c *UserAdminController) BanUser(ctx *gin.Context) {
 
 	result := c.dispatcher.Dispatch(command)
 	if !result.IsSuccess {
-		apiResponse.ApplicationError(ctx, err)
+		response.ApplicationError(ctx, err)
 		return
 	}
 
-	apiResponse.Success(ctx, result.Message)
+	response.Success(ctx, result.Message)
 }
 
 // UnBanUser unbans a user.
@@ -123,14 +123,14 @@ func (c *UserAdminController) BanUser(ctx *gin.Context) {
 // @Description Unbans a user by setting their status to 'active'.
 // @Tags admin
 // @Param id path int true "User ID"
-// @Success 200 {object} apiResponse.APIResponse{data=string} "User unbanned successfully"
-// @Failure 400 {object} apiResponse.APIResponse "Invalid URL parameter"
-// @Failure 500 {object} apiResponse.APIResponse "Internal server error"
+// @Success 200 {object} response.APIResponse{data=string} "User unbanned successfully"
+// @Failure 400 {object} response.APIResponse "Invalid URL parameter"
+// @Failure 500 {object} response.APIResponse "Internal server error"
 // @Router /v1/admin/users/{id}/unban [post]
 func (c *UserAdminController) UnBanUser(ctx *gin.Context) {
 	userID, err := shared.ParseParamToEntityID(ctx, "id", "user")
 	if err != nil {
-		apiResponse.RequestURLParamError(ctx, err, "id", ctx.Param("id"))
+		response.RequestURLParamError(ctx, err, "id", ctx.Param("id"))
 	}
 
 	command := command.ChangeUserStatusCommand{
@@ -141,11 +141,11 @@ func (c *UserAdminController) UnBanUser(ctx *gin.Context) {
 
 	result := c.dispatcher.Dispatch(command)
 	if !result.IsSuccess {
-		apiResponse.ApplicationError(ctx, err)
+		response.ApplicationError(ctx, err)
 		return
 	}
 
-	apiResponse.Success(ctx, result.Message)
+	response.Success(ctx, result.Message)
 }
 
 // DeleteUser soft deletes a user.
@@ -153,14 +153,14 @@ func (c *UserAdminController) UnBanUser(ctx *gin.Context) {
 // @Desc
 // @Tags admin
 // @Param id path int true "User ID"
-// @Success 200 {object} apiResponse.APIResponse{data=string} "User soft deleted successfully"
-// @Failure 400 {object} apiResponse.APIResponse "Invalid URL parameter"
-// @Failure 500 {object} apiResponse.APIResponse "Internal server error"
+// @Success 200 {object} response.APIResponse{data=string} "User soft deleted successfully"
+// @Failure 400 {object} response.APIResponse "Invalid URL parameter"
+// @Failure 500 {object} response.APIResponse "Internal server error"
 // @Router /v1/admin/users/{id} [delete]
 func (c *UserAdminController) DeleteUser(ctx *gin.Context) {
 	id, err := shared.ParseParamToInt(ctx, "id")
 	if err != nil {
-		apiResponse.RequestURLParamError(ctx, err, "id", ctx.Param("id"))
+		response.RequestURLParamError(ctx, err, "id", ctx.Param("id"))
 		return
 	}
 
@@ -173,11 +173,11 @@ func (c *UserAdminController) DeleteUser(ctx *gin.Context) {
 
 	result := c.dispatcher.Dispatch(command)
 	if !result.IsSuccess {
-		apiResponse.ApplicationError(ctx, err)
+		response.ApplicationError(ctx, err)
 		return
 	}
 
-	apiResponse.Success(ctx, result.Message)
+	response.Success(ctx, result.Message)
 }
 
 func (c *UserAdminController) SearchUsers(ctx *gin.Context) {

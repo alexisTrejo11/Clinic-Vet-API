@@ -7,19 +7,83 @@ import (
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
+)
+
+const (
+	ErrFailedFindUser     = "failed to find user"
+	ErrFailedChangePhone  = "failed to change phone"
+	ErrFailedChangeEmail  = "failed to change email"
+	ErrFailedUpdateUser   = "failed to update user"
+	ErrEmailAlreadyExists = "email already exists"
+	ErrPhoneAlreadyTaken  = "phone already taken"
+	ErrInvalidUserID      = "invalid user ID"
+	ErrInvalidEmail       = "invalid email"
+	ErrInvalidPhone       = "invalid phone number"
+	ErrPhoneUnchanged     = "phone number unchanged"
+	ErrEmailUnchanged     = "email unchanged"
+
+	ErrFailedMappingUser   = "failed to map user from command"
+	ErrFailedValidation    = "failed to validate user creation"
+	ErrFailedHashPassword  = "failed to hash password"
+	ErrFailedSaveUser      = "failed to save user"
+	ErrInvalidRole         = "invalid user role"
+	ErrInvalidStatus       = "invalid user status"
+	ErrInvalidGender       = "invalid gender"
+	ErrInvalidDateOfBirth  = "invalid date of birth"
+	ErrUserCreationSuccess = "user created successfully"
 )
 
 type ChangeEmailCommand struct {
-	UserID valueobject.UserID `json:"user_id"`
-	Email  valueobject.Email  `json:"email"`
-	CTX    context.Context    `json:"-"`
+	userID valueobject.UserID
+	email  valueobject.Email
+	ctx    context.Context
 }
 
 type ChangePhoneCommand struct {
-	UserID valueobject.UserID      `json:"user_id"`
-	Phone  valueobject.PhoneNumber `json:"phone"`
-	CTX    context.Context         `json:"-"`
+	userID valueobject.UserID
+	phone  valueobject.PhoneNumber
+	ctx    context.Context
+}
+
+func NewChangeEmailCommand(ctx context.Context, userIDInt int, emailStr string) (ChangeEmailCommand, error) {
+	userID, err := valueobject.NewUserID(userIDInt)
+	if err != nil {
+		return ChangeEmailCommand{}, errors.New(ErrInvalidUserID)
+	}
+
+	email, err := valueobject.NewEmail(emailStr)
+	if err != nil {
+		return ChangeEmailCommand{}, errors.New(ErrInvalidEmail)
+	}
+
+	cmd := &ChangeEmailCommand{
+		ctx:    ctx,
+		userID: userID,
+		email:  email,
+	}
+
+	return *cmd, nil
+}
+
+func NewChangePhoneCommand(ctx context.Context, userIDInt int, phoneStr string) (ChangePhoneCommand, error) {
+	userID, err := valueobject.NewUserID(userIDInt)
+	if err != nil {
+		return ChangePhoneCommand{}, errors.New(ErrInvalidUserID)
+	}
+
+	phone, err := valueobject.NewPhoneNumber(phoneStr)
+	if err != nil {
+		return ChangePhoneCommand{}, errors.New(ErrInvalidPhone)
+	}
+
+	cmd := &ChangePhoneCommand{
+		userID: userID,
+		phone:  phone,
+		ctx:    ctx,
+	}
+
+	return *cmd, nil
 }
 
 type ChangeEmailHandler struct {
@@ -42,71 +106,77 @@ func NewChangeEmailHandler(userRepository repository.UserRepository) ChangeEmail
 	}
 }
 
-func (h ChangePhoneHandler) Handle(cmd any) shared.CommandResult {
-	command := cmd.(ChangePhoneCommand)
+func (h ChangePhoneHandler) Handle(cmd any) cqrs.CommandResult {
+	command, ok := cmd.(ChangePhoneCommand)
+	if !ok {
+		return cqrs.FailureResult(ErrFailedChangePhone, errors.New("invalid command type"))
+	}
 
-	user, err := h.userRepository.GetByID(command.CTX, command.UserID)
+	user, err := h.userRepository.GetByID(command.ctx, command.userID.GetValue())
 	if err != nil {
-		return shared.FailureResult("failed to find user", err)
+		return cqrs.FailureResult(ErrFailedFindUser, err)
 	}
 
 	if err := h.validate(command, user); err != nil {
-		return shared.FailureResult("failed to change phone", err)
+		return cqrs.FailureResult(ErrFailedChangePhone, err)
 	}
 
-	user.UpdatePhoneNumber(command.Phone)
+	user.UpdatePhoneNumber(command.phone)
 
-	if err := h.userRepository.Save(command.CTX, &user); err != nil {
-		return shared.FailureResult("failed to update user", err)
+	if err := h.userRepository.Save(command.ctx, &user); err != nil {
+		return cqrs.FailureResult(ErrFailedUpdateUser, err)
 	}
 
-	return shared.SuccessResult(user.ID().String(), "phone changed successfully")
+	return cqrs.SuccessResult(user.ID().String(), "phone changed successfully")
 }
 
-func (h ChangeEmailHandler) Handle(cmd any) shared.CommandResult {
-	command := cmd.(ChangeEmailCommand)
+func (h ChangeEmailHandler) Handle(cmd any) cqrs.CommandResult {
+	command, ok := cmd.(ChangeEmailCommand)
+	if !ok {
+		return cqrs.FailureResult(ErrFailedChangeEmail, errors.New("invalid command type"))
+	}
 
-	user, err := h.userRepository.GetByID(command.CTX, command.UserID)
+	user, err := h.userRepository.GetByID(command.ctx, command.userID.GetValue())
 	if err != nil {
-		return shared.FailureResult("failed to find user", err)
+		return cqrs.FailureResult(ErrFailedFindUser, err)
 	}
 
 	if err := h.validate(command, user); err != nil {
-		return shared.FailureResult("failed to change email", err)
+		return cqrs.FailureResult(ErrFailedChangeEmail, err)
 	}
 
-	user.UpdateEmail(command.Email)
+	user.UpdateEmail(command.email)
 
-	if err := h.userRepository.Save(command.CTX, &user); err != nil {
-		return shared.FailureResult("failed to update user", err)
+	if err := h.userRepository.Save(command.ctx, &user); err != nil {
+		return cqrs.FailureResult(ErrFailedUpdateUser, err)
 	}
 
-	return shared.SuccessResult(user.ID().String(), "email changed successfully")
+	return cqrs.SuccessResult(user.ID().String(), "email changed successfully")
 }
 
 func (h ChangeEmailHandler) validate(command ChangeEmailCommand, user entity.User) error {
-	if user.Email().String() == command.Email.String() {
-		return nil
+	if user.Email().String() == command.email.String() {
+		return errors.New(ErrEmailUnchanged)
 	}
 
-	if exists, err := h.userRepository.ExistsByEmail(command.CTX, command.Email.String()); err != nil {
+	if exists, err := h.userRepository.ExistsByEmail(command.ctx, command.email.String()); err != nil {
 		return err
 	} else if exists {
-		return errors.New("email already exists")
+		return errors.New(ErrEmailAlreadyExists)
 	}
 
 	return nil
 }
 
 func (h ChangePhoneHandler) validate(command ChangePhoneCommand, user entity.User) error {
-	if user.PhoneNumber().String() == command.Phone.String() {
-		return nil
+	if user.PhoneNumber().String() == command.phone.String() {
+		return errors.New(ErrPhoneUnchanged)
 	}
 
-	if exists, err := h.userRepository.ExistsByPhone(command.CTX, command.Phone.String()); err != nil {
+	if exists, err := h.userRepository.ExistsByPhone(command.ctx, command.phone.String()); err != nil {
 		return err
 	} else if exists {
-		return errors.New("phone already taken")
+		return errors.New(ErrPhoneAlreadyTaken)
 	}
 
 	return nil

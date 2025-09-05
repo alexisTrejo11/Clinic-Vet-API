@@ -106,3 +106,12 @@ func (r *CompleteAppointmentRequest) ToCommand(ctx context.Context, appointmentI
 
 	return *cmd, nil
 }
+
+type RequestAppointmentData struct {
+	petID    int
+	service  string
+	datetime time.Time
+	status   string
+	reason   string
+	notes    *string
+}

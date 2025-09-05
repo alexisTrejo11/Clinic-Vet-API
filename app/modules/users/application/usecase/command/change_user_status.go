@@ -10,9 +10,21 @@ import (
 )
 
 type ChangeUserStatusCommand struct {
-	UserID valueobject.UserID `json:"user_id"`
-	Status enum.UserStatus    `json:"status"`
-	CTX    context.Context    `json:"ctx"`
+	userID valueobject.UserID `json:"user_id"`
+	status enum.UserStatus    `json:"status"`
+	ctx    context.Context    `json:"ctx"`
+}
+
+func NewChangeUserStatusCommand(ctx context.Context, userIDInt int, status string) (*ChangeUserStatusCommand, error) {
+	errorMessage := make([]string, 0) 
+
+	userID, err := valueobject.NewUserID(userIDInt)
+
+
+
+	cmd := &ChangeUserStatusCommand{
+		us
+	}
 }
 
 type ChangeUserStatusHandler struct {

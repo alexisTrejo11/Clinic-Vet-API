@@ -3,7 +3,7 @@ package entity
 import (
 	"time"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/enum"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
 )
 
 type Notification struct {
@@ -26,7 +26,7 @@ func NewActivateAccountNotification(userID, userEmail string) Notification {
 		UserEmail: userEmail,
 		Subject:   "Activate your account",
 		Message:   "Please click the link below to activate your account.",
-		NType:     enum.ActivationToken,
-		Channel:   enum.Email,
+		NType:     enum.NotificationTypeActivationToken,
+		Channel:   enum.NotificationChannelEmail,
 	}
 }

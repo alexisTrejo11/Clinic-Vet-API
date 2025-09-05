@@ -6,40 +6,38 @@ import (
 
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/users/application/usecase/command"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
 )
 
-type CommandHandler interface {
-	Handle(command any) shared.CommandResult
+type UserCommandBus struct {
+	handlers map[reflect.Type]cqrs.CommandHandler
 }
 
-type CommandDispatcher struct {
-	handlers map[reflect.Type]CommandHandler
-}
-
-func NewCommandDispatcher() *CommandDispatcher {
-	return &CommandDispatcher{
-		handlers: make(map[reflect.Type]CommandHandler),
+func NewUserCommandBus() cqrs.CommandBus {
+	return &UserCommandBus{
+		handlers: make(map[reflect.Type]cqrs.CommandHandler),
 	}
 }
 
-func (d *CommandDispatcher) Register(command any, handler CommandHandler) {
-	commandType := reflect.TypeOf(command)
-	d.handlers[commandType] = handler
+func (d *UserCommandBus) Register(commandType reflect.Type, handler cqrs.CommandHandler) error {
+	cmd := reflect.TypeOf(commandType)
+	d.handlers[cmd] = handler
+
+	return nil
 }
 
-func (d *CommandDispatcher) Dispatch(command any) shared.CommandResult {
+func (d *UserCommandBus) Execute(command cqrs.Command) cqrs.CommandResult {
 	commandType := reflect.TypeOf(command)
 	handler, ok := d.handlers[commandType]
 	if !ok {
-		return shared.FailureResult(
+		return cqrs.FailureResult(
 			"an ocurred dispatching command", fmt.Errorf("no handler registered for command type %s", commandType),
 		)
 	}
 	return handler.Handle(command)
 }
 
-func (d *CommandDispatcher) RegisterCurrentCommands(userRepo repository.UserRepository) {
+func (d *UserCommandBus) RegisterCurrentCommands(userRepo repository.UserRepository) {
 	d.Register(command.ChangePasswordCommand{}, command.NewChangePasswordHandler(userRepo))
 	d.Register(command.ChangeEmailCommand{}, command.NewChangeEmailHandler(userRepo))
 	d.Register(command.ChangePasswordCommand{}, command.NewChangePasswordHandler(userRepo))

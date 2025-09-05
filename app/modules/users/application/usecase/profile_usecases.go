@@ -7,17 +7,16 @@ import (
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/valueObjects"
 )
 
 type ProfileUpdate struct {
-	UserID      valueobject.UserID       `json:"user_id"`
-	Name        *valueObjects.PersonName `json:"name"`
-	Gender      *string                  `json:"gender"`
-	ProfilePic  *string                  `json:"profile_pic"`
-	Bio         *string                  `json:"bio"`
-	DateOfBirth *time.Time               `json:"date_of_birth"`
-	Address     *entity.Address          `json:"address"`
+	UserID      valueobject.UserID      `json:"user_id"`
+	Name        *valueobject.PersonName `json:"name"`
+	Gender      *string                 `json:"gender"`
+	ProfilePic  *string                 `json:"profile_pic"`
+	Bio         *string                 `json:"bio"`
+	DateOfBirth *time.Time              `json:"date_of_birth"`
+	Address     *entity.Address         `json:"address"`
 }
 
 type ProfileUseCases interface {
@@ -56,7 +55,7 @@ func (p *profileUseCasesImpl) GetUserProfile(ctx context.Context, userID valueob
 }
 
 func (uc *UpdateUserProfileUseCase) Execute(ctx context.Context, request ProfileUpdate) error {
-	profile, err := uc.repo.GetByUserID(ctx, request.UserID)
+	profile, err := uc.repo.GetByUserID(ctx, request.UserID.GetValue())
 	if err != nil {
 		return err
 	}
@@ -67,7 +66,7 @@ func (uc *UpdateUserProfileUseCase) Execute(ctx context.Context, request Profile
 }
 
 func (uc *GetProfileByIDUseCase) Execute(ctx context.Context, userID valueobject.UserID) (entity.Profile, error) {
-	profile, err := uc.repo.GetByUserID(ctx, userID)
+	profile, err := uc.repo.GetByUserID(ctx, userID.GetValue())
 	if err != nil {
 		return entity.Profile{}, err
 	}

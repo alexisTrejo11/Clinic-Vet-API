@@ -1,12 +1,14 @@
 package controller
 
 import (
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
+	"context"
+
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/users/application/usecase"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
-	apiResponse "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/responses"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/valueObjects"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/users/infrastructure/api/dto"
+	authError "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/auth"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/response"
+	"github.com/alexisTrejo11/Clinic-Vet-API/middleware"
 	"github.com/gin-gonic/gin"
 )
 
@@ -20,74 +22,41 @@ func NewProfileController(useCases usecase.ProfileUseCases) *ProfileController {
 	}
 }
 
-func (c *ProfileController) GetUserProfile(ctx *gin.Context) {
-	id, err := shared.ParseParamToInt(ctx, "id")
-	if err != nil {
-		apiResponse.RequestURLParamError(ctx, err, "id", ctx.Param("id"))
+func (controller *ProfileController) GetUserProfile(c *gin.Context) {
+	idInt, exists := middleware.GetUserIDFromContext(c)
+	if !exists {
+		authError.UnauthorizedCTXError()
 		return
 	}
 
-	userID, _ := valueobject.NewUserID(id)
-	profile, err := c.useCases.GetUserProfile(ctx, userID)
+	userID, _ := valueobject.NewUserID(idInt)
+	profile, err := controller.useCases.GetUserProfile(context.Background(), userID)
 	if err != nil {
-		apiResponse.ApplicationError(ctx, err)
+		response.ApplicationError(c, err)
 		return
 	}
 
-	apiResponse.Success(ctx, profile)
+	response.Success(c, profile)
 }
 
-func (c *ProfileController) UpdateUserProfile(ctx *gin.Context) {
-	var request UpdateProfileRequest
-	if err := ctx.ShouldBindJSON(&request); err != nil {
-		apiResponse.BadRequest(ctx, err)
+func (controller *ProfileController) UpdateUserProfile(c *gin.Context) {
+	idInt, exists := middleware.GetUserIDFromContext(c)
+	if !exists {
+		authError.UnauthorizedCTXError()
 		return
 	}
 
-	userIDInt, err := shared.ParseParamToInt(ctx, "id")
-	if err != nil {
-		apiResponse.RequestURLParamError(ctx, err, "id", ctx.Param("id"))
+	var requestData dto.UpdateProfileRequest
+	if err := c.ShouldBindJSON(&requestData); err != nil {
+		response.BadRequest(c, err)
 		return
 	}
 
-	profileUpdateData := mapRequestToProfileUpdate(request, userIDInt)
-
-	if err := c.useCases.UpdateProfileUseCase(ctx, profileUpdateData); err != nil {
-		apiResponse.ApplicationError(ctx, err)
+	profileUpdateData := requestData.ToProfileUpdateDTO(idInt)
+	if err := controller.useCases.UpdateProfileUseCase(context.Background(), profileUpdateData); err != nil {
+		response.ApplicationError(c, err)
 		return
 	}
 
-	apiResponse.NoContent(ctx)
-}
-
-func mapRequestToProfileUpdate(request UpdateProfileRequest, id int) usecase.ProfileUpdate {
-	userID, _ := valueobject.NewUserID(id)
-	updateData := usecase.ProfileUpdate{
-		UserID:     userID,
-		Bio:        request.Bio,
-		ProfilePic: request.PhotoURL,
-	}
-
-	if request.Name != nil {
-		updateData.Name = &valueObjects.PersonName{
-			FirstName: *request.Name,
-			LastName:  *request.Name,
-		}
-	}
-
-	if request.Address != nil {
-		country := valueobject.Country(request.Address.Country)
-		updateData.Address = &entity.Address{
-			Street:              request.Address.Street,
-			City:                request.Address.City,
-			State:               request.Address.State,
-			ZipCode:             request.Address.ZipCode,
-			Country:             country,
-			BuildingType:        valueobject.BuildingType(request.Address.BuildingType),
-			BuildingOuterNumber: request.Address.BuildingOuterNumber,
-			BuildingInnerNumber: request.Address.BuildingInnerNumber,
-		}
-	}
-
-	return updateData
+	response.NoContent(c)
 }

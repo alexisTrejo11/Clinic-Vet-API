@@ -12,15 +12,16 @@ import (
 )
 
 type CreateAppointmentCommand struct {
-	ctx      context.Context
-	ownerID  valueobject.OwnerID
-	petID    valueobject.PetID
-	vetID    *valueobject.VetID
-	service  enum.ClinicService
-	datetime time.Time
-	status   *enum.AppointmentStatus
-	reason   string
-	notes    *string
+	ctx         context.Context
+	ownerID     valueobject.OwnerID
+	petID       valueobject.PetID
+	vetID       *valueobject.VetID
+	service     enum.ClinicService
+	datetime    time.Time
+	status      *enum.AppointmentStatus
+	reason      enum.VisitReason
+	notes       *string
+	RequestByID valueobject.UserID
 }
 
 func NewCreateAppointCmd(
@@ -31,6 +32,7 @@ func NewCreateAppointCmd(
 	service string,
 	dateTime time.Time,
 	status string,
+	reason string,
 	notes *string,
 ) (*CreateAppointmentCommand, error) {
 	ownerID, err := valueobject.NewOwnerID(ownerIDInt)
@@ -62,12 +64,18 @@ func NewCreateAppointCmd(
 		return nil, err
 	}
 
+	visitReason, err := enum.NewVisitReason(reason)
+	if err != nil {
+		return nil, err
+	}
+
 	return &CreateAppointmentCommand{
 		ownerID:  ownerID,
 		petID:    petID,
 		vetID:    vetID,
 		datetime: dateTime,
 		notes:    notes,
+		reason:   visitReason,
 		status:   &appointmentStatus,
 		service:  cliniService,
 	}, nil

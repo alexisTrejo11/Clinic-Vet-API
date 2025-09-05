@@ -1,10 +1,14 @@
 package controller
 
 import (
+	"context"
+	"strconv"
 	"time"
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/enum"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/auth/application/command"
+	apperror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/application"
 )
 
 type RequestSignup struct {
@@ -49,10 +53,19 @@ type RequestLogout struct {
 	RefreshToken string `json:"refresh_token" binding:"required"`
 }
 
-func (r *RequestLogout) ToCommand() *command.LogoutCommand {
-	return &command.LogoutCommand{
-		RefreshToken: r.RefreshToken,
+func (r *RequestLogout) ToCommand(userIdInt int) (command.LogoutCommand, error) {
+	userId, err := valueobject.NewUserID(userIdInt)
+	if err != nil {
+		 return command.LogoutCommand{}, apperror.FieldValidationError("userID", strconv.Itoa(userIdInt), err.Error())
 	}
+
+	cmd := &command.LogoutCommand{
+		RefreshToken: r.RefreshToken,
+		UserID:       userId,
+		CTX:          context.Background(),
+	}
+
+	return *cmd, nil
 }
 
 type RefreshSessionRequest struct {

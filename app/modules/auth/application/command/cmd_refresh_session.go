@@ -56,7 +56,7 @@ func (h *RefreshSessionHandler) Handle(cmd any) AuthCommandResult {
 }
 
 func (h *RefreshSessionHandler) validateExisitngUser(command RefreshSessionCommand) error {
-	exists, err := h.userRepo.ExistsByID(command.CTX, command.UserID)
+	exists, err := h.userRepo.ExistsByID(command.CTX, command.UserID.GetValue())
 	if err != nil {
 		return err
 	}

@@ -2,14 +2,30 @@ package command
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
+	apperror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/application"
 )
 
 type LogoutAllCommand struct {
-	UserID valueobject.UserID `json:"user_id"`
-	CTX    context.Context    `json:"-"`
+	userID valueobject.UserID
+	ctx    context.Context
+}
+
+func NewLogoutAllCommand(idnInt int) (LogoutAllCommand, error) {
+	userID, err := valueobject.NewUserID(idnInt)
+	if err != nil {
+		return LogoutAllCommand{}, apperror.FieldValidationError("userId", strconv.Itoa(idnInt), err.Error())
+	}
+
+	cmd := &LogoutAllCommand{
+		ctx:    context.Background(),
+		userID: userID,
+	}
+
+	return *cmd, nil
 }
 
 type logoutAllHandler struct {
@@ -30,12 +46,12 @@ func NewLogoutAllHandler(
 func (h *logoutAllHandler) Handle(cmd any) AuthCommandResult {
 	command := cmd.(LogoutAllCommand)
 
-	user, err := h.userRepository.GetByID(command.CTX, command.UserID)
+	user, err := h.userRepository.GetByID(command.ctx, command.userID.GetValue())
 	if err != nil {
 		return FailureAuthResult("an error ocurred finding user", err)
 	}
 
-	err = h.sessionRepository.DeleteAllUserSessions(command.CTX, user.ID().String())
+	err = h.sessionRepository.DeleteAllUserSessions(command.ctx, user.ID().String())
 	if err != nil {
 		return FailureAuthResult("an error ocurred delete user sessions", err)
 	}
