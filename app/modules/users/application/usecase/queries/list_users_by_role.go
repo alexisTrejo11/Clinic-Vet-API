@@ -3,14 +3,14 @@ package userDomainQueries
 import (
 	"context"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/enum"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 )
 
 type ListUsersByRoleQuery struct {
 	Role       enum.UserRole   `json:"role"`
-	Pagination page.PageData   `json:"pagination"`
+	Pagination page.PageInput  `json:"pagination"`
 	Ctx        context.Context `json:"-"`
 }
 

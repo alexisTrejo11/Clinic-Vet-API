@@ -23,7 +23,7 @@ func NewQueryBus(paymentRepo repository.PaymentRepository) *PaymentQueryBus {
 
 func (bus *PaymentQueryBus) registerHandlers(paymentRepo repository.PaymentRepository) {
 	bus.Register(reflect.TypeOf(query.GetPaymentByIDQuery{}), query.NewGetPaymentByIDHandler(paymentRepo))
-	bus.Register(reflect.TypeOf(query.ListPaymentsByUserQuery{}), query.NewListByUserHandler(paymentRepo))
+	bus.Register(reflect.TypeOf(query.ListPaymentsByOwnerQuery{}), query.NewListByOwnerHandler(paymentRepo))
 	bus.Register(reflect.TypeOf(query.ListPaymentsByStatusQuery{}), query.NewListPaymentsByStatusHandler(paymentRepo))
 	bus.Register(reflect.TypeOf(query.ListOverduePaymentsQuery{}), query.NewListOverduePaymentsHandler(paymentRepo))
 	bus.Register(reflect.TypeOf(query.SearchPaymentsQuery{}), query.NewSearchPaymentsHandler(paymentRepo))
@@ -42,7 +42,7 @@ func (bus *PaymentQueryBus) Execute(qry cqrs.Query) (any, error) {
 	case query.GetPaymentByIDQuery:
 		h := handler.(query.GetPaymentByIDHandler)
 		return h.Handle(q)
-	case query.ListPaymentsByUserQuery:
+	case query.ListPaymentsByOwnerQuery:
 		h := handler.(query.ListPaymentsByStatusHandler)
 		return h.Handle(q)
 

@@ -2,11 +2,13 @@
 package mapper
 
 import (
+	"fmt"
 	"time"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/enum"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/appointment"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
+
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/appointment/application/dto"
 	apperror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/application"
 )
@@ -18,50 +20,56 @@ func NewAppointmentMapper() *AppointmentMapper {
 }
 
 // ToAppointmentResponse converts domain appointment to response
-func (m *AppointmentMapper) ToAppointmentResponse(appointment *entity.Appointment) dto.AppointmentResponse {
+func (m *AppointmentMapper) ToAppointmentResponse(appointment *appointment.Appointment) dto.AppointmentResponse {
 	var vetID *int
-	if appointment.GetVetID() != nil {
-		v := appointment.GetVetID().GetValue()
+	if appointment.VetID() != nil {
+		v := appointment.VetID().Value()
 		vetID = &v
 	}
 
 	return dto.AppointmentResponse{
-		ID:            appointment.GetID().GetValue(),
-		PetID:         appointment.GetPetID().GetValue(),
-		OwnerID:       appointment.GetOwnerID().GetValue(),
+		ID:            appointment.ID().Value(),
+		PetID:         appointment.PetID().Value(),
+		OwnerID:       appointment.OwnerID().Value(),
 		VetID:         vetID,
-		Service:       appointment.GetService(),
-		ScheduledDate: appointment.GetScheduledDate(),
-		Status:        appointment.GetStatus(),
-		CreatedAt:     appointment.GetCreatedAt(),
-		UpdatedAt:     appointment.GetUpdatedAt(),
+		Service:       appointment.Service(),
+		ScheduledDate: appointment.ScheduledDate(),
+		Status:        appointment.Status(),
+		CreatedAt:     appointment.CreatedAt(),
+		UpdatedAt:     appointment.UpdatedAt(),
 	}
 }
 
 // ToAppointmentDetail converts domain appointment to detailed response
 func (m *AppointmentMapper) ToAppointmentDetail(
-	appointment *entity.Appointment,
+	appointment *appointment.Appointment,
 	pet *dto.PetSummary,
 	owner *dto.OwnerSummary,
 	vet *dto.VetSummary,
 ) dto.AppointmentDetail {
 	return dto.AppointmentDetail{
-		ID:            appointment.GetID().GetValue(),
+		ID:            appointment.ID().Value(),
 		Pet:           pet,
 		Owner:         owner,
 		Veterinarian:  vet,
-		Service:       appointment.GetService(),
-		ScheduledDate: appointment.GetScheduledDate(),
-		Status:        appointment.GetStatus(),
-		CreatedAt:     appointment.GetCreatedAt(),
-		UpdatedAt:     appointment.GetUpdatedAt(),
+		Service:       appointment.Service(),
+		ScheduledDate: appointment.ScheduledDate(),
+		Status:        appointment.Status(),
+		CreatedAt:     appointment.CreatedAt(),
+		UpdatedAt:     appointment.UpdatedAt(),
 	}
 }
 
-// RequestToDomain converts request  to domain appointment
-func (m *AppointmentMapper) RequestToDomain(dto dto.AppointmentCreate) (entity.Appointment, error) {
+// RequestToDomain converts request to domain appointment
+func (m *AppointmentMapper) RequestToDomain(dto dto.AppointmentCreate) (appointment.Appointment, error) {
 	errorsMessages := make([]string, 0)
+
 	petID, err := valueobject.NewPetID(dto.PetID)
+	if err != nil {
+		errorsMessages = append(errorsMessages, err.Error())
+	}
+
+	ownerID, err := valueobject.NewOwnerID(dto.OwnerID)
 	if err != nil {
 		errorsMessages = append(errorsMessages, err.Error())
 	}
@@ -71,40 +79,38 @@ func (m *AppointmentMapper) RequestToDomain(dto dto.AppointmentCreate) (entity.A
 		id, err := valueobject.NewVetID(*dto.VetID)
 		if err != nil {
 			errorsMessages = append(errorsMessages, err.Error())
+		} else {
+			vetID = &id
 		}
-		vetID = &id
 	}
 
-	ownerID, err := valueobject.NewOwnerID(dto.OwnerID)
-	if err != nil {
-		errorsMessages = append(errorsMessages, err.Error())
-	}
-
-	now := time.Now()
-
+	appointmentID, err := valueobject.NewAppointmentID(0)
 	if err != nil {
 		errorsMessages = append(errorsMessages, err.Error())
 	}
 
 	if len(errorsMessages) > 0 {
-		return entity.Appointment{}, apperror.MappingError(errorsMessages, "createDTO", "domain", "appointment")
+		return appointment.Appointment{}, apperror.MappingError(errorsMessages, "createDTO", "domain", "appointment")
 	}
 
-	return *entity.
-		NewAppointmentBuilder().
-		WithPetID(petID).
-		WithNotes(dto.Notes).
-		WithOwnerID(ownerID).
-		WithReason(*dto.Notes).
-		WithTimestamps(now, now).
-		WithScheduledDate(dto.ScheduledDate).
-		WithVetID(vetID).
-		WithService(dto.Service).
-		Build(), nil
+	appt, err := appointment.NewAppointment(
+		appointmentID,
+		petID,
+		ownerID,
+		appointment.WithVetID(vetID),
+		appointment.WithService(dto.Service),
+		appointment.WithScheduledDate(dto.ScheduledDate),
+		appointment.WithNotes(dto.Notes),
+	)
+	if err != nil {
+		return appointment.Appointment{}, fmt.Errorf("failed to create appointment: %w", err)
+	}
+
+	return *appt, nil
 }
 
 // ToCreateAppointmentResponse creates a response for appointment creation
-func (m *AppointmentMapper) ToCreateAppointmentResponse(appointment *entity.Appointment) dto.CreateAppointmentResponse {
+func (m *AppointmentMapper) ToCreateAppointmentResponse(appointment *appointment.Appointment) dto.CreateAppointmentResponse {
 	return dto.CreateAppointmentResponse{
 		Appointment: m.ToAppointmentResponse(appointment),
 		Message:     "Appointment requested successfully",
@@ -114,8 +120,8 @@ func (m *AppointmentMapper) ToCreateAppointmentResponse(appointment *entity.Appo
 // ToCancelAppointmentResponse creates a response for appointment cancellation
 func (m *AppointmentMapper) ToCancelAppointmentResponse(appointmentID valueobject.AppointmentID) dto.CancelAppointmentResponse {
 	return dto.CancelAppointmentResponse{
-		AppointmentID: appointmentID.GetValue(),
-		Status:        string(enum.StatusCancelled),
+		AppointmentID: appointmentID.Value(),
+		Status:        enum.AppointmentStatusCancelled.DisplayName(),
 		Message:       "App",
 		CancelledAt:   time.Now(),
 	}

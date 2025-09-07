@@ -2,8 +2,6 @@
 package controller
 
 import (
-	"strconv"
-
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/auth/application/command"
 	autherror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/auth"
 	httpError "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/infrastructure/http"
@@ -95,8 +93,7 @@ func (controller *AuthController) Logout(c *gin.Context) {
 		return
 	}
 
-	userId, _ := strconv.Atoi(id)
-	logoutCommand, err := requestLogout.ToCommand(userId)
+	logoutCommand, err := requestLogout.ToCommand(id)
 	if err != nil {
 		response.ApplicationError(c, err)
 		return
@@ -118,8 +115,7 @@ func (controller *AuthController) LogoutAll(c *gin.Context) {
 		return
 	}
 
-	userId, _ := strconv.Atoi(id)
-	logoutAllCommand, err := command.NewLogoutAllCommand(userId)
+	logoutAllCommand, err := command.NewLogoutAllCommand(id)
 	if err != nil {
 		response.ApplicationError(c, err)
 		return

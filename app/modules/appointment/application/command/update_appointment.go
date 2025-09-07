@@ -3,8 +3,8 @@ package command
 import (
 	"context"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/enum"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
 )
@@ -28,20 +28,19 @@ func NewUpdateAppointmentCommand(ctx context.Context, appointIDInt int, vetIDInt
 	var vetID *valueobject.VetID
 	if vetIDInt != nil {
 		vetIDObj, err := valueobject.NewVetID(*vetIDInt)
-		vetID = &vetIDObj
-
 		if err != nil {
 			return nil, err
 		}
+		vetID = &vetIDObj
 	}
 
 	var clinicService *enum.ClinicService
 	if service != nil {
-		service, err := enum.NewClinicService(*service)
+		serviceEnum, err := enum.ParseClinicService(*service)
 		if err != nil {
 			return nil, err
 		}
-		clinicService = &service
+		clinicService = &serviceEnum
 	}
 
 	return &UpdateAppointmentCommand{
@@ -65,22 +64,23 @@ func NewUpdateAppointmentHandler(appointmentRepo repository.AppointmentRepositor
 }
 
 func (h *UpdateAppointmentHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
-	command := cmd.(UpdateAppointmentCommand)
+	command, ok := cmd.(*UpdateAppointmentCommand)
+	if !ok {
+		return cqrs.FailureResult(ErrInvalidCommandType, nil)
+	}
 
 	appointment, err := h.appointmentRepo.GetByID(command.ctx, command.appointmentID)
 	if err != nil {
-		return cqrs.FailureResult("appointment not found", err)
+		return cqrs.FailureResult(ErrAppointmentNotFound, err)
 	}
 
-	appointment.Update(command.notes, command.vetID, command.service, command.reason)
-
-	if err := appointment.ValidateFields(); err != nil {
-		return cqrs.FailureResult("appointment validation failed", err)
+	if err := appointment.Update(command.notes, command.vetID, command.service, command.reason); err != nil {
+		return cqrs.FailureResult(ErrUpdateAppointmentFailed, err)
 	}
 
 	if err := h.appointmentRepo.Save(command.ctx, &appointment); err != nil {
-		return cqrs.FailureResult("failed to update appointment", err)
+		return cqrs.FailureResult(ErrSaveAppointmentFailed, err)
 	}
 
-	return cqrs.SuccessResult(appointment.GetID().String(), "appointment updated successfully")
+	return cqrs.SuccessResult(appointment.ID().String(), SuccessAppointmentUpdated)
 }

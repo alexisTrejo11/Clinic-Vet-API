@@ -1,8 +1,10 @@
-package user
+// Package profile contains the Profile entity definition.
+package profile
 
 import (
 	"time"
 
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/user/address"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
 )
 
@@ -12,7 +14,7 @@ type Profile struct {
 	VeterinarianID *int
 	PhotoURL       string
 	Bio            string
-	Address        *Address
+	Address        *address.Address
 	DateOfBirth    *time.Time
 	JoinedAt       time.Time
 }

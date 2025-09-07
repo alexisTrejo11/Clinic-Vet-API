@@ -1,6 +1,7 @@
+// Package dto contains Data Transfer Objects for the pets module.
 package dto
 
-import "github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
+import "github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
 
 type PetCreate struct {
 	Name               string

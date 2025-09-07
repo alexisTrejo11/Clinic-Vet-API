@@ -7,6 +7,7 @@ import (
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/users/application/usecase/command"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/password"
 )
 
 type UserCommandBus struct {
@@ -38,7 +39,7 @@ func (d *UserCommandBus) Execute(command cqrs.Command) cqrs.CommandResult {
 }
 
 func (d *UserCommandBus) RegisterCurrentCommands(userRepo repository.UserRepository) {
-	d.Register(command.ChangePasswordCommand{}, command.NewChangePasswordHandler(userRepo))
+	d.Register(command.ChangePasswordCommand{}, command.NewChangePasswordHandler(userRepo, &password.PasswordEncoderImpl{}))
 	d.Register(command.ChangeEmailCommand{}, command.NewChangeEmailHandler(userRepo))
 	d.Register(command.ChangePasswordCommand{}, command.NewChangePasswordHandler(userRepo))
 	d.Register(command.DeleteUserCommand{}, command.NewDeleteUserHandler(userRepo))

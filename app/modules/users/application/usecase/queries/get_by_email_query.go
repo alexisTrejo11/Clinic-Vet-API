@@ -3,8 +3,8 @@ package userDomainQueries
 import (
 	"context"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/user"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 )
 
@@ -15,7 +15,7 @@ type GetByEmailQuery struct {
 }
 
 type GetByEmailHandler interface {
-	Handle(ctx context.Context, query GetByEmailQuery) (entity.User, error)
+	Handle(ctx context.Context, query GetByEmailQuery) (user.User, error)
 }
 
 type getByEmailHandler struct {
@@ -28,11 +28,11 @@ func NewGetByEmailHandler(userRepository repository.UserRepository) GetByEmailHa
 	}
 }
 
-func (h *getByEmailHandler) Handle(ctx context.Context, query GetByEmailQuery) (entity.User, error) {
-	user, err := h.userRepository.GetByEmail(ctx, query.Email.Value())
+func (h *getByEmailHandler) Handle(ctx context.Context, query GetByEmailQuery) (user.User, error) {
+	userEntity, err := h.userRepository.GetByEmail(ctx, query.Email.Value())
 	if err != nil {
-		return entity.User{}, err
+		return user.User{}, err
 	}
 
-	return user, nil
+	return userEntity, nil
 }

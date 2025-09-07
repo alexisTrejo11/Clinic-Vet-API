@@ -3,7 +3,7 @@ package usecase
 import (
 	"context"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/owners/application/dto"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 )

@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/notification"
 	service "github.com/alexisTrejo11/Clinic-Vet-API/app/modules/notifications/application"
 	"github.com/twilio/twilio-go"
 	twilioApi "github.com/twilio/twilio-go/rest/api/v2010"
@@ -20,7 +20,7 @@ func NewTwilioPhoneSender(client *twilio.RestClient, twilioPhoneNumber string) s
 	return &TwilioPhoneSender{client: client, twilioPhoneNumber: twilioPhoneNumber}
 }
 
-func (s *TwilioPhoneSender) Send(ctx context.Context, notification *entity.Notification) error {
+func (s *TwilioPhoneSender) Send(ctx context.Context, notification *notification.Notification) error {
 	params := &twilioApi.CreateMessageParams{}
 
 	if notification.UserPhone == "" {
@@ -46,6 +46,6 @@ func (s *TwilioPhoneSender) Send(ctx context.Context, notification *entity.Notif
 	}
 }
 
-func (s *TwilioPhoneSender) GenerateBody(notification *entity.Notification) string {
+func (s *TwilioPhoneSender) GenerateBody(notification *notification.Notification) string {
 	return fmt.Sprintf("Hello from Clinic Vet! %s", notification.Message)
 }

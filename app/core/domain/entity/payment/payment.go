@@ -1,3 +1,4 @@
+// Package payment defines the Payment entity and its behaviors.
 package payment
 
 import (
@@ -10,7 +11,7 @@ import (
 )
 
 type Payment struct {
-	base.Entity
+	base.Entity[valueobject.PaymentID]
 	appointmentID valueobject.AppointmentID
 	userID        valueobject.UserID
 	amount        valueobject.Money
@@ -24,13 +25,11 @@ type Payment struct {
 	refundedAt    *time.Time
 }
 
-// PaymentOption defines the functional option type
 type PaymentOption func(*Payment) error
 
-// Functional options
 func WithAmount(amount valueobject.Money) PaymentOption {
 	return func(p *Payment) error {
-		if amount.Amount <= 0 {
+		if amount.Amount() <= 0 {
 			return domainerr.NewValidationError("payment", "amount", "amount must be positive")
 		}
 		p.amount = amount
@@ -128,13 +127,13 @@ func NewPayment(
 	userID valueobject.UserID,
 	opts ...PaymentOption,
 ) (*Payment, error) {
-	if id.GetValue() == 0 {
+	if id.Value() == 0 {
 		return nil, domainerr.NewValidationError("payment", "id", "payment ID is required")
 	}
-	if appointmentID.GetValue() == 0 {
+	if appointmentID.Value() == 0 {
 		return nil, domainerr.NewValidationError("payment", "appointmentID", "appointment ID is required")
 	}
-	if userID.GetValue() == 0 {
+	if userID.Value() == 0 {
 		return nil, domainerr.NewValidationError("payment", "userID", "user ID is required")
 	}
 
@@ -146,14 +145,12 @@ func NewPayment(
 		currency:      "USD",                     // Default currency
 	}
 
-	// Apply all options
 	for _, opt := range opts {
 		if err := opt(payment); err != nil {
 			return nil, err
 		}
 	}
 
-	// Final validation
 	if err := payment.validate(); err != nil {
 		return nil, err
 	}
@@ -163,14 +160,14 @@ func NewPayment(
 
 // Validation
 func (p *Payment) validate() error {
-	if p.amount.Amount <= 0 {
+	if p.amount.Amount() <= 0 {
 		return domainerr.NewValidationError("payment", "amount", "amount must be positive")
 	}
 	if p.currency == "" {
 		return domainerr.NewValidationError("payment", "currency", "currency is required")
 	}
 	if !p.paymentMethod.IsValid() {
-		return domainerr.NewValidationError("payment", "paymentMethod", "payment method is required")
+		return domainerr.NewValidationError("payment", "payment Method", "payment method is required")
 	}
 	if !p.status.IsValid() {
 		return domainerr.NewValidationError("payment", "status", "status is required")
@@ -178,9 +175,8 @@ func (p *Payment) validate() error {
 	return nil
 }
 
-// Getters
 func (p *Payment) ID() valueobject.PaymentID {
-	return p.ID()
+	return p.Entity.ID()
 }
 
 func (p *Payment) AppointmentID() valueobject.AppointmentID {
@@ -227,10 +223,9 @@ func (p *Payment) RefundedAt() *time.Time {
 	return p.refundedAt
 }
 
-// Business logic methods
 func (p *Payment) Update(amount *valueobject.Money, paymentMethod *enum.PaymentMethod, description *string, dueDate *time.Time) error {
 	if amount != nil {
-		if amount.Amount <= 0 {
+		if amount.Amount() <= 0 {
 			return domainerr.NewValidationError("payment", "amount", "amount must be positive")
 		}
 		p.amount = *amount
@@ -238,7 +233,7 @@ func (p *Payment) Update(amount *valueobject.Money, paymentMethod *enum.PaymentM
 
 	if paymentMethod != nil {
 		if !paymentMethod.IsValid() {
-			return domainerr.NewValidationError("payment", "paymentMethod", "invalid payment method")
+			return domainerr.NewValidationError("payment", "payment method", "invalid payment method")
 		}
 		p.paymentMethod = *paymentMethod
 	}
@@ -252,169 +247,11 @@ func (p *Payment) Update(amount *valueobject.Money, paymentMethod *enum.PaymentM
 
 	if dueDate != nil {
 		if dueDate.Before(time.Now()) {
-			return domainerr.NewValidationError("payment", "dueDate", "due date cannot be in the past")
+			return domainerr.NewValidationError("payment", "due date", "due date cannot be in the past")
 		}
 		p.dueDate = dueDate
 	}
 
 	p.IncrementVersion()
 	return nil
-}
-
-func (p *Payment) Cancel(reason string) error {
-	allowedStatuses := []enum.PaymentStatus{
-		enum.PaymentStatusPending,
-		enum.PaymentStatusPaid,
-		enum.PaymentStatusFailed,
-	}
-
-	if !p.canTransitionTo(enum.PaymentStatusCancelled, allowedStatuses) {
-		return domainerr.NewBusinessRuleError("payment", "cancel", "payment cannot be cancelled in current status")
-	}
-
-	if reason == "" {
-		return domainerr.NewValidationError("payment", "reason", "cancellation reason is required")
-	}
-
-	p.status = enum.PaymentStatusCancelled
-	p.IncrementVersion()
-	return nil
-}
-
-func (p *Payment) Pay(transactionID string) error {
-	allowedStatuses := []enum.PaymentStatus{
-		enum.PaymentStatusFailed,
-		enum.PaymentStatusPending,
-	}
-
-	if !p.canTransitionTo(enum.PaymentStatusPaid, allowedStatuses) {
-		return domainerr.NewBusinessRuleError("payment", "pay", "payment cannot be paid in current status")
-	}
-
-	if transactionID == "" {
-		return domainerr.NewValidationError("payment", "transactionID", "transaction ID is required")
-	}
-
-	now := time.Now()
-	p.status = enum.PaymentStatusPaid
-	p.transactionID = &transactionID
-	p.paidAt = &now
-	p.IncrementVersion()
-
-	return nil
-}
-
-func (p *Payment) Refund() error {
-	allowedStatuses := []enum.PaymentStatus{enum.PaymentStatusPaid}
-
-	if !p.canTransitionTo(enum.PaymentStatusRefunded, allowedStatuses) {
-		return domainerr.NewBusinessRuleError("payment", "refund", "payment cannot be refunded in current status")
-	}
-
-	now := time.Now()
-	p.status = enum.PaymentStatusRefunded
-	p.refundedAt = &now
-	p.IncrementVersion()
-
-	return nil
-}
-
-func (p *Payment) MarkAsOverdue() error {
-	allowedStatuses := []enum.PaymentStatus{
-		enum.PaymentStatusFailed,
-		enum.PaymentStatusPending,
-	}
-
-	if !p.canTransitionTo(enum.PaymentStatusOverdue, allowedStatuses) {
-		return domainerr.NewBusinessRuleError("payment", "overdue", "payment cannot be marked as overdue in current status")
-	}
-
-	if p.dueDate != nil && time.Now().Before(*p.dueDate) {
-		return domainerr.NewBusinessRuleError("payment", "overdue", "cannot mark as overdue before due date")
-	}
-
-	p.status = enum.PaymentStatusOverdue
-	p.IncrementVersion()
-	return nil
-}
-
-func (p *Payment) MarkAsFailed() error {
-	allowedStatuses := []enum.PaymentStatus{enum.PaymentStatusPending}
-
-	if !p.canTransitionTo(enum.PaymentStatusFailed, allowedStatuses) {
-		return domainerr.NewBusinessRuleError("payment", "failed", "payment cannot be marked as failed in current status")
-	}
-
-	p.status = enum.PaymentStatusFailed
-	p.IncrementVersion()
-	return nil
-}
-
-// Helper methods
-func (p *Payment) IsOverdue() bool {
-	if p.status == enum.PaymentStatusOverdue {
-		return true
-	}
-
-	if p.paidAt != nil || p.status.IsFinal() {
-		return false
-	}
-
-	if p.dueDate != nil && time.Now().After(*p.dueDate) {
-		return true
-	}
-
-	return false
-}
-
-func (p *Payment) IsPaid() bool {
-	return p.status == enum.PaymentStatusPaid
-}
-
-func (p *Payment) IsRefunded() bool {
-	return p.status == enum.PaymentStatusRefunded
-}
-
-func (p *Payment) IsCancelled() bool {
-	return p.status == enum.PaymentStatusCancelled
-}
-
-func (p *Payment) CanRetry() bool {
-	return p.status == enum.PaymentStatusFailed || p.status == enum.PaymentStatusPending
-}
-
-func (p *Payment) AmountDue() valueobject.Money {
-	if p.IsPaid() || p.IsRefunded() || p.IsCancelled() {
-		return valueobject.NewMoney(0, p.currency)
-	}
-	return p.amount
-}
-
-// Private helper
-func (p *Payment) canTransitionTo(newStatus enum.PaymentStatus, allowedFrom []enum.PaymentStatus) bool {
-	for _, status := range allowedFrom {
-		if p.status == status {
-			return true
-		}
-	}
-	return false
-}
-
-// Additional business logic
-func (p *Payment) RequiresPaymentProcessing() bool {
-	return p.status == enum.PaymentStatusPending &&
-		p.paymentMethod.RequiresOnlineProcessing()
-}
-
-func (p *Payment) CanBeRefunded() bool {
-	return p.status == enum.PaymentStatusPaid &&
-		p.paidAt != nil &&
-		p.paidAt.After(time.Now().AddDate(0, -6, 0)) // Within 6 months
-}
-
-func (p *Payment) DaysOverdue() int {
-	if !p.IsOverdue() || p.dueDate == nil {
-		return 0
-	}
-	return int(time.Since(*p.dueDate).Hours() / 24)
 }

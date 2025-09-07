@@ -1,4 +1,5 @@
-package user
+// Package address contains the Address entity definition.
+package address
 
 import "github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
 

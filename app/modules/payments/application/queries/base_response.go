@@ -4,7 +4,7 @@ package query
 import (
 	"time"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/payment"
 )
 
 type PaymentResponse struct {
@@ -25,22 +25,22 @@ type PaymentResponse struct {
 	UpdatedAt     string  `json:"updated_at"`
 }
 
-func NewPaymentResponse(payment *entity.Payment) PaymentResponse {
+func NewPaymentResponse(payment *payment.Payment) PaymentResponse {
 	return PaymentResponse{
-		ID:            payment.GetID().GetValue(),
-		AppointmentID: payment.GetAppointmentID().GetValue(),
-		UserID:        payment.GetUserID().GetValue(),
-		Amount:        payment.GetAmount().ToFloat(),
-		Currency:      payment.GetCurrency(),
-		PaymentMethod: string(payment.GetPaymentMethod()),
-		Status:        string(payment.GetStatus()),
-		TransactionID: payment.GetTransactionID(),
-		Description:   payment.GetDescription(),
-		DueDate:       formatTime(payment.GetDueDate()),
-		PaidAt:        formatTime(payment.GetPaidAt()),
-		RefundedAt:    formatTime(payment.GetRefundedAt()),
-		CreatedAt:     payment.GetCreatedAt().Format(time.RFC3339),
-		UpdatedAt:     payment.GetUpdatedAt().Format(time.RFC3339),
+		ID:            payment.ID().Value(),
+		AppointmentID: payment.AppointmentID().Value(),
+		UserID:        payment.UserID().Value(),
+		Amount:        payment.Amount().ToFloat(),
+		Currency:      payment.Currency(),
+		PaymentMethod: string(payment.PaymentMethod()),
+		Status:        string(payment.Status()),
+		TransactionID: payment.TransactionID(),
+		Description:   payment.Description(),
+		DueDate:       formatTime(payment.DueDate()),
+		PaidAt:        formatTime(payment.PaidAt()),
+		RefundedAt:    formatTime(payment.RefundedAt()),
+		CreatedAt:     payment.CreatedAt().Format(time.RFC3339),
+		UpdatedAt:     payment.UpdatedAt().Format(time.RFC3339),
 	}
 }
 
@@ -52,7 +52,7 @@ func formatTime(t *time.Time) *string {
 	return &formatted
 }
 
-func mapPaymentsToResponses(payments []entity.Payment) []PaymentResponse {
+func mapPaymentsToResponses(payments []payment.Payment) []PaymentResponse {
 	var responses []PaymentResponse
 	for _, payment := range payments {
 		responses = append(responses, NewPaymentResponse(&payment))

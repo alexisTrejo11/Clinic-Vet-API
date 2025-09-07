@@ -6,7 +6,7 @@ import (
 	service "github.com/alexisTrejo11/Clinic-Vet-API/app/modules/notifications/application"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/notifications/infrastructure/api/controller"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/notifications/infrastructure/api/routes"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/notifications/infrastructure/persistence"
+	repositoryimpl "github.com/alexisTrejo11/Clinic-Vet-API/app/modules/notifications/infrastructure/repository"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/notifications/infrastructure/sending/email"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/notifications/infrastructure/sending/sms"
 	"github.com/alexisTrejo11/Clinic-Vet-API/config"
@@ -16,7 +16,7 @@ import (
 )
 
 func SetupNotificationModule(app *gin.Engine, mongoClient *mongo.Client, emailConfig config.EmailConfig, twilioClient *twilio.RestClient) {
-	notificationRepo := persistence.NewMongoNotificationRepository(mongoClient)
+	notificationRepo := repositoryimpl.NewMongoNotificationRepository(mongoClient)
 	emailSender := email.NewEmailSender(emailConfig)
 	smsSender := sms.NewTwilioPhoneSender(twilioClient, os.Getenv("TWILIO_PHONE_NUMBER"))
 

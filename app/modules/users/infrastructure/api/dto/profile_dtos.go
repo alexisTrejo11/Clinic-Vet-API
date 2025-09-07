@@ -1,8 +1,8 @@
 package dto
 
 import (
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/user/address"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/users/application/usecase"
 )
 
@@ -37,7 +37,7 @@ func (request *UpdateProfileRequest) ToProfileUpdateDTO(id int) usecase.ProfileU
 
 	if request.Address != nil {
 		country := valueobject.Country(request.Address.Country)
-		updateData.Address = &entity.Address{
+		updateData.Address = &address.Address{
 			Street:              request.Address.Street,
 			City:                request.Address.City,
 			State:               request.Address.State,

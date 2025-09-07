@@ -3,21 +3,19 @@ package base
 
 import (
 	"time"
-
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
 )
 
-type Entity struct {
-	id        valueobject.IntegerID
+type Entity[T any] struct {
+	id        T
 	createdAt time.Time
 	updatedAt time.Time
 	version   int
 }
 
 // NewEntity creates a new base entity
-func NewEntity(id valueobject.IntegerID) Entity {
+func NewEntity[T any](id T) Entity[T] {
 	now := time.Now()
-	return Entity{
+	return Entity[T]{
 		id:        id,
 		createdAt: now,
 		updatedAt: now,
@@ -25,25 +23,24 @@ func NewEntity(id valueobject.IntegerID) Entity {
 	}
 }
 
-// Getters
-func (e Entity) ID() valueobject.IntegerID {
+func (e Entity[T]) ID() T {
 	return e.id
 }
 
-func (e Entity) CreatedAt() time.Time {
+func (e Entity[T]) CreatedAt() time.Time {
 	return e.createdAt
 }
 
-func (e Entity) UpdatedAt() time.Time {
+func (e Entity[T]) UpdatedAt() time.Time {
 	return e.updatedAt
 }
 
-func (e Entity) Version() int {
+func (e Entity[T]) Version() int {
 	return e.version
 }
 
 // IncrementVersion updates the version and updatedAt timestamp
-func (e *Entity) IncrementVersion() {
+func (e *Entity[T]) IncrementVersion() {
 	e.version++
 	e.updatedAt = time.Now()
 }

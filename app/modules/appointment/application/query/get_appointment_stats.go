@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/enum"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/appointment"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
@@ -42,14 +42,14 @@ func NewGetAppointmentStatsHandler(appointmentRepo repository.AppointmentReposit
 func (h *GetAppointmentStatsHandler) Handle(q cqrs.Query) (AppointmentStatsResponse, error) {
 	query := q.(GetAppointmentStatsQuery)
 
-	var appointments []entity.Appointment
+	var appointments []appointment.Appointment
 	var err error
 	maxPage := page.PageInput{
 		PageNumber: 1,
 		PageSize:   10000,
 	}
 
-	// Get appointments based on filters
+	//. appointments based on filters
 	if query.startDate != nil && query.endDate != nil {
 		appointmentsPage, dberr := h.appointmentRepo.ListByDateRange(query.ctx, *query.startDate, *query.endDate, maxPage)
 		appointments = appointmentsPage.Data
@@ -64,19 +64,19 @@ func (h *GetAppointmentStatsHandler) Handle(q cqrs.Query) (AppointmentStatsRespo
 		return AppointmentStatsResponse{}, err
 	}
 	// Apply additional filters
-	var filteredAppointments []entity.Appointment
+	var filteredAppointments []appointment.Appointment
 	for _, appointment := range appointments {
 		includeAppointment := true
 
 		// Filter by vet ID
 		if query.vetID != nil {
-			if appointment.GetVetID() == nil || appointment.GetVetID().GetValue() != *query.vetID {
+			if appointment.VetID() == nil || appointment.VetID().Value() != *query.vetID {
 				includeAppointment = false
 			}
 		}
 
 		// Filter by owner ID
-		if query.ownerID != nil && appointment.GetOwnerID().Equals(*query.ownerID) {
+		if query.ownerID != nil && appointment.OwnerID().Equals(*query.ownerID) {
 			includeAppointment = false
 		}
 
@@ -91,7 +91,7 @@ func (h *GetAppointmentStatsHandler) Handle(q cqrs.Query) (AppointmentStatsRespo
 	return stats, nil
 }
 
-func (h *GetAppointmentStatsHandler) calculateStats(appointments []entity.Appointment, query GetAppointmentStatsQuery) AppointmentStatsResponse {
+func (h *GetAppointmentStatsHandler) calculateStats(appointments []appointment.Appointment, query GetAppointmentStatsQuery) AppointmentStatsResponse {
 	totalAppointments := len(appointments)
 	pendingCount := 0
 	confirmedCount := 0
@@ -105,22 +105,22 @@ func (h *GetAppointmentStatsHandler) calculateStats(appointments []entity.Appoin
 
 	for _, appointment := range appointments {
 		// Count by status
-		status := appointment.GetStatus()
+		status := appointment.Status()
 		statusBreakdown[status]++
 
 		switch status {
-		case enum.StatusPending:
+		case enum.AppointmentStatusPending:
 			pendingCount++
-		case enum.StatusCompleted:
+		case enum.AppointmentStatusCompleted:
 			completedCount++
-		case enum.StatusCancelled:
+		case enum.AppointmentStatusCancelled:
 			cancelledCount++
-		case enum.StatusNotPresented:
+		case enum.AppointmentStatusNotPresented:
 			noShowCount++
 		}
 
 		// Count by service
-		service := appointment.GetService()
+		service := appointment.Service()
 		serviceBreakdown[service]++
 
 		// Count emergency appointments

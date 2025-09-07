@@ -4,11 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/enum"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/user"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 	apperror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/application"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/password"
@@ -90,7 +92,7 @@ func (h *signupHandler) Handle(cmd any) AuthCommandResult {
 		return FailureAuthResult(ErrValidationFailed, err)
 	}
 
-	if err := entity.ValidateNotWeakPassword(command.Password); err != nil {
+	if err := user.ValidatePassword(command.Password); err != nil {
 		return FailureAuthResult(err.Error(), err)
 	}
 
@@ -99,11 +101,11 @@ func (h *signupHandler) Handle(cmd any) AuthCommandResult {
 		return FailureAuthResult(ErrDataParsingFailed, err)
 	}
 
-	if err := h.hashUserPassword(&user); err != nil {
+	if err := h.hashUserPassword(user); err != nil {
 		return FailureAuthResult("Error Hashing password", err)
 	}
 
-	if err := h.userRepo.Save(command.CTX, &user); err != nil {
+	if err := h.userRepo.Save(command.CTX, user); err != nil {
 		return FailureAuthResult(ErrUserSaveFailed, err)
 	}
 
@@ -179,36 +181,68 @@ func (h *signupHandler) validatePhoneUnique(ctx context.Context, phone string, w
 	}
 }
 
-// toDomain converts SignupCommand to domain entity
-func (h *signupHandler) toDomain(command SignupCommand) (entity.User, error) {
-	builder := entity.NewUserBuilder().
-		WithID(command.UserID).
-		WithPassword(command.Password).
-		WithRole(command.Role)
+// toDomain converts SignupCommand to domain entity with comprehensive validation
+func (h *signupHandler) toDomain(command SignupCommand) (*user.User, error) {
+	var errorsMessages []string
 
-	if command.Email != nil && *command.Email != "" {
-		builder = builder.WithEmail(*command.Email)
-	}
-
-	if command.PhoneNumber != nil && *command.PhoneNumber != "" {
-		builder = builder.WithPhoneNumber(*command.PhoneNumber)
-	}
-
-	user, err := builder.Build()
+	userID, err := valueobject.NewUserID(command.UserID)
 	if err != nil {
-		return entity.User{}, fmt.Errorf("failed to build user entity: %w", err)
+		errorsMessages = append(errorsMessages, fmt.Sprintf("user ID: %v", err))
 	}
 
-	return user, nil
+	if err := user.ValidatePassword(command.Password); err != nil {
+		errorsMessages = append(errorsMessages, fmt.Sprintf("password: %v", err))
+	}
+
+	if len(errorsMessages) > 0 {
+		return nil, fmt.Errorf("validation errors: %s", strings.Join(errorsMessages, "; "))
+	}
+
+	opts := []user.UserOption{
+		user.WithPassword(command.Password),
+	}
+
+	if command.Email != nil {
+		if *command.Email != "" {
+			email, err := valueobject.NewEmail(*command.Email)
+			if err != nil {
+				errorsMessages = append(errorsMessages, fmt.Sprintf("email: %v", err))
+			} else {
+				opts = append(opts, user.WithEmail(email))
+			}
+		}
+	}
+
+	if command.PhoneNumber != nil {
+		if *command.PhoneNumber != "" {
+			phone, err := valueobject.NewPhoneNumber(*command.PhoneNumber)
+			if err != nil {
+				errorsMessages = append(errorsMessages, fmt.Sprintf("phone: %v", err))
+			} else {
+				opts = append(opts, user.WithPhoneNumber(phone))
+			}
+		}
+	}
+
+	if len(errorsMessages) > 0 {
+		return nil, fmt.Errorf("validation errors: %s", strings.Join(errorsMessages, "; "))
+	}
+
+	userEntity, err := user.NewUser(userID, command.Role, opts...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to build user entity: %w", err)
+	}
+
+	return userEntity, nil
 }
 
-func (h *signupHandler) hashUserPassword(user *entity.User) error {
+func (h *signupHandler) hashUserPassword(user *user.User) error {
 	hashPassword, err := h.passwordEndoder.HashPassword(user.Password())
 	if err != nil {
 		return err
 	}
 
-	user.SetPassword(hashPassword)
+	user.UpdatePassword(hashPassword)
 
 	return nil
 }

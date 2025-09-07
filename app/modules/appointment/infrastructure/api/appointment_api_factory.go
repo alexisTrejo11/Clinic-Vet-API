@@ -4,11 +4,11 @@ import (
 	"fmt"
 
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/appointment/application/command"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/appointment/application/query"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/appointment/infrastructure/api/controller"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/appointment/infrastructure/api/routes"
-	sqlcrepository "github.com/alexisTrejo11/Clinic-Vet-API/app/modules/appointment/infrastructure/persistence/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/appointment/infrastructure/bus"
+	repositoryimpl "github.com/alexisTrejo11/Clinic-Vet-API/app/modules/appointment/infrastructure/persistence/repository"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
 	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -25,8 +25,8 @@ type AppointmentAPIConfig struct {
 // AppointmentAPIComponents holds all created components
 type AppointmentAPIComponents struct {
 	Repository  repository.AppointmentRepository // Your appointment repository interface
-	CommandBus  *command.CommandBus
-	QueryBus    *query.QueryBus
+	CommandBus  *cqrs.CommandBus
+	QueryBus    *cqrs.QueryBus
 	Controllers *AppointmentControllers
 	Routes      *routes.AppointmentRoutes
 }
@@ -65,11 +65,11 @@ func (f *AppointmentAPIBuilder) Build() error {
 	}
 
 	// Create repository (single instance)
-	repository := sqlcrepository.NewSQLCAppointmentRepository(f.config.Queries)
+	repository := repositoryimpl.NewSQLCAppointmentRepository(f.config.Queries)
 
 	// Create buses
-	commandBus := command.NewAppointmentCommandBus(repository)
-	queryBus := query.NewAppointmentQueryBus(repository, f.config.OwnerRepo)
+	commandBus := bus.NewAppointmentCommandBus(repository)
+	queryBus := bus.NewAppointmentQueryBus(repository, f.config.OwnerRepo)
 
 	// Create controllers
 	controllers := f.createControllers(&commandBus, &queryBus)
@@ -92,8 +92,8 @@ func (f *AppointmentAPIBuilder) Build() error {
 
 // createControllers creates all appointment controllers
 func (f *AppointmentAPIBuilder) createControllers(
-	commandBus *command.CommandBus,
-	queryBus *query.QueryBus,
+	commandBus *cqrs.CommandBus,
+	queryBus *cqrs.QueryBus,
 ) *AppointmentControllers {
 	return &AppointmentControllers{
 		Command: controller.NewAppointmentCommandController(*commandBus, f.config.Validator),

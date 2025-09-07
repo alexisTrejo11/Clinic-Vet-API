@@ -52,7 +52,7 @@ func (r *AppointmentRoutes) RegisterAdminRoutes(router *gin.Engine) {
 		// Owner appointment management
 		ownerGroup.POST("/appointments", r.ownerAppointmentController.RequestAppointment)
 		ownerGroup.GET("/appointments", r.ownerAppointmentController.GetMyAppointments)
-		ownerGroup.GET("/appointments/:id", r.ownerAppointmentController.GetAppointmentByID)
+		ownerGroup.GET("/appointments/:id", r.ownerAppointmentController.GetMyAppointmentDetail)
 		ownerGroup.PUT("/appointments/:id/reschedule", r.ownerAppointmentController.RescheduleAppointment)
 		ownerGroup.DELETE("/appointments/:id", r.ownerAppointmentController.CancelAppointment)
 
@@ -83,7 +83,7 @@ func (r *AppointmentRoutes) RegisterOwnerRoutes(router *gin.Engine) {
 	{
 		ownerGroup.POST("/appointments", r.ownerAppointmentController.RequestAppointment)
 		ownerGroup.GET("/appointments", r.ownerAppointmentController.GetMyAppointments)
-		ownerGroup.GET("/appointments/:id", r.ownerAppointmentController.GetAppointmentByID)
+		ownerGroup.GET("/appointments/:id", r.ownerAppointmentController.GetMyAppointmentDetail)
 		ownerGroup.PUT("/appointments/:id/reschedule", r.ownerAppointmentController.RescheduleAppointment)
 		ownerGroup.DELETE("/appointments/:id", r.ownerAppointmentController.CancelAppointment)
 		ownerGroup.GET("/pets/:petID/appointments", r.ownerAppointmentController.GetAppointmentsByPet)

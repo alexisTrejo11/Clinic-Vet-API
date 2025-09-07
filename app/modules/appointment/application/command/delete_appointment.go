@@ -3,8 +3,7 @@ package command
 import (
 	"context"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/enum"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
 )
@@ -37,19 +36,18 @@ func NewDeleteAppointmentHandler(appointmentRepo repository.AppointmentRepositor
 }
 
 func (h *DeleteAppointmentHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
-	command := cmd.(DeleteAppointmentCommand)
+	command, ok := cmd.(*DeleteAppointmentCommand)
+	if !ok {
+		return cqrs.FailureResult(ErrInvalidCommandType, nil)
+	}
+
 	appointment, err := h.appointmentRepo.GetByID(command.ctx, command.appointmentID)
 	if err != nil {
-		return cqrs.FailureResult("error finding appointment", err)
+		return cqrs.FailureResult(ErrFindingAppointment, err)
 	}
-
-	if appointment.GetStatus() == enum.StatusCompleted {
-		return cqrs.FailureResult("cannot delete completed appointment", nil)
-	}
-
 	if err := h.appointmentRepo.Delete(command.appointmentID); err != nil {
-		return cqrs.FailureResult("failed to delete appointment", err)
+		return cqrs.FailureResult(ErrFailedToDelete, err)
 	}
 
-	return cqrs.SuccessResult(appointment.GetID().String(), "appointment deleted successfully")
+	return cqrs.SuccessResult(appointment.ID().String(), SuccessAppointmentDeleted)
 }

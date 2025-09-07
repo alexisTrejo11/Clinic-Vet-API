@@ -5,7 +5,7 @@ import (
 	"errors"
 	"strconv"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
 	"github.com/gin-gonic/gin"
 )
 

@@ -1,48 +1,51 @@
-package persistence
+package repositoryimpl
 
 import (
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/enum"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
+	"fmt"
+	"time"
+
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/medical"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
 	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-func ToDomain(sqlRow sqlc.MedicalHistory) (entity.MedicalHistory, error) {
-	// Mapeo de Value Objects y Enums.
+func ToDomain(sqlRow sqlc.MedicalHistory) (medical.MedicalHistory, error) {
 	medHistId, err := valueobject.NewMedHistoryID(int(sqlRow.ID))
 	if err != nil {
-		return entity.MedicalHistory{}, err
+		return medical.MedicalHistory{}, fmt.Errorf("invalid medical history ID: %w", err)
 	}
 
 	petId, err := valueobject.NewPetID(int(sqlRow.PetID))
 	if err != nil {
-		return entity.MedicalHistory{}, err
+		return medical.MedicalHistory{}, fmt.Errorf("invalid pet ID: %w", err)
 	}
 
 	vetId, err := valueobject.NewVetID(int(sqlRow.VeterinarianID))
 	if err != nil {
-		return entity.MedicalHistory{}, err
+		return medical.MedicalHistory{}, fmt.Errorf("invalid vet ID: %w", err)
 	}
 
 	ownerID, err := valueobject.NewOwnerID(int(sqlRow.OwnerID))
 	if err != nil {
-		return entity.MedicalHistory{}, err
+		return medical.MedicalHistory{}, fmt.Errorf("invalid owner ID: %w", err)
 	}
 
-	visitType, err := enum.NewVisitType(sqlRow.VisitType)
+	visitType, err := enum.ParseVisitType(sqlRow.VisitType)
 	if err != nil {
-		return entity.MedicalHistory{}, err
+		return medical.MedicalHistory{}, fmt.Errorf("invalid visit type: %w", err)
 	}
 
-	condition, err := enum.NewPetCondition(sqlRow.Condition.String)
-	if err != nil {
-		return entity.MedicalHistory{}, err
-	}
-
-	reason, err := enum.NewVisitReason("injury")
-	if err != nil {
-		return entity.MedicalHistory{}, err
+	var condition enum.PetCondition
+	if sqlRow.Condition.Valid {
+		condition, err = enum.ParsePetCondition(sqlRow.Condition.String)
+		if err != nil {
+			return medical.MedicalHistory{}, fmt.Errorf("invalid pet condition: %w", err)
+		}
+	} else {
+		// Valor por defecto si es NULL
+		condition = enum.PetConditionStable
 	}
 
 	var notes *string
@@ -50,27 +53,37 @@ func ToDomain(sqlRow sqlc.MedicalHistory) (entity.MedicalHistory, error) {
 		notes = &sqlRow.Notes.String
 	}
 
-	medicalHistory := entity.NewMedicalHistory(
+	var visitDate time.Time
+	if sqlRow.VisitDate.Valid {
+		visitDate = sqlRow.VisitDate.Time
+	} else {
+		// Valor por defecto si es NULL
+		visitDate = time.Now()
+	}
+
+	// Crear la entidad usando functional options
+	medicalHistory, err := medical.NewMedicalHistory(
 		medHistId,
 		petId,
 		ownerID,
-		reason,
-		visitType,
-		sqlRow.VisitDate.Time,
-		notes,
-		sqlRow.Diagnosis.String,
-		sqlRow.Treatment.String,
-		condition,
 		vetId,
-		sqlRow.CreatedAt.Time,
-		sqlRow.UpdatedAt.Time,
+		medical.WithVisitReason(enum.VisitReasonEmergency),
+		medical.WithVisitType(visitType),
+		medical.WithVisitDate(visitDate),
+		medical.WithNotes(*notes),
+		medical.WithDiagnosis(sqlRow.Diagnosis.String),
+		medical.WithTreatment(sqlRow.Treatment.String),
+		medical.WithCondition(condition),
 	)
+	if err != nil {
+		return medical.MedicalHistory{}, fmt.Errorf("failed to create medical history: %w", err)
+	}
 
 	return *medicalHistory, nil
 }
 
-func ToDomainList(medHistList []sqlc.MedicalHistory) ([]entity.MedicalHistory, error) {
-	domainList := make([]entity.MedicalHistory, len(medHistList))
+func ToDomainList(medHistList []sqlc.MedicalHistory) ([]medical.MedicalHistory, error) {
+	domainList := make([]medical.MedicalHistory, len(medHistList))
 
 	for i, sqlRow := range medHistList {
 		domainMedHist, err := ToDomain(sqlRow)
@@ -83,21 +96,21 @@ func ToDomainList(medHistList []sqlc.MedicalHistory) ([]entity.MedicalHistory, e
 	return domainList, nil
 }
 
-func ToCreateParams(medHist entity.MedicalHistory) sqlc.CreateMedicalHistoryParams {
+func ToCreateParams(medHist medical.MedicalHistory) sqlc.CreateMedicalHistoryParams {
 	var notes string
 	if medHist.Notes != nil {
 		notes = *medHist.Notes()
 	}
 
 	params := sqlc.CreateMedicalHistoryParams{
-		PetID:          int32(medHist.PetID().GetValue()),
-		OwnerID:        int32(medHist.OwnerID().GetValue()),
-		VeterinarianID: int32(medHist.VetID().GetValue()),
-		VisitType:      medHist.VisitType().ToString(),
+		PetID:          int32(medHist.PetID().Value()),
+		OwnerID:        int32(medHist.OwnerID().Value()),
+		VeterinarianID: int32(medHist.VetID().Value()),
+		VisitType:      medHist.VisitType().DisplayName(),
 		VisitDate:      pgtype.Timestamptz{Time: medHist.VisitDate(), Valid: true},
 		Diagnosis:      pgtype.Text{String: medHist.Diagnosis(), Valid: true},
 		Treatment:      pgtype.Text{String: medHist.Treatment(), Valid: true},
-		Condition:      pgtype.Text{String: medHist.Condition().ToString(), Valid: true},
+		Condition:      pgtype.Text{String: medHist.Condition().DisplayName(), Valid: true},
 	}
 
 	if notes != "" {
@@ -109,17 +122,17 @@ func ToCreateParams(medHist entity.MedicalHistory) sqlc.CreateMedicalHistoryPara
 	return params
 }
 
-func entityToUpdateParam(medHistory entity.MedicalHistory, notes pgtype.Text) sqlc.UpdateMedicalHistoryParams {
+func entityToUpdateParam(medHistory medical.MedicalHistory, notes pgtype.Text) sqlc.UpdateMedicalHistoryParams {
 	return sqlc.UpdateMedicalHistoryParams{
-		ID:             int32(medHistory.ID().GetValue()),
-		PetID:          int32(medHistory.PetID().GetValue()),
-		OwnerID:        int32(medHistory.OwnerID().GetValue()),
-		VeterinarianID: int32(medHistory.VetID().GetValue()),
+		ID:             int32(medHistory.ID().Value()),
+		PetID:          int32(medHistory.PetID().Value()),
+		OwnerID:        int32(medHistory.OwnerID().Value()),
+		VeterinarianID: int32(medHistory.VetID().Value()),
 		VisitDate:      pgtype.Timestamptz{Time: medHistory.VisitDate(), Valid: true},
 		Diagnosis:      pgtype.Text{String: medHistory.Diagnosis(), Valid: true},
 		Treatment:      pgtype.Text{String: medHistory.Treatment(), Valid: true},
 		Notes:          notes,
-		VisitType:      medHistory.VisitType().ToString(),
-		Condition:      pgtype.Text{String: medHistory.Condition().ToString(), Valid: true},
+		VisitType:      medHistory.VisitType().DisplayName(),
+		Condition:      pgtype.Text{String: medHistory.Condition().DisplayName(), Valid: true},
 	}
 }

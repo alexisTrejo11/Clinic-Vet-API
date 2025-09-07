@@ -4,9 +4,9 @@ import (
 	"context"
 	"time"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/enum"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/payment"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
 	apperror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/application"
@@ -46,12 +46,9 @@ func NewCreatePaymentCommand(
 		errors = append(errors, err.Error())
 	}
 
-	amount, err := valueobject.NewMoney(amountValue, amountCurrency)
-	if err != nil {
-		errors = append(errors, err.Error())
-	}
+	amount := valueobject.NewMoney(amountValue, amountCurrency)
 
-	paymentMethod, err := enum.NewPaymentMethod(paymentMethodStr)
+	paymentMethod, err := enum.ParsePaymentMethod(paymentMethodStr)
 	if err != nil {
 		errors = append(errors, err.Error())
 	}
@@ -107,27 +104,33 @@ func NewCreatePaymentHandler(paymentRepo repository.PaymentRepository) cqrs.Comm
 func (h *CreatePaymentHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
 	command := cmd.(CreatePaymentCommand)
 
-	payment := h.createCommandToDomain(command)
+	payment, err := h.createCommandToDomain(command)
+	if err != nil {
+		return cqrs.FailureResult("failed to create payment domain", err)
+	}
 
 	if err := h.paymentRepo.Save(command.ctx, payment); err != nil {
 		return cqrs.FailureResult("failed to create payment", err)
 	}
 
-	return cqrs.SuccessResult(payment.GetID().String(), "payment created successfully")
+	return cqrs.SuccessResult(payment.ID().String(), "payment created successfully")
 }
 
-func (h *CreatePaymentHandler) createCommandToDomain(command CreatePaymentCommand) *entity.Payment {
-	return entity.NewPaymentBuilder().
-		WithAppointmentID(command.appointmentID).
-		WithUserID(command.userID).
-		WithCurrency(command.amount.Currency).
-		WithAmount(command.amount).
-		WithPaymentMethod(command.paymentMethod).
-		WithDescription(command.description).
-		WithDueDate(command.dueDate).
-		WithTransactionID(command.transactionID).
-		WithStatus(enum.PENDING).
-		WithCreatedAt(time.Now()).
-		WithUpdatedAt(time.Now()).
-		Build()
+func (h *CreatePaymentHandler) createCommandToDomain(command CreatePaymentCommand) (*payment.Payment, error) {
+	paymentEntity, err := payment.NewPayment(
+		valueobject.PaymentID{},
+		command.appointmentID,
+		command.userID,
+		payment.WithCurrency(command.amount.Currency()),
+		payment.WithAmount(command.amount),
+		payment.WithPaymentMethod(command.paymentMethod),
+		payment.WithDescription(command.description),
+		payment.WithDueDate(command.dueDate),
+		payment.WithTransactionID(command.transactionID),
+		payment.WithStatus(enum.PaymentStatusPending))
+	if err != nil {
+		return nil, apperror.MappingError([]string{err.Error()}, "constructor", "domain", "Payment")
+	}
+
+	return paymentEntity, nil
 }

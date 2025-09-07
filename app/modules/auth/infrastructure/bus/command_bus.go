@@ -1,5 +1,4 @@
-// Package cqrs contains the bus implementation for all command operations for auth module
-package cqrs
+package bus
 
 import (
 	"errors"

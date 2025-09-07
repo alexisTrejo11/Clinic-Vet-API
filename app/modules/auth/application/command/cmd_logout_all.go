@@ -4,7 +4,7 @@ import (
 	"context"
 	"strconv"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 	apperror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/application"
 )
@@ -46,12 +46,12 @@ func NewLogoutAllHandler(
 func (h *logoutAllHandler) Handle(cmd any) AuthCommandResult {
 	command := cmd.(LogoutAllCommand)
 
-	user, err := h.userRepository.GetByID(command.ctx, command.userID.GetValue())
+	user, err := h.userRepository.GetByID(command.ctx, command.userID.Value())
 	if err != nil {
 		return FailureAuthResult("an error ocurred finding user", err)
 	}
 
-	err = h.sessionRepository.DeleteAllUserSessions(command.ctx, user.ID().String())
+	err = h.sessionRepository.DeleteAllUserSessions(command.ctx, user.ID())
 	if err != nil {
 		return FailureAuthResult("an error ocurred delete user sessions", err)
 	}

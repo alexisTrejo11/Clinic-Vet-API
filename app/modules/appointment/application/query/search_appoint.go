@@ -9,12 +9,12 @@ import (
 )
 
 type SearchAppointmentsQuery struct {
-	pageInput      page.PageData
+	pageInput      page.PageInput
 	ctx            context.Context
 	searchCriteria map[string]any
 }
 
-func NewSearchAppointmentsQuery(pageInput page.PageData) (SearchAppointmentsQuery, error) {
+func NewSearchAppointmentsQuery(pageInput page.PageInput) (SearchAppointmentsQuery, error) {
 	query := &SearchAppointmentsQuery{
 		pageInput:      pageInput,
 		ctx:            context.Background(),

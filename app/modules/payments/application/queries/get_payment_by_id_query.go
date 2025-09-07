@@ -3,7 +3,7 @@ package query
 import (
 	"context"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
 	apperror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/application"
@@ -37,7 +37,7 @@ func NewGetPaymentByIDHandler(repository repository.PaymentRepository) cqrs.Quer
 
 func (h *GetPaymentByIDHandler) Handle(q cqrs.Query) (PaymentResponse, error) {
 	query := q.(GetPaymentByIDQuery)
-	payment, err := h.repository.GetByID(query.ctx, query.id.GetValue())
+	payment, err := h.repository.GetByID(query.ctx, query.id)
 	if err != nil {
 		return PaymentResponse{}, err
 	}

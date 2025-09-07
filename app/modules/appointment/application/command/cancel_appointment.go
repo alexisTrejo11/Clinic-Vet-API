@@ -5,7 +5,8 @@ import (
 	"context"
 	"strconv"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
+	appt "github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/appointment"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
 	apperror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/application"
@@ -13,22 +14,29 @@ import (
 
 type CancelAppointmentCommand struct {
 	appointmentID valueobject.AppointmentID
+	vetID         *valueobject.VetID
 	reason        string
 	ctx           context.Context
 }
 
-func NewCancelAppointmentCommand(ctx context.Context, id int, reason string) (*CancelAppointmentCommand, error) {
-	if ctx == nil {
-		return nil, apperror.FieldValidationError("context", "nil", "context is nil")
-	}
-
+func NewCancelAppointmentCommand(ctx context.Context, id int, vetID *int, reason string) (*CancelAppointmentCommand, error) {
 	appointmentID, err := valueobject.NewAppointmentID(id)
 	if err != nil {
-		return nil, apperror.FieldValidationError("appointmentID", strconv.Itoa(id), err.Error())
+		return nil, apperror.FieldValidationError("appointment-ID", strconv.Itoa(id), err.Error())
+	}
+
+	var vetIDObj *valueobject.VetID
+	if vetID != nil {
+		vetIDVal, err := valueobject.NewVetID(*vetID)
+		vetIDObj = &vetIDVal
+		if err != nil {
+			return nil, apperror.FieldValidationError("vet-ID", strconv.Itoa(*vetID), err.Error())
+		}
 	}
 
 	return &CancelAppointmentCommand{
 		appointmentID: appointmentID,
+		vetID:         vetIDObj,
 		reason:        reason,
 		ctx:           ctx,
 	}, nil
@@ -45,20 +53,30 @@ func NewCancelAppointmentHandler(appointmentRepo repository.AppointmentRepositor
 }
 
 func (h *CancelAppointmentHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
-	command := cmd.(CancelAppointmentCommand)
+	command, ok := cmd.(CancelAppointmentCommand)
+	if !ok {
+		return cqrs.FailureResult(ErrInvalidCommandType, nil)
+	}
 
-	appointment, err := h.appointmentRepo.GetByID(command.ctx, command.appointmentID)
+	appointment, err := h.getAppointment(command)
 	if err != nil {
-		return cqrs.FailureResult("failed finding appointent", err)
+		return cqrs.FailureResult(ErrAppointmentNotFound, err)
 	}
 
 	if err := appointment.Cancel(); err != nil {
-		return cqrs.FailureResult("failed to cancel appointment", err)
+		return cqrs.FailureResult(ErrFailedToCancel, err)
 	}
 
 	if err := h.appointmentRepo.Save(command.ctx, &appointment); err != nil {
-		return cqrs.FailureResult("failed to save cancelled appointment", err)
+		return cqrs.FailureResult(ErrUpdateAppointmentFailed, err)
 	}
 
-	return cqrs.SuccessResult(appointment.GetID().String(), "appointment cancelled successfully")
+	return cqrs.SuccessResult(appointment.ID().String(), SuccessAppointmentUpdated)
+}
+
+func (h *CancelAppointmentHandler) getAppointment(cmd CancelAppointmentCommand) (appt.Appointment, error) {
+	if cmd.vetID != nil {
+		return h.appointmentRepo.GetByIDAndVetID(cmd.ctx, cmd.appointmentID, *cmd.vetID)
+	}
+	return h.appointmentRepo.GetByID(cmd.ctx, cmd.appointmentID)
 }

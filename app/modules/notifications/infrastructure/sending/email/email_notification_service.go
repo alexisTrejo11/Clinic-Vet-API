@@ -5,14 +5,14 @@ import (
 	"fmt"
 	"html/template"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/notification"
 	service "github.com/alexisTrejo11/Clinic-Vet-API/app/modules/notifications/application"
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/config"
 )
 
 type EmailSender interface {
-	Send(ctx context.Context, notification *entity.Notification) error
+	Send(ctx context.Context, notification *notification.Notification) error
 }
 type EmailTemplateData struct {
 	ProjectName string
@@ -40,7 +40,7 @@ func NewEmailSender(config config.EmailConfig) service.Sender {
 	return sender
 }
 
-func (s *emailSenderImpl) Send(ctx context.Context, notification *entity.Notification) error {
+func (s *emailSenderImpl) Send(ctx context.Context, notification *notification.Notification) error {
 	tmpl, err := s.assignTemplate(notification)
 	if err != nil {
 		return fmt.Errorf("error assigning template: %w", err)

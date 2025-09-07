@@ -3,7 +3,7 @@ package domainerr
 import (
 	"errors"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/enum"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
 )
 
 func AppointmentScheduleDateZeroErr() error {

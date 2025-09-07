@@ -7,7 +7,7 @@ import (
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/medical/application/usecase"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/medical/infrastructure/api/controller"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/medical/infrastructure/api/routes"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/medical/infrastructure/persistence"
+	repositoryimpl "github.com/alexisTrejo11/Clinic-Vet-API/app/modules/medical/infrastructure/persistence/repository"
 	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -69,7 +69,7 @@ func (m *MedicalHistoryModule) Bootstrap() error {
 }
 
 func (m *MedicalHistoryModule) createRepository() repository.MedicalHistoryRepository {
-	return persistence.NewSQLCMedHistRepository(m.config.Queries)
+	return repositoryimpl.NewSQLCMedHistRepository(m.config.Queries)
 }
 
 func (m *MedicalHistoryModule) createUseCase(repository repository.MedicalHistoryRepository) *usecase.MedicalHistoryUseCase {

@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/enum"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
 	apperror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/application"
@@ -41,21 +41,16 @@ func NewUpdatePaymentCommand(
 		if amountCurrency == nil {
 			errors = append(errors, "currency is required when amount is provided")
 		} else {
-			money, err := valueobject.NewMoney(*amountValue, *amountCurrency)
-			if err != nil {
-				errors = append(errors, err.Error())
-			} else {
-				amount = &money
-			}
+			money := valueobject.NewMoney(*amountValue, *amountCurrency)
+			amount = &money
 		}
 	} else if amountCurrency != nil {
 		errors = append(errors, "amount is required when currency is provided")
 	}
 
-	// Validate and create PaymentMethod if provided
 	var paymentMethod *enum.PaymentMethod
 	if paymentMethodStr != nil {
-		pm, err := enum.NewPaymentMethod(*paymentMethodStr)
+		pm, err := enum.ParsePaymentMethod(*paymentMethodStr)
 		if err != nil {
 			errors = append(errors, err.Error())
 		} else {
@@ -72,7 +67,7 @@ func NewUpdatePaymentCommand(
 	}
 
 	if len(errors) > 0 {
-		return UpdatePaymentCommand{}, apperror.MappingError(errors, "contructor", "command", "payment")
+		return UpdatePaymentCommand{}, apperror.MappingError(errors, "constructor", "command", "payment")
 	}
 
 	return UpdatePaymentCommand{
@@ -97,7 +92,7 @@ func NewUpdatePaymentHandler(paymentRepo repository.PaymentRepository) cqrs.Comm
 
 func (h *UpdatePaymentHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
 	command := cmd.(UpdatePaymentCommand)
-	payment, err := h.paymentRepo.GetByID(command.ctx, command.paymentID.GetValue())
+	payment, err := h.paymentRepo.GetByID(command.ctx, command.paymentID)
 	if err != nil {
 		return cqrs.FailureResult("error fetching payment", err)
 	}
@@ -113,7 +108,7 @@ func (h *UpdatePaymentHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
 	}
 
 	return cqrs.SuccessResult(
-		payment.GetID().String(),
+		payment.ID().String(),
 		"payment updated successfully",
 	)
 }

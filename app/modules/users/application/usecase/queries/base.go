@@ -1,7 +1,7 @@
 package userDomainQueries
 
 import (
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/user"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 )
 
@@ -26,7 +26,7 @@ type ProfileResponse struct {
 	JoinedAt    string `json:"joined_at"`
 }
 
-func toResponse(user entity.User) UserResponse {
+func toResponse(user user.User) UserResponse {
 	userResponse := &UserResponse{
 		ID:          user.ID().String(),
 		Email:       user.Email().String(),
@@ -40,7 +40,7 @@ func toResponse(user entity.User) UserResponse {
 	return *userResponse
 }
 
-func toResponsePage(userPage page.Page[[]entity.User]) page.Page[[]UserResponse] {
+func toResponsePage(userPage page.Page[[]user.User]) page.Page[[]UserResponse] {
 	if userPage.Data == nil || len(userPage.Data) < 1 {
 		return page.EmptyPage[[]UserResponse]()
 	}

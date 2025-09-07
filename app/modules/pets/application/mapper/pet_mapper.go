@@ -1,142 +1,127 @@
+// Package mapper contains functions to map between different representations of Pet data.
 package mapper
 
 import (
-	"time"
+	"fmt"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/enum"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/pet"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/pets/application/dto"
 )
 
-func ToDomainFromCreate(dto dto.PetCreate) *entity.Pet {
-	builder := entity.NewPetBuilder().
-		WithName(dto.Name).
-		WithSpecies(dto.Species).
-		WithOwnerID(dto.OwnerID).
-		WithIsActive(dto.IsActive).
-		WithCreatedAt(time.Now()).
-		WithUpdatedAt(time.Now())
+func ToDomainFromCreate(dto dto.PetCreate) (*pet.Pet, error) {
+	// Convertir y validar los IDs de value objects
 
+	ownerID, err := valueobject.NewOwnerID(dto.OwnerID.Value())
+	if err != nil {
+		return nil, fmt.Errorf("invalid owner ID: %w", err)
+	}
+
+	// Crear options básicas
+	opts := []pet.PetOption{
+		pet.WithName(dto.Name),
+		pet.WithSpecies(dto.Species),
+		pet.WithIsActive(dto.IsActive),
+	}
+
+	// Agregar options para campos opcionales
 	if dto.Photo != nil {
-		builder.WithPhoto(dto.Photo)
-	}
-	if dto.Breed != nil {
-		builder.WithBreed(dto.Breed)
-	}
-	if dto.Age != nil {
-		builder.WithAge(dto.Age)
-	}
-	if dto.Gender != nil {
-		domainGender := enum.PetGender(*dto.Gender)
-		builder.WithGender(&domainGender)
-	}
-	if dto.Weight != nil {
-		builder.WithWeight(dto.Weight)
-	}
-	if dto.Color != nil {
-		builder.WithColor(dto.Color)
-	}
-	if dto.Microchip != nil {
-		builder.WithMicrochip(dto.Microchip)
-	}
-	if dto.IsNeutered != nil {
-		builder.WithIsNeutered(dto.IsNeutered)
-	}
-	if dto.Allergies != nil {
-		builder.WithAllergies(dto.Allergies)
-	}
-	if dto.CurrentMedications != nil {
-		builder.WithCurrentMedications(dto.CurrentMedications)
-	}
-	if dto.SpecialNeeds != nil {
-		builder.WithSpecialNeeds(dto.SpecialNeeds)
+		opts = append(opts, pet.WithPhoto(dto.Photo))
 	}
 
-	return builder.Build()
+	if dto.Breed != nil {
+		opts = append(opts, pet.WithBreed(dto.Breed))
+	}
+
+	if dto.Age != nil {
+		opts = append(opts, pet.WithAge(dto.Age))
+	}
+
+	if dto.Gender != nil {
+		gender, err := enum.ParsePetGender(*dto.Gender)
+		if err != nil {
+			return nil, fmt.Errorf("invalid gender: %w", err)
+		}
+		opts = append(opts, pet.WithGender(&gender))
+	}
+
+	if dto.Weight != nil {
+		opts = append(opts, pet.WithWeight(dto.Weight))
+	}
+
+	if dto.Color != nil {
+		opts = append(opts, pet.WithColor(dto.Color))
+	}
+
+	if dto.Microchip != nil {
+		opts = append(opts, pet.WithMicrochip(dto.Microchip))
+	}
+
+	if dto.IsNeutered != nil {
+		opts = append(opts, pet.WithIsNeutered(dto.IsNeutered))
+	}
+
+	if dto.Allergies != nil {
+		opts = append(opts, pet.WithAllergies(dto.Allergies))
+	}
+
+	if dto.CurrentMedications != nil {
+		opts = append(opts, pet.WithCurrentMedications(dto.CurrentMedications))
+	}
+
+	if dto.SpecialNeeds != nil {
+		opts = append(opts, pet.WithSpecialNeeds(dto.SpecialNeeds))
+	}
+
+	// Crear la entidad Pet
+	petEntity, err := pet.NewPet(
+		valueobject.PetID{}, // ID will be generated inside NewPet
+		ownerID,
+		opts...,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create pet: %w", err)
+	}
+
+	return petEntity, nil
 }
 
-func ToDomainFromUpdate(pet *entity.Pet, dto dto.PetUpdate) {
-	if dto.Name != nil {
-		pet.SetName(*dto.Name)
-	}
-	if dto.Photo != nil {
-		pet.SetPhoto(dto.Photo)
-	}
-	if dto.Species != nil {
-		pet.SetSpecies(*dto.Species)
-	}
-	if dto.Breed != nil {
-		pet.SetBreed(dto.Breed)
-	}
-	if dto.Age != nil {
-		pet.SetAge(dto.Age)
-	}
-	if dto.Gender != nil {
-		domainGender := enum.PetGender(*dto.Gender)
-		pet.SetGender(&domainGender)
-	}
-	if dto.Weight != nil {
-		pet.SetWeight(dto.Weight)
-	}
-	if dto.Color != nil {
-		pet.SetColor(dto.Color)
-	}
-	if dto.Microchip != nil {
-		pet.SetMicrochip(dto.Microchip)
-	}
-	if dto.IsNeutered != nil {
-		pet.SetIsNeutered(dto.IsNeutered)
-	}
-	if dto.OwnerID != nil {
-		pet.SetOwnerID(*dto.OwnerID)
-	}
-	if dto.Allergies != nil {
-		pet.SetAllergies(dto.Allergies)
-	}
-	if dto.CurrentMedications != nil {
-		pet.SetCurrentMedications(dto.CurrentMedications)
-	}
-	if dto.SpecialNeeds != nil {
-		pet.SetSpecialNeeds(dto.SpecialNeeds)
-	}
-	if dto.IsActive != nil {
-		pet.SetIsActive(*dto.IsActive)
-	}
-
-	pet.SetUpdatedAt(time.Now())
+// TODO: implement ToDomainFromUpdate
+func ToDomainFromUpdate(pet *pet.Pet, dto dto.PetUpdate) {
 }
 
-func ToResponse(pet *entity.Pet) dto.PetResponse {
+func ToResponse(pet *pet.Pet) dto.PetResponse {
 	response := dto.PetResponse{
-		ID:                 pet.GetID().GetValue(),
-		Name:               pet.GetName(),
-		Photo:              pet.GetPhoto(),
-		Species:            pet.GetSpecies(),
-		Breed:              pet.GetBreed(),
-		Weight:             pet.GetWeight(),
-		Color:              pet.GetColor(),
-		Microchip:          pet.GetMicrochip(),
-		IsNeutered:         pet.GetIsNeutered(),
-		OwnerID:            pet.GetOwnerID().GetValue(),
-		Allergies:          pet.GetAllergies(),
-		CurrentMedications: pet.GetCurrentMedications(),
-		SpecialNeeds:       pet.GetSpecialNeeds(),
-		IsActive:           pet.GetIsActive(),
-		CreatedAt:          pet.GetCreatedAt().Format("2005-10-01 20:00:00"),
-		UpdatedAt:          pet.GetUpdatedAt().Format("2005-10-01 20:00:00"),
+		ID:                 pet.ID().Value(),
+		Name:               pet.Name(),
+		Photo:              pet.Photo(),
+		Species:            pet.Species(),
+		Breed:              pet.Breed(),
+		Weight:             pet.Weight(),
+		Color:              pet.Color(),
+		Microchip:          pet.Microchip(),
+		IsNeutered:         pet.IsNeutered(),
+		OwnerID:            pet.OwnerID().Value(),
+		Allergies:          pet.Allergies(),
+		CurrentMedications: pet.CurrentMedications(),
+		SpecialNeeds:       pet.SpecialNeeds(),
+		IsActive:           pet.IsActive(),
+		CreatedAt:          pet.CreatedAt().Format("2005-10-01 20:00:00"),
+		UpdatedAt:          pet.UpdatedAt().Format("2005-10-01 20:00:00"),
 	}
 
-	if pet.GetAge() != nil {
-		response.Age = pet.GetAge()
+	if pet.Age() != nil {
+		response.Age = pet.Age()
 	}
-	if pet.GetGender() != nil {
-		response.Gender = (*string)(pet.GetGender())
+	if pet.Gender() != nil {
+		response.Gender = (*string)(pet.Gender())
 	}
 
 	return response
 }
 
-func ToResponseList(pets []entity.Pet) []dto.PetResponse {
+func ToResponseList(pets []pet.Pet) []dto.PetResponse {
 	if pets == nil {
 		return []dto.PetResponse{}
 	}

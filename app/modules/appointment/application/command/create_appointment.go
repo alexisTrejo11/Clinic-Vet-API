@@ -4,11 +4,12 @@ import (
 	"context"
 	"time"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/enum"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
+	appt "github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/appointment"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
+	apperror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/application"
 )
 
 type CreateAppointmentCommand struct {
@@ -54,17 +55,17 @@ func NewCreateAppointCmd(
 		}
 	}
 
-	cliniService, err := enum.NewClinicService(service)
+	cliniService, err := enum.ParseClinicService(service)
 	if err != nil {
 		return nil, err
 	}
 
-	appointmentStatus, err := enum.NewAppointmentStatus(status)
+	appointmentStatus, err := enum.ParseAppointmentStatus(status)
 	if err != nil {
 		return nil, err
 	}
 
-	visitReason, err := enum.NewVisitReason(reason)
+	visitReason, err := enum.ParseVisitReason(reason)
 	if err != nil {
 		return nil, err
 	}
@@ -99,40 +100,37 @@ func (h *CreateAppointmentHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
 		return cqrs.FailureResult("failed to create appointment domain", err)
 	}
 
-	if err := appointment.ValidateRequestSchedule(); err != nil {
-		return cqrs.FailureResult("validation for schedule failed", err)
-	}
-
 	if err := h.appointmentRepo.Save(command.ctx, appointment); err != nil {
 		return cqrs.FailureResult("failed to save appointment", err)
 	}
 
-	return cqrs.SuccessResult(appointment.GetID().String(), "appointment created successfully")
+	return cqrs.SuccessResult(appointment.ID().String(), "appointment created successfully")
 }
 
-func (h *CreateAppointmentHandler) commandToDomain(command CreateAppointmentCommand) (*entity.Appointment, error) {
+func (h *CreateAppointmentHandler) commandToDomain(command CreateAppointmentCommand) (*appt.Appointment, error) {
 	appointmentID, err := valueobject.NewAppointmentID(0)
 	if err != nil {
 		return nil, err
 	}
 
-	status := enum.StatusPending
+	status := enum.AppointmentStatusPending
 	if command.status != nil {
 		status = *command.status
 	}
 
-	now := time.Now()
-	appointment := entity.NewAppointment(
+	appointmentEntity, err := appt.NewAppointment(
 		appointmentID,
 		command.petID,
 		command.ownerID,
-		command.vetID,
-		command.service,
-		command.datetime,
-		status,
-		now,
-		now,
+		appt.WithVetID(command.vetID),
+		appt.WithService(command.service),
+		appt.WithScheduledDate(command.datetime),
+		appt.WithReason(command.reason),
+		appt.WithNotes(command.notes),
+		appt.WithStatus(status),
 	)
-
-	return appointment, nil
+	if err != nil {
+		return nil, apperror.MappingError([]string{err.Error()}, "constructor", "domain", "Appointment")
+	}
+	return appointmentEntity, nil
 }

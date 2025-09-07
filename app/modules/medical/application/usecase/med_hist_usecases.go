@@ -1,10 +1,12 @@
+// Package usecase implements the use cases for managing medical histories in a veterinary clinic system.
 package usecase
 
 import (
 	"context"
 	"errors"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/medical"
+	vo "github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/medical/application/dto"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
@@ -41,7 +43,7 @@ func (uc *MedicalHistoryUseCase) Search(ctx context.Context, searchParams dto.Me
 	return responsePage, nil
 }
 
-func (uc *MedicalHistoryUseCase) GetByPet(ctx context.Context, petID int, pagintation page.PageInput) (page.Page[[]dto.MedHistResponse], error) {
+func (uc *MedicalHistoryUseCase) GetByPet(ctx context.Context, petID vo.PetID, pagintation page.PageInput) (page.Page[[]dto.MedHistResponse], error) {
 	medHistPage, err := uc.medHistRepo.ListByPetID(ctx, petID, pagintation)
 	if err != nil {
 		return page.Page[[]dto.MedHistResponse]{}, err
@@ -51,7 +53,7 @@ func (uc *MedicalHistoryUseCase) GetByPet(ctx context.Context, petID int, pagint
 	return page.NewPage(medHistResponse, medHistPage.Metadata), nil
 }
 
-func (uc *MedicalHistoryUseCase) ListByOwner(ctx context.Context, ownerID int, pagintation page.PageInput) (page.Page[[]dto.MedHistResponse], error) {
+func (uc *MedicalHistoryUseCase) ListByOwner(ctx context.Context, ownerID vo.OwnerID, pagintation page.PageInput) (page.Page[[]dto.MedHistResponse], error) {
 	medHistPage, err := uc.medHistRepo.ListByOwnerID(ctx, ownerID, pagintation)
 	if err != nil {
 		return page.Page[[]dto.MedHistResponse]{}, err
@@ -62,7 +64,7 @@ func (uc *MedicalHistoryUseCase) ListByOwner(ctx context.Context, ownerID int, p
 	return reponsePage, nil
 }
 
-func (uc *MedicalHistoryUseCase) ListByVet(ctx context.Context, vetID int, pagintation page.PageInput) (page.Page[[]dto.MedHistResponse], error) {
+func (uc *MedicalHistoryUseCase) ListByVet(ctx context.Context, vetID vo.VetID, pagintation page.PageInput) (page.Page[[]dto.MedHistResponse], error) {
 	medHistPage, err := uc.medHistRepo.ListByVetID(ctx, vetID, pagintation)
 	if err != nil {
 		return page.Page[[]dto.MedHistResponse]{}, err
@@ -72,7 +74,7 @@ func (uc *MedicalHistoryUseCase) ListByVet(ctx context.Context, vetID int, pagin
 	return page.NewPage(medHistResponse, medHistPage.Metadata), nil
 }
 
-func (uc *MedicalHistoryUseCase) GetByID(ctx context.Context, id int) (dto.MedHistResponse, error) {
+func (uc *MedicalHistoryUseCase) GetByID(ctx context.Context, id vo.MedHistoryID) (dto.MedHistResponse, error) {
 	medHistory, err := uc.medHistRepo.GetByID(ctx, id)
 	if err != nil {
 		return dto.MedHistResponse{}, err
@@ -81,7 +83,7 @@ func (uc *MedicalHistoryUseCase) GetByID(ctx context.Context, id int) (dto.MedHi
 	return dto.ToResponse(medHistory), nil
 }
 
-func (uc *MedicalHistoryUseCase) GetByIDWithDeatils(ctx context.Context, id int) (dto.MedHistResponseDetail, error) {
+func (uc *MedicalHistoryUseCase) GetByIDWithDeatils(ctx context.Context, id vo.MedHistoryID) (dto.MedHistResponseDetail, error) {
 	medHistory, err := uc.medHistRepo.GetByID(ctx, id)
 	if err != nil {
 		return dto.MedHistResponseDetail{}, err
@@ -115,10 +117,6 @@ func (uc *MedicalHistoryUseCase) Create(ctx context.Context, createData dto.Medi
 		return err
 	}
 
-	if err := medHistory.ValidateBusinessRules(); err != nil {
-		return err
-	}
-
 	if err := uc.medHistRepo.Create(ctx, &medHistory); err != nil {
 		return err
 	}
@@ -126,7 +124,7 @@ func (uc *MedicalHistoryUseCase) Create(ctx context.Context, createData dto.Medi
 	return nil
 }
 
-func (uc *MedicalHistoryUseCase) Delete(ctx context.Context, id int, isSoftDelete bool) error {
+func (uc *MedicalHistoryUseCase) Delete(ctx context.Context, id vo.MedHistoryID, isSoftDelete bool) error {
 	_, err := uc.medHistRepo.GetByID(ctx, id)
 	if err != nil {
 		return err
@@ -135,7 +133,7 @@ func (uc *MedicalHistoryUseCase) Delete(ctx context.Context, id int, isSoftDelet
 	return uc.medHistRepo.Delete(ctx, id, isSoftDelete)
 }
 
-func (uc *MedicalHistoryUseCase) validateCreation(ctx context.Context, medHistory *entity.MedicalHistory) error {
+func (uc *MedicalHistoryUseCase) validateCreation(ctx context.Context, medHistory *medical.MedicalHistory) error {
 	owner, err := uc.ownerRepo.GetByID(ctx, medHistory.OwnerID())
 	if err != nil {
 		return err
@@ -143,7 +141,7 @@ func (uc *MedicalHistoryUseCase) validateCreation(ctx context.Context, medHistor
 
 	petFound := false
 	for _, pet := range owner.Pets() {
-		if medHistory.PetID().Equals(pet.GetID().GetValue()) {
+		if medHistory.PetID().Equals(pet.ID().Value()) {
 			petFound = true
 			break
 		}

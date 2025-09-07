@@ -1,8 +1,11 @@
+// Package dto contains Data Transfer Objects for medical history operations.
 package dto
 
 import (
 	"time"
 
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
 	"github.com/go-playground/validator/v10"
 )
 
@@ -33,16 +36,16 @@ const (
 )
 
 type MedicalHistoryCreate struct {
-	PetID       int          `json:"petID" binding:"required"`
-	OwnerID     int          `json:"ownerID" binding:"required"`
-	Date        time.Time    `json:"date" binding:"required"`
-	Diagnosis   string       `json:"diagnosis" binding:"required,min=3,max=255"`
-	Treatment   string       `json:"treatment" binding:"required,min=3,max=255"`
-	Condition   PetCondition `json:"condition" binding:"required,validPetCondition"`
-	VisitReason VisitReason  `json:"visitReason" binding:"required,validVisitReason"`
-	VisitType   VisitType    `json:"visitType" binding:"required,validVisitType"`
-	Notes       *string      `json:"notes" binding:"omitempty,max=1000"`
-	VetID       int          `json:"vetID" binding:"required"`
+	PetID       valueobject.PetID   `json:"petID" binding:"required"`
+	OwnerID     valueobject.OwnerID `json:"ownerID" binding:"required"`
+	Date        time.Time           `json:"date" binding:"required"`
+	Diagnosis   string              `json:"diagnosis" binding:"required,min=3,max=255"`
+	Treatment   string              `json:"treatment" binding:"required,min=3,max=255"`
+	Condition   enum.PetCondition   `json:"condition" binding:"required,validPetCondition"`
+	VisitReason enum.VisitReason    `json:"visitReason" binding:"required,validVisitReason"`
+	VisitType   enum.VisitType      `json:"visitType" binding:"required,validVisitType"`
+	Notes       *string             `json:"notes" binding:"omitempty,max=1000"`
+	VetID       valueobject.VetID   `json:"vetID" binding:"required"`
 }
 
 type MedicalHistoryUpdate struct {

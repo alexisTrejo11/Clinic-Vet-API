@@ -4,52 +4,77 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/enum"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/payment"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
 	"github.com/alexisTrejo11/Clinic-Vet-API/db/models"
 	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-func sqlcToEntity(sqlcPayment sqlc.Payment) (entity.Payment, error) {
-	status, err := enum.NewPaymentStatus(string(sqlcPayment.Status))
+func sqlcToEntity(sqlcPayment sqlc.Payment) (payment.Payment, error) {
+	status, err := enum.ParsePaymentStatus(string(sqlcPayment.Status))
 	if err != nil {
-		return entity.Payment{}, fmt.Errorf("invalid payment status: %w", err)
+		return payment.Payment{}, fmt.Errorf("invalid payment status: %w", err)
 	}
 
-	method, err := enum.NewPaymentMethod(string(sqlcPayment.Method))
+	method, err := enum.ParsePaymentMethod(string(sqlcPayment.Method))
 	if err != nil {
-		return entity.Payment{}, fmt.Errorf("invalid payment method: %w", err)
+		return payment.Payment{}, fmt.Errorf("invalid payment method: %w", err)
 	}
 
-	money, err := valueobject.NewMoney(float64(sqlcPayment.Amount.Int.Int64()), sqlcPayment.Currency)
-	if err != nil {
-		return entity.Payment{}, fmt.Errorf("invalid money amount: %w", err)
-	}
-
+	// Mapeo de value objects
 	paymentID, err := valueobject.NewPaymentID(int(sqlcPayment.ID))
 	if err != nil {
-		return entity.Payment{}, err
+		return payment.Payment{}, fmt.Errorf("invalid payment ID: %w", err)
 	}
 
-	builder := entity.NewPaymentBuilder().
-		WithID(paymentID).
-		WithAmount(money).
-		WithStatus(status).
-		WithPaymentMethod(method).
-		WithCreatedAt(sqlcPayment.CreatedAt.Time).
-		WithUpdatedAt(sqlcPayment.UpdatedAt.Time)
-
-	if sqlcPayment.TransactionID.Valid {
-		builder = builder.WithTransactionID(&sqlcPayment.TransactionID.String)
+	// TODO: Fix
+	appointmentID, err := valueobject.NewAppointmentID(1)
+	if err != nil {
+		return payment.Payment{}, fmt.Errorf("invalid appointment ID: %w", err)
 	}
 
-	return *builder.Build(), nil
+	userID, err := valueobject.NewUserID(int(sqlcPayment.UserID))
+	if err != nil {
+		return payment.Payment{}, fmt.Errorf("invalid user ID: %w", err)
+	}
+
+	var amount valueobject.Money
+	if sqlcPayment.Amount.Valid {
+		amount = valueobject.NewMoney(float64(sqlcPayment.Amount.Int.Int64()), sqlcPayment.Currency)
+	} else {
+		// Valor por defecto o error según tu lógica de negocio
+		return payment.Payment{}, fmt.Errorf("payment amount is required")
+	}
+
+	// Crear el payment usando functional options
+	paymentEntity, err := payment.NewPayment(
+		paymentID,
+		appointmentID,
+		userID,
+		payment.WithAmount(amount),
+		payment.WithCurrency(sqlcPayment.Currency),
+		payment.WithPaymentMethod(method),
+		payment.WithStatus(status),
+		// TODO: Fix (nullable fields)
+		/*)
+		payment.WithTransactionID(utils.StringPtrFromNullString(sqlcPayment.TransactionID.String)),
+		payment.WithDescription(utils.StringPtrFromNullString(sqlcPayment.Description)),
+		payment.WithDueDate(utils.TimePtrFromNullTime(sqlcPayment.DueDate)),
+		payment.WithPaidAt(utils.TimePtrFromNullTime(sqlcPayment.PaidAt)),
+		payment.WithRefundedAt(utils.TimePtrFromNullTime(sqlcPayment.RefundedAt)),
+		*/
+	)
+	if err != nil {
+		return payment.Payment{}, fmt.Errorf("failed to create payment entity: %w", err)
+	}
+
+	return *paymentEntity, nil
 }
 
-func sqlcToEntityList(sqlcPayments []sqlc.Payment) ([]entity.Payment, error) {
-	var payments []entity.Payment
+func sqlcToEntityList(sqlcPayments []sqlc.Payment) ([]payment.Payment, error) {
+	var payments []payment.Payment
 	for _, sqlcPayment := range sqlcPayments {
 		payment, err := sqlcToEntity(sqlcPayment)
 		if err != nil {
@@ -60,32 +85,32 @@ func sqlcToEntityList(sqlcPayments []sqlc.Payment) ([]entity.Payment, error) {
 	return payments, nil
 }
 
-func entityToCreateParams(payment *entity.Payment) sqlc.CreatePaymentParams {
+func entityToCreateParams(payment *payment.Payment) sqlc.CreatePaymentParams {
 	return sqlc.CreatePaymentParams{
-		Amount:        pgtype.Numeric{Int: big.NewInt(payment.GetAmount().Amount), Valid: true},
-		Currency:      payment.GetAmount().Currency,
-		TransactionID: pgtype.Text{String: *payment.GetTransactionID(), Valid: payment.GetTransactionID() != nil},
-		Status:        models.PaymentStatus(string(payment.GetStatus())),
-		Method:        models.PaymentMethod(string(payment.GetPaymentMethod())),
-		Description:   pgtype.Text{String: *payment.GetDescription(), Valid: payment.GetDescription() != nil},
-		Duedate:       pgtype.Timestamptz{Time: *payment.GetDueDate(), Valid: payment.GetDueDate() != nil},
-		PaidAt:        pgtype.Timestamptz{Time: *payment.GetPaidAt(), Valid: payment.GetPaidAt() != nil},
-		RefundedAt:    pgtype.Timestamptz{Time: *payment.GetRefundedAt(), Valid: payment.GetRefundedAt() != nil},
+		Amount:        pgtype.Numeric{Int: big.NewInt(payment.Amount().Amount()), Valid: true},
+		Currency:      payment.Amount().Currency(),
+		TransactionID: pgtype.Text{String: *payment.TransactionID(), Valid: payment.TransactionID() != nil},
+		Status:        models.PaymentStatus(string(payment.Status())),
+		Method:        models.PaymentMethod(string(payment.PaymentMethod())),
+		Description:   pgtype.Text{String: *payment.Description(), Valid: payment.Description() != nil},
+		Duedate:       pgtype.Timestamptz{Time: *payment.DueDate(), Valid: payment.DueDate() != nil},
+		PaidAt:        pgtype.Timestamptz{Time: *payment.PaidAt(), Valid: payment.PaidAt() != nil},
+		RefundedAt:    pgtype.Timestamptz{Time: *payment.RefundedAt(), Valid: payment.RefundedAt() != nil},
 	}
 }
 
-func mapDomainToUpdateParams(payment *entity.Payment) sqlc.UpdatePaymentParams {
+func mapDomainToUpdateParams(payment *payment.Payment) sqlc.UpdatePaymentParams {
 	return sqlc.UpdatePaymentParams{
-		ID:            int32(payment.GetID().GetValue()),
-		Amount:        pgtype.Numeric{Int: big.NewInt(payment.GetAmount().Amount), Valid: true},
-		Currency:      payment.GetAmount().Currency,
-		TransactionID: pgtype.Text{String: *payment.GetTransactionID(), Valid: payment.GetTransactionID() != nil},
-		Status:        models.PaymentStatus(string(payment.GetStatus())),
-		Method:        models.PaymentMethod(string(payment.GetPaymentMethod())),
-		UserID:        int32(payment.GetUserID().GetValue()),
-		Description:   pgtype.Text{String: *payment.GetDescription(), Valid: payment.GetDescription() != nil},
-		Duedate:       pgtype.Timestamptz{Time: *payment.GetDueDate(), Valid: payment.GetDueDate() != nil},
-		PaidAt:        pgtype.Timestamptz{Time: *payment.GetPaidAt(), Valid: payment.GetPaidAt() != nil},
-		RefundedAt:    pgtype.Timestamptz{Time: *payment.GetRefundedAt(), Valid: payment.GetRefundedAt() != nil},
+		ID:            int32(payment.ID().Value()),
+		Amount:        pgtype.Numeric{Int: big.NewInt(payment.Amount().Amount()), Valid: true},
+		Currency:      payment.Amount().Currency(),
+		TransactionID: pgtype.Text{String: *payment.TransactionID(), Valid: payment.TransactionID() != nil},
+		Status:        models.PaymentStatus(string(payment.Status())),
+		Method:        models.PaymentMethod(string(payment.PaymentMethod())),
+		UserID:        int32(payment.UserID().Value()),
+		Description:   pgtype.Text{String: *payment.Description(), Valid: payment.Description() != nil},
+		Duedate:       pgtype.Timestamptz{Time: *payment.DueDate(), Valid: payment.DueDate() != nil},
+		PaidAt:        pgtype.Timestamptz{Time: *payment.PaidAt(), Valid: payment.PaidAt() != nil},
+		RefundedAt:    pgtype.Timestamptz{Time: *payment.RefundedAt(), Valid: payment.RefundedAt() != nil},
 	}
 }

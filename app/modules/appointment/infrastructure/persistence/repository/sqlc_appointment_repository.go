@@ -1,4 +1,4 @@
-// Package repositoryimpl contains all the implementation for database operations related to appointments table
+// Package repositoryimpl contains implementation for database operations related to appointments
 package repositoryimpl
 
 import (
@@ -8,141 +8,182 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
-	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
+	appt "github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/appointment"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
+	vo "github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
+	repo "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-// SQLCAppointmentRepository implements AppointmentRepository using SQLC
 type SQLCAppointmentRepository struct {
 	queries *sqlc.Queries
 }
 
-// NewSQLCAppointmentRepository creates a new appointment repository instance
-func NewSQLCAppointmentRepository(queries *sqlc.Queries) repository.AppointmentRepository {
-	return &SQLCAppointmentRepository{
-		queries: queries,
-	}
+func NewSQLCAppointmentRepository(queries *sqlc.Queries) repo.AppointmentRepository {
+	return &SQLCAppointmentRepository{queries: queries}
 }
 
-// ListAll retrieves all appointments with pagination
-func (r *SQLCAppointmentRepository) ListAll(ctx context.Context, pageInput page.PageInput) (page.Page[[]entity.Appointment], error) {
-	sqlRows, err := r.queries.ListAppoinments(ctx, sqlc.ListAppoinmentsParams{
-		Offset: r.calculateOffset(pageInput),
-		Limit:  int32(pageInput.PageSize),
+func (r *SQLCAppointmentRepository) GetByIDAndOwnerID(ctx context.Context, id vo.AppointmentID, ownerID valueobject.OwnerID) (appt.Appointment, error) {
+	sqlRow, err := r.queries.GetAppoinmentByIDAndOwnerID(ctx, sqlc.GetAppoinmentByIDAndOwnerIDParams{
+		ID:      int32(id.Value()),
+		OwnerID: int32(ownerID.Value()),
 	})
 	if err != nil {
-		return page.Page[[]entity.Appointment]{}, r.dbError(OpSelect, ErrMsgListAppointments, err)
-	}
-
-	appointments, err := sqlRowsToDomainList(sqlRows)
-	if err != nil {
-		return page.Page[[]entity.Appointment]{}, r.wrapConversionError(err)
-	}
-
-	totalCount, err := r.queries.CountAppoinments(ctx)
-	if err != nil {
-		return page.Page[[]entity.Appointment]{}, r.dbError(OpCount, ErrMsgCountAppointments, err)
-	}
-
-	pageMetadata := page.GetPageMetadata(int(totalCount), pageInput)
-	return page.NewPage(appointments, *pageMetadata), nil
-}
-
-// GetByID retrieves a single appointment by its ID
-func (r *SQLCAppointmentRepository) GetByID(ctx context.Context, appointmentID valueobject.AppointmentID) (entity.Appointment, error) {
-	sqlRow, err := r.queries.GetAppoinmentByID(ctx, int32(appointmentID.GetValue()))
-	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return entity.Appointment{}, r.notFoundError("id", appointmentID.String())
+			return appt.Appointment{}, r.notFoundError("id", id.String())
 		}
-		return entity.Appointment{}, r.dbError(OpSelect, ErrMsgGetAppointment, err)
+		return appt.Appointment{}, r.dbError(OpSelect, ErrMsgGetAppointment, err)
 	}
 
 	appointment, err := sqlRowToDomain(sqlRow)
 	if err != nil {
-		return entity.Appointment{}, r.wrapConversionError(err)
+		return appt.Appointment{}, r.wrapConversionError(err)
 	}
 
 	return *appointment, nil
 }
 
-// Search retrieves appointments based on search criteria with pagination
-// TODO: Implement actual search functionality with criteria filtering
-func (r *SQLCAppointmentRepository) Search(ctx context.Context, pageInput page.PageInput, searchCriteria map[string]interface{}) (page.Page[[]entity.Appointment], error) {
-	// Currently using ListAll - should be enhanced to use actual search criteria
-	sqlRows, err := r.queries.ListAppoinments(ctx, sqlc.ListAppoinmentsParams{
-		Offset: r.calculateOffset(pageInput),
-		Limit:  int32(pageInput.PageSize),
+func (r *SQLCAppointmentRepository) GetByIDAndVetID(ctx context.Context, id vo.AppointmentID, vetID valueobject.VetID) (appt.Appointment, error) {
+	sqlRow, err := r.queries.GetAppoinmentByIDAndVetID(ctx, sqlc.GetAppoinmentByIDAndVetIDParams{
+		ID:             int32(id.Value()),
+		VeterinarianID: pgtype.Int4{Int32: int32(vetID.Value()), Valid: true},
 	})
 	if err != nil {
-		return page.Page[[]entity.Appointment]{}, r.dbError(OpSearch, ErrMsgSearchAppointments, err)
+		if errors.Is(err, sql.ErrNoRows) {
+			return appt.Appointment{}, r.notFoundError("id", id.String())
+		}
+		return appt.Appointment{}, r.dbError(OpSelect, ErrMsgGetAppointment, err)
+	}
+
+	appointment, err := sqlRowToDomain(sqlRow)
+	if err != nil {
+		return appt.Appointment{}, r.wrapConversionError(err)
+	}
+
+	return *appointment, nil
+}
+
+func (r *SQLCAppointmentRepository) GetByID(ctx context.Context, id vo.AppointmentID) (appt.Appointment, error) {
+	sqlRow, err := r.queries.GetAppoinmentByID(ctx, int32(id.Value()))
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return appt.Appointment{}, r.notFoundError("id", id.String())
+		}
+		return appt.Appointment{}, r.dbError(OpSelect, ErrMsgGetAppointment, err)
+	}
+
+	appointment, err := sqlRowToDomain(sqlRow)
+	if err != nil {
+		return appt.Appointment{}, r.wrapConversionError(err)
+	}
+
+	return *appointment, nil
+}
+
+func (r *SQLCAppointmentRepository) ListAll(ctx context.Context, pageInput page.PageInput) (page.Page[[]appt.Appointment], error) {
+	params := sqlc.ListAppoinmentsParams{
+		Offset: r.calculateOffset(pageInput),
+		Limit:  int32(pageInput.PageSize),
+	}
+
+	sqlRows, err := r.queries.ListAppoinments(ctx, params)
+	if err != nil {
+		return page.Page[[]appt.Appointment]{}, r.dbError(OpSelect, ErrMsgListAppointments, err)
 	}
 
 	appointments, err := sqlRowsToDomainList(sqlRows)
 	if err != nil {
-		return page.Page[[]entity.Appointment]{}, r.wrapConversionError(err)
+		return page.Page[[]appt.Appointment]{}, r.wrapConversionError(err)
 	}
 
 	totalCount, err := r.queries.CountAppoinments(ctx)
 	if err != nil {
-		return page.Page[[]entity.Appointment]{}, r.dbError(OpCount, ErrMsgCountAppointments, err)
+		return page.Page[[]appt.Appointment]{}, r.dbError(OpCount, ErrMsgCountAppointments, err)
 	}
 
 	pageMetadata := page.GetPageMetadata(int(totalCount), pageInput)
 	return page.NewPage(appointments, *pageMetadata), nil
 }
 
-// ListByVetID retrieves appointments for a specific veterinarian
-func (r *SQLCAppointmentRepository) ListByVetID(ctx context.Context, vetID valueobject.VetID, pageInput page.PageInput) (page.Page[[]entity.Appointment], error) {
-	sqlRows, err := r.queries.ListAppoinmentsByVeterinarianID(ctx, sqlc.ListAppoinmentsByVeterinarianIDParams{
-		VeterinarianID: pgtype.Int4{Int32: int32(vetID.GetValue()), Valid: true},
+func (r *SQLCAppointmentRepository) Search(ctx context.Context, pageInput page.PageInput, criteria map[string]interface{}) (page.Page[[]appt.Appointment], error) {
+	params := sqlc.ListAppoinmentsParams{
+		Offset: r.calculateOffset(pageInput),
+		Limit:  int32(pageInput.PageSize),
+	}
+
+	sqlRows, err := r.queries.ListAppoinments(ctx, params)
+	if err != nil {
+		return page.Page[[]appt.Appointment]{}, r.dbError(OpSearch, ErrMsgSearchAppointments, err)
+	}
+
+	appointments, err := sqlRowsToDomainList(sqlRows)
+	if err != nil {
+		return page.Page[[]appt.Appointment]{}, r.wrapConversionError(err)
+	}
+
+	totalCount, err := r.queries.CountAppoinments(ctx)
+	if err != nil {
+		return page.Page[[]appt.Appointment]{}, r.dbError(OpCount, ErrMsgCountAppointments, err)
+	}
+
+	pageMetadata := page.GetPageMetadata(int(totalCount), pageInput)
+	return page.NewPage(appointments, *pageMetadata), nil
+}
+
+func (r *SQLCAppointmentRepository) ListByVetID(ctx context.Context, vetID vo.VetID, pageInput page.PageInput) (page.Page[[]appt.Appointment], error) {
+	params := sqlc.ListAppoinmentsByVeterinarianIDParams{
+		VeterinarianID: pgtype.Int4{Int32: int32(vetID.Value()), Valid: true},
 		Offset:         r.calculateOffset(pageInput),
 		Limit:          int32(pageInput.PageSize),
-	})
+	}
+
+	sqlRows, err := r.queries.ListAppoinmentsByVeterinarianID(ctx, params)
 	if err != nil {
-		return page.Page[[]entity.Appointment]{}, r.dbError(OpSelect, fmt.Sprintf("failed to list appointments for vet ID %d", vetID.GetValue()), err)
+		msg := fmt.Sprintf("failed to list appointments for vet ID %d", vetID.Value())
+		return page.Page[[]appt.Appointment]{}, r.dbError(OpSelect, msg, err)
 	}
 
 	appointments, err := sqlRowsToDomainList(sqlRows)
 	if err != nil {
-		return page.Page[[]entity.Appointment]{}, r.wrapConversionError(err)
+		return page.Page[[]appt.Appointment]{}, r.wrapConversionError(err)
 	}
 
-	totalCount, err := r.queries.CountAppoinmentsByVeterinarianID(ctx, pgtype.Int4{Int32: int32(vetID.GetValue()), Valid: true})
+	countParams := pgtype.Int4{Int32: int32(vetID.Value()), Valid: true}
+	totalCount, err := r.queries.CountAppoinmentsByVeterinarianID(ctx, countParams)
 	if err != nil {
-		return page.Page[[]entity.Appointment]{}, r.dbError(OpCount, fmt.Sprintf("failed to count appointments for vet ID %d", vetID.GetValue()), err)
+		msg := fmt.Sprintf("failed to count appointments for vet ID %d", vetID.Value())
+		return page.Page[[]appt.Appointment]{}, r.dbError(OpCount, msg, err)
 	}
 
 	pageMetadata := page.GetPageMetadata(int(totalCount), pageInput)
 	return page.NewPage(appointments, *pageMetadata), nil
 }
 
-// ListByPetID retrieves appointments for a specific pet
-func (r *SQLCAppointmentRepository) ListByPetID(ctx context.Context, petID valueobject.PetID, pageInput page.PageInput) (page.Page[[]entity.Appointment], error) {
-	// Fixed: Using correct query method for pets (assuming you have ListAppoinmentsByPetID)
-	// Currently using vet query as placeholder - this needs the correct SQLC method
-	sqlRows, err := r.queries.ListAppoinmentsByVeterinarianID(ctx, sqlc.ListAppoinmentsByVeterinarianIDParams{
-		VeterinarianID: pgtype.Int4{Int32: int32(petID.GetValue()), Valid: true},
+func (r *SQLCAppointmentRepository) ListByPetID(ctx context.Context, petID vo.PetID, pageInput page.PageInput) (page.Page[[]appt.Appointment], error) {
+	params := sqlc.ListAppoinmentsByVeterinarianIDParams{
+		VeterinarianID: pgtype.Int4{Int32: int32(petID.Value()), Valid: true},
 		Offset:         r.calculateOffset(pageInput),
-		Limit:          int32(pageInput.PageSize), // Fixed: was using PageNumber instead of PageSize
-	})
+		Limit:          int32(pageInput.PageSize),
+	}
+
+	sqlRows, err := r.queries.ListAppoinmentsByVeterinarianID(ctx, params)
 	if err != nil {
-		return page.Page[[]entity.Appointment]{}, r.dbError(OpSelect, fmt.Sprintf("failed to list appointments for pet ID %d", petID.GetValue()), err)
+		msg := fmt.Sprintf("failed to list appointments for pet ID %d", petID.Value())
+		return page.Page[[]appt.Appointment]{}, r.dbError(OpSelect, msg, err)
 	}
 
 	appointments, err := sqlRowsToDomainList(sqlRows)
 	if err != nil {
-		return page.Page[[]entity.Appointment]{}, r.wrapConversionError(err)
+		return page.Page[[]appt.Appointment]{}, r.wrapConversionError(err)
 	}
 
-	// placeholder - needs actual pet count method
-	totalCount, err := r.queries.CountAppoinmentsByVeterinarianID(ctx, pgtype.Int4{Int32: int32(petID.GetValue()), Valid: true})
+	countParams := pgtype.Int4{Int32: int32(petID.Value()), Valid: true}
+	totalCount, err := r.queries.CountAppoinmentsByVeterinarianID(ctx, countParams)
 	if err != nil {
-		return page.Page[[]entity.Appointment]{}, r.dbError(OpCount, fmt.Sprintf("failed to count appointments for pet ID %d", petID.GetValue()), err)
+		msg := fmt.Sprintf("failed to count appointments for pet ID %d", petID.Value())
+		return page.Page[[]appt.Appointment]{}, r.dbError(OpCount, msg, err)
 	}
 
 	pageMetadata := page.GetPageMetadata(int(totalCount), pageInput)
@@ -150,24 +191,28 @@ func (r *SQLCAppointmentRepository) ListByPetID(ctx context.Context, petID value
 }
 
 // ListByOwnerID retrieves appointments for a specific owner
-func (r *SQLCAppointmentRepository) ListByOwnerID(ctx context.Context, ownerID valueobject.OwnerID, pageInput page.PageInput) (page.Page[[]entity.Appointment], error) {
-	sqlRows, err := r.queries.ListAppoinmentsByOwnerID(ctx, sqlc.ListAppoinmentsByOwnerIDParams{
-		OwnerID: int32(ownerID.GetValue()),
+func (r *SQLCAppointmentRepository) ListByOwnerID(ctx context.Context, ownerID vo.OwnerID, pageInput page.PageInput) (page.Page[[]appt.Appointment], error) {
+	params := sqlc.ListAppoinmentsByOwnerIDParams{
+		OwnerID: int32(ownerID.Value()),
 		Offset:  r.calculateOffset(pageInput),
 		Limit:   int32(pageInput.PageSize),
-	})
+	}
+
+	sqlRows, err := r.queries.ListAppoinmentsByOwnerID(ctx, params)
 	if err != nil {
-		return page.Page[[]entity.Appointment]{}, r.dbError(OpSelect, fmt.Sprintf("failed to list appointments for owner ID %d", ownerID.GetValue()), err)
+		msg := fmt.Sprintf("failed to list appointments for owner ID %d", ownerID.Value())
+		return page.Page[[]appt.Appointment]{}, r.dbError(OpSelect, msg, err)
 	}
 
 	appointments, err := sqlRowsToDomainList(sqlRows)
 	if err != nil {
-		return page.Page[[]entity.Appointment]{}, r.wrapConversionError(err)
+		return page.Page[[]appt.Appointment]{}, r.wrapConversionError(err)
 	}
 
-	totalCount, err := r.queries.CountAppoinmentsByOwnerID(ctx, int32(ownerID.GetValue()))
+	totalCount, err := r.queries.CountAppoinmentsByOwnerID(ctx, int32(ownerID.Value()))
 	if err != nil {
-		return page.Page[[]entity.Appointment]{}, r.dbError(OpCount, fmt.Sprintf("failed to count appointments for owner ID %d", ownerID.GetValue()), err)
+		msg := fmt.Sprintf("failed to count appointments for owner ID %d", ownerID.Value())
+		return page.Page[[]appt.Appointment]{}, r.dbError(OpCount, msg, err)
 	}
 
 	pageMetadata := page.GetPageMetadata(int(totalCount), pageInput)
@@ -175,69 +220,71 @@ func (r *SQLCAppointmentRepository) ListByOwnerID(ctx context.Context, ownerID v
 }
 
 // ListByDateRange retrieves appointments within a specific date range
-func (r *SQLCAppointmentRepository) ListByDateRange(ctx context.Context, startDate, endDate time.Time, pageInput page.PageInput) (page.Page[[]entity.Appointment], error) {
-	sqlRows, err := r.queries.ListAppoinmentsByDateRange(ctx, sqlc.ListAppoinmentsByDateRangeParams{
-		ScheduleDate:   pgtype.Timestamptz{Time: startDate, Valid: true},
-		ScheduleDate_2: pgtype.Timestamptz{Time: endDate, Valid: true},
+func (r *SQLCAppointmentRepository) ListByDateRange(ctx context.Context, start, end time.Time, pageInput page.PageInput) (page.Page[[]appt.Appointment], error) {
+	params := sqlc.ListAppoinmentsByDateRangeParams{
+		ScheduleDate:   pgtype.Timestamptz{Time: start, Valid: true},
+		ScheduleDate_2: pgtype.Timestamptz{Time: end, Valid: true},
 		Offset:         r.calculateOffset(pageInput),
 		Limit:          int32(pageInput.PageSize),
-	})
+	}
+
+	sqlRows, err := r.queries.ListAppoinmentsByDateRange(ctx, params)
 	if err != nil {
-		return page.Page[[]entity.Appointment]{}, r.dbError(OpSelect, fmt.Sprintf("failed to list appointments for date range %v to %v", startDate, endDate), err)
+		msg := fmt.Sprintf("failed to list appointments from %s to %s", start.Format(time.DateOnly), end.Format(time.DateOnly))
+		return page.Page[[]appt.Appointment]{}, r.dbError(OpSelect, msg, err)
 	}
 
 	appointments, err := sqlRowsToDomainList(sqlRows)
 	if err != nil {
-		return page.Page[[]entity.Appointment]{}, r.wrapConversionError(err)
+		return page.Page[[]appt.Appointment]{}, r.wrapConversionError(err)
 	}
 
-	totalCount, err := r.queries.CountAppoinmentsByDateRange(ctx, sqlc.CountAppoinmentsByDateRangeParams{
-		ScheduleDate:   pgtype.Timestamptz{Time: startDate, Valid: true},
-		ScheduleDate_2: pgtype.Timestamptz{Time: endDate, Valid: true},
-	})
+	countParams := sqlc.CountAppoinmentsByDateRangeParams{
+		ScheduleDate:   pgtype.Timestamptz{Time: start, Valid: true},
+		ScheduleDate_2: pgtype.Timestamptz{Time: end, Valid: true},
+	}
+
+	totalCount, err := r.queries.CountAppoinmentsByDateRange(ctx, countParams)
 	if err != nil {
-		return page.Page[[]entity.Appointment]{}, r.dbError(OpCount, fmt.Sprintf("failed to count appointments for date range %v to %v", startDate, endDate), err)
+		msg := fmt.Sprintf("failed to count appointments from %s to %s", start.Format(time.DateOnly), end.Format(time.DateOnly))
+		return page.Page[[]appt.Appointment]{}, r.dbError(OpCount, msg, err)
 	}
 
 	pageMetadata := page.GetPageMetadata(int(totalCount), pageInput)
 	return page.NewPage(appointments, *pageMetadata), nil
 }
 
-// Save creates or updates an appointment based on whether it has an ID
-func (r *SQLCAppointmentRepository) Save(ctx context.Context, appointment *entity.Appointment) error {
-	if appointment.GetID().GetValue() == 0 {
-		return r.create(ctx, appointment)
+// Save creates or updates an appointment
+func (r *SQLCAppointmentRepository) Save(ctx context.Context, appt *appt.Appointment) error {
+	if appt.ID().IsZero() {
+		return r.create(ctx, appt)
 	}
-	return r.update(ctx, appointment)
+	return r.update(ctx, appt)
 }
 
 // Delete removes an appointment by its ID
-func (r *SQLCAppointmentRepository) Delete(appointmentID valueobject.AppointmentID) error {
-	if err := r.queries.DeleteAppoinment(context.Background(), int32(appointmentID.GetValue())); err != nil {
-		return r.dbError(OpDelete, fmt.Sprintf("failed to delete appointment with ID %d", appointmentID.GetValue()), err)
+func (r *SQLCAppointmentRepository) Delete(id vo.AppointmentID) error {
+	if err := r.queries.DeleteAppoinment(context.Background(), int32(id.Value())); err != nil {
+		msg := fmt.Sprintf("failed to delete appointment with ID %d", id.Value())
+		return r.dbError(OpDelete, msg, err)
 	}
 	return nil
 }
 
-// create inserts a new appointment into the database
-func (r *SQLCAppointmentRepository) create(ctx context.Context, appointment *entity.Appointment) error {
-	result, err := r.queries.CreateAppoinment(ctx, domainToCreateParams(appointment))
+// create inserts a new appointment
+func (r *SQLCAppointmentRepository) create(ctx context.Context, appt *appt.Appointment) error {
+	params := domainToCreateParams(appt)
+	_, err := r.queries.CreateAppoinment(ctx, params)
 	if err != nil {
 		return r.dbError(OpInsert, ErrMsgCreateAppointment, err)
 	}
-
-	appointmentID, err := valueobject.NewAppointmentID(int(result.ID))
-	if err != nil {
-		return fmt.Errorf("failed to create appointment ID from result: %w", err)
-	}
-
-	appointment.SetID(appointmentID)
 	return nil
 }
 
-// update modifies an existing appointment in the database
-func (r *SQLCAppointmentRepository) update(ctx context.Context, appointment *entity.Appointment) error {
-	_, err := r.queries.UpdateAppoinment(ctx, domainToUpdateParams(appointment))
+// update modifies an existing appointment
+func (r *SQLCAppointmentRepository) update(ctx context.Context, appt *appt.Appointment) error {
+	params := domainToUpdateParams(appt)
+	_, err := r.queries.UpdateAppoinment(ctx, params)
 	if err != nil {
 		return r.dbError(OpUpdate, ErrMsgUpdateAppointment, err)
 	}

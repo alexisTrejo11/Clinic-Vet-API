@@ -1,9 +1,10 @@
+// Package usecase implements the use case for creating a new pet.
 package usecase
 
 import (
 	"context"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 	petApplicationError "github.com/alexisTrejo11/Clinic-Vet-API/app/modules/pets/application"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/pets/application/dto"
@@ -30,7 +31,11 @@ func (uc CreatePetUseCase) Execute(ctx context.Context, petCreate dto.PetCreate)
 		return dto.PetResponse{}, err
 	}
 
-	newPet := mapper.ToDomainFromCreate(petCreate)
+	newPet, err := mapper.ToDomainFromCreate(petCreate)
+	if err != nil {
+		return dto.PetResponse{}, err
+	}
+
 	if err := uc.petRepository.Save(ctx, newPet); err != nil {
 		return dto.PetResponse{}, err
 	}
@@ -45,7 +50,7 @@ func (uc CreatePetUseCase) validateOwner(ctx context.Context, ownerID valueobjec
 	}
 
 	if !exists {
-		petApplicationError.OwnerNotFoundError(ownerID.GetValue())
+		petApplicationError.OwnerNotFoundError(ownerID.Value())
 	}
 
 	return nil

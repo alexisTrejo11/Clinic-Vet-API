@@ -3,7 +3,7 @@ package dto
 import (
 	"time"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/enum"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/appointment/application/query"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 )

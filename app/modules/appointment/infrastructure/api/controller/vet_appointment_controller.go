@@ -2,21 +2,19 @@
 package controller
 
 import (
-	"context"
-	"errors"
-	"net/http"
-	"strconv"
 	"time"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/appointment/application/command"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/appointment/application/query"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
+	authError "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/auth"
+	httpError "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/infrastructure/http"
+	ginUtils "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/gin_utils"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/response"
-	apiResponse "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/responses"
-	response "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/responses"
+	"github.com/alexisTrejo11/Clinic-Vet-API/middleware"
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 )
 
 // VetAppointmentController handles veterinarian-specific appointment operations
@@ -29,12 +27,14 @@ import (
 type VetAppointmentController struct {
 	commandBus cqrs.CommandBus
 	queryBus   cqrs.QueryBus
+	validator  *validator.Validate
 }
 
-func NewVetAppointmentController(commandBus cqrs.CommandBus, queryBus cqrs.QueryBus) *VetAppointmentController {
+func NewVetAppointmentController(commandBus cqrs.CommandBus, queryBus cqrs.QueryBus, validator *validator.Validate) *VetAppointmentController {
 	return &VetAppointmentController{
 		commandBus: commandBus,
 		queryBus:   queryBus,
+		validator:  validator,
 	}
 }
 
@@ -52,60 +52,118 @@ func NewVetAppointmentController(commandBus cqrs.CommandBus, queryBus cqrs.Query
 // @Failure 401 {object} response.APIResponse "Unauthorized - Veterinarian not authenticated"
 // @Failure 500 {object} response.APIResponse "Internal server error"
 // @Router /vet/appointments [get]
-func (c *VetAppointmentController) GetMyAppointments(ctx *gin.Context) {
-	// Parse pagination parameters
-	page, _ := strconv.Atoi(ctx.DefaultQuery("page", "1"))
-	pageSize, _ := strconv.Atoi(ctx.DefaultQuery("pageSize", "10"))
-
-	// Get vet id from JWT context (assuming it's set by auth middleware)
-	vetID, exists := ctx.Get("vet_id")
+func (controller *VetAppointmentController) GetMyAppointments(c *gin.Context) {
+	userCTX, exists := middleware.GetUserFromContext(c)
 	if !exists {
-		response.Unauthorized(ctx, errors.New("vet id not found in context"))
+		response.Unauthorized(c, authError.UnauthorizedCTXError())
 		return
 	}
 
-	query, err := query.NewListAppointmentsByVetQuery(vetID, ctx)
+	var pagination page.PageInput
+	if err := c.ShouldBindQuery(&pagination); err != nil {
+		response.BadRequest(c, httpError.RequestURLQueryError(err, c.Request.URL.RawQuery))
+		return
+	}
+
+	if err := controller.validator.Struct(&pagination); err != nil {
+		response.BadRequest(c, httpError.InvalidDataError(err))
+		return
+	}
+
+	listAppointmentsByVetQuery, err := query.NewListAppointmentsByVetQuery(userCTX.EmployeeID, c.Request.Context(), pagination)
 	if err != nil {
-		response.ApplicationError(ctx, err)
+		response.ApplicationError(c, err)
 		return
 	}
 
-	result, err := c.queryBus.Execute(query)
+	result, err := controller.queryBus.Execute(listAppointmentsByVetQuery)
 	if err != nil {
-		response.ApplicationError(ctx, err)
+		response.ApplicationError(c, err)
 		return
 	}
 
-	response.Success(ctx, result)
+	response.Success(c, result)
 }
 
-// GetTodayAppointments godoc
-// @Summary Get today's appointments
-// @Description Retrieves all appointments scheduled for today for the authenticated veterinarian
+// CompleteAppointment godoc
+// @Summary Complete an appointment
+// @Description Marks an appointment as completed by the authenticated veterinarian
 // @Tags vet-appointments
 // @Accept json
 // @Produce json
+// @Param id path int true "Appointment ID"
 // @Security BearerAuth
-// @Success 200 {object} response.APIResponse{data=[]query.AppointmentResponse} "Today's appointments"
-// @Failure 401 {object} response.APIResponse "Unauthorized - Veterinarian not authenticated"
-// @Failure 500 {object} response.APIResponse "Internal server error"
-// @Router /vet/appointments/today [get]
-func (c *VetAppointmentController) GetTodayAppointments(ctx *gin.Context) {
-	// Get today's date range
-	now := time.Now()
-	startOfDay := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
-	endOfDay := startOfDay.Add(24 * time.Hour).Add(-time.Nanosecond)
-
-	query := query.NewGetAppointmentsByDateRangeQuery(
-		startOfDay, endOfDay, 1, 5000,
-	)
-	result, err := c.queryBus.Execute(context.Background(), query)
+// @Router /vet/appointments/{id}/complete [put]
+func (controller *VetAppointmentController) CompleteAppointment(c *gin.Context) {
+	appointmentID, err := ginUtils.ParseParamToInt(c, "id")
 	if err != nil {
-		response.ApplicationError(ctx, err)
+		response.BadRequest(c, httpError.RequestURLParamError(err, "appointment-ID", c.Param("id")))
+		return
+	}
+	userCTX, exists := middleware.GetUserFromContext(c)
+	if !exists {
+		response.Unauthorized(c, authError.UnauthorizedCTXError())
 		return
 	}
 
-	response.Success(ctx, result)
+	completeAppointmentCommand, err := command.NewCompleteAppointmenCommand(
+		c.Request.Context(),
+		appointmentID,
+		&userCTX.EmployeeID,
+		nil,
+	)
+	if err != nil {
+		response.ApplicationError(c, err)
+		return
+	}
+
+	result := controller.commandBus.Execute(completeAppointmentCommand)
+	if !result.IsSuccess {
+		response.ApplicationError(c, result.Error)
+		return
+	}
+
+	response.Success(c, result)
+}
+
+// CancelAppointment godoc
+// @Summary Cancel an appointment
+// @Description Cancels an appointment by the authenticated veterinarian
+// @Tags vet-appointments
+// @Accept json
+// @Produce json
+// @Param id path int true "Appointment ID"
+// @Security BearerAuth
+// @Router /vet/appointments/{id} [delete]
+func (controller *VetAppointmentController) CancelAppointment(c *gin.Context) {
+	appointmentID, err := ginUtils.ParseParamToInt(c, "id")
+	if err != nil {
+		response.BadRequest(c, httpError.RequestURLParamError(err, "appointment-ID", c.Param("id")))
+		return
+	}
+	userCTX, exists := middleware.GetUserFromContext(c)
+	if !exists {
+		response.Unauthorized(c, authError.UnauthorizedCTXError())
+		return
+	}
+	cancelAppointmentCommand, err := command.NewCancelAppointmentCommand(
+		c.Request.Context(),
+		appointmentID,
+		&userCTX.EmployeeID,
+		"",
+	)
+	if err != nil {
+		response.ApplicationError(c, err)
+		return
+	}
+
+	result := controller.commandBus.Execute(cancelAppointmentCommand)
+	if !result.IsSuccess {
+		response.ApplicationError(c, result.Error)
+		return
+	}
+
+	response.Success(c, result)
 }
 
 // ConfirmAppointment godoc
@@ -123,31 +181,36 @@ func (c *VetAppointmentController) GetTodayAppointments(ctx *gin.Context) {
 // @Failure 404 {object} response.APIResponse "Appointment not found"
 // @Failure 422 {object} response.APIResponse "Cannot confirm appointment"
 // @Router /vet/appointments/{id}/confirm [put]
-func (c *VetAppointmentController) ConfirmAppointment(ctx *gin.Context) {
-}
+func (controller *VetAppointmentController) Confirmppointment(c *gin.Context) {
+	appointmentID, err := ginUtils.ParseParamToInt(c, "id")
+	if err != nil {
+		response.BadRequest(c, httpError.RequestURLParamError(err, "appointment-ID", c.Param("id")))
+		return
+	}
+	userCTX, exists := middleware.GetUserFromContext(c)
+	if !exists {
+		response.Unauthorized(c, authError.UnauthorizedCTXError())
+		return
+	}
 
-// CompleteAppointment godoc
-// @Summary Complete an appointment
-// @Description Marks an appointment as completed by the authenticated veterinarian
-// @Tags vet-appointments
-// @Accept json
-// @Produce json
-// @Param id path int true "Appointment ID"
-// @Security BearerAuth
-// @Router /vet/appointments/{id}/complete [put]
-func (c *VetAppointmentController) CompleteAppointment(ctx *gin.Context) {
-}
+	completeAppointmentCommand, err := command.NewCancelAppointmentCommand(
+		c.Request.Context(),
+		appointmentID,
+		&userCTX.EmployeeID,
+		"",
+	)
+	if err != nil {
+		response.ApplicationError(c, err)
+		return
+	}
 
-// CancelAppointment godoc
-// @Summary Cancel an appointment
-// @Description Cancels an appointment by the authenticated veterinarian
-// @Tags vet-appointments
-// @Accept json
-// @Produce json
-// @Param id path int true "Appointment ID"
-// @Security BearerAuth
-// @Router /vet/appointments/{id} [delete]
-func (c *VetAppointmentController) CancelAppointment(ctx *gin.Context) {
+	result := controller.commandBus.Execute(completeAppointmentCommand)
+	if !result.IsSuccess {
+		response.ApplicationError(c, result.Error)
+		return
+	}
+
+	response.Success(c, result)
 }
 
 // MarkAsNoShow godoc
@@ -165,34 +228,31 @@ func (c *VetAppointmentController) CancelAppointment(ctx *gin.Context) {
 // @Failure 404 {object} response.APIResponse "Appointment not found"
 // @Failure 422 {object} response.APIResponse "Cannot mark as no-show"
 // @Router /vet/appointments/{id}/no-show [put]
-func (c *VetAppointmentController) MarkAsNoShow(ctx *gin.Context) {
-	entityID, err := shared.ParseParamToEntityID(ctx, "id", "appointment")
+func (controller *VetAppointmentController) MarkAsNoShow(c *gin.Context) {
+	appointmentID, err := ginUtils.ParseParamToInt(c, "id")
 	if err != nil {
-		apiResponse.RequestURLParamError(ctx, err, "appointmentID", ctx.Param("id"))
+		response.BadRequest(c, httpError.RequestURLParamError(err, "appointment-ID", c.Param("id")))
+		return
+	}
+	userCTX, exists := middleware.GetUserFromContext(c)
+	if !exists {
+		response.Unauthorized(c, authError.UnauthorizedCTXError())
 		return
 	}
 
-	appointmentID, valid := entityID.(valueobject.AppointmentID)
-	if !valid {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "invalid id entity parse"})
-		return
-	}
-
-	// Get vet id from JWT context to verify the appointment belongs to this vet
-
-	command, err := command.NewNotAttendAppointmentCommand(ctx, appointmentID)
+	command, err := command.NewNotAttendAppointmentCommand(c, appointmentID, &userCTX.EmployeeID)
 	if err != nil {
-		response.ApplicationError(ctx, err)
+		response.ApplicationError(c, err)
 		return
 	}
 
-	result := c.commandBus.Execute(command)
+	result := controller.commandBus.Execute(command)
 	if !result.IsSuccess {
-		response.ApplicationError(ctx, result.Error)
+		response.ApplicationError(c, result.Error)
 		return
 	}
 
-	response.Success(ctx, result)
+	response.Success(c, result)
 }
 
 // GetAppointmentStats godoc
@@ -209,41 +269,43 @@ func (c *VetAppointmentController) MarkAsNoShow(ctx *gin.Context) {
 // @Failure 401 {object} response.APIResponse "Unauthorized - Veterinarian not authenticated"
 // @Failure 500 {object} response.APIResponse "Internal server error"
 // @Router /vet/appointments/stats [get]
-func (c *VetAppointmentController) GetAppointmentStats(ctx *gin.Context) {
-	// Get vet id from JWT context
-	vetIDInterface, exists := ctx.Get("vet_id")
-	if !exists {
-		response.Unauthorized(ctx, errors.New("vet id not found in context"))
-		return
-	}
-
-	vetID, ok := vetIDInterface.(int)
-	if !ok {
-		response.BadRequest(ctx, errors.New("invalid vet id format"))
-		return
-	}
-
-	// Parse date range from query parameters (optional)
-	var startDate, endDate *time.Time
-	if startDateStr := ctx.Query("start_date"); startDateStr != "" {
-		if parsed, err := time.Parse("2006-01-02", startDateStr); err == nil {
-			startDate = &parsed
+func (controller *VetAppointmentController) GetAppointmentStats(c *gin.Context) {
+	/*
+		// Get vet id from JWT context
+		vetIDInterface, exists := c.Get("vet_id")
+		if !exists {
+			response.Unauthorized(c, errors.New("vet id not found in context"))
+			return
 		}
-	}
-	if endDateStr := ctx.Query("end_date"); endDateStr != "" {
-		if parsed, err := time.Parse("2006-01-02", endDateStr); err == nil {
-			endDate = &parsed
+
+		vetID, ok := vetIDInterface.(int)
+		if !ok {
+			response.BadRequest(c, errors.New("invalid vet id format"))
+			return
 		}
-	}
 
-	query := query.NewGetAppointmentStatsQuery(&vetID, nil, startDate, endDate)
-	result, err := c.queryBus.Execute(context.Background(), query)
-	if err != nil {
-		response.ApplicationError(ctx, err)
-		return
-	}
+		// Parse date range from query parameters (optional)
+		var startDate, endDate *time.Time
+		if startDateStr := c.Query("start_date"); startDateStr != "" {
+			if parsed, err := time.Parse("2006-01-02", startDateStr); err == nil {
+				startDate = &parsed
+			}
+		}
+		if endDateStr := c.Query("end_date"); endDateStr != "" {
+			if parsed, err := time.Parse("2006-01-02", endDateStr); err == nil {
+				endDate = &parsed
+			}
+		}
 
-	response.Success(ctx, result)
+		query := query.NewGetAppointmentStatsQuery(&vetID, nil, startDate, endDate)
+		result, err := c.queryBus.Execute(context.Background(), query)
+		if err != nil {
+			response.ApplicationError(c, err)
+			return
+		}
+
+		response.Success(c, result)
+	*/
 }
 
 // RescheduleAppointment godoc
@@ -262,60 +324,28 @@ func (c *VetAppointmentController) GetAppointmentStats(ctx *gin.Context) {
 // @Failure 404 {object} response.APIResponse "Appointment not found"
 // @Failure 422 {object} response.APIResponse "Invalid time slot or scheduling conflict"
 // @Router /vet/appointments/{id}/reschedule [put]
-func (c *VetAppointmentController) RescheduleAppointment(ctx *gin.Context) {
-	entityID, err := shared.ParseParamToEntityID(ctx, "id", "appointment")
+func (controller *VetAppointmentController) RescheduleAppointment(c *gin.Context) {
+	appointmentID, err := ginUtils.ParseParamToInt(c, "id")
 	if err != nil {
-		apiResponse.RequestURLParamError(ctx, err, "appointmentID", ctx.Param("id"))
+		response.BadRequest(c, httpError.RequestURLParamError(err, "appointment-ID", c.Param("id")))
 		return
 	}
-
-	appointmentID, valid := entityID.(valueobject.AppointmentID)
-	if !valid {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "invalid id entity parse"})
-		return
-	}
-
-	var command command.RescheduleAppointmentCommand
-	if err := ctx.ShouldBindJSON(&command); err != nil {
-		response.RequestBodyDataError(ctx, err)
-		return
-	}
-
-	command.AppointmentID = appointmentID
-
-	// Get vet id from JWT context to verify the appointment belongs to this vet
-	vetIDInterface, exists := ctx.Get("vet_id")
+	userCTX, exists := middleware.GetUserFromContext(c)
 	if !exists {
-		response.Unauthorized(ctx, errors.New("vet id not found in context"))
+		response.Unauthorized(c, authError.UnauthorizedCTXError())
 		return
 	}
 
-	vetID, ok := vetIDInterface.(int)
-	if !ok {
-		response.BadRequest(ctx, errors.New("invalid vet id format"))
-		return
-	}
-
-	// Verify the appointment belongs to this vet
-	getQuery := query.NewGetAppointmentByIDQuery(appointmentID)
-	getResult, err := c.queryBus.Execute(context.Background(), getQuery)
+	rescheduleCommand, err := command.NewRescheduleAppointmentCommand(c.Request.Context(), appointmentID, &userCTX.EmployeeID, time.Time{}, nil)
 	if err != nil {
-		response.ApplicationError(ctx, err)
+		response.ApplicationError(c, err)
 		return
 	}
-
-	appointment := getResult.(*query.AppointmentResponse)
-
-	if appointment.VetID == nil || *appointment.VetID != vetID {
-		response.Forbidden(ctx, errors.New("acccess denied: you can only reschedule your own appointments"))
-		return
-	}
-
-	result := c.commandBus.Execute(context.Background(), command)
+	result := controller.commandBus.Execute(rescheduleCommand)
 	if !result.IsSuccess {
-		response.ApplicationError(ctx, result.Error)
+		response.ApplicationError(c, result.Error)
 		return
 	}
 
-	response.Success(ctx, result)
+	response.Success(c, result)
 }

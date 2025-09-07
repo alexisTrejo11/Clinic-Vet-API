@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/enum"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
 )
 
 var (

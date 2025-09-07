@@ -3,7 +3,7 @@ package command
 import (
 	"context"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
 	apperror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/application"
@@ -66,5 +66,5 @@ func (h *ConfirmAppointmentHandler) Handle(cmd cqrs.Command) cqrs.CommandResult 
 		return cqrs.FailureResult("failed to save confirmed appointment", err)
 	}
 
-	return cqrs.SuccessResult(appointment.GetID().String(), "appointment confirmed successfully")
+	return cqrs.SuccessResult(appointment.ID().String(), "appointment confirmed successfully")
 }

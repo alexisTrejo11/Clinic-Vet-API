@@ -4,7 +4,7 @@ package command
 import (
 	"context"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
 	appError "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/application"
@@ -40,7 +40,7 @@ func NewCancelPaymentHandler(paymentRepo repository.PaymentRepository) cqrs.Comm
 func (h *CancelPaymentHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
 	command := cmd.(CancelPaymentCommand)
 
-	payment, err := h.paymentRepo.GetByID(command.ctx, command.paymentID.GetValue())
+	payment, err := h.paymentRepo.GetByID(command.ctx, command.paymentID)
 	if err != nil {
 		return cqrs.FailureResult("failed to retrieve payment", err)
 	}
@@ -53,5 +53,5 @@ func (h *CancelPaymentHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
 		return cqrs.FailureResult("failed to save canceled payment", err)
 	}
 
-	return cqrs.SuccessResult(payment.GetID().String(), "payment canceled successfully")
+	return cqrs.SuccessResult(payment.ID().String(), "payment canceled successfully")
 }

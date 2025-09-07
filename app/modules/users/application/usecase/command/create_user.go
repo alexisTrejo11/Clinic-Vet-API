@@ -5,26 +5,16 @@ import (
 	"errors"
 	"time"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/enum"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/user"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/user/profile"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/service"
+
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
 )
 
 // Error messages as variables
-const (
-	ErrFailedMappingUser   = "failed to map user from command"
-	ErrFailedValidation    = "failed to validate user creation"
-	ErrFailedHashPassword  = "failed to hash password"
-	ErrFailedSaveUser      = "failed to save user"
-	ErrInvalidRole         = "invalid user role"
-	ErrInvalidStatus       = "invalid user status"
-	ErrInvalidGender       = "invalid gender"
-	ErrInvalidDateOfBirth  = "invalid date of birth"
-	ErrUserCreationSuccess = "user created successfully"
-)
 
 type createProfileCommand struct {
 	firstName   string
@@ -53,8 +43,7 @@ type createUserCommand struct {
 }
 
 type CreateUserHandler struct {
-	repo            repository.UserRepository
-	securityService *service.UseSecurityService
+	repo repository.UserRepository
 }
 
 // NewCreateUserCommand creates a new user command from primitive types
@@ -114,8 +103,7 @@ func NewCreateUserCommand(
 
 func NewCreateUserHandler(repo repository.UserRepository) *CreateUserHandler {
 	return &CreateUserHandler{
-		repo:            repo,
-		securityService: service.NewUseSecurityService(repo),
+		repo: repo,
 	}
 }
 
@@ -130,13 +118,16 @@ func (uc *CreateUserHandler) Handle(cmd any) cqrs.CommandResult {
 		return cqrs.FailureResult(ErrFailedMappingUser, err)
 	}
 
-	if err := uc.securityService.ValidateCreation(command.ctx, *user); err != nil {
-		return cqrs.FailureResult(ErrFailedValidation, err)
-	}
+	// TODO: implement security service for validation and password hashing
+	/*
+		if err := uc.securityService.ValidateCreation(command.ctx, *user); err != nil {
+			return cqrs.FailureResult(ErrFailedValidation, err)
+		}
 
-	if err := uc.securityService.HashPassword(user); err != nil {
-		return cqrs.FailureResult(ErrFailedHashPassword, err)
-	}
+		if err := uc.securityService.HashPassword(user); err != nil {
+			return cqrs.FailureResult(ErrFailedHashPassword, err)
+		}
+	*/
 
 	if err := uc.repo.Save(command.ctx, user); err != nil {
 		return cqrs.FailureResult(ErrFailedSaveUser, err)
@@ -145,7 +136,7 @@ func (uc *CreateUserHandler) Handle(cmd any) cqrs.CommandResult {
 	return cqrs.SuccessResult(user.ID().String(), ErrUserCreationSuccess)
 }
 
-func fromCreateCommand(command createUserCommand) (*entity.User, error) {
+func fromCreateCommand(command createUserCommand) (*user.User, error) {
 	// Map email
 	email, err := valueobject.NewEmail(command.email)
 	if err != nil {
@@ -159,49 +150,28 @@ func fromCreateCommand(command createUserCommand) (*entity.User, error) {
 	}
 
 	// Map role
-	userRole, err := enum.NewUserRole(command.role)
+	userRole, err := enum.ParseUserRole(command.role)
 	if err != nil {
 		return nil, errors.New(ErrInvalidRole)
 	}
 
 	// Map status
-	userStatus, err := enum.UserStatus(command.status)
+	userStatus, err := enum.ParseUserStatus(command.status)
 	if err != nil {
 		return nil, errors.New(ErrInvalidStatus)
 	}
 
 	// Map gender
-	userGender := enum.NewGender(command.gender)
+	userGender, err := enum.ParseGender(command.gender)
 	if err != nil {
 		return nil, errors.New(ErrInvalidGender)
 	}
 
-	// Create profile
-	profile := entity.Profile{
-		FirstName:   command.profile.firstName,
-		LastName:    command.profile.lastName,
-		Gender:      userGender,
-		ProfilePic:  command.profile.profilePic,
-		Bio:         command.profile.bio,
-		DateOfBirth: command.profile.dateOfBirth,
-		Address:     command.profile.address,
-	}
+	// TODO: impl
+	profile := profile.Profile{}
 
 	// Create user
-	user := &entity.User{
-		Email:          email,
-		PhoneNumber:    phoneNumber,
-		Password:       command.password, // Will be hashed later
-		Gender:         userGender,
-		Phone:          command.phone,
-		Address:        command.address,
-		Role:           userRole,
-		OwnerID:        command.ownerID,
-		VeterinarianID: command.veterinarianID,
-		Status:         userStatus,
-		DateOfBirth:    command.dateOfBirth,
-		Profile:        profile,
-	}
+	user := &user.User{}
 
 	return user, nil
 }

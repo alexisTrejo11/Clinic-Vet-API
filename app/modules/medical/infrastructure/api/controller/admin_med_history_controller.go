@@ -36,7 +36,7 @@ func (ctlr AdminMedicalHistoryController) SearchMedicalHistories(ctx *gin.Contex
 		return
 	}
 
-	ctx.JSON(200, gin.H{"data": medHistories.Data, "metadata": gin.H{"pagintation": medHistories.Metadata}})
+	ctx.JSON(200, gin.H{"data": medHistories.Data, "metadata": gin.H{"pagination": medHistories.Metadata}})
 }
 
 func (ctlr AdminMedicalHistoryController) GetMedicalHistory(c *gin.Context) {

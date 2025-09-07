@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/enum"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/payment"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
@@ -29,7 +29,7 @@ func (h *MarkOverduePaymentsHandler) Handle(cmd cqrs.Command) cqrs.CommandResult
 	command := cmd.(MarkOverduePaymentsCommand)
 
 	searchCriteria := map[string]any{
-		"status": enum.PENDING,
+		"status": enum.PaymentStatusPending,
 	}
 
 	pagination := page.PageInput{
@@ -51,7 +51,7 @@ func (h *MarkOverduePaymentsHandler) Handle(cmd cqrs.Command) cqrs.CommandResult
 
 		for _, payment := range payments {
 			if err := h.UpdatePaymentOverdued(command.context, &payment); err != nil {
-				fmt.Printf("Error updating payment %d: %v\n", payment.GetID(), err)
+				fmt.Printf("Error updating payment %d: %v\n", payment.ID(), err)
 				continue
 			}
 			updatedCount++
@@ -67,8 +67,8 @@ func (h *MarkOverduePaymentsHandler) Handle(cmd cqrs.Command) cqrs.CommandResult
 	return cqrs.SuccessResult("", fmt.Sprintf("Updated %d overdue payments", updatedCount))
 }
 
-func (h *MarkOverduePaymentsHandler) UpdatePaymentOverdued(ctx context.Context, payment *entity.Payment) error {
-	if err := payment.Overdue(); err != nil {
+func (h *MarkOverduePaymentsHandler) UpdatePaymentOverdued(ctx context.Context, payment *payment.Payment) error {
+	if err := payment.MarkAsOverdue(); err != nil {
 		return err
 	}
 
@@ -83,6 +83,6 @@ func (h *MarkOverduePaymentsHandler) IsLastPage(pagination page.PageInput, total
 	return pagination.PageNumber >= totalPages
 }
 
-func (h *MarkOverduePaymentsHandler) IsEmptyList(payments []entity.Payment) bool {
+func (h *MarkOverduePaymentsHandler) IsEmptyList(payments []payment.Payment) bool {
 	return len(payments) == 0
 }

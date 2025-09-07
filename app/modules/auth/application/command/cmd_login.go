@@ -5,7 +5,8 @@ import (
 	"errors"
 	"time"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/auth"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/user"
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/auth/application/jwt"
 	apperror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/application"
@@ -71,7 +72,14 @@ func (h *loginHandler) Handle(cmd any) AuthCommandResult {
 		return FailureAuthResult(ErrAuthenticationFailed, err)
 	}
 
-	if user.Is2FAEnabled() {
+	if user.CanLogin() {
+		return FailureAuthResult(
+			ErrAuthenticationFailed,
+			apperror.ConflictError("UserStatus", "user is not active, please contact support"),
+		)
+	}
+
+	if user.IsTwoFactorEnabled() {
 		return FailureAuthResult(
 			ErrTwoFactorRequired,
 			apperror.ConflictError("TwoFactorAuth", ErrTwoFactorAuthConflict),
@@ -92,27 +100,27 @@ func (h *loginHandler) Handle(cmd any) AuthCommandResult {
 	return SuccessAuthResult(&response, session.ID, MsgLoginSuccess)
 }
 
-func (h *loginHandler) authenticate(command *LoginCommand) (entity.User, error) {
-	user, err := h.userRepo.GetByEmail(command.CTX, command.Identifier)
+func (h *loginHandler) authenticate(command *LoginCommand) (user.User, error) {
+	userEntity, err := h.userRepo.GetByEmail(command.CTX, command.Identifier)
 	if err != nil {
-		user, err = h.userRepo.GetByPhone(command.CTX, command.Identifier)
+		userEntity, err = h.userRepo.GetByPhone(command.CTX, command.Identifier)
 		if err != nil {
-			return entity.User{}, errors.New(ErrInvalidCredentials)
+			return user.User{}, errors.New(ErrInvalidCredentials)
 		}
 	}
 
-	if err := h.passwordEncoder.CheckPassword(command.Password, user.Password()); err != nil {
-		return entity.User{}, errors.New(ErrInvalidCredentials)
+	if err := h.passwordEncoder.CheckPassword(command.Password, userEntity.Password()); err != nil {
+		return user.User{}, errors.New(ErrInvalidCredentials)
 	}
 
-	return user, nil
+	return userEntity, nil
 }
 
 // createSession creates and persists a new user session
-func (h *loginHandler) createSession(userID string, command LoginCommand) (entity.Session, error) {
+func (h *loginHandler) createSession(userID string, command LoginCommand) (auth.Session, error) {
 	refreshToken, err := h.jwtService.GenerateRefreshToken(userID)
 	if err != nil {
-		return entity.Session{}, err
+		return auth.Session{}, err
 	}
 
 	now := time.Now()
@@ -122,7 +130,7 @@ func (h *loginHandler) createSession(userID string, command LoginCommand) (entit
 		sessionDuration = 30 * 24 * time.Hour // 30 days
 	}
 
-	newSession := entity.Session{
+	newSession := auth.Session{
 		UserID:       userID,
 		IPAddress:    command.IP,
 		RefreshToken: refreshToken,
@@ -133,7 +141,7 @@ func (h *loginHandler) createSession(userID string, command LoginCommand) (entit
 	}
 
 	if err := h.sessionRepo.Create(command.CTX, &newSession); err != nil {
-		return entity.Session{}, err
+		return auth.Session{}, err
 	}
 
 	return newSession, nil

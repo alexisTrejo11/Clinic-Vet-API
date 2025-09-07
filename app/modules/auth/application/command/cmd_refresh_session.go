@@ -3,8 +3,8 @@ package command
 import (
 	"context"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/auth"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/auth/application/jwt"
 	apperror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/application"
@@ -41,7 +41,7 @@ func (h *RefreshSessionHandler) Handle(cmd any) AuthCommandResult {
 		return FailureAuthResult("Error ocurred validatin user", err)
 	}
 
-	entity, err := h.sessionRepo.GetByUserAndID(command.CTX, command.UserID.String(), command.RefreshToken)
+	session, err := h.sessionRepo.GetByUserAndID(command.CTX, command.UserID, command.RefreshToken)
 	if err != nil {
 		return FailureAuthResult("Session not found", err)
 	}
@@ -51,12 +51,12 @@ func (h *RefreshSessionHandler) Handle(cmd any) AuthCommandResult {
 		return FailureAuthResult("Failed to generate access token", err)
 	}
 
-	response := getSessionResponse(entity, access)
-	return SuccessAuthResult(&response, entity.ID, "session successfully refreshed")
+	response := getSessionResponse(session, access)
+	return SuccessAuthResult(&response, session.ID, "session successfully refreshed")
 }
 
 func (h *RefreshSessionHandler) validateExisitngUser(command RefreshSessionCommand) error {
-	exists, err := h.userRepo.ExistsByID(command.CTX, command.UserID.GetValue())
+	exists, err := h.userRepo.ExistsByID(command.CTX, command.UserID.Value())
 	if err != nil {
 		return err
 	}
@@ -68,7 +68,7 @@ func (h *RefreshSessionHandler) validateExisitngUser(command RefreshSessionComma
 	return nil
 }
 
-func getSessionResponse(entity entity.Session, access string) SessionResponse {
+func getSessionResponse(entity auth.Session, access string) SessionResponse {
 	sessionResponse := &SessionResponse{
 		UserID:       entity.UserID,
 		AccessToken:  access,

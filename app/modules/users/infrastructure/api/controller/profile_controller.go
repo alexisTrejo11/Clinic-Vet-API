@@ -3,7 +3,7 @@ package controller
 import (
 	"context"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/users/application/usecase"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/users/infrastructure/api/dto"
 	authError "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/auth"

@@ -11,7 +11,7 @@ var (
 )
 
 type IntegerID interface {
-	GetValue() int
+	Value() int
 	Equals(number int) bool
 	String() string
 	IsZero() bool
@@ -21,7 +21,7 @@ type baseID struct {
 	value int
 }
 
-func (id baseID) GetValue() int {
+func (id baseID) Value() int {
 	return id.value
 }
 

@@ -3,36 +3,39 @@ package query
 import (
 	"context"
 
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 )
 
-type ListPaymentsByUserQuery struct {
-	userID     int
+type ListPaymentsByOwnerQuery struct {
+	ownerID    valueobject.OwnerID
 	pagination page.PageInput
 	ctx        context.Context
 }
 
-func NewListPaymentsByUserQuery(userID int, pagination page.PageInput) ListPaymentsByUserQuery {
-	return ListPaymentsByUserQuery{
-		userID:     userID,
+func NewListPaymentsByUserQuery(ownerIDInt int, pagination page.PageInput) ListPaymentsByOwnerQuery {
+	ownerID, _ := valueobject.NewOwnerID(ownerIDInt)
+
+	return ListPaymentsByOwnerQuery{
+		ownerID:    ownerID,
 		pagination: pagination,
 		ctx:        context.Background(),
 	}
 }
 
-type ListByUserHandler struct {
+type ListByOwnerHandler struct {
 	repository repository.PaymentRepository
 }
 
-func NewListByUserHandler(repository repository.PaymentRepository) cqrs.QueryHandler[page.Page[[]PaymentResponse]] {
-	return &ListByUserHandler{repository: repository}
+func NewListByOwnerHandler(repository repository.PaymentRepository) cqrs.QueryHandler[page.Page[[]PaymentResponse]] {
+	return &ListByOwnerHandler{repository: repository}
 }
 
-func (h *ListByUserHandler) Handle(q cqrs.Query) (page.Page[[]PaymentResponse], error) {
-	query := q.(ListPaymentsByUserQuery)
-	paymentsPage, err := h.repository.ListByUserID(query.ctx, query.userID, query.pagination)
+func (h *ListByOwnerHandler) Handle(q cqrs.Query) (page.Page[[]PaymentResponse], error) {
+	query := q.(ListPaymentsByOwnerQuery)
+	paymentsPage, err := h.repository.ListByPaidFrom(query.ctx, query.ownerID, query.pagination)
 	if err != nil {
 		return page.Page[[]PaymentResponse]{}, err
 	}

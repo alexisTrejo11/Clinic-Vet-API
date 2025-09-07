@@ -3,7 +3,7 @@ package command
 import (
 	"context"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
 	apperror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/application"
@@ -40,7 +40,7 @@ func NewProcessPaymentHandler(paymentRepo repository.PaymentRepository) cqrs.Com
 
 func (h *ProcessPaymentHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
 	command := cmd.(ProcessPaymentCommand)
-	payment, err := h.paymentRepo.GetByID(command.ctx, command.paymentID.GetValue())
+	payment, err := h.paymentRepo.GetByID(command.ctx, command.paymentID)
 	if err != nil {
 		return cqrs.FailureResult("failed to retrieve payment", err)
 	}
@@ -53,5 +53,5 @@ func (h *ProcessPaymentHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
 		return cqrs.FailureResult("failed to save processed payment", err)
 	}
 
-	return cqrs.SuccessResult(payment.GetID().String(), "payment processed successfully")
+	return cqrs.SuccessResult(payment.ID().String(), "payment processed successfully")
 }

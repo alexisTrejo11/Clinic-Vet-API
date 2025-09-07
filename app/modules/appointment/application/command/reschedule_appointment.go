@@ -4,20 +4,27 @@ import (
 	"context"
 	"time"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
 	apperror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/application"
 )
 
 type RescheduleAppointmentCommand struct {
-	ctx           context.Context
-	appointmentID valueobject.AppointmentID
-	datetime      time.Time
-	reason        *string
+	ctx            context.Context
+	appointmentID  valueobject.AppointmentID
+	veterinarianID *valueobject.VetID
+	datetime       time.Time
+	reason         *string
 }
 
-func NewRescheduleAppointmentCommand(ctx context.Context, appointIDInt int, dateTime time.Time, reason *string) (RescheduleAppointmentCommand, error) {
+func NewRescheduleAppointmentCommand(
+	ctx context.Context,
+	appointIDInt int,
+	vetID *int,
+	dateTime time.Time,
+	reason *string,
+) (RescheduleAppointmentCommand, error) {
 	errorMessages := make([]string, 0)
 
 	appointmentID, err := valueobject.NewAppointmentID(appointIDInt)
@@ -25,8 +32,17 @@ func NewRescheduleAppointmentCommand(ctx context.Context, appointIDInt int, date
 		errorMessages = append(errorMessages, err.Error())
 	}
 
+	var veterinarianID *valueobject.VetID
+	if vetID != nil {
+		vetIDVal, err := valueobject.NewVetID(*vetID)
+		if err != nil {
+			errorMessages = append(errorMessages, err.Error())
+		}
+		veterinarianID = &vetIDVal
+	}
+
 	if dateTime.IsZero() {
-		errorMessages = append(errorMessages, "invalid datetime")
+		errorMessages = append(errorMessages, "invalid date time")
 	}
 
 	if len(errorMessages) > 0 {
@@ -34,10 +50,11 @@ func NewRescheduleAppointmentCommand(ctx context.Context, appointIDInt int, date
 	}
 
 	cmd := &RescheduleAppointmentCommand{
-		ctx:           ctx,
-		appointmentID: appointmentID,
-		reason:        reason,
-		datetime:      dateTime,
+		ctx:            ctx,
+		appointmentID:  appointmentID,
+		veterinarianID: veterinarianID,
+		reason:         reason,
+		datetime:       dateTime,
 	}
 
 	return *cmd, nil
@@ -61,7 +78,7 @@ func (h *RescheduleAppointmentHandler) Handle(cmd cqrs.Command) cqrs.CommandResu
 		return cqrs.FailureResult("appointment not found", err)
 	}
 
-	if err := appointment.RescheduleAppointment(command.datetime); err != nil {
+	if err := appointment.Reschedule(command.datetime); err != nil {
 		return cqrs.FailureResult("failed to reschedule appointment", err)
 	}
 
@@ -69,5 +86,5 @@ func (h *RescheduleAppointmentHandler) Handle(cmd cqrs.Command) cqrs.CommandResu
 		return cqrs.FailureResult("failed to save rescheduled appointment", err)
 	}
 
-	return cqrs.SuccessResult(appointment.GetID().String(), "appointment rescheduled successfully")
+	return cqrs.SuccessResult(appointment.ID().String(), "appointment rescheduled successfully")
 }

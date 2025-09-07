@@ -4,34 +4,10 @@ import (
 	"context"
 	"errors"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/user"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
-)
-
-const (
-	ErrFailedFindUser     = "failed to find user"
-	ErrFailedChangePhone  = "failed to change phone"
-	ErrFailedChangeEmail  = "failed to change email"
-	ErrFailedUpdateUser   = "failed to update user"
-	ErrEmailAlreadyExists = "email already exists"
-	ErrPhoneAlreadyTaken  = "phone already taken"
-	ErrInvalidUserID      = "invalid user ID"
-	ErrInvalidEmail       = "invalid email"
-	ErrInvalidPhone       = "invalid phone number"
-	ErrPhoneUnchanged     = "phone number unchanged"
-	ErrEmailUnchanged     = "email unchanged"
-
-	ErrFailedMappingUser   = "failed to map user from command"
-	ErrFailedValidation    = "failed to validate user creation"
-	ErrFailedHashPassword  = "failed to hash password"
-	ErrFailedSaveUser      = "failed to save user"
-	ErrInvalidRole         = "invalid user role"
-	ErrInvalidStatus       = "invalid user status"
-	ErrInvalidGender       = "invalid gender"
-	ErrInvalidDateOfBirth  = "invalid date of birth"
-	ErrUserCreationSuccess = "user created successfully"
 )
 
 type ChangeEmailCommand struct {
@@ -106,13 +82,13 @@ func NewChangeEmailHandler(userRepository repository.UserRepository) ChangeEmail
 	}
 }
 
-func (h ChangePhoneHandler) Handle(cmd any) cqrs.CommandResult {
+func (h ChangePhoneHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
 	command, ok := cmd.(ChangePhoneCommand)
 	if !ok {
 		return cqrs.FailureResult(ErrFailedChangePhone, errors.New("invalid command type"))
 	}
 
-	user, err := h.userRepository.GetByID(command.ctx, command.userID.GetValue())
+	user, err := h.userRepository.GetByID(command.ctx, command.userID)
 	if err != nil {
 		return cqrs.FailureResult(ErrFailedFindUser, err)
 	}
@@ -136,7 +112,7 @@ func (h ChangeEmailHandler) Handle(cmd any) cqrs.CommandResult {
 		return cqrs.FailureResult(ErrFailedChangeEmail, errors.New("invalid command type"))
 	}
 
-	user, err := h.userRepository.GetByID(command.ctx, command.userID.GetValue())
+	user, err := h.userRepository.GetByID(command.ctx, command.userID)
 	if err != nil {
 		return cqrs.FailureResult(ErrFailedFindUser, err)
 	}
@@ -154,7 +130,7 @@ func (h ChangeEmailHandler) Handle(cmd any) cqrs.CommandResult {
 	return cqrs.SuccessResult(user.ID().String(), "email changed successfully")
 }
 
-func (h ChangeEmailHandler) validate(command ChangeEmailCommand, user entity.User) error {
+func (h ChangeEmailHandler) validate(command ChangeEmailCommand, user user.User) error {
 	if user.Email().String() == command.email.String() {
 		return errors.New(ErrEmailUnchanged)
 	}
@@ -168,7 +144,7 @@ func (h ChangeEmailHandler) validate(command ChangeEmailCommand, user entity.Use
 	return nil
 }
 
-func (h ChangePhoneHandler) validate(command ChangePhoneCommand, user entity.User) error {
+func (h ChangePhoneHandler) validate(command ChangePhoneCommand, user user.User) error {
 	if user.PhoneNumber().String() == command.phone.String() {
 		return errors.New(ErrPhoneUnchanged)
 	}

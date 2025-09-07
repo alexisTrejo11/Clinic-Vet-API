@@ -1,10 +1,10 @@
-package persistence
+package repositoryimpl
 
 import (
 	"context"
 	"fmt"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/medical"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/medical/application/dto"
 	dberr "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/infrastructure/database"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
@@ -45,13 +45,13 @@ func (r *SQLCMedHistRepository) calculateOffset(pageData page.PageInput) int32 {
 }
 
 // applyManualPagination applies pagination logic in memory (temporary solution)
-func (r *SQLCMedHistRepository) applyManualPagination(items []entity.MedicalHistory, pagination page.PageInput) ([]entity.MedicalHistory, int) {
+func (r *SQLCMedHistRepository) applyManualPagination(items []medical.MedicalHistory, pagination page.PageInput) ([]medical.MedicalHistory, int) {
 	totalCount := len(items)
 	startIndex := (pagination.PageNumber - 1) * pagination.PageSize
 	endIndex := startIndex + pagination.PageSize
 
 	if startIndex >= totalCount {
-		return []entity.MedicalHistory{}, totalCount
+		return []medical.MedicalHistory{}, totalCount
 	}
 
 	if endIndex > totalCount {

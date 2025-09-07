@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/user"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/password"
@@ -30,10 +30,10 @@ func NewChangePasswordHandler(userRepo repository.UserRepository, passwordEncode
 	}
 }
 
-func (c *ChangePasswordHandler) Handle(cmd any) cqrs.CommandResult {
+func (c *ChangePasswordHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
 	command := cmd.(ChangePasswordCommand)
 
-	user, err := c.userRepository.GetByID(command.CTX, command.UserID.GetValue())
+	user, err := c.userRepository.GetByID(command.CTX, command.UserID)
 	if err != nil {
 		return cqrs.FailureResult("failed to find user", err)
 	}
@@ -49,13 +49,13 @@ func (c *ChangePasswordHandler) Handle(cmd any) cqrs.CommandResult {
 	return cqrs.SuccessResult(user.ID().String(), "password changed successfully")
 }
 
-func (c *ChangePasswordHandler) changePassword(user *entity.User, command ChangePasswordCommand) error {
+func (c *ChangePasswordHandler) changePassword(user *user.User, command ChangePasswordCommand) error {
 	err := c.passwordEncoder.CheckPassword(user.Password(), command.OldPassword)
 	if err != nil {
 		return errors.New("invalid current password")
 	}
 
-	if err := user.ChangePassword(command.NewPassword); err != nil {
+	if err := user.UpdatePassword(command.NewPassword); err != nil {
 		return err
 	}
 
@@ -64,8 +64,7 @@ func (c *ChangePasswordHandler) changePassword(user *entity.User, command Change
 		return err
 	}
 
-	user.SetPassword(hashedPassword)
-	c.userRepository.Save(command.CTX, user)
+	user.SetHashedPassword(hashedPassword)
 
-	return nil
+	return c.userRepository.Save(command.CTX, user)
 }

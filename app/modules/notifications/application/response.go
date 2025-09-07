@@ -3,7 +3,7 @@ package service
 import (
 	"time"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/notification"
 )
 
 type NotificationResponse struct {
@@ -20,7 +20,7 @@ type NotificationResponse struct {
 	Channel   string `json:"channel"`
 }
 
-func fromDomain(notification entity.Notification) NotificationResponse {
+func fromDomain(notification notification.Notification) NotificationResponse {
 	response := &NotificationResponse{
 		ID:        notification.ID,
 		UserID:    notification.UserID,
@@ -37,7 +37,7 @@ func fromDomain(notification entity.Notification) NotificationResponse {
 	return *response
 }
 
-func fromDomainList(notifications []entity.Notification) []NotificationResponse {
+func fromDomainList(notifications []notification.Notification) []NotificationResponse {
 	responses := make([]NotificationResponse, 0, len(notifications))
 	for i, notification := range notifications {
 		responses[i] = fromDomain(notification)

@@ -2,120 +2,132 @@ package persistence
 
 import (
 	"fmt"
-	"strconv"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/enum"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/pet"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
 	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-func ToDomainPet(sqlPet sqlc.Pet) (*entity.Pet, error) {
+func ToDomainPet(sqlPet sqlc.Pet) (*pet.Pet, error) {
 	petID, err := valueobject.NewPetID(int(sqlPet.ID))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("invalid pet ID: %w", err)
 	}
 
 	ownerID, err := valueobject.NewOwnerID(int(sqlPet.OwnerID))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("invalid owner ID: %w", err)
 	}
-	builder := entity.NewPetBuilder().
-		WithID(petID).
-		WithName(sqlPet.Name).
-		WithSpecies(sqlPet.Species).
-		WithOwnerID(ownerID).
-		WithIsActive(sqlPet.IsActive)
 
+	opts := []pet.PetOption{
+		pet.WithName(sqlPet.Name),
+		pet.WithSpecies(sqlPet.Species),
+		pet.WithIsActive(sqlPet.IsActive),
+	}
+
+	// Agregar options para campos opcionales
 	if sqlPet.Photo.Valid {
-		builder.WithPhoto(&sqlPet.Photo.String)
+		opts = append(opts, pet.WithPhoto(&sqlPet.Photo.String))
 	}
-	if sqlPet.Breed.Valid {
-		builder.WithBreed(&sqlPet.Breed.String)
+
+	if sqlPet.Breed.Valid && sqlPet.Breed.String != "" {
+		opts = append(opts, pet.WithBreed(&sqlPet.Breed.String))
 	}
+
 	if sqlPet.Age.Valid {
 		age := int(sqlPet.Age.Int16)
-		builder.WithAge(&age)
+		opts = append(opts, pet.WithAge(&age))
 	}
-	if sqlPet.Gender.Valid {
-		genderVal := enum.PetGender(sqlPet.Gender.String)
-		builder.WithGender(&genderVal)
-	}
-	if sqlPet.Weight.Valid {
-		weight := sqlPet.Weight.Int.String()
-		parsedWeight, err := strconv.ParseFloat(weight, 64)
+
+	if sqlPet.Gender.Valid && sqlPet.Gender.String != "" {
+		gender, err := enum.ParsePetGender(sqlPet.Gender.String)
 		if err != nil {
-			return nil, fmt.Errorf("error al parsear peso: %w", err)
+			return nil, fmt.Errorf("invalid gender '%s': %w", sqlPet.Gender.String, err)
 		}
-		builder.WithWeight(&parsedWeight)
+		opts = append(opts, pet.WithGender(&gender))
 	}
-	if sqlPet.Color.Valid {
-		builder.WithColor(&sqlPet.Color.String)
+
+	if sqlPet.Weight.Valid {
+		weight := float64(sqlPet.Weight.Int.Int64()) / 100.0 // Ajustar según la precisión de tu BD
+		opts = append(opts, pet.WithWeight(&weight))
 	}
-	if sqlPet.Microchip.Valid {
-		builder.WithMicrochip(&sqlPet.Microchip.String)
+
+	if sqlPet.Color.Valid && sqlPet.Color.String != "" {
+		opts = append(opts, pet.WithColor(&sqlPet.Color.String))
 	}
+
+	if sqlPet.Microchip.Valid && sqlPet.Microchip.String != "" {
+		opts = append(opts, pet.WithMicrochip(&sqlPet.Microchip.String))
+	}
+
 	if sqlPet.IsNeutered.Valid {
-		builder.WithIsNeutered(&sqlPet.IsNeutered.Bool)
-	}
-	if sqlPet.Allergies.Valid {
-		builder.WithAllergies(&sqlPet.Allergies.String)
-	}
-	if sqlPet.CurrentMedications.Valid {
-		builder.WithCurrentMedications(&sqlPet.CurrentMedications.String)
-	}
-	if sqlPet.SpecialNeeds.Valid {
-		builder.WithSpecialNeeds(&sqlPet.SpecialNeeds.String)
-	}
-	if sqlPet.CreatedAt.Valid {
-		builder.WithCreatedAt(sqlPet.CreatedAt.Time)
-	}
-	if sqlPet.UpdatedAt.Valid {
-		builder.WithUpdatedAt(sqlPet.UpdatedAt.Time)
+		opts = append(opts, pet.WithIsNeutered(&sqlPet.IsNeutered.Bool))
 	}
 
-	return builder.Build(), nil
+	if sqlPet.Allergies.Valid && sqlPet.Allergies.String != "" {
+		opts = append(opts, pet.WithAllergies(&sqlPet.Allergies.String))
+	}
+
+	if sqlPet.CurrentMedications.Valid && sqlPet.CurrentMedications.String != "" {
+		opts = append(opts, pet.WithCurrentMedications(&sqlPet.CurrentMedications.String))
+	}
+
+	if sqlPet.SpecialNeeds.Valid && sqlPet.SpecialNeeds.String != "" {
+		opts = append(opts, pet.WithSpecialNeeds(&sqlPet.SpecialNeeds.String))
+	}
+
+	petEntity, err := pet.NewPet(
+		petID,
+		ownerID,
+		opts...,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create pet from SQL: %w", err)
+	}
+
+	return petEntity, nil
 }
 
-func ToSqlCreateParam(pet *entity.Pet) *sqlc.CreatePetParams {
+func ToSqlCreateParam(pet *pet.Pet) *sqlc.CreatePetParams {
 	return &sqlc.CreatePetParams{
-		Name:               pet.GetName(),
-		Photo:              toPgTypeText(pet.GetPhoto()),
-		Species:            pet.GetSpecies(),
-		Breed:              toPgTypeText(pet.GetBreed()),
-		Age:                toPgTypeInt2(pet.GetAge()),
-		Gender:             toPgTypeText((*string)(pet.GetGender())),
-		Weight:             toPgTypeNumeric(pet.GetWeight()),
-		Color:              toPgTypeText(pet.GetColor()),
-		Microchip:          toPgTypeText(pet.GetMicrochip()),
-		IsNeutered:         toPgTypeBool(pet.GetIsNeutered()),
-		OwnerID:            int32(pet.GetOwnerID().GetValue()),
-		Allergies:          toPgTypeText(pet.GetAllergies()),
-		CurrentMedications: toPgTypeText(pet.GetCurrentMedications()),
-		SpecialNeeds:       toPgTypeText(pet.GetSpecialNeeds()),
-		IsActive:           pet.GetIsActive(),
+		Name:               pet.Name(),
+		Photo:              toPgTypeText(pet.Photo()),
+		Species:            pet.Species(),
+		Breed:              toPgTypeText(pet.Breed()),
+		Age:                toPgTypeInt2(pet.Age()),
+		Gender:             toPgTypeText((*string)(pet.Gender())),
+		Weight:             toPgTypeNumeric(pet.Weight()),
+		Color:              toPgTypeText(pet.Color()),
+		Microchip:          toPgTypeText(pet.Microchip()),
+		IsNeutered:         toPgTypeBool(pet.IsNeutered()),
+		OwnerID:            int32(pet.OwnerID().Value()),
+		Allergies:          toPgTypeText(pet.Allergies()),
+		CurrentMedications: toPgTypeText(pet.CurrentMedications()),
+		SpecialNeeds:       toPgTypeText(pet.SpecialNeeds()),
+		IsActive:           pet.IsActive(),
 	}
 }
 
-func ToSqlUpdateParam(pet *entity.Pet) *sqlc.UpdatePetParams {
+func ToSqlUpdateParam(pet *pet.Pet) *sqlc.UpdatePetParams {
 	return &sqlc.UpdatePetParams{
-		ID:                 int32(pet.GetID().GetValue()),
-		Name:               pet.GetName(),
-		Photo:              toPgTypeText(pet.GetPhoto()),
-		Species:            pet.GetSpecies(),
-		Breed:              toPgTypeText(pet.GetBreed()),
-		Age:                toPgTypeInt2(pet.GetAge()),
-		Gender:             toPgTypeText((*string)(pet.GetGender())),
-		Weight:             toPgTypeNumeric(pet.GetWeight()),
-		Color:              toPgTypeText(pet.GetColor()),
-		Microchip:          toPgTypeText(pet.GetMicrochip()),
-		IsNeutered:         toPgTypeBool(pet.GetIsNeutered()),
-		OwnerID:            int32(pet.GetOwnerID().GetValue()),
-		Allergies:          toPgTypeText(pet.GetAllergies()),
-		CurrentMedications: toPgTypeText(pet.GetCurrentMedications()),
-		SpecialNeeds:       toPgTypeText(pet.GetSpecialNeeds()),
-		IsActive:           pet.GetIsActive(),
+		ID:                 int32(pet.ID().Value()),
+		Name:               pet.Name(),
+		Photo:              toPgTypeText(pet.Photo()),
+		Species:            pet.Species(),
+		Breed:              toPgTypeText(pet.Breed()),
+		Age:                toPgTypeInt2(pet.Age()),
+		Gender:             toPgTypeText((*string)(pet.Gender())),
+		Weight:             toPgTypeNumeric(pet.Weight()),
+		Color:              toPgTypeText(pet.Color()),
+		Microchip:          toPgTypeText(pet.Microchip()),
+		IsNeutered:         toPgTypeBool(pet.IsNeutered()),
+		OwnerID:            int32(pet.OwnerID().Value()),
+		Allergies:          toPgTypeText(pet.Allergies()),
+		CurrentMedications: toPgTypeText(pet.CurrentMedications()),
+		SpecialNeeds:       toPgTypeText(pet.SpecialNeeds()),
+		IsActive:           pet.IsActive(),
 	}
 }
 

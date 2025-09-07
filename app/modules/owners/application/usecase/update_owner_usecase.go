@@ -3,7 +3,7 @@ package usecase
 import (
 	"context"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/owners/application/dto"
 	mapper "github.com/alexisTrejo11/Clinic-Vet-API/app/modules/owners/application/mappers"
@@ -32,7 +32,7 @@ func (uc *UpdateOwnerUseCase) Execute(ctx context.Context, id valueobject.OwnerI
 			return dto.OwnerDetail{}, err
 		}
 		if exists {
-			return dto.OwnerDetail{}, apperror.ConflictError("phoneNumber", "phoneNumber already taken")
+			return dto.OwnerDetail{}, apperror.ConflictError("phone Number", "phone Number already taken")
 		}
 
 		owner.SetPhoneNumber(*updateData.PhoneNumber)
@@ -54,6 +54,9 @@ func (uc *UpdateOwnerUseCase) Execute(ctx context.Context, id valueobject.OwnerI
 		}
 
 		fullName, _ := valueobject.NewPersonName(firstName, lastName)
+		if err != nil {
+			return dto.OwnerDetail{}, apperror.FieldValidationError("full-name", firstName+" "+lastName, err.Error())
+		}
 		owner.SetFullName(fullName)
 	}
 

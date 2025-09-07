@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/notification"
 )
 
 type Notifier struct {
@@ -12,14 +12,14 @@ type Notifier struct {
 }
 
 type Sender interface {
-	Send(ctx context.Context, notification *entity.Notification) error
+	Send(ctx context.Context, notification *notification.Notification) error
 }
 
 func (n *Notifier) SetSender(sender Sender) {
 	n.sender = sender
 }
 
-func (n *Notifier) SendNotification(ctx context.Context, notification *entity.Notification) error {
+func (n *Notifier) SendNotification(ctx context.Context, notification *notification.Notification) error {
 	if n.sender == nil {
 		return fmt.Errorf("no sender strategy set")
 	}
@@ -27,5 +27,5 @@ func (n *Notifier) SendNotification(ctx context.Context, notification *entity.No
 }
 
 type EmailSender interface {
-	Send(ctx context.Context, notification *entity.Notification) error
+	Send(ctx context.Context, notification *notification.Notification) error
 }

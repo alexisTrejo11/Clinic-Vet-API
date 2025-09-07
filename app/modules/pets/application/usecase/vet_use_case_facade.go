@@ -3,14 +3,13 @@ package usecase
 import (
 	"context"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/pets/application/dto"
 )
 
 type PetUseCasesFacade interface {
 	GetPetByID(ctx context.Context, petID valueobject.PetID) (dto.PetResponse, error)
-	ListPets(ctx context.Context) ([]dto.PetResponse, error)
 	CreatePet(ctx context.Context, petCreate dto.PetCreate) (dto.PetResponse, error)
 	UpdatePet(ctx context.Context, petUpdate dto.PetUpdate) (dto.PetResponse, error)
 	DeletePet(ctx context.Context, petID valueobject.PetID, isSoftDelete bool) error
@@ -46,9 +45,4 @@ func (f *petUseCaseFacade) GetPetByID(ctx context.Context, petID valueobject.Pet
 func (f *petUseCaseFacade) DeletePet(ctx context.Context, petID valueobject.PetID, isSoftDelete bool) error {
 	useCase := NewDeletePetUseCase(f.petRepository)
 	return useCase.Execute(ctx, petID, isSoftDelete)
-}
-
-func (f *petUseCaseFacade) ListPets(ctx context.Context) ([]dto.PetResponse, error) {
-	useCase := NewListPetsUseCase(f.petRepository)
-	return useCase.Execute(ctx)
 }

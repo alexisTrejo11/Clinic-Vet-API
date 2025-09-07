@@ -27,7 +27,11 @@ func (uc *CreateOwnerUseCase) Execute(ctx context.Context, createData dto.OwnerC
 		return dto.OwnerDetail{}, domainerr.HandlePhoneConflictError()
 	}
 
-	owner := mapper.FromRequestCreate(createData)
+	owner, err := mapper.FromRequestCreate(createData)
+	if err != nil {
+		return dto.OwnerDetail{}, err
+	}
+
 	if err := uc.ownerRepo.Save(ctx, owner); err != nil {
 		return dto.OwnerDetail{}, err
 	}

@@ -1,10 +1,10 @@
 package controller
 
 import (
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/pets/application/usecase"
 	utils "github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
-	apiResponse "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/responses"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/response"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )
@@ -30,16 +30,16 @@ func NewPetController(
 // @Tags Pet Management
 // @Produce json
 // @Success 200 {array} PetResponse "List of pets"
-// @Failure 500 {object} apiResponse.APIResponse "Internal server error"
+// @Failure 500 {object} response.APIResponse "Internal server error"
 // @Router /pets [get]
 func (c *PetController) ListPets(ctx *gin.Context) {
 	pets, err := c.petUseCases.ListPets(ctx)
 	if err != nil {
-		apiResponse.ApplicationError(ctx, err)
+		response.ApplicationError(ctx, err)
 		return
 	}
 
-	apiResponse.Success(ctx, pets)
+	response.Success(ctx, pets)
 }
 
 // GetPetByID retrieves a pet by its ID.
@@ -49,30 +49,30 @@ func (c *PetController) ListPets(ctx *gin.Context) {
 // @Produce json
 // @Param id path int true "Pet ID"
 // @Success 200 {object} PetResponse "Pet found"
-// @Failure 400 {object} apiResponse.APIResponse "Invalid URL parameter"
-// @Failure 404 {object} apiResponse.APIResponse "Pet not found"
-// @Failure 500 {object} apiResponse.APIResponse "Internal server error"
+// @Failure 400 {object} response.APIResponse "Invalid URL parameter"
+// @Failure 404 {object} response.APIResponse "Pet not found"
+// @Failure 500 {object} response.APIResponse "Internal server error"
 // @Router /pets/{id} [get]
 func (c *PetController) GetPetByID(ctx *gin.Context) {
 	id, err := utils.ParseParamToInt(ctx, "id")
 	if err != nil {
-		apiResponse.RequestURLParamError(ctx, err, "pet_id", ctx.Param("id"))
+		response.RequestURLParamError(ctx, err, "pet_id", ctx.Param("id"))
 		return
 	}
 
 	petID, err := valueobject.NewPetID(id)
 	if err != nil {
-		apiResponse.BadRequest(ctx, err)
+		response.BadRequest(ctx, err)
 		return
 	}
 
 	pet, err := c.petUseCases.GetPetByID(ctx, petID)
 	if err != nil {
-		apiResponse.ApplicationError(ctx, err)
+		response.ApplicationError(ctx, err)
 		return
 	}
 
-	apiResponse.Success(ctx, pet)
+	response.Success(ctx, pet)
 }
 
 // CreatePet creates a new pet record.
@@ -83,30 +83,30 @@ func (c *PetController) GetPetByID(ctx *gin.Context) {
 // @Produce json
 // @Param pet body PetInsertRequest true "Pet creation request"
 // @Success 201 {object} PetResponse "Pet created successfully"
-// @Failure 400 {object} apiResponse.APIResponse "Invalid request body or validation error"
-// @Failure 500 {object} apiResponse.APIResponse "Internal server error"
+// @Failure 400 {object} response.APIResponse "Invalid request body or validation error"
+// @Failure 500 {object} response.APIResponse "Internal server error"
 // @Router /pets [post]
 func (c *PetController) CreatePet(ctx *gin.Context) {
 	var petCreate PetInsertRequest
 
 	if err := ctx.ShouldBindBodyWithJSON(&petCreate); err != nil {
-		apiResponse.RequestBodyDataError(ctx, err)
+		response.RequestBodyDataError(ctx, err)
 		return
 	}
 
 	if err := c.validator.Struct(&petCreate); err != nil {
-		apiResponse.RequestBodyDataError(ctx, err)
+		response.RequestBodyDataError(ctx, err)
 		return
 	}
 
 	createPet := requestToCreatePet(petCreate)
 	pet, err := c.petUseCases.CreatePet(ctx, createPet)
 	if err != nil {
-		apiResponse.ApplicationError(ctx, err)
+		response.ApplicationError(ctx, err)
 		return
 	}
 
-	apiResponse.Created(ctx, pet)
+	response.Created(ctx, pet)
 }
 
 // UpdatePet updates an existing pet record.
@@ -118,36 +118,36 @@ func (c *PetController) CreatePet(ctx *gin.Context) {
 // @Param id path int true "Pet ID"
 // @Param pet body PetInsertRequest true "Pet update request"
 // @Success 200 {object} PetResponse "Pet updated successfully"
-// @Failure 400 {object} apiResponse.APIResponse "Invalid URL parameter or request body"
-// @Failure 404 {object} apiResponse.APIResponse "Pet not found"
-// @Failure 500 {object} apiResponse.APIResponse "Internal server error"
+// @Failure 400 {object} response.APIResponse "Invalid URL parameter or request body"
+// @Failure 404 {object} response.APIResponse "Pet not found"
+// @Failure 500 {object} response.APIResponse "Internal server error"
 // @Router /pets/{id} [put]
 func (c *PetController) UpdatePet(ctx *gin.Context) {
 	id, err := utils.ParseParamToInt(ctx, "id")
 	if err != nil {
-		apiResponse.RequestURLParamError(ctx, err, "pet_id", ctx.Param("id"))
+		response.RequestURLParamError(ctx, err, "pet_id", ctx.Param("id"))
 		return
 	}
 
 	var petCreate PetInsertRequest
 	if err := ctx.ShouldBindBodyWithJSON(&petCreate); err != nil {
-		apiResponse.RequestBodyDataError(ctx, err)
+		response.RequestBodyDataError(ctx, err)
 		return
 	}
 
 	petUpdate := requestToUpdatePet(petCreate, id)
 	if err := c.validator.Struct(&petUpdate); err != nil {
-		apiResponse.RequestBodyDataError(ctx, err)
+		response.RequestBodyDataError(ctx, err)
 		return
 	}
 
 	pet, err := c.petUseCases.UpdatePet(ctx, petUpdate)
 	if err != nil {
-		apiResponse.ApplicationError(ctx, err)
+		response.ApplicationError(ctx, err)
 		return
 	}
 
-	apiResponse.Success(ctx, pet)
+	response.Success(ctx, pet)
 }
 
 // SoftDeletePet soft deletes a pet record.
@@ -156,27 +156,27 @@ func (c *PetController) UpdatePet(ctx *gin.Context) {
 // @Tags Pet Management
 // @Param id path int true "Pet ID"
 // @Success 204 "No Content"
-// @Failure 400 {object} apiResponse.APIResponse "Invalid URL parameter"
-// @Failure 404 {object} apiResponse.APIResponse "Pet not found"
-// @Failure 500 {object} apiResponse.APIResponse "Internal server error"
+// @Failure 400 {object} response.APIResponse "Invalid URL parameter"
+// @Failure 404 {object} response.APIResponse "Pet not found"
+// @Failure 500 {object} response.APIResponse "Internal server error"
 // @Router /pets/{id} [delete]
 func (c *PetController) SoftDeletePet(ctx *gin.Context) {
 	id, err := utils.ParseParamToInt(ctx, "id")
 	if err != nil {
-		apiResponse.RequestURLParamError(ctx, err, "pet_id", ctx.Param("id"))
+		response.RequestURLParamError(ctx, err, "pet_id", ctx.Param("id"))
 		return
 	}
 
 	petID, err := valueobject.NewPetID(id)
 	if err != nil {
-		apiResponse.BadRequest(ctx, err)
+		response.BadRequest(ctx, err)
 		return
 	}
 
 	if err := c.petUseCases.DeletePet(ctx, petID, true); err != nil {
-		apiResponse.ApplicationError(ctx, err)
+		response.ApplicationError(ctx, err)
 		return
 	}
 
-	apiResponse.NoContent(ctx)
+	response.NoContent(ctx)
 }

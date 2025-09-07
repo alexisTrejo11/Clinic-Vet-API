@@ -3,9 +3,9 @@ package command
 import (
 	"context"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
 )
 
 type deleteUserHandler struct {
@@ -25,20 +25,20 @@ func NewDeleteUserHandler(userRepo repository.UserRepository) DeleteUserHandler 
 }
 
 type DeleteUserHandler interface {
-	Handle(cmd any) shared.CommandResult
+	Handle(cmd any) cqrs.CommandResult
 }
 
-func (d *deleteUserHandler) Handle(cmd any) shared.CommandResult {
+func (d *deleteUserHandler) Handle(cmd any) cqrs.CommandResult {
 	command := cmd.(DeleteUserCommand)
 
 	if _, err := d.userRepository.GetByID(command.CTX, command.UserID); err != nil {
-		return shared.FailureResult("failed to find user", err)
+		return cqrs.FailureResult("failed to find user", err)
 	}
 
 	err := d.userRepository.Delete(command.CTX, command.UserID, command.SoftDelete)
 	if err != nil {
-		return shared.FailureResult("failed to delete user", err)
+		return cqrs.FailureResult("failed to delete user", err)
 	}
 
-	return shared.SuccessResult(command.UserID.String(), "user deleted successfully")
+	return cqrs.SuccessResult(command.UserID.String(), "user deleted successfully")
 }

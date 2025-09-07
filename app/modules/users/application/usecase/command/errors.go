@@ -12,7 +12,9 @@ const (
 	ErrInvalidPhone       = "invalid phone number"
 	ErrPhoneUnchanged     = "phone number unchanged"
 	ErrEmailUnchanged     = "email unchanged"
+)
 
+const (
 	ErrFailedMappingUser   = "failed to map user from command"
 	ErrFailedValidation    = "failed to validate user creation"
 	ErrFailedHashPassword  = "failed to hash password"

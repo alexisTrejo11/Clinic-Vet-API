@@ -16,12 +16,16 @@ func RequestURLParamError(err error, field string, value string) error {
 	}
 }
 
-func RequestURLQueryError(err error) error {
+func RequestURLQueryError(err error, queryURL string) error {
 	return apperror.BaseApplicationError{
-		Code:       "INVALID_URL_PARAM",
-		Type:       "ROUTING",
-		Message:    err.Error(),
-		Details:    map[string]string{},
+		Code:    "INVALID_URL_PARAMS",
+		Type:    "ROUTING",
+		Message: "invalid query parameters",
+		Details: map[string]string{
+			"query":   queryURL,
+			"error":   err.Error(),
+			"context": "parsing query parameters",
+		},
 		StatusCode: http.StatusBadRequest,
 	}
 }

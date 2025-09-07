@@ -1,16 +1,18 @@
 package persistence
 
 import (
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/enum"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/owner"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/pet"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
+
 	appError "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/application"
 	"github.com/alexisTrejo11/Clinic-Vet-API/db/models"
 	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-func toCreateParams(owner entity.Owner) *sqlc.CreateOwnerParams {
+func toCreateParams(owner owner.Owner) *sqlc.CreateOwnerParams {
 	createOwnerParam := &sqlc.CreateOwnerParams{
 		Photo:       owner.Photo(),
 		PhoneNumber: owner.PhoneNumber(),
@@ -21,20 +23,16 @@ func toCreateParams(owner entity.Owner) *sqlc.CreateOwnerParams {
 		IsActive:    owner.IsActive(),
 	}
 
-	if owner.Address() != nil {
-		createOwnerParam.Address = pgtype.Text{String: *owner.Address(), Valid: true}
-	}
-
 	if owner.UserID() != nil {
-		createOwnerParam.UserID = pgtype.Int4{Int32: int32(owner.UserID().GetValue())}
+		createOwnerParam.UserID = pgtype.Int4{Int32: int32(owner.UserID().Value())}
 	}
 
 	return createOwnerParam
 }
 
-func entityToUpdateParams(owner entity.Owner) *sqlc.UpdateOwnerParams {
+func entityToUpdateParams(owner owner.Owner) *sqlc.UpdateOwnerParams {
 	updateOwnerParam := &sqlc.UpdateOwnerParams{
-		ID:          int32(owner.ID().GetValue()),
+		ID:          int32(owner.ID().Value()),
 		Photo:       owner.Photo(),
 		PhoneNumber: owner.PhoneNumber(),
 		Gender:      models.PersonGender(owner.Gender()),
@@ -44,18 +42,14 @@ func entityToUpdateParams(owner entity.Owner) *sqlc.UpdateOwnerParams {
 		IsActive:    owner.IsActive(),
 	}
 
-	if owner.Address() != nil {
-		updateOwnerParam.Address = pgtype.Text{String: *owner.Address(), Valid: true}
-	}
-
 	if owner.UserID() != nil {
-		updateOwnerParam.UserID = pgtype.Int4{Int32: int32(owner.UserID().GetValue())}
+		updateOwnerParam.UserID = pgtype.Int4{Int32: int32(owner.UserID().Value())}
 	}
 
 	return updateOwnerParam
 }
 
-func sqlRowToOwner(row sqlc.Owner) (entity.Owner, error) {
+func sqlRowToOwner(row sqlc.Owner, pets []pet.Pet) (owner.Owner, error) {
 	errorMessages := make([]string, 0)
 
 	fullName, err := valueobject.NewPersonName(row.FirstName, row.LastName)
@@ -74,33 +68,38 @@ func sqlRowToOwner(row sqlc.Owner) (entity.Owner, error) {
 	}
 
 	if len(errorMessages) > 0 {
-		return entity.Owner{}, appError.MappingError(errorMessages, "sql", "domainEntity", "owner")
+		return owner.Owner{}, appError.MappingError(errorMessages, "sql", "domain-entity", "owner")
 	}
 
-	gender := enum.NewGender(string(row.Gender))
+	gender, err := enum.ParseGender(string(row.Gender))
+	if err != nil {
+		return owner.Owner{}, err
+	}
+	ownerEntity, err := owner.NewOwner(
+		ownerID,
+		owner.WithFullName(fullName),
+		owner.WithPhoneNumber(row.PhoneNumber),
+		owner.WithDateOfBirth(row.DateOfBirth.Time),
+		owner.WithUserID(&userID),
+		owner.WithGender(gender),
+		owner.WithIsActive(row.IsActive),
+		owner.WithPets(pets),
+	)
+	if err != nil {
+		return owner.Owner{}, err
+	}
 
-	owner := entity.NewOwnerBuilder().
-		WithID(ownerID).
-		WithFullName(fullName).
-		WithPhoneNumber(row.PhoneNumber).
-		WithAddress(row.Address.String).
-		WithDateOfBirth(row.DateOfBirth.Time).
-		WithUserID(userID).
-		WithGender(gender).
-		WithIsActive(row.IsActive).
-		Build()
-
-	return *owner, nil
+	return *ownerEntity, nil
 }
 
-func ListRowToOwner(rows []sqlc.Owner) ([]entity.Owner, error) {
-	owners := make([]entity.Owner, 0, len(rows))
+func ListRowToOwner(rows []sqlc.Owner) ([]owner.Owner, error) {
+	owners := make([]owner.Owner, 0, len(rows))
 	for i, row := range rows {
-		owner, err := sqlRowToOwner(row)
+		o, err := sqlRowToOwner(row)
 		if err != nil {
-			return []entity.Owner{}, err
+			return []owner.Owner{}, err
 		}
-		owners[i] = owner
+		owners[i] = o
 	}
 	return owners, nil
 }

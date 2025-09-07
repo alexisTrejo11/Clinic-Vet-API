@@ -1,4 +1,4 @@
-package entity
+package notification
 
 import (
 	"time"

@@ -4,8 +4,8 @@ package query
 import (
 	"time"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/enum"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/appointment"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
 )
 
 type AppointmentResponse struct {
@@ -23,27 +23,27 @@ type AppointmentResponse struct {
 	UpdatedAt     string                 `json:"updated_at"`
 }
 
-func NewAppointmentResponse(appointment *entity.Appointment) AppointmentResponse {
+func NewAppointmentResponse(appointment *appointment.Appointment) AppointmentResponse {
 	var vetID *int
-	if appointment.GetVetID() != nil {
-		id := appointment.GetVetID().GetValue()
+	if appointment.VetID() != nil {
+		id := appointment.VetID().Value()
 		vetID = &id
 	}
 
 	return AppointmentResponse{
-		ID:            appointment.GetID().GetValue(),
-		OwnerID:       appointment.GetOwnerID().GetValue(),
-		PetID:         appointment.GetPetID().GetValue(),
+		ID:            appointment.ID().Value(),
+		OwnerID:       appointment.OwnerID().Value(),
+		PetID:         appointment.PetID().Value(),
 		VetID:         vetID,
-		Service:       appointment.GetService(),
-		ScheduledDate: appointment.GetScheduledDate().Format(time.RFC3339),
-		Status:        appointment.GetStatus(),
-		CreatedAt:     appointment.GetCreatedAt().Format(time.RFC3339),
-		UpdatedAt:     appointment.GetUpdatedAt().Format(time.RFC3339),
+		Service:       appointment.Service(),
+		ScheduledDate: appointment.ScheduledDate().Format(time.RFC3339),
+		Status:        appointment.Status(),
+		CreatedAt:     appointment.CreatedAt().Format(time.RFC3339),
+		UpdatedAt:     appointment.UpdatedAt().Format(time.RFC3339),
 	}
 }
 
-func mapAppointmentsToResponses(appointments []entity.Appointment) []AppointmentResponse {
+func mapAppointmentsToResponses(appointments []appointment.Appointment) []AppointmentResponse {
 	responses := make([]AppointmentResponse, 0, len(appointments))
 	for _, appointment := range appointments {
 		responses = append(responses, NewAppointmentResponse(&appointment))

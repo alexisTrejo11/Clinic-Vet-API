@@ -4,7 +4,7 @@ import (
 	"context"
 	"strconv"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/user"
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/auth/application/jwt"
 	autherror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/auth"
@@ -21,7 +21,7 @@ type UserContext struct {
 	EmployeeID  int
 }
 
-func UserToUserContext(user entity.User) *UserContext {
+func UserToUserContext(user user.User) *UserContext {
 	return &UserContext{
 		UserID:      user.ID().GetValue(),
 		Email:       user.Email().String(),

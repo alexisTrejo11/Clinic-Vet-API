@@ -3,7 +3,7 @@ package command
 import (
 	"context"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
 	apperror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/application"
@@ -40,12 +40,12 @@ func NewDeletePaymentHandler(paymentRepo repository.PaymentRepository) cqrs.Comm
 
 func (h *DeletePaymentHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
 	command := cmd.(DeletePaymentCommand)
-	payment, err := h.paymentRepo.GetByID(command.ctx, command.paymentID.GetValue())
+	payment, err := h.paymentRepo.GetByID(command.ctx, command.paymentID)
 	if err != nil {
 		return cqrs.FailureResult("error fetching payment", err)
 	}
 
-	if err := h.paymentRepo.SoftDelete(command.ctx, payment.GetID().GetValue()); err != nil {
+	if err := h.paymentRepo.SoftDelete(command.ctx, payment.ID()); err != nil {
 		return cqrs.FailureResult("error deleting payment", err)
 	}
 

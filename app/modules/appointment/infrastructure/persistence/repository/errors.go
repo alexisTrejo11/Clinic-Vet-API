@@ -28,6 +28,7 @@ const (
 	ErrMsgUpdateAppointment  = "failed to update appointment"
 	ErrMsgDeleteAppointment  = "failed to delete appointment"
 	ErrMsgConvertToDomain    = "failed to convert to domain entity"
+	ErrMsgNotFound           = "appointment not found"
 )
 
 // calculateOffset computes the database offset for pagination

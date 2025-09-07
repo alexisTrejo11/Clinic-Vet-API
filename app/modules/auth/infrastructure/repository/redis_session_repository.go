@@ -1,4 +1,5 @@
-package persistence
+// package repositoryimpl contains the implementation of repositories using Redis as the storage backend.
+package repositoryimpl
 
 import (
 	"context"
@@ -6,7 +7,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/auth"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 	"github.com/redis/go-redis/v9"
 )
@@ -35,7 +37,7 @@ func (r *RedisSessionRepository) userSessionsKey(userID string) string {
 	return fmt.Sprintf("user_sessions:%s", userID)
 }
 
-func (r *RedisSessionRepository) Create(ctx context.Context, sess *entity.Session) error {
+func (r *RedisSessionRepository) Create(ctx context.Context, sess *auth.Session) error {
 	sessionJSON, err := json.Marshal(sess)
 	if err != nil {
 		return fmt.Errorf("failed to marshal session to JSON: %w", err)
@@ -56,44 +58,44 @@ func (r *RedisSessionRepository) Create(ctx context.Context, sess *entity.Sessio
 	return nil
 }
 
-func (r *RedisSessionRepository) GetByID(ctx context.Context, sessionID string) (entity.Session, error) {
+func (r *RedisSessionRepository) GetByID(ctx context.Context, sessionID string) (auth.Session, error) {
 	sessionJSON, err := r.redisClient.Get(ctx, r.sessionKey(sessionID)).Bytes()
 	if err != nil {
 		if err == redis.Nil {
-			return entity.Session{}, fmt.Errorf("session not found for ID: %s", sessionID)
+			return auth.Session{}, fmt.Errorf("session not found for ID: %s", sessionID)
 		}
-		return entity.Session{}, fmt.Errorf("failed to get session from Redis: %w", err)
+		return auth.Session{}, fmt.Errorf("failed to get session from Redis: %w", err)
 	}
 
-	var sess entity.Session
+	var sess auth.Session
 	if err := json.Unmarshal(sessionJSON, &sess); err != nil {
-		return entity.Session{}, fmt.Errorf("failed to unmarshal session JSON: %w", err)
+		return auth.Session{}, fmt.Errorf("failed to unmarshal session JSON: %w", err)
 	}
 
 	return sess, nil
 }
 
-func (r *RedisSessionRepository) GetByUserAndID(ctx context.Context, userID, token string) (entity.Session, error) {
-	isMember, err := r.redisClient.SIsMember(ctx, r.userSessionsKey(userID), token).Result()
+func (r *RedisSessionRepository) GetByUserAndID(ctx context.Context, userID valueobject.UserID, token string) (auth.Session, error) {
+	isMember, err := r.redisClient.SIsMember(ctx, r.userSessionsKey(userID.String()), token).Result()
 	if err != nil {
-		return entity.Session{}, fmt.Errorf("failed to check session membership: %w", err)
+		return auth.Session{}, fmt.Errorf("failed to check session membership: %w", err)
 	}
 	if !isMember {
-		return entity.Session{}, fmt.Errorf("session with token %s not found for user %s", token, userID)
+		return auth.Session{}, fmt.Errorf("session with token %s not found for user %s", token, userID)
 	}
 
 	// Then, retrieve the session data itself
 	return r.GetByID(ctx, token)
 }
 
-func (r *RedisSessionRepository) GetByUserID(ctx context.Context, userID string) ([]entity.Session, error) {
-	sessionIDs, err := r.redisClient.SMembers(ctx, r.userSessionsKey(userID)).Result()
+func (r *RedisSessionRepository) GetByUserID(ctx context.Context, userID valueobject.UserID) ([]auth.Session, error) {
+	sessionIDs, err := r.redisClient.SMembers(ctx, r.userSessionsKey(userID.String())).Result()
 	if err != nil {
-		return []entity.Session{}, fmt.Errorf("failed to get session IDs for user %s: %w", userID, err)
+		return []auth.Session{}, fmt.Errorf("failed to get session IDs for user %s: %w", userID, err)
 	}
 
 	if len(sessionIDs) == 0 {
-		return []entity.Session{}, nil
+		return []auth.Session{}, nil
 	}
 
 	sessionKeys := make([]string, len(sessionIDs))
@@ -103,28 +105,28 @@ func (r *RedisSessionRepository) GetByUserID(ctx context.Context, userID string)
 
 	sessionData, err := r.redisClient.MGet(ctx, sessionKeys...).Result()
 	if err != nil {
-		return []entity.Session{}, fmt.Errorf("failed to get sessions from Redis: %w", err)
+		return []auth.Session{}, fmt.Errorf("failed to get sessions from Redis: %w", err)
 	}
 
-	sessions := make([]entity.Session, 0, len(sessionData))
+	sessions := make([]auth.Session, 0, len(sessionData))
 	for _, val := range sessionData {
 		if val == nil {
 			continue // Skip if a session key expired or was deleted
 		}
 
-		var sess entity.Session
+		var sess auth.Session
 		if err := json.Unmarshal([]byte(val.(string)), &sess); err != nil {
-			return []entity.Session{}, fmt.Errorf("failed to unmarshal session JSON: %w", err)
+			return []auth.Session{}, fmt.Errorf("failed to unmarshal session JSON: %w", err)
 		}
 		sessions = append(sessions, sess)
 	}
 	return sessions, nil
 }
 
-func (r *RedisSessionRepository) DeleteUserSession(ctx context.Context, userID, sessionID string) error {
+func (r *RedisSessionRepository) DeleteUserSession(ctx context.Context, userID valueobject.UserID, sessionID string) error {
 	_, err := r.redisClient.TxPipelined(ctx, func(pipe redis.Pipeliner) error {
 		pipe.Del(ctx, r.sessionKey(sessionID))
-		pipe.SRem(ctx, r.userSessionsKey(userID), sessionID)
+		pipe.SRem(ctx, r.userSessionsKey(userID.String()), sessionID)
 		return nil
 	})
 	if err != nil {
@@ -134,8 +136,8 @@ func (r *RedisSessionRepository) DeleteUserSession(ctx context.Context, userID, 
 	return nil
 }
 
-func (r *RedisSessionRepository) DeleteAllUserSessions(ctx context.Context, userID string) error {
-	sessionIDs, err := r.redisClient.SMembers(ctx, r.userSessionsKey(userID)).Result()
+func (r *RedisSessionRepository) DeleteAllUserSessions(ctx context.Context, userID valueobject.UserID) error {
+	sessionIDs, err := r.redisClient.SMembers(ctx, r.userSessionsKey(userID.String())).Result()
 	if err != nil {
 		return fmt.Errorf("failed to get sessions for user: %w", err)
 	}
@@ -144,7 +146,7 @@ func (r *RedisSessionRepository) DeleteAllUserSessions(ctx context.Context, user
 		for _, sessionID := range sessionIDs {
 			pipe.Del(ctx, r.sessionKey(sessionID))
 		}
-		pipe.Del(ctx, r.userSessionsKey(userID))
+		pipe.Del(ctx, r.userSessionsKey(userID.String()))
 		return nil
 	})
 	if err != nil {

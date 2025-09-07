@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/enum"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/auth/application/command"
 	apperror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/application"
 )
@@ -23,7 +23,7 @@ type RequestSignup struct {
 }
 
 func (r *RequestSignup) ToCommand() *command.SignupCommand {
-	gender := enum.NewGender(r.Gender)
+	gender := enum.MustParseGender(r.Gender)
 
 	return &command.SignupCommand{
 		Email:       &r.Email,
@@ -56,7 +56,7 @@ type RequestLogout struct {
 func (r *RequestLogout) ToCommand(userIdInt int) (command.LogoutCommand, error) {
 	userId, err := valueobject.NewUserID(userIdInt)
 	if err != nil {
-		 return command.LogoutCommand{}, apperror.FieldValidationError("userID", strconv.Itoa(userIdInt), err.Error())
+		return command.LogoutCommand{}, apperror.FieldValidationError("userID", strconv.Itoa(userIdInt), err.Error())
 	}
 
 	cmd := &command.LogoutCommand{

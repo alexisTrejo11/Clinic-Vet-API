@@ -3,8 +3,8 @@ package usecase
 import (
 	"context"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/pet"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 )
 
@@ -44,7 +44,7 @@ func (uc *DeletePetUseCase) delete(cxt context.Context, petID valueobject.PetID)
 	return nil
 }
 
-func (uc *DeletePetUseCase) softDelete(cxt context.Context, pet entity.Pet) error {
+func (uc *DeletePetUseCase) softDelete(cxt context.Context, pet pet.Pet) error {
 	pet.SoftDelete()
 	if err := uc.repository.Save(cxt, &pet); err != nil {
 		return err
