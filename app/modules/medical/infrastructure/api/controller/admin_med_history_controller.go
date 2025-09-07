@@ -1,10 +1,15 @@
+// Package controller defines the controllers for handling HTTP requests related to medical histories.
 package controller
 
 import (
-	"strconv"
+	"errors"
 
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/medical/application/dto"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/medical/application/usecase"
+	httpError "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/infrastructure/http"
+	ginUtils "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/gin_utils"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/response"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )
@@ -18,115 +23,94 @@ func NewAdminMedicalHistoryController(usecases *usecase.MedicalHistoryUseCase) *
 	return &AdminMedicalHistoryController{usecase: usecases, validator: validator.New()}
 }
 
-func (ctlr AdminMedicalHistoryController) SearchMedicalHistories(ctx *gin.Context) {
+func (ctlr AdminMedicalHistoryController) SearchMedicalHistories(c *gin.Context) {
 	var serachParams dto.MedHistSearchParams
-	if err := ctx.ShouldBindQuery(&serachParams); err != nil {
-		ctx.JSON(400, gin.H{"error": err.Error()})
+	if err := c.ShouldBindQuery(&serachParams); err != nil {
+		response.BadRequest(c, httpError.RequestURLQueryError(err, c.Request.URL.RawQuery))
 		return
 	}
 
 	if err := ctlr.validator.Struct(serachParams); err != nil {
-		ctx.JSON(400, gin.H{"error": err.Error()})
+		response.BadRequest(c, httpError.InvalidDataError(err))
 		return
 	}
 
-	medHistories, err := ctlr.usecase.Search(ctx.Request.Context(), serachParams)
+	medHistories, err := ctlr.usecase.Search(c.Request.Context(), serachParams)
 	if err != nil {
-		ctx.JSON(500, gin.H{"error": err.Error()})
+		response.ApplicationError(c, err)
 		return
 	}
 
-	ctx.JSON(200, gin.H{"data": medHistories.Data, "metadata": gin.H{"pagination": medHistories.Metadata}})
-}
-
-func (ctlr AdminMedicalHistoryController) GetMedicalHistory(c *gin.Context) {
-	id := c.Param("id")
-	if id == "" {
-		c.JSON(400, gin.H{"error": "ID parameter is required"})
-		return
-	}
-
-	idInt, err := strconv.Atoi(id)
-	if err != nil {
-		c.JSON(400, gin.H{"error": "Invalid ID format"})
-		return
-	}
-
-	medHistory, err := ctlr.usecase.GetByID(c.Request.Context(), idInt)
-	if err != nil {
-		c.JSON(404, gin.H{"error": "Medical history not found", "id": idInt, "details": err.Error()})
-		return
-	}
-
-	c.JSON(200, gin.H{"data": medHistory})
+	response.SuccessWithMeta(c, medHistories.Data, gin.H{"pagination": medHistories.Metadata})
 }
 
 func (ctlr AdminMedicalHistoryController) GetMedicalHistoryDetails(c *gin.Context) {
-	id := c.Param("id")
-	if id == "" {
-		c.JSON(400, gin.H{"error": "ID parameter is required"})
-		return
-	}
-
-	idInt, err := strconv.Atoi(id)
+	idInterface, err := ginUtils.ParseParamToEntityID(c, "id", "medical_history")
 	if err != nil {
-		c.JSON(400, gin.H{"error": "Invalid ID format"})
+		response.BadRequest(c, httpError.RequestURLParamError(err, "medical-history", c.Param("id")))
 		return
 	}
 
-	medHistory, err := ctlr.usecase.GetByIDWithDeatils(c.Request.Context(), idInt)
+	mediHistID, valid := idInterface.(valueobject.MedHistoryID)
+	if !valid {
+		response.ServerError(c, httpError.InternalServerError(errors.New("invalid medical history ID type")))
+		return
+	}
+
+	medHistory, err := ctlr.usecase.GetByIDWithDeatils(c.Request.Context(), mediHistID)
 	if err != nil {
-		c.JSON(404, gin.H{"error": "Medical history not found", "id": idInt, "details": err.Error()})
+		response.ApplicationError(c, err)
 		return
 	}
 
-	c.JSON(200, gin.H{"data": medHistory})
+	response.Success(c, medHistory)
 }
 
 func (ctlr AdminMedicalHistoryController) CreateMedicalHistories(c *gin.Context) {
 	var createData dto.MedicalHistoryCreate
 	if err := c.ShouldBindJSON(&createData); err != nil {
-		c.JSON(400, gin.H{"error": "Invalid input", "details": err.Error()})
+		response.BadRequest(c, httpError.RequestBodyDataError(err))
 		return
 	}
 
 	if err := ctlr.validator.Struct(createData); err != nil {
-		c.JSON(400, gin.H{"error": "Validation failed", "details": err.Error()})
+		response.BadRequest(c, httpError.InvalidDataError(err))
 		return
+
 	}
 
 	if err := ctlr.usecase.Create(c.Request.Context(), createData); err != nil {
-		c.JSON(500, gin.H{"error": "Failed to create medical history", "details": err.Error()})
+		response.ApplicationError(c, err)
 		return
 	}
 
-	c.JSON(201, gin.H{"message": "Medical history created successfully"})
+	response.Created(c, "Medical history created successfully")
 }
 
 func (ctlr AdminMedicalHistoryController) DeleteMedicalHistories(c *gin.Context) {
-	id := c.Param("id")
-	if id == "" {
-		c.JSON(400, gin.H{"error": "ID parameter is required"})
+	idInterface, err := ginUtils.ParseParamToEntityID(c, "id", "medical_history")
+	if err != nil {
+		response.BadRequest(c, httpError.RequestURLParamError(err, "medical-history", c.Param("id")))
+		return
+	}
+
+	mediHistID, valid := idInterface.(valueobject.MedHistoryID)
+	if !valid {
+		response.ServerError(c, httpError.InternalServerError(errors.New("invalid medical history ID type")))
 		return
 	}
 
 	softDelete := c.Query("is_soft_delete")
 	if softDelete != "" && softDelete != "true" && softDelete != "false" {
-		c.JSON(400, gin.H{"error": "Invalid is_soft_delete parameter"})
+		response.BadRequest(c, httpError.RequestURLQueryError(err, c.Request.URL.RawQuery))
 		return
 	}
 	isSoftDelete := softDelete == "true"
 
-	idInt, err := strconv.Atoi(id)
-	if err != nil {
-		c.JSON(400, gin.H{"error": "Invalid ID format"})
+	if err := ctlr.usecase.Delete(c.Request.Context(), mediHistID, isSoftDelete); err != nil {
+		response.ApplicationError(c, err)
 		return
 	}
 
-	if err := ctlr.usecase.Delete(c.Request.Context(), idInt, isSoftDelete); err != nil {
-		c.JSON(500, gin.H{"error": "Failed to delete medical history", "details": err.Error()})
-		return
-	}
-
-	c.JSON(200, gin.H{"message": "Delete Medical Histories"})
+	response.NoContent(c)
 }

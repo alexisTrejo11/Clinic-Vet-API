@@ -1,89 +1,70 @@
+// Package mapper defines functions to map between Veterinarian entities and DTOs.
 package mapper
 
 import (
+	"errors"
 	"fmt"
-	"time"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/veterinarian"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/veterinarians/application/dto"
 )
 
-func FromCreateDTO(vetData dto.VetCreate) (*entity.Veterinarian, error) {
+func FromCreateDTO(vetData dto.CreateVetData) (*veterinarian.Veterinarian, error) {
+	if vetData.FirstName == "" || vetData.LastName == "" {
+		return nil, errors.New("first name and last name are required")
+	}
+	if vetData.LicenseNumber == "" {
+		return nil, errors.New("license number is required")
+	}
+
 	personName, err := valueobject.NewPersonName(vetData.FirstName, vetData.LastName)
 	if err != nil {
 		return nil, fmt.Errorf("error creating person name: %w", err)
 	}
 
-	builder := entity.NewVeterinarianBuilder().
-		WithName(personName).
-		WithPhoto(vetData.Photo).
-		WithLicenseNumber(vetData.LicenseNumber).
-		WithSpecialty(vetData.Specialty).
-		WithYearsExperience(vetData.YearsExperience).
-		WithConsultationFee(vetData.ConsultationFee).
-		WithIsActive(vetData.IsActive).
-		WithCreatedAt(time.Now()).
-		WithUpdatedAt(time.Now())
-
-	return builder.Build(), nil
-}
-
-func UpdateFromDTO(vet *entity.Veterinarian, vetData dto.VetUpdate) error {
-	if vetData.FirstName != nil || vetData.LastName != nil {
-		currentFirstName := vet.GetName().FirstName
-		currentLastName := vet.GetName().LastName
-
-		if vetData.FirstName != nil {
-			currentFirstName = *vetData.FirstName
-		}
-		if vetData.LastName != nil {
-			currentLastName = *vetData.LastName
-		}
-
-		updatedName, err := valueobject.NewPersonName(currentFirstName, currentLastName)
-		if err != nil {
-			return fmt.Errorf("error updating person name: %w", err)
-		}
-		vet.SetName(updatedName)
+	specialty, err := enum.ParseVetSpecialty(vetData.Specialty)
+	if err != nil {
+		return nil, fmt.Errorf("invalid specialty '%s': %w", vetData.Specialty, err)
 	}
 
-	if vetData.Photo != nil {
-		vet.SetPhoto(*vetData.Photo)
+	// Crear options
+	opts := []veterinarian.VeterinarianOption{
+		veterinarian.WithName(personName),
+		veterinarian.WithLicenseNumber(vetData.LicenseNumber),
+		veterinarian.WithSpecialty(specialty),
+		veterinarian.WithYearsExperience(vetData.YearsExperience),
+		veterinarian.WithIsActive(vetData.IsActive),
 	}
 
-	if vetData.LicenseNumber != nil {
-		vet.SetLicenseNumber(*vetData.LicenseNumber)
-	}
-
-	if vetData.Specialty != nil {
-		vet.SetSpecialty(*vetData.Specialty)
-	}
-
-	if vetData.YearsExperience != nil {
-		vet.SetYearsExperience(*vetData.YearsExperience)
+	if vetData.Photo != "" {
+		opts = append(opts, veterinarian.WithPhoto(vetData.Photo))
 	}
 
 	if vetData.ConsultationFee != nil {
-		vet.SetConsultationFee(vetData.ConsultationFee)
+		if vetData.ConsultationFee.Amount() < 0 {
+			return nil, errors.New("consultation fee cannot be negative")
+		}
+		opts = append(opts, veterinarian.WithConsultationFee(vetData.ConsultationFee))
 	}
 
-	if vetData.IsActive != nil {
-		vet.SetIsActive(*vetData.IsActive)
+	vet, err := veterinarian.NewVeterinarian(valueobject.VetID{}, opts...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create veterinarian: %w", err)
 	}
 
-	vet.SetUpdatedAt(time.Now())
-	return nil
+	return vet, nil
 }
 
-func ToResponse(vet *entity.Veterinarian) dto.VetResponse {
-	var scheduleResponses *[]dto.ScheduleInsert
-	if vet.GetSchedule() != nil {
-		days := vet.GetSchedule().WorkDays
+func ToResponse(vet *veterinarian.Veterinarian) dto.VetResponse {
+	var scheduleResponses *[]dto.ScheduleData
+	if vet.Schedule() != nil {
+		days := vet.Schedule().WorkDays
 
-		scheduleResponsesSlice := make([]dto.ScheduleInsert, len(days))
+		scheduleResponsesSlice := make([]dto.ScheduleData, len(days))
 		for i, day := range days {
-			shcedule := dto.ScheduleInsert{
+			shcedule := dto.ScheduleData{
 				Day:           day.Day.String(),
 				EntryTime:     day.StartHour,
 				DepartureTime: day.EndHour,
@@ -96,16 +77,94 @@ func ToResponse(vet *entity.Veterinarian) dto.VetResponse {
 	}
 
 	response := &dto.VetResponse{
-		Id:              vet.GetID(),
-		FirstName:       vet.GetName().FirstName,
-		LastName:        vet.GetName().LastName,
-		Photo:           vet.GetPhoto(),
-		LicenseNumber:   vet.GetLicenseNumber(),
-		Specialty:       vet.GetSpecialty().String(),
-		YearsExperience: vet.GetYearsExperience(),
-		ConsultationFee: vet.GetConsultationFee(),
+		ID:              vet.ID().Value(),
+		FirstName:       vet.Name().FirstName,
+		LastName:        vet.Name().LastName,
+		Photo:           vet.Photo(),
+		LicenseNumber:   vet.LicenseNumber(),
+		Specialty:       vet.Specialty().String(),
+		YearsExperience: vet.YearsExperience(),
+		ConsultationFee: vet.ConsultationFee(),
 		LaboralSchedule: scheduleResponses,
 	}
 
 	return *response
+}
+
+func UpdateFromDTO(vet *veterinarian.Veterinarian, vetData dto.UpdateVetData) error {
+	// Actualizar nombre si se proporciona
+	if vetData.FirstName != nil || vetData.LastName != nil {
+		currentName := vet.Name()
+		newFirstName := currentName.FirstName
+		newLastName := currentName.LastName
+
+		if vetData.FirstName != nil {
+			newFirstName = *vetData.FirstName
+		}
+		if vetData.LastName != nil {
+			newLastName = *vetData.LastName
+		}
+
+		updatedName, err := valueobject.NewPersonName(newFirstName, newLastName)
+		if err != nil {
+			return fmt.Errorf("error updating person name: %w", err)
+		}
+
+		if err := vet.UpdateName(updatedName); err != nil {
+			return fmt.Errorf("failed to update name: %w", err)
+		}
+	}
+
+	// Actualizar photo
+	if vetData.Photo != nil {
+		if err := vet.UpdatePhoto(*vetData.Photo); err != nil {
+			return fmt.Errorf("failed to update photo: %w", err)
+		}
+	}
+
+	// Actualizar license number
+	if vetData.LicenseNumber != nil {
+		if err := vet.UpdateLicenseNumber(*vetData.LicenseNumber); err != nil {
+			return fmt.Errorf("failed to update license number: %w", err)
+		}
+	}
+
+	// Actualizar specialty
+	if vetData.Specialty != nil {
+		specialty, err := enum.ParseVetSpecialty(*vetData.Specialty)
+		if err != nil {
+			return fmt.Errorf("invalid specialty: %w", err)
+		}
+		if err := vet.UpdateSpecialty(specialty); err != nil {
+			return fmt.Errorf("failed to update specialty: %w", err)
+		}
+	}
+
+	// Actualizar years experience
+	if vetData.YearsExperience != nil {
+		if err := vet.UpdateYearsExperience(*vetData.YearsExperience); err != nil {
+			return fmt.Errorf("failed to update years experience: %w", err)
+		}
+	}
+
+	// Actualizar consultation fee
+	if vetData.ConsultationFee != nil {
+		if err := vet.UpdateConsultationFee(vetData.ConsultationFee); err != nil {
+			return fmt.Errorf("failed to update consultation fee: %w", err)
+		}
+	}
+
+	if vetData.IsActive != nil {
+		if *vetData.IsActive {
+			if err := vet.Activate(); err != nil {
+				return fmt.Errorf("failed to activate veterinarian: %w", err)
+			}
+		} else {
+			if err := vet.Deactivate(); err != nil {
+				return fmt.Errorf("failed to deactivate veterinarian: %w", err)
+			}
+		}
+	}
+
+	return nil
 }

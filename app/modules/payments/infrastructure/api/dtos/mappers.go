@@ -3,8 +3,8 @@ package dto
 import (
 	"context"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/enum"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/payment"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
 	cmd "github.com/alexisTrejo11/Clinic-Vet-API/app/modules/payments/application/command"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 )
@@ -59,28 +59,28 @@ func (req CancelPaymentRequest) ToCancelPaymentCommand(paymentID int) (cmd.Cance
 }
 
 func ToPaymentResponse(pay any) PaymentResponse {
-	payment := pay.(entity.Payment)
+	payment := pay.(payment.Payment)
 
 	return PaymentResponse{
-		ID:            payment.GetID().GetValue(),
-		AppointmentID: payment.GetAppointmentID().GetValue(),
-		UserID:        payment.GetUserID().GetValue(),
-		Amount:        payment.GetAmount().ToFloat(),
-		Currency:      payment.GetCurrency(),
-		PaymentMethod: payment.GetPaymentMethod(),
-		Status:        payment.GetStatus(),
-		TransactionID: payment.GetTransactionID(),
-		Description:   payment.GetDescription(),
-		DueDate:       payment.GetDueDate(),
-		PaidAt:        payment.GetPaidAt(),
-		RefundedAt:    payment.GetRefundedAt(),
-		CreatedAt:     payment.GetCreatedAt(),
-		UpdatedAt:     payment.GetUpdatedAt(),
+		ID:            payment.ID().Value(),
+		AppointmentID: payment.AppointmentID().Value(),
+		UserID:        payment.UserID().Value(),
+		Amount:        payment.Amount().ToFloat(),
+		Currency:      payment.Currency(),
+		PaymentMethod: payment.PaymentMethod(),
+		Status:        payment.Status(),
+		TransactionID: payment.TransactionID(),
+		Description:   payment.Description(),
+		DueDate:       payment.DueDate(),
+		PaidAt:        payment.PaidAt(),
+		RefundedAt:    payment.RefundedAt(),
+		CreatedAt:     payment.CreatedAt(),
+		UpdatedAt:     payment.UpdatedAt(),
 	}
 }
 
 func ToPaymentListResponse(data interface{}) PaymentListResponse {
-	paymentsPage := data.(page.Page[[]entity.Payment])
+	paymentsPage := data.(page.Page[[]payment.Payment])
 
 	responses := make([]PaymentResponse, len(paymentsPage.Data))
 	for i, payment := range paymentsPage.Data {
@@ -125,7 +125,7 @@ func ToPaymentReportResponse(report PaymentReport) PaymentReportResponse {
 	}
 }
 
-func (req PaymentSearchRequest) ToSearchCriteria() map[string]interface{} {
+func (req PaymentSearchRequest) ToSearchCriteria() map[string]any {
 	criteria := make(map[string]interface{})
 
 	if req.UserID != nil {

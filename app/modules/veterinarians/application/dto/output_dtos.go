@@ -1,13 +1,11 @@
 package dto
 
-import (
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
-)
+import "github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
 
 // @Description Represents the response structure for a veterinarian.
 type VetResponse struct {
 	// The unique ID of the veterinarian.
-	Id int `json:"id"`
+	ID int `json:"id"`
 	// The first name of the veterinarian.
 	FirstName string `json:"first_name"`
 	// The last name of the veterinarian.
@@ -23,5 +21,5 @@ type VetResponse struct {
 	// The consultation fee charged by the veterinarian.
 	ConsultationFee *valueobject.Money `json:"consultation_fee"`
 	// The working schedule of the veterinarian.
-	LaboralSchedule *[]ScheduleInsert `json:"laboral_schedule"`
+	LaboralSchedule *[]ScheduleData `json:"laboral_schedule"`
 }

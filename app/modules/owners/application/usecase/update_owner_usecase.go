@@ -55,7 +55,7 @@ func (uc *UpdateOwnerUseCase) Execute(ctx context.Context, id valueobject.OwnerI
 
 		fullName, _ := valueobject.NewPersonName(firstName, lastName)
 		if err != nil {
-			return dto.OwnerDetail{}, apperror.FieldValidationError("full-name", firstName+" "+lastName, err.Error())
+			return dto.OwnerDetail{}, apperror.FieldValidationError("fullName", "", err.Error())
 		}
 		owner.SetFullName(fullName)
 	}

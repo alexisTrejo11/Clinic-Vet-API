@@ -64,21 +64,21 @@ type SignupCommand struct {
 }
 
 // signupHandler handles user registration operations
-type signupHandler struct {
+type SignupHandler struct {
 	userRepo        repository.UserRepository
 	passwordEndoder password.PasswordEncoder
 }
 
 // NewSignupCommandHandler creates a new instance of signupHandler
 func NewSignupCommandHandler(userRepo repository.UserRepository, passwordEndoder password.PasswordEncoder) AuthCommandHandler {
-	return &signupHandler{
+	return &SignupHandler{
 		userRepo:        userRepo,
 		passwordEndoder: passwordEndoder,
 	}
 }
 
 // Handle processes the signup command and returns authentication result
-func (h *signupHandler) Handle(cmd any) AuthCommandResult {
+func (h *SignupHandler) Handle(cmd any) AuthCommandResult {
 	command, ok := cmd.(SignupCommand)
 	if !ok {
 		return FailureAuthResult(ErrInvalidCommandType, errors.New("expected SignupCommand"))
@@ -113,7 +113,7 @@ func (h *signupHandler) Handle(cmd any) AuthCommandResult {
 }
 
 // validateCredentialsPresent ensures at least email or phone is provided
-func (h *signupHandler) validateCredentialsPresent(command *SignupCommand) error {
+func (h *SignupHandler) validateCredentialsPresent(command *SignupCommand) error {
 	if command.Email == nil && command.PhoneNumber == nil {
 		return errors.New(ErrMissingCredentials)
 	}
@@ -121,7 +121,7 @@ func (h *signupHandler) validateCredentialsPresent(command *SignupCommand) error
 }
 
 // validateUniqueCredentials checks if email and phone are unique using concurrent validation
-func (h *signupHandler) validateUniqueCredentials(command *SignupCommand) error {
+func (h *SignupHandler) validateUniqueCredentials(command *SignupCommand) error {
 	var wg sync.WaitGroup
 	errChan := make(chan error, MaxConcurrentValidations)
 
@@ -150,7 +150,7 @@ func (h *signupHandler) validateUniqueCredentials(command *SignupCommand) error 
 }
 
 // validateEmailUnique checks if email is already registered
-func (h *signupHandler) validateEmailUnique(ctx context.Context, email string, wg *sync.WaitGroup, errChan chan<- error) {
+func (h *SignupHandler) validateEmailUnique(ctx context.Context, email string, wg *sync.WaitGroup, errChan chan<- error) {
 	defer wg.Done()
 
 	exists, err := h.userRepo.ExistsByEmail(ctx, email)
@@ -166,7 +166,7 @@ func (h *signupHandler) validateEmailUnique(ctx context.Context, email string, w
 }
 
 // validatePhoneUnique checks if phone number is already registered
-func (h *signupHandler) validatePhoneUnique(ctx context.Context, phone string, wg *sync.WaitGroup, errChan chan<- error) {
+func (h *SignupHandler) validatePhoneUnique(ctx context.Context, phone string, wg *sync.WaitGroup, errChan chan<- error) {
 	defer wg.Done()
 
 	exists, err := h.userRepo.ExistsByPhone(ctx, phone)
@@ -182,7 +182,7 @@ func (h *signupHandler) validatePhoneUnique(ctx context.Context, phone string, w
 }
 
 // toDomain converts SignupCommand to domain entity with comprehensive validation
-func (h *signupHandler) toDomain(command SignupCommand) (*user.User, error) {
+func (h *SignupHandler) toDomain(command SignupCommand) (*user.User, error) {
 	var errorsMessages []string
 
 	userID, err := valueobject.NewUserID(command.UserID)
@@ -236,7 +236,7 @@ func (h *signupHandler) toDomain(command SignupCommand) (*user.User, error) {
 	return userEntity, nil
 }
 
-func (h *signupHandler) hashUserPassword(user *user.User) error {
+func (h *SignupHandler) hashUserPassword(user *user.User) error {
 	hashPassword, err := h.passwordEndoder.HashPassword(user.Password())
 	if err != nil {
 		return err

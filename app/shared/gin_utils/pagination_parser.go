@@ -9,7 +9,7 @@ import (
 
 func ShouldBindPageParams(requestPageParams *page.PageInput, ctx *gin.Context, validator *validator.Validate) error {
 	if err := ctx.ShouldBindQuery(&requestPageParams); err != nil {
-		return htttpError.RequestURLQueryError(err)
+		return htttpError.RequestURLQueryError(err, ctx.Request.URL.RawQuery)
 	}
 
 	if err := validator.Struct(&requestPageParams); err != nil {

@@ -14,9 +14,7 @@ import (
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
 )
 
-// Error messages as variables
-
-type createProfileCommand struct {
+type CreateProfileCommand struct {
 	firstName   string
 	lastName    string
 	gender      string
@@ -26,7 +24,7 @@ type createProfileCommand struct {
 	address     string
 }
 
-type createUserCommand struct {
+type CreateUserCommand struct {
 	email          string
 	phoneNumber    string
 	password       string
@@ -38,7 +36,7 @@ type createUserCommand struct {
 	veterinarianID *int
 	status         string
 	dateOfBirth    time.Time
-	profile        createProfileCommand
+	profile        CreateProfileCommand
 	ctx            context.Context
 }
 
@@ -54,27 +52,27 @@ func NewCreateUserCommand(
 	status string,
 	dateOfBirth time.Time,
 	firstName, lastName, profilePic, bio string,
-) (createUserCommand, error) {
+) (CreateUserCommand, error) {
 	if email == "" {
-		return createUserCommand{}, errors.New(ErrInvalidEmail)
+		return CreateUserCommand{}, errors.New(ErrInvalidEmail)
 	}
 	if phoneNumber == "" {
-		return createUserCommand{}, errors.New(ErrInvalidPhone)
+		return CreateUserCommand{}, errors.New(ErrInvalidPhone)
 	}
 	if role == "" {
-		return createUserCommand{}, errors.New(ErrInvalidRole)
+		return CreateUserCommand{}, errors.New(ErrInvalidRole)
 	}
 	if status == "" {
-		return createUserCommand{}, errors.New(ErrInvalidStatus)
+		return CreateUserCommand{}, errors.New(ErrInvalidStatus)
 	}
 	if gender == "" {
-		return createUserCommand{}, errors.New(ErrInvalidGender)
+		return CreateUserCommand{}, errors.New(ErrInvalidGender)
 	}
 	if dateOfBirth.IsZero() {
-		return createUserCommand{}, errors.New(ErrInvalidDateOfBirth)
+		return CreateUserCommand{}, errors.New(ErrInvalidDateOfBirth)
 	}
 
-	profile := createProfileCommand{
+	profile := CreateProfileCommand{
 		firstName:   firstName,
 		lastName:    lastName,
 		gender:      gender,
@@ -84,7 +82,7 @@ func NewCreateUserCommand(
 		address:     address,
 	}
 
-	return createUserCommand{
+	return CreateUserCommand{
 		email:          email,
 		phoneNumber:    phoneNumber,
 		password:       password,
@@ -107,8 +105,8 @@ func NewCreateUserHandler(repo repository.UserRepository) *CreateUserHandler {
 	}
 }
 
-func (uc *CreateUserHandler) Handle(cmd any) cqrs.CommandResult {
-	command, ok := cmd.(createUserCommand)
+func (uc *CreateUserHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
+	command, ok := cmd.(CreateUserCommand)
 	if !ok {
 		return cqrs.FailureResult(ErrFailedMappingUser, errors.New("invalid command type"))
 	}
@@ -136,7 +134,7 @@ func (uc *CreateUserHandler) Handle(cmd any) cqrs.CommandResult {
 	return cqrs.SuccessResult(user.ID().String(), ErrUserCreationSuccess)
 }
 
-func fromCreateCommand(command createUserCommand) (*user.User, error) {
+func fromCreateCommand(command CreateUserCommand) (*user.User, error) {
 	// Map email
 	email, err := valueobject.NewEmail(command.email)
 	if err != nil {

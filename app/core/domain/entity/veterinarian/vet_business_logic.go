@@ -14,6 +14,16 @@ const (
 	MaxExperienceYears = 60
 )
 
+func (v *Veterinarian) UpdatePhoto(newPhoto string) error {
+	if newPhoto != "" && len(newPhoto) > 500 {
+		return errors.New("photo URL too long")
+	}
+
+	v.photo = newPhoto
+	v.IncrementVersion()
+	return nil
+}
+
 func (v *Veterinarian) UpdateName(newName valueobject.PersonName) error {
 	v.name = newName
 	v.IncrementVersion()

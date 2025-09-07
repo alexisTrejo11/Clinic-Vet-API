@@ -7,7 +7,9 @@ import (
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/veterinarians/application/dto"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/veterinarians/application/usecase"
 	utils "github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
-	apiResponse "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/responses"
+	httpError "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/infrastructure/http"
+	ginUtils "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/gin_utils"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/response"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )
@@ -38,22 +40,22 @@ func NewVeterinarianController(
 // @Param limit query int false "Number of items per page"
 // @Param specialty query string false "Filter by specialty"
 // @Success 200 {array} dto.VetResponse "List of veterinarians"
-// @Failure 500 {object} apiResponse.APIResponse "Internal server error"
+// @Failure 500 {object} response.APIResponse "Internal server error"
 // @Router /veterinarians [get]
-func (c *VeterinarianController) ListVeterinarians(ctx *gin.Context) {
-	listParams, err := fetchVetParams(ctx)
+func (controller *VeterinarianController) ListVeterinarians(c *gin.Context) {
+	listParams, err := fetchVetParams(c)
 	if err != nil {
-		apiResponse.RequestURLQueryError(ctx, err)
+		response.BadRequest(c, httpError.RequestURLQueryError(err, c.Request.URL.RawQuery))
 		return
 	}
 
-	vets, err := c.vetUseCases.ListVetUseCase(ctx.Request.Context(), listParams)
+	vets, err := controller.vetUseCases.ListVetUseCase(c.Request.Context(), listParams)
 	if err != nil {
-		apiResponse.ApplicationError(ctx, err)
+		response.ApplicationError(c, err)
 		return
 	}
 
-	apiResponse.Success(ctx, vets)
+	response.Success(c, vets)
 }
 
 // @Summary Get a veterinarian by ID
@@ -62,25 +64,24 @@ func (c *VeterinarianController) ListVeterinarians(ctx *gin.Context) {
 // @Produce json
 // @Param id path int true "Veterinarian ID"
 // @Success 200 {object} dto.VetResponse "Veterinarian details"
-// @Failure 400 {object} apiResponse.APIResponse "Invalid ID supplied"
-// @Failure 404 {object} apiResponse.APIResponse "Veterinarian not found"
-// @Failure 500 {object} apiResponse.APIResponse "Internal server error"
+// @Failure 400 {object} response.APIResponse "Invalid ID supplied"
+// @Failure 404 {object} response.APIResponse "Veterinarian not found"
+// @Failure 500 {object} response.APIResponse "Internal server error"
 // @Router /veterinarians/{id} [get]
-func (c *VeterinarianController) GetVeterinarianByID(ctx *gin.Context) {
-	id, err := utils.ParseParamToInt(ctx, "id")
+func (controller *VeterinarianController) GetVeterinarianByID(c *gin.Context) {
+	id, err := ginUtils.ParseParamToInt(c, "id")
 	if err != nil {
-		apiResponse.RequestURLParamError(ctx, err, "Veterinarian_id", ctx.Param("id"))
+		response.BadRequest(c, httpError.RequestURLParamError(err, "id", c.Param("id")))
 		return
 	}
 
-	vetID, _ := valueobject.NewVetID(id)
-	Veterinarian, err := c.vetUseCases.GetVetByIDUseCase(context.TODO(), vetID)
+	veterinarian, err := controller.vetUseCases.GetVetByIDUseCase(c.Request.Context(), id)
 	if err != nil {
-		apiResponse.ApplicationError(ctx, err)
+		response.ApplicationError(c, err)
 		return
 	}
 
-	apiResponse.Success(ctx, Veterinarian)
+	response.Success(c, veterinarian)
 }
 
 // @Summary Create a new veterinarian
@@ -90,29 +91,29 @@ func (c *VeterinarianController) GetVeterinarianByID(ctx *gin.Context) {
 // @Produce json
 // @Param vetCreate body dto.VetCreate true "Veterinarian data"
 // @Success 201 {object} dto.VetResponse "Veterinarian created"
-// @Failure 400 {object} apiResponse.APIResponse "Invalid request body"
-// @Failure 500 {object} apiResponse.APIResponse "Internal server error"
+// @Failure 400 {object} response.APIResponse "Invalid request body"
+// @Failure 500 {object} response.APIResponse "Internal server error"
 // @Router /veterinarians [post]
-func (c *VeterinarianController) CreateVeterinarian(ctx *gin.Context) {
+func (c *VeterinarianController) CreateVeterinarian(c *gin.Context) {
 	var vetCreate dto.VetCreate
 
-	if err := ctx.ShouldBindBodyWithJSON(&vetCreate); err != nil {
-		apiResponse.RequestBodyDataError(ctx, err)
+	if err := c.ShouldBindBodyWithJSON(&vetCreate); err != nil {
+		response.RequestBodyDataError(c, err)
 		return
 	}
 
 	if err := c.validator.Struct(&vetCreate); err != nil {
-		apiResponse.RequestBodyDataError(ctx, err)
+		response.RequestBodyDataError(c, err)
 		return
 	}
 
 	vetCreated, err := c.vetUseCases.CreateVetUseCase(context.TODO(), vetCreate)
 	if err != nil {
-		apiResponse.ApplicationError(ctx, err)
+		response.ApplicationError(c, err)
 		return
 	}
 
-	apiResponse.Created(ctx, vetCreated)
+	response.Created(c, vetCreated)
 }
 
 // @Summary Update an existing veterinarian
@@ -123,36 +124,36 @@ func (c *VeterinarianController) CreateVeterinarian(ctx *gin.Context) {
 // @Param id path int true "Veterinarian ID"
 // @Param vetUpdate body dto.VetUpdate true "Updated veterinarian data"
 // @Success 200 {object} dto.VetResponse "Veterinarian updated"
-// @Failure 400 {object} apiResponse.APIResponse "Invalid request data or ID"
-// @Failure 404 {object} apiResponse.APIResponse "Veterinarian not found"
-// @Failure 500 {object} apiResponse.APIResponse "Internal server error"
+// @Failure 400 {object} response.APIResponse "Invalid request data or ID"
+// @Failure 404 {object} response.APIResponse "Veterinarian not found"
+// @Failure 500 {object} response.APIResponse "Internal server error"
 // @Router /veterinarians/{id} [patch]
-func (c *VeterinarianController) UpdateVeterinarian(ctx *gin.Context) {
-	id, err := utils.ParseParamToInt(ctx, "id")
+func (c *VeterinarianController) UpdateVeterinarian(c *gin.Context) {
+	id, err := utils.ParseParamToInt(c, "id")
 	if err != nil {
-		apiResponse.RequestURLParamError(ctx, err, "Veterinarian_id", ctx.Param("id"))
+		response.RequestURLParamError(c, err, "Veterinarian_id", c.Param("id"))
 		return
 	}
 
 	var vetUpdate dto.VetUpdate
-	if err := ctx.ShouldBindBodyWithJSON(&vetUpdate); err != nil {
-		apiResponse.RequestBodyDataError(ctx, err)
+	if err := c.ShouldBindBodyWithJSON(&vetUpdate); err != nil {
+		response.RequestBodyDataError(c, err)
 		return
 	}
 
 	if err := c.validator.Struct(&vetUpdate); err != nil {
-		apiResponse.RequestBodyDataError(ctx, err)
+		response.RequestBodyDataError(c, err)
 		return
 	}
 
 	vetID, _ := valueobject.NewVetID(id)
 	verUpdated, err := c.vetUseCases.UpdateVetUseCase(context.TODO(), vetID, vetUpdate)
 	if err != nil {
-		apiResponse.ApplicationError(ctx, err)
+		response.ApplicationError(c, err)
 		return
 	}
 
-	apiResponse.Success(ctx, verUpdated)
+	response.Success(c, verUpdated)
 }
 
 // @Summary Delete a veterinarian
@@ -161,22 +162,22 @@ func (c *VeterinarianController) UpdateVeterinarian(ctx *gin.Context) {
 // @Produce json
 // @Param id path int true "Veterinarian ID"
 // @Success 204 "No Content"
-// @Failure 400 {object} apiResponse.APIResponse "Invalid ID supplied"
-// @Failure 404 {object} apiResponse.APIResponse "Veterinarian not found"
-// @Failure 500 {object} apiResponse.APIResponse "Internal server error"
+// @Failure 400 {object} response.APIResponse "Invalid ID supplied"
+// @Failure 404 {object} response.APIResponse "Veterinarian not found"
+// @Failure 500 {object} response.APIResponse "Internal server error"
 // @Router /veterinarians/{id} [delete]
-func (c *VeterinarianController) DeleteVeterinarian(ctx *gin.Context) {
-	id, err := utils.ParseParamToInt(ctx, "id")
+func (c *VeterinarianController) DeleteVeterinarian(c *gin.Context) {
+	id, err := utils.ParseParamToInt(c, "id")
 	if err != nil {
-		apiResponse.RequestURLParamError(ctx, err, "Veterinarian_id", ctx.Param("id"))
+		response.RequestURLParamError(c, err, "Veterinarian_id", c.Param("id"))
 		return
 	}
 
 	vetID, _ := valueobject.NewVetID(id)
 	if err := c.vetUseCases.DeleteVetUseCase(context.TODO(), vetID); err != nil {
-		apiResponse.ApplicationError(ctx, err)
+		response.ApplicationError(c, err)
 		return
 	}
 
-	apiResponse.NoContent(ctx)
+	response.NoContent(c)
 }

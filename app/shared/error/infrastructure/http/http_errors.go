@@ -16,6 +16,16 @@ func RequestURLParamError(err error, field string, value string) error {
 	}
 }
 
+func InternalServerError(err error) error {
+	return apperror.BaseApplicationError{
+		Code:       "INTERNAL_SERVER_ERROR",
+		Type:       "SERVER",
+		Message:    "an internal server error occurred",
+		Details:    map[string]string{"error": err.Error()},
+		StatusCode: http.StatusInternalServerError,
+	}
+}
+
 func RequestURLQueryError(err error, queryURL string) error {
 	return apperror.BaseApplicationError{
 		Code:    "INVALID_URL_PARAMS",

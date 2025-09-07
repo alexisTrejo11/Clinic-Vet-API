@@ -2,9 +2,11 @@ package usecase
 
 import (
 	"context"
+	"strconv"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/veterinarians/application/dto"
+	apperror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/application"
 )
 
 type VeterinarianUseCases struct {
@@ -35,18 +37,31 @@ func (uc *VeterinarianUseCases) ListVetUseCase(ctx context.Context, searchParams
 	return uc.listVetsUseCase.Execute(ctx, searchParams)
 }
 
-func (uc *VeterinarianUseCases) GetVetByIDUseCase(ctx context.Context, vetID valueobject.VetID) (dto.VetResponse, error) {
+func (uc *VeterinarianUseCases) GetVetByIDUseCase(ctx context.Context, vetIDInt int) (dto.VetResponse, error) {
+	vetID, err := valueobject.NewVetID(vetIDInt)
+	if err != nil {
+		return dto.VetResponse{}, apperror.FieldValidationError("id", strconv.Itoa(vetIDInt), err.Error())
+	}
 	return uc.getVetByIDUseCase.Execute(ctx, vetID)
 }
 
-func (uc *VeterinarianUseCases) CreateVetUseCase(ctx context.Context, vetCreateData dto.VetCreate) (dto.VetResponse, error) {
+func (uc *VeterinarianUseCases) CreateVetUseCase(ctx context.Context, vetCreateData dto.CreateVetData) (dto.VetResponse, error) {
 	return uc.createVetUseCase.Execute(ctx, vetCreateData)
 }
 
-func (uc *VeterinarianUseCases) UpdateVetUseCase(ctx context.Context, vetID valueobject.VetID, vetCreateData dto.VetUpdate) (dto.VetResponse, error) {
+func (uc *VeterinarianUseCases) UpdateVetUseCase(ctx context.Context, vetIDInt int, vetCreateData dto.UpdateVetData) (dto.VetResponse, error) {
+	vetID, err := valueobject.NewVetID(vetIDInt)
+	if err != nil {
+		return dto.VetResponse{}, apperror.FieldValidationError("id", strconv.Itoa(vetIDInt), err.Error())
+	}
+
 	return uc.updateVetUseCase.Execute(ctx, vetID, vetCreateData)
 }
 
-func (uc *VeterinarianUseCases) DeleteVetUseCase(ctx context.Context, vetID valueobject.VetID) error {
+func (uc *VeterinarianUseCases) DeleteVetUseCase(ctx context.Context, vetIDInt int) error {
+	vetID, err := valueobject.NewVetID(vetIDInt)
+	if err != nil {
+		return apperror.FieldValidationError("id", strconv.Itoa(vetIDInt), err.Error())
+	}
 	return uc.deleteVetUseCase.Execute(ctx, vetID)
 }

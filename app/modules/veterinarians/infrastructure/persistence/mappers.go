@@ -5,14 +5,13 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/enum"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/veterinarian"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
 	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
 )
 
-func SqlcVetToDomain(sql sqlc.Veterinarian) (*entity.Veterinarian, error) {
+func SqlcVetToDomain(sql sqlc.Veterinarian) (*veterinarian.Veterinarian, error) {
 	name, err := valueobject.NewPersonName(sql.FirstName, sql.LastName)
 	if err != nil {
 		return nil, fmt.Errorf("error al crear el nombre de la persona: %w", err)
@@ -24,13 +23,13 @@ func SqlcVetToDomain(sql sqlc.Veterinarian) (*entity.Veterinarian, error) {
 	}
 
 	// Utiliza el builder para construir el objeto del dominio
-	builder := entity.NewVeterinarianBuilder().
+	builder := veterinarian.NewVeterinarianBuilder().
 		WithID(int(sql.ID)).
 		WithName(name).
 		WithPhoto(sql.Photo).
 		WithLicenseNumber(sql.LicenseNumber).
 		WithYearsExperience(int(sql.YearsOfExperience)).
-		WithSpecialty(enum.VetSpecialtyFromString(shared.AssertString(sql.Speciality))).
+		WithSpecialty(enum.MustParseVetSpecialty(string(sql.Speciality))).
 		WithSchedule(schedule).
 		WithScheduleJSON(string(sql.ScheduleJson))
 

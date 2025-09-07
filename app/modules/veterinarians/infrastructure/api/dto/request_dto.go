@@ -1,13 +1,14 @@
+// Package dto contains data transfer objects for the veterinarians module.
 package dto
 
 import (
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/enum"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 )
 
-// VetCreate represents the data transfer object for creating a new veterinarian.
-type VetCreate struct {
+// CreateVetRequest represents the data transfer object for creating a new veterinarian.
+type CreateVetRequest struct {
 	// The veterinarian's first name.
 	FirstName string `json:"first_name" validate:"required"`
 	// The veterinarian's last name.
@@ -25,11 +26,11 @@ type VetCreate struct {
 	// The fee for a consultation.
 	ConsultationFee *valueobject.Money `json:"consultation_fee"`
 	// The working schedule of the veterinarian.
-	LaboralSchedule []ScheduleInsert `json:"laboral_schedule"`
+	LaboralSchedule []ScheduleRequest `json:"laboral_schedule"`
 }
 
-// ScheduleInsert represents a working day schedule for a veterinarian.
-type ScheduleInsert struct {
+// ScheduleRequest represents a working day schedule for a veterinarian.
+type ScheduleRequest struct {
 	// The day of the week for the schedule. (e.g., "Monday", "Tuesday")
 	Day string `json:"day"`
 	// The start time of the work day in hours (e.g., 8 for 8:00 AM).
@@ -42,8 +43,8 @@ type ScheduleInsert struct {
 	EndBreak int `json:"end_break"`
 }
 
-// VetUpdate represents the data transfer object for updating a veterinarian.
-type VetUpdate struct {
+// UpdatePetRequest represents the data transfer object for updating a veterinarian.
+type UpdatePetRequest struct {
 	// The veterinarian's first name.
 	FirstName *string `json:"first_name"`
 	// The veterinarian's last name.
@@ -61,13 +62,13 @@ type VetUpdate struct {
 	// The fee for a consultation.
 	ConsultationFee *valueobject.Money `json:"consultation_fee"`
 	// The working schedule of the veterinarian.
-	LaboralSchedule *[]ScheduleInsert `json:"laboral_schedule"`
+	LaboralSchedule *[]ScheduleRequest `json:"laboral_schedule"`
 }
 
 // VetSearchParams defines the parameters for searching and filtering veterinarians.
 type VetSearchParams struct {
 	// Embedded page data for pagination.
-	page.PageData
+	page.PageInput
 	// Filters to apply to the search results.
 	Filters VetFilters `json:"filters"`
 	// The field to order the results by.

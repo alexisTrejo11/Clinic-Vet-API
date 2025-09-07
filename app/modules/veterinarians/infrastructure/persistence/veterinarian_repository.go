@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
+	vet "github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/veterinarian"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/veterinarians/application/dto"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
@@ -22,7 +22,7 @@ func NewSqlcVetRepository(queries *sqlc.Queries) repository.VetRepository {
 	return &SqlcVetRepository{queries: queries}
 }
 
-func (r *SqlcVetRepository) List(ctx context.Context, searchParams interface{}) ([]entity.Veterinarian, error) {
+func (r *SqlcVetRepository) List(ctx context.Context, searchParams interface{}) ([]vet.Veterinarian, error) {
 	searchParam := searchParams.(dto.VetSearchParams)
 
 	params := sqlc.ListVeterinariansParams{
@@ -115,7 +115,7 @@ func (r *SqlcVetRepository) List(ctx context.Context, searchParams interface{}) 
 		return nil, fmt.Errorf("failed to list veterinarians: %w", err)
 	}
 
-	vets := make([]entity.Veterinarian, len(sqlVets))
+	vets := make([]vet.Veterinarian, len(sqlVets))
 	for i, sqlVet := range sqlVets {
 		vet, err := SqlcVetToDomain(sqlVet)
 		if err != nil {
@@ -127,40 +127,40 @@ func (r *SqlcVetRepository) List(ctx context.Context, searchParams interface{}) 
 	return vets, nil
 }
 
-func (c *SqlcVetRepository) GetByID(ctx context.Context, id valueobject.VetID) (entity.Veterinarian, error) {
-	sqlVet, err := c.queries.GetVeterinarianById(ctx, int32(id.GetValue()))
+func (c *SqlcVetRepository) GetByID(ctx context.Context, id valueobject.VetID) (vet.Veterinarian, error) {
+	sqlVet, err := c.queries.GetVeterinarianById(ctx, int32(id.Value()))
 	if err != nil {
-		return entity.Veterinarian{}, err
+		return vet.Veterinarian{}, err
 	}
 
-	vet, err := SqlcVetToDomain(sqlVet)
+	veterinarian, err := SqlcVetToDomain(sqlVet)
 	if err != nil {
-		return entity.Veterinarian{}, err
+		return vet.Veterinarian{}, err
 	}
 
-	return *vet, nil
+	return *veterinarian, nil
 }
 
-func (c *SqlcVetRepository) GetByUserID(ctx context.Context, userID valueobject.UserID) (entity.Veterinarian, error) {
-	sqlVet, err := c.queries.GetVeterinarianById(ctx, int32(userID.GetValue()))
+func (c *SqlcVetRepository) GetByUserID(ctx context.Context, userID valueobject.UserID) (vet.Veterinarian, error) {
+	sqlVet, err := c.queries.GetVeterinarianById(ctx, int32(userID.Value()))
 	if err != nil {
-		return entity.Veterinarian{}, err
+		return vet.Veterinarian{}, err
 	}
 
-	vet, err := SqlcVetToDomain(sqlVet)
+	veterinarian, err := SqlcVetToDomain(sqlVet)
 	if err != nil {
-		return entity.Veterinarian{}, err
+		return vet.Veterinarian{}, err
 	}
-	return *vet, nil
+	return *veterinarian, nil
 }
 
-func (c *SqlcVetRepository) Save(ctx context.Context, vet *entity.Veterinarian) error {
-	if vet.GetID() == 0 {
-		if err := c.create(ctx, vet); err != nil {
+func (c *SqlcVetRepository) Save(ctx context.Context, veterinarian *vet.Veterinarian) error {
+	if veterinarian.ID().IsZero() {
+		if err := c.create(ctx, veterinarian); err != nil {
 			return err
 		}
 	} else {
-		if err := c.update(ctx, vet); err != nil {
+		if err := c.update(ctx, veterinarian); err != nil {
 			return err
 		}
 	}
@@ -168,14 +168,14 @@ func (c *SqlcVetRepository) Save(ctx context.Context, vet *entity.Veterinarian) 
 }
 
 func (c *SqlcVetRepository) SoftDelete(ctx context.Context, id valueobject.VetID) error {
-	if err := c.queries.SoftDeleteVeterinarian(ctx, int32(id.GetValue())); err != nil {
+	if err := c.queries.SoftDeleteVeterinarian(ctx, int32(id.Value())); err != nil {
 		return err
 	}
 	return nil
 }
 
 func (c *SqlcVetRepository) Exists(ctx context.Context, id valueobject.VetID) (bool, error) {
-	_, err := c.queries.GetVeterinarianById(ctx, int32(id.GetValue()))
+	_, err := c.queries.GetVeterinarianById(ctx, int32(id.Value()))
 	if err != nil {
 		if err.Error() == "sql: no rows in result set" {
 			return false, nil
@@ -187,47 +187,40 @@ func (c *SqlcVetRepository) Exists(ctx context.Context, id valueobject.VetID) (b
 	return true, nil
 }
 
-func (c *SqlcVetRepository) create(ctx context.Context, vet *entity.Veterinarian) error {
+func (c *SqlcVetRepository) create(ctx context.Context, vet *vet.Veterinarian) error {
 	createParams := sqlc.CreateVeterinarianParams{
-		FirstName:         vet.GetName().FirstName,
-		LastName:          vet.GetName().LastName,
-		LicenseNumber:     vet.GetLicenseNumber(),
-		Photo:             vet.GetPhoto(),
-		Speciality:        models.VeterinarianSpeciality(vet.GetSpecialty().String()),
-		YearsOfExperience: int32(vet.GetYearsExperience()),
-		IsActive:          pgtype.Bool{Bool: vet.GetIsActive(), Valid: true},
+		FirstName:         vet.Name().FirstName,
+		LastName:          vet.Name().LastName,
+		LicenseNumber:     vet.LicenseNumber(),
+		Photo:             vet.Photo(),
+		Speciality:        models.VeterinarianSpeciality(vet.Specialty().String()),
+		YearsOfExperience: int32(vet.YearsExperience()),
+		IsActive:          pgtype.Bool{Bool: vet.IsActive(), Valid: true},
 	}
 
-	sqlVet, err := c.queries.CreateVeterinarian(ctx, createParams)
+	_, err := c.queries.CreateVeterinarian(ctx, createParams)
 	if err != nil {
 		return err
 	}
-
-	vet.SetID(int(sqlVet.ID))
-	vet.SetCreatedAt(sqlVet.CreatedAt.Time)
-	vet.SetUpdatedAt(sqlVet.UpdatedAt.Time)
 
 	return nil
 }
 
-func (c *SqlcVetRepository) update(ctx context.Context, vet *entity.Veterinarian) error {
+func (c *SqlcVetRepository) update(ctx context.Context, vet *vet.Veterinarian) error {
 	updateParams := sqlc.UpdateVeterinarianParams{
-		ID:                int32(vet.GetID()),
-		FirstName:         vet.GetName().FirstName,
-		LastName:          vet.GetName().LastName,
-		LicenseNumber:     vet.GetLicenseNumber(),
-		Photo:             vet.GetPhoto(),
-		Speciality:        models.VeterinarianSpeciality(vet.GetSpecialty().String()),
-		YearsOfExperience: int32(vet.GetYearsExperience()),
-		IsActive:          pgtype.Bool{Bool: vet.GetIsActive(), Valid: true},
+		ID:                int32(vet.ID().Value()),
+		FirstName:         vet.Name().FirstName,
+		LastName:          vet.Name().LastName,
+		LicenseNumber:     vet.LicenseNumber(),
+		Photo:             vet.Photo(),
+		Speciality:        models.VeterinarianSpeciality(vet.Specialty().String()),
+		YearsOfExperience: int32(vet.YearsExperience()),
+		IsActive:          pgtype.Bool{Bool: vet.IsActive(), Valid: true},
 	}
 
-	sqlVet, err := c.queries.UpdateVeterinarian(ctx, updateParams)
+	_, err := c.queries.UpdateVeterinarian(ctx, updateParams)
 	if err != nil {
 		return err
 	}
-
-	vet.SetUpdatedAt(sqlVet.UpdatedAt.Time)
-
 	return nil
 }
