@@ -2,11 +2,10 @@ package command
 
 import (
 	"context"
-	"strconv"
+	"errors"
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
-	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
-	apperror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/application"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/repository"
 )
 
 type LogoutAllCommand struct {
@@ -14,18 +13,11 @@ type LogoutAllCommand struct {
 	ctx    context.Context
 }
 
-func NewLogoutAllCommand(idnInt int) (LogoutAllCommand, error) {
-	userID, err := valueobject.NewUserID(idnInt)
-	if err != nil {
-		return LogoutAllCommand{}, apperror.FieldValidationError("userId", strconv.Itoa(idnInt), err.Error())
+func NewLogoutAllCommand(ctx context.Context, useridnUInt uint) *LogoutAllCommand {
+	return &LogoutAllCommand{
+		ctx:    ctx,
+		userID: valueobject.NewUserID(useridnUInt),
 	}
-
-	cmd := &LogoutAllCommand{
-		ctx:    context.Background(),
-		userID: userID,
-	}
-
-	return *cmd, nil
 }
 
 type logoutAllHandler struct {
@@ -33,10 +25,7 @@ type logoutAllHandler struct {
 	sessionRepository repository.SessionRepository
 }
 
-func NewLogoutAllHandler(
-	userRepository repository.UserRepository,
-	sessionRepository repository.SessionRepository,
-) *logoutAllHandler {
+func NewLogoutAllHandler(userRepository repository.UserRepository, sessionRepository repository.SessionRepository) *logoutAllHandler {
 	return &logoutAllHandler{
 		userRepository:    userRepository,
 		sessionRepository: sessionRepository,
@@ -44,7 +33,10 @@ func NewLogoutAllHandler(
 }
 
 func (h *logoutAllHandler) Handle(cmd any) AuthCommandResult {
-	command := cmd.(LogoutAllCommand)
+	command, ok := cmd.(LogoutAllCommand)
+	if !ok {
+		return FailureAuthResult(ErrAuthenticationFailed, errors.New("invalid command type"))
+	}
 
 	user, err := h.userRepository.GetByID(command.ctx, command.userID)
 	if err != nil {

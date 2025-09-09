@@ -8,8 +8,16 @@ import (
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
 )
 
-type CreateUserEvent struct {
+type CreateUserEmployeeEvent struct {
+	UserID     valueobject.UserID `json:"user_id"`
+	Email      valueobject.Email  `json:"email"`
+	Role       enum.UserRole      `json:"role"`
+	EmployeeID valueobject.VetID  `json:"employee_id"`
+}
+
+type CreateUserCustomerEvent struct {
 	UserID valueobject.UserID `json:"user_id"`
+	Email  valueobject.Email  `json:"email"`
 	Role   enum.UserRole      `json:"role"`
 
 	// Personal Data
@@ -17,12 +25,4 @@ type CreateUserEvent struct {
 	Gender    enum.PersonGender      `json:" gender"`
 	Birthdate time.Time              `json:"birthdate"`
 	Location  string                 `json:"location"`
-
-	// Vet Data (only for vets)
-	LicenseNumber *string            `json:"license_number,omitempty"`
-	Specialty     *enum.VetSpecialty `json:"specialty,omitempty"`
-
-	// Profile Data
-	Bio        string `json:"bio"`
-	ProfilePic string `json:"profile_pic"`
 }

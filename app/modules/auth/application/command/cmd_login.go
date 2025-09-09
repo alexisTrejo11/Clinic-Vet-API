@@ -7,23 +7,10 @@ import (
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/auth"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/user"
-	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/repository"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/auth/application/jwt"
 	apperror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/application"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/password"
-)
-
-const (
-	ErrAuthenticationFailed  = "authentication failed"
-	ErrTwoFactorRequired     = "2FA is enabled for this user, please complete the 2FA process"
-	ErrSessionCreationFailed = "failed to create session"
-	ErrAccessTokenGenFailed  = "failed to generate access token"
-	ErrInvalidCredentials    = "user not found with provided credentials, please check your email/phone-number and password"
-	ErrTwoFactorAuthConflict = "user has TwoFactorAuth auth login method"
-
-	MsgLoginSuccess = "login successfully processed"
-
-	DefaultSessionDuration = 7 * 24 * time.Hour
 )
 
 // LoginCommand represents the login request data
@@ -96,8 +83,11 @@ func (h *loginHandler) Handle(cmd any) AuthCommandResult {
 		return FailureAuthResult(ErrAccessTokenGenFailed, err)
 	}
 
-	response := getSessionResponse(session, accessToken)
-	return SuccessAuthResult(&response, session.ID, MsgLoginSuccess)
+	return SuccessAuthResult(
+		getSessionResponse(session, accessToken),
+		session.ID,
+		MsgLoginSuccess,
+	)
 }
 
 func (h *loginHandler) authenticate(command *LoginCommand) (user.User, error) {

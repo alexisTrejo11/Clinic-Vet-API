@@ -2,10 +2,11 @@ package command
 
 import (
 	"context"
+	"errors"
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/auth"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
-	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/repository"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/auth/application/jwt"
 	apperror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/application"
 )
@@ -35,7 +36,10 @@ func NewRefreshSessionHandler(
 }
 
 func (h *RefreshSessionHandler) Handle(cmd any) AuthCommandResult {
-	command := cmd.(RefreshSessionCommand)
+	command, ok := cmd.(RefreshSessionCommand)
+	if !ok {
+		return FailureAuthResult(ErrAuthenticationFailed, errors.New("invalid command type"))
+	}
 
 	if err := h.validateExisitngUser(command); err != nil {
 		return FailureAuthResult("Error ocurred validatin user", err)
@@ -52,7 +56,7 @@ func (h *RefreshSessionHandler) Handle(cmd any) AuthCommandResult {
 	}
 
 	response := getSessionResponse(session, access)
-	return SuccessAuthResult(&response, session.ID, "session successfully refreshed")
+	return SuccessAuthResult(response, session.ID, "session successfully refreshed")
 }
 
 func (h *RefreshSessionHandler) validateExisitngUser(command RefreshSessionCommand) error {
@@ -68,14 +72,12 @@ func (h *RefreshSessionHandler) validateExisitngUser(command RefreshSessionComma
 	return nil
 }
 
-func getSessionResponse(entity auth.Session, access string) SessionResponse {
-	sessionResponse := &SessionResponse{
+func getSessionResponse(entity auth.Session, access string) *SessionResponse {
+	return &SessionResponse{
 		UserID:       entity.UserID,
 		AccessToken:  access,
 		RefreshToken: entity.RefreshToken,
 		ExpiresAt:    entity.ExpiresAt,
 		CreatedAt:    entity.CreatedAt,
 	}
-
-	return *sessionResponse
 }

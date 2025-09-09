@@ -22,6 +22,7 @@ type UserRepository interface {
 	ExistsByEmail(ctx context.Context, email string) (bool, error)
 	ExistsByPhone(ctx context.Context, phone string) (bool, error)
 	ExistsByID(ctx context.Context, id valueobject.UserID) (bool, error)
+	ExistsByEmployeeID(ctx context.Context, id valueobject.VetID) (bool, error)
 	UpdateLastLogin(ctx context.Context, id valueobject.UserID) error
 }
 
