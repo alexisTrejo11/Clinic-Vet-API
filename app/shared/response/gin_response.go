@@ -1,10 +1,11 @@
 package response
 
 import (
-	"database/sql"
-	"errors"
 	"net/http"
 
+	domainerr "github.com/alexisTrejo11/Clinic-Vet-API/app/core/error"
+	apperror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/application"
+	infraerr "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/infrastructure"
 	"github.com/gin-gonic/gin"
 )
 
@@ -80,8 +81,22 @@ func ApplicationError(ctx *gin.Context, err error) {
 	errorResponse := response.ErrorRequest(err)
 	httpStatusCode := http.StatusInternalServerError
 
-	if errors.Is(err, sql.ErrNoRows) {
-		httpStatusCode = http.StatusNotFound
+	switch e := err.(type) {
+	case interface{ HTTPStatus() int }:
+		ctx.JSON(e.HTTPStatus(), e)
+		return
+	}
+
+	switch e := err.(type) {
+	case domainerr.BaseDomainError:
+		ctx.JSON(e.HTTPStatus(), e)
+		return
+	case apperror.BaseApplicationError:
+		ctx.JSON(e.HTTPStatus(), e)
+		return
+	case infraerr.BaseInfrastructureError:
+		ctx.JSON(e.HTTPStatus(), e)
+		return
 	}
 
 	ctx.JSON(httpStatusCode, errorResponse)

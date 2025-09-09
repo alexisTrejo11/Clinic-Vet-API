@@ -86,11 +86,6 @@ func WithUserID(userID *valueobject.UserID) VeterinarianOption {
 
 func WithSchedule(schedule *valueobject.Schedule) VeterinarianOption {
 	return func(v *Veterinarian) error {
-		if schedule != nil {
-			if err := schedule.Validate(); err != nil {
-				return fmt.Errorf("invalid schedule: %w", err)
-			}
-		}
 		v.schedule = schedule
 		return nil
 	}
@@ -120,43 +115,26 @@ func NewVeterinarian(
 			return nil, fmt.Errorf("invalid veterinarian option: %w", err)
 		}
 	}
+	return vet, nil
+}
+
+func CreateVeterinarian(
+	opts ...VeterinarianOption,
+) (*Veterinarian, error) {
+	vet := &Veterinarian{
+		Entity:   base.NewEntity(valueobject.VetID{}, time.Now(), time.Now(), 1),
+		isActive: true, // Default to active
+	}
+
+	for _, opt := range opts {
+		if err := opt(vet); err != nil {
+			return nil, fmt.Errorf("invalid veterinarian option: %w", err)
+		}
+	}
 
 	if err := vet.validate(); err != nil {
 		return nil, err
 	}
 
 	return vet, nil
-}
-
-func validateLicenseNumber(licenseNumber string) error {
-	if licenseNumber == "" {
-		return errors.New("license number is required")
-	}
-	if len(licenseNumber) < MinLicenseLength || len(licenseNumber) > MaxLicenseLength {
-		return fmt.Errorf("license number must be between %d and %d characters", MinLicenseLength, MaxLicenseLength)
-	}
-	return nil
-}
-
-func validateYearsExperience(years int) error {
-	if years < 0 {
-		return errors.New("years of experience cannot be negative")
-	}
-	if years > MaxExperienceYears {
-		return fmt.Errorf("years of experience cannot exceed %d", MaxExperienceYears)
-	}
-	return nil
-}
-
-func (v *Veterinarian) validate() error {
-	if err := validateLicenseNumber(v.licenseNumber); err != nil {
-		return err
-	}
-	if err := validateYearsExperience(v.yearsExperience); err != nil {
-		return err
-	}
-	if !v.specialty.IsValid() {
-		return errors.New("specialty is required")
-	}
-	return nil
 }

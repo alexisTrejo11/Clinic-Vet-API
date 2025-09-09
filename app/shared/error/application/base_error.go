@@ -9,6 +9,13 @@ type BaseApplicationError struct {
 	StatusCode int               `json:"-"`
 }
 
+func (e BaseApplicationError) HTTPStatusCode() int {
+	if e.StatusCode == 0 {
+		return 500
+	}
+	return e.StatusCode
+}
+
 func (e BaseApplicationError) Error() string {
 	return e.Message
 }

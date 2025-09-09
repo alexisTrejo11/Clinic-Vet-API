@@ -37,9 +37,6 @@ func WithPassword(password string) UserOption {
 
 func WithLastLoginAt(lastLogin time.Time) UserOption {
 	return func(u *User) error {
-		if lastLogin.After(time.Now()) {
-			return errors.New("last login cannot be in the future")
-		}
 		u.lastLoginAt = &lastLogin
 		return nil
 	}
@@ -54,28 +51,32 @@ func WithTwoFactorAuth(twoFA auth.TwoFactorAuth) UserOption {
 
 func WithJoinedAt(joinedAt time.Time) UserOption {
 	return func(u *User) error {
-		if joinedAt.After(time.Now()) {
-			return errors.New("joined date cannot be in the future")
-		}
 		u.SetTimeStamps(joinedAt, time.Time{})
 		return nil
 	}
 }
 
 // NewUser creates a new User with functional options
-func NewUser(
-	id valueobject.UserID,
-	role enum.UserRole,
-	status enum.UserStatus,
-	opts ...UserOption,
-) (*User, error) {
-	if err := validateRole(role); err != nil {
-		return nil, err
-	}
-
+func NewUser(id valueobject.UserID, role enum.UserRole, status enum.UserStatus, opts ...UserOption) (*User, error) {
 	now := time.Now()
 	user := &User{
-		Entity:        base.NewEntity(id, now, now, 1),
+		Entity: base.NewEntity(id, now, now, 1),
+		role:   role,
+		status: status,
+	}
+
+	for _, opt := range opts {
+		if err := opt(user); err != nil {
+			return nil, fmt.Errorf("invalid user option: %w", err)
+		}
+	}
+
+	return user, nil
+}
+
+func CreateUser(role enum.UserRole, status enum.UserStatus, opts ...UserOption) (*User, error) {
+	user := &User{
+		Entity:        base.CreateEntity(valueobject.UserID{}),
 		role:          role,
 		status:        status,
 		twoFactorAuth: auth.NewDisabledTwoFactorAuth(), // Default disabled 2FA
@@ -94,20 +95,6 @@ func NewUser(
 	return user, nil
 }
 
-func validateStatus(status enum.UserStatus) error {
-	if !status.IsValid() {
-		return errors.New("invalid user status")
-	}
-	return nil
-}
-
-func validateRole(role enum.UserRole) error {
-	if !role.IsValid() {
-		return errors.New("invalid user role")
-	}
-	return nil
-}
-
 func (u *User) validate() error {
 	if u.email.String() == "" {
 		return errors.New("email is required")
@@ -115,5 +102,12 @@ func (u *User) validate() error {
 	if u.password == "" {
 		return errors.New("password is required")
 	}
+	if !u.role.IsValid() {
+		return errors.New("invalid user role")
+	}
+	if !u.status.IsValid() {
+		return errors.New("invalid user status")
+	}
+
 	return nil
 }

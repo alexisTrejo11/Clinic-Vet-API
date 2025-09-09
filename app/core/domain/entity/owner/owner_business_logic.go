@@ -60,7 +60,7 @@ func (o *Owner) UpdatePhoto(newPhoto string) error {
 }
 
 func (o *Owner) UpdateFullName(newName valueobject.PersonName) error {
-	if err := o.Person.UpdateName(newName); err != nil {
+	if err := o.UpdateName(newName); err != nil {
 		return err
 	}
 	o.IncrementVersion()

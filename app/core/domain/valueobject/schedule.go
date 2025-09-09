@@ -28,11 +28,11 @@ func (s *Schedule) validateHoursWorked() error {
 	vetDaysWorked := getWeekDayMap()
 	for _, workDay := range s.WorkDays {
 		if isDayDuplicated(workDay.Day, vetDaysWorked) {
-			return errors.New("el veterinario no puede trabajar dos veces el mismo día de la semana")
+			return errors.New("vet cannot work the same day more than once a week")
 		}
 
-		if !s.isValidWorkDay(workDay) {
-			return fmt.Errorf("el veterinario solo puede trabajar en el horario de la clínica (9:00 AM - 8:00 PM)")
+		if err := s.isValidWorkDay(workDay); err != nil {
+			return err
 		}
 
 		setDaysAsWorked(workDay.Day, vetDaysWorked)
@@ -40,21 +40,21 @@ func (s *Schedule) validateHoursWorked() error {
 	return nil
 }
 
-func (s *Schedule) isValidWorkDay(workDay WorkDaySchedule) bool {
+func (s *Schedule) isValidWorkDay(workDay WorkDaySchedule) error {
 	// Validar horario laboral principal
-	if !s.isHoursWithinServiceSchedule(workDay.StartHour, workDay.EndHour) {
-		return false
+	if err := s.isHoursWithinServiceSchedule(workDay.StartHour, workDay.EndHour); err != nil {
+		return err
 	}
 
 	// Validar descansos
-	if !s.isValidBreak(workDay.Breaks, workDay) {
-		return false
+	if err := s.isValidBreak(workDay.Breaks, workDay); err != nil {
+		return err
 	}
 
-	return true
+	return nil
 }
 
-func (s *Schedule) Validate() error {
+func (s *Schedule) ValidateBuissnessLogic() error {
 	if err := s.validateDaysWorked(); err != nil {
 		return err
 	}
@@ -66,34 +66,38 @@ func (s *Schedule) Validate() error {
 	return nil
 }
 
-func (s *Schedule) isValidBreak(brk Break, workDay WorkDaySchedule) bool {
+func (s *Schedule) isValidBreak(brk Break, workDay WorkDaySchedule) error {
 	// Validar que el descanso esté dentro del horario de la clínica
-	if !s.isHoursWithinServiceSchedule(brk.StartHour, brk.EndHour) {
-		return false
+	if err := s.isHoursWithinServiceSchedule(brk.StartHour, brk.EndHour); err != nil {
+		return err
 	}
 
 	// Validar que el descanso esté dentro del horario laboral del día
 	if brk.StartHour < workDay.StartHour || brk.EndHour > workDay.EndHour {
-		return false
+		return errors.New("the break must be within the working hours of the day")
 	}
 
 	// Validar duración máxima del descanso
 	if (brk.EndHour - brk.StartHour) > 2 {
-		return false
+		return errors.New("the break cannot exceed 2 hours")
 	}
 
-	return true
+	return nil
 }
 
-func (s *Schedule) isHoursWithinServiceSchedule(startHour, endHour int) bool {
-	if startHour < 9 || endHour > 19 {
-		return false
+func (s *Schedule) isHoursWithinServiceSchedule(startHour, endHour int) error {
+	if startHour == 0 || endHour == 0 {
+		return errors.New("start hour and end hour must be provided")
+	}
+
+	if startHour < 8 || endHour > 22 {
+		return errors.New("the working hours must be between 8 AM and 10 PM")
 	}
 
 	if startHour >= endHour {
-		return false
+		return errors.New("the start hour must be before the end hour")
 	}
-	return true
+	return nil
 }
 
 type Break struct {

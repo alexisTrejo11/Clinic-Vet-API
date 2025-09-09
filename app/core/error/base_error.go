@@ -7,10 +7,10 @@ import (
 )
 
 type BaseDomainError struct {
-	Code       string `json:"code"`
-	Type       string `json:"type"`
-	Message    string `json:"message"`
-	StatusCode int
+	Code       string            `json:"code"`
+	Type       string            `json:"type"`
+	Message    string            `json:"message"`
+	StatusCode int               `json:"-"`
 	Details    map[string]string `json:"details,omitempty"`
 }
 
@@ -24,6 +24,13 @@ func (e BaseDomainError) ErrorCode() string {
 
 func (e BaseDomainError) ErrorType() string {
 	return e.Type
+}
+
+func (e BaseDomainError) HTTPStatus() int {
+	if e.StatusCode == 0 {
+		return http.StatusInternalServerError
+	}
+	return e.StatusCode
 }
 
 func (e BaseDomainError) DetailMap() map[string]string {

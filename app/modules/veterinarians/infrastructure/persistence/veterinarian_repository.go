@@ -2,6 +2,8 @@ package persistence
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"fmt"
 
 	vet "github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/veterinarian"
@@ -34,7 +36,7 @@ func (r *SqlcVetRepository) List(ctx context.Context, searchParams interface{}) 
 		YearsOfExperience_2: 0,
 		IsActive:            pgtype.Bool{Bool: false, Valid: false},
 		Limit:               int32(searchParam.PageSize),
-		Offset:              int32(searchParam.PageNumber - 1),
+		Offset:              int32((searchParam.PageNumber - 1) * searchParam.PageSize),
 	}
 
 	// Apply Filters
@@ -74,30 +76,29 @@ func (r *SqlcVetRepository) List(ctx context.Context, searchParams interface{}) 
 	switch searchParam.OrderBy {
 	case "name":
 		if searchParam.SortDirection == page.ASC {
-			orderParams[0] = true // $8: Order by first_name ASC
+			orderParams[0] = true
 		} else {
-			orderParams[1] = true // $9: Order by first_name DESC
+			orderParams[1] = true
 		}
 	case "specialty":
 		if searchParam.SortDirection == page.ASC {
-			orderParams[2] = true // $10: Order by speciality ASC
+			orderParams[2] = true
 		} else {
-			orderParams[3] = true // $11: Order by speciality DESC
+			orderParams[3] = true
 		}
 	case "years_experience":
 		if searchParam.SortDirection == page.ASC {
-			orderParams[4] = true // $12: Order by years_of_experience ASC
+			orderParams[4] = true
 		} else {
-			orderParams[5] = true // $13: Order by years_of_experience DESC
+			orderParams[5] = true
 		}
 	case "created_at":
 		if searchParam.SortDirection == page.ASC {
-			orderParams[6] = true // $14: Order by created_at ASC
+			orderParams[6] = true
 		} else {
-			orderParams[7] = true // $15: Order by created_at DESC
+			orderParams[7] = true
 		}
 	default:
-		// Default ordering: for recents first
 		orderParams[7] = true
 	}
 
@@ -112,82 +113,80 @@ func (r *SqlcVetRepository) List(ctx context.Context, searchParams interface{}) 
 
 	sqlVets, err := r.queries.ListVeterinarians(ctx, params)
 	if err != nil {
-		return nil, fmt.Errorf("failed to list veterinarians: %w", err)
+		return nil, r.dbError(OpSelect, ErrMsgListVets, err)
 	}
 
 	vets := make([]vet.Veterinarian, len(sqlVets))
 	for i, sqlVet := range sqlVets {
-		vet, err := SqlcVetToDomain(sqlVet)
+		vetEntity, err := SqlcVetToDomain(sqlVet)
 		if err != nil {
-			return nil, err
+			return nil, r.wrapConversionError(err)
 		}
-		vets[i] = *vet
+		vets[i] = *vetEntity
 	}
 
 	return vets, nil
 }
 
-func (c *SqlcVetRepository) GetByID(ctx context.Context, id valueobject.VetID) (vet.Veterinarian, error) {
-	sqlVet, err := c.queries.GetVeterinarianById(ctx, int32(id.Value()))
+func (r *SqlcVetRepository) GetByID(ctx context.Context, id valueobject.VetID) (vet.Veterinarian, error) {
+	sqlVet, err := r.queries.GetVeterinarianById(ctx, int32(id.Value()))
 	if err != nil {
-		return vet.Veterinarian{}, err
+		if errors.Is(err, sql.ErrNoRows) {
+			return vet.Veterinarian{}, r.notFoundError("id", id.String())
+		}
+		return vet.Veterinarian{}, r.dbError(OpSelect, fmt.Sprintf("%s with ID %d", ErrMsgGetVet, id.Value()), err)
 	}
 
 	veterinarian, err := SqlcVetToDomain(sqlVet)
 	if err != nil {
-		return vet.Veterinarian{}, err
+		return vet.Veterinarian{}, r.wrapConversionError(err)
 	}
 
 	return *veterinarian, nil
 }
 
-func (c *SqlcVetRepository) GetByUserID(ctx context.Context, userID valueobject.UserID) (vet.Veterinarian, error) {
-	sqlVet, err := c.queries.GetVeterinarianById(ctx, int32(userID.Value()))
+func (r *SqlcVetRepository) GetByUserID(ctx context.Context, userID valueobject.UserID) (vet.Veterinarian, error) {
+	sqlVet, err := r.queries.GetVeterinarianById(ctx, int32(userID.Value()))
 	if err != nil {
-		return vet.Veterinarian{}, err
+		if errors.Is(err, sql.ErrNoRows) {
+			return vet.Veterinarian{}, r.notFoundError("user_id", userID.String())
+		}
+		return vet.Veterinarian{}, r.dbError(OpSelect, fmt.Sprintf("%s with user ID %d", ErrMsgGetVetByUserID, userID.Value()), err)
 	}
 
 	veterinarian, err := SqlcVetToDomain(sqlVet)
 	if err != nil {
-		return vet.Veterinarian{}, err
+		return vet.Veterinarian{}, r.wrapConversionError(err)
 	}
 	return *veterinarian, nil
 }
 
-func (c *SqlcVetRepository) Save(ctx context.Context, veterinarian *vet.Veterinarian) error {
+func (r *SqlcVetRepository) Save(ctx context.Context, veterinarian *vet.Veterinarian) error {
 	if veterinarian.ID().IsZero() {
-		if err := c.create(ctx, veterinarian); err != nil {
-			return err
-		}
-	} else {
-		if err := c.update(ctx, veterinarian); err != nil {
-			return err
-		}
+		return r.create(ctx, veterinarian)
+	}
+	return r.update(ctx, veterinarian)
+}
+
+func (r *SqlcVetRepository) SoftDelete(ctx context.Context, id valueobject.VetID) error {
+	if err := r.queries.SoftDeleteVeterinarian(ctx, int32(id.Value())); err != nil {
+		return r.dbError(OpDelete, fmt.Sprintf("%s with ID %d", ErrMsgSoftDeleteVet, id.Value()), err)
 	}
 	return nil
 }
 
-func (c *SqlcVetRepository) SoftDelete(ctx context.Context, id valueobject.VetID) error {
-	if err := c.queries.SoftDeleteVeterinarian(ctx, int32(id.Value())); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (c *SqlcVetRepository) Exists(ctx context.Context, id valueobject.VetID) (bool, error) {
-	_, err := c.queries.GetVeterinarianById(ctx, int32(id.Value()))
+func (r *SqlcVetRepository) Exists(ctx context.Context, id valueobject.VetID) (bool, error) {
+	_, err := r.queries.GetVeterinarianById(ctx, int32(id.Value()))
 	if err != nil {
-		if err.Error() == "sql: no rows in result set" {
+		if errors.Is(err, sql.ErrNoRows) {
 			return false, nil
-		} else {
-			return false, err
 		}
+		return false, r.dbError(OpSelect, fmt.Sprintf("%s with ID %d", ErrMsgCheckVetExists, id.Value()), err)
 	}
-
 	return true, nil
 }
 
-func (c *SqlcVetRepository) create(ctx context.Context, vet *vet.Veterinarian) error {
+func (r *SqlcVetRepository) create(ctx context.Context, vet *vet.Veterinarian) error {
 	createParams := sqlc.CreateVeterinarianParams{
 		FirstName:         vet.Name().FirstName,
 		LastName:          vet.Name().LastName,
@@ -198,15 +197,15 @@ func (c *SqlcVetRepository) create(ctx context.Context, vet *vet.Veterinarian) e
 		IsActive:          pgtype.Bool{Bool: vet.IsActive(), Valid: true},
 	}
 
-	_, err := c.queries.CreateVeterinarian(ctx, createParams)
+	_, err := r.queries.CreateVeterinarian(ctx, createParams)
 	if err != nil {
-		return err
+		return r.dbError(OpInsert, ErrMsgCreateVet, err)
 	}
 
 	return nil
 }
 
-func (c *SqlcVetRepository) update(ctx context.Context, vet *vet.Veterinarian) error {
+func (r *SqlcVetRepository) update(ctx context.Context, vet *vet.Veterinarian) error {
 	updateParams := sqlc.UpdateVeterinarianParams{
 		ID:                int32(vet.ID().Value()),
 		FirstName:         vet.Name().FirstName,
@@ -218,9 +217,9 @@ func (c *SqlcVetRepository) update(ctx context.Context, vet *vet.Veterinarian) e
 		IsActive:          pgtype.Bool{Bool: vet.IsActive(), Valid: true},
 	}
 
-	_, err := c.queries.UpdateVeterinarian(ctx, updateParams)
+	_, err := r.queries.UpdateVeterinarian(ctx, updateParams)
 	if err != nil {
-		return err
+		return r.dbError(OpUpdate, fmt.Sprintf("%s with ID %d", ErrMsgUpdateVet, vet.ID().Value()), err)
 	}
 	return nil
 }

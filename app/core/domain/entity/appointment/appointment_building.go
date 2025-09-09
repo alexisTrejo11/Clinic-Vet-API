@@ -14,9 +14,6 @@ type AppointmentOption func(*Appointment) error
 
 func WithService(service enum.ClinicService) AppointmentOption {
 	return func(a *Appointment) error {
-		if !service.IsValid() {
-			return domainerr.NewValidationError("appointment", "service", "invalid clinic service")
-		}
 		a.service = service
 		return nil
 	}
@@ -34,9 +31,6 @@ func WithScheduledDate(date time.Time) AppointmentOption {
 
 func WithStatus(status enum.AppointmentStatus) AppointmentOption {
 	return func(a *Appointment) error {
-		if !status.IsValid() {
-			return domainerr.NewValidationError("appointment", "status", "invalid appointment status")
-		}
 		a.status = status
 		return nil
 	}
@@ -54,9 +48,6 @@ func WithReason(reason enum.VisitReason) AppointmentOption {
 
 func WithNotes(notes *string) AppointmentOption {
 	return func(a *Appointment) error {
-		if notes != nil && len(*notes) > 1000 {
-			return domainerr.NewValidationError("appointment", "notes", "notes too long")
-		}
 		a.notes = notes
 		return nil
 	}
@@ -76,9 +67,27 @@ func NewAppointment(
 	ownerID valueobject.OwnerID,
 	opts ...AppointmentOption,
 ) (*Appointment, error) {
-	if id.IsZero() {
-		return nil, domainerr.NewValidationError("appointment", "id", "appointment ID is required")
+	appointment := &Appointment{
+		Entity:  base.NewEntity(id, time.Now(), time.Now(), 1),
+		petID:   petID,
+		ownerID: ownerID,
+		status:  enum.AppointmentStatusPending, // Default status
 	}
+
+	for _, opt := range opts {
+		if err := opt(appointment); err != nil {
+			return nil, err
+		}
+	}
+
+	return appointment, nil
+}
+
+func CreateAppointment(
+	petID valueobject.PetID,
+	ownerID valueobject.OwnerID,
+	opts ...AppointmentOption,
+) (*Appointment, error) {
 	if petID.IsZero() {
 		return nil, domainerr.NewValidationError("appointment", "pet-ID", "pet ID is required")
 	}
@@ -87,7 +96,7 @@ func NewAppointment(
 	}
 
 	appointment := &Appointment{
-		Entity:  base.NewEntity(id, time.Now(), time.Now(), 1),
+		Entity:  base.CreateEntity(valueobject.AppointmentID{}),
 		petID:   petID,
 		ownerID: ownerID,
 		status:  enum.AppointmentStatusPending, // Default status
@@ -143,5 +152,18 @@ func (a *Appointment) validate() error {
 	if err := validateScheduledDate(a.scheduledDate); err != nil {
 		return err
 	}
+
+	if a.notes != nil && len(*a.notes) > 1000 {
+		return domainerr.NewValidationError("appointment", "notes", "notes too long")
+	}
+
+	if !a.status.IsValid() {
+		return domainerr.NewValidationError("appointment", "status", "invalid appointment status")
+	}
+
+	if !a.service.IsValid() {
+		return domainerr.NewValidationError("appointment", "service", "invalid clinic service")
+	}
+
 	return nil
 }

@@ -3,7 +3,6 @@ package repositoryimpl
 import (
 	"context"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/user/address"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/user/profile"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
@@ -45,7 +44,6 @@ func (r *SQLCProfileRepository) GetByUserID(ctx context.Context, userID valueobj
 		}(),
 		PhotoURL: sqlRow.ProfilePic.String,
 		Bio:      sqlRow.Bio.String,
-		Address:  &address.Address{},
 		JoinedAt: sqlRow.CreatedAt.Time,
 	}, nil
 }

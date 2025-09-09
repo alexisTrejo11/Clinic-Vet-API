@@ -22,6 +22,15 @@ func NewEntity[T any](id T, createdAt, updatedAt time.Time, version int) Entity[
 	}
 }
 
+func CreateEntity[T any](id T) Entity[T] {
+	return Entity[T]{
+		id:        id,
+		createdAt: time.Now(),
+		updatedAt: time.Now(),
+		version:   1,
+	}
+}
+
 func (e Entity[T]) ID() T {
 	return e.id
 }

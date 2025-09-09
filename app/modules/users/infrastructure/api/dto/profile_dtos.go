@@ -1,7 +1,6 @@
 package dto
 
 import (
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/user/address"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/users/application/usecase"
 )
@@ -17,7 +16,6 @@ type UpdateProfileRequest struct {
 	// The name of the userDomain. (optional)
 	Name *string `json:"name" validate:"omitempty"`
 	// The user's address. (optional)
-	Address *AddressRequest `json:"address" validate:"omitempty"`
 }
 
 func (request *UpdateProfileRequest) ToProfileUpdateDTO(id int) usecase.UpdateProfileData {
@@ -34,20 +32,5 @@ func (request *UpdateProfileRequest) ToProfileUpdateDTO(id int) usecase.UpdatePr
 			LastName:  *request.Name,
 		}
 	}
-
-	if request.Address != nil {
-		country := valueobject.Country(request.Address.Country)
-		updateData.Address = &address.Address{
-			Street:              request.Address.Street,
-			City:                request.Address.City,
-			State:               request.Address.State,
-			ZipCode:             request.Address.ZipCode,
-			Country:             country,
-			BuildingType:        valueobject.BuildingType(request.Address.BuildingType),
-			BuildingOuterNumber: request.Address.BuildingOuterNumber,
-			BuildingInnerNumber: request.Address.BuildingInnerNumber,
-		}
-	}
-
 	return updateData
 }

@@ -3,6 +3,8 @@ package repositoryimpl
 
 import (
 	"context"
+	"errors"
+	"fmt"
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/notification"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
@@ -28,19 +30,36 @@ func NewMongoNotificationRepository(client *mongo.Client) repository.Notificatio
 func (r *MongoNotificationRepository) Create(ctx context.Context, notification *notification.Notification) error {
 	result, err := r.notificationCollection.InsertOne(ctx, notification)
 	if err != nil {
-		return err
+		return r.mongoError(OpInsertMongo, ErrMsgCreateNotification, err)
 	}
 
-	notification.ID = result.InsertedID.(bson.ObjectID).Hex()
+	// Asumiendo que el ID se genera como ObjectID en MongoDB
+	if oid, ok := result.InsertedID.(bson.ObjectID); ok {
+		notification.ID = oid.Hex()
+	} else {
+		return r.mongoError(OpInsertMongo, "failed to get inserted notification ID", errors.New("invalid inserted ID type"))
+	}
 
 	return nil
 }
 
 func (r *MongoNotificationRepository) GetByID(ctx context.Context, id string) (notification.Notification, error) {
 	var notification notification.Notification
-	if err := r.notificationCollection.FindOne(ctx, bson.M{"_id": id}).Decode(&notification); err != nil {
-		return notification, err
+
+	// Convertir el string ID a ObjectID si es necesario
+	objectID, err := convertStringToObjectID(id)
+	if err != nil {
+		return notification, r.mongoError(OpFindMongo, "invalid notification ID format", err)
 	}
+
+	err = r.notificationCollection.FindOne(ctx, bson.M{"_id": objectID}).Decode(&notification)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return notification, r.notFoundError("id", id)
+		}
+		return notification, r.mongoError(OpFindMongo, fmt.Sprintf("%s with ID %s", ErrMsgGetNotification, id), err)
+	}
+
 	return notification, nil
 }
 
@@ -113,7 +132,7 @@ func (r *MongoNotificationRepository) paginateSearch(pagination page.PageInput) 
 func (r *MongoNotificationRepository) countQueryTotalItems(ctx context.Context, queryFilter bson.M) (int64, error) {
 	totalItems, err := r.notificationCollection.CountDocuments(ctx, queryFilter)
 	if err != nil {
-		return 0, err
+		return 0, r.mongoError(OpCountMongo, ErrMsgCountNotifications, err)
 	}
 
 	return totalItems, nil
@@ -134,17 +153,23 @@ func (r *MongoNotificationRepository) findByFilter(ctx context.Context,
 	findBuilderOptions *options.FindOptionsBuilder,
 ) ([]notification.Notification, error) {
 	var notifications []notification.Notification
+
 	cursor, err := r.notificationCollection.Find(ctx, queryFilter, findBuilderOptions)
 	if err != nil {
-		return nil, err
+		return nil, r.mongoError(OpFindMongo, ErrMsgListNotifications, err)
 	}
+	defer cursor.Close(ctx)
 
 	for cursor.Next(ctx) {
 		var noti notification.Notification
 		if err := cursor.Decode(&noti); err != nil {
-			return []notification.Notification{}, err
+			return nil, r.mongoError(OpDecodeMongo, ErrMsgDecodeNotification, err)
 		}
 		notifications = append(notifications, noti)
+	}
+
+	if err := cursor.Err(); err != nil {
+		return nil, r.mongoError(OpFindMongo, "cursor error while listing notifications", err)
 	}
 
 	return notifications, nil

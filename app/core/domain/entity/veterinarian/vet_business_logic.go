@@ -88,7 +88,7 @@ func (v *Veterinarian) Deactivate() error {
 
 func (v *Veterinarian) UpdateSchedule(newSchedule *valueobject.Schedule) error {
 	if newSchedule != nil {
-		if err := newSchedule.Validate(); err != nil {
+		if err := newSchedule.ValidateBuissnessLogic(); err != nil {
 			return fmt.Errorf("invalid schedule: %w", err)
 		}
 	}
@@ -112,5 +112,45 @@ func (v *Veterinarian) RemoveUserAssociation() error {
 	}
 	v.userID = nil
 	v.IncrementVersion()
+	return nil
+}
+
+func validateLicenseNumber(licenseNumber string) error {
+	if licenseNumber == "" {
+		return errors.New("license number is required")
+	}
+	if len(licenseNumber) < MinLicenseLength || len(licenseNumber) > MaxLicenseLength {
+		return fmt.Errorf("license number must be between %d and %d characters", MinLicenseLength, MaxLicenseLength)
+	}
+	return nil
+}
+
+func validateYearsExperience(years int) error {
+	if years < 0 {
+		return errors.New("years of experience cannot be negative")
+	}
+	if years > MaxExperienceYears {
+		return fmt.Errorf("years of experience cannot exceed %d", MaxExperienceYears)
+	}
+	return nil
+}
+
+func (v *Veterinarian) validate() error {
+	if err := validateLicenseNumber(v.licenseNumber); err != nil {
+		return err
+	}
+	if err := validateYearsExperience(v.yearsExperience); err != nil {
+		return err
+	}
+
+	if v.schedule != nil {
+		if err := v.schedule.ValidateBuissnessLogic(); err != nil {
+			return fmt.Errorf("invalid schedule: %w", err)
+		}
+	}
+
+	if !v.specialty.IsValid() {
+		return errors.New("specialty is required")
+	}
 	return nil
 }

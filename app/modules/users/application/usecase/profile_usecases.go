@@ -29,7 +29,6 @@ type UpdateProfileData struct {
 	ProfilePic  *string                 `json:"profile_pic"`
 	Bio         *string                 `json:"bio"`
 	DateOfBirth *time.Time              `json:"date_of_birth"`
-	Address     *address.Address        `json:"address"`
 }
 
 type ProfileUseCases interface {
@@ -75,9 +74,6 @@ func (uc *profileUseCasesImpl) UpdateProfile(ctx context.Context, request Update
 }
 
 func applyProfileUpdates(profile *p.Profile, request UpdateProfileData) {
-	if request.Address != nil {
-		profile.Address = request.Address
-	}
 	if request.Bio != nil {
 		profile.Bio = *request.Bio
 	}

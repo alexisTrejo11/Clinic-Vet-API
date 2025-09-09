@@ -35,9 +35,7 @@ VALUES (
     $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15,
     CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 )
-RETURNING id, name, photo, species, breed, age, gender, weight, color, microchip, 
-          is_neutered, owner_id, allergies, current_medications, special_needs, 
-          is_active, created_at, updated_at
+RETURNING id, name, photo, species, breed, age, gender, weight, color, microchip, is_neutered, owner_id, allergies, current_medications, special_needs, is_active, created_at, updated_at
 `
 
 type CreatePetParams struct {
@@ -111,10 +109,7 @@ func (q *Queries) DeletePet(ctx context.Context, id int32) error {
 }
 
 const getPetByID = `-- name: GetPetByID :one
-SELECT id, name, photo, species, breed, age, gender, weight, color, microchip,
-       is_neutered, owner_id, allergies, current_medications, special_needs,
-       is_active, created_at, updated_at
-FROM pets
+SELECT id, name, photo, species, breed, age, gender, weight, color, microchip, is_neutered, owner_id, allergies, current_medications, special_needs, is_active, created_at, updated_at FROM pets
 WHERE id = $1
 `
 
@@ -144,11 +139,44 @@ func (q *Queries) GetPetByID(ctx context.Context, id int32) (Pet, error) {
 	return i, err
 }
 
+const getPetByIDAndOwnerID = `-- name: GetPetByIDAndOwnerID :one
+SELECT id, name, photo, species, breed, age, gender, weight, color, microchip, is_neutered, owner_id, allergies, current_medications, special_needs, is_active, created_at, updated_at FROM pets
+WHERE id = $1 AND owner_id = $2
+`
+
+type GetPetByIDAndOwnerIDParams struct {
+	ID      int32
+	OwnerID int32
+}
+
+func (q *Queries) GetPetByIDAndOwnerID(ctx context.Context, arg GetPetByIDAndOwnerIDParams) (Pet, error) {
+	row := q.db.QueryRow(ctx, getPetByIDAndOwnerID, arg.ID, arg.OwnerID)
+	var i Pet
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Photo,
+		&i.Species,
+		&i.Breed,
+		&i.Age,
+		&i.Gender,
+		&i.Weight,
+		&i.Color,
+		&i.Microchip,
+		&i.IsNeutered,
+		&i.OwnerID,
+		&i.Allergies,
+		&i.CurrentMedications,
+		&i.SpecialNeeds,
+		&i.IsActive,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const getPetsByOwnerID = `-- name: GetPetsByOwnerID :many
-SELECT id, name, photo, species, breed, age, gender, weight, color, microchip,
-       is_neutered, owner_id, allergies, current_medications, special_needs,
-       is_active, created_at, updated_at
-FROM pets
+SELECT id, name, photo, species, breed, age, gender, weight, color, microchip, is_neutered, owner_id, allergies, current_medications, special_needs, is_active, created_at, updated_at FROM pets
 WHERE owner_id = $1
 ORDER BY id
 `
@@ -193,10 +221,7 @@ func (q *Queries) GetPetsByOwnerID(ctx context.Context, ownerID int32) ([]Pet, e
 }
 
 const listPets = `-- name: ListPets :many
-SELECT id, name, photo, species, breed, age, gender, weight, color, microchip,
-       is_neutered, owner_id, allergies, current_medications, special_needs,
-       is_active, created_at, updated_at
-FROM pets
+SELECT id, name, photo, species, breed, age, gender, weight, color, microchip, is_neutered, owner_id, allergies, current_medications, special_needs, is_active, created_at, updated_at FROM pets
 ORDER BY id
 `
 
@@ -259,6 +284,7 @@ SET
     is_active = $16,
     updated_at = CURRENT_TIMESTAMP
 WHERE id = $1
+RETURNING id, name, photo, species, breed, age, gender, weight, color, microchip, is_neutered, owner_id, allergies, current_medications, special_needs, is_active, created_at, updated_at
 `
 
 type UpdatePetParams struct {

@@ -87,6 +87,28 @@ func NewMedicalHistory(
 		}
 	}
 
+	return mh, nil
+}
+
+func CreateMedicalHistory(
+	petID valueobject.PetID,
+	ownerID valueobject.OwnerID,
+	vetID valueobject.VetID,
+	opts ...MedicalHistoryOptions,
+) (*MedicalHistory, error) {
+	mh := &MedicalHistory{
+		Entity:  base.CreateEntity(valueobject.MedHistoryID{}),
+		petID:   petID,
+		ownerID: ownerID,
+		vetID:   vetID,
+	}
+
+	for _, opt := range opts {
+		if err := opt(mh); err != nil {
+			return nil, err
+		}
+	}
+
 	if err := mh.Validate(); err != nil {
 		return nil, err
 	}

@@ -1,3 +1,20 @@
+-- name: GetPetByID :one
+SELECT * FROM pets
+WHERE id = $1;
+
+-- name: GetPetByIDAndOwnerID :one
+SELECT * FROM pets
+WHERE id = $1 AND owner_id = $2;
+
+-- name: GetPetsByOwnerID :many
+SELECT * FROM pets
+WHERE owner_id = $1
+ORDER BY id;
+
+-- name: ListPets :many
+SELECT * FROM pets
+ORDER BY id;
+
 -- name: CreatePet :one
 INSERT INTO pets (
     name, 
@@ -22,31 +39,7 @@ VALUES (
     $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15,
     CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 )
-RETURNING id, name, photo, species, breed, age, gender, weight, color, microchip, 
-          is_neutered, owner_id, allergies, current_medications, special_needs, 
-          is_active, created_at, updated_at;
-
--- name: GetPetByID :one
-SELECT id, name, photo, species, breed, age, gender, weight, color, microchip,
-       is_neutered, owner_id, allergies, current_medications, special_needs,
-       is_active, created_at, updated_at
-FROM pets
-WHERE id = $1;
-
--- name: GetPetsByOwnerID :many
-SELECT id, name, photo, species, breed, age, gender, weight, color, microchip,
-       is_neutered, owner_id, allergies, current_medications, special_needs,
-       is_active, created_at, updated_at
-FROM pets
-WHERE owner_id = $1
-ORDER BY id;
-
--- name: ListPets :many
-SELECT id, name, photo, species, breed, age, gender, weight, color, microchip,
-       is_neutered, owner_id, allergies, current_medications, special_needs,
-       is_active, created_at, updated_at
-FROM pets
-ORDER BY id;
+RETURNING *; 
 
 -- name: UpdatePet :exec
 UPDATE pets
@@ -67,7 +60,8 @@ SET
     special_needs = $15,
     is_active = $16,
     updated_at = CURRENT_TIMESTAMP
-WHERE id = $1;
+WHERE id = $1
+RETURNING *;
 
 -- name: DeletePet :exec
 DELETE FROM pets

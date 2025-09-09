@@ -7,7 +7,6 @@ import (
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/pet"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
-	domainerr "github.com/alexisTrejo11/Clinic-Vet-API/app/core/error"
 )
 
 // OwnerOption defines the functional option type
@@ -15,9 +14,6 @@ type OwnerOption func(*Owner) error
 
 func WithPhoto(photo string) OwnerOption {
 	return func(o *Owner) error {
-		if photo != "" && len(photo) > 500 {
-			return domainerr.NewValidationError("owner", "photo", "photo URL too long")
-		}
 		o.photo = photo
 		return nil
 	}
@@ -25,7 +21,7 @@ func WithPhoto(photo string) OwnerOption {
 
 func WithFullName(fullName valueobject.PersonName) OwnerOption {
 	return func(o *Owner) error {
-		return o.Person.UpdateName(fullName)
+		return o.UpdateName(fullName)
 	}
 }
 
@@ -37,7 +33,7 @@ func WithGender(gender enum.PersonGender) OwnerOption {
 
 func WithDateOfBirth(dob time.Time) OwnerOption {
 	return func(o *Owner) error {
-		return o.Person.UpdateDateOfBirth(dob)
+		return o.UpdateDateOfBirth(dob)
 	}
 }
 
@@ -90,14 +86,32 @@ func NewOwner(
 		pets:     []pet.Pet{},
 	}
 
-	// Apply all options
 	for _, opt := range opts {
 		if err := opt(owner); err != nil {
 			return nil, err
 		}
 	}
 
-	// Final validation
+	if err := owner.validate(); err != nil {
+		return nil, err
+	}
+
+	return owner, nil
+}
+
+func CreateOwner(opts ...OwnerOption) (*Owner, error) {
+	owner := &Owner{
+		Entity:   base.CreateEntity(valueobject.OwnerID{}),
+		isActive: true, // Default to active
+		pets:     []pet.Pet{},
+	}
+
+	for _, opt := range opts {
+		if err := opt(owner); err != nil {
+			return nil, err
+		}
+	}
+
 	if err := owner.validate(); err != nil {
 		return nil, err
 	}
