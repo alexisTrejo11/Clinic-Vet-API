@@ -7,7 +7,7 @@ import (
 
 func PetsRoutes(app *gin.Engine, petController *controller.PetController) {
 	path := app.Group("api/v2/pets")
-	path.GET("/", petController.ListPets)
+	path.GET("/", petController.SearchPets)
 	path.GET("/:id", petController.GetPetByID)
 	path.POST("/", petController.CreatePet)
 	path.PATCH("/:id", petController.UpdatePet)

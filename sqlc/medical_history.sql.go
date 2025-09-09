@@ -11,6 +11,30 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const countMedicalHistoryByPet = `-- name: CountMedicalHistoryByPet :one
+SELECT COUNT(*) FROM medical_history
+WHERE pet_id = $1 AND deleted_at IS NULL
+`
+
+func (q *Queries) CountMedicalHistoryByPet(ctx context.Context, petID int32) (int64, error) {
+	row := q.db.QueryRow(ctx, countMedicalHistoryByPet, petID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
+const countMedicalHistoryByVet = `-- name: CountMedicalHistoryByVet :one
+SELECT COUNT(*) FROM medical_history
+WHERE veterinarian_id = $1 AND deleted_at IS NULL
+`
+
+func (q *Queries) CountMedicalHistoryByVet(ctx context.Context, veterinarianID int32) (int64, error) {
+	row := q.db.QueryRow(ctx, countMedicalHistoryByVet, veterinarianID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const createMedicalHistory = `-- name: CreateMedicalHistory :one
 INSERT INTO medical_history (
     pet_id, 

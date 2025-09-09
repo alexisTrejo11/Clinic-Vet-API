@@ -3,7 +3,9 @@ package controller
 import (
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/pets/application/usecase"
-	utils "github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/pets/infrastructure/api/dto"
+	httpError "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/infrastructure/http"
+	ginUtils "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/gin_utils"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/response"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -32,8 +34,20 @@ func NewPetController(
 // @Success 200 {array} PetResponse "List of pets"
 // @Failure 500 {object} response.APIResponse "Internal server error"
 // @Router /pets [get]
-func (c *PetController) ListPets(ctx *gin.Context) {
-	pets, err := c.petUseCases.ListPets(ctx)
+func (c *PetController) SearchPets(ctx *gin.Context) {
+	var searchParams *dto.PetSearchParams
+
+	if err := ctx.ShouldBindQuery(&searchParams); err != nil {
+		response.BadRequest(ctx, httpError.RequestURLQueryError(err, ctx.Request.URL.RawQuery))
+		return
+	}
+
+	if err := c.validator.Struct(searchParams); err != nil {
+		response.BadRequest(ctx, httpError.InvalidDataError(err))
+		return
+	}
+
+	pets, err := c.petUseCases.SearchPets(ctx, *searchParams)
 	if err != nil {
 		response.ApplicationError(ctx, err)
 		return
@@ -54,9 +68,9 @@ func (c *PetController) ListPets(ctx *gin.Context) {
 // @Failure 500 {object} response.APIResponse "Internal server error"
 // @Router /pets/{id} [get]
 func (c *PetController) GetPetByID(ctx *gin.Context) {
-	id, err := utils.ParseParamToInt(ctx, "id")
+	id, err := ginUtils.ParseParamToInt(ctx, "id")
 	if err != nil {
-		response.RequestURLParamError(ctx, err, "pet_id", ctx.Param("id"))
+		response.BadRequest(ctx, httpError.RequestURLParamError(err, "pet_id", ctx.Param("id")))
 		return
 	}
 
@@ -87,20 +101,21 @@ func (c *PetController) GetPetByID(ctx *gin.Context) {
 // @Failure 500 {object} response.APIResponse "Internal server error"
 // @Router /pets [post]
 func (c *PetController) CreatePet(ctx *gin.Context) {
-	var petCreate PetInsertRequest
+	var requestData dto.CreatePetRequest
 
-	if err := ctx.ShouldBindBodyWithJSON(&petCreate); err != nil {
-		response.RequestBodyDataError(ctx, err)
+	if err := ctx.ShouldBindBodyWithJSON(&requestData); err != nil {
+		response.BadRequest(ctx, httpError.RequestBodyDataError(err))
 		return
 	}
 
-	if err := c.validator.Struct(&petCreate); err != nil {
-		response.RequestBodyDataError(ctx, err)
+	if err := c.validator.Struct(&requestData); err != nil {
+		response.BadRequest(ctx, httpError.InvalidDataError(err))
 		return
 	}
 
-	createPet := requestToCreatePet(petCreate)
-	pet, err := c.petUseCases.CreatePet(ctx, createPet)
+	createPetData := requestData.ToCreateData()
+
+	pet, err := c.petUseCases.CreatePet(ctx.Request.Context(), createPetData)
 	if err != nil {
 		response.ApplicationError(ctx, err)
 		return
@@ -123,25 +138,25 @@ func (c *PetController) CreatePet(ctx *gin.Context) {
 // @Failure 500 {object} response.APIResponse "Internal server error"
 // @Router /pets/{id} [put]
 func (c *PetController) UpdatePet(ctx *gin.Context) {
-	id, err := utils.ParseParamToInt(ctx, "id")
+	id, err := ginUtils.ParseParamToInt(ctx, "id")
 	if err != nil {
-		response.RequestURLParamError(ctx, err, "pet_id", ctx.Param("id"))
+		response.BadRequest(ctx, httpError.RequestURLParamError(err, "pet_id", ctx.Param("id")))
 		return
 	}
 
-	var petCreate PetInsertRequest
-	if err := ctx.ShouldBindBodyWithJSON(&petCreate); err != nil {
-		response.RequestBodyDataError(ctx, err)
+	var requestData dto.UpdatePetRequest
+	if err := ctx.ShouldBindBodyWithJSON(&requestData); err != nil {
+		response.BadRequest(ctx, httpError.RequestBodyDataError(err))
 		return
 	}
 
-	petUpdate := requestToUpdatePet(petCreate, id)
-	if err := c.validator.Struct(&petUpdate); err != nil {
-		response.RequestBodyDataError(ctx, err)
+	if err := c.validator.Struct(&requestData); err != nil {
+		response.BadRequest(ctx, httpError.InvalidDataError(err))
 		return
 	}
 
-	pet, err := c.petUseCases.UpdatePet(ctx, petUpdate)
+	updatePetData := requestData.ToUpdatePet(id)
+	pet, err := c.petUseCases.UpdatePet(ctx, updatePetData)
 	if err != nil {
 		response.ApplicationError(ctx, err)
 		return
@@ -161,9 +176,9 @@ func (c *PetController) UpdatePet(ctx *gin.Context) {
 // @Failure 500 {object} response.APIResponse "Internal server error"
 // @Router /pets/{id} [delete]
 func (c *PetController) SoftDeletePet(ctx *gin.Context) {
-	id, err := utils.ParseParamToInt(ctx, "id")
+	id, err := ginUtils.ParseParamToInt(ctx, "id")
 	if err != nil {
-		response.RequestURLParamError(ctx, err, "pet_id", ctx.Param("id"))
+		response.BadRequest(ctx, httpError.RequestURLParamError(err, "pet_id", ctx.Param("id")))
 		return
 	}
 

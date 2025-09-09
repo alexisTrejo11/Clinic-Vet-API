@@ -41,10 +41,10 @@ func (o *Owner) validate() error {
 	if err := validatePhoneNumber(o.phoneNumber); err != nil {
 		return err
 	}
-	if err := validateDateOfBirth(o.dateOfBirth); err != nil {
+	if err := validateDateOfBirth(o.Person.DateOfBirth()); err != nil {
 		return err
 	}
-	if !o.gender.IsValid() {
+	if !o.Person.Gender().IsValid() {
 		return domainerr.NewValidationError("owner", "gender", "gender is required")
 	}
 	return nil
@@ -60,16 +60,17 @@ func (o *Owner) UpdatePhoto(newPhoto string) error {
 }
 
 func (o *Owner) UpdateFullName(newName valueobject.PersonName) error {
-	o.fullName = newName
+	if err := o.Person.UpdateName(newName); err != nil {
+		return err
+	}
 	o.IncrementVersion()
 	return nil
 }
 
 func (o *Owner) UpdateGender(newGender enum.PersonGender) error {
-	if !newGender.IsValid() {
-		return domainerr.NewValidationError("owner", "gender", "invalid gender")
+	if err := o.Person.UpdateGender(newGender); err != nil {
+		return err
 	}
-	o.gender = newGender
 	o.IncrementVersion()
 	return nil
 }
@@ -159,15 +160,4 @@ func (o *Owner) HasActivePets() bool {
 func (o *Owner) CanBeDeactivated() bool {
 	// Cannot  owner with active pets
 	return !o.HasActivePets()
-}
-
-func calculateAge(dob time.Time) int {
-	now := time.Now()
-	years := now.Year() - dob.Year()
-
-	if now.YearDay() < dob.YearDay() {
-		years--
-	}
-
-	return years
 }

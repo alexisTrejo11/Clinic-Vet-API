@@ -18,7 +18,6 @@ type User struct {
 	role          enum.UserRole
 	status        enum.UserStatus
 	lastLoginAt   *time.Time
-	joinedAt      time.Time
 	twoFactorAuth auth.TwoFactorAuth
 }
 
@@ -51,7 +50,7 @@ func (u *User) LastLoginAt() *time.Time {
 }
 
 func (u *User) JoinedAt() time.Time {
-	return u.joinedAt
+	return u.CreatedAt()
 }
 
 func (u *User) TwoFactorAuth() auth.TwoFactorAuth {

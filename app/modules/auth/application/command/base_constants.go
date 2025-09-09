@@ -8,7 +8,7 @@ const (
 	ErrPhoneAlreadyExists = "phone number already exists"
 	ErrInvalidCommandType = "invalid command type"
 	ErrMissingCredentials = "either email or phone number is required"
-
+	ErrUserCreationFailed = "user creation failed"
 	MsgUserCreatedSuccess = "user successfully created"
 
 	MaxConcurrentValidations = 2

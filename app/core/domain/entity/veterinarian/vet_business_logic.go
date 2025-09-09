@@ -25,7 +25,9 @@ func (v *Veterinarian) UpdatePhoto(newPhoto string) error {
 }
 
 func (v *Veterinarian) UpdateName(newName valueobject.PersonName) error {
-	v.name = newName
+	if err := v.Person.UpdateName(newName); err != nil {
+		return err
+	}
 	v.IncrementVersion()
 	return nil
 }

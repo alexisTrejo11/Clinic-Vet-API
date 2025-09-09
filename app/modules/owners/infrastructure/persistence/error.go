@@ -1,10 +1,10 @@
+// Package persistence contains the implementation of the owner repository using SQLC.
 package persistence
 
 import (
 	"fmt"
 
 	dberr "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/infrastructure/database"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 )
 
 const (
@@ -37,11 +37,6 @@ const (
 	// Goroutine timeout for concurrent operations
 	ConcurrentOpTimeout = 1
 )
-
-// calculateOffset computes the database offset for pagination
-func (r *SqlcOwnerRepository) calculateOffset(pagination page.PageInput) int32 {
-	return int32((pagination.PageNumber - 1) * pagination.PageSize)
-}
 
 // dbError creates a standardized database operation error
 func (r *SqlcOwnerRepository) dbError(operation, message string, err error) error {

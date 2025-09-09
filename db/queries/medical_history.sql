@@ -1,3 +1,43 @@
+-- name: GetMedicalHistoryByID :one
+SELECT *
+FROM medical_history
+WHERE id = $1 AND deleted_at IS NULL;
+
+-- name: GetMedicalHistoryByOwnerID :many
+SELECT *
+FROM medical_history
+WHERE owner_id = $1 AND deleted_at IS NULL
+ORDER BY $2 DESC
+OFFSET $3
+LIMIT $4;
+
+-- name: ListMedicalHistoryByPet :many
+SELECT * FROM medical_history
+WHERE pet_id = $1 AND deleted_at IS NULL
+ORDER BY visit_date DESC;
+
+-- name: CountMedicalHistoryByPet :one
+SELECT COUNT(*) FROM medical_history
+WHERE pet_id = $1 AND deleted_at IS NULL;
+
+-- name: ListMedicalHistoryByVet :many
+SELECT * FROM medical_history
+WHERE veterinarian_id = $1 AND deleted_at IS NULL
+ORDER BY created_at DESC
+LIMIT $2
+OFFSET $3;
+
+-- name: CountMedicalHistoryByVet :one
+SELECT COUNT(*) FROM medical_history
+WHERE veterinarian_id = $1 AND deleted_at IS NULL;
+
+-- name: SearchMedicalHistory :many
+SELECT * FROM medical_history
+WHERE deleted_at IS NULL
+ORDER BY $3 DESC
+OFFSET $1
+LIMIT $2;
+
 -- name: CreateMedicalHistory :one
 INSERT INTO medical_history (
     pet_id, 
@@ -39,35 +79,3 @@ WHERE id = $1;
 -- name: HardDeleteMedicalHistory :exec
 DELETE FROM medical_history
 WHERE id = $1;
-
--- name: ListMedicalHistoryByPet :many
-SELECT * FROM medical_history
-WHERE pet_id = $1 AND deleted_at IS NULL
-ORDER BY visit_date DESC;
-
--- name: GetMedicalHistoryByOwnerID :many
-SELECT *
-FROM medical_history
-WHERE owner_id = $1 AND deleted_at IS NULL
-ORDER BY $2 DESC
-OFFSET $3
-LIMIT $4;
-
--- name: ListMedicalHistoryByVet :many
-SELECT * FROM medical_history
-WHERE veterinarian_id = $1 AND deleted_at IS NULL
-ORDER BY created_at DESC
-LIMIT $2
-OFFSET $3;
-
--- name: GetMedicalHistoryByID :one
-SELECT *
-FROM medical_history
-WHERE id = $1 AND deleted_at IS NULL;
-
--- name: SearchMedicalHistory :many
-SELECT * FROM medical_history
-WHERE deleted_at IS NULL
-ORDER BY $3 DESC
-OFFSET $1
-LIMIT $2;

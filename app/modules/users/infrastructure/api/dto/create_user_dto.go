@@ -1,6 +1,11 @@
 package dto
 
-import "time"
+import (
+	"context"
+	"time"
+
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/users/application/usecase/command"
+)
 
 // @Description Represents the request body for creating a new userDomain.
 type CreateUserRequest struct {
@@ -14,14 +19,18 @@ type CreateUserRequest struct {
 	Role string `json:"role" validate:"required,oneof=customer veterinarian admin"`
 	// The user's address. (required)
 	Address string `json:"address" validate:"required"`
-	// The unique ID of the owner. (required)
-	OwnerID *int `json:"owner_id" validate:"required`
-	// The unique ID of the veterinarian. (optional)
-	VeterinarianID *int `json:"veterinarian_id" validate:"omitempty"`
 	// The user's gender. (required, must be "male", "female", or "other")
 	Gender *string `json:"gender" validate:"required,oneof=male, female, other"`
 	// The user's location. (required)
 	Location *string `json:"location" validate:"required"`
+
+	// The status of the user account. (optional, defaults to "pending" if not provided)
+	Status string `json:"status" validate:"omitempty,oneof=active inactive pending"`
+
 	// The user's date of birth. (required)
 	DateOfBirth *time.Time `json:"date_of_birth" validate:"required"`
+}
+
+func (c *CreateUserRequest) ToCommand(ctx context.Context) (command.CreateUserCommand, error) {
+	return command.NewCreateUserCommand(ctx, c.Email, c.PhoneNumber, c.Password, c.Role, c.Status)
 }

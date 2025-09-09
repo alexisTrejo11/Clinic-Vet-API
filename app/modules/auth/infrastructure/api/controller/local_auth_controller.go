@@ -39,7 +39,12 @@ func (controller *AuthController) Signup(c *gin.Context) {
 		return
 	}
 
-	signupCommand := singupRequest.ToCommand()
+	signupCommand, err := singupRequest.ToCommand()
+	if err != nil {
+		response.ApplicationError(c, err)
+		return
+	}
+
 	result := controller.authCommandBus.Dispatch(signupCommand)
 	if !result.IsSuccess() {
 		response.ApplicationError(c, result.Error())

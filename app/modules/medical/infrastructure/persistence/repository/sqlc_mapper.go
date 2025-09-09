@@ -12,17 +12,17 @@ import (
 )
 
 func ToDomain(sqlRow sqlc.MedicalHistory) (medical.MedicalHistory, error) {
-	medHistId, err := valueobject.NewMedHistoryID(int(sqlRow.ID))
+	medHistID, err := valueobject.NewMedHistoryID(int(sqlRow.ID))
 	if err != nil {
 		return medical.MedicalHistory{}, fmt.Errorf("invalid medical history ID: %w", err)
 	}
 
-	petId, err := valueobject.NewPetID(int(sqlRow.PetID))
+	petID, err := valueobject.NewPetID(int(sqlRow.PetID))
 	if err != nil {
 		return medical.MedicalHistory{}, fmt.Errorf("invalid pet ID: %w", err)
 	}
 
-	vetId, err := valueobject.NewVetID(int(sqlRow.VeterinarianID))
+	vetID, err := valueobject.NewVetID(int(sqlRow.VeterinarianID))
 	if err != nil {
 		return medical.MedicalHistory{}, fmt.Errorf("invalid vet ID: %w", err)
 	}
@@ -57,16 +57,14 @@ func ToDomain(sqlRow sqlc.MedicalHistory) (medical.MedicalHistory, error) {
 	if sqlRow.VisitDate.Valid {
 		visitDate = sqlRow.VisitDate.Time
 	} else {
-		// Valor por defecto si es NULL
 		visitDate = time.Now()
 	}
 
-	// Crear la entidad usando functional options
 	medicalHistory, err := medical.NewMedicalHistory(
-		medHistId,
-		petId,
+		medHistID,
+		petID,
 		ownerID,
-		vetId,
+		vetID,
 		medical.WithVisitReason(enum.VisitReasonEmergency),
 		medical.WithVisitType(visitType),
 		medical.WithVisitDate(visitDate),
@@ -98,7 +96,7 @@ func ToDomainList(medHistList []sqlc.MedicalHistory) ([]medical.MedicalHistory, 
 
 func ToCreateParams(medHist medical.MedicalHistory) sqlc.CreateMedicalHistoryParams {
 	var notes string
-	if medHist.Notes != nil {
+	if medHist.Notes() != nil {
 		notes = *medHist.Notes()
 	}
 

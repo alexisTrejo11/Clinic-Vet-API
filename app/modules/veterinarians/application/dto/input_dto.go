@@ -28,12 +28,13 @@ type ScheduleData struct {
 }
 
 type UpdateVetData struct {
+	VetID           valueobject.VetID  `json:"vet_id" validate:"required"`
 	FirstName       *string            `json:"first_name"`
 	LastName        *string            `json:"last_name"`
 	Photo           *string            `json:"photo"`
 	LicenseNumber   *string            `json:"license_number"`
 	YearsExperience *int               `json:"years_experience"`
-	Specialty       string             `json:"specialty"`
+	Specialty       *string            `json:"specialty"`
 	IsActive        *bool              `json:"is_active"`
 	ConsultationFee *valueobject.Money `json:"consultation_fee"`
 	LaboralSchedule *[]ScheduleData    `json:"laboral_schedule"`

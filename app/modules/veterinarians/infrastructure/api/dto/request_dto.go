@@ -4,6 +4,7 @@ package dto
 import (
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/veterinarians/application/dto"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 )
 
@@ -29,6 +30,19 @@ type CreateVetRequest struct {
 	LaboralSchedule []ScheduleRequest `json:"laboral_schedule"`
 }
 
+func (r *CreateVetRequest) ToCreateData() (dto.CreateVetData, error) {
+	return dto.CreateVetData{
+		FirstName:       r.FirstName,
+		LastName:        r.LastName,
+		Photo:           r.Photo,
+		LicenseNumber:   r.LicenseNumber,
+		YearsExperience: r.YearsExperience,
+		IsActive:        r.IsActive,
+		Specialty:       string(r.Specialty),
+		ConsultationFee: r.ConsultationFee,
+	}, nil
+}
+
 // ScheduleRequest represents a working day schedule for a veterinarian.
 type ScheduleRequest struct {
 	// The day of the week for the schedule. (e.g., "Monday", "Tuesday")
@@ -44,7 +58,7 @@ type ScheduleRequest struct {
 }
 
 // UpdatePetRequest represents the data transfer object for updating a veterinarian.
-type UpdatePetRequest struct {
+type UpdateVetRequest struct {
 	// The veterinarian's first name.
 	FirstName *string `json:"first_name"`
 	// The veterinarian's last name.
@@ -63,6 +77,31 @@ type UpdatePetRequest struct {
 	ConsultationFee *valueobject.Money `json:"consultation_fee"`
 	// The working schedule of the veterinarian.
 	LaboralSchedule *[]ScheduleRequest `json:"laboral_schedule"`
+}
+
+func (r *UpdateVetRequest) ToUpdateData(vetIDInt int) (dto.UpdateVetData, error) {
+	vetID, err := valueobject.NewVetID(vetIDInt)
+	if err != nil {
+		return dto.UpdateVetData{}, err
+	}
+
+	return dto.UpdateVetData{
+		VetID:           vetID,
+		FirstName:       r.FirstName,
+		LastName:        r.LastName,
+		Photo:           r.Photo,
+		LicenseNumber:   r.LicenseNumber,
+		YearsExperience: r.YearsExperience,
+		Specialty: func() *string {
+			if r.Specialty != nil {
+				s := string(*r.Specialty)
+				return &s
+			}
+			return nil
+		}(),
+		IsActive:        r.IsActive,
+		ConsultationFee: r.ConsultationFee,
+	}, nil
 }
 
 // VetSearchParams defines the parameters for searching and filtering veterinarians.

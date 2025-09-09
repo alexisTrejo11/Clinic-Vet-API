@@ -26,7 +26,7 @@ func NewCreatePetUseCase(
 	}
 }
 
-func (uc CreatePetUseCase) Execute(ctx context.Context, petCreate dto.PetCreate) (dto.PetResponse, error) {
+func (uc CreatePetUseCase) Execute(ctx context.Context, petCreate dto.CreatePetData) (dto.PetResponse, error) {
 	if err := uc.validateOwner(ctx, petCreate.OwnerID); err != nil {
 		return dto.PetResponse{}, err
 	}

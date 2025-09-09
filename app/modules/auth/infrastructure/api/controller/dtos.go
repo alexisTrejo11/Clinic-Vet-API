@@ -14,7 +14,7 @@ import (
 type RequestSignup struct {
 	Email       string    `json:"email" binding:"required,email"`
 	Password    string    `json:"password" binding:"required,min=8"`
-	Phone       *string   `json:"phone"`
+	Phone       string    `json:"phone"`
 	FirstName   string    `json:"first_name" binding:"required,min=2,max=50"`
 	LastName    string    `json:"last_name" binding:"required,min=2,max=50"`
 	Address     string    `json:"address"`
@@ -22,19 +22,42 @@ type RequestSignup struct {
 	DateOfBirth time.Time `json:"date_of_birth" binding:"required"`
 }
 
-func (r *RequestSignup) ToCommand() *command.SignupCommand {
-	gender := enum.MustParseGender(r.Gender)
+func (r *RequestSignup) ToCommand() (command.SignupCommand, error) {
+	errorMessages := make([]string, 0)
+	gender, err := enum.ParseGender(r.Gender)
+	if err != nil {
+		errorMessages = append(errorMessages, err.Error())
+	}
 
-	return &command.SignupCommand{
-		Email:       &r.Email,
+	if r.DateOfBirth.After(time.Now()) {
+		errorMessages = append(errorMessages, "date_of_birth cannot be in the future")
+	}
+
+	emailVo, err := valueobject.NewEmail(r.Email)
+	if err != nil {
+		errorMessages = append(errorMessages, "email: "+err.Error())
+	}
+
+	phoneVo, err := valueobject.NewPhoneNumber(r.Phone)
+	if err != nil {
+		errorMessages = append(errorMessages, "phone: "+err.Error())
+	}
+
+	if len(errorMessages) > 0 {
+		return command.SignupCommand{}, apperror.MappingError(errorMessages, "request", "SignupRequest", "userSingup")
+	}
+
+	cmd := &command.SignupCommand{
+		Email:       emailVo,
 		Password:    r.Password,
-		PhoneNumber: r.Phone,
+		PhoneNumber: phoneVo,
 		FirstName:   r.FirstName,
 		LastName:    r.LastName,
 		Address:     r.Address,
 		Gender:      gender,
 		DateOfBirth: r.DateOfBirth,
 	}
+	return *cmd, nil
 }
 
 type RequestLogin struct {

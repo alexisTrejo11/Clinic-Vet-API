@@ -13,13 +13,12 @@ type Entity[T any] struct {
 }
 
 // NewEntity creates a new base entity
-func NewEntity[T any](id T) Entity[T] {
-	now := time.Now()
+func NewEntity[T any](id T, createdAt, updatedAt time.Time, version int) Entity[T] {
 	return Entity[T]{
 		id:        id,
-		createdAt: now,
-		updatedAt: now,
-		version:   1,
+		createdAt: createdAt,
+		updatedAt: updatedAt,
+		version:   version,
 	}
 }
 
@@ -43,4 +42,9 @@ func (e Entity[T]) Version() int {
 func (e *Entity[T]) IncrementVersion() {
 	e.version++
 	e.updatedAt = time.Now()
+}
+
+func (e *Entity[T]) SetTimeStamps(createAt, updateAt time.Time) {
+	e.createdAt = createAt
+	e.updatedAt = updateAt
 }

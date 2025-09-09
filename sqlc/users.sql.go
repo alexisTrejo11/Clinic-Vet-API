@@ -77,6 +77,19 @@ func (q *Queries) ExistsUserByEmail(ctx context.Context, email pgtype.Text) (boo
 	return column_1, err
 }
 
+const existsUserByID = `-- name: ExistsUserByID :one
+SELECT COUNT(*) > 0
+FROM users
+WHERE id = $1
+`
+
+func (q *Queries) ExistsUserByID(ctx context.Context, id int32) (bool, error) {
+	row := q.db.QueryRow(ctx, existsUserByID, id)
+	var column_1 bool
+	err := row.Scan(&column_1)
+	return column_1, err
+}
+
 const existsUserByPhoneNumber = `-- name: ExistsUserByPhoneNumber :one
 SELECT COUNT(*) > 0
 FROM users

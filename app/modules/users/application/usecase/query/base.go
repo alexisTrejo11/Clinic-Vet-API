@@ -1,4 +1,5 @@
-package userDomainQueries
+// Pacakge query contains the data structures and conversion functions for user-related query responses.
+package query
 
 import (
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/user"
@@ -41,7 +42,7 @@ func toResponse(user user.User) UserResponse {
 }
 
 func toResponsePage(userPage page.Page[[]user.User]) page.Page[[]UserResponse] {
-	if userPage.Data == nil || len(userPage.Data) < 1 {
+	if len(userPage.Data) < 1 {
 		return page.EmptyPage[[]UserResponse]()
 	}
 

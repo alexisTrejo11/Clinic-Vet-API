@@ -9,7 +9,6 @@ import (
 	"time"
 
 	appt "github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/appointment"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
 	vo "github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
 	repo "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
@@ -25,8 +24,8 @@ func NewSQLCAppointmentRepository(queries *sqlc.Queries) repo.AppointmentReposit
 	return &SQLCAppointmentRepository{queries: queries}
 }
 
-func (r *SQLCAppointmentRepository) GetByIDAndOwnerID(ctx context.Context, id vo.AppointmentID, ownerID valueobject.OwnerID) (appt.Appointment, error) {
-	sqlRow, err := r.queries.GetAppoinmentByIDAndOwnerID(ctx, sqlc.GetAppoinmentByIDAndOwnerIDParams{
+func (r *SQLCAppointmentRepository) GetByIDAndOwnerID(ctx context.Context, id vo.AppointmentID, ownerID vo.OwnerID) (appt.Appointment, error) {
+	sqlRow, err := r.queries.GetAppointmentByIDAndOwnerID(ctx, sqlc.GetAppointmentByIDAndOwnerIDParams{
 		ID:      int32(id.Value()),
 		OwnerID: int32(ownerID.Value()),
 	})
@@ -45,8 +44,8 @@ func (r *SQLCAppointmentRepository) GetByIDAndOwnerID(ctx context.Context, id vo
 	return *appointment, nil
 }
 
-func (r *SQLCAppointmentRepository) GetByIDAndVetID(ctx context.Context, id vo.AppointmentID, vetID valueobject.VetID) (appt.Appointment, error) {
-	sqlRow, err := r.queries.GetAppoinmentByIDAndVetID(ctx, sqlc.GetAppoinmentByIDAndVetIDParams{
+func (r *SQLCAppointmentRepository) GetByIDAndVetID(ctx context.Context, id vo.AppointmentID, vetID vo.VetID) (appt.Appointment, error) {
+	sqlRow, err := r.queries.GetAppointmentByIDAndVeterinarianID(ctx, sqlc.GetAppointmentByIDAndVeterinarianIDParams{
 		ID:             int32(id.Value()),
 		VeterinarianID: pgtype.Int4{Int32: int32(vetID.Value()), Valid: true},
 	})

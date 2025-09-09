@@ -1,40 +1,19 @@
--- name: CreateAppoinment :one
-INSERT INTO appoinments (
-    clinic_service, 
-    schedule_date, 
-    status, 
-    reason, 
-    notes, 
-    owner_id, 
-    veterinarian_id,
-    pet_id,
-    created_at,
-    updated_at,
-    deleted_at
-) VALUES (
-    $1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL
-) RETURNING *;
+-- name: GetAppoinmentByID :one
+SELECT * FROM appoinments 
+WHERE id = $1 
+AND deleted_at IS NULL;
 
+-- name: GetAppointmentByIDAndOwnerID :one
+SELECT * FROM appoinments 
+WHERE id = $1 
+AND owner_id = $2
+AND deleted_at IS NULL;
 
-
--- name: UpdateAppoinment :one
-UPDATE appoinments SET
-    clinic_service = $2,
-    schedule_date = $3,
-    status = $4,
-    reason = $5,
-    notes = $6,
-    owner_id = $7,
-    veterinarian_id = $8,
-    pet_id = $9,
-    updated_at = CURRENT_TIMESTAMP
-WHERE id = $1
-RETURNING *;
-
--- name: DeleteAppoinment :exec
-UPDATE appoinments SET
-    deleted_at = CURRENT_TIMESTAMP
-WHERE id = $1;
+-- name: GetAppointmentByIDAndVeterinarianID :one
+SELECT * FROM appoinments 
+WHERE id = $1 
+AND veterinarian_id = $2
+AND deleted_at IS NULL;
 
 -- name: ListAppoinmentsByOwnerID :many
 SELECT * FROM appoinments 
@@ -70,11 +49,6 @@ SELECT COUNT(*) FROM appoinments
 WHERE pet_id = $1
 AND deleted_at IS NULL;
 
--- name: GetAppoinmentByID :one
-SELECT * FROM appoinments 
-WHERE id = $1 
-AND deleted_at IS NULL;
-
 -- name: ListAppoinments :many
 SELECT * FROM appoinments 
 WHERE deleted_at IS NULL 
@@ -106,3 +80,40 @@ ORDER BY created_at DESC LIMIT $2 OFFSET $3;
 SELECT COUNT(*) FROM appoinments
 WHERE status = $1
 AND deleted_at IS NULL;
+
+
+-- name: CreateAppoinment :one
+INSERT INTO appoinments (
+    clinic_service, 
+    schedule_date, 
+    status, 
+    reason, 
+    notes, 
+    owner_id, 
+    veterinarian_id,
+    pet_id,
+    created_at,
+    updated_at,
+    deleted_at
+) VALUES (
+    $1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL
+) RETURNING *;
+
+-- name: UpdateAppoinment :one
+UPDATE appoinments SET
+    clinic_service = $2,
+    schedule_date = $3,
+    status = $4,
+    reason = $5,
+    notes = $6,
+    owner_id = $7,
+    veterinarian_id = $8,
+    pet_id = $9,
+    updated_at = CURRENT_TIMESTAMP
+WHERE id = $1
+RETURNING *;
+
+-- name: DeleteAppoinment :exec
+UPDATE appoinments SET
+    deleted_at = CURRENT_TIMESTAMP
+WHERE id = $1;

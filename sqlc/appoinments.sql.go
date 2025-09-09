@@ -189,6 +189,70 @@ func (q *Queries) GetAppoinmentByID(ctx context.Context, id int32) (Appoinment, 
 	return i, err
 }
 
+const getAppointmentByIDAndOwnerID = `-- name: GetAppointmentByIDAndOwnerID :one
+SELECT id, clinic_service, schedule_date, status, reason, notes, owner_id, pet_id, veterinarian_id, created_at, updated_at, deleted_at FROM appoinments 
+WHERE id = $1 
+AND owner_id = $2
+AND deleted_at IS NULL
+`
+
+type GetAppointmentByIDAndOwnerIDParams struct {
+	ID      int32
+	OwnerID int32
+}
+
+func (q *Queries) GetAppointmentByIDAndOwnerID(ctx context.Context, arg GetAppointmentByIDAndOwnerIDParams) (Appoinment, error) {
+	row := q.db.QueryRow(ctx, getAppointmentByIDAndOwnerID, arg.ID, arg.OwnerID)
+	var i Appoinment
+	err := row.Scan(
+		&i.ID,
+		&i.ClinicService,
+		&i.ScheduleDate,
+		&i.Status,
+		&i.Reason,
+		&i.Notes,
+		&i.OwnerID,
+		&i.PetID,
+		&i.VeterinarianID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+	)
+	return i, err
+}
+
+const getAppointmentByIDAndVeterinarianID = `-- name: GetAppointmentByIDAndVeterinarianID :one
+SELECT id, clinic_service, schedule_date, status, reason, notes, owner_id, pet_id, veterinarian_id, created_at, updated_at, deleted_at FROM appoinments 
+WHERE id = $1 
+AND veterinarian_id = $2
+AND deleted_at IS NULL
+`
+
+type GetAppointmentByIDAndVeterinarianIDParams struct {
+	ID             int32
+	VeterinarianID pgtype.Int4
+}
+
+func (q *Queries) GetAppointmentByIDAndVeterinarianID(ctx context.Context, arg GetAppointmentByIDAndVeterinarianIDParams) (Appoinment, error) {
+	row := q.db.QueryRow(ctx, getAppointmentByIDAndVeterinarianID, arg.ID, arg.VeterinarianID)
+	var i Appoinment
+	err := row.Scan(
+		&i.ID,
+		&i.ClinicService,
+		&i.ScheduleDate,
+		&i.Status,
+		&i.Reason,
+		&i.Notes,
+		&i.OwnerID,
+		&i.PetID,
+		&i.VeterinarianID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+	)
+	return i, err
+}
+
 const listAppoinments = `-- name: ListAppoinments :many
 SELECT id, clinic_service, schedule_date, status, reason, notes, owner_id, pet_id, veterinarian_id, created_at, updated_at, deleted_at FROM appoinments 
 WHERE deleted_at IS NULL 

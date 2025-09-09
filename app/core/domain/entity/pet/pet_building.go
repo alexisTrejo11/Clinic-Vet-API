@@ -1,6 +1,8 @@
 package pet
 
 import (
+	"time"
+
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/base"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
@@ -139,6 +141,16 @@ func WithCurrentMedications(medications *string) PetOption {
 	}
 }
 
+func WithTimeStamps(createdAt, updatedAt time.Time) PetOption {
+	return func(p *Pet) error {
+		if createdAt.IsZero() || updatedAt.IsZero() {
+			return domainerr.NewValidationError("pet", "timestamps", "createdAt and updatedAt are required")
+		}
+		p.SetTimeStamps(createdAt, updatedAt)
+		return nil
+	}
+}
+
 func WithSpecialNeeds(specialNeeds *string) PetOption {
 	return func(p *Pet) error {
 		if specialNeeds != nil && len(*specialNeeds) > 500 {
@@ -170,7 +182,7 @@ func NewPet(
 	}
 
 	pet := &Pet{
-		Entity:   base.NewEntity(id),
+		Entity:   base.NewEntity(id, time.Now(), time.Now(), 1),
 		ownerID:  ownerID,
 		isActive: true, // Default to active
 	}

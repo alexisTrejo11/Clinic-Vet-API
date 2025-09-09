@@ -9,18 +9,18 @@ import (
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 )
 
-type ListOwnersUseCase struct {
+type SearchOwnersUseCase struct {
 	ownerRepo repository.OwnerRepository
 }
 
-func NewListOwnersUseCase(ownerRepo repository.OwnerRepository) *ListOwnersUseCase {
-	return &ListOwnersUseCase{
+func NewSearchOwnersUseCase(ownerRepo repository.OwnerRepository) *SearchOwnersUseCase {
+	return &SearchOwnersUseCase{
 		ownerRepo: ownerRepo,
 	}
 }
 
-func (uc *ListOwnersUseCase) Execute(ctx context.Context, queryData dto.GetOwnersRequest) (page.Page[[]dto.OwnerDetail], error) {
-	ownersPage, err := uc.ownerRepo.List(ctx, queryData.Page)
+func (uc *SearchOwnersUseCase) Execute(ctx context.Context, queryData dto.GetOwnersRequest) (page.Page[[]dto.OwnerDetail], error) {
+	ownersPage, err := uc.ownerRepo.Search(ctx, queryData.Page)
 	if err != nil {
 		return page.EmptyPage[[]dto.OwnerDetail](), err
 	}

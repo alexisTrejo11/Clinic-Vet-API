@@ -93,9 +93,13 @@ func sqlRowToOwner(row sqlc.Owner, pets []pet.Pet) (owner.Owner, error) {
 }
 
 func ListRowToOwner(rows []sqlc.Owner) ([]owner.Owner, error) {
+	if len(rows) == 0 {
+		return []owner.Owner{}, nil
+	}
+
 	owners := make([]owner.Owner, 0, len(rows))
 	for i, row := range rows {
-		o, err := sqlRowToOwner(row)
+		o, err := sqlRowToOwner(row, []pet.Pet{})
 		if err != nil {
 			return []owner.Owner{}, err
 		}

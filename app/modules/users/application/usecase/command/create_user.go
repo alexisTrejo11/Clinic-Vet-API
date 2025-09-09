@@ -3,105 +3,79 @@ package command
 import (
 	"context"
 	"errors"
-	"time"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/user"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/user/profile"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/service"
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
+	apperror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/application"
 )
 
-type CreateProfileCommand struct {
-	firstName   string
-	lastName    string
-	gender      string
-	profilePic  string
-	bio         string
-	dateOfBirth time.Time
-	address     string
-}
-
+// CreateUserCommand represents the command to create a new user.
 type CreateUserCommand struct {
-	email          string
-	phoneNumber    string
-	password       string
-	gender         string
-	phone          string
-	address        string
-	role           string
-	ownerID        *int
-	veterinarianID *int
-	status         string
-	dateOfBirth    time.Time
-	profile        CreateProfileCommand
-	ctx            context.Context
+	email       valueobject.Email
+	phoneNumber valueobject.PhoneNumber
+	password    string
+	role        enum.UserRole
+	status      enum.UserStatus
+	profile     CreateProfileCommand
+	ctx         context.Context
 }
 
-type CreateUserHandler struct {
-	repo repository.UserRepository
-}
+// NewCreateUserCommand creates a new instance of CreateUserCommand mapping primitive data types.
+func NewCreateUserCommand(ctx context.Context, email, phoneNumber, password, role string, status string) (CreateUserCommand, error) {
+	var errorsMessages []string
 
-// NewCreateUserCommand creates a new user command from primitive types
-func NewCreateUserCommand(
-	ctx context.Context,
-	email, phoneNumber, password, gender, phone, address, role string,
-	ownerID, veterinarianID *int,
-	status string,
-	dateOfBirth time.Time,
-	firstName, lastName, profilePic, bio string,
-) (CreateUserCommand, error) {
-	if email == "" {
-		return CreateUserCommand{}, errors.New(ErrInvalidEmail)
-	}
-	if phoneNumber == "" {
-		return CreateUserCommand{}, errors.New(ErrInvalidPhone)
-	}
-	if role == "" {
-		return CreateUserCommand{}, errors.New(ErrInvalidRole)
-	}
-	if status == "" {
-		return CreateUserCommand{}, errors.New(ErrInvalidStatus)
-	}
-	if gender == "" {
-		return CreateUserCommand{}, errors.New(ErrInvalidGender)
-	}
-	if dateOfBirth.IsZero() {
-		return CreateUserCommand{}, errors.New(ErrInvalidDateOfBirth)
+	emailVO, err := valueobject.NewEmail(email)
+	if err != nil {
+		errorsMessages = append(errorsMessages, err.Error())
 	}
 
-	profile := CreateProfileCommand{
-		firstName:   firstName,
-		lastName:    lastName,
-		gender:      gender,
-		profilePic:  profilePic,
-		bio:         bio,
-		dateOfBirth: dateOfBirth,
-		address:     address,
+	phoneNumberVO, err := valueobject.NewPhoneNumber(phoneNumber)
+	if err != nil {
+		errorsMessages = append(errorsMessages, err.Error())
+	}
+
+	userRole, err := enum.ParseUserRole(role)
+	if err != nil {
+		errorsMessages = append(errorsMessages, err.Error())
+	}
+
+	userStatus, err := enum.ParseUserStatus(status)
+	if err != nil {
+		errorsMessages = append(errorsMessages, err.Error())
+	}
+
+	if len(errorsMessages) > 0 {
+		return CreateUserCommand{}, apperror.MappingError(errorsMessages, "constructor", "CreateUserCommand", "user")
+	}
+
+	if password == "" {
+		errorsMessages = append(errorsMessages, "password cannot be empty")
 	}
 
 	return CreateUserCommand{
-		email:          email,
-		phoneNumber:    phoneNumber,
-		password:       password,
-		gender:         gender,
-		phone:          phone,
-		address:        address,
-		role:           role,
-		ownerID:        ownerID,
-		veterinarianID: veterinarianID,
-		status:         status,
-		dateOfBirth:    dateOfBirth,
-		profile:        profile,
-		ctx:            ctx,
+		email:       emailVO,
+		phoneNumber: phoneNumberVO,
+		password:    password,
+		role:        userRole,
+		status:      userStatus,
+		ctx:         ctx,
 	}, nil
 }
 
-func NewCreateUserHandler(repo repository.UserRepository) *CreateUserHandler {
+// CreateUserHandler handles the creation of a new user.
+type CreateUserHandler struct {
+	repo            repository.UserRepository
+	securityService service.UserSecurityService
+}
+
+func NewCreateUserHandler(repo repository.UserRepository, securityService service.UserSecurityService) *CreateUserHandler {
 	return &CreateUserHandler{
-		repo: repo,
+		repo:            repo,
+		securityService: securityService,
 	}
 }
 
@@ -116,60 +90,17 @@ func (uc *CreateUserHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
 		return cqrs.FailureResult(ErrFailedMappingUser, err)
 	}
 
-	// TODO: implement security service for validation and password hashing
-	/*
-		if err := uc.securityService.ValidateCreation(command.ctx, *user); err != nil {
-			return cqrs.FailureResult(ErrFailedValidation, err)
-		}
-
-		if err := uc.securityService.HashPassword(user); err != nil {
-			return cqrs.FailureResult(ErrFailedHashPassword, err)
-		}
-	*/
-
-	if err := uc.repo.Save(command.ctx, user); err != nil {
-		return cqrs.FailureResult(ErrFailedSaveUser, err)
+	if err := uc.securityService.ValidateUserCreation(
+		command.ctx,
+		command.email,
+		command.phoneNumber,
+		command.password,
+	); err != nil {
+		return cqrs.FailureResult(ErrFailedValidatingUser, err)
 	}
 
+	if err := uc.securityService.ProccesUserCreation(command.ctx, *user); err != nil {
+		return cqrs.FailureResult(ErrFailedProcessingUser, err)
+	}
 	return cqrs.SuccessResult(user.ID().String(), ErrUserCreationSuccess)
-}
-
-func fromCreateCommand(command CreateUserCommand) (*user.User, error) {
-	// Map email
-	email, err := valueobject.NewEmail(command.email)
-	if err != nil {
-		return nil, errors.New(ErrInvalidEmail)
-	}
-
-	// Map phone number
-	phoneNumber, err := valueobject.NewPhoneNumber(command.phoneNumber)
-	if err != nil {
-		return nil, errors.New(ErrInvalidPhone)
-	}
-
-	// Map role
-	userRole, err := enum.ParseUserRole(command.role)
-	if err != nil {
-		return nil, errors.New(ErrInvalidRole)
-	}
-
-	// Map status
-	userStatus, err := enum.ParseUserStatus(command.status)
-	if err != nil {
-		return nil, errors.New(ErrInvalidStatus)
-	}
-
-	// Map gender
-	userGender, err := enum.ParseGender(command.gender)
-	if err != nil {
-		return nil, errors.New(ErrInvalidGender)
-	}
-
-	// TODO: impl
-	profile := profile.Profile{}
-
-	// Create user
-	user := &user.User{}
-
-	return user, nil
 }

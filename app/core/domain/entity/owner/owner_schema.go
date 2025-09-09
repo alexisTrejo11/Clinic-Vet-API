@@ -12,10 +12,8 @@ import (
 
 type Owner struct {
 	base.Entity[valueobject.OwnerID]
+	base.Person
 	photo       string
-	fullName    valueobject.PersonName
-	gender      enum.PersonGender
-	dateOfBirth time.Time
 	phoneNumber string
 	userID      *valueobject.UserID
 	isActive    bool
@@ -31,15 +29,15 @@ func (o *Owner) Photo() string {
 }
 
 func (o *Owner) FullName() valueobject.PersonName {
-	return o.fullName
+	return o.Person.Name()
 }
 
 func (o *Owner) Gender() enum.PersonGender {
-	return o.gender
+	return o.Person.Gender()
 }
 
 func (o *Owner) DateOfBirth() time.Time {
-	return o.dateOfBirth
+	return o.Person.DateOfBirth()
 }
 
 func (o *Owner) PhoneNumber() string {
@@ -59,5 +57,5 @@ func (o *Owner) Pets() []pet.Pet {
 }
 
 func (o *Owner) Age() int {
-	return calculateAge(o.dateOfBirth)
+	return o.Person.Age()
 }

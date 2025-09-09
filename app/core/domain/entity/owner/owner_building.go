@@ -25,31 +25,19 @@ func WithPhoto(photo string) OwnerOption {
 
 func WithFullName(fullName valueobject.PersonName) OwnerOption {
 	return func(o *Owner) error {
-		if fullName.FullName() == "" {
-			return domainerr.NewValidationError("owner", "full name", "full name is required")
-		}
-		o.fullName = fullName
-		return nil
+		return o.Person.UpdateName(fullName)
 	}
 }
 
 func WithGender(gender enum.PersonGender) OwnerOption {
 	return func(o *Owner) error {
-		if !gender.IsValid() {
-			return domainerr.NewValidationError("owner", "gender", "invalid gender")
-		}
-		o.gender = gender
-		return nil
+		return o.Person.UpdateGender(gender)
 	}
 }
 
 func WithDateOfBirth(dob time.Time) OwnerOption {
 	return func(o *Owner) error {
-		if err := validateDateOfBirth(dob); err != nil {
-			return err
-		}
-		o.dateOfBirth = dob
-		return nil
+		return o.Person.UpdateDateOfBirth(dob)
 	}
 }
 
@@ -84,13 +72,20 @@ func WithPets(pets []pet.Pet) OwnerOption {
 	}
 }
 
+func WithTimestamp(createdAt, updatedAt time.Time) OwnerOption {
+	return func(o *Owner) error {
+		o.SetTimeStamps(createdAt, updatedAt)
+		return nil
+	}
+}
+
 // NewOwner creates a new Owner with functional options
 func NewOwner(
 	id valueobject.OwnerID,
 	opts ...OwnerOption,
 ) (*Owner, error) {
 	owner := &Owner{
-		Entity:   base.NewEntity(id),
+		Entity:   base.NewEntity(id, time.Now(), time.Now(), 1),
 		isActive: true, // Default to active
 		pets:     []pet.Pet{},
 	}

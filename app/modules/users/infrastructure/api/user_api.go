@@ -7,7 +7,9 @@ import (
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/users/application/usecase"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/users/infrastructure/api/controller"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/users/infrastructure/api/routes"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/users/infrastructure/bus"
 	persistence "github.com/alexisTrejo11/Clinic-Vet-API/app/modules/users/infrastructure/persistence/repository"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
 	"github.com/gin-gonic/gin"
@@ -18,7 +20,8 @@ type UserAPIComponents struct {
 	repository        repository.UserRepository
 	adminController   controller.UserAdminController
 	profileController controller.ProfileController
-	dispatcher        usecase.CommandDispatcher
+	commandBus        cqrs.CommandBus
+	quertBus          cqrs.QueryBus
 }
 
 type UserAPIConfig struct {
@@ -61,9 +64,10 @@ func (u *UserAPIModule) Bootstrap() error {
 	userRepo := persistence.NewSQLCUserRepository(u.config.Queries)
 	profileRepo := persistence.NewSQLCProfileRepository(u.config.Queries)
 
-	userDispatcher := usecase.NewCommandDispatcher()
-	userDispatcher.RegisterCurrentCommands(userRepo)
-	userControllers := controller.NewUserAdminController(u.config.DataValidator, userDispatcher)
+	commandUserBus := bus.NewUserCommandBus(userRepo)
+	queryUserBus := bus.NewUserQueryBus(userRepo)
+
+	userControllers := controller.NewUserAdminController(u.config.DataValidator, commandUserBus, queryUserBus)
 	profileUseCases := usecase.NewProfileUseCases(profileRepo)
 	profileController := controller.NewProfileController(profileUseCases)
 
@@ -73,7 +77,8 @@ func (u *UserAPIModule) Bootstrap() error {
 		repository:        userRepo,
 		adminController:   *userControllers,
 		profileController: *profileController,
-		dispatcher:        *userDispatcher,
+		commandBus:        commandUserBus,
+		quertBus:          queryUserBus,
 	}
 	u.isBuilt = true
 
@@ -85,7 +90,7 @@ func (u *UserAPIModule) GetComponents() UserAPIComponents {
 		repository:        u.components.repository,
 		adminController:   u.components.adminController,
 		profileController: u.components.profileController,
-		dispatcher:        u.components.dispatcher,
+		commandBus:        u.components.commandBus,
 	}
 }
 

@@ -23,23 +23,13 @@ func NewUpdateOwnerUseCase(ownerRepo repository.OwnerRepository) *UpdateOwnerUse
 func (uc *UpdateOwnerUseCase) Execute(ctx context.Context, id valueobject.OwnerID, updateData dto.OwnerUpdate) (dto.OwnerDetail, error) {
 	owner, err := uc.ownerRepo.GetByID(ctx, id)
 	if err != nil {
-		return dto.OwnerDetail{}, nil
-	}
-
-	if updateData.PhoneNumber != nil && *updateData.PhoneNumber != owner.PhoneNumber() {
-		exists, err := uc.ownerRepo.ExistsByPhone(ctx, *updateData.PhoneNumber)
-		if err != nil {
-			return dto.OwnerDetail{}, err
-		}
-		if exists {
-			return dto.OwnerDetail{}, apperror.ConflictError("phone Number", "phone Number already taken")
-		}
-
-		owner.SetPhoneNumber(*updateData.PhoneNumber)
+		return dto.OwnerDetail{}, err
 	}
 
 	if updateData.Photo != nil {
-		owner.SetPhoto(*updateData.Photo)
+		if err := owner.UpdatePhoto(*updateData.Photo); err != nil {
+			return dto.OwnerDetail{}, apperror.FieldValidationError("photo", "", err.Error())
+		}
 	}
 
 	if updateData.FirstName != nil || updateData.LastName != nil {
@@ -53,15 +43,14 @@ func (uc *UpdateOwnerUseCase) Execute(ctx context.Context, id valueobject.OwnerI
 			lastName = *updateData.LastName
 		}
 
-		fullName, _ := valueobject.NewPersonName(firstName, lastName)
+		fullName, err := valueobject.NewPersonName(firstName, lastName)
 		if err != nil {
-			return dto.OwnerDetail{}, apperror.FieldValidationError("fullName", "", err.Error())
+			return dto.OwnerDetail{}, apperror.FieldValidationError("name", "", err.Error())
 		}
-		owner.SetFullName(fullName)
-	}
 
-	if updateData.Address != nil {
-		owner.SetAddress(*updateData.Address)
+		if err := owner.UpdateName(fullName); err != nil {
+			return dto.OwnerDetail{}, apperror.FieldValidationError("name", "", err.Error())
+		}
 	}
 
 	if err := uc.ownerRepo.Save(ctx, &owner); err != nil {

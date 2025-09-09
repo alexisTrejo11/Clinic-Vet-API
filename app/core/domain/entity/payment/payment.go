@@ -120,6 +120,16 @@ func WithRefundedAt(refundedAt *time.Time) PaymentOption {
 	}
 }
 
+func WithTimeStamps(createdAt, updatedAt time.Time) PaymentOption {
+	return func(p *Payment) error {
+		if createdAt.IsZero() || updatedAt.IsZero() {
+			return domainerr.NewValidationError("payment", "timestamps", "createdAt and updatedAt are required")
+		}
+		p.SetTimeStamps(createdAt, updatedAt)
+		return nil
+	}
+}
+
 // NewPayment creates a new Payment with functional options
 func NewPayment(
 	id valueobject.PaymentID,
@@ -138,7 +148,7 @@ func NewPayment(
 	}
 
 	payment := &Payment{
-		Entity:        base.NewEntity(id),
+		Entity:        base.NewEntity(id, time.Now(), time.Now(), 1),
 		appointmentID: appointmentID,
 		userID:        userID,
 		status:        enum.PaymentStatusPending, // Default status

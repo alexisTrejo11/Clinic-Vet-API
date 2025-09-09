@@ -106,7 +106,7 @@ func (h ChangePhoneHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
 	return cqrs.SuccessResult(user.ID().String(), "phone changed successfully")
 }
 
-func (h ChangeEmailHandler) Handle(cmd any) cqrs.CommandResult {
+func (h ChangeEmailHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
 	command, ok := cmd.(ChangeEmailCommand)
 	if !ok {
 		return cqrs.FailureResult(ErrFailedChangeEmail, errors.New("invalid command type"))

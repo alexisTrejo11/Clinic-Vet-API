@@ -10,7 +10,6 @@ import (
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/medical"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/medical/application/dto"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
 )
@@ -44,34 +43,7 @@ func (r *SQLCMedHistRepository) GetByID(ctx context.Context, medHistID valueobje
 
 // Search retrieves medical history records based on search criteria with pagination
 func (r *SQLCMedHistRepository) Search(ctx context.Context, searchParams any) (page.Page[[]medical.MedicalHistory], error) {
-	searchParam, ok := searchParams.(dto.MedHistSearchParams)
-	if !ok {
-		return page.Page[[]medical.MedicalHistory]{}, r.invalidParamsError(ErrMsgInvalidSearchParams)
-	}
-
-	// TODO: Implement actual search parameters in the SQLC query
-	queryRows, err := r.queries.SearchMedicalHistory(ctx, sqlc.SearchMedicalHistoryParams{
-		// Add search parameters here when SQLC query is updated
-		Limit:  int32(searchParam.Page.PageSize),
-		Offset: r.calculateOffset(searchParam.Page),
-	})
-	if err != nil {
-		return page.Page[[]medical.MedicalHistory]{}, r.dbError(OpSearch, ErrMsgSearchMedicalHistory, err)
-	}
-
-	medHistoryList, err := ToDomainList(queryRows)
-	if err != nil {
-		return page.Page[[]medical.MedicalHistory]{}, r.wrapConversionError(err)
-	}
-
-	// TODO: Get actual total count from database instead of using len(queryRows)
-	totalCount, err := r.getSearchResultCount(ctx, searchParam)
-	if err != nil {
-		return page.Page[[]medical.MedicalHistory]{}, r.dbError(OpCount, ErrMsgCountMedicalHistory, err)
-	}
-
-	metadata := page.GetPageMetadata(totalCount, searchParam.Page)
-	return page.NewPage(medHistoryList, *metadata), nil
+	return page.Page[[]medical.MedicalHistory]{}, errors.New("method not implemented")
 }
 
 func (r *SQLCMedHistRepository) ListByVetID(ctx context.Context, vetID valueobject.VetID, pagination page.PageInput) (page.Page[[]medical.MedicalHistory], error) {
@@ -101,45 +73,44 @@ func (r *SQLCMedHistRepository) ListByVetID(ctx context.Context, vetID valueobje
 	return page.NewPage(entityList, *metadata), nil
 }
 
-// TODO: Add pagination parameters to the SQLC query
 func (r *SQLCMedHistRepository) ListByPetID(ctx context.Context, petID valueobject.PetID, pagination page.PageInput) (page.Page[[]medical.MedicalHistory], error) {
-	// TODO: Update SQLC query to support pagination parameters
 	queryRows, err := r.queries.ListMedicalHistoryByPet(ctx, int32(petID.Value()))
 	if err != nil {
 		return page.Page[[]medical.MedicalHistory]{}, r.dbError(OpSelect, fmt.Sprintf("failed to list medical history for pet ID %d", petID), err)
 	}
 
-	entityList, err := ToDomainList(queryRows)
+	pets, err := ToDomainList(queryRows)
 	if err != nil {
 		return page.Page[[]medical.MedicalHistory]{}, r.wrapConversionError(err)
 	}
 
-	// Apply manual pagination until SQLC query is updated
-	paginatedList, totalCount := r.applyManualPagination(entityList, pagination)
+	totalCount, err := r.queries.CountMedicalHistoryByPet(ctx, int32(petID.Value()))
+	if err != nil {
+		return page.Page[[]medical.MedicalHistory]{}, r.dbError(OpCount, fmt.Sprintf("failed to count medical history for pet ID %d", petID), err)
+	}
 
-	metadata := page.GetPageMetadata(totalCount, pagination)
-	return page.NewPage(paginatedList, *metadata), nil
+	metadata := page.GetPageMetadata(int(totalCount), pagination)
+	return page.NewPage(pets, *metadata), nil
 }
 
-// TODO: Create proper SQLC query for owner-based medical history retrieval
 func (r *SQLCMedHistRepository) ListByOwnerID(ctx context.Context, ownerID valueobject.OwnerID, pagination page.PageInput) (page.Page[[]medical.MedicalHistory], error) {
-	// TODO: Create ListMedicalHistoryByOwner SQLC query instead of using pet query
-	// This is currently using the wrong query as a placeholder
 	queryRows, err := r.queries.ListMedicalHistoryByPet(ctx, int32(ownerID.Value()))
 	if err != nil {
 		return page.Page[[]medical.MedicalHistory]{}, r.dbError(OpSelect, fmt.Sprintf("failed to list medical history for owner ID %d (using placeholder query)", ownerID.Value()), err)
 	}
 
-	entityList, err := ToDomainList(queryRows)
+	medHistories, err := ToDomainList(queryRows)
 	if err != nil {
 		return page.Page[[]medical.MedicalHistory]{}, r.wrapConversionError(err)
 	}
 
-	// Apply manual pagination until proper SQLC query is created
-	paginatedList, totalCount := r.applyManualPagination(entityList, pagination)
+	totalCount, err := r.queries.CountMedicalHistoryByPet(ctx, int32(ownerID.Value()))
+	if err != nil {
+		return page.Page[[]medical.MedicalHistory]{}, r.dbError(OpCount, fmt.Sprintf("failed to count medical history for owner ID %d (using placeholder query)", ownerID.Value()), err)
+	}
 
-	metadata := page.GetPageMetadata(totalCount, pagination)
-	return page.NewPage(paginatedList, *metadata), nil
+	metadata := page.GetPageMetadata(int(totalCount), pagination)
+	return page.NewPage(medHistories, *metadata), nil
 }
 
 func (r *SQLCMedHistRepository) Create(ctx context.Context, medHistory *medical.MedicalHistory) error {

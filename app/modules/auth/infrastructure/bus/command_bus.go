@@ -6,6 +6,7 @@ import (
 	"reflect"
 
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/service"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/auth/application/command"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/auth/application/jwt"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/password"
@@ -25,7 +26,7 @@ func NewAuthCommandBus(
 	}
 
 	bus.Register(reflect.TypeOf(command.RefreshSessionCommand{}), command.NewRefreshSessionHandler(userRepo, sessionRepo, jwtService))
-	bus.Register(reflect.TypeOf(command.SignupCommand{}), command.NewSignupCommandHandler(userRepo, &password.PasswordEncoderImpl{}))
+	bus.Register(reflect.TypeOf(command.SignupCommand{}), command.NewSignupCommandHandler(userRepo, *service.NewUserSecurityService(userRepo)))
 	bus.Register(reflect.TypeOf(command.LogoutCommand{}), command.NewLogoutHandler(userRepo, sessionRepo))
 	bus.Register(reflect.TypeOf(command.LoginCommand{}), command.NewLoginHandler(userRepo, sessionRepo, jwtService, &password.PasswordEncoderImpl{}))
 	bus.Register(reflect.TypeOf(command.LogoutAllCommand{}), command.NewLogoutAllHandler(userRepo, sessionRepo))

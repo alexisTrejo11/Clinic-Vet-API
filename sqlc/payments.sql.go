@@ -12,6 +12,62 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const countOverduePayments = `-- name: CountOverduePayments :one
+SELECT COUNT (*)
+WHERE duedate < CURRENT_TIMESTAMP AND status != 'paid' AND deleted_at IS NULL
+`
+
+func (q *Queries) CountOverduePayments(ctx context.Context) (int64, error) {
+	row := q.db.QueryRow(ctx, countOverduePayments)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
+const countPaymentsByDateRange = `-- name: CountPaymentsByDateRange :one
+SELECT COUNT(*)
+FROM payments
+WHERE created_at BETWEEN $1 AND $2 AND deleted_at IS NULL
+`
+
+type CountPaymentsByDateRangeParams struct {
+	CreatedAt   pgtype.Timestamptz
+	CreatedAt_2 pgtype.Timestamptz
+}
+
+func (q *Queries) CountPaymentsByDateRange(ctx context.Context, arg CountPaymentsByDateRangeParams) (int64, error) {
+	row := q.db.QueryRow(ctx, countPaymentsByDateRange, arg.CreatedAt, arg.CreatedAt_2)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
+const countPaymentsByStatus = `-- name: CountPaymentsByStatus :one
+SELECT COUNT(*)
+FROM payments
+WHERE status = $1 AND deleted_at IS NULL
+`
+
+func (q *Queries) CountPaymentsByStatus(ctx context.Context, status models.PaymentStatus) (int64, error) {
+	row := q.db.QueryRow(ctx, countPaymentsByStatus, status)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
+const countPaymentsByUserId = `-- name: CountPaymentsByUserId :one
+SELECT COUNT(*)
+FROM payments
+WHERE user_id = $1 AND deleted_at IS NULL
+`
+
+func (q *Queries) CountPaymentsByUserId(ctx context.Context, userID int32) (int64, error) {
+	row := q.db.QueryRow(ctx, countPaymentsByUserId, userID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const createPayment = `-- name: CreatePayment :one
 INSERT INTO payments (
     amount,

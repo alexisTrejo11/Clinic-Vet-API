@@ -189,7 +189,7 @@ func (controller *AppointmentCommandController) NotAttend(c *gin.Context) {
 	}
 
 	ctx := context.Background()
-	notAttendCommand, err := command.NewNotAttendAppointmentCommand(ctx, appointmentID)
+	notAttendCommand, err := command.NewNotAttendAppointmentCommand(ctx, appointmentID, nil)
 	if err != nil {
 		response.ApplicationError(c, err)
 		return

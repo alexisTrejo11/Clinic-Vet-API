@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/payment"
+	p "github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/payment"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
@@ -28,10 +29,10 @@ func NewSQLCPaymentRepository(queries *sqlc.Queries) repository.PaymentRepositor
 }
 
 func (r *SQLCPaymentRepository) GetByIDAndPaidFrom(ctx context.Context, id valueobject.OwnerID) (payment.Payment, error) {
-	return payment.Payment{}, errors.New("method not implemented")
+	return p.Payment{}, errors.New("method not implemented")
 }
 
-// Save creates or updates a payment based on whether it has an ID
+// Save creates or updates a p.based on whether it has an ID
 func (r *SQLCPaymentRepository) Save(ctx context.Context, payment *payment.Payment) error {
 	if payment.ID().IsZero() {
 		return r.create(ctx, payment)
@@ -43,17 +44,17 @@ func (r *SQLCPaymentRepository) GetByID(ctx context.Context, id valueobject.Paym
 	sqlRow, err := r.queries.GetPaymentById(ctx, int32(id.Value()))
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return payment.Payment{}, r.notFoundError("id", fmt.Sprintf("%d", id))
+			return p.Payment{}, r.notFoundError("id", fmt.Sprintf("%d", id))
 		}
-		return payment.Payment{}, r.dbError(OpSelect, fmt.Sprintf("failed to get payment with ID %d", id), err)
+		return p.Payment{}, r.dbError(OpSelect, fmt.Sprintf("failed to get payment with ID %d", id), err)
 	}
 
-	paymentEntity, err := sqlcToEntity(sqlRow)
+	payment, err := sqlcToEntity(sqlRow)
 	if err != nil {
-		return payment.Payment{}, r.wrapConversionError(err)
+		return p.Payment{}, r.wrapConversionError(err)
 	}
 
-	return paymentEntity, nil
+	return payment, nil
 }
 
 func (r *SQLCPaymentRepository) GetByTransactionID(ctx context.Context, transactionID string) (payment.Payment, error) {
@@ -63,14 +64,14 @@ func (r *SQLCPaymentRepository) GetByTransactionID(ctx context.Context, transact
 	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return payment.Payment{}, r.notFoundError("transaction_id", transactionID)
+			return p.Payment{}, r.notFoundError("transaction_id", transactionID)
 		}
-		return payment.Payment{}, r.dbError(OpSelect, fmt.Sprintf("failed to get payment with transaction ID %s", transactionID), err)
+		return p.Payment{}, r.dbError(OpSelect, fmt.Sprintf("failed to get payment with transaction ID %s", transactionID), err)
 	}
 
 	payment, err := sqlcToEntity(sqlRow)
 	if err != nil {
-		return payment.Payment{}, r.wrapConversionError(err)
+		return p.Payment{}, r.wrapConversionError(err)
 	}
 
 	return payment, nil
@@ -86,21 +87,21 @@ func (r *SQLCPaymentRepository) ListByPaidFrom(ctx context.Context, ownerID valu
 
 	sqlRows, err := r.queries.ListPaymentsByUserId(ctx, params)
 	if err != nil {
-		return page.Page[[]payment.Payment]{}, r.dbError(OpSelect, fmt.Sprintf("failed to list payments for user ID %d", ownerID.Value()), err)
+		return page.Page[[]p.Payment]{}, r.dbError(OpSelect, fmt.Sprintf("failed to list payments for user ID %d", ownerID.Value()), err)
 	}
 
-	payments, err := sqlcToEntityList(sqlRows)
+	payment, err := sqlcToEntityList(sqlRows)
 	if err != nil {
-		return page.Page[[]payment.Payment]{}, r.wrapConversionError(err)
+		return page.Page[[]p.Payment]{}, r.wrapConversionError(err)
 	}
 
 	totalCount, err := r.queries.CountPaymentsByUserId(ctx, int32(ownerID.Value()))
 	if err != nil {
-		return page.Page[[]payment.Payment]{}, r.dbError(OpCount, fmt.Sprintf("failed to count payments for user ID %d", ownerID.Value()), err)
+		return page.Page[[]p.Payment]{}, r.dbError(OpCount, fmt.Sprintf("failed to count payments for user ID %d", ownerID.Value()), err)
 	}
 
 	pageMetadata := page.GetPageMetadata(int(totalCount), pageInput)
-	return page.NewPage(payments, *pageMetadata), nil
+	return page.NewPage(payment, *pageMetadata), nil
 }
 
 func (r *SQLCPaymentRepository) ListByStatus(ctx context.Context, status enum.PaymentStatus, pageInput page.PageInput) (page.Page[[]payment.Payment], error) {
@@ -112,21 +113,21 @@ func (r *SQLCPaymentRepository) ListByStatus(ctx context.Context, status enum.Pa
 
 	sqlRows, err := r.queries.ListPaymentsByStatus(ctx, params)
 	if err != nil {
-		return page.Page[[]payment.Payment]{}, r.dbError(OpSelect, fmt.Sprintf("failed to list payments with status %s", status), err)
+		return page.Page[[]p.Payment]{}, r.dbError(OpSelect, fmt.Sprintf("failed to list payments with status %s", status), err)
 	}
 
-	payments, err := sqlcToEntityList(sqlRows)
+	payment, err := sqlcToEntityList(sqlRows)
 	if err != nil {
-		return page.Page[[]payment.Payment]{}, r.wrapConversionError(err)
+		return page.Page[[]p.Payment]{}, r.wrapConversionError(err)
 	}
 
 	totalCount, err := r.queries.CountPaymentsByStatus(ctx, models.PaymentStatus(status))
 	if err != nil {
-		return page.Page[[]payment.Payment]{}, r.dbError(OpCount, fmt.Sprintf("failed to count payments with status %s", status), err)
+		return page.Page[[]p.Payment]{}, r.dbError(OpCount, fmt.Sprintf("failed to count payments with status %s", status), err)
 	}
 
 	pageMetadata := page.GetPageMetadata(int(totalCount), pageInput)
-	return page.NewPage(payments, *pageMetadata), nil
+	return page.NewPage(payment, *pageMetadata), nil
 }
 
 func (r *SQLCPaymentRepository) ListOverduePayments(ctx context.Context, pageInput page.PageInput) (page.Page[[]payment.Payment], error) {
@@ -137,17 +138,17 @@ func (r *SQLCPaymentRepository) ListOverduePayments(ctx context.Context, pageInp
 
 	sqlRows, err := r.queries.ListOverduePayments(ctx, params)
 	if err != nil {
-		return page.Page[[]payment.Payment]{}, r.dbError(OpSelect, ErrMsgListOverduePayments, err)
+		return page.Page[[]p.Payment]{}, r.dbError(OpSelect, ErrMsgListOverduePayments, err)
 	}
 
 	payments, err := sqlcToEntityList(sqlRows)
 	if err != nil {
-		return page.Page[[]payment.Payment]{}, r.wrapConversionError(err)
+		return page.Page[[]p.Payment]{}, r.wrapConversionError(err)
 	}
 
 	totalCount, err := r.queries.CountOverduePayments(ctx)
 	if err != nil {
-		return page.Page[[]payment.Payment]{}, r.dbError(OpCount, "failed to count overdue payments", err)
+		return page.Page[[]p.Payment]{}, r.dbError(OpCount, "failed to count overdue payments", err)
 	}
 
 	pageMetadata := page.GetPageMetadata(int(totalCount), pageInput)
@@ -164,12 +165,12 @@ func (r *SQLCPaymentRepository) ListPaymentsByDateRange(ctx context.Context, sta
 
 	sqlRows, err := r.queries.ListPaymentsByDateRange(ctx, params)
 	if err != nil {
-		return page.Page[[]payment.Payment]{}, r.dbError(OpSelect, fmt.Sprintf("failed to list payments between %s and %s", startDate.Format("2006-01-02"), endDate.Format("2006-01-02")), err)
+		return page.Page[[]p.Payment]{}, r.dbError(OpSelect, fmt.Sprintf("failed to list payments between %s and %s", startDate.Format("2006-01-02"), endDate.Format("2006-01-02")), err)
 	}
 
 	payments, err := sqlcToEntityList(sqlRows)
 	if err != nil {
-		return page.Page[[]payment.Payment]{}, r.wrapConversionError(err)
+		return page.Page[[]p.Payment]{}, r.wrapConversionError(err)
 	}
 
 	totalCount, err := r.queries.CountPaymentsByDateRange(ctx, sqlc.CountPaymentsByDateRangeParams{
@@ -177,7 +178,7 @@ func (r *SQLCPaymentRepository) ListPaymentsByDateRange(ctx context.Context, sta
 		CreatedAt_2: pgtype.Timestamptz{Time: endDate, Valid: true},
 	})
 	if err != nil {
-		return page.Page[[]payment.Payment]{}, r.dbError(OpCount, fmt.Sprintf("failed to count payments between %s and %s", startDate.Format("2006-01-02"), endDate.Format("2006-01-02")), err)
+		return page.Page[[]p.Payment]{}, r.dbError(OpCount, fmt.Sprintf("failed to count payments between %s and %s", startDate.Format("2006-01-02"), endDate.Format("2006-01-02")), err)
 	}
 
 	pageMetadata := page.GetPageMetadata(int(totalCount), pageInput)
@@ -185,12 +186,12 @@ func (r *SQLCPaymentRepository) ListPaymentsByDateRange(ctx context.Context, sta
 }
 
 func (r *SQLCPaymentRepository) Search(ctx context.Context, pageInput page.PageInput, searchCriteria map[string]any) (page.Page[[]payment.Payment], error) {
-	return page.Page[[]payment.Payment]{}, r.dbError(OpSelect, ErrMsgSearchPayments, errors.New("search method not implemented"))
+	return page.Page[[]p.Payment]{}, r.dbError(OpSelect, ErrMsgSearchPayments, errors.New("search method not implemented"))
 }
 
 func (r *SQLCPaymentRepository) SoftDelete(ctx context.Context, id valueobject.PaymentID) error {
 	if err := r.queries.SoftDeletePayment(ctx, int32(id.Value())); err != nil {
-		return r.dbError(OpDelete, fmt.Sprintf("failed to soft delete payment with ID %d", id), err)
+		return r.dbError(OpDelete, fmt.Sprintf("failed to soft delete p.with ID %d", id), err)
 	}
 	return nil
 }
@@ -211,7 +212,7 @@ func (r *SQLCPaymentRepository) update(ctx context.Context, payment *payment.Pay
 
 	_, err := r.queries.UpdatePayment(ctx, params)
 	if err != nil {
-		return r.dbError(OpUpdate, fmt.Sprintf("failed to update payment with ID %d", payment.ID().Value()), err)
+		return r.dbError(OpUpdate, fmt.Sprintf("failed to update p.with ID %d", payment.ID().Value()), err)
 	}
 
 	return nil

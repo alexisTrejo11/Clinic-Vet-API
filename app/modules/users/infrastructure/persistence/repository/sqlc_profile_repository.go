@@ -1,10 +1,11 @@
-package persistence
+package repositoryimpl
 
 import (
 	"context"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/user/address"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/user/profile"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -20,13 +21,13 @@ func NewSQLCProfileRepository(queries *sqlc.Queries) repository.ProfileRepositor
 	}
 }
 
-func (r *SQLCProfileRepository) GetByUserID(ctx context.Context, userID valueobject.UserID) (entity.Profile, error) {
-	sqlRow, err := r.queries.GetUserProfile(ctx, pgtype.Int4{Int32: int32(userID.GetValue()), Valid: true})
+func (r *SQLCProfileRepository) GetByUserID(ctx context.Context, userID valueobject.UserID) (profile.Profile, error) {
+	sqlRow, err := r.queries.GetUserProfile(ctx, pgtype.Int4{Int32: int32(userID.Value()), Valid: true})
 	if err != nil {
-		return entity.Profile{}, err
+		return profile.Profile{}, err
 	}
 
-	return entity.Profile{
+	return profile.Profile{
 		UserID: userID,
 		OwnerID: func() *int {
 			if sqlRow.OwnerID.Valid {
@@ -44,14 +45,14 @@ func (r *SQLCProfileRepository) GetByUserID(ctx context.Context, userID valueobj
 		}(),
 		PhotoURL: sqlRow.ProfilePic.String,
 		Bio:      sqlRow.Bio.String,
-		Address:  &entity.Address{},
+		Address:  &address.Address{},
 		JoinedAt: sqlRow.CreatedAt.Time,
 	}, nil
 }
 
-func (r *SQLCProfileRepository) Create(ctx context.Context, profile *entity.Profile) error {
+func (r *SQLCProfileRepository) Create(ctx context.Context, profile *profile.Profile) error {
 	_, err := r.queries.CreateProfile(ctx, sqlc.CreateProfileParams{
-		UserID:         pgtype.Int4{Int32: int32(profile.UserID.GetValue()), Valid: true},
+		UserID:         pgtype.Int4{Int32: int32(profile.UserID.Value()), Valid: true},
 		Bio:            pgtype.Text{String: profile.Bio, Valid: true},
 		ProfilePic:     pgtype.Text{String: profile.PhotoURL, Valid: profile.PhotoURL != ""},
 		VeterinarianID: pgtype.Int4{Int32: int32(*profile.VeterinarianID), Valid: profile.VeterinarianID != nil},
@@ -64,9 +65,9 @@ func (r *SQLCProfileRepository) Create(ctx context.Context, profile *entity.Prof
 	return nil
 }
 
-func (r *SQLCProfileRepository) Update(ctx context.Context, profile *entity.Profile) error {
+func (r *SQLCProfileRepository) Update(ctx context.Context, profile *profile.Profile) error {
 	_, err := r.queries.UpdateUserProfile(ctx, sqlc.UpdateUserProfileParams{
-		UserID:         pgtype.Int4{Int32: int32(profile.UserID.GetValue()), Valid: !profile.UserID.IsUser()},
+		UserID:         pgtype.Int4{Int32: int32(profile.UserID.Value()), Valid: !profile.UserID.IsUser()},
 		Bio:            pgtype.Text{String: profile.Bio, Valid: true},
 		ProfilePic:     pgtype.Text{String: profile.PhotoURL, Valid: profile.PhotoURL != ""},
 		VeterinarianID: pgtype.Int4{Int32: int32(*profile.VeterinarianID), Valid: profile.VeterinarianID != nil},
@@ -79,8 +80,8 @@ func (r *SQLCProfileRepository) Update(ctx context.Context, profile *entity.Prof
 	return nil
 }
 
-func (r *SQLCProfileRepository) Delete(ctx context.Context, id int) error {
-	err := r.queries.DeleteUserProfile(ctx, pgtype.Int4{Int32: int32(id), Valid: true})
+func (r *SQLCProfileRepository) DeleteByUserID(ctx context.Context, userID valueobject.UserID) error {
+	err := r.queries.DeleteUserProfile(ctx, pgtype.Int4{Int32: int32(userID.Value()), Valid: true})
 	if err != nil {
 		return err
 	}

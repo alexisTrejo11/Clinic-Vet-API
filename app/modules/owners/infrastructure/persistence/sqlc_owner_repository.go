@@ -44,7 +44,6 @@ func (r *SqlcOwnerRepository) GetByID(ctx context.Context, id valueobject.OwnerI
 	petsChan := make(chan petsResult, ConcurrentOpTimeout)
 	var wg sync.WaitGroup
 
-	// Fetch owner data
 	ownerRow, err := r.queries.GetOwnerByID(ctx, int32(id.Value()))
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -53,7 +52,6 @@ func (r *SqlcOwnerRepository) GetByID(ctx context.Context, id valueobject.OwnerI
 		return owner.Owner{}, r.dbError(OpSelect, fmt.Sprintf("failed to get owner with ID %d", id.Value()), err)
 	}
 
-	// Concurrently fetch pets for the owner
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -71,7 +69,6 @@ func (r *SqlcOwnerRepository) GetByID(ctx context.Context, id valueobject.OwnerI
 		return owner.Owner{}, fmt.Errorf("%s with ID %d: %w", "", id.Value(), petsRes.err)
 	}
 
-	// Convert SQL row to domain owner
 	ownerEntity, err := sqlRowToOwner(ownerRow, petsRes.pets)
 	if err != nil {
 		return owner.Owner{}, r.wrapConversionError(err)
@@ -97,30 +94,9 @@ func (r *SqlcOwnerRepository) GetByPhone(ctx context.Context, phone string) (own
 	return ownerEntity, nil
 }
 
-// List retrieves owners with pagination
-func (r *SqlcOwnerRepository) List(ctx context.Context, pagination page.PageInput) (page.Page[[]owner.Owner], error) {
-	pageParams := sqlc.ListOwnersParams{
-		Limit:  int32(pagination.PageSize),
-		Offset: r.calculateOffset(pagination),
-	}
-
-	ownerRows, err := r.queries.ListOwners(ctx, pageParams)
-	if err != nil {
-		return page.Page[[]owner.Owner]{}, r.dbError(OpSelect, ErrMsgListOwners, err)
-	}
-
-	owners, err := ListRowToOwner(ownerRows)
-	if err != nil {
-		return page.Page[[]owner.Owner]{}, r.wrapConversionError(err)
-	}
-
-	totalCount, err := r.queries.CountOwners(ctx)
-	if err != nil {
-		return page.Page[[]owner.Owner]{}, r.dbError(OpCount, ErrMsgCountOwners, err)
-	}
-
-	pageMetadata := page.GetPageMetadata(int(totalCount), pagination)
-	return page.NewPage(owners, *pageMetadata), nil
+// Search retrieves owners with pagination
+func (r *SqlcOwnerRepository) Search(ctx context.Context, search any) (page.Page[[]owner.Owner], error) {
+	return page.Page[[]owner.Owner]{}, errors.New("not implemented")
 }
 
 func (r *SqlcOwnerRepository) SoftDelete(ctx context.Context, id valueobject.OwnerID) error {

@@ -181,7 +181,7 @@ func (controller *VetAppointmentController) CancelAppointment(c *gin.Context) {
 // @Failure 404 {object} response.APIResponse "Appointment not found"
 // @Failure 422 {object} response.APIResponse "Cannot confirm appointment"
 // @Router /vet/appointments/{id}/confirm [put]
-func (controller *VetAppointmentController) Confirmppointment(c *gin.Context) {
+func (controller *VetAppointmentController) ConfirmAppointment(c *gin.Context) {
 	appointmentID, err := ginUtils.ParseParamToInt(c, "id")
 	if err != nil {
 		response.BadRequest(c, httpError.RequestURLParamError(err, "appointment-ID", c.Param("id")))

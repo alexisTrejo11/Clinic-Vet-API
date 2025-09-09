@@ -3,14 +3,10 @@ package config
 import (
 	"os"
 
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/log"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"gopkg.in/natefinch/lumberjack.v2"
-)
-
-var (
-	AppLogger   *zap.Logger
-	AuditLogger *zap.Logger
 )
 
 func InitLogger() {
@@ -26,7 +22,7 @@ func InitLogger() {
 	core := zapcore.NewTee(
 		zapcore.NewCore(consoleEncoder, zapcore.AddSync(os.Stdout), zapcore.InfoLevel),
 	)
-	AppLogger = zap.New(core, zap.AddCaller())
+	log.AppLogger = zap.New(core, zap.AddCaller())
 
 	// AUDIT
 	auditFile := &lumberjack.Logger{
@@ -48,10 +44,10 @@ func InitLogger() {
 		zapcore.NewCore(fileEncoder, zapcore.AddSync(auditFile), zapcore.InfoLevel),
 	)
 
-	AuditLogger = zap.New(auditCore)
+	log.AuditLogger = zap.New(auditCore)
 }
 
 func SyncLogger() {
-	_ = AppLogger.Sync()
-	_ = AuditLogger.Sync()
+	_ = log.AppLogger.Sync()
+	_ = log.AuditLogger.Sync()
 }

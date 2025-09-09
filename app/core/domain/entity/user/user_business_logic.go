@@ -25,9 +25,10 @@ func (u *User) UpdatePhoneNumber(newPhone valueobject.PhoneNumber) error {
 }
 
 func (u *User) UpdatePassword(newPassword string) error {
-	if err := ValidatePassword(newPassword); err != nil {
-		return err
+	if len(newPassword) < 8 {
+		return errors.New("password must be at least 8 characters long")
 	}
+
 	u.password = newPassword
 	u.IncrementVersion()
 	return nil

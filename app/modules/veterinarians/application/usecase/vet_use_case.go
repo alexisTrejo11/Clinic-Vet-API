@@ -49,16 +49,11 @@ func (uc *VeterinarianUseCases) CreateVetUseCase(ctx context.Context, vetCreateD
 	return uc.createVetUseCase.Execute(ctx, vetCreateData)
 }
 
-func (uc *VeterinarianUseCases) UpdateVetUseCase(ctx context.Context, vetIDInt int, vetCreateData dto.UpdateVetData) (dto.VetResponse, error) {
-	vetID, err := valueobject.NewVetID(vetIDInt)
-	if err != nil {
-		return dto.VetResponse{}, apperror.FieldValidationError("id", strconv.Itoa(vetIDInt), err.Error())
-	}
-
-	return uc.updateVetUseCase.Execute(ctx, vetID, vetCreateData)
+func (uc *VeterinarianUseCases) UpdateVetUseCase(ctx context.Context, vetCreateData dto.UpdateVetData) (dto.VetResponse, error) {
+	return uc.updateVetUseCase.Execute(ctx, vetCreateData)
 }
 
-func (uc *VeterinarianUseCases) DeleteVetUseCase(ctx context.Context, vetIDInt int) error {
+func (uc *VeterinarianUseCases) DeleteVet(ctx context.Context, vetIDInt int) error {
 	vetID, err := valueobject.NewVetID(vetIDInt)
 	if err != nil {
 		return apperror.FieldValidationError("id", strconv.Itoa(vetIDInt), err.Error())

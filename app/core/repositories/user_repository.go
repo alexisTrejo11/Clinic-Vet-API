@@ -26,8 +26,8 @@ type UserRepository interface {
 }
 
 type ProfileRepository interface {
-	GetByUserID(ctx context.Context, userID int) (profile.Profile, error)
+	GetByUserID(ctx context.Context, userID valueobject.UserID) (profile.Profile, error)
 	Create(ctx context.Context, profile *profile.Profile) error
 	Update(ctx context.Context, profile *profile.Profile) error
-	Delete(ctx context.Context, userID int) error
+	DeleteByUserID(ctx context.Context, userID valueobject.UserID) error
 }

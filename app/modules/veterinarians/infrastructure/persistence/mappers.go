@@ -1,64 +1,93 @@
 package persistence
 
 import (
+	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/veterinarian"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
 	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 func SqlcVetToDomain(sql sqlc.Veterinarian) (*veterinarian.Veterinarian, error) {
-	name, err := valueobject.NewPersonName(sql.FirstName, sql.LastName)
-	if err != nil {
-		return nil, fmt.Errorf("error al crear el nombre de la persona: %w", err)
+	if sql.FirstName == "" || sql.LastName == "" {
+		return nil, errors.New("first name and last name are required")
 	}
 
-	schedule, err := UnmarshalVetSchedule(sql.ScheduleJson)
+	if sql.LicenseNumber == "" {
+		return nil, errors.New("license number is required")
+	}
+
+	if sql.Speciality == "" {
+		return nil, errors.New("specialty is required")
+	}
+
+	vetID, err := valueobject.NewVetID(int(sql.ID))
 	if err != nil {
+		return nil, fmt.Errorf("invalid vet ID: %w", err)
+	}
+
+	// Mapeo del nombre
+	name, err := valueobject.NewPersonName(sql.FirstName, sql.LastName)
+	if err != nil {
+		return nil, fmt.Errorf("error creating person name: %w", err)
+	}
+
+	// Mapeo de la especialidad
+	specialty, err := enum.ParseVetSpecialty(string(sql.Speciality))
+	if err != nil {
+		return nil, fmt.Errorf("invalid specialty '%s': %w", sql.Speciality, err)
+	}
+
+	// Mapeo del schedule
+	var schedule *valueobject.Schedule
+	if sql.ScheduleJson != nil {
+		schedule, err = UnmarshalVetSchedule(sql.ScheduleJson)
+		if err != nil {
+			// Log the error but continue with empty schedule
+			log.Printf("Warning: Failed to unmarshal schedule: %v", err)
+			schedule = &valueobject.Schedule{}
+		}
+	} else {
 		schedule = &valueobject.Schedule{}
 	}
 
-	// Utiliza el builder para construir el objeto del dominio
-	builder := veterinarian.NewVeterinarianBuilder().
-		WithID(int(sql.ID)).
-		WithName(name).
-		WithPhoto(sql.Photo).
-		WithLicenseNumber(sql.LicenseNumber).
-		WithYearsExperience(int(sql.YearsOfExperience)).
-		WithSpecialty(enum.MustParseVetSpecialty(string(sql.Speciality))).
-		WithSchedule(schedule).
-		WithScheduleJSON(string(sql.ScheduleJson))
-
-	// Manejar campos opcionales/nulos
-	if sql.IsActive.Valid {
-		builder.WithIsActive(sql.IsActive.Bool)
-	} else {
-		// Asume un valor por defecto si no es válido
-		builder.WithIsActive(false)
-	}
-
+	// Mapeo del userID
+	var userID *valueobject.UserID
 	if sql.UserID.Valid {
-		uid := int(sql.UserID.Int32)
-		builder.WithUserID(&uid)
+		userIDVal, err := valueobject.NewUserID(int(sql.UserID.Int32))
+		if err != nil {
+			return nil, fmt.Errorf("invalid user ID: %w", err)
+		}
+		userID = &userIDVal
 	}
 
-	if sql.CreatedAt.Valid {
-		builder.WithCreatedAt(sql.CreatedAt.Time)
-	} else {
-		builder.WithCreatedAt(time.Time{})
+	// Crear options
+	opts := []veterinarian.VeterinarianOption{
+		veterinarian.WithName(name),
+		veterinarian.WithPhoto(sql.Photo),
+		veterinarian.WithLicenseNumber(sql.LicenseNumber),
+		veterinarian.WithSpecialty(specialty),
+		veterinarian.WithYearsExperience(int(sql.YearsOfExperience)),
+		veterinarian.WithSchedule(schedule),
+		veterinarian.WithIsActive(getBoolFromNullBool(sql.IsActive, true)),
+		veterinarian.WithUserID(userID),
+		veterinarian.WithTimestamps(sql.CreatedAt.Time, sql.UpdatedAt.Time),
 	}
 
-	if sql.UpdatedAt.Valid {
-		builder.WithUpdatedAt(sql.UpdatedAt.Time)
-	} else {
-		builder.WithUpdatedAt(time.Time{})
+	// Crear la entidad
+	vet, err := veterinarian.NewVeterinarian(vetID, opts...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create veterinarian from database: %w", err)
 	}
 
-	return builder.Build(), nil
+	return vet, nil
 }
 
 // Estructura temporal para parsear el JSON de PostgreSQL
@@ -156,4 +185,32 @@ func UnmarshalVetSchedule(sqlJSON []byte) (*valueobject.Schedule, error) {
 	}
 
 	return parseScheduleFromPostgres(sqlJSON)
+}
+
+func getBoolFromNullBool(nullBool pgtype.Bool, defaultValue bool) bool {
+	if nullBool.Valid {
+		return nullBool.Bool
+	}
+	return defaultValue
+}
+
+func getTimeFromNullTime(nullTime pgtype.Timestamp, defaultValue time.Time) time.Time {
+	if nullTime.Valid {
+		return nullTime.Time
+	}
+	return defaultValue
+}
+
+func getIntFromNullInt32(nullInt sql.NullInt32, defaultValue int) int {
+	if nullInt.Valid {
+		return int(nullInt.Int32)
+	}
+	return defaultValue
+}
+
+func getStringFromNullString(nullString sql.NullString, defaultValue string) string {
+	if nullString.Valid {
+		return nullString.String
+	}
+	return defaultValue
 }

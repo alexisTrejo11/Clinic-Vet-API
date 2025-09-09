@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/user"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/auth/application/jwt"
 	autherror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/auth"
@@ -23,7 +24,7 @@ type UserContext struct {
 
 func UserToUserContext(user user.User) *UserContext {
 	return &UserContext{
-		UserID:      user.ID().GetValue(),
+		UserID:      user.ID().Value(),
 		Email:       user.Email().String(),
 		PhoneNumber: user.PhoneNumber().String(),
 		Role:        string(user.Role()),
@@ -60,7 +61,14 @@ func (am *AuthMiddleware) Authenticate() gin.HandlerFunc {
 
 		ctx := context.Background()
 
-		userID, err := strconv.Atoi(idSTR)
+		idINT, err := strconv.Atoi(idSTR)
+		if err != nil {
+			response.ServerError(c, err)
+			c.Abort()
+			return
+		}
+
+		userID, err := valueobject.NewUserID(idINT)
 		if err != nil {
 			response.ServerError(c, err)
 			c.Abort()
@@ -101,7 +109,14 @@ func (am *AuthMiddleware) OptionalAuth() gin.HandlerFunc {
 			return
 		}
 
-		userID, err := strconv.Atoi(claims.ID)
+		idINT, err := strconv.Atoi(claims.ID)
+		if err != nil {
+			response.ServerError(c, err)
+			c.Abort()
+			return
+		}
+
+		userID, err := valueobject.NewUserID(idINT)
 		if err != nil {
 			response.ServerError(c, err)
 			c.Abort()

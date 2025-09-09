@@ -53,6 +53,13 @@ func WithNotes(notes string) MedicalHistoryOptions {
 	}
 }
 
+func WithTimestamp(createdAt, updatedAt time.Time) MedicalHistoryOptions {
+	return func(mh *MedicalHistory) error {
+		mh.SetTimeStamps(createdAt, updatedAt)
+		return nil
+	}
+}
+
 func WithCondition(condition enum.PetCondition) MedicalHistoryOptions {
 	return func(mh *MedicalHistory) error {
 		mh.condition = condition
@@ -68,7 +75,7 @@ func NewMedicalHistory(
 	opts ...MedicalHistoryOptions,
 ) (*MedicalHistory, error) {
 	mh := &MedicalHistory{
-		Entity:  base.NewEntity(medhistoryID),
+		Entity:  base.NewEntity(medhistoryID, time.Now(), time.Now(), 1),
 		petID:   petID,
 		ownerID: ownerID,
 		vetID:   vetID,

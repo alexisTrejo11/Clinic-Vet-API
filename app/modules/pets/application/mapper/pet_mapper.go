@@ -3,6 +3,7 @@ package mapper
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/pet"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
@@ -10,7 +11,7 @@ import (
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/pets/application/dto"
 )
 
-func ToDomainFromCreate(dto dto.PetCreate) (*pet.Pet, error) {
+func ToDomainFromCreate(dto dto.CreatePetData) (*pet.Pet, error) {
 	// Convertir y validar los IDs de value objects
 
 	ownerID, err := valueobject.NewOwnerID(dto.OwnerID.Value())
@@ -107,15 +108,15 @@ func ToResponse(pet *pet.Pet) dto.PetResponse {
 		CurrentMedications: pet.CurrentMedications(),
 		SpecialNeeds:       pet.SpecialNeeds(),
 		IsActive:           pet.IsActive(),
-		CreatedAt:          pet.CreatedAt().Format("2005-10-01 20:00:00"),
-		UpdatedAt:          pet.UpdatedAt().Format("2005-10-01 20:00:00"),
+		CreatedAt:          pet.CreatedAt().Format(time.RFC822),
+		UpdatedAt:          pet.UpdatedAt().Format(time.RFC822),
 	}
 
 	if pet.Age() != nil {
 		response.Age = pet.Age()
 	}
 	if pet.Gender() != nil {
-		response.Gender = (*string)(pet.Gender())
+		response.Gender = pet.Gender().DisplayName()
 	}
 
 	return response

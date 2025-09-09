@@ -6,7 +6,7 @@ import (
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/owners/infrastructure/api/controller"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/owners/infrastructure/api/routes"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/owners/infrastructure/persistence"
-	appError "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/errors/application"
+	appError "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/application"
 	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -73,7 +73,7 @@ func (f *OwnerAPIModule) Bootstrap() error {
 // createUseCases creates and wires all use cases
 func (f *OwnerAPIModule) createUseCases(repo repository.OwnerRepository) usecase.OwnerServiceFacade {
 	getUseCase := usecase.NewGetOwnerByIDUseCase(repo)
-	listUseCase := usecase.NewListOwnersUseCase(repo)
+	listUseCase := usecase.NewSearchOwnersUseCase(repo)
 	createUseCase := usecase.NewCreateOwnerUseCase(repo)
 	updateUseCase := usecase.NewUpdateOwnerUseCase(repo)
 	deleteUseCase := usecase.NewSoftDeleteOwnerUseCase(repo)
@@ -84,19 +84,19 @@ func (f *OwnerAPIModule) createUseCases(repo repository.OwnerRepository) usecase
 // validateConfig validates the Module configuration
 func (f *OwnerAPIModule) validateConfig() error {
 	if f.config == nil {
-		return appError.NewConflictError("INVALID_CONFIG", "configuration cannot be nil")
+		return appError.ConflictError("INVALID_CONFIG", "configuration cannot be nil")
 	}
 	if f.config.Router == nil {
-		return appError.NewConflictError("INVALID_CONFIG", "router cannot be nil")
+		return appError.ConflictError("INVALID_CONFIG", "router cannot be nil")
 	}
 	if f.config.Validator == nil {
-		return appError.NewConflictError("INVALID_CONFIG", "validator cannot be nil")
+		return appError.ConflictError("INVALID_CONFIG", "validator cannot be nil")
 	}
 	if f.config.Queries == nil {
-		return appError.NewConflictError("INVALID_CONFIG", "queries cannot be nil")
+		return appError.ConflictError("INVALID_CONFIG", "queries cannot be nil")
 	}
 	if f.config.PetRepo == nil {
-		return appError.NewConflictError("INVALID_CONFIG", "pet repository cannot be nil")
+		return appError.ConflictError("INVALID_CONFIG", "pet repository cannot be nil")
 	}
 	return nil
 }

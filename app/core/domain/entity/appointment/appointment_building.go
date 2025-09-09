@@ -87,7 +87,7 @@ func NewAppointment(
 	}
 
 	appointment := &Appointment{
-		Entity:  base.NewEntity(id),
+		Entity:  base.NewEntity(id, time.Now(), time.Now(), 1),
 		petID:   petID,
 		ownerID: ownerID,
 		status:  enum.AppointmentStatusPending, // Default status

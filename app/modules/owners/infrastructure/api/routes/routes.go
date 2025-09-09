@@ -1,3 +1,4 @@
+// Package routes defines the HTTP routes for owner-related operations.
 package routes
 
 import (
@@ -8,7 +9,7 @@ import (
 func OwnerRoutes(app *gin.Engine, ownerController *controller.OwnerController) {
 	ownerV2 := app.Group("/api/v2/owners")
 	ownerV2.GET("/:id", ownerController.GetOwnerByID)
-	ownerV2.GET("/", ownerController.ListOwners)
+	ownerV2.GET("/", ownerController.SearchOwners)
 	ownerV2.POST("/", ownerController.CreateOwner)
 	ownerV2.PATCH("/:id", ownerController.UpdateOwner)
 	ownerV2.DELETE("/:id", ownerController.DeleteOwner)

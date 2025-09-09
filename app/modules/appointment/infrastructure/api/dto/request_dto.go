@@ -86,7 +86,7 @@ type RescheduleAppointmentRequest struct {
 }
 
 func (r *RescheduleAppointmentRequest) ToCommand(ctx context.Context) (command.RescheduleAppointmentCommand, error) {
-	rescheduleCommand, err := command.NewRescheduleAppointmentCommand(ctx, r.AppointmentID, r.Datetime.Time, r.Reason)
+	rescheduleCommand, err := command.NewRescheduleAppointmentCommand(ctx, r.AppointmentID, nil, r.Datetime.Time, r.Reason)
 	if err != nil {
 		return command.RescheduleAppointmentCommand{}, err
 	}
@@ -99,7 +99,7 @@ type CompleteAppointmentRequest struct {
 }
 
 func (r *CompleteAppointmentRequest) ToCommand(ctx context.Context, appointmentID int) (command.CompleteAppointmentCommand, error) {
-	cmd, err := command.NewCompleteAppointmenCommand(ctx, appointmentID, r.Notes)
+	cmd, err := command.NewCompleteAppointmenCommand(ctx, appointmentID, nil, r.Notes)
 	if err != nil {
 		return command.CompleteAppointmentCommand{}, err
 	}

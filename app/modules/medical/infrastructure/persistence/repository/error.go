@@ -1,11 +1,8 @@
 package repositoryimpl
 
 import (
-	"context"
 	"fmt"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/medical"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/medical/application/dto"
 	dberr "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/infrastructure/database"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -44,37 +41,12 @@ func (r *SQLCMedHistRepository) calculateOffset(pageData page.PageInput) int32 {
 	return int32(pageData.PageSize * (pageData.PageNumber - 1))
 }
 
-// applyManualPagination applies pagination logic in memory (temporary solution)
-func (r *SQLCMedHistRepository) applyManualPagination(items []medical.MedicalHistory, pagination page.PageInput) ([]medical.MedicalHistory, int) {
-	totalCount := len(items)
-	startIndex := (pagination.PageNumber - 1) * pagination.PageSize
-	endIndex := startIndex + pagination.PageSize
-
-	if startIndex >= totalCount {
-		return []medical.MedicalHistory{}, totalCount
-	}
-
-	if endIndex > totalCount {
-		endIndex = totalCount
-	}
-
-	return items[startIndex:endIndex], totalCount
-}
-
 // buildNotesParam creates a pgtype.Text parameter for notes field
 func (r *SQLCMedHistRepository) buildNotesParam(notes *string) pgtype.Text {
 	if notes != nil {
 		return pgtype.Text{String: *notes, Valid: true}
 	}
 	return pgtype.Text{Valid: false}
-}
-
-// getSearchResultCount gets the total count for search results
-// TODO: Implement with actual count query
-func (r *SQLCMedHistRepository) getSearchResultCount(ctx context.Context, searchParam dto.MedHistSearchParams) (int, error) {
-	// Placeholder - should use actual count query with search parameters
-	// For now, return 0 to avoid errors
-	return 0, nil
 }
 
 // dbError creates a standardized database operation error
@@ -90,9 +62,4 @@ func (r *SQLCMedHistRepository) notFoundError(parameterName, parameterValue stri
 // wrapConversionError wraps domain conversion errors
 func (r *SQLCMedHistRepository) wrapConversionError(err error) error {
 	return fmt.Errorf("%s: %w", ErrMsgConvertToDomain, err)
-}
-
-// invalidParamsError creates an error for invalid parameters
-func (r *SQLCMedHistRepository) invalidParamsError(message string) error {
-	return fmt.Errorf("%s: expected dto.MedHistSearchParams", message)
 }

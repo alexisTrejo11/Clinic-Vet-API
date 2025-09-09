@@ -3,17 +3,15 @@ package controller
 
 import (
 	"errors"
-	"net/http"
-	"strconv"
 	"time"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/entity/valueobject"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/appointment/application/command"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/appointment/application/query"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/appointment/infrastructure/api/dto"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
 	authError "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/auth"
 	httpError "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/infrastructure/http"
+	ginUtils "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/gin_utils"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/response"
 	"github.com/alexisTrejo11/Clinic-Vet-API/middleware"
@@ -218,29 +216,25 @@ func (controller *OwnerAppointmentController) RescheduleAppointment(c *gin.Conte
 // @Param id path int true "Appointment ID"
 // @Security BearerAuth
 // @Router /owner/appointments/{id}/cancel [put]
-func (controller *OwnerAppointmentController) CancelAppointment(ctx *gin.Context) {
-	idParam := ctx.Param("id")
-	id, err := strconv.Atoi(idParam)
+func (controller *OwnerAppointmentController) CancelAppointment(c *gin.Context) {
+	appointmentID, err := ginUtils.ParseParamToInt(c, "id")
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid appointment ID"})
+		response.BadRequest(c, httpError.RequestURLParamError(err, "id", c.Param("id")))
 		return
 	}
 
-	appointmentID, err := valueobject.NewAppointmentID(id)
+	command, err := command.NewCancelAppointmentCommand(c.Request.Context(), appointmentID, nil, "Cancelled by admin")
 	if err != nil {
-		ctx.JSON(400, gin.H{"error": err.Error()})
-		return
+		response.ApplicationError(c, err)
 	}
 
-	command := command.NewCancelAppointmentCommand(appointmentID, "")
-
-	result := controller.commandBus.Execute(ctx, command)
+	result := controller.commandBus.Execute(command)
 	if !result.IsSuccess {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": result.Message})
+		response.ApplicationError(c, result.Error)
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"message": result.Message})
+	response.Success(c, result)
 }
 
 // GetAppointmentsByPet godoc
@@ -254,38 +248,37 @@ func (controller *OwnerAppointmentController) CancelAppointment(ctx *gin.Context
 // @Param limit query int false "Items per page" default(10)
 // @Security BearerAuth
 // @Router /owner/appointments/pet/{petID} [get]
-func (controller *OwnerAppointmentController) GetAppointmentsByPet(ctx *gin.Context) {
-	petIDParam := ctx.Param("petID")
-	idInt, err := strconv.Atoi(petIDParam)
+func (controller *OwnerAppointmentController) GetAppointmentsByPet(c *gin.Context) {
+	petID, err := ginUtils.ParseParamToInt(c, "id")
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid pet ID"})
+		response.BadRequest(c, httpError.RequestURLParamError(err, "id", c.Param("id")))
 		return
 	}
 
-	pageParam := ctx.DefaultQuery("page", "1")
-	limitParam := ctx.DefaultQuery("limit", "10")
-
-	page, err := strconv.Atoi(pageParam)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid page number"})
+	var pagination *page.PageInput
+	if err := c.ShouldBindQuery(&pagination); err != nil {
+		response.BadRequest(c, httpError.RequestBodyDataError(err))
 		return
 	}
 
-	limit, err := strconv.Atoi(limitParam)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid limit"})
+	if err := controller.validator.Struct(&pagination); err != nil {
+		response.BadRequest(c, httpError.InvalidDataError(err))
 		return
 	}
 
-	petID, _ := valueobject.NewPetID(idInt)
-	query := query.NewGetAppointmentsByPetQuery(petID, page, limit)
-	response, err := controller.queryBus.Execute(ctx, query)
+	getApptByPetQuery, err := query.NewListAppointmentsByPetQuery(petID, *pagination)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		response.ApplicationError(c, err)
 		return
 	}
 
-	ctx.JSON(http.StatusOK, response)
+	petResponsePage, err := controller.queryBus.Execute(getApptByPetQuery)
+	if err != nil {
+		response.ApplicationError(c, err)
+		return
+	}
+
+	response.Success(c, petResponsePage)
 }
 
 // GetUpcomingAppointments godoc
@@ -300,47 +293,43 @@ func (controller *OwnerAppointmentController) GetAppointmentsByPet(ctx *gin.Cont
 // @Param limit query int false "Items per page" default(10)
 // @Security BearerAuth
 // @Router /owner/appointments/upcoming [get]
-func (controller *OwnerAppointmentController) GetUpcomingAppointments(ctx *gin.Context) {
-	// Get owner ID from context (should be set by auth middleware)
-
-	// Default to next 30 days if no date range specified
+func (controller *OwnerAppointmentController) GetUpcomingAppointments(c *gin.Context) {
 	startDate := time.Now()
 	endDate := startDate.AddDate(0, 0, 30)
 
-	// Allow custom date range via query parameters
-	if startDateStr := ctx.Query("start_date"); startDateStr != "" {
+	if startDateStr := c.Query("start_date"); startDateStr != "" {
 		if parsed, err := time.Parse("2006-01-02", startDateStr); err == nil {
 			startDate = parsed
 		}
 	}
-	if endDateStr := ctx.Query("end_date"); endDateStr != "" {
+	if endDateStr := c.Query("end_date"); endDateStr != "" {
 		if parsed, err := time.Parse("2006-01-02", endDateStr); err == nil {
 			endDate = parsed
 		}
 	}
 
-	pageParam := ctx.DefaultQuery("page", "1")
-	limitParam := ctx.DefaultQuery("limit", "10")
-
-	page, err := strconv.Atoi(pageParam)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid page number"})
+	var pageInput page.PageInput
+	if err := c.ShouldBindQuery(&pageInput); err != nil {
+		response.BadRequest(c, httpError.RequestBodyDataError(err))
 		return
 	}
 
-	limit, err := strconv.Atoi(limitParam)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid limit"})
+	if err := controller.validator.Struct(&pageInput); err != nil {
+		response.BadRequest(c, httpError.InvalidDataError(err))
 		return
 	}
 
-	query := query.NewGetAppointmentsByDateRangeQuery(startDate, endDate, page, limit)
-
-	response, err := controller.queryBus.Execute(ctx, query)
+	listApptByDataRangeQuery, err := query.NewListAppointmentsByDateRangeQuery(startDate, endDate, pageInput)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		response.ApplicationError(c, err)
 		return
 	}
 
-	ctx.JSON(http.StatusOK, response)
+	appointmentPage, err := controller.queryBus.Execute(listApptByDataRangeQuery)
+	if err != nil {
+		response.ApplicationError(c, err)
+		return
+	}
+
+	response.Success(c, appointmentPage)
 }

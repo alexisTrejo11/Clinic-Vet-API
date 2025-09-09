@@ -9,8 +9,9 @@ import (
 )
 
 type PetUseCasesFacade interface {
+	SearchPets(ctx context.Context, params any) ([]dto.PetResponse, error)
 	GetPetByID(ctx context.Context, petID valueobject.PetID) (dto.PetResponse, error)
-	CreatePet(ctx context.Context, petCreate dto.PetCreate) (dto.PetResponse, error)
+	CreatePet(ctx context.Context, petCreate dto.CreatePetData) (dto.PetResponse, error)
 	UpdatePet(ctx context.Context, petUpdate dto.PetUpdate) (dto.PetResponse, error)
 	DeletePet(ctx context.Context, petID valueobject.PetID, isSoftDelete bool) error
 }
@@ -27,7 +28,11 @@ func NewPetUseCasesFacade(petRepo repository.PetRepository, ownerRepo repository
 	}
 }
 
-func (f *petUseCaseFacade) CreatePet(ctx context.Context, petCreate dto.PetCreate) (dto.PetResponse, error) {
+func (f *petUseCaseFacade) SearchPets(ctx context.Context, params any) ([]dto.PetResponse, error) {
+	return []dto.PetResponse{}, nil
+}
+
+func (f *petUseCaseFacade) CreatePet(ctx context.Context, petCreate dto.CreatePetData) (dto.PetResponse, error) {
 	useCase := NewCreatePetUseCase(f.petRepository, f.ownerRepository)
 	return useCase.Execute(ctx, petCreate)
 }

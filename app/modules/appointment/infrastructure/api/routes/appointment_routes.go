@@ -65,7 +65,7 @@ func (r *AppointmentRoutes) RegisterAdminRoutes(router *gin.Engine) {
 	{
 		// Vet appointment management
 		vetGroup.GET("/appointments", r.vetAppointmentController.GetMyAppointments)
-		vetGroup.GET("/appointments/today", r.vetAppointmentController.GetTodayAppointments)
+		// vetGroup.GET("/appointments/today", r.vetAppointmentController.GetTodayAppointments)
 		vetGroup.GET("/appointments/stats", r.vetAppointmentController.GetAppointmentStats)
 
 		// Appointment state management
@@ -95,7 +95,7 @@ func (r *AppointmentRoutes) RegisterVetRoutes(router *gin.Engine) {
 	vetGroup := router.Group("/api/v2/vet")
 	{
 		vetGroup.GET("/appointments", r.vetAppointmentController.GetMyAppointments)
-		vetGroup.GET("/appointments/today", r.vetAppointmentController.GetTodayAppointments)
+		// vetGroup.GET("/appointments/today", r.vetAppointmentController.GetTodayAppointments)
 		vetGroup.GET("/appointments/stats", r.vetAppointmentController.GetAppointmentStats)
 		vetGroup.PUT("/appointments/:id/confirm", r.vetAppointmentController.ConfirmAppointment)
 		vetGroup.PUT("/appointments/:id/complete", r.vetAppointmentController.CompleteAppointment)

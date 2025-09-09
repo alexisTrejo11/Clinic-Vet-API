@@ -10,7 +10,7 @@ import (
 
 type OwnerServiceFacade interface {
 	GetOwnerByID(ctx context.Context, ownerID valueobject.OwnerID) (dto.OwnerDetail, error)
-	ListOwners(ctx context.Context, params dto.GetOwnersRequest) (page.Page[[]dto.OwnerDetail], error)
+	SearchOwners(ctx context.Context, params dto.GetOwnersRequest) (page.Page[[]dto.OwnerDetail], error)
 	CreateOwner(ctx context.Context, data dto.OwnerCreate) (dto.OwnerDetail, error)
 	UpdateOwner(ctx context.Context, ownerID valueobject.OwnerID, data dto.OwnerUpdate) (dto.OwnerDetail, error)
 	SoftDeleteOwner(ctx context.Context, ownerID valueobject.OwnerID) error
@@ -18,7 +18,7 @@ type OwnerServiceFacade interface {
 
 type ownerUseCases struct {
 	getOwnerByIDUseCase    *GetOwnerByIDUseCase
-	listOwnersUseCase      *ListOwnersUseCase
+	listOwnersUseCase      *SearchOwnersUseCase
 	createOwnerUseCase     *CreateOwnerUseCase
 	updateOwnerUseCase     *UpdateOwnerUseCase
 	softDeleteOwnerUseCase *SoftDeleteOwnerUseCase
@@ -26,7 +26,7 @@ type ownerUseCases struct {
 
 func NewOwnerUseCases(
 	getOwnerByIDUC *GetOwnerByIDUseCase,
-	listOwnersUC *ListOwnersUseCase,
+	listOwnersUC *SearchOwnersUseCase,
 	createOwnerUC *CreateOwnerUseCase,
 	updateOwnerUC *UpdateOwnerUseCase,
 	softDeleteOwnerUC *SoftDeleteOwnerUseCase,
@@ -44,7 +44,7 @@ func (uc *ownerUseCases) GetOwnerByID(ctx context.Context, ownerID valueobject.O
 	return uc.getOwnerByIDUseCase.Execute(ctx, ownerID)
 }
 
-func (uc *ownerUseCases) ListOwners(ctx context.Context, params dto.GetOwnersRequest) (page.Page[[]dto.OwnerDetail], error) {
+func (uc *ownerUseCases) SearchOwners(ctx context.Context, params dto.GetOwnersRequest) (page.Page[[]dto.OwnerDetail], error) {
 	return uc.listOwnersUseCase.Execute(ctx, params)
 }
 

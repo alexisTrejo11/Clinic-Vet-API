@@ -3,7 +3,6 @@ package usecase
 import (
 	"context"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/veterinarians/application/dto"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/veterinarians/application/mapper"
@@ -19,8 +18,8 @@ func NewUpdateVetUseCase(vetRepository repository.VetRepository) *UpdateVetUseCa
 	}
 }
 
-func (uc *UpdateVetUseCase) Execute(ctx context.Context, vetId valueobject.VetID, vetUpdateData dto.UpdateVetData) (dto.VetResponse, error) {
-	veterinarian, err := uc.vetRepository.GetByID(ctx, vetId)
+func (uc *UpdateVetUseCase) Execute(ctx context.Context, vetUpdateData dto.UpdateVetData) (dto.VetResponse, error) {
+	veterinarian, err := uc.vetRepository.GetByID(ctx, vetUpdateData.VetID)
 	if err != nil {
 		return dto.VetResponse{}, err
 	}

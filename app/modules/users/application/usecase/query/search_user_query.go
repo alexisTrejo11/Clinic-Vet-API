@@ -1,10 +1,12 @@
-package userDomainQueries
+package query
 
 import (
 	"context"
+	"errors"
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 )
 
@@ -56,21 +58,22 @@ func (q *UserSearchQuery) ToMap() map[string]interface{} {
 	return searchMap
 }
 
-type SearchUserHandler interface {
-	Handle(query UserSearchQuery) (page.Page[[]UserResponse], error)
-}
-
-type searchUserHander struct {
+type SearchUsersHandler struct {
 	repository repository.UserRepository
 }
 
-func NewSearchUserHandler(repository repository.UserRepository) SearchUserHandler {
-	return &searchUserHander{
+func NewSearchUsersHandler(repository repository.UserRepository) cqrs.QueryHandler[page.Page[[]UserResponse]] {
+	return &SearchUsersHandler{
 		repository: repository,
 	}
 }
 
-func (h *searchUserHander) Handle(query UserSearchQuery) (page.Page[[]UserResponse], error) {
+func (h *SearchUsersHandler) Handle(q cqrs.Query) (page.Page[[]UserResponse], error) {
+	query, valid := q.(UserSearchQuery)
+	if !valid {
+		return page.Page[[]UserResponse]{}, errors.New("invalid query type")
+	}
+
 	searchCriteria := query.ToMap()
 	userPage, err := h.repository.Search(query.Ctx, searchCriteria, query.Pagination)
 	if err != nil {

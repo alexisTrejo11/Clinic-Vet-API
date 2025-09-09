@@ -20,9 +20,9 @@ type UpdateProfileRequest struct {
 	Address *AddressRequest `json:"address" validate:"omitempty"`
 }
 
-func (request *UpdateProfileRequest) ToProfileUpdateDTO(id int) usecase.ProfileUpdate {
+func (request *UpdateProfileRequest) ToProfileUpdateDTO(id int) usecase.UpdateProfileData {
 	userID, _ := valueobject.NewUserID(id)
-	updateData := usecase.ProfileUpdate{
+	updateData := usecase.UpdateProfileData{
 		UserID:     userID,
 		Bio:        request.Bio,
 		ProfilePic: request.PhotoURL,

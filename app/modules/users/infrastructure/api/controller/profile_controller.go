@@ -53,7 +53,7 @@ func (controller *ProfileController) UpdateUserProfile(c *gin.Context) {
 	}
 
 	profileUpdateData := requestData.ToProfileUpdateDTO(idInt)
-	if err := controller.useCases.UpdateProfileUseCase(context.Background(), profileUpdateData); err != nil {
+	if err := controller.useCases.UpdateProfile(context.Background(), profileUpdateData); err != nil {
 		response.ApplicationError(c, err)
 		return
 	}

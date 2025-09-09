@@ -99,7 +99,7 @@ func (f *AppointmentAPIBuilder) createControllers(
 		Command: controller.NewAppointmentCommandController(*commandBus, f.config.Validator),
 		Query:   controller.NewAppointmentQueryController(*queryBus, f.config.Validator),
 		Owner:   controller.NewOwnerAppointmentController(*commandBus, *queryBus),
-		Vet:     controller.NewVetAppointmentController(*commandBus, *queryBus),
+		Vet:     controller.NewVetAppointmentController(*commandBus, *queryBus, f.config.Validator),
 	}
 }
 

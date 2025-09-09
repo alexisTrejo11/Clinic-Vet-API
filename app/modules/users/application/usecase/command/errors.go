@@ -24,4 +24,7 @@ const (
 	ErrInvalidGender       = "invalid gender"
 	ErrInvalidDateOfBirth  = "invalid date of birth"
 	ErrUserCreationSuccess = "user created successfully"
+
+	ErrFailedValidatingUser = "failed to validate user update"
+	ErrFailedProcessingUser = "failed to process user update"
 )

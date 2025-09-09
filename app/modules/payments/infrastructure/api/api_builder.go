@@ -73,12 +73,12 @@ func (f *PaymentAPIBuilder) Build() error {
 func (f *PaymentAPIBuilder) createControllers(commandBus *bus.PaymentCommandBus, queryBus *bus.PaymentQueryBus) *PaymentControllers {
 	queryController := controller.NewPaymentQueryController(
 		f.config.Validator,
-		*queryBus,
+		queryBus,
 	)
 
 	commandController := controller.NewPaymentController(
 		f.config.Validator,
-		*commandBus,
+		commandBus,
 	)
 
 	clientController := controller.NewClientPaymentController(

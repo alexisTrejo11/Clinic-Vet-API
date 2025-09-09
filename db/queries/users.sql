@@ -83,6 +83,11 @@ SELECT COUNT(*) > 0
 FROM users
 WHERE phone_number = $1;
 
+-- name: ExistsUserByID :one
+SELECT COUNT(*) > 0
+FROM users
+WHERE id = $1;
+
 -- name: ListUsersByRole :many
 SELECT *
 FROM users

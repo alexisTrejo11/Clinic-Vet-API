@@ -3,6 +3,7 @@ package veterinarian
 import (
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/base"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
@@ -13,8 +14,7 @@ type VeterinarianOption func(*Veterinarian) error
 
 func WithName(name valueobject.PersonName) VeterinarianOption {
 	return func(v *Veterinarian) error {
-		v.name = name
-		return nil
+		return v.Person.UpdateName(name)
 	}
 }
 
@@ -96,12 +96,22 @@ func WithSchedule(schedule *valueobject.Schedule) VeterinarianOption {
 	}
 }
 
+func WithTimestamps(createdAt, updatedAt time.Time) VeterinarianOption {
+	return func(v *Veterinarian) error {
+		if createdAt.IsZero() || updatedAt.IsZero() {
+			return errors.New("createdAt and updatedAt cannot be zero")
+		}
+		v.SetTimeStamps(createdAt, updatedAt)
+		return nil
+	}
+}
+
 func NewVeterinarian(
 	id valueobject.VetID,
 	opts ...VeterinarianOption,
 ) (*Veterinarian, error) {
 	vet := &Veterinarian{
-		Entity:   base.NewEntity(id),
+		Entity:   base.NewEntity(id, time.Now(), time.Now(), 1),
 		isActive: true, // Default to active
 	}
 

@@ -9,7 +9,7 @@ import (
 
 type Veterinarian struct {
 	base.Entity[valueobject.VetID]
-	name            valueobject.PersonName
+	base.Person
 	photo           string
 	licenseNumber   string
 	specialty       enum.VetSpecialty
@@ -25,7 +25,7 @@ func (v *Veterinarian) ID() valueobject.VetID {
 }
 
 func (v *Veterinarian) Name() valueobject.PersonName {
-	return v.name
+	return v.Person.Name()
 }
 
 func (v *Veterinarian) Photo() string {

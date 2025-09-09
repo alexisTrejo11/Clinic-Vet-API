@@ -36,6 +36,10 @@ func sqlRowToDomain(row sqlc.Appoinment) (*appointment.Appointment, error) {
 	if err != nil {
 		errorMessage = append(errorMessage, err.Error())
 	}
+	reason, err := enum.ParseVisitReason(row.Reason)
+	if err != nil {
+		errorMessage = append(errorMessage, err.Error())
+	}
 
 	var notes *string
 	if row.Notes.Valid {
@@ -46,17 +50,13 @@ func sqlRowToDomain(row sqlc.Appoinment) (*appointment.Appointment, error) {
 		return &appointment.Appointment{}, apperror.MappingError(errorMessage, "sql", "domainEntity", "appointment")
 	}
 
-	return appointment.NewAppointmentBuilder().
-		WithID(id).
-		WithOwnerID(ownerID).
-		WithVetID(&vetID).
-		WithPetID(petID).
-		WithStatus(statusEnum).
-		WithScheduledDate(row.ScheduleDate.Time).
-		WithTimestamps(row.CreatedAt.Time, row.UpdatedAt.Time).
-		WithReason(row.Reason).
-		WithNotes(notes).
-		Build(), nil
+	return appointment.NewAppointment(
+		id, petID, ownerID,
+		appointment.WithVetID(&vetID),
+		appointment.WithStatus(statusEnum),
+		appointment.WithScheduledDate(row.ScheduleDate.Time),
+		appointment.WithReason(reason),
+		appointment.WithNotes(notes))
 }
 
 func sqlRowsToDomainList(rows []sqlc.Appoinment) ([]appointment.Appointment, error) {

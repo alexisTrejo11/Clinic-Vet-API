@@ -73,5 +73,5 @@ func (a *OwnerRescheduleAppointData) Clean() {
 }
 
 func (a *OwnerRescheduleAppointData) ToCommand(appointmentID int) (command.RescheduleAppointmentCommand, error) {
-	return command.NewRescheduleAppointmentCommand(context.Background(), appointmentID, a.NewDateTime, &a.Reason)
+	return command.NewRescheduleAppointmentCommand(context.Background(), appointmentID, nil, a.NewDateTime, &a.Reason)
 }

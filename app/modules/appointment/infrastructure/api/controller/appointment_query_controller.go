@@ -84,7 +84,7 @@ func (controller *AppointmentQueryController) SearchAppointments(c *gin.Context)
 	var pageParams *page.PageInput
 
 	if err := ginUtils.ShouldBindPageParams(pageParams, c, controller.validate); err != nil {
-		response.BadRequest(c, httpError.RequestURLQueryError(err))
+		response.BadRequest(c, httpError.RequestURLQueryError(err, c.Request.URL.RawQuery))
 		return
 	}
 
@@ -168,7 +168,7 @@ func (controller *AppointmentQueryController) GetAppointmentsByOwner(c *gin.Cont
 
 	var pageParams page.PageInput
 	if err := c.ShouldBindQuery(&pageParams); err != nil {
-		response.BadRequest(c, httpError.RequestURLQueryError(err))
+		response.BadRequest(c, httpError.RequestURLQueryError(err, c.Request.URL.RawQuery))
 		return
 	}
 
@@ -215,7 +215,7 @@ func (controller *AppointmentQueryController) GetAppointmentsByVet(c *gin.Contex
 
 	var pageParams page.PageInput
 	if err := c.ShouldBindQuery(&pageParams); err != nil {
-		response.BadRequest(c, httpError.RequestURLQueryError(err))
+		response.BadRequest(c, httpError.RequestURLQueryError(err, c.Request.URL.RawQuery))
 		return
 	}
 
@@ -257,7 +257,7 @@ func (controller *AppointmentQueryController) GetAppointmentsByPet(c *gin.Contex
 
 	var pageParams page.PageInput
 	if err := c.ShouldBindQuery(&pageParams); err != nil {
-		response.BadRequest(c, httpError.RequestURLQueryError(err))
+		response.BadRequest(c, httpError.RequestURLQueryError(err, c.Request.URL.RawQuery))
 		return
 	}
 

@@ -30,20 +30,7 @@ func WithPhoneNumber(phone valueobject.PhoneNumber) UserOption {
 
 func WithPassword(password string) UserOption {
 	return func(u *User) error {
-		if err := ValidatePassword(password); err != nil {
-			return err
-		}
 		u.password = password
-		return nil
-	}
-}
-
-func WithStatus(status enum.UserStatus) UserOption {
-	return func(u *User) error {
-		if err := validateStatus(status); err != nil {
-			return err
-		}
-		u.status = status
 		return nil
 	}
 }
@@ -70,7 +57,7 @@ func WithJoinedAt(joinedAt time.Time) UserOption {
 		if joinedAt.After(time.Now()) {
 			return errors.New("joined date cannot be in the future")
 		}
-		u.joinedAt = joinedAt
+		u.SetTimeStamps(joinedAt, time.Time{})
 		return nil
 	}
 }
@@ -79,17 +66,18 @@ func WithJoinedAt(joinedAt time.Time) UserOption {
 func NewUser(
 	id valueobject.UserID,
 	role enum.UserRole,
+	status enum.UserStatus,
 	opts ...UserOption,
 ) (*User, error) {
 	if err := validateRole(role); err != nil {
 		return nil, err
 	}
 
+	now := time.Now()
 	user := &User{
-		Entity:        base.NewEntity(id),
+		Entity:        base.NewEntity(id, now, now, 1),
 		role:          role,
-		status:        enum.UserStatusPending,          // Default status
-		joinedAt:      time.Now(),                      // Default joined at now
+		status:        status,
 		twoFactorAuth: auth.NewDisabledTwoFactorAuth(), // Default disabled 2FA
 	}
 
@@ -104,13 +92,6 @@ func NewUser(
 	}
 
 	return user, nil
-}
-
-func ValidatePassword(password string) error {
-	if len(password) < 8 {
-		return errors.New("password must be at least 8 characters")
-	}
-	return nil
 }
 
 func validateStatus(status enum.UserStatus) error {
