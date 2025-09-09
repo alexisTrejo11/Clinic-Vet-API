@@ -1,5 +1,5 @@
-// Package ginUtils contains all the helping operations to help controller to interact with gin framework
-package ginUtils
+// Package ginutils contains all the helping operations to help controller to interact with gin framework
+package ginutils
 
 import (
 	"errors"
@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func ParseParamToInt(c *gin.Context, paramName string) (int, error) {
+func ParseParamToUInt(c *gin.Context, paramName string) (uint, error) {
 	idStr := c.Param(paramName)
 	if idStr == "" {
 		return 0, errors.New("empty id")
@@ -24,11 +24,11 @@ func ParseParamToInt(c *gin.Context, paramName string) (int, error) {
 		return 0, errors.New("ID cannot be negative")
 	}
 
-	return int(intValue), nil
+	return uint(intValue), nil
 }
 
 func ParseParamToEntityID(c *gin.Context, idParam string, entity string) (valueobject.IntegerID, error) {
-	intValue, err := ParseParamToInt(c, idParam)
+	intValue, err := ParseParamToUInt(c, idParam)
 	if err != nil {
 		return nil, err
 	}

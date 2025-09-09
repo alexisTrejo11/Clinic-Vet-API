@@ -1,4 +1,4 @@
-package ginUtils
+package ginutils
 
 import (
 	htttpError "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/infrastructure/http"

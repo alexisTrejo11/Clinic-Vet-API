@@ -2,10 +2,9 @@
 package controller
 
 import (
-	"time"
-
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/appointment/application/command"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/appointment/application/query"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/appointment/infrastructure/api/dto"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
 	authError "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/auth"
 	httpError "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/infrastructure/http"
@@ -70,13 +69,8 @@ func (controller *VetAppointmentController) GetMyAppointments(c *gin.Context) {
 		return
 	}
 
-	listAppointmentsByVetQuery, err := query.NewListAppointmentsByVetQuery(userCTX.EmployeeID, c.Request.Context(), pagination)
-	if err != nil {
-		response.ApplicationError(c, err)
-		return
-	}
-
-	result, err := controller.queryBus.Execute(listAppointmentsByVetQuery)
+	listApptByVetQuery := query.NewListApptByVetQuery(c.Request.Context(), userCTX.EmployeeID, pagination)
+	result, err := controller.queryBus.Execute(listApptByVetQuery)
 	if err != nil {
 		response.ApplicationError(c, err)
 		return
@@ -95,28 +89,20 @@ func (controller *VetAppointmentController) GetMyAppointments(c *gin.Context) {
 // @Security BearerAuth
 // @Router /vet/appointments/{id}/complete [put]
 func (controller *VetAppointmentController) CompleteAppointment(c *gin.Context) {
-	appointmentID, err := ginUtils.ParseParamToInt(c, "id")
-	if err != nil {
-		response.BadRequest(c, httpError.RequestURLParamError(err, "appointment-ID", c.Param("id")))
-		return
-	}
 	userCTX, exists := middleware.GetUserFromContext(c)
 	if !exists {
 		response.Unauthorized(c, authError.UnauthorizedCTXError())
 		return
 	}
 
-	completeAppointmentCommand, err := command.NewCompleteAppointmenCommand(
-		c.Request.Context(),
-		appointmentID,
-		&userCTX.EmployeeID,
-		nil,
-	)
+	appointmentID, err := ginUtils.ParseParamToUInt(c, "id")
 	if err != nil {
-		response.ApplicationError(c, err)
+		response.BadRequest(c, httpError.RequestURLParamError(err, "appointment-ID", c.Param("id")))
 		return
 	}
+	notes := c.Query("notes")
 
+	completeAppointmentCommand := command.NewCompleteApptCommand(c.Request.Context(), appointmentID, &userCTX.EmployeeID, notes)
 	result := controller.commandBus.Execute(completeAppointmentCommand)
 	if !result.IsSuccess {
 		response.ApplicationError(c, result.Error)
@@ -136,27 +122,21 @@ func (controller *VetAppointmentController) CompleteAppointment(c *gin.Context) 
 // @Security BearerAuth
 // @Router /vet/appointments/{id} [delete]
 func (controller *VetAppointmentController) CancelAppointment(c *gin.Context) {
-	appointmentID, err := ginUtils.ParseParamToInt(c, "id")
-	if err != nil {
-		response.BadRequest(c, httpError.RequestURLParamError(err, "appointment-ID", c.Param("id")))
-		return
-	}
 	userCTX, exists := middleware.GetUserFromContext(c)
 	if !exists {
 		response.Unauthorized(c, authError.UnauthorizedCTXError())
 		return
 	}
-	cancelAppointmentCommand, err := command.NewCancelAppointmentCommand(
-		c.Request.Context(),
-		appointmentID,
-		&userCTX.EmployeeID,
-		"",
-	)
+
+	appointmentID, err := ginUtils.ParseParamToUInt(c, "id")
 	if err != nil {
-		response.ApplicationError(c, err)
+		response.BadRequest(c, httpError.RequestURLParamError(err, "appointment-ID", c.Param("id")))
 		return
 	}
 
+	reason := c.Query("reason")
+
+	cancelAppointmentCommand := command.NewCancelApptCommand(c.Request.Context(), appointmentID, &userCTX.EmployeeID, reason)
 	result := controller.commandBus.Execute(cancelAppointmentCommand)
 	if !result.IsSuccess {
 		response.ApplicationError(c, result.Error)
@@ -182,29 +162,20 @@ func (controller *VetAppointmentController) CancelAppointment(c *gin.Context) {
 // @Failure 422 {object} response.APIResponse "Cannot confirm appointment"
 // @Router /vet/appointments/{id}/confirm [put]
 func (controller *VetAppointmentController) ConfirmAppointment(c *gin.Context) {
-	appointmentID, err := ginUtils.ParseParamToInt(c, "id")
-	if err != nil {
-		response.BadRequest(c, httpError.RequestURLParamError(err, "appointment-ID", c.Param("id")))
-		return
-	}
 	userCTX, exists := middleware.GetUserFromContext(c)
 	if !exists {
 		response.Unauthorized(c, authError.UnauthorizedCTXError())
 		return
 	}
 
-	completeAppointmentCommand, err := command.NewCancelAppointmentCommand(
-		c.Request.Context(),
-		appointmentID,
-		&userCTX.EmployeeID,
-		"",
-	)
+	appointmentID, err := ginUtils.ParseParamToUInt(c, "id")
 	if err != nil {
-		response.ApplicationError(c, err)
+		response.BadRequest(c, httpError.RequestURLParamError(err, "appointment-ID", c.Param("id")))
 		return
 	}
 
-	result := controller.commandBus.Execute(completeAppointmentCommand)
+	vetConfirmApptCommand := command.NewConfirmAppointmentCommand(c.Request.Context(), appointmentID, userCTX.EmployeeID)
+	result := controller.commandBus.Execute(vetConfirmApptCommand)
 	if !result.IsSuccess {
 		response.ApplicationError(c, result.Error)
 		return
@@ -229,7 +200,7 @@ func (controller *VetAppointmentController) ConfirmAppointment(c *gin.Context) {
 // @Failure 422 {object} response.APIResponse "Cannot mark as no-show"
 // @Router /vet/appointments/{id}/no-show [put]
 func (controller *VetAppointmentController) MarkAsNoShow(c *gin.Context) {
-	appointmentID, err := ginUtils.ParseParamToInt(c, "id")
+	appointmentID, err := ginUtils.ParseParamToUInt(c, "id")
 	if err != nil {
 		response.BadRequest(c, httpError.RequestURLParamError(err, "appointment-ID", c.Param("id")))
 		return
@@ -240,13 +211,8 @@ func (controller *VetAppointmentController) MarkAsNoShow(c *gin.Context) {
 		return
 	}
 
-	command, err := command.NewNotAttendAppointmentCommand(c, appointmentID, &userCTX.EmployeeID)
-	if err != nil {
-		response.ApplicationError(c, err)
-		return
-	}
-
-	result := controller.commandBus.Execute(command)
+	vetApptCommand := command.NewNotAttendApptCommand(c, appointmentID, &userCTX.EmployeeID)
+	result := controller.commandBus.Execute(vetApptCommand)
 	if !result.IsSuccess {
 		response.ApplicationError(c, result.Error)
 		return
@@ -325,23 +291,31 @@ func (controller *VetAppointmentController) GetAppointmentStats(c *gin.Context) 
 // @Failure 422 {object} response.APIResponse "Invalid time slot or scheduling conflict"
 // @Router /vet/appointments/{id}/reschedule [put]
 func (controller *VetAppointmentController) RescheduleAppointment(c *gin.Context) {
-	appointmentID, err := ginUtils.ParseParamToInt(c, "id")
-	if err != nil {
-		response.BadRequest(c, httpError.RequestURLParamError(err, "appointment-ID", c.Param("id")))
-		return
-	}
 	userCTX, exists := middleware.GetUserFromContext(c)
 	if !exists {
 		response.Unauthorized(c, authError.UnauthorizedCTXError())
 		return
 	}
 
-	rescheduleCommand, err := command.NewRescheduleAppointmentCommand(c.Request.Context(), appointmentID, &userCTX.EmployeeID, time.Time{}, nil)
+	appointmentID, err := ginUtils.ParseParamToUInt(c, "id")
 	if err != nil {
-		response.ApplicationError(c, err)
+		response.BadRequest(c, httpError.RequestURLParamError(err, "appointment-ID", c.Param("id")))
 		return
 	}
-	result := controller.commandBus.Execute(rescheduleCommand)
+
+	var requestData *dto.RescheduleAppointData
+	if err := c.ShouldBindQuery(&requestData); err != nil {
+		response.BadRequest(c, httpError.InvalidDataError(err))
+		return
+	}
+
+	if err := controller.validator.Struct(&requestData); err != nil {
+		response.BadRequest(c, httpError.InvalidDataError(err))
+		return
+	}
+
+	vetRescheduleApptCommand := requestData.ToCommandWithVetID(c.Request.Context(), userCTX.EmployeeID, appointmentID)
+	result := controller.commandBus.Execute(vetRescheduleApptCommand)
 	if !result.IsSuccess {
 		response.ApplicationError(c, result.Error)
 		return

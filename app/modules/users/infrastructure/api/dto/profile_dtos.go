@@ -15,7 +15,6 @@ type UpdateProfileRequest struct {
 	PhotoURL *string `json:"photo_url" validate:"omitempty,url"`
 	// The name of the userDomain. (optional)
 	Name *string `json:"name" validate:"omitempty"`
-	// The user's address. (optional)
 }
 
 func (request *UpdateProfileRequest) ToProfileUpdateDTO(id int) usecase.UpdateProfileData {

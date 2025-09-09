@@ -1,8 +1,6 @@
 package controller
 
 import (
-	"context"
-
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/veterinarians/application/usecase"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/veterinarians/infrastructure/api/dto"
 	httpError "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/infrastructure/http"
@@ -40,14 +38,31 @@ func NewVeterinarianController(
 // @Success 200 {array} dto.VetResponse "List of veterinarians"
 // @Failure 500 {object} response.APIResponse "Internal server error"
 // @Router /veterinarians [get]
-func (controller *VeterinarianController) ListVeterinarians(c *gin.Context) {
-	listParams, err := fetchVetParams(c)
+func (controller *VeterinarianController) SearchVeterinarians(c *gin.Context) {
+	queryRequest, err := dto.NewVetSearchRequestFromContext(c)
 	if err != nil {
-		response.BadRequest(c, httpError.RequestURLQueryError(err, c.Request.URL.RawQuery))
+		response.BadRequest(c, httpError.RequestBodyDataError(err))
 		return
 	}
 
-	vets, err := controller.vetUseCases.ListVetUseCase(c.Request.Context(), listParams)
+	if err := controller.validator.Struct(queryRequest); err != nil {
+		validationErrors := err.(validator.ValidationErrors)
+		response.BadRequest(c, httpError.InvalidDataError(validationErrors))
+		return
+	}
+
+	if err := controller.validator.Struct(queryRequest); err != nil {
+		response.BadRequest(c, httpError.InvalidDataError(err))
+		return
+	}
+
+	searchVetSpecification, err := queryRequest.ToSpecification()
+	if err != nil {
+		response.BadRequest(c, httpError.InvalidDataError(err))
+		return
+	}
+
+	vets, err := controller.vetUseCases.SearchVeterinan(c.Request.Context(), *searchVetSpecification)
 	if err != nil {
 		response.ApplicationError(c, err)
 		return
@@ -94,7 +109,6 @@ func (controller *VeterinarianController) GetVeterinarianByID(c *gin.Context) {
 // @Router /veterinarians [post]
 func (controller *VeterinarianController) CreateVeterinarian(c *gin.Context) {
 	var requestData dto.CreateVetRequest
-
 	if err := c.ShouldBindBodyWithJSON(&requestData); err != nil {
 		response.BadRequest(c, httpError.RequestBodyDataError(err))
 		return
@@ -156,7 +170,7 @@ func (controller *VeterinarianController) UpdateVeterinarian(c *gin.Context) {
 		return
 	}
 
-	verUpdated, err := controller.vetUseCases.UpdateVetUseCase(context.TODO(), updateVetData)
+	verUpdated, err := controller.vetUseCases.UpdateVetUseCase(c.Request.Context(), updateVetData)
 	if err != nil {
 		response.ApplicationError(c, err)
 		return
@@ -182,7 +196,7 @@ func (controller *VeterinarianController) DeleteVeterinarian(c *gin.Context) {
 		return
 	}
 
-	if err := controller.vetUseCases.DeleteVet(context.TODO(), id); err != nil {
+	if err := controller.vetUseCases.DeleteVet(c.Request.Context(), id); err != nil {
 		response.ApplicationError(c, err)
 		return
 	}

@@ -4,11 +4,13 @@ import (
 	"context"
 
 	vet "github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/veterinarian"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/specification"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 )
 
 type VetRepository interface {
-	List(ctx context.Context, searchParams any) ([]vet.Veterinarian, error)
+	Search(ctx context.Context, specification specification.VetSearchSpecification) (page.Page[[]vet.Veterinarian], error)
 	GetByID(ctx context.Context, id valueobject.VetID) (vet.Veterinarian, error)
 	Exists(ctx context.Context, id valueobject.VetID) (bool, error)
 	GetByUserID(ctx context.Context, userID valueobject.UserID) (vet.Veterinarian, error)

@@ -8,11 +8,11 @@ import (
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
 )
 
-type AppointmentResponse struct {
-	ID            int                    `json:"id"`
-	OwnerID       int                    `json:"owner_id"`
-	PetID         int                    `json:"pet_id"`
-	VetID         *int                   `json:"vet_id,omitempty"`
+type ApptResponse struct {
+	ID            uint                   `json:"id"`
+	OwnerID       uint                   `json:"owner_id"`
+	PetID         uint                   `json:"pet_id"`
+	VetID         *uint                  `json:"vet_id,omitempty"`
 	Service       enum.ClinicService     `json:"service"`
 	ScheduledDate string                 `json:"scheduled_date"`
 	Status        enum.AppointmentStatus `json:"status"`
@@ -23,14 +23,14 @@ type AppointmentResponse struct {
 	UpdatedAt     string                 `json:"updated_at"`
 }
 
-func NewAppointmentResponse(appointment *appointment.Appointment) AppointmentResponse {
-	var vetID *int
+func NewApptResponse(appointment *appointment.Appointment) ApptResponse {
+	var vetID *uint
 	if appointment.VetID() != nil {
 		id := appointment.VetID().Value()
 		vetID = &id
 	}
 
-	return AppointmentResponse{
+	return ApptResponse{
 		ID:            appointment.ID().Value(),
 		OwnerID:       appointment.OwnerID().Value(),
 		PetID:         appointment.PetID().Value(),
@@ -43,49 +43,49 @@ func NewAppointmentResponse(appointment *appointment.Appointment) AppointmentRes
 	}
 }
 
-func mapAppointmentsToResponses(appointments []appointment.Appointment) []AppointmentResponse {
-	responses := make([]AppointmentResponse, 0, len(appointments))
+func mapApptsToResponse(appointments []appointment.Appointment) []ApptResponse {
+	responses := make([]ApptResponse, 0, len(appointments))
 	for _, appointment := range appointments {
-		responses = append(responses, NewAppointmentResponse(&appointment))
+		responses = append(responses, NewApptResponse(&appointment))
 	}
 	return responses
 }
 
-type AppointmentStatsResponse struct {
-	TotalAppointments     int                            `json:"total_appointments"`
-	PendingAppointments   int                            `json:"pending_appointments"`
-	ConfirmedAppointments int                            `json:"confirmed_appointments"`
-	CompletedAppointments int                            `json:"completed_appointments"`
-	CancelledAppointments int                            `json:"cancelled_appointments"`
-	NoShowAppointments    int                            `json:"no_show_appointments"`
-	StatusBreakdown       map[enum.AppointmentStatus]int `json:"status_breakdown"`
-	ServiceBreakdown      map[enum.ClinicService]int     `json:"service_breakdown"`
-	EmergencyCount        int                            `json:"emergency_count"`
-	Period                *string                        `json:"period,omitempty"`
+type ApptStatsResponse struct {
+	TotalAppts       int                            `json:"total_appointments"`
+	PendingAppts     int                            `json:"pending_appointments"`
+	ConfirmedAppts   int                            `json:"confirmed_appointments"`
+	CompletedAppts   int                            `json:"completed_appointments"`
+	CancelledAppts   int                            `json:"cancelled_appointments"`
+	NoShowAppts      int                            `json:"no_show_appointments"`
+	StatusBreakdown  map[enum.AppointmentStatus]int `json:"status_breakdown"`
+	ServiceBreakdown map[enum.ClinicService]int     `json:"service_breakdown"`
+	EmergencyCount   int                            `json:"emergency_count"`
+	Period           *string                        `json:"period,omitempty"`
 }
 
-func NewAppointmentStatsResponse(
-	totalAppointments,
-	pendingAppointments,
-	confirmedAppointments,
-	completedAppointments,
-	cancelledAppointments,
-	noShowAppointments,
+func NewApptStatsResponse(
+	totalAppts,
+	pendingAppts,
+	confirmedAppts,
+	completedAppts,
+	cancelledAppts,
+	noShowAppts,
 	emergencyCount int,
 	statusBreakdown map[enum.AppointmentStatus]int,
 	serviceBreakdown map[enum.ClinicService]int,
 	period *string,
-) AppointmentStatsResponse {
-	return AppointmentStatsResponse{
-		TotalAppointments:     totalAppointments,
-		PendingAppointments:   pendingAppointments,
-		ConfirmedAppointments: confirmedAppointments,
-		CompletedAppointments: completedAppointments,
-		CancelledAppointments: cancelledAppointments,
-		NoShowAppointments:    noShowAppointments,
-		StatusBreakdown:       statusBreakdown,
-		ServiceBreakdown:      serviceBreakdown,
-		EmergencyCount:        emergencyCount,
-		Period:                period,
+) ApptStatsResponse {
+	return ApptStatsResponse{
+		TotalAppts:       totalAppts,
+		PendingAppts:     pendingAppts,
+		ConfirmedAppts:   confirmedAppts,
+		CompletedAppts:   completedAppts,
+		CancelledAppts:   cancelledAppts,
+		NoShowAppts:      noShowAppts,
+		StatusBreakdown:  statusBreakdown,
+		ServiceBreakdown: serviceBreakdown,
+		EmergencyCount:   emergencyCount,
+		Period:           period,
 	}
 }

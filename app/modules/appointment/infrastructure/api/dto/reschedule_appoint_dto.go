@@ -5,14 +5,15 @@ import (
 	"strings"
 	"time"
 
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/appointment/application/command"
 )
 
-// RequestOwnerAppointmentData represents the structure for appointment booking requests
+// RequestApptByOwnerData represents the structure for appointment booking requests
 // @Description Appointment booking request data with validation and sanitization
-type RequestOwnerAppointmentData struct {
+type RequestApptByOwnerData struct {
 	// @Required Required: The ID of the pet for the appointment
-	PetID int `json:"petId" binding:"required,min=1" example:"123"`
+	PetID uint `json:"petId" binding:"required,min=1" example:"123"`
 
 	// @Required Required: Type of service requested (e.g., "checkup", "vaccination", "surgery")
 	Service string `json:"service" binding:"required,min=2,max=100" example:"Annual Checkup"`
@@ -28,7 +29,7 @@ type RequestOwnerAppointmentData struct {
 }
 
 // Clean sanitizes and validates the appointment data
-func (a *RequestOwnerAppointmentData) Clean() {
+func (a *RequestApptByOwnerData) Clean() {
 	a.Service = strings.TrimSpace(a.Service)
 	a.Reason = strings.TrimSpace(a.Reason)
 
@@ -44,22 +45,32 @@ func (a *RequestOwnerAppointmentData) Clean() {
 	}
 }
 
-func (a *RequestOwnerAppointmentData) ToCommand(userOwnerID int) (command.CreateAppointmentCommand, error) {
-	ownerAppointCMD, err := command.NewCreateAppointCmd(
-		context.Background(),
+func (a *RequestApptByOwnerData) ToCommand(ctx context.Context, userOwnerID uint) (command.CreateApptCommand, error) {
+	clinicService, err := enum.ParseClinicService(a.Service)
+	if err != nil {
+		return command.CreateApptCommand{}, err
+	}
+
+	visitsReason, err := enum.ParseVisitReason(a.Reason)
+	if err != nil && a.Reason != "" {
+		return command.CreateApptCommand{}, err
+	}
+
+	ownerAppointCMD := command.NewCreateApptCommand(
+		ctx,
 		userOwnerID,
 		a.PetID,
-		nil,
-		a.Service,
+		nil, // No vet assigned at booking
+		clinicService,
 		a.DateTime,
-		"pending",
-		a.Reason,
+		enum.AppointmentStatusPending, // Default status is pending
+		visitsReason,
 		a.Notes,
 	)
-	return *ownerAppointCMD, err
+	return *ownerAppointCMD, nil
 }
 
-type OwnerRescheduleAppointData struct {
+type RescheduleAppointData struct {
 	// @Required Required: Date and time for the appointment (RFC3339 format)
 	NewDateTime time.Time `json:"datetime" binding:"required" example:"2024-01-15T10:30:00Z"`
 
@@ -67,11 +78,15 @@ type OwnerRescheduleAppointData struct {
 	Reason string `json:"reason,omitempty" binding:"omitempty,max=500" example:"Routine checkup"`
 }
 
+func (a *RescheduleAppointData) ToCommandWithVetID(ctx context.Context, apptID, ownernID uint) command.RescheduleApptCommand {
+	return *command.NewRescheduleApptCommand(ctx, apptID, &ownernID, a.NewDateTime, &a.Reason)
+}
+
 // Clean sanitizes and validates the appointment data
-func (a *OwnerRescheduleAppointData) Clean() {
+func (a *RescheduleAppointData) Clean() {
 	a.Reason = strings.TrimSpace(a.Reason)
 }
 
-func (a *OwnerRescheduleAppointData) ToCommand(appointmentID int) (command.RescheduleAppointmentCommand, error) {
-	return command.NewRescheduleAppointmentCommand(context.Background(), appointmentID, nil, a.NewDateTime, &a.Reason)
+func (a *RescheduleAppointData) ToCommand(ctx context.Context, appointmentID uint) command.RescheduleApptCommand {
+	return *command.NewRescheduleApptCommand(ctx, appointmentID, nil, a.NewDateTime, &a.Reason)
 }

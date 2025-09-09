@@ -2,7 +2,6 @@
 package controller
 
 import (
-	"context"
 	"errors"
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/appointment/application/query"
@@ -16,49 +15,45 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-// AppointmentQueryController handles appointment query operations
-// @title Veterinary Clinic API - Appointment Queries
+// ApptQueryController handles appointment query operations
+// @title Veterinary Clinic API - Appt Queries
 // @version 1.0
 // @description This controller manages appointment queries including retrieving appointments by various criteria
-type AppointmentQueryController struct {
+type ApptQueryController struct {
 	queryBus cqrs.QueryBus
 	validate *validator.Validate
 }
 
-func NewAppointmentQueryController(
+func NewApptQueryController(
 	queryBus cqrs.QueryBus,
 	validate *validator.Validate,
-) *AppointmentQueryController {
-	return &AppointmentQueryController{
+) *ApptQueryController {
+	return &ApptQueryController{
 		queryBus: queryBus,
 		validate: validate,
 	}
 }
 
-// GetAppointmentByID godoc
+// GetApptByID godoc
 // @Summary Get appointment by ID
 // @Description Retrieves detailed information about a specific appointment
 // @Tags appointments-query
 // @Accept json
 // @Produce json
-// @Param id path int true "Appointment ID"
-// @Success 200 {object} query.AppointmentResponse "Appointment details"
+// @Param id path int true "Appt ID"
+// @Success 200 {object} query.ApptResponse "Appointment details"
 // @Failure 400 {object} response.APIResponse "Invalid appointment ID"
-// @Failure 404 {object} response.APIResponse "Appointment not found"
+// @Failure 404 {object} response.APIResponse "Appt not found"
 // @Failure 500 {object} response.APIResponse "Internal server error"
 // @Router /appointments/{id} [get]
-func (controller *AppointmentQueryController) GetAppointmentByID(c *gin.Context) {
-	appointmentID, err := ginUtils.ParseParamToInt(c, "id")
+func (controller *ApptQueryController) GetAppointmentByID(c *gin.Context) {
+	appointmentID, err := ginUtils.ParseParamToUInt(c, "id")
 	if err != nil {
 		response.BadRequest(c, httpError.RequestURLParamError(err, "id", c.Param("id")))
 		return
 	}
 
-	appointmentQuery, err := query.NewGetAppointmentByIDQuery(appointmentID)
-	if err != nil {
-		response.ApplicationError(c, err)
-	}
-
+	appointmentQuery := query.NewGetApptByIDQuery(c.Request.Context(), appointmentID)
 	appointmentResponse, err := controller.queryBus.Execute(appointmentQuery)
 	if err != nil {
 		response.ApplicationError(c, err)
@@ -68,7 +63,7 @@ func (controller *AppointmentQueryController) GetAppointmentByID(c *gin.Context)
 	response.Success(c, appointmentResponse)
 }
 
-// GetAllAppointments godoc
+// GetAllAppts godoc
 // @Summary Get all appointments
 // @Description Retrieves a paginated list of all appointments
 // @Tags appointments-query
@@ -76,34 +71,27 @@ func (controller *AppointmentQueryController) GetAppointmentByID(c *gin.Context)
 // @Produce json
 // @Param page_number query int false "Page number" default(1)
 // @Param page_size query int false "Items per page" default(10)
-// @Success 200 {object} response.APIResponse{data=[]query.AppointmentResponse,metadata=PaginationMetadata} "List of appointments"
+// @Success 200 {object} response.APIResponse{data=[]query.ApptResponse,metadata=PaginationMetadata} "List of appointments"
 // @Failure 400 {object} response.APIResponse "Invalid pagination parameters"
 // @Failure 500 {object} response.APIResponse "Internal server error"
 // @Router /appointments [get]
-func (controller *AppointmentQueryController) SearchAppointments(c *gin.Context) {
-	var pageParams *page.PageInput
-
-	if err := ginUtils.ShouldBindPageParams(pageParams, c, controller.validate); err != nil {
-		response.BadRequest(c, httpError.RequestURLQueryError(err, c.Request.URL.RawQuery))
+func (controller *ApptQueryController) SearchAppointments(c *gin.Context) {
+	searchSpecification, err := dto.NewApptSearchRequestFromContext(c)
+	if err := controller.validate.Struct(searchSpecification); err != nil {
+		response.BadRequest(c, httpError.InvalidDataError(err))
 		return
 	}
 
-	searchQuery, err := query.NewSearchAppointmentsQuery(*pageParams)
+	appointmentPage, err := controller.queryBus.Execute(searchSpecification)
 	if err != nil {
 		response.ApplicationError(c, err)
 		return
 	}
 
-	appointmentPage, err := controller.queryBus.Execute(searchQuery)
-	if err != nil {
-		response.ApplicationError(c, err)
-		return
-	}
-
-	HandlePaginatedResponse(c, appointmentPage, pageParams)
+	HandlePaginatedResponse(c, appointmentPage, appointmentPage)
 }
 
-// GetAppointmentsByDateRange godoc
+// GetApptsByDateRange godoc
 // @Summary Get appointments by date range
 // @Description Retrieves appointments within a specified date range
 // @Tags appointments-query
@@ -113,12 +101,12 @@ func (controller *AppointmentQueryController) SearchAppointments(c *gin.Context)
 // @Param end_date query string true "End date (YYYY-MM-DD)" format(date)
 // @Param page_number query int false "Page number" default(1)
 // @Param page_size query int false "Items per page" default(10)
-// @Success 200 {object} response.APIResponse{data=[]query.AppointmentResponse,metadata=PaginationMetadata} "List of appointments"
+// @Success 200 {object} response.APIResponse{data=[]query.ApptResponse,metadata=PaginationMetadata} "List of appointments"
 // @Failure 400 {object} response.APIResponse "Invalid date range or pagination parameters"
 // @Failure 500 {object} response.APIResponse "Internal server error"
 // @Router /appointments/date-range [get]
-func (controller *AppointmentQueryController) GetAppointmentsByDateRange(c *gin.Context) {
-	var dateRangeQueryData dto.ListAppointmentsByDateRangeRequest
+func (controller *ApptQueryController) GetAppointmentsByDateRange(c *gin.Context) {
+	var dateRangeQueryData dto.ListApptByDateRangeRequest
 
 	if err := c.ShouldBindQuery(&dateRangeQueryData); err != nil {
 		response.BadRequest(c, httpError.RequestBodyDataError(err))
@@ -145,7 +133,7 @@ func (controller *AppointmentQueryController) GetAppointmentsByDateRange(c *gin.
 	HandlePaginatedResponse(c, appointmentPage, dateRangeQueryData.PageInput)
 }
 
-// GetAppointmentsByOwner godoc
+// GetApptsByOwner godoc
 // @Summary Get appointments by owner
 // @Description Retrieves all appointments for a specific pet owner
 // @Tags appointments-query
@@ -154,13 +142,13 @@ func (controller *AppointmentQueryController) GetAppointmentsByDateRange(c *gin.
 // @Param ownerID path int true "Owner ID"
 // @Param page_number query int false "Page number" default(1)
 // @Param page_size query int false "Items per page" default(10)
-// @Success 200 {object} response.APIResponse{data=[]query.AppointmentResponse,metadata=PaginationMetadata} "List of appointments"
+// @Success 200 {object} response.APIResponse{data=[]query.ApptResponse,metadata=PaginationMetadata} "List of appointments"
 // @Failure 400 {object} response.APIResponse "Invalid owner ID or pagination parameters"
 // @Failure 404 {object} response.APIResponse "Owner not found"
 // @Failure 500 {object} response.APIResponse "Internal server error"
 // @Router /appointments/owner/{id} [get]
-func (controller *AppointmentQueryController) GetAppointmentsByOwner(c *gin.Context) {
-	ownerID, err := ginUtils.ParseParamToInt(c, "id")
+func (controller *ApptQueryController) GetAppointmentsByOwner(c *gin.Context) {
+	ownerID, err := ginUtils.ParseParamToUInt(c, "id")
 	if err != nil {
 		response.BadRequest(c, httpError.RequestURLParamError(err, "id", c.Param("id")))
 		return
@@ -177,12 +165,7 @@ func (controller *AppointmentQueryController) GetAppointmentsByOwner(c *gin.Cont
 		return
 	}
 
-	listAppointByOwnerQuery, err := query.NewListAppointmentsByOwnerQuery(ownerID, pageParams)
-	if err != nil {
-		response.ApplicationError(c, err)
-		return
-	}
-
+	listAppointByOwnerQuery := query.NewListApptByOwnerQuery(c.Request.Context(), ownerID, pageParams)
 	appointPage, err := controller.queryBus.Execute(listAppointByOwnerQuery)
 	if err != nil {
 		response.ApplicationError(c, err)
@@ -192,7 +175,7 @@ func (controller *AppointmentQueryController) GetAppointmentsByOwner(c *gin.Cont
 	HandlePaginatedResponse(c, appointPage, pageParams)
 }
 
-// GetAppointmentsByVet godoc
+// GetApptsByVet godoc
 // @Summary Get appointments by veterinarian
 // @Description Retrieves all appointments assigned to a specific veterinarian
 // @Tags appointments-query
@@ -201,13 +184,13 @@ func (controller *AppointmentQueryController) GetAppointmentsByOwner(c *gin.Cont
 // @Param vetID path int true "Veterinarian ID"
 // @Param page_number query int false "Page number" default(1)
 // @Param page_size query int false "Items per page" default(10)
-// @Success 200 {object} response.APIResponse{data=[]query.AppointmentResponse,metadata=PaginationMetadata} "List of appointments"
+// @Success 200 {object} response.APIResponse{data=[]query.ApptResponse,metadata=PaginationMetadata} "List of appointments"
 // @Failure 400 {object} response.APIResponse "Invalid veterinarian ID or pagination parameters"
 // @Failure 404 {object} response.APIResponse "Veterinarian not found"
 // @Failure 500 {object} response.APIResponse "Internal server error"
 // @Router /appointments/vet/{id} [get]
-func (controller *AppointmentQueryController) GetAppointmentsByVet(c *gin.Context) {
-	ownerID, err := ginUtils.ParseParamToInt(c, "id")
+func (controller *ApptQueryController) GetAppointmentsByVet(c *gin.Context) {
+	ownerID, err := ginUtils.ParseParamToUInt(c, "id")
 	if err != nil {
 		response.BadRequest(c, httpError.RequestURLParamError(err, "id", c.Param("id")))
 		return
@@ -219,12 +202,7 @@ func (controller *AppointmentQueryController) GetAppointmentsByVet(c *gin.Contex
 		return
 	}
 
-	query, err := query.NewListAppointmentsByVetQuery(ownerID, context.Background(), pageParams)
-	if err != nil {
-		response.ApplicationError(c, err)
-		return
-	}
-
+	query := query.NewListApptByVetQuery(c.Request.Context(), ownerID, pageParams)
 	appointmentPage, err := controller.queryBus.Execute(query)
 	if err != nil {
 		response.ApplicationError(c, err)
@@ -234,7 +212,7 @@ func (controller *AppointmentQueryController) GetAppointmentsByVet(c *gin.Contex
 	HandlePaginatedResponse(c, appointmentPage, pageParams)
 }
 
-// GetAppointmentsByPet godoc
+// GetApptsByPet godoc
 // @Summary Get appointments by pet
 // @Description Retrieves all appointments for a specific pet
 // @Tags appointments-query
@@ -243,13 +221,13 @@ func (controller *AppointmentQueryController) GetAppointmentsByVet(c *gin.Contex
 // @Param petID path int true "Pet ID"
 // @Param page_number query int false "Page number" default(1)
 // @Param page_size query int false "Items per page" default(10)
-// @Success 200 {object} response.APIResponse{data=[]query.AppointmentResponse,metadata=PaginationMetadata} "List of appointments"
+// @Success 200 {object} response.APIResponse{data=[]query.ApptResponse,metadata=PaginationMetadata} "List of appointments"
 // @Failure 400 {object} response.APIResponse "Invalid pet ID or pagination parameters"
 // @Failure 404 {object} response.APIResponse "Pet not found"
 // @Failure 500 {object} response.APIResponse "Internal server error"
 // @Router /appointments/pet/{id} [get]
-func (controller *AppointmentQueryController) GetAppointmentsByPet(c *gin.Context) {
-	petID, err := ginUtils.ParseParamToInt(c, "id")
+func (controller *ApptQueryController) GetAppointmentsByPet(c *gin.Context) {
+	petID, err := ginUtils.ParseParamToUInt(c, "id")
 	if err != nil {
 		response.BadRequest(c, httpError.RequestURLParamError(err, "id", c.Param("id")))
 		return
@@ -261,12 +239,7 @@ func (controller *AppointmentQueryController) GetAppointmentsByPet(c *gin.Contex
 		return
 	}
 
-	listByPetQuery, err := query.NewListAppointmentsByPetQuery(petID, pageParams)
-	if err != nil {
-		response.ApplicationError(c, err)
-		return
-	}
-
+	listByPetQuery := query.NewListApptByPetQuery(c.Request.Context(), petID, pageParams)
 	appointmentPage, err := controller.queryBus.Execute(listByPetQuery)
 	if err != nil {
 		response.ApplicationError(c, err)
@@ -276,17 +249,17 @@ func (controller *AppointmentQueryController) GetAppointmentsByPet(c *gin.Contex
 	HandlePaginatedResponse(c, appointmentPage, pageParams)
 }
 
-// GetAppointmentStats godoc
+// GetApptStats godoc
 // @Summary Get appointment statistics
 // @Description Retrieves statistical information about appointments
 // @Tags appointments-query
 // @Accept json
 // @Produce json
-// @Success 200 {object} response.APIResponse "Appointment statistics"
+// @Success 200 {object} response.APIResponse "Appt statistics"
 // @Failure 500 {object} response.APIResponse "Internal server error"
 // @Router /appointments/stats [get]
-func (controller *AppointmentQueryController) GetAppointmentStats(c *gin.Context) {
-	query := query.GetAppointmentStatsQuery{}
+func (controller *ApptQueryController) GetAppointmentStats(c *gin.Context) {
+	query := query.GetAppointmentStatsHandler{}
 
 	appointmentStats, err := controller.queryBus.Execute(query)
 	if err != nil {
@@ -308,9 +281,9 @@ func HandlePaginatedResponse(c *gin.Context, pageResponseInterface any, queryPar
 	response.SuccessWithMeta(c, appointmentPage.Data, metadata)
 }
 
-func mapInterfaceToPageResponse(qry any) (page.Page[query.AppointmentResponse], error) {
-	if appointmentPage, ok := qry.(page.Page[query.AppointmentResponse]); ok {
+func mapInterfaceToPageResponse(qry any) (page.Page[query.ApptResponse], error) {
+	if appointmentPage, ok := qry.(page.Page[query.ApptResponse]); ok {
 		return appointmentPage, nil
 	}
-	return page.Page[query.AppointmentResponse]{}, errors.New("invalid query type")
+	return page.Page[query.ApptResponse]{}, errors.New("invalid query type")
 }

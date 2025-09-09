@@ -5,57 +5,49 @@ import (
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/appointment"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
-	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/repository"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
 )
 
-type NotAttendAppointmentCommand struct {
+type NotAttendApptCommand struct {
 	ctx           context.Context
 	appointmentID valueobject.AppointmentID
 	vetID         *valueobject.VetID
 }
 
-func NewNotAttendAppointmentCommand(ctx context.Context, id int, vetID *int) (*NotAttendAppointmentCommand, error) {
-	appointmentID, err := valueobject.NewAppointmentID(id)
-	if err != nil {
-		return nil, err
+func NewNotAttendApptCommand(ctx context.Context, id uint, vetIDUint *uint) *NotAttendApptCommand {
+	var vetID *valueobject.VetID
+	if vetIDUint != nil {
+		vetIDVal := valueobject.NewVetID(*vetIDUint)
+		vetID = &vetIDVal
 	}
 
-	var vetIDObj *valueobject.VetID
-	if vetID != nil {
-		vetIDVal, err := valueobject.NewVetID(*vetID)
-		vetIDObj = &vetIDVal
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return &NotAttendAppointmentCommand{
+	return &NotAttendApptCommand{
 		ctx:           ctx,
-		appointmentID: appointmentID,
-		vetID:         vetIDObj,
-	}, nil
+		appointmentID: valueobject.NewAppointmentID(id),
+		vetID:         vetID,
+	}
 }
 
-type NotAttendAppointmentHandler struct {
+type NotAttendApptHandler struct {
 	appointmentRepo repository.AppointmentRepository
 }
 
-func NewNotAttendAppointmentHandler(appointmentRepo repository.AppointmentRepository) cqrs.CommandHandler {
-	return &NotAttendAppointmentHandler{
+func NewNotAttendApptHandler(appointmentRepo repository.AppointmentRepository) cqrs.CommandHandler {
+	return &NotAttendApptHandler{
 		appointmentRepo: appointmentRepo,
 	}
 }
 
-func (h *NotAttendAppointmentHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
-	command, ok := cmd.(*NotAttendAppointmentCommand)
+func (h *NotAttendApptHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
+	command, ok := cmd.(*NotAttendApptCommand)
 	if !ok {
 		return cqrs.FailureResult(ErrInvalidCommandType, nil)
 	}
 
 	appointment, err := h.getAppointment(command)
 	if err != nil {
-		return cqrs.FailureResult(ErrAppointmentNotFound, err)
+		return cqrs.FailureResult(ErrApptNotFound, err)
 	}
 
 	if err := appointment.MarkAsNotPresented(); err != nil {
@@ -63,13 +55,13 @@ func (h *NotAttendAppointmentHandler) Handle(cmd cqrs.Command) cqrs.CommandResul
 	}
 
 	if err := h.appointmentRepo.Save(command.ctx, &appointment); err != nil {
-		return cqrs.FailureResult(ErrSaveAppointmentFailed, err)
+		return cqrs.FailureResult(ErrSaveApptFailed, err)
 	}
 
 	return cqrs.SuccessResult(appointment.ID().String(), SuccessMarkedAsNotPresented)
 }
 
-func (h *NotAttendAppointmentHandler) getAppointment(command *NotAttendAppointmentCommand) (appointment.Appointment, error) {
+func (h *NotAttendApptHandler) getAppointment(command *NotAttendApptCommand) (appointment.Appointment, error) {
 	if command.vetID != nil {
 		return h.appointmentRepo.GetByIDAndVetID(command.ctx, command.appointmentID, *command.vetID)
 	}

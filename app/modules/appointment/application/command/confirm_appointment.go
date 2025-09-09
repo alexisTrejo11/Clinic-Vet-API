@@ -2,56 +2,40 @@ package command
 
 import (
 	"context"
+	"errors"
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
-	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/repository"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
-	apperror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/application"
 )
 
-type ConfirmAppointmentCommand struct {
+type ConfirmApptCommand struct {
 	id    valueobject.AppointmentID
 	vetID valueobject.VetID
 	ctx   context.Context
 }
 
-func NewConfirmAppointmentCommand(ctx context.Context, appointIDInt, vetIDInt int) (ConfirmAppointmentCommand, error) {
-	errorMessage := make([]string, 0)
-
-	appointmentID, err := valueobject.NewAppointmentID(appointIDInt)
-	if err != nil {
-		errorMessage = append(errorMessage, err.Error())
-	}
-
-	vetID, err := valueobject.NewVetID(vetIDInt)
-	if err != nil {
-		errorMessage = append(errorMessage, err.Error())
-	}
-
-	if len(errorMessage) > 0 {
-		return ConfirmAppointmentCommand{}, apperror.MappingError(errorMessage, "contructor", "command", "confirmAppointmentCommand")
-	}
-
-	cmd := ConfirmAppointmentCommand{
+func NewConfirmAppointmentCommand(ctx context.Context, appointIDInt, vetIDInt uint) *ConfirmApptCommand {
+	return &ConfirmApptCommand{
 		ctx:   ctx,
-		vetID: vetID,
-		id:    appointmentID,
+		id:    valueobject.NewAppointmentID(appointIDInt),
+		vetID: valueobject.NewVetID(vetIDInt),
 	}
-	return cmd, nil
 }
 
-type ConfirmAppointmentHandler struct {
+type ConfirmApptHandler struct {
 	appointmentRepo repository.AppointmentRepository
 }
 
-func NewConfirmAppointmentHandler(appointmentRepo repository.AppointmentRepository) cqrs.CommandHandler {
-	return &ConfirmAppointmentHandler{
-		appointmentRepo: appointmentRepo,
-	}
+func NewConfirmApptHandler(appointmentRepo repository.AppointmentRepository) cqrs.CommandHandler {
+	return &ConfirmApptHandler{appointmentRepo: appointmentRepo}
 }
 
-func (h *ConfirmAppointmentHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
-	command := cmd.(ConfirmAppointmentCommand)
+func (h *ConfirmApptHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
+	command, valid := cmd.(ConfirmApptCommand)
+	if !valid {
+		return cqrs.FailureResult("invalid command type", errors.New("invalid command type"))
+	}
 
 	appointment, err := h.appointmentRepo.GetByID(command.ctx, command.id)
 	if err != nil {

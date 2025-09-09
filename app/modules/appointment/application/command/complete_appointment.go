@@ -2,87 +2,76 @@ package command
 
 import (
 	"context"
-	"strconv"
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/appointment"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
-	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/repository"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
-	apperror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/application"
 )
 
-type CompleteAppointmentCommand struct {
+type CompleteApptCommand struct {
 	id    valueobject.AppointmentID
 	vetID *valueobject.VetID
 	notes *string
 	ctx   context.Context
 }
 
-func NewCompleteAppointmenCommand(ctx context.Context, id int, vetID *int, notes *string) (*CompleteAppointmentCommand, error) {
-	appointmentID, err := valueobject.NewAppointmentID(id)
-	if err != nil {
-		return nil, apperror.FieldValidationError("appointment-ID", strconv.Itoa(id), err.Error())
-	}
-
-	var vetIDObj *valueobject.VetID
-	if vetID != nil {
-		vetIDVal, err := valueobject.NewVetID(*vetID)
-		vetIDObj = &vetIDVal
-		if err != nil {
-			return nil, apperror.FieldValidationError("vet-ID", strconv.Itoa(*vetID), err.Error())
-		}
-	}
-
-	return &CompleteAppointmentCommand{
-		id:    appointmentID,
-		notes: notes,
-		vetID: vetIDObj,
+func NewCompleteApptCommand(ctx context.Context, id uint, vetIDInt *uint, notes string) *CompleteApptCommand {
+	cmd := &CompleteApptCommand{
+		id:    valueobject.NewAppointmentID(id),
+		notes: &notes,
 		ctx:   ctx,
-	}, nil
+	}
+
+	if vetIDInt != nil {
+		vetID := valueobject.NewVetID(*vetIDInt)
+		cmd.vetID = &vetID
+	}
+	return cmd
 }
 
-type CompleteAppointmentHandler struct {
-	appointmentRepo repository.AppointmentRepository
+type CompleteApptHandler struct {
+	apptRepository repository.AppointmentRepository
 }
 
-func NewCompleteAppointmentHandler(appointmentRepo repository.AppointmentRepository) cqrs.CommandHandler {
-	return &CompleteAppointmentHandler{
-		appointmentRepo: appointmentRepo,
+func NewCompleteApptHandler(apptRepository repository.AppointmentRepository) cqrs.CommandHandler {
+	return &CompleteApptHandler{
+		apptRepository: apptRepository,
 	}
 }
 
-func (h *CompleteAppointmentHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
-	command, valid := cmd.(CompleteAppointmentCommand)
+func (h *CompleteApptHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
+	command, valid := cmd.(CompleteApptCommand)
 	if !valid {
 		return cqrs.FailureResult(ErrInvalidCommandType, nil)
 	}
 
-	appointment, err := h.getAppointment(command)
+	appointment, err := h.getAppt(command)
 	if err != nil {
-		return cqrs.FailureResult(ErrAppointmentNotFound, err)
+		return cqrs.FailureResult(ErrApptNotFound, err)
 	}
 
 	if err := appointment.Complete(); err != nil {
 		return cqrs.FailureResult("failed to complete appointment", err)
 	}
 
-	if err := h.appointmentRepo.Save(command.ctx, &appointment); err != nil {
+	if err := h.apptRepository.Save(command.ctx, &appointment); err != nil {
 		return cqrs.FailureResult("failed to save completed appointment", err)
 	}
 
 	return cqrs.SuccessResult(appointment.ID().String(), "appointment completed successfully")
 }
 
-func (h *CompleteAppointmentHandler) getAppointment(command CompleteAppointmentCommand) (appointment.Appointment, error) {
+func (h *CompleteApptHandler) getAppt(command CompleteApptCommand) (appointment.Appointment, error) {
 	if command.vetID != nil {
-		appointment, err := h.appointmentRepo.GetByIDAndVetID(command.ctx, command.id, *command.vetID)
+		appointment, err := h.apptRepository.GetByIDAndVetID(command.ctx, command.id, *command.vetID)
 		if err != nil {
 			return appointment, err
 		}
 		return appointment, nil
 	}
 
-	appointment, err := h.appointmentRepo.GetByID(command.ctx, command.id)
+	appointment, err := h.apptRepository.GetByID(command.ctx, command.id)
 	if err != nil {
 		return appointment, err
 	}

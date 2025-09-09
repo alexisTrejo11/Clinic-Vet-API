@@ -2,15 +2,15 @@ package command
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
-	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/repository"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
-	apperror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/application"
 )
 
-type RescheduleAppointmentCommand struct {
+type RescheduleApptCommand struct {
 	ctx            context.Context
 	appointmentID  valueobject.AppointmentID
 	veterinarianID *valueobject.VetID
@@ -18,60 +18,35 @@ type RescheduleAppointmentCommand struct {
 	reason         *string
 }
 
-func NewRescheduleAppointmentCommand(
-	ctx context.Context,
-	appointIDInt int,
-	vetID *int,
-	dateTime time.Time,
-	reason *string,
-) (RescheduleAppointmentCommand, error) {
-	errorMessages := make([]string, 0)
-
-	appointmentID, err := valueobject.NewAppointmentID(appointIDInt)
-	if err != nil {
-		errorMessages = append(errorMessages, err.Error())
-	}
-
+func NewRescheduleApptCommand(ctx context.Context, appointIDInt uint, vetID *uint, dateTime time.Time, reason *string) *RescheduleApptCommand {
 	var veterinarianID *valueobject.VetID
 	if vetID != nil {
-		vetIDVal, err := valueobject.NewVetID(*vetID)
-		if err != nil {
-			errorMessages = append(errorMessages, err.Error())
-		}
+		vetIDVal := valueobject.NewVetID(*vetID)
 		veterinarianID = &vetIDVal
 	}
 
-	if dateTime.IsZero() {
-		errorMessages = append(errorMessages, "invalid date time")
-	}
-
-	if len(errorMessages) > 0 {
-		return RescheduleAppointmentCommand{}, apperror.MappingError(errorMessages, "http_data_body", "command", "appointment")
-	}
-
-	cmd := &RescheduleAppointmentCommand{
+	return &RescheduleApptCommand{
 		ctx:            ctx,
-		appointmentID:  appointmentID,
+		appointmentID:  valueobject.NewAppointmentID(appointIDInt),
 		veterinarianID: veterinarianID,
 		reason:         reason,
 		datetime:       dateTime,
 	}
-
-	return *cmd, nil
 }
 
-type RescheduleAppointmentHandler struct {
+type RescheduleApptHander struct {
 	appointmentRepo repository.AppointmentRepository
 }
 
-func NewRescheduleAppointmentHandler(appointmentRepo repository.AppointmentRepository) cqrs.CommandHandler {
-	return &RescheduleAppointmentHandler{
-		appointmentRepo: appointmentRepo,
-	}
+func NewRescheduleApptHandler(appointmentRepo repository.AppointmentRepository) cqrs.CommandHandler {
+	return &RescheduleApptHander{appointmentRepo: appointmentRepo}
 }
 
-func (h *RescheduleAppointmentHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
-	command := cmd.(RescheduleAppointmentCommand)
+func (h *RescheduleApptHander) Handle(cmd cqrs.Command) cqrs.CommandResult {
+	command, valid := cmd.(RescheduleApptCommand)
+	if !valid {
+		return cqrs.FailureResult("invalid command type", errors.New("expected RescheduleApptCommand"))
+	}
 
 	appointment, err := h.appointmentRepo.GetByID(command.ctx, command.appointmentID)
 	if err != nil {

@@ -12,10 +12,12 @@ import (
 	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 type VeterinarianAPIConfig struct {
 	Queries       *sqlc.Queries
+	DB            *pgconn.Conn
 	Router        *gin.Engine
 	DataValidator *validator.Validate
 }
@@ -49,7 +51,7 @@ func (f *VeterinarianModule) Bootstrap() error {
 	}
 
 	f.components = &VeterinarianAPIComponents{}
-	vetRepo := persistence.NewSqlcVetRepository(f.config.Queries)
+	vetRepo := persistence.NewSqlcVetRepository(f.config.Queries, f.config.DB)
 
 	getVetUseCase := usecase.NewGetVetByIDUseCase(vetRepo)
 	listVetUseCase := usecase.NewListVetUseCase(vetRepo)
@@ -96,4 +98,4 @@ func (f *VeterinarianModule) GetRepository() (repository.VetRepository, error) {
 		return nil, errors.New("module not bootstrapped")
 	}
 	return f.components.repository, nil
-}
+

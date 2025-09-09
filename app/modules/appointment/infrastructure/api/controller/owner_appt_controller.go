@@ -19,44 +19,44 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-// OwnerAppointmentController handles owner-specific appointment operations
-// @title Veterinary Clinic API - Owner Appointment Management
+// OwnerApptController handles owner-specific appointment operations
+// @title Veterinary Clinic API - Owner Appt Management
 // @version 1.0
 // @description This controller manages appointment operations specific to pet owners including scheduling, rescheduling, and viewing appointments
 // @securityDefinitions.apikey BearerAuth
 // @in header
 // @name Authorization
-type OwnerAppointmentController struct {
+type OwnerApptController struct {
 	commandBus cqrs.CommandBus
 	queryBus   cqrs.QueryBus
 	validator  *validator.Validate
 }
 
-func NewOwnerAppointmentController(commandBus cqrs.CommandBus, queryBus cqrs.QueryBus) *OwnerAppointmentController {
-	return &OwnerAppointmentController{
+func NewOwnerApptController(commandBus cqrs.CommandBus, queryBus cqrs.QueryBus) *OwnerApptController {
+	return &OwnerApptController{
 		commandBus: commandBus,
 		queryBus:   queryBus,
 		validator:  &validator.Validate{},
 	}
 }
 
-// RequestAppointment godoc
+// RequestAppt godoc
 // @Summary Request a new appointment
 // @Description Owner creates a new appointment request for their pet
 // @Tags owner-appointments
 // @Accept json
 // @Produce json
-// @Param appointment body command.CreateAppointmentCommand true "Appointment details"
+// @Param appointment body command.CreateApptCommand true "Appointment details"
 // @Security BearerAuth
 // @Router /owner/appointments [post]
-func (controller *OwnerAppointmentController) RequestAppointment(c *gin.Context) {
+func (controller *OwnerApptController) RequestAppointment(c *gin.Context) {
 	userCtx, exists := middleware.GetUserFromContext(c)
 	if !exists {
 		response.Unauthorized(c, authError.UnauthorizedCTXError())
 		return
 	}
 
-	var requestData *dto.RequestOwnerAppointmentData
+	var requestData *dto.RequestApptByOwnerData
 	if err := c.ShouldBindJSON(&requestData); err != nil {
 		response.BadRequest(c, httpError.RequestBodyDataError(err))
 		return
@@ -69,7 +69,7 @@ func (controller *OwnerAppointmentController) RequestAppointment(c *gin.Context)
 		return
 	}
 
-	createAppointCommand, err := requestData.ToCommand(userCtx.CustomerID)
+	createAppointCommand, err := requestData.ToCommand(c.Request.Context(), userCtx.CustomerID)
 	if err != nil {
 		response.ApplicationError(c, err)
 		return
@@ -84,7 +84,7 @@ func (controller *OwnerAppointmentController) RequestAppointment(c *gin.Context)
 	response.Created(c, result)
 }
 
-// GetMyAppointments godoc
+// GetMyAppts godoc
 // @Summary Get owner's appointments
 // @Description Retrieves a list of all appointments for the authenticated owner
 // @Tags owner-appointments
@@ -94,7 +94,7 @@ func (controller *OwnerAppointmentController) RequestAppointment(c *gin.Context)
 // @Param limit query int false "Items per page" default(10)
 // @Security BearerAuth
 // @Router /owner/appointments [get]
-func (controller *OwnerAppointmentController) GetMyAppointments(c *gin.Context) {
+func (controller *OwnerApptController) GetMyAppointments(c *gin.Context) {
 	userCtx, exists := middleware.GetUserFromContext(c)
 	if !exists {
 		response.Unauthorized(c, authError.UnauthorizedCTXError())
@@ -107,12 +107,7 @@ func (controller *OwnerAppointmentController) GetMyAppointments(c *gin.Context) 
 		return
 	}
 
-	getByOwnerQuery, err := query.NewListAppointmentsByOwnerQuery(userCtx.CustomerID, *pageInput)
-	if err != nil {
-		response.ApplicationError(c, err)
-		return
-	}
-
+	getByOwnerQuery := query.NewListApptByOwnerQuery(c.Request.Context(), userCtx.CustomerID, *pageInput)
 	appointmentPage, err := controller.queryBus.Execute(getByOwnerQuery)
 	if err != nil {
 		response.ApplicationError(c, err)
@@ -122,31 +117,32 @@ func (controller *OwnerAppointmentController) GetMyAppointments(c *gin.Context) 
 	response.Success(c, appointmentPage)
 }
 
-// GetAppointmentByID godoc
+// GetApptByID godoc
 // @Summary Get specific appointment details
 // @Description Retrieves details of a specific appointment for the authenticated owner
 // @Tags owner-appointments
 // @Accept json
 // @Produce json
-// @Param id path int true "Appointment ID"
+// @Param id path int true "Appt ID"
 // @Security BearerAuth
 // @Router /owner/appointments/{id} [get]
-func (controller *OwnerAppointmentController) GetMyAppointmentDetail(c *gin.Context) {
+func (controller *OwnerApptController) GetMyAppointmentDetail(c *gin.Context) {
+	appointmentID, err := ginUtils.ParseParamToUInt(c, "id")
+	if err != nil {
+		response.BadRequest(c, httpError.RequestURLParamError(err, "id", c.Param("id")))
+		return
+	}
+
 	userCtx, exists := middleware.GetUserFromContext(c)
 	if !exists {
 		response.Unauthorized(c, authError.UnauthorizedCTXError())
 		return
 	}
 
-	// TODO: Add GetByIdAndUserId
-	getByIDQuery, err := query.NewGetAppointmentByIDQuery(userCtx.CustomerID)
-	if err != nil {
-		response.ApplicationError(c, err)
-		return
-	}
+	getByIDQuery := query.NewGetApptByIDAndOwnerIDQuery(c.Request.Context(), appointmentID, userCtx.CustomerID)
 
 	iAmppointment, err := controller.queryBus.Execute(getByIDQuery)
-	appointmentDetail := iAmppointment.(query.AppointmentResponse)
+	appointmentDetail := iAmppointment.(query.ApptResponse)
 	if err != nil {
 		response.ApplicationError(c, err)
 		return
@@ -160,17 +156,17 @@ func (controller *OwnerAppointmentController) GetMyAppointmentDetail(c *gin.Cont
 	response.Success(c, appointmentDetail)
 }
 
-// RescheduleAppointment godoc
+// RescheduleAppt godoc
 // @Summary Reschedule an appointment
 // @Description Owner reschedules their existing appointment
 // @Tags owner-appointments
 // @Accept json
 // @Produce json
-// @Param id path int true "Appointment ID"
-// @Param reschedule body command.RescheduleAppointmentCommand true "New appointment time"
+// @Param id path int true "Appt ID"
+// @Param reschedule body command.RescheduleApptCommand true "New appointment time"
 // @Security BearerAuth
 // @Router /owner/appointments/{id}/reschedule [put]
-func (controller *OwnerAppointmentController) RescheduleAppointment(c *gin.Context) {
+func (controller *OwnerApptController) RescheduleAppointment(c *gin.Context) {
 	// TODO: Implement Command
 	_, exists := middleware.GetUserFromContext(c)
 	if !exists {
@@ -178,7 +174,7 @@ func (controller *OwnerAppointmentController) RescheduleAppointment(c *gin.Conte
 		return
 	}
 
-	var requestData dto.OwnerRescheduleAppointData
+	var requestData dto.RescheduleAppointData
 	if err := c.ShouldBindJSON(&requestData); err != nil {
 		response.BadRequest(c, httpError.RequestBodyDataError(err))
 		return
@@ -191,13 +187,9 @@ func (controller *OwnerAppointmentController) RescheduleAppointment(c *gin.Conte
 		return
 	}
 
-	rescheduleAppointmentCommand, err := requestData.ToCommand(0)
-	if err != nil {
-		response.ApplicationError(c, err)
-		return
-	}
-
-	result := controller.commandBus.Execute(rescheduleAppointmentCommand)
+	// TODO: Validate appointment ownership
+	rescheduleApptCommand := requestData.ToCommand(c.Request.Context(), 0)
+	result := controller.commandBus.Execute(rescheduleApptCommand)
 	if !result.IsSuccess {
 		response.ApplicationError(c, result.Error)
 		return
@@ -206,28 +198,24 @@ func (controller *OwnerAppointmentController) RescheduleAppointment(c *gin.Conte
 	response.Success(c, result)
 }
 
-// CancelAppointment - Owner cancels their appointment
-// CancelAppointment godoc
+// CancelAppt - Owner cancels their appointment
+// CancelAppt godoc
 // @Summary Cancel an appointment
 // @Description Owner cancels their existing appointment
 // @Tags owner-appointments
 // @Accept json
 // @Produce json
-// @Param id path int true "Appointment ID"
+// @Param id path int true "Appt ID"
 // @Security BearerAuth
 // @Router /owner/appointments/{id}/cancel [put]
-func (controller *OwnerAppointmentController) CancelAppointment(c *gin.Context) {
-	appointmentID, err := ginUtils.ParseParamToInt(c, "id")
+func (controller *OwnerApptController) CancelAppointment(c *gin.Context) {
+	appointmentID, err := ginUtils.ParseParamToUInt(c, "id")
 	if err != nil {
 		response.BadRequest(c, httpError.RequestURLParamError(err, "id", c.Param("id")))
 		return
 	}
 
-	command, err := command.NewCancelAppointmentCommand(c.Request.Context(), appointmentID, nil, "Cancelled by admin")
-	if err != nil {
-		response.ApplicationError(c, err)
-	}
-
+	command := command.NewCancelApptCommand(c.Request.Context(), appointmentID, nil, "Cancelled by admin")
 	result := controller.commandBus.Execute(command)
 	if !result.IsSuccess {
 		response.ApplicationError(c, result.Error)
@@ -237,7 +225,7 @@ func (controller *OwnerAppointmentController) CancelAppointment(c *gin.Context) 
 	response.Success(c, result)
 }
 
-// GetAppointmentsByPet godoc
+// GetApptsByPet godoc
 // @Summary Get appointments for a specific pet
 // @Description Retrieves all appointments for a specific pet owned by the authenticated owner
 // @Tags owner-appointments
@@ -248,8 +236,8 @@ func (controller *OwnerAppointmentController) CancelAppointment(c *gin.Context) 
 // @Param limit query int false "Items per page" default(10)
 // @Security BearerAuth
 // @Router /owner/appointments/pet/{petID} [get]
-func (controller *OwnerAppointmentController) GetAppointmentsByPet(c *gin.Context) {
-	petID, err := ginUtils.ParseParamToInt(c, "id")
+func (controller *OwnerApptController) GetAppointmentsByPet(c *gin.Context) {
+	petID, err := ginUtils.ParseParamToUInt(c, "id")
 	if err != nil {
 		response.BadRequest(c, httpError.RequestURLParamError(err, "id", c.Param("id")))
 		return
@@ -266,12 +254,7 @@ func (controller *OwnerAppointmentController) GetAppointmentsByPet(c *gin.Contex
 		return
 	}
 
-	getApptByPetQuery, err := query.NewListAppointmentsByPetQuery(petID, *pagination)
-	if err != nil {
-		response.ApplicationError(c, err)
-		return
-	}
-
+	getApptByPetQuery := query.NewListApptByVetQuery(c.Request.Context(), petID, *pagination)
 	petResponsePage, err := controller.queryBus.Execute(getApptByPetQuery)
 	if err != nil {
 		response.ApplicationError(c, err)
@@ -281,7 +264,7 @@ func (controller *OwnerAppointmentController) GetAppointmentsByPet(c *gin.Contex
 	response.Success(c, petResponsePage)
 }
 
-// GetUpcomingAppointments godoc
+// GetUpcomingAppts godoc
 // @Summary Get upcoming appointments
 // @Description Retrieves upcoming appointments for the authenticated owner within a date range
 // @Tags owner-appointments
@@ -293,7 +276,7 @@ func (controller *OwnerAppointmentController) GetAppointmentsByPet(c *gin.Contex
 // @Param limit query int false "Items per page" default(10)
 // @Security BearerAuth
 // @Router /owner/appointments/upcoming [get]
-func (controller *OwnerAppointmentController) GetUpcomingAppointments(c *gin.Context) {
+func (controller *OwnerApptController) GetUpcomingAppointments(c *gin.Context) {
 	startDate := time.Now()
 	endDate := startDate.AddDate(0, 0, 30)
 
@@ -319,9 +302,8 @@ func (controller *OwnerAppointmentController) GetUpcomingAppointments(c *gin.Con
 		return
 	}
 
-	listApptByDataRangeQuery, err := query.NewListAppointmentsByDateRangeQuery(startDate, endDate, pageInput)
+	listApptByDataRangeQuery, err := query.NewListApptByDateRangeQuery(startDate, endDate, pageInput)
 	if err != nil {
-		response.ApplicationError(c, err)
 		return
 	}
 

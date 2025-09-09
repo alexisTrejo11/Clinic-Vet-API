@@ -5,27 +5,24 @@ import (
 	"fmt"
 )
 
-var (
-	ErrNegativeID     = errors.New("ID cannot be negative")
-	ErrEntityNotFound = errors.New("entity not supported")
-)
+var ErrEntityNotFound = errors.New("entity not supported")
 
 type IntegerID interface {
-	Value() int
-	Equals(number int) bool
+	Value() uint
+	Equals(number uint) bool
 	String() string
 	IsZero() bool
 }
 
 type baseID struct {
-	value int
+	value uint
 }
 
-func (id baseID) Value() int {
+func (id baseID) Value() uint {
 	return id.value
 }
 
-func (id baseID) Equals(number int) bool {
+func (id baseID) Equals(number uint) bool {
 	return id.value == number
 }
 
@@ -47,84 +44,53 @@ type (
 	MedHistoryID  struct{ baseID }
 )
 
-func NewPetID(value int) (PetID, error) {
-	if err := validateID(value); err != nil {
-		return PetID{}, err
-	}
-	return PetID{baseID{value}}, nil
+func NewPetID(value uint) PetID {
+	return PetID{baseID{value}}
 }
 
-func NewPaymentID(value int) (PaymentID, error) {
-	if err := validateID(value); err != nil {
-		return PaymentID{}, err
-	}
-	return PaymentID{baseID{value}}, nil
+func NewPaymentID(value uint) PaymentID {
+	return PaymentID{baseID{value}}
 }
 
-func NewVetID(value int) (VetID, error) {
-	if err := validateID(value); err != nil {
-		return VetID{}, err
-	}
-	return VetID{baseID{value}}, nil
+func NewVetID(value uint) VetID {
+	return VetID{baseID{value}}
 }
 
-func NewUserID(value int) (UserID, error) {
-	if err := validateID(value); err != nil {
-		return UserID{}, err
-	}
-	return UserID{baseID{value}}, nil
+func NewUserID(value uint) UserID {
+	return UserID{baseID{value}}
 }
 
-func NewOwnerID(value int) (OwnerID, error) {
-	if err := validateID(value); err != nil {
-		return OwnerID{}, err
-	}
-	return OwnerID{baseID{value}}, nil
+func NewOwnerID(value uint) OwnerID {
+	return OwnerID{baseID{value}}
 }
 
-func NewMedHistoryID(value int) (MedHistoryID, error) {
-	if err := validateID(value); err != nil {
-		return MedHistoryID{}, err
-	}
-	return MedHistoryID{baseID{value}}, nil
+func NewMedHistoryID(value uint) MedHistoryID {
+	return MedHistoryID{baseID{value}}
 }
 
-func NewAppointmentID(value int) (AppointmentID, error) {
-	if err := validateID(value); err != nil {
-		return AppointmentID{}, err
-	}
-	return AppointmentID{baseID{value}}, nil
+func NewAppointmentID(value uint) AppointmentID {
+	return AppointmentID{baseID{value}}
 }
 
-func NewIDFactory(value int, entity string) (IntegerID, error) {
-	if err := validateID(value); err != nil {
-		return nil, err
-	}
+func NewIDFactory(value uint, entity string) (IntegerID, error) {
 	switch entity {
 	case "payment":
-		return NewPaymentID(value)
+		return NewPaymentID(value), nil
 	case "veterinarian", "vet":
-		return NewVetID(value)
+		return NewVetID(value), nil
 	case "user":
-		return NewUserID(value)
+		return NewUserID(value), nil
 	case "owner":
-		return NewOwnerID(value)
+		return NewOwnerID(value), nil
 	case "medical_history", "medicalhistory":
-		return NewMedHistoryID(value)
+		return NewMedHistoryID(value), nil
 	case "appointment":
-		return NewAppointmentID(value)
+		return NewAppointmentID(value), nil
 	case "pet":
-		return NewVetID(value)
+		return NewVetID(value), nil
 	default:
 		return nil, fmt.Errorf("%w: %s", ErrEntityNotFound, entity)
 	}
-}
-
-func validateID(value int) error {
-	if value < 0 {
-		return fmt.Errorf("%w: %d", ErrNegativeID, value)
-	}
-	return nil
 }
 
 func (id PaymentID) IsPayment() bool         { return true }

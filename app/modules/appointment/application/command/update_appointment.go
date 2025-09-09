@@ -5,11 +5,11 @@ import (
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
-	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/repository"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
 )
 
-type UpdateAppointmentCommand struct {
+type UpdateApptCommand struct {
 	ctx           context.Context
 	appointmentID valueobject.AppointmentID
 	vetID         *valueobject.VetID
@@ -19,68 +19,51 @@ type UpdateAppointmentCommand struct {
 	service       *enum.ClinicService
 }
 
-func NewUpdateAppointmentCommand(ctx context.Context, appointIDInt int, vetIDInt *int, status string, reason, notes, service *string) (*UpdateAppointmentCommand, error) {
-	appointmentID, err := valueobject.NewAppointmentID(appointIDInt)
-	if err != nil {
-		return nil, err
-	}
-
+func NewUpdateApptCommand(ctx context.Context, appointIDInt uint, vetIDInt *uint, status string, reason, notes *string, service *enum.ClinicService) *UpdateApptCommand {
 	var vetID *valueobject.VetID
 	if vetIDInt != nil {
-		vetIDObj, err := valueobject.NewVetID(*vetIDInt)
-		if err != nil {
-			return nil, err
-		}
+		vetIDObj := valueobject.NewVetID(*vetIDInt)
 		vetID = &vetIDObj
 	}
 
-	var clinicService *enum.ClinicService
-	if service != nil {
-		serviceEnum, err := enum.ParseClinicService(*service)
-		if err != nil {
-			return nil, err
-		}
-		clinicService = &serviceEnum
-	}
-
-	return &UpdateAppointmentCommand{
+	return &UpdateApptCommand{
 		ctx:           ctx,
-		appointmentID: appointmentID,
+		appointmentID: valueobject.NewAppointmentID(appointIDInt),
 		vetID:         vetID,
-		service:       clinicService,
+		service:       service,
 		reason:        reason,
 		notes:         notes,
-	}, nil
-}
-
-type UpdateAppointmentHandler struct {
-	appointmentRepo repository.AppointmentRepository
-}
-
-func NewUpdateAppointmentHandler(appointmentRepo repository.AppointmentRepository) cqrs.CommandHandler {
-	return &UpdateAppointmentHandler{
-		appointmentRepo: appointmentRepo,
 	}
 }
 
-func (h *UpdateAppointmentHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
-	command, ok := cmd.(*UpdateAppointmentCommand)
+type UpdateApptHandler struct {
+	apptRepository repository.AppointmentRepository
+}
+
+func NewUpdateApptHandler(apptRepository repository.AppointmentRepository) cqrs.CommandHandler {
+	return &UpdateApptHandler{
+		apptRepository: apptRepository,
+	}
+}
+
+func (h *UpdateApptHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
+	command, ok := cmd.(*UpdateApptCommand)
 	if !ok {
 		return cqrs.FailureResult(ErrInvalidCommandType, nil)
 	}
 
-	appointment, err := h.appointmentRepo.GetByID(command.ctx, command.appointmentID)
+	appointment, err := h.apptRepository.GetByID(command.ctx, command.appointmentID)
 	if err != nil {
-		return cqrs.FailureResult(ErrAppointmentNotFound, err)
+		return cqrs.FailureResult(ErrApptNotFound, err)
 	}
 
 	if err := appointment.Update(command.notes, command.vetID, command.service, command.reason); err != nil {
-		return cqrs.FailureResult(ErrUpdateAppointmentFailed, err)
+		return cqrs.FailureResult(ErrUpdateApptFailed, err)
 	}
 
-	if err := h.appointmentRepo.Save(command.ctx, &appointment); err != nil {
-		return cqrs.FailureResult(ErrSaveAppointmentFailed, err)
+	if err := h.apptRepository.Save(command.ctx, &appointment); err != nil {
+		return cqrs.FailureResult(ErrSaveApptFailed, err)
 	}
 
-	return cqrs.SuccessResult(appointment.ID().String(), SuccessAppointmentUpdated)
+	return cqrs.SuccessResult(appointment.ID().String(), SuccessApptUpdated)
 }

@@ -40,8 +40,6 @@ func (r *SQLCPaymentRepository) calculateOffset(pageInput page.PageInput) int32 
 	return int32((pageInput.PageNumber - 1) * pageInput.PageSize)
 }
 
-// Error handling helper methods
-
 // dbError creates a standardized database operation error
 func (r *SQLCPaymentRepository) dbError(operation, message string, err error) error {
 	return dberr.DatabaseOperationError(operation, TablePayments, DriverSQL, fmt.Sprintf("%s: %v", message, err))

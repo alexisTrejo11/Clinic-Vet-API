@@ -4,13 +4,15 @@ import (
 	"context"
 	"strconv"
 
+	s "github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/specification"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/veterinarians/application/dto"
 	apperror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/application"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 )
 
 type VeterinarianUseCases struct {
-	listVetsUseCase   ListVetUseCase
+	searchVetUseCase  SearchVetUseCase
 	getVetByIDUseCase GetVetByIDUseCase
 	createVetUseCase  CreateVetUseCase
 	updateVetUseCase  UpdateVetUseCase
@@ -18,14 +20,14 @@ type VeterinarianUseCases struct {
 }
 
 func NewVetUseCase(
-	listVetsUseCase ListVetUseCase,
+	searchVetUseCase SearchVetUseCase,
 	getVetByIDUseCase GetVetByIDUseCase,
 	createVetUseCase CreateVetUseCase,
 	updateVetUseCase UpdateVetUseCase,
 	deleteVetUseCase DeleteVetUseCase,
 ) *VeterinarianUseCases {
 	return &VeterinarianUseCases{
-		listVetsUseCase:   listVetsUseCase,
+		searchVetUseCase:  searchVetUseCase,
 		getVetByIDUseCase: getVetByIDUseCase,
 		createVetUseCase:  createVetUseCase,
 		updateVetUseCase:  updateVetUseCase,
@@ -33,8 +35,11 @@ func NewVetUseCase(
 	}
 }
 
-func (uc *VeterinarianUseCases) ListVetUseCase(ctx context.Context, searchParams dto.VetSearchParams) ([]dto.VetResponse, error) {
-	return uc.listVetsUseCase.Execute(ctx, searchParams)
+func (uc *VeterinarianUseCases) SearchVeterinan(
+	ctx context.Context,
+	specification s.VetSearchSpecification,
+) (page.Page[[]dto.VetResponse], error) {
+	return uc.searchVetUseCase.Execute(ctx, specification)
 }
 
 func (uc *VeterinarianUseCases) GetVetByIDUseCase(ctx context.Context, vetIDInt int) (dto.VetResponse, error) {

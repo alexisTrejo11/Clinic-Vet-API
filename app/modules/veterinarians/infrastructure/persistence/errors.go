@@ -8,7 +8,6 @@ import (
 
 const (
 	TableVeterinarians = "veterinarians"
-	DriverSQL          = "sqlc"
 	OpSelect           = "select"
 	OpInsert           = "insert"
 	OpUpdate           = "update"

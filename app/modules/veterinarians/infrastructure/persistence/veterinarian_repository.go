@@ -1,3 +1,4 @@
+// Package persistence includes the implementation of repositories using SQLC
 package persistence
 
 import (
@@ -7,125 +8,64 @@ import (
 	"fmt"
 
 	vet "github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/veterinarian"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/specification"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
 	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/veterinarians/application/dto"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
-	"github.com/alexisTrejo11/Clinic-Vet-API/db/models"
 	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
-	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type SqlcVetRepository struct {
 	queries *sqlc.Queries
+	pool    *pgxpool.Pool
 }
 
-func NewSqlcVetRepository(queries *sqlc.Queries) repository.VetRepository {
-	return &SqlcVetRepository{queries: queries}
+func NewSqlcVetRepository(queries *sqlc.Queries, pool *pgxpool.Pool) repository.VetRepository {
+	return &SqlcVetRepository{
+		queries: queries,
+		pool:    pool,
+	}
 }
 
-func (r *SqlcVetRepository) List(ctx context.Context, searchParams interface{}) ([]vet.Veterinarian, error) {
-	searchParam := searchParams.(dto.VetSearchParams)
+func (r *SqlcVetRepository) Search(ctx context.Context, spec specification.VetSearchSpecification) (page.Page[[]vet.Veterinarian], error) {
+	query, params := spec.ToSQL()
 
-	params := sqlc.ListVeterinariansParams{
-		FirstName:           "%",
-		LastName:            "%",
-		LicenseNumber:       "%",
-		Speciality:          "",
-		YearsOfExperience:   0,
-		YearsOfExperience_2: 0,
-		IsActive:            pgtype.Bool{Bool: false, Valid: false},
-		Limit:               int32(searchParam.PageSize),
-		Offset:              int32((searchParam.PageNumber - 1) * searchParam.PageSize),
-	}
-
-	// Apply Filters
-	if searchParam.Filters.Name != nil {
-		name := "%" + *searchParam.Filters.Name + "%"
-		params.FirstName = name
-		params.LastName = name
-	}
-
-	if searchParam.Filters.LicenseNumber != nil {
-		params.LicenseNumber = "%" + *searchParam.Filters.LicenseNumber + "%"
-	}
-
-	if searchParam.Filters.Specialty != nil {
-		params.Speciality = models.VeterinarianSpeciality(searchParam.Filters.Specialty.String())
-	}
-
-	if searchParam.Filters.YearsExperience != nil {
-		if searchParam.Filters.YearsExperience.Min != nil {
-			params.YearsOfExperience = int32(*searchParam.Filters.YearsExperience.Min)
-		}
-		if searchParam.Filters.YearsExperience.Max != nil {
-			params.YearsOfExperience_2 = int32(*searchParam.Filters.YearsExperience.Max)
-		}
-	}
-
-	if searchParam.Filters.IsActive != nil {
-		params.IsActive = pgtype.Bool{Bool: *searchParam.Filters.IsActive, Valid: true}
-	}
-
-	// Ordering Config
-	orderParams := make([]interface{}, 8)
-	for i := range orderParams {
-		orderParams[i] = false
-	}
-
-	switch searchParam.OrderBy {
-	case "name":
-		if searchParam.SortDirection == page.ASC {
-			orderParams[0] = true
-		} else {
-			orderParams[1] = true
-		}
-	case "specialty":
-		if searchParam.SortDirection == page.ASC {
-			orderParams[2] = true
-		} else {
-			orderParams[3] = true
-		}
-	case "years_experience":
-		if searchParam.SortDirection == page.ASC {
-			orderParams[4] = true
-		} else {
-			orderParams[5] = true
-		}
-	case "created_at":
-		if searchParam.SortDirection == page.ASC {
-			orderParams[6] = true
-		} else {
-			orderParams[7] = true
-		}
-	default:
-		orderParams[7] = true
-	}
-
-	params.Column8 = orderParams[0]
-	params.Column9 = orderParams[1]
-	params.Column10 = orderParams[2]
-	params.Column11 = orderParams[3]
-	params.Column12 = orderParams[4]
-	params.Column13 = orderParams[5]
-	params.Column14 = orderParams[6]
-	params.Column15 = orderParams[7]
-
-	sqlVets, err := r.queries.ListVeterinarians(ctx, params)
+	// Execute the query
+	rows, err := r.pool.Query(ctx, query, params...)
 	if err != nil {
-		return nil, r.dbError(OpSelect, ErrMsgListVets, err)
+		return page.Page[[]vet.Veterinarian]{}, r.dbError(OpSelect, "failed to search veterinarians", err)
 	}
+	defer rows.Close()
 
-	vets := make([]vet.Veterinarian, len(sqlVets))
-	for i, sqlVet := range sqlVets {
-		vetEntity, err := SqlcVetToDomain(sqlVet)
+	// Iterate through the rows and scan into Veterinarian structs
+	var vets []vet.Veterinarian
+	for rows.Next() {
+		var veterinarian vet.Veterinarian
+		err := r.scanVetFromRow(rows, &veterinarian)
 		if err != nil {
-			return nil, r.wrapConversionError(err)
+			return page.Page[[]vet.Veterinarian]{}, r.wrapConversionError(err)
 		}
-		vets[i] = *vetEntity
+		vets = append(vets, veterinarian)
 	}
 
-	return vets, nil
+	if err := rows.Err(); err != nil {
+		return page.Page[[]vet.Veterinarian]{}, r.dbError(OpSelect, "error iterating search results", err)
+	}
+
+	// Get total count for pagination
+	totalCount, err := r.getTotalCountWithFilters(ctx, &spec)
+	if err != nil {
+		return page.Page[[]vet.Veterinarian]{}, err
+	}
+
+	// Handle pagination
+	pageMetadata := page.GetPageMetadata(totalCount, page.PageInput{
+		PageNumber: spec.GetPagination().Page,
+		PageSize:   spec.GetPagination().PageSize,
+	})
+
+	return page.NewPage(vets, *pageMetadata), nil
 }
 
 func (r *SqlcVetRepository) GetByID(ctx context.Context, id valueobject.VetID) (vet.Veterinarian, error) {
@@ -187,17 +127,8 @@ func (r *SqlcVetRepository) Exists(ctx context.Context, id valueobject.VetID) (b
 }
 
 func (r *SqlcVetRepository) create(ctx context.Context, vet *vet.Veterinarian) error {
-	createParams := sqlc.CreateVeterinarianParams{
-		FirstName:         vet.Name().FirstName,
-		LastName:          vet.Name().LastName,
-		LicenseNumber:     vet.LicenseNumber(),
-		Photo:             vet.Photo(),
-		Speciality:        models.VeterinarianSpeciality(vet.Specialty().String()),
-		YearsOfExperience: int32(vet.YearsExperience()),
-		IsActive:          pgtype.Bool{Bool: vet.IsActive(), Valid: true},
-	}
-
-	_, err := r.queries.CreateVeterinarian(ctx, createParams)
+	createParams := vetToCreateParams(vet)
+	_, err := r.queries.CreateVeterinarian(ctx, *createParams)
 	if err != nil {
 		return r.dbError(OpInsert, ErrMsgCreateVet, err)
 	}
@@ -206,18 +137,8 @@ func (r *SqlcVetRepository) create(ctx context.Context, vet *vet.Veterinarian) e
 }
 
 func (r *SqlcVetRepository) update(ctx context.Context, vet *vet.Veterinarian) error {
-	updateParams := sqlc.UpdateVeterinarianParams{
-		ID:                int32(vet.ID().Value()),
-		FirstName:         vet.Name().FirstName,
-		LastName:          vet.Name().LastName,
-		LicenseNumber:     vet.LicenseNumber(),
-		Photo:             vet.Photo(),
-		Speciality:        models.VeterinarianSpeciality(vet.Specialty().String()),
-		YearsOfExperience: int32(vet.YearsExperience()),
-		IsActive:          pgtype.Bool{Bool: vet.IsActive(), Valid: true},
-	}
-
-	_, err := r.queries.UpdateVeterinarian(ctx, updateParams)
+	updateParams := vetToUpdateParams(vet)
+	_, err := r.queries.UpdateVeterinarian(ctx, *updateParams)
 	if err != nil {
 		return r.dbError(OpUpdate, fmt.Sprintf("%s with ID %d", ErrMsgUpdateVet, vet.ID().Value()), err)
 	}

@@ -3,6 +3,7 @@ package controller
 
 import (
 	"context"
+	"errors"
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/appointment/application/command"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/appointment/infrastructure/api/dto"
@@ -45,7 +46,23 @@ func NewAppointmentCommandController(
 // @Failure 500 {object} response.APIResponse "Internal server error"
 // @Router /appointments [post]
 func (controller *AppointmentCommandController) CreateAppointment(c *gin.Context) {
-	var createCommand command.CreateAppointmentCommand
+	var requestCreateData *dto.CreateApptRequest
+	if err := c.ShouldBindJSON(&requestCreateData); err != nil {
+		response.BadRequest(c, httpError.RequestBodyDataError(err))
+		return
+	}
+
+	if err := controller.validate.Struct(&requestCreateData); err != nil {
+		response.BadRequest(c, httpError.InvalidDataError(err))
+		return
+	}
+
+	createCommand, err := requestCreateData.ToCommand(c.Request.Context())
+	if err != nil {
+		response.ApplicationError(c, err)
+		return
+	}
+
 	if err := c.ShouldBindJSON(&createCommand); err != nil {
 		response.BadRequest(c, httpError.RequestBodyDataError(err))
 		return
@@ -57,7 +74,7 @@ func (controller *AppointmentCommandController) CreateAppointment(c *gin.Context
 		return
 	}
 
-	response.Created(c, result.ToMap())
+	response.Created(c, result)
 }
 
 // UpdateAppointment godoc
@@ -74,7 +91,7 @@ func (controller *AppointmentCommandController) CreateAppointment(c *gin.Context
 // @Failure 500 {object} response.APIResponse "Internal server error"
 // @Router /appointments/{id} [put]
 func (controller *AppointmentCommandController) UpdateAppointment(c *gin.Context) {
-	var updateAppointData *dto.UpdateAppointmentRequest
+	var updateAppointData *dto.UpdateApptRequest
 	if err := c.ShouldBindJSON(&updateAppointData); err != nil {
 		response.BadRequest(c, httpError.RequestBodyDataError(err))
 		return
@@ -113,19 +130,13 @@ func (controller *AppointmentCommandController) UpdateAppointment(c *gin.Context
 // @Failure 500 {object} response.APIResponse "Internal server error"
 // @Router /appointments/{id} [delete]
 func (controller *AppointmentCommandController) DeleteAppointment(c *gin.Context) {
-	entityID, err := ginUtils.ParseParamToInt(c, "id")
+	entityID, err := ginUtils.ParseParamToUInt(c, "id")
 	if err != nil {
 		response.BadRequest(c, httpError.RequestURLParamError(err, "id", c.Param("id")))
 		return
 	}
 
-	ctx := context.Background()
-	deleteCommand, err := command.NewDeleteAppointmentCommand(entityID, ctx)
-	if err != nil {
-		response.ApplicationError(c, err)
-		return
-	}
-
+	deleteCommand := command.NewDeleteApptCommand(entityID, c.Request.Context())
 	result := controller.commandBus.Execute(deleteCommand)
 	if !result.IsSuccess {
 		response.ApplicationError(c, result.Error)
@@ -149,13 +160,13 @@ func (controller *AppointmentCommandController) DeleteAppointment(c *gin.Context
 // @Failure 500 {object} response.APIResponse "Internal server error"
 // @Router /appointments/{id}/reschedule [put]
 func (controller *AppointmentCommandController) RescheduleAppointment(c *gin.Context) {
-	var rescheduleAppointData dto.RescheduleAppointmentRequest
-	if err := c.ShouldBindJSON(&rescheduleAppointData); err != nil {
+	var requestApptData dto.RescheduleApptRequest
+	if err := c.ShouldBindJSON(&requestApptData); err != nil {
 		response.BadRequest(c, httpError.RequestBodyDataError(err))
 		return
 	}
 
-	rescheduleCommand, err := rescheduleAppointData.ToCommand(context.Background())
+	rescheduleCommand, err := requestApptData.ToCommand(c.Request.Context())
 	if err != nil {
 		response.ApplicationError(c, err)
 	}
@@ -182,26 +193,20 @@ func (controller *AppointmentCommandController) RescheduleAppointment(c *gin.Con
 // @Failure 500 {object} response.APIResponse "Internal server error"
 // @Router /appointments/{id}/no-show [put]
 func (controller *AppointmentCommandController) NotAttend(c *gin.Context) {
-	appointmentID, err := ginUtils.ParseParamToInt(c, "id")
+	appointmentID, err := ginUtils.ParseParamToUInt(c, "id")
 	if err != nil {
 		response.BadRequest(c, httpError.RequestURLParamError(err, "id", c.Param("id")))
 		return
 	}
 
-	ctx := context.Background()
-	notAttendCommand, err := command.NewNotAttendAppointmentCommand(ctx, appointmentID, nil)
-	if err != nil {
-		response.ApplicationError(c, err)
-		return
-	}
-
+	notAttendCommand := command.NewNotAttendApptCommand(c.Request.Context(), appointmentID, nil)
 	result := controller.commandBus.Execute(notAttendCommand)
 	if !result.IsSuccess {
 		response.ApplicationError(c, result.Error)
 		return
 	}
 
-	response.Success(c, result.ToMap())
+	response.Success(c, result)
 }
 
 // ConfirmAppointment godoc
@@ -220,19 +225,26 @@ func (controller *AppointmentCommandController) NotAttend(c *gin.Context) {
 // @Failure 500 {object} response.APIResponse "Internal server error"
 // @Router /appointments/{id}/confirm [put]
 func (controller *AppointmentCommandController) ConfirmAppointment(c *gin.Context) {
-	appointmentID, err := ginUtils.ParseParamToInt(c, "id")
+	appointmentID, err := ginUtils.ParseParamToUInt(c, "id")
 	if err != nil {
 		response.BadRequest(c, httpError.RequestURLParamError(err, "id", c.Param("id")))
 		return
 	}
 
-	// TODO: Retrieve VetID
-	confirmAppointmentCmd, err := command.NewConfirmAppointmentCommand(context.Background(), appointmentID, 0)
-	if err != nil {
-		response.ApplicationError(c, err)
+	vetIDStr := c.Query("vet_id")
+	if vetIDStr == "" {
+		response.BadRequest(c, httpError.RequestURLParamError(errors.New("vetID is required"), "vet_id", vetIDStr))
+		return
 	}
 
-	result := controller.commandBus.Execute(confirmAppointmentCmd)
+	vetID, err := ginUtils.ParseParamToUInt(c, "vet_id")
+	if err != nil {
+		response.BadRequest(c, httpError.RequestURLParamError(err, "vet_id", vetIDStr))
+		return
+	}
+
+	confirmApptCommand := command.NewConfirmAppointmentCommand(c.Request.Context(), appointmentID, vetID)
+	result := controller.commandBus.Execute(confirmApptCommand)
 	if !result.IsSuccess {
 		response.ApplicationError(c, result.Error)
 		return
@@ -258,29 +270,19 @@ func (controller *AppointmentCommandController) ConfirmAppointment(c *gin.Contex
 // @Failure 500 {object} response.APIResponse "Internal server error"
 // @Router /appointments/{id}/complete [put]
 func (controller *AppointmentCommandController) CompleteAppointment(c *gin.Context) {
-	appointmentID, err := ginUtils.ParseParamToInt(c, "id")
+	appointmentID, err := ginUtils.ParseParamToUInt(c, "id")
 	if err != nil {
 		response.BadRequest(c, httpError.RequestURLParamError(err, "id", c.Param("id")))
 		return
 	}
+	notes := c.Query("notes")
 
-	var completeAppointData dto.CompleteAppointmentRequest
-	if err := c.ShouldBindJSON(&completeAppointData); err != nil {
-		response.BadRequest(c, httpError.RequestBodyDataError(err))
-		return
-	}
-
-	completeAppointmentCmd, err := completeAppointData.ToCommand(context.Background(), appointmentID)
-	if err != nil {
-		response.ApplicationError(c, err)
-		return
-	}
-
-	result := controller.commandBus.Execute(completeAppointmentCmd)
+	completApptCommand := command.NewCompleteApptCommand(c.Request.Context(), appointmentID, nil, notes)
+	result := controller.commandBus.Execute(completApptCommand)
 	if !result.IsSuccess {
 		response.ApplicationError(c, result.Error)
 		return
 	}
 
-	response.Success(c, result.ToMap())
+	response.Success(c, result)
 }

@@ -7,20 +7,20 @@ import (
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/appointment"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
-	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/repository"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 )
 
 type GetAppointmentStatsQuery struct {
-	vetID     *int
-	ownerID   *int
+	vetID     *uint
+	ownerID   *uint
 	startDate *time.Time
 	endDate   *time.Time
 	ctx       context.Context
 }
 
-func NewGetAppointmentStatsQuery(vetID, ownerID *int, startDate, endDate *time.Time) GetAppointmentStatsQuery {
+func NewGetAppointmentStatsQuery(vetID, ownerID *uint, startDate, endDate *time.Time) GetAppointmentStatsQuery {
 	return GetAppointmentStatsQuery{
 		vetID:     vetID,
 		ownerID:   ownerID,
@@ -30,16 +30,16 @@ func NewGetAppointmentStatsQuery(vetID, ownerID *int, startDate, endDate *time.T
 }
 
 type GetAppointmentStatsHandler struct {
-	appointmentRepo repository.AppointmentRepository
+	apptRepo repository.AppointmentRepository
 }
 
-func NewGetAppointmentStatsHandler(appointmentRepo repository.AppointmentRepository) cqrs.QueryHandler[AppointmentStatsResponse] {
+func NewGetAppointmentStatsHandler(apptRepo repository.AppointmentRepository) cqrs.QueryHandler[ApptStatsResponse] {
 	return &GetAppointmentStatsHandler{
-		appointmentRepo: appointmentRepo,
+		apptRepo: apptRepo,
 	}
 }
 
-func (h *GetAppointmentStatsHandler) Handle(q cqrs.Query) (AppointmentStatsResponse, error) {
+func (h *GetAppointmentStatsHandler) Handle(q cqrs.Query) (ApptStatsResponse, error) {
 	query := q.(GetAppointmentStatsQuery)
 
 	var appointments []appointment.Appointment
@@ -49,19 +49,18 @@ func (h *GetAppointmentStatsHandler) Handle(q cqrs.Query) (AppointmentStatsRespo
 		PageSize:   10000,
 	}
 
-	//. appointments based on filters
 	if query.startDate != nil && query.endDate != nil {
-		appointmentsPage, dberr := h.appointmentRepo.ListByDateRange(query.ctx, *query.startDate, *query.endDate, maxPage)
+		appointmentsPage, dberr := h.apptRepo.ListByDateRange(query.ctx, *query.startDate, *query.endDate, maxPage)
 		appointments = appointmentsPage.Data
 		err = dberr
 	} else {
-		appointmentsPage, dberr := h.appointmentRepo.ListAll(query.ctx, maxPage)
+		appointmentsPage, dberr := h.apptRepo.ListAll(query.ctx, maxPage)
 		appointments = appointmentsPage.Data
 		err = dberr
 	}
 
 	if err != nil {
-		return AppointmentStatsResponse{}, err
+		return ApptStatsResponse{}, err
 	}
 	// Apply additional filters
 	var filteredAppointments []appointment.Appointment
@@ -85,13 +84,12 @@ func (h *GetAppointmentStatsHandler) Handle(q cqrs.Query) (AppointmentStatsRespo
 		}
 	}
 
-	// Calculate statistics
 	stats := h.calculateStats(filteredAppointments, query)
 
 	return stats, nil
 }
 
-func (h *GetAppointmentStatsHandler) calculateStats(appointments []appointment.Appointment, query GetAppointmentStatsQuery) AppointmentStatsResponse {
+func (h *GetAppointmentStatsHandler) calculateStats(appointments []appointment.Appointment, query GetAppointmentStatsQuery) ApptStatsResponse {
 	totalAppointments := len(appointments)
 	pendingCount := 0
 	confirmedCount := 0
@@ -137,7 +135,7 @@ func (h *GetAppointmentStatsHandler) calculateStats(appointments []appointment.A
 		period = &periodStr
 	}
 
-	return NewAppointmentStatsResponse(
+	return NewApptStatsResponse(
 		totalAppointments,
 		pendingCount,
 		confirmedCount,

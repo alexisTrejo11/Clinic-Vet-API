@@ -11,6 +11,7 @@ import (
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/veterinarian"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
+	"github.com/alexisTrejo11/Clinic-Vet-API/db/models"
 	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
 	"github.com/jackc/pgx/v5/pgtype"
 )
@@ -213,4 +214,64 @@ func getStringFromNullString(nullString sql.NullString, defaultValue string) str
 		return nullString.String
 	}
 	return defaultValue
+}
+
+func (r *SqlcVetRepository) scanVetFromRow(rows *sql.Rows, vet *veterinarian.Veterinarian) error {
+	// Esta implementación depende de tu schema exacto
+	// Aquí un ejemplo genérico:
+	var (
+		id              int32
+		firstName       string
+		lastName        string
+		licenseNumber   string
+		photo           sql.NullString
+		specialty       string
+		yearsExperience int32
+		consultationFee sql.NullFloat64
+		isActive        bool
+		userID          sql.NullInt32
+		scheduleJSON    sql.NullString
+		createdAt       sql.NullTime
+		updatedAt       sql.NullTime
+	)
+
+	err := rows.Scan(
+		&id, &firstName, &lastName, &licenseNumber, &photo,
+		&specialty, &yearsExperience, &consultationFee, &isActive,
+		&userID, &scheduleJSON, &createdAt, &updatedAt,
+	)
+	if err != nil {
+		return err
+	}
+
+	// TODO:
+	// Aquí construirías la entidad Veterinarian con los valores escaneados
+	// Esto es solo un ejemplo - debes adaptarlo a tu implementación real
+
+	return nil
+}
+
+func vetToUpdateParams(vet *veterinarian.Veterinarian) *sqlc.UpdateVeterinarianParams {
+	return &sqlc.UpdateVeterinarianParams{
+		ID:                int32(vet.ID().Value()),
+		FirstName:         vet.Name().FirstName,
+		LastName:          vet.Name().LastName,
+		LicenseNumber:     vet.LicenseNumber(),
+		Photo:             vet.Photo(),
+		Speciality:        models.VeterinarianSpeciality(vet.Specialty().String()),
+		YearsOfExperience: int32(vet.YearsExperience()),
+		IsActive:          pgtype.Bool{Bool: vet.IsActive(), Valid: true},
+	}
+}
+
+func vetToCreateParams(vet *veterinarian.Veterinarian) *sqlc.CreateVeterinarianParams {
+	return &sqlc.CreateVeterinarianParams{
+		FirstName:         vet.Name().FirstName,
+		LastName:          vet.Name().LastName,
+		LicenseNumber:     vet.LicenseNumber(),
+		Photo:             vet.Photo(),
+		Speciality:        models.VeterinarianSpeciality(vet.Specialty().String()),
+		YearsOfExperience: int32(vet.YearsExperience()),
+		IsActive:          pgtype.Bool{Bool: vet.IsActive(), Valid: true},
+	}
 }

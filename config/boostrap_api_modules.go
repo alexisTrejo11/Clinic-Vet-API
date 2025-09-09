@@ -13,11 +13,13 @@ import (
 	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 func BootstrapAPIModules(
 	router *gin.Engine,
 	queries *sqlc.Queries,
+	db *pgxpool.Pool,
 	validator *validator.Validate,
 ) error {
 	petRepository := sqlcPetRepository.NewSqlcPetRepository(queries)
@@ -25,6 +27,7 @@ func BootstrapAPIModules(
 	// Bootstrap Vet Module
 	vetModule := vetAPI.NewVeterinarianModule(&vetAPI.VeterinarianAPIConfig{
 		Router:        router,
+		DB:            db,
 		Queries:       queries,
 		DataValidator: validator,
 	})

@@ -2,98 +2,73 @@ package command
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	appt "github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/appointment"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
-	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/repository"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
 	apperror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/application"
 )
 
-type CreateAppointmentCommand struct {
-	ctx         context.Context
-	ownerID     valueobject.OwnerID
-	petID       valueobject.PetID
-	vetID       *valueobject.VetID
-	service     enum.ClinicService
-	datetime    time.Time
-	status      *enum.AppointmentStatus
-	reason      enum.VisitReason
-	notes       *string
-	RequestByID valueobject.UserID
+type CreateApptCommand struct {
+	ctx      context.Context
+	ownerID  valueobject.OwnerID
+	petID    valueobject.PetID
+	vetID    *valueobject.VetID
+	service  enum.ClinicService
+	datetime time.Time
+	status   *enum.AppointmentStatus
+	reason   enum.VisitReason
+	notes    *string
 }
 
-func NewCreateAppointCmd(
+func NewCreateApptCommand(
 	ctx context.Context,
 	ownerIDInt,
-	petIDInt int,
-	vetIDInt *int,
-	service string,
+	petIDInt uint,
+	vetIDInt *uint,
+	service enum.ClinicService,
 	dateTime time.Time,
-	status string,
-	reason string,
+	status enum.AppointmentStatus,
+	reason enum.VisitReason,
 	notes *string,
-) (*CreateAppointmentCommand, error) {
-	ownerID, err := valueobject.NewOwnerID(ownerIDInt)
-	if err != nil {
-		return nil, err
-	}
-	petID, err := valueobject.NewPetID(petIDInt)
-	if err != nil {
-		return nil, err
-	}
-
+) *CreateApptCommand {
 	var vetID *valueobject.VetID
 	if vetIDInt != nil {
-		vetIDObj, err := valueobject.NewVetID(*vetIDInt)
+		vetIDObj := valueobject.NewVetID(*vetIDInt)
 		vetID = &vetIDObj
-
-		if err != nil {
-			return nil, err
-		}
 	}
 
-	cliniService, err := enum.ParseClinicService(service)
-	if err != nil {
-		return nil, err
-	}
-
-	appointmentStatus, err := enum.ParseAppointmentStatus(status)
-	if err != nil {
-		return nil, err
-	}
-
-	visitReason, err := enum.ParseVisitReason(reason)
-	if err != nil {
-		return nil, err
-	}
-
-	return &CreateAppointmentCommand{
-		ownerID:  ownerID,
-		petID:    petID,
+	return &CreateApptCommand{
+		ownerID:  valueobject.NewOwnerID(ownerIDInt),
+		petID:    valueobject.NewPetID(petIDInt),
 		vetID:    vetID,
 		datetime: dateTime,
 		notes:    notes,
-		reason:   visitReason,
-		status:   &appointmentStatus,
-		service:  cliniService,
-	}, nil
+		reason:   reason,
+		status:   &status,
+		service:  service,
+	}
 }
 
-type CreateAppointmentHandler struct {
+type CreateApptHandler struct {
 	appointmentRepo repository.AppointmentRepository
 }
 
-func NewCreateAppointmentHandler(appointmentRepo repository.AppointmentRepository) cqrs.CommandHandler {
-	return &CreateAppointmentHandler{
+func NewCreateApptHandler(appointmentRepo repository.AppointmentRepository) cqrs.CommandHandler {
+	return &CreateApptHandler{
 		appointmentRepo: appointmentRepo,
 	}
 }
 
-func (h *CreateAppointmentHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
-	command := cmd.(CreateAppointmentCommand)
+func (h *CreateApptHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
+	command, valid := cmd.(CreateApptCommand)
+	if !valid {
+		return cqrs.FailureResult("invalid command type", errors.New("expected CreateApptCommand"))
+	}
 
 	appointment, err := h.commandToDomain(command)
 	if err != nil {
@@ -107,19 +82,13 @@ func (h *CreateAppointmentHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
 	return cqrs.SuccessResult(appointment.ID().String(), "appointment created successfully")
 }
 
-func (h *CreateAppointmentHandler) commandToDomain(command CreateAppointmentCommand) (*appt.Appointment, error) {
-	appointmentID, err := valueobject.NewAppointmentID(0)
-	if err != nil {
-		return nil, err
-	}
-
+func (h *CreateApptHandler) commandToDomain(command CreateApptCommand) (*appt.Appointment, error) {
 	status := enum.AppointmentStatusPending
 	if command.status != nil {
 		status = *command.status
 	}
 
-	appointmentEntity, err := appt.NewAppointment(
-		appointmentID,
+	appointmentEntity, err := appt.CreateAppointment(
 		command.petID,
 		command.ownerID,
 		appt.WithVetID(command.vetID),

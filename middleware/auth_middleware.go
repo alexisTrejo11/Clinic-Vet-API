@@ -14,12 +14,12 @@ import (
 )
 
 type UserContext struct {
-	UserID      int
+	UserID      uint
 	Email       string
 	PhoneNumber string
 	Role        string
-	CustomerID  int
-	EmployeeID  int
+	CustomerID  uint
+	EmployeeID  uint
 }
 
 func UserToUserContext(user user.User) *UserContext {

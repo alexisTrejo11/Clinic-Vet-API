@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"os"
 
+	config "command-line-arguments/Users/alexis/Documents/Clinic-Vet-API/config/postgres_config.go"
+
 	authApi "github.com/alexisTrejo11/Clinic-Vet-API/app/modules/auth/infrastructure/api"
 	mhDTOs "github.com/alexisTrejo11/Clinic-Vet-API/app/modules/medical/application/dto"
 	notification_api "github.com/alexisTrejo11/Clinic-Vet-API/app/modules/notifications/infrastructure/api"
@@ -74,7 +76,9 @@ func main() {
 	authApi.SetupAuthModule(router, dataValidator, config.RedisClient, queries, jwtSecret)
 	notification_api.SetupNotificationModule(router, mongoClient, emailConfig, config.GetTwilioClient())
 
-	if err := config.BootstrapAPIModules(router, queries, dataValidator); err != nil {
+	pxpool := config.CreatePgxPool(os.Getenv("DATABASE_URL"))
+
+	if err := config.BootstrapAPIModules(router, queries, pxpool, dataValidator); err != nil {
 		panic(fmt.Sprintf("Failed to bootstrap modules: %v", err))
 	}
 
