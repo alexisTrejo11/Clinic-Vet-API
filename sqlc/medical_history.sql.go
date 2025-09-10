@@ -25,11 +25,11 @@ func (q *Queries) CountMedicalHistoryByPet(ctx context.Context, petID int32) (in
 
 const countMedicalHistoryByVet = `-- name: CountMedicalHistoryByVet :one
 SELECT COUNT(*) FROM medical_history
-WHERE veterinarian_id = $1 AND deleted_at IS NULL
+WHERE employee_id = $1 AND deleted_at IS NULL
 `
 
-func (q *Queries) CountMedicalHistoryByVet(ctx context.Context, veterinarianID int32) (int64, error) {
-	row := q.db.QueryRow(ctx, countMedicalHistoryByVet, veterinarianID)
+func (q *Queries) CountMedicalHistoryByVet(ctx context.Context, employeeID int32) (int64, error) {
+	row := q.db.QueryRow(ctx, countMedicalHistoryByVet, employeeID)
 	var count int64
 	err := row.Scan(&count)
 	return count, err
@@ -38,8 +38,8 @@ func (q *Queries) CountMedicalHistoryByVet(ctx context.Context, veterinarianID i
 const createMedicalHistory = `-- name: CreateMedicalHistory :one
 INSERT INTO medical_history (
     pet_id, 
-    owner_id,
-    veterinarian_id,
+    customer_id,
+    employee_id,
     visit_date,
     visit_type,
     diagnosis, 
@@ -50,26 +50,26 @@ INSERT INTO medical_history (
 VALUES (
     $1, $2, $3, $4, $5, $6, $7, $8, $9
 )
-RETURNING id, pet_id, owner_id, veterinarian_id, visit_date, visit_type, diagnosis, notes, treatment, condition, created_at, updated_at, deleted_at
+RETURNING id, pet_id, customer_id, employee_id, visit_date, visit_type, diagnosis, notes, treatment, condition, created_at, updated_at, deleted_at
 `
 
 type CreateMedicalHistoryParams struct {
-	PetID          int32
-	OwnerID        int32
-	VeterinarianID int32
-	VisitDate      pgtype.Timestamptz
-	VisitType      string
-	Diagnosis      pgtype.Text
-	Treatment      pgtype.Text
-	Notes          pgtype.Text
-	Condition      pgtype.Text
+	PetID      int32
+	CustomerID int32
+	EmployeeID int32
+	VisitDate  pgtype.Timestamptz
+	VisitType  string
+	Diagnosis  pgtype.Text
+	Treatment  pgtype.Text
+	Notes      pgtype.Text
+	Condition  pgtype.Text
 }
 
 func (q *Queries) CreateMedicalHistory(ctx context.Context, arg CreateMedicalHistoryParams) (MedicalHistory, error) {
 	row := q.db.QueryRow(ctx, createMedicalHistory,
 		arg.PetID,
-		arg.OwnerID,
-		arg.VeterinarianID,
+		arg.CustomerID,
+		arg.EmployeeID,
 		arg.VisitDate,
 		arg.VisitType,
 		arg.Diagnosis,
@@ -81,8 +81,8 @@ func (q *Queries) CreateMedicalHistory(ctx context.Context, arg CreateMedicalHis
 	err := row.Scan(
 		&i.ID,
 		&i.PetID,
-		&i.OwnerID,
-		&i.VeterinarianID,
+		&i.CustomerID,
+		&i.EmployeeID,
 		&i.VisitDate,
 		&i.VisitType,
 		&i.Diagnosis,
@@ -96,52 +96,25 @@ func (q *Queries) CreateMedicalHistory(ctx context.Context, arg CreateMedicalHis
 	return i, err
 }
 
-const getMedicalHistoryByID = `-- name: GetMedicalHistoryByID :one
-SELECT id, pet_id, owner_id, veterinarian_id, visit_date, visit_type, diagnosis, notes, treatment, condition, created_at, updated_at, deleted_at
+const getMedicalHistoryByCustomerID = `-- name: GetMedicalHistoryByCustomerID :many
+SELECT id, pet_id, customer_id, employee_id, visit_date, visit_type, diagnosis, notes, treatment, condition, created_at, updated_at, deleted_at
 FROM medical_history
-WHERE id = $1 AND deleted_at IS NULL
-`
-
-func (q *Queries) GetMedicalHistoryByID(ctx context.Context, id int32) (MedicalHistory, error) {
-	row := q.db.QueryRow(ctx, getMedicalHistoryByID, id)
-	var i MedicalHistory
-	err := row.Scan(
-		&i.ID,
-		&i.PetID,
-		&i.OwnerID,
-		&i.VeterinarianID,
-		&i.VisitDate,
-		&i.VisitType,
-		&i.Diagnosis,
-		&i.Notes,
-		&i.Treatment,
-		&i.Condition,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.DeletedAt,
-	)
-	return i, err
-}
-
-const getMedicalHistoryByOwnerID = `-- name: GetMedicalHistoryByOwnerID :many
-SELECT id, pet_id, owner_id, veterinarian_id, visit_date, visit_type, diagnosis, notes, treatment, condition, created_at, updated_at, deleted_at
-FROM medical_history
-WHERE owner_id = $1 AND deleted_at IS NULL
+WHERE customer_id = $1 AND deleted_at IS NULL
 ORDER BY $2 DESC
 OFFSET $3
 LIMIT $4
 `
 
-type GetMedicalHistoryByOwnerIDParams struct {
-	OwnerID int32
-	Column2 interface{}
-	Offset  int32
-	Limit   int32
+type GetMedicalHistoryByCustomerIDParams struct {
+	CustomerID int32
+	Column2    interface{}
+	Offset     int32
+	Limit      int32
 }
 
-func (q *Queries) GetMedicalHistoryByOwnerID(ctx context.Context, arg GetMedicalHistoryByOwnerIDParams) ([]MedicalHistory, error) {
-	rows, err := q.db.Query(ctx, getMedicalHistoryByOwnerID,
-		arg.OwnerID,
+func (q *Queries) GetMedicalHistoryByCustomerID(ctx context.Context, arg GetMedicalHistoryByCustomerIDParams) ([]MedicalHistory, error) {
+	rows, err := q.db.Query(ctx, getMedicalHistoryByCustomerID,
+		arg.CustomerID,
 		arg.Column2,
 		arg.Offset,
 		arg.Limit,
@@ -156,8 +129,8 @@ func (q *Queries) GetMedicalHistoryByOwnerID(ctx context.Context, arg GetMedical
 		if err := rows.Scan(
 			&i.ID,
 			&i.PetID,
-			&i.OwnerID,
-			&i.VeterinarianID,
+			&i.CustomerID,
+			&i.EmployeeID,
 			&i.VisitDate,
 			&i.VisitType,
 			&i.Diagnosis,
@@ -178,6 +151,33 @@ func (q *Queries) GetMedicalHistoryByOwnerID(ctx context.Context, arg GetMedical
 	return items, nil
 }
 
+const getMedicalHistoryByID = `-- name: GetMedicalHistoryByID :one
+SELECT id, pet_id, customer_id, employee_id, visit_date, visit_type, diagnosis, notes, treatment, condition, created_at, updated_at, deleted_at
+FROM medical_history
+WHERE id = $1 AND deleted_at IS NULL
+`
+
+func (q *Queries) GetMedicalHistoryByID(ctx context.Context, id int32) (MedicalHistory, error) {
+	row := q.db.QueryRow(ctx, getMedicalHistoryByID, id)
+	var i MedicalHistory
+	err := row.Scan(
+		&i.ID,
+		&i.PetID,
+		&i.CustomerID,
+		&i.EmployeeID,
+		&i.VisitDate,
+		&i.VisitType,
+		&i.Diagnosis,
+		&i.Notes,
+		&i.Treatment,
+		&i.Condition,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+	)
+	return i, err
+}
+
 const hardDeleteMedicalHistory = `-- name: HardDeleteMedicalHistory :exec
 DELETE FROM medical_history
 WHERE id = $1
@@ -189,7 +189,7 @@ func (q *Queries) HardDeleteMedicalHistory(ctx context.Context, id int32) error 
 }
 
 const listMedicalHistoryByPet = `-- name: ListMedicalHistoryByPet :many
-SELECT id, pet_id, owner_id, veterinarian_id, visit_date, visit_type, diagnosis, notes, treatment, condition, created_at, updated_at, deleted_at FROM medical_history
+SELECT id, pet_id, customer_id, employee_id, visit_date, visit_type, diagnosis, notes, treatment, condition, created_at, updated_at, deleted_at FROM medical_history
 WHERE pet_id = $1 AND deleted_at IS NULL
 ORDER BY visit_date DESC
 `
@@ -206,8 +206,8 @@ func (q *Queries) ListMedicalHistoryByPet(ctx context.Context, petID int32) ([]M
 		if err := rows.Scan(
 			&i.ID,
 			&i.PetID,
-			&i.OwnerID,
-			&i.VeterinarianID,
+			&i.CustomerID,
+			&i.EmployeeID,
 			&i.VisitDate,
 			&i.VisitType,
 			&i.Diagnosis,
@@ -229,21 +229,21 @@ func (q *Queries) ListMedicalHistoryByPet(ctx context.Context, petID int32) ([]M
 }
 
 const listMedicalHistoryByVet = `-- name: ListMedicalHistoryByVet :many
-SELECT id, pet_id, owner_id, veterinarian_id, visit_date, visit_type, diagnosis, notes, treatment, condition, created_at, updated_at, deleted_at FROM medical_history
-WHERE veterinarian_id = $1 AND deleted_at IS NULL
+SELECT id, pet_id, customer_id, employee_id, visit_date, visit_type, diagnosis, notes, treatment, condition, created_at, updated_at, deleted_at FROM medical_history
+WHERE employee_id = $1 AND deleted_at IS NULL
 ORDER BY created_at DESC
 LIMIT $2
 OFFSET $3
 `
 
 type ListMedicalHistoryByVetParams struct {
-	VeterinarianID int32
-	Limit          int32
-	Offset         int32
+	EmployeeID int32
+	Limit      int32
+	Offset     int32
 }
 
 func (q *Queries) ListMedicalHistoryByVet(ctx context.Context, arg ListMedicalHistoryByVetParams) ([]MedicalHistory, error) {
-	rows, err := q.db.Query(ctx, listMedicalHistoryByVet, arg.VeterinarianID, arg.Limit, arg.Offset)
+	rows, err := q.db.Query(ctx, listMedicalHistoryByVet, arg.EmployeeID, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -254,8 +254,8 @@ func (q *Queries) ListMedicalHistoryByVet(ctx context.Context, arg ListMedicalHi
 		if err := rows.Scan(
 			&i.ID,
 			&i.PetID,
-			&i.OwnerID,
-			&i.VeterinarianID,
+			&i.CustomerID,
+			&i.EmployeeID,
 			&i.VisitDate,
 			&i.VisitType,
 			&i.Diagnosis,
@@ -277,7 +277,7 @@ func (q *Queries) ListMedicalHistoryByVet(ctx context.Context, arg ListMedicalHi
 }
 
 const searchMedicalHistory = `-- name: SearchMedicalHistory :many
-SELECT id, pet_id, owner_id, veterinarian_id, visit_date, visit_type, diagnosis, notes, treatment, condition, created_at, updated_at, deleted_at FROM medical_history
+SELECT id, pet_id, customer_id, employee_id, visit_date, visit_type, diagnosis, notes, treatment, condition, created_at, updated_at, deleted_at FROM medical_history
 WHERE deleted_at IS NULL
 ORDER BY $3 DESC
 OFFSET $1
@@ -302,8 +302,8 @@ func (q *Queries) SearchMedicalHistory(ctx context.Context, arg SearchMedicalHis
 		if err := rows.Scan(
 			&i.ID,
 			&i.PetID,
-			&i.OwnerID,
-			&i.VeterinarianID,
+			&i.CustomerID,
+			&i.EmployeeID,
 			&i.VisitDate,
 			&i.VisitType,
 			&i.Diagnosis,
@@ -339,8 +339,8 @@ const updateMedicalHistory = `-- name: UpdateMedicalHistory :one
 UPDATE medical_history
 SET 
     pet_id = $2, 
-    owner_id = $3,
-    veterinarian_id = $4,
+    customer_id = $3,
+    employee_id = $4,
     visit_date = $5, 
     diagnosis = $6, 
     visit_type = $7,
@@ -349,28 +349,28 @@ SET
     treatment = $10, 
     updated_at = CURRENT_TIMESTAMP
 WHERE id = $1
-RETURNING id, pet_id, owner_id, veterinarian_id, visit_date, visit_type, diagnosis, notes, treatment, condition, created_at, updated_at, deleted_at
+RETURNING id, pet_id, customer_id, employee_id, visit_date, visit_type, diagnosis, notes, treatment, condition, created_at, updated_at, deleted_at
 `
 
 type UpdateMedicalHistoryParams struct {
-	ID             int32
-	PetID          int32
-	OwnerID        int32
-	VeterinarianID int32
-	VisitDate      pgtype.Timestamptz
-	Diagnosis      pgtype.Text
-	VisitType      string
-	Notes          pgtype.Text
-	Condition      pgtype.Text
-	Treatment      pgtype.Text
+	ID         int32
+	PetID      int32
+	CustomerID int32
+	EmployeeID int32
+	VisitDate  pgtype.Timestamptz
+	Diagnosis  pgtype.Text
+	VisitType  string
+	Notes      pgtype.Text
+	Condition  pgtype.Text
+	Treatment  pgtype.Text
 }
 
 func (q *Queries) UpdateMedicalHistory(ctx context.Context, arg UpdateMedicalHistoryParams) (MedicalHistory, error) {
 	row := q.db.QueryRow(ctx, updateMedicalHistory,
 		arg.ID,
 		arg.PetID,
-		arg.OwnerID,
-		arg.VeterinarianID,
+		arg.CustomerID,
+		arg.EmployeeID,
 		arg.VisitDate,
 		arg.Diagnosis,
 		arg.VisitType,
@@ -382,8 +382,8 @@ func (q *Queries) UpdateMedicalHistory(ctx context.Context, arg UpdateMedicalHis
 	err := row.Scan(
 		&i.ID,
 		&i.PetID,
-		&i.OwnerID,
-		&i.VeterinarianID,
+		&i.CustomerID,
+		&i.EmployeeID,
 		&i.VisitDate,
 		&i.VisitType,
 		&i.Diagnosis,

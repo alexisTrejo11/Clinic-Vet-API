@@ -24,6 +24,19 @@ func (q *Queries) CountAppoinments(ctx context.Context) (int64, error) {
 	return count, err
 }
 
+const countAppoinmentsByCustomerID = `-- name: CountAppoinmentsByCustomerID :one
+SELECT COUNT(*) FROM appoinments
+WHERE customer_id = $1
+AND deleted_at IS NULL
+`
+
+func (q *Queries) CountAppoinmentsByCustomerID(ctx context.Context, customerID int32) (int64, error) {
+	row := q.db.QueryRow(ctx, countAppoinmentsByCustomerID, customerID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const countAppoinmentsByDateRange = `-- name: CountAppoinmentsByDateRange :one
 SELECT COUNT(*) FROM appoinments
 WHERE schedule_date BETWEEN $1 AND $2
@@ -42,14 +55,14 @@ func (q *Queries) CountAppoinmentsByDateRange(ctx context.Context, arg CountAppo
 	return count, err
 }
 
-const countAppoinmentsByOwnerID = `-- name: CountAppoinmentsByOwnerID :one
+const countAppoinmentsByEmployeeID = `-- name: CountAppoinmentsByEmployeeID :one
 SELECT COUNT(*) FROM appoinments
-WHERE owner_id = $1
+WHERE employee_id = $1
 AND deleted_at IS NULL
 `
 
-func (q *Queries) CountAppoinmentsByOwnerID(ctx context.Context, ownerID int32) (int64, error) {
-	row := q.db.QueryRow(ctx, countAppoinmentsByOwnerID, ownerID)
+func (q *Queries) CountAppoinmentsByEmployeeID(ctx context.Context, employeeID pgtype.Int4) (int64, error) {
+	row := q.db.QueryRow(ctx, countAppoinmentsByEmployeeID, employeeID)
 	var count int64
 	err := row.Scan(&count)
 	return count, err
@@ -81,19 +94,6 @@ func (q *Queries) CountAppoinmentsByStatus(ctx context.Context, status models.Ap
 	return count, err
 }
 
-const countAppoinmentsByVeterinarianID = `-- name: CountAppoinmentsByVeterinarianID :one
-SELECT COUNT(*) FROM appoinments
-WHERE veterinarian_id = $1
-AND deleted_at IS NULL
-`
-
-func (q *Queries) CountAppoinmentsByVeterinarianID(ctx context.Context, veterinarianID pgtype.Int4) (int64, error) {
-	row := q.db.QueryRow(ctx, countAppoinmentsByVeterinarianID, veterinarianID)
-	var count int64
-	err := row.Scan(&count)
-	return count, err
-}
-
 const createAppoinment = `-- name: CreateAppoinment :one
 INSERT INTO appoinments (
     clinic_service, 
@@ -101,26 +101,26 @@ INSERT INTO appoinments (
     status, 
     reason, 
     notes, 
-    owner_id, 
-    veterinarian_id,
+    customer_id, 
+    employee_id,
     pet_id,
     created_at,
     updated_at,
     deleted_at
 ) VALUES (
     $1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL
-) RETURNING id, clinic_service, schedule_date, status, reason, notes, owner_id, pet_id, veterinarian_id, created_at, updated_at, deleted_at
+) RETURNING id, clinic_service, schedule_date, status, reason, notes, customer_id, pet_id, employee_id, created_at, updated_at, deleted_at
 `
 
 type CreateAppoinmentParams struct {
-	ClinicService  models.ClinicService
-	ScheduleDate   pgtype.Timestamptz
-	Status         models.AppointmentStatus
-	Reason         string
-	Notes          pgtype.Text
-	OwnerID        int32
-	VeterinarianID pgtype.Int4
-	PetID          int32
+	ClinicService models.ClinicService
+	ScheduleDate  pgtype.Timestamptz
+	Status        models.AppointmentStatus
+	Reason        string
+	Notes         pgtype.Text
+	CustomerID    int32
+	EmployeeID    pgtype.Int4
+	PetID         int32
 }
 
 func (q *Queries) CreateAppoinment(ctx context.Context, arg CreateAppoinmentParams) (Appoinment, error) {
@@ -130,8 +130,8 @@ func (q *Queries) CreateAppoinment(ctx context.Context, arg CreateAppoinmentPara
 		arg.Status,
 		arg.Reason,
 		arg.Notes,
-		arg.OwnerID,
-		arg.VeterinarianID,
+		arg.CustomerID,
+		arg.EmployeeID,
 		arg.PetID,
 	)
 	var i Appoinment
@@ -142,9 +142,9 @@ func (q *Queries) CreateAppoinment(ctx context.Context, arg CreateAppoinmentPara
 		&i.Status,
 		&i.Reason,
 		&i.Notes,
-		&i.OwnerID,
+		&i.CustomerID,
 		&i.PetID,
-		&i.VeterinarianID,
+		&i.EmployeeID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.DeletedAt,
@@ -164,7 +164,7 @@ func (q *Queries) DeleteAppoinment(ctx context.Context, id int32) error {
 }
 
 const getAppoinmentByID = `-- name: GetAppoinmentByID :one
-SELECT id, clinic_service, schedule_date, status, reason, notes, owner_id, pet_id, veterinarian_id, created_at, updated_at, deleted_at FROM appoinments 
+SELECT id, clinic_service, schedule_date, status, reason, notes, customer_id, pet_id, employee_id, created_at, updated_at, deleted_at FROM appoinments 
 WHERE id = $1 
 AND deleted_at IS NULL
 `
@@ -179,9 +179,9 @@ func (q *Queries) GetAppoinmentByID(ctx context.Context, id int32) (Appoinment, 
 		&i.Status,
 		&i.Reason,
 		&i.Notes,
-		&i.OwnerID,
+		&i.CustomerID,
 		&i.PetID,
-		&i.VeterinarianID,
+		&i.EmployeeID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.DeletedAt,
@@ -189,20 +189,20 @@ func (q *Queries) GetAppoinmentByID(ctx context.Context, id int32) (Appoinment, 
 	return i, err
 }
 
-const getAppointmentByIDAndOwnerID = `-- name: GetAppointmentByIDAndOwnerID :one
-SELECT id, clinic_service, schedule_date, status, reason, notes, owner_id, pet_id, veterinarian_id, created_at, updated_at, deleted_at FROM appoinments 
+const getAppointmentByIDAndCustomerID = `-- name: GetAppointmentByIDAndCustomerID :one
+SELECT id, clinic_service, schedule_date, status, reason, notes, customer_id, pet_id, employee_id, created_at, updated_at, deleted_at FROM appoinments 
 WHERE id = $1 
-AND owner_id = $2
+AND customer_id = $2
 AND deleted_at IS NULL
 `
 
-type GetAppointmentByIDAndOwnerIDParams struct {
-	ID      int32
-	OwnerID int32
+type GetAppointmentByIDAndCustomerIDParams struct {
+	ID         int32
+	CustomerID int32
 }
 
-func (q *Queries) GetAppointmentByIDAndOwnerID(ctx context.Context, arg GetAppointmentByIDAndOwnerIDParams) (Appoinment, error) {
-	row := q.db.QueryRow(ctx, getAppointmentByIDAndOwnerID, arg.ID, arg.OwnerID)
+func (q *Queries) GetAppointmentByIDAndCustomerID(ctx context.Context, arg GetAppointmentByIDAndCustomerIDParams) (Appoinment, error) {
+	row := q.db.QueryRow(ctx, getAppointmentByIDAndCustomerID, arg.ID, arg.CustomerID)
 	var i Appoinment
 	err := row.Scan(
 		&i.ID,
@@ -211,9 +211,9 @@ func (q *Queries) GetAppointmentByIDAndOwnerID(ctx context.Context, arg GetAppoi
 		&i.Status,
 		&i.Reason,
 		&i.Notes,
-		&i.OwnerID,
+		&i.CustomerID,
 		&i.PetID,
-		&i.VeterinarianID,
+		&i.EmployeeID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.DeletedAt,
@@ -221,20 +221,20 @@ func (q *Queries) GetAppointmentByIDAndOwnerID(ctx context.Context, arg GetAppoi
 	return i, err
 }
 
-const getAppointmentByIDAndVeterinarianID = `-- name: GetAppointmentByIDAndVeterinarianID :one
-SELECT id, clinic_service, schedule_date, status, reason, notes, owner_id, pet_id, veterinarian_id, created_at, updated_at, deleted_at FROM appoinments 
+const getAppointmentByIDAndEmployeeID = `-- name: GetAppointmentByIDAndEmployeeID :one
+SELECT id, clinic_service, schedule_date, status, reason, notes, customer_id, pet_id, employee_id, created_at, updated_at, deleted_at FROM appoinments 
 WHERE id = $1 
-AND veterinarian_id = $2
+AND employee_id = $2
 AND deleted_at IS NULL
 `
 
-type GetAppointmentByIDAndVeterinarianIDParams struct {
-	ID             int32
-	VeterinarianID pgtype.Int4
+type GetAppointmentByIDAndEmployeeIDParams struct {
+	ID         int32
+	EmployeeID pgtype.Int4
 }
 
-func (q *Queries) GetAppointmentByIDAndVeterinarianID(ctx context.Context, arg GetAppointmentByIDAndVeterinarianIDParams) (Appoinment, error) {
-	row := q.db.QueryRow(ctx, getAppointmentByIDAndVeterinarianID, arg.ID, arg.VeterinarianID)
+func (q *Queries) GetAppointmentByIDAndEmployeeID(ctx context.Context, arg GetAppointmentByIDAndEmployeeIDParams) (Appoinment, error) {
+	row := q.db.QueryRow(ctx, getAppointmentByIDAndEmployeeID, arg.ID, arg.EmployeeID)
 	var i Appoinment
 	err := row.Scan(
 		&i.ID,
@@ -243,9 +243,9 @@ func (q *Queries) GetAppointmentByIDAndVeterinarianID(ctx context.Context, arg G
 		&i.Status,
 		&i.Reason,
 		&i.Notes,
-		&i.OwnerID,
+		&i.CustomerID,
 		&i.PetID,
-		&i.VeterinarianID,
+		&i.EmployeeID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.DeletedAt,
@@ -254,7 +254,7 @@ func (q *Queries) GetAppointmentByIDAndVeterinarianID(ctx context.Context, arg G
 }
 
 const listAppoinments = `-- name: ListAppoinments :many
-SELECT id, clinic_service, schedule_date, status, reason, notes, owner_id, pet_id, veterinarian_id, created_at, updated_at, deleted_at FROM appoinments 
+SELECT id, clinic_service, schedule_date, status, reason, notes, customer_id, pet_id, employee_id, created_at, updated_at, deleted_at FROM appoinments 
 WHERE deleted_at IS NULL 
 ORDER BY created_at DESC LIMIT $1 OFFSET $2
 `
@@ -280,9 +280,55 @@ func (q *Queries) ListAppoinments(ctx context.Context, arg ListAppoinmentsParams
 			&i.Status,
 			&i.Reason,
 			&i.Notes,
-			&i.OwnerID,
+			&i.CustomerID,
 			&i.PetID,
-			&i.VeterinarianID,
+			&i.EmployeeID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.DeletedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listAppoinmentsByCustomerID = `-- name: ListAppoinmentsByCustomerID :many
+SELECT id, clinic_service, schedule_date, status, reason, notes, customer_id, pet_id, employee_id, created_at, updated_at, deleted_at FROM appoinments 
+WHERE customer_id = $1
+AND deleted_at IS NULL
+ORDER BY created_at DESC LIMIT $2 OFFSET $3
+`
+
+type ListAppoinmentsByCustomerIDParams struct {
+	CustomerID int32
+	Limit      int32
+	Offset     int32
+}
+
+func (q *Queries) ListAppoinmentsByCustomerID(ctx context.Context, arg ListAppoinmentsByCustomerIDParams) ([]Appoinment, error) {
+	rows, err := q.db.Query(ctx, listAppoinmentsByCustomerID, arg.CustomerID, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Appoinment
+	for rows.Next() {
+		var i Appoinment
+		if err := rows.Scan(
+			&i.ID,
+			&i.ClinicService,
+			&i.ScheduleDate,
+			&i.Status,
+			&i.Reason,
+			&i.Notes,
+			&i.CustomerID,
+			&i.PetID,
+			&i.EmployeeID,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.DeletedAt,
@@ -298,7 +344,7 @@ func (q *Queries) ListAppoinments(ctx context.Context, arg ListAppoinmentsParams
 }
 
 const listAppoinmentsByDateRange = `-- name: ListAppoinmentsByDateRange :many
-SELECT id, clinic_service, schedule_date, status, reason, notes, owner_id, pet_id, veterinarian_id, created_at, updated_at, deleted_at FROM appoinments
+SELECT id, clinic_service, schedule_date, status, reason, notes, customer_id, pet_id, employee_id, created_at, updated_at, deleted_at FROM appoinments
 WHERE schedule_date BETWEEN $1 AND $2
 AND deleted_at IS NULL
 ORDER BY schedule_date DESC LIMIT $3 OFFSET $4
@@ -332,9 +378,9 @@ func (q *Queries) ListAppoinmentsByDateRange(ctx context.Context, arg ListAppoin
 			&i.Status,
 			&i.Reason,
 			&i.Notes,
-			&i.OwnerID,
+			&i.CustomerID,
 			&i.PetID,
-			&i.VeterinarianID,
+			&i.EmployeeID,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.DeletedAt,
@@ -349,21 +395,21 @@ func (q *Queries) ListAppoinmentsByDateRange(ctx context.Context, arg ListAppoin
 	return items, nil
 }
 
-const listAppoinmentsByOwnerID = `-- name: ListAppoinmentsByOwnerID :many
-SELECT id, clinic_service, schedule_date, status, reason, notes, owner_id, pet_id, veterinarian_id, created_at, updated_at, deleted_at FROM appoinments 
-WHERE owner_id = $1
+const listAppoinmentsByEmployeeID = `-- name: ListAppoinmentsByEmployeeID :many
+SELECT id, clinic_service, schedule_date, status, reason, notes, customer_id, pet_id, employee_id, created_at, updated_at, deleted_at FROM appoinments
+WHERE employee_id = $1
 AND deleted_at IS NULL
 ORDER BY created_at DESC LIMIT $2 OFFSET $3
 `
 
-type ListAppoinmentsByOwnerIDParams struct {
-	OwnerID int32
-	Limit   int32
-	Offset  int32
+type ListAppoinmentsByEmployeeIDParams struct {
+	EmployeeID pgtype.Int4
+	Limit      int32
+	Offset     int32
 }
 
-func (q *Queries) ListAppoinmentsByOwnerID(ctx context.Context, arg ListAppoinmentsByOwnerIDParams) ([]Appoinment, error) {
-	rows, err := q.db.Query(ctx, listAppoinmentsByOwnerID, arg.OwnerID, arg.Limit, arg.Offset)
+func (q *Queries) ListAppoinmentsByEmployeeID(ctx context.Context, arg ListAppoinmentsByEmployeeIDParams) ([]Appoinment, error) {
+	rows, err := q.db.Query(ctx, listAppoinmentsByEmployeeID, arg.EmployeeID, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -378,9 +424,9 @@ func (q *Queries) ListAppoinmentsByOwnerID(ctx context.Context, arg ListAppoinme
 			&i.Status,
 			&i.Reason,
 			&i.Notes,
-			&i.OwnerID,
+			&i.CustomerID,
 			&i.PetID,
-			&i.VeterinarianID,
+			&i.EmployeeID,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.DeletedAt,
@@ -396,7 +442,7 @@ func (q *Queries) ListAppoinmentsByOwnerID(ctx context.Context, arg ListAppoinme
 }
 
 const listAppoinmentsByPetID = `-- name: ListAppoinmentsByPetID :many
-SELECT id, clinic_service, schedule_date, status, reason, notes, owner_id, pet_id, veterinarian_id, created_at, updated_at, deleted_at FROM appoinments
+SELECT id, clinic_service, schedule_date, status, reason, notes, customer_id, pet_id, employee_id, created_at, updated_at, deleted_at FROM appoinments
 WHERE pet_id = $1
 AND deleted_at IS NULL
 ORDER BY created_at DESC LIMIT $2 OFFSET $3
@@ -424,9 +470,9 @@ func (q *Queries) ListAppoinmentsByPetID(ctx context.Context, arg ListAppoinment
 			&i.Status,
 			&i.Reason,
 			&i.Notes,
-			&i.OwnerID,
+			&i.CustomerID,
 			&i.PetID,
-			&i.VeterinarianID,
+			&i.EmployeeID,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.DeletedAt,
@@ -442,7 +488,7 @@ func (q *Queries) ListAppoinmentsByPetID(ctx context.Context, arg ListAppoinment
 }
 
 const listAppoinmentsByStatus = `-- name: ListAppoinmentsByStatus :many
-SELECT id, clinic_service, schedule_date, status, reason, notes, owner_id, pet_id, veterinarian_id, created_at, updated_at, deleted_at FROM appoinments
+SELECT id, clinic_service, schedule_date, status, reason, notes, customer_id, pet_id, employee_id, created_at, updated_at, deleted_at FROM appoinments
 WHERE status = $1
 AND deleted_at IS NULL
 ORDER BY created_at DESC LIMIT $2 OFFSET $3
@@ -470,55 +516,9 @@ func (q *Queries) ListAppoinmentsByStatus(ctx context.Context, arg ListAppoinmen
 			&i.Status,
 			&i.Reason,
 			&i.Notes,
-			&i.OwnerID,
+			&i.CustomerID,
 			&i.PetID,
-			&i.VeterinarianID,
-			&i.CreatedAt,
-			&i.UpdatedAt,
-			&i.DeletedAt,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const listAppoinmentsByVeterinarianID = `-- name: ListAppoinmentsByVeterinarianID :many
-SELECT id, clinic_service, schedule_date, status, reason, notes, owner_id, pet_id, veterinarian_id, created_at, updated_at, deleted_at FROM appoinments
-WHERE veterinarian_id = $1
-AND deleted_at IS NULL
-ORDER BY created_at DESC LIMIT $2 OFFSET $3
-`
-
-type ListAppoinmentsByVeterinarianIDParams struct {
-	VeterinarianID pgtype.Int4
-	Limit          int32
-	Offset         int32
-}
-
-func (q *Queries) ListAppoinmentsByVeterinarianID(ctx context.Context, arg ListAppoinmentsByVeterinarianIDParams) ([]Appoinment, error) {
-	rows, err := q.db.Query(ctx, listAppoinmentsByVeterinarianID, arg.VeterinarianID, arg.Limit, arg.Offset)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []Appoinment
-	for rows.Next() {
-		var i Appoinment
-		if err := rows.Scan(
-			&i.ID,
-			&i.ClinicService,
-			&i.ScheduleDate,
-			&i.Status,
-			&i.Reason,
-			&i.Notes,
-			&i.OwnerID,
-			&i.PetID,
-			&i.VeterinarianID,
+			&i.EmployeeID,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.DeletedAt,
@@ -540,24 +540,24 @@ UPDATE appoinments SET
     status = $4,
     reason = $5,
     notes = $6,
-    owner_id = $7,
-    veterinarian_id = $8,
+    customer_id = $7,
+    employee_id = $8,
     pet_id = $9,
     updated_at = CURRENT_TIMESTAMP
 WHERE id = $1
-RETURNING id, clinic_service, schedule_date, status, reason, notes, owner_id, pet_id, veterinarian_id, created_at, updated_at, deleted_at
+RETURNING id, clinic_service, schedule_date, status, reason, notes, customer_id, pet_id, employee_id, created_at, updated_at, deleted_at
 `
 
 type UpdateAppoinmentParams struct {
-	ID             int32
-	ClinicService  models.ClinicService
-	ScheduleDate   pgtype.Timestamptz
-	Status         models.AppointmentStatus
-	Reason         string
-	Notes          pgtype.Text
-	OwnerID        int32
-	VeterinarianID pgtype.Int4
-	PetID          int32
+	ID            int32
+	ClinicService models.ClinicService
+	ScheduleDate  pgtype.Timestamptz
+	Status        models.AppointmentStatus
+	Reason        string
+	Notes         pgtype.Text
+	CustomerID    int32
+	EmployeeID    pgtype.Int4
+	PetID         int32
 }
 
 func (q *Queries) UpdateAppoinment(ctx context.Context, arg UpdateAppoinmentParams) (Appoinment, error) {
@@ -568,8 +568,8 @@ func (q *Queries) UpdateAppoinment(ctx context.Context, arg UpdateAppoinmentPara
 		arg.Status,
 		arg.Reason,
 		arg.Notes,
-		arg.OwnerID,
-		arg.VeterinarianID,
+		arg.CustomerID,
+		arg.EmployeeID,
 		arg.PetID,
 	)
 	var i Appoinment
@@ -580,9 +580,9 @@ func (q *Queries) UpdateAppoinment(ctx context.Context, arg UpdateAppoinmentPara
 		&i.Status,
 		&i.Reason,
 		&i.Notes,
-		&i.OwnerID,
+		&i.CustomerID,
 		&i.PetID,
-		&i.VeterinarianID,
+		&i.EmployeeID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.DeletedAt,

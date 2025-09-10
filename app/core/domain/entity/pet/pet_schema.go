@@ -22,7 +22,7 @@ type Pet struct {
 	color              *string
 	microchip          *string
 	isNeutered         *bool
-	ownerID            valueobject.OwnerID
+	customerID         valueobject.CustomerID
 	allergies          *string
 	currentMedications *string
 	specialNeeds       *string
@@ -74,8 +74,8 @@ func (p *Pet) IsNeutered() *bool {
 	return p.isNeutered
 }
 
-func (p *Pet) OwnerID() valueobject.OwnerID {
-	return p.ownerID
+func (p *Pet) CustomerID() valueobject.CustomerID {
+	return p.customerID
 }
 
 func (p *Pet) Allergies() *string {

@@ -10,37 +10,21 @@ import (
 )
 
 type Appoinment struct {
-	ID             int32
-	ClinicService  models.ClinicService
-	ScheduleDate   pgtype.Timestamptz
-	Status         models.AppointmentStatus
-	Reason         string
-	Notes          pgtype.Text
-	OwnerID        int32
-	PetID          int32
-	VeterinarianID pgtype.Int4
-	CreatedAt      pgtype.Timestamptz
-	UpdatedAt      pgtype.Timestamptz
-	DeletedAt      pgtype.Timestamp
+	ID            int32
+	ClinicService models.ClinicService
+	ScheduleDate  pgtype.Timestamptz
+	Status        models.AppointmentStatus
+	Reason        string
+	Notes         pgtype.Text
+	CustomerID    int32
+	PetID         int32
+	EmployeeID    pgtype.Int4
+	CreatedAt     pgtype.Timestamptz
+	UpdatedAt     pgtype.Timestamptz
+	DeletedAt     pgtype.Timestamp
 }
 
-type MedicalHistory struct {
-	ID             int32
-	PetID          int32
-	OwnerID        int32
-	VeterinarianID int32
-	VisitDate      pgtype.Timestamptz
-	VisitType      string
-	Diagnosis      pgtype.Text
-	Notes          pgtype.Text
-	Treatment      pgtype.Text
-	Condition      pgtype.Text
-	CreatedAt      pgtype.Timestamptz
-	UpdatedAt      pgtype.Timestamptz
-	DeletedAt      pgtype.Timestamp
-}
-
-type Owner struct {
+type Customer struct {
 	ID          int32
 	FirstName   string
 	LastName    string
@@ -56,22 +40,55 @@ type Owner struct {
 	DeletedAt   pgtype.Timestamp
 }
 
+type Employee struct {
+	ID                int32
+	FirstName         string
+	LastName          string
+	Photo             string
+	LicenseNumber     string
+	Speciality        models.VeterinarianSpeciality
+	YearsOfExperience int32
+	IsActive          bool
+	UserID            pgtype.Int4
+	ScheduleJson      []byte
+	CreatedAt         pgtype.Timestamptz
+	UpdatedAt         pgtype.Timestamptz
+	DeletedAt         pgtype.Timestamp
+}
+
+type MedicalHistory struct {
+	ID         int32
+	PetID      int32
+	CustomerID int32
+	EmployeeID int32
+	VisitDate  pgtype.Timestamptz
+	VisitType  string
+	Diagnosis  pgtype.Text
+	Notes      pgtype.Text
+	Treatment  pgtype.Text
+	Condition  pgtype.Text
+	CreatedAt  pgtype.Timestamptz
+	UpdatedAt  pgtype.Timestamptz
+	DeletedAt  pgtype.Timestamp
+}
+
 type Payment struct {
-	ID            int32
-	Amount        pgtype.Numeric
-	Currency      string
-	Status        models.PaymentStatus
-	Method        models.PaymentMethod
-	TransactionID pgtype.Text
-	Description   pgtype.Text
-	Duedate       pgtype.Timestamptz
-	PaidAt        pgtype.Timestamptz
-	RefundedAt    pgtype.Timestamptz
-	IsActive      bool
-	CreatedAt     pgtype.Timestamptz
-	UpdatedAt     pgtype.Timestamptz
-	DeletedAt     pgtype.Timestamp
-	UserID        int32
+	ID               int32
+	Amount           pgtype.Numeric
+	Currency         string
+	Status           models.PaymentStatus
+	Method           models.PaymentMethod
+	TransactionID    pgtype.Text
+	Description      pgtype.Text
+	Duedate          pgtype.Timestamptz
+	PaidAt           pgtype.Timestamptz
+	RefundedAt       pgtype.Timestamptz
+	IsActive         bool
+	CreatedAt        pgtype.Timestamptz
+	UpdatedAt        pgtype.Timestamptz
+	DeletedAt        pgtype.Timestamp
+	PaidFromCustomer pgtype.Int4
+	PaidToEmployee   pgtype.Int4
 }
 
 type Pet struct {
@@ -86,7 +103,7 @@ type Pet struct {
 	Color              pgtype.Text
 	Microchip          pgtype.Text
 	IsNeutered         pgtype.Bool
-	OwnerID            int32
+	CustomerID         int32
 	Allergies          pgtype.Text
 	CurrentMedications pgtype.Text
 	SpecialNeeds       pgtype.Text
@@ -96,14 +113,12 @@ type Pet struct {
 }
 
 type Profile struct {
-	ID             int32
-	UserID         pgtype.Int4
-	VeterinarianID pgtype.Int4
-	OwnerID        pgtype.Int4
-	Bio            pgtype.Text
-	ProfilePic     pgtype.Text
-	CreatedAt      pgtype.Timestamptz
-	LastUpdate     pgtype.Timestamptz
+	ID         int32
+	UserID     pgtype.Int4
+	Bio        pgtype.Text
+	ProfilePic pgtype.Text
+	CreatedAt  pgtype.Timestamptz
+	LastUpdate pgtype.Timestamptz
 }
 
 type User struct {
@@ -114,23 +129,9 @@ type User struct {
 	Status      models.UserStatus
 	Role        models.UserRole
 	ProfileID   pgtype.Int4
+	CustomerID  pgtype.Int4
+	EmployeeID  pgtype.Int4
 	CreatedAt   pgtype.Timestamptz
 	UpdatedAt   pgtype.Timestamptz
 	DeletedAt   pgtype.Timestamp
-}
-
-type Veterinarian struct {
-	ID                int32
-	FirstName         string
-	LastName          string
-	Photo             string
-	LicenseNumber     string
-	Speciality        models.VeterinarianSpeciality
-	YearsOfExperience int32
-	IsActive          pgtype.Bool
-	UserID            pgtype.Int4
-	ScheduleJson      []byte
-	CreatedAt         pgtype.Timestamptz
-	UpdatedAt         pgtype.Timestamptz
-	DeletedAt         pgtype.Timestamp
 }

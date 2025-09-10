@@ -12,13 +12,13 @@ import (
 type NotAttendApptCommand struct {
 	ctx           context.Context
 	appointmentID valueobject.AppointmentID
-	vetID         *valueobject.VetID
+	vetID         *valueobject.EmployeeID
 }
 
 func NewNotAttendApptCommand(ctx context.Context, id uint, vetIDUint *uint) *NotAttendApptCommand {
-	var vetID *valueobject.VetID
+	var vetID *valueobject.EmployeeID
 	if vetIDUint != nil {
-		vetIDVal := valueobject.NewVetID(*vetIDUint)
+		vetIDVal := valueobject.NewEmployeeID(*vetIDUint)
 		vetID = &vetIDVal
 	}
 
@@ -63,7 +63,7 @@ func (h *NotAttendApptHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
 
 func (h *NotAttendApptHandler) getAppointment(command *NotAttendApptCommand) (appointment.Appointment, error) {
 	if command.vetID != nil {
-		return h.appointmentRepo.GetByIDAndVetID(command.ctx, command.appointmentID, *command.vetID)
+		return h.appointmentRepo.GetByIDAndEmployeeID(command.ctx, command.appointmentID, *command.vetID)
 	}
 
 	return h.appointmentRepo.GetByID(command.ctx, command.appointmentID)

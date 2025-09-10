@@ -118,11 +118,11 @@ func WithIsActive(isActive bool) PetOption {
 }
 
 // NewPet creates a new Pet with functional options
-func NewPet(id valueobject.PetID, ownerID valueobject.OwnerID, opts ...PetOption) (*Pet, error) {
+func NewPet(id valueobject.PetID, customerID valueobject.CustomerID, opts ...PetOption) (*Pet, error) {
 	pet := &Pet{
-		Entity:   base.NewEntity(id, time.Now(), time.Now(), 1),
-		ownerID:  ownerID,
-		isActive: true, // Default to active
+		Entity:     base.NewEntity(id, time.Now(), time.Now(), 1),
+		customerID: customerID,
+		isActive:   true, // Default to active
 	}
 
 	for _, opt := range opts {
@@ -133,11 +133,11 @@ func NewPet(id valueobject.PetID, ownerID valueobject.OwnerID, opts ...PetOption
 	return pet, nil
 }
 
-func CreatePet(ownerID valueobject.OwnerID, opts ...PetOption) (*Pet, error) {
+func CreatePet(customerID valueobject.CustomerID, opts ...PetOption) (*Pet, error) {
 	pet := &Pet{
-		Entity:   base.NewEntity(valueobject.PetID{}, time.Now(), time.Now(), 1),
-		ownerID:  ownerID,
-		isActive: true, // Default to active
+		Entity:     base.NewEntity(valueobject.PetID{}, time.Now(), time.Now(), 1),
+		customerID: customerID,
+		isActive:   true, // Default to active
 	}
 
 	for _, opt := range opts {

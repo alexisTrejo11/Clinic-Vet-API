@@ -9,35 +9,32 @@ import (
 	"context"
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/db/models"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
-const createVeterinarian = `-- name: CreateVeterinarian :one
-INSERT INTO veterinarians(
+const createEmployee = `-- name: CreateEmployee :one
+INSERT INTO employees(
     first_name, last_name, photo, license_number, speciality,
     years_of_experience, is_active, schedule_json, created_at, updated_at
 )
 VALUES (
     $1, $2, $3, $4, $5, $6, $7, $8::jsonb, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 )
-RETURNING
-    id, first_name, last_name, photo, license_number, speciality, years_of_experience,
-    is_active, user_id, schedule_json, created_at, updated_at, deleted_at
+RETURNING id, first_name, last_name, photo, license_number, speciality, years_of_experience, is_active, user_id, schedule_json, created_at, updated_at, deleted_at
 `
 
-type CreateVeterinarianParams struct {
+type CreateEmployeeParams struct {
 	FirstName         string
 	LastName          string
 	Photo             string
 	LicenseNumber     string
 	Speciality        models.VeterinarianSpeciality
 	YearsOfExperience int32
-	IsActive          pgtype.Bool
+	IsActive          bool
 	Column8           []byte
 }
 
-func (q *Queries) CreateVeterinarian(ctx context.Context, arg CreateVeterinarianParams) (Veterinarian, error) {
-	row := q.db.QueryRow(ctx, createVeterinarian,
+func (q *Queries) CreateEmployee(ctx context.Context, arg CreateEmployeeParams) (Employee, error) {
+	row := q.db.QueryRow(ctx, createEmployee,
 		arg.FirstName,
 		arg.LastName,
 		arg.Photo,
@@ -47,7 +44,7 @@ func (q *Queries) CreateVeterinarian(ctx context.Context, arg CreateVeterinarian
 		arg.IsActive,
 		arg.Column8,
 	)
-	var i Veterinarian
+	var i Employee
 	err := row.Scan(
 		&i.ID,
 		&i.FirstName,
@@ -66,17 +63,17 @@ func (q *Queries) CreateVeterinarian(ctx context.Context, arg CreateVeterinarian
 	return i, err
 }
 
-const getVeterinarianById = `-- name: GetVeterinarianById :one
+const getEmployeeById = `-- name: GetEmployeeById :one
 SELECT 
     id, first_name, last_name, photo, license_number, speciality, years_of_experience, 
     is_active, user_id, schedule_json, created_at, updated_at, deleted_at
-FROM veterinarians
+FROM employees
 WHERE id = $1 AND deleted_at IS NULL
 `
 
-func (q *Queries) GetVeterinarianById(ctx context.Context, id int32) (Veterinarian, error) {
-	row := q.db.QueryRow(ctx, getVeterinarianById, id)
-	var i Veterinarian
+func (q *Queries) GetEmployeeById(ctx context.Context, id int32) (Employee, error) {
+	row := q.db.QueryRow(ctx, getEmployeeById, id)
+	var i Employee
 	err := row.Scan(
 		&i.ID,
 		&i.FirstName,
@@ -95,22 +92,22 @@ func (q *Queries) GetVeterinarianById(ctx context.Context, id int32) (Veterinari
 	return i, err
 }
 
-const getVeterinariansWithSchedule = `-- name: GetVeterinariansWithSchedule :many
-SELECT id, first_name, last_name, photo, license_number, speciality, years_of_experience, is_active, user_id, schedule_json, created_at, updated_at, deleted_at FROM veterinarians
+const getEmployeesWithSchedule = `-- name: GetEmployeesWithSchedule :many
+SELECT id, first_name, last_name, photo, license_number, speciality, years_of_experience, is_active, user_id, schedule_json, created_at, updated_at, deleted_at FROM employees
 WHERE 
     deleted_at IS NULL
     AND schedule_json @> '{"work_days": [{"day": 1, "start_hour": 9}]}'
 `
 
-func (q *Queries) GetVeterinariansWithSchedule(ctx context.Context) ([]Veterinarian, error) {
-	rows, err := q.db.Query(ctx, getVeterinariansWithSchedule)
+func (q *Queries) GetEmployeesWithSchedule(ctx context.Context) ([]Employee, error) {
+	rows, err := q.db.Query(ctx, getEmployeesWithSchedule)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Veterinarian
+	var items []Employee
 	for rows.Next() {
-		var i Veterinarian
+		var i Employee
 		if err := rows.Scan(
 			&i.ID,
 			&i.FirstName,
@@ -136,105 +133,8 @@ func (q *Queries) GetVeterinariansWithSchedule(ctx context.Context) ([]Veterinar
 	return items, nil
 }
 
-const listVeterinarians = `-- name: ListVeterinarians :many
-SELECT 
-    id, first_name, last_name, photo, license_number, speciality, years_of_experience, 
-    is_active, user_id, schedule_json, created_at, updated_at, deleted_at
-FROM veterinarians
-WHERE 
-    (first_name ILIKE $1 OR last_name ILIKE $2)
-    AND (license_number ILIKE $3 OR $3 = '')
-    AND (speciality = $4 OR $4 = '')
-    AND (years_of_experience >= $5 OR $5 = 0)
-    AND (years_of_experience <= $6 OR $6 = 0)
-    AND (is_active = $7 OR $7 IS NULL)
-    AND deleted_at IS NULL
-ORDER BY
-    CASE WHEN $8 THEN first_name END ASC NULLS LAST,
-    CASE WHEN $9 THEN first_name END DESC NULLS LAST,
-    CASE WHEN $10 THEN speciality END ASC NULLS LAST,
-    CASE WHEN $11 THEN speciality END DESC NULLS LAST,
-    CASE WHEN $12 THEN years_of_experience END ASC NULLS LAST,
-    CASE WHEN $13 THEN years_of_experience END DESC NULLS LAST,
-    CASE WHEN $14 THEN created_at END ASC NULLS LAST,
-    CASE WHEN $15 THEN created_at END DESC NULLS LAST
-LIMIT $16 OFFSET $17
-`
-
-type ListVeterinariansParams struct {
-	FirstName           string
-	LastName            string
-	LicenseNumber       string
-	Speciality          models.VeterinarianSpeciality
-	YearsOfExperience   int32
-	YearsOfExperience_2 int32
-	IsActive            pgtype.Bool
-	Column8             interface{}
-	Column9             interface{}
-	Column10            interface{}
-	Column11            interface{}
-	Column12            interface{}
-	Column13            interface{}
-	Column14            interface{}
-	Column15            interface{}
-	Limit               int32
-	Offset              int32
-}
-
-func (q *Queries) ListVeterinarians(ctx context.Context, arg ListVeterinariansParams) ([]Veterinarian, error) {
-	rows, err := q.db.Query(ctx, listVeterinarians,
-		arg.FirstName,
-		arg.LastName,
-		arg.LicenseNumber,
-		arg.Speciality,
-		arg.YearsOfExperience,
-		arg.YearsOfExperience_2,
-		arg.IsActive,
-		arg.Column8,
-		arg.Column9,
-		arg.Column10,
-		arg.Column11,
-		arg.Column12,
-		arg.Column13,
-		arg.Column14,
-		arg.Column15,
-		arg.Limit,
-		arg.Offset,
-	)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []Veterinarian
-	for rows.Next() {
-		var i Veterinarian
-		if err := rows.Scan(
-			&i.ID,
-			&i.FirstName,
-			&i.LastName,
-			&i.Photo,
-			&i.LicenseNumber,
-			&i.Speciality,
-			&i.YearsOfExperience,
-			&i.IsActive,
-			&i.UserID,
-			&i.ScheduleJson,
-			&i.CreatedAt,
-			&i.UpdatedAt,
-			&i.DeletedAt,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const softDeleteVeterinarian = `-- name: SoftDeleteVeterinarian :exec
-UPDATE veterinarians
+const softDeleteEmployee = `-- name: SoftDeleteEmployee :exec
+UPDATE employees
 SET
     deleted_at = CURRENT_TIMESTAMP,
     updated_at = CURRENT_TIMESTAMP
@@ -242,13 +142,13 @@ WHERE
     id = $1 AND deleted_at IS NULL
 `
 
-func (q *Queries) SoftDeleteVeterinarian(ctx context.Context, id int32) error {
-	_, err := q.db.Exec(ctx, softDeleteVeterinarian, id)
+func (q *Queries) SoftDeleteEmployee(ctx context.Context, id int32) error {
+	_, err := q.db.Exec(ctx, softDeleteEmployee, id)
 	return err
 }
 
-const updateVeterinarian = `-- name: UpdateVeterinarian :one
-UPDATE veterinarians
+const updateEmployee = `-- name: UpdateEmployee :one
+UPDATE employees
 SET
     first_name = COALESCE($1, first_name),
     last_name = COALESCE($2, last_name),  
@@ -266,20 +166,20 @@ RETURNING
     is_active, user_id, schedule_json, created_at, updated_at, deleted_at
 `
 
-type UpdateVeterinarianParams struct {
+type UpdateEmployeeParams struct {
 	FirstName         string
 	LastName          string
 	Photo             string
 	LicenseNumber     string
 	Speciality        models.VeterinarianSpeciality
 	YearsOfExperience int32
-	IsActive          pgtype.Bool
+	IsActive          bool
 	Column8           []byte
 	ID                int32
 }
 
-func (q *Queries) UpdateVeterinarian(ctx context.Context, arg UpdateVeterinarianParams) (Veterinarian, error) {
-	row := q.db.QueryRow(ctx, updateVeterinarian,
+func (q *Queries) UpdateEmployee(ctx context.Context, arg UpdateEmployeeParams) (Employee, error) {
+	row := q.db.QueryRow(ctx, updateEmployee,
 		arg.FirstName,
 		arg.LastName,
 		arg.Photo,
@@ -290,7 +190,7 @@ func (q *Queries) UpdateVeterinarian(ctx context.Context, arg UpdateVeterinarian
 		arg.Column8,
 		arg.ID,
 	)
-	var i Veterinarian
+	var i Employee
 	err := row.Scan(
 		&i.ID,
 		&i.FirstName,

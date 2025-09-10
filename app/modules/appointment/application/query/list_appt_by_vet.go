@@ -9,31 +9,31 @@ import (
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 )
 
-type ListApptByVetQuery struct {
-	vetID     valueobject.VetID
+type ListApptsByEmployeeIDQuery struct {
+	vetID     valueobject.EmployeeID
 	ctx       context.Context
 	pageInput page.PageInput
 }
 
-func NewListApptByVetQuery(ctx context.Context, vetID uint, pageInput page.PageInput) *ListApptByVetQuery {
-	return &ListApptByVetQuery{
+func NewListApptsByEmployeeIDQuery(ctx context.Context, vetID uint, pageInput page.PageInput) *ListApptsByEmployeeIDQuery {
+	return &ListApptsByEmployeeIDQuery{
 		ctx:       ctx,
-		vetID:     valueobject.NewVetID(vetID),
+		vetID:     valueobject.NewEmployeeID(vetID),
 		pageInput: pageInput,
 	}
 }
 
-type ListApptByVetHandler struct {
+type ListApptsByEmployeeIDHandler struct {
 	appointmentRepo repository.AppointmentRepository
 }
 
-func NewListApptsByVetHandler(appointmentRepo repository.AppointmentRepository) cqrs.QueryHandler[(page.Page[[]ApptResponse])] {
-	return &ListApptByVetHandler{appointmentRepo: appointmentRepo}
+func NewListApptsByEmployeeIDHandler(appointmentRepo repository.AppointmentRepository) cqrs.QueryHandler[(page.Page[[]ApptResponse])] {
+	return &ListApptsByEmployeeIDHandler{appointmentRepo: appointmentRepo}
 }
 
-func (h *ListApptByVetHandler) Handle(q cqrs.Query) (page.Page[[]ApptResponse], error) {
-	query := q.(ListApptByVetQuery)
-	appointmentsPage, err := h.appointmentRepo.ListByVetID(query.ctx, query.vetID, query.pageInput)
+func (h *ListApptsByEmployeeIDHandler) Handle(q cqrs.Query) (page.Page[[]ApptResponse], error) {
+	query := q.(ListApptsByEmployeeIDQuery)
+	appointmentsPage, err := h.appointmentRepo.ListByEmployeeID(query.ctx, query.vetID, query.pageInput)
 	if err != nil {
 		return page.Page[[]ApptResponse]{}, err
 	}

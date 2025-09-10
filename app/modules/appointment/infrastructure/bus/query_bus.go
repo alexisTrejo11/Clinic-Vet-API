@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"reflect"
 
-	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/repository"
 	appointquery "github.com/alexisTrejo11/Clinic-Vet-API/app/modules/appointment/application/query"
 	icqrs "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
 	infraerr "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/infrastructure"
@@ -15,9 +15,9 @@ type appointmentQueryBus struct {
 	handlers map[reflect.Type]any
 }
 
-func NewAppointmentQueryBus(
+func NewApptQueryBus(
 	appointmentRepo repository.AppointmentRepository,
-	ownerRepo repository.OwnerRepository,
+	ownerRepo repository.CustomerRepository,
 ) icqrs.QueryBus {
 	bus := &appointmentQueryBus{
 		handlers: make(map[reflect.Type]any),
@@ -26,14 +26,14 @@ func NewAppointmentQueryBus(
 	return bus
 }
 
-func (bus *appointmentQueryBus) registerhandler(appointmentRepo repository.AppointmentRepository, ownerRepo repository.OwnerRepository) {
-	bus.Register(reflect.TypeOf(appointquery.GetAppointmentByIDQuery{}), appointquery.NewGetAppointmentByIDHandler(appointmentRepo))
-	bus.Register(reflect.TypeOf(appointquery.SearchAppointmentsQuery{}), appointquery.NewSearchAppointmentsHandler(appointmentRepo))
-	bus.Register(reflect.TypeOf(appointquery.ListAppointmentsByOwnerQuery{}), appointquery.NewListAppointmentsByOwnerHandler(appointmentRepo, ownerRepo))
-	bus.Register(reflect.TypeOf(appointquery.ListAppointmentsByVetQuery{}), appointquery.NewListAppointmentsByVetHandler(appointmentRepo))
-	bus.Register(reflect.TypeOf(appointquery.ListAppointmentsByPetQuery{}), appointquery.NewListAppointmentsByPetHandler(appointmentRepo))
-	bus.Register(reflect.TypeOf(appointquery.ListAppointmentsByDateRangeQuery{}), appointquery.NewListAppointmentsByDateRangeHandler(appointmentRepo))
-	bus.Register(reflect.TypeOf(appointquery.GetAppointmentStatsQuery{}), appointquery.NewGetAppointmentStatsHandler(appointmentRepo))
+func (bus *appointmentQueryBus) registerhandler(appointmentRepo repository.AppointmentRepository, ownerRepo repository.CustomerRepository) {
+	bus.Register(reflect.TypeOf(appointquery.GetApptByIDQuery{}), appointquery.NewGetApptByIDHandler(appointmentRepo))
+	bus.Register(reflect.TypeOf(appointquery.SearchApptsQuery{}), appointquery.NewSearchApptsHandler(appointmentRepo))
+	bus.Register(reflect.TypeOf(appointquery.ListApptsByCustomerIDQuery{}), appointquery.NewListApptsByCustomerIDHandler(appointmentRepo, ownerRepo))
+	bus.Register(reflect.TypeOf(appointquery.ListApptsByEmployeeIDQuery{}), appointquery.NewListApptsByEmployeeIDHandler(appointmentRepo))
+	bus.Register(reflect.TypeOf(appointquery.ListApptsByPetQuery{}), appointquery.NewListApptsByPetHandler(appointmentRepo))
+	bus.Register(reflect.TypeOf(appointquery.ListApptsByDateRangeQuery{}), appointquery.NewListApptsByDateRangeHandler(appointmentRepo))
+	bus.Register(reflect.TypeOf(appointquery.GetApptStatsQuery{}), appointquery.NewGetApptStatsHandler(appointmentRepo))
 }
 
 func (bus *appointmentQueryBus) Execute(query icqrs.Query) (any, error) {
@@ -46,32 +46,32 @@ func (bus *appointmentQueryBus) Execute(query icqrs.Query) (any, error) {
 
 	// Type switch to handle different types of response
 	switch q := query.(type) {
-	case appointquery.GetAppointmentByIDQuery:
-		h := handler.(appointquery.GetAppointmentByIDHandler)
+	case appointquery.GetApptByIDQuery:
+		h := handler.(appointquery.GetApptByIDHandler)
 		return h.Handle(q)
 
-	case appointquery.SearchAppointmentsQuery:
-		h := handler.(appointquery.SearchAppointmentsHandler)
+	case appointquery.SearchApptsQuery:
+		h := handler.(appointquery.SearchApptsHandler)
 		return h.Handle(q)
 
-	case appointquery.ListAppointmentsByOwnerQuery:
-		h := handler.(appointquery.ListAppointmentsByOwnerHandler)
+	case appointquery.ListApptsByCustomerIDQuery:
+		h := handler.(appointquery.ListApptsByCustomerIDHandler)
 		return h.Handle(q)
 
-	case appointquery.ListAppointmentsByVetQuery:
-		h := handler.(appointquery.ListAppointmentsByVetHandler)
+	case appointquery.ListApptsByEmployeeIDQuery:
+		h := handler.(appointquery.ListApptsByEmployeeIDHandler)
 		return h.Handle(q)
 
-	case appointquery.ListAppointmentsByPetQuery:
-		h := handler.(appointquery.ListAppointmentsByPetHandler)
+	case appointquery.ListApptsByPetQuery:
+		h := handler.(appointquery.ListApptsByPetHandler)
 		return h.Handle(q)
 
-	case appointquery.ListAppointmentsByDateRangeQuery:
-		h := handler.(appointquery.ListAppointmentsByDateRangeHandler)
+	case appointquery.ListApptsByDateRangeQuery:
+		h := handler.(appointquery.ListApptsByDateRangeHandler)
 		return h.Handle(q)
 
-	case appointquery.GetAppointmentStatsQuery:
-		h := handler.(appointquery.GetAppointmentStatsHandler)
+	case appointquery.GetApptStatsQuery:
+		h := handler.(appointquery.GetApptStatsHandler)
 		return h.Handle(q)
 
 	default:
@@ -87,72 +87,72 @@ func (bus *appointmentQueryBus) Register(queryType reflect.Type, handler any) er
 	return nil
 }
 
-type AppointmentQueryService struct {
+type ApptQueryService struct {
 	queryBus        icqrs.QueryBus
 	appointmentRepo repository.AppointmentRepository
 }
 
-func NewAppointmentQueryService(queryBus icqrs.QueryBus, appointmentRepo repository.AppointmentRepository) *AppointmentQueryService {
-	return &AppointmentQueryService{
+func NewApptQueryService(queryBus icqrs.QueryBus, appointmentRepo repository.AppointmentRepository) *ApptQueryService {
+	return &ApptQueryService{
 		queryBus:        queryBus,
 		appointmentRepo: appointmentRepo,
 	}
 }
 
-func (s *AppointmentQueryService) ListAppointmentByID(query appointquery.GetAppointmentByIDQuery) (*appointquery.AppointmentResponse, error) {
+func (s *ApptQueryService) ListApptByID(query appointquery.GetApptByIDQuery) (*appointquery.ApptResponse, error) {
 	result, err := s.queryBus.Execute(query)
 	if err != nil {
 		return nil, err
 	}
-	return result.(*appointquery.AppointmentResponse), nil
+	return result.(*appointquery.ApptResponse), nil
 }
 
-func (s *AppointmentQueryService) SearchAppointments(query appointquery.SearchAppointmentsQuery) (*AppointmentPageResponse, error) {
+func (s *ApptQueryService) SearchAppts(query appointquery.SearchApptsQuery) (*ApptPageResponse, error) {
 	result, err := s.queryBus.Execute(query)
 	if err != nil {
 		return nil, err
 	}
-	return result.(*AppointmentPageResponse), nil
+	return result.(*ApptPageResponse), nil
 }
 
-func (s *AppointmentQueryService) ListAppointmentsByOwner(query appointquery.ListAppointmentsByOwnerQuery) (*AppointmentPageResponse, error) {
+func (s *ApptQueryService) ListApptsByCustomer(query appointquery.ListApptsByCustomerIDQuery) (*ApptPageResponse, error) {
 	result, err := s.queryBus.Execute(query)
 	if err != nil {
 		return nil, err
 	}
-	return result.(*AppointmentPageResponse), nil
+	return result.(*ApptPageResponse), nil
 }
 
-func (s *AppointmentQueryService) ListAppointmentsByVet(query appointquery.ListAppointmentsByVetQuery) (*AppointmentPageResponse, error) {
+func (s *ApptQueryService) ListApptsByEmployee(query appointquery.ListApptsByEmployeeIDHandler) (*ApptPageResponse, error) {
 	result, err := s.queryBus.Execute(query)
 	if err != nil {
 		return nil, err
 	}
-	return result.(*AppointmentPageResponse), nil
+	return result.(*ApptPageResponse), nil
 }
 
-func (s *AppointmentQueryService) ListAppointmentsByPet(query appointquery.ListAppointmentsByPetQuery) (*AppointmentPageResponse, error) {
+func (s *ApptQueryService) ListApptsByPet(query appointquery.ListApptsByPetQuery) (*ApptPageResponse, error) {
 	result, err := s.queryBus.Execute(query)
 	if err != nil {
 		return nil, err
 	}
-	return result.(*AppointmentPageResponse), nil
+	return result.(*ApptPageResponse), nil
 }
 
-func (s *AppointmentQueryService) ListAppointmentsByDateRange(query appointquery.ListAppointmentsByDateRangeQuery) (*AppointmentPageResponse, error) {
+func (s *ApptQueryService) ListApptsByDateRange(query appointquery.ListApptsByDateRangeQuery) (*ApptPageResponse, error) {
 	result, err := s.queryBus.Execute(query)
 	if err != nil {
 		return nil, err
 	}
-	return result.(*AppointmentPageResponse), nil
+	return result.(*ApptPageResponse), nil
 }
 
-func (s *AppointmentQueryService) GetAppointmentStats(query appointquery.GetAppointmentStatsQuery) (*appointquery.AppointmentStatsResponse, error) {
+func (s *ApptQueryService) GetApptStats(query appointquery.GetApptStatsQuery) (*appointquery.ApptStatsResponse, error) {
 	result, err := s.queryBus.Execute(query)
 	if err != nil {
 		return nil, err
 	}
-	return result.(*appointquery.AppointmentStatsResponse), nil
+	return result.(*appointquery.ApptStatsResponse), nil
 }
 
-type AppointmentPageResponse = page.Page[[]appointquery.AppointmentResponse]
+type ApptPageResponse = page.Page[[]appointquery.ApptResponse]

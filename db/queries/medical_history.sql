@@ -3,10 +3,10 @@ SELECT *
 FROM medical_history
 WHERE id = $1 AND deleted_at IS NULL;
 
--- name: GetMedicalHistoryByOwnerID :many
+-- name: GetMedicalHistoryByCustomerID :many
 SELECT *
 FROM medical_history
-WHERE owner_id = $1 AND deleted_at IS NULL
+WHERE customer_id = $1 AND deleted_at IS NULL
 ORDER BY $2 DESC
 OFFSET $3
 LIMIT $4;
@@ -22,14 +22,14 @@ WHERE pet_id = $1 AND deleted_at IS NULL;
 
 -- name: ListMedicalHistoryByVet :many
 SELECT * FROM medical_history
-WHERE veterinarian_id = $1 AND deleted_at IS NULL
+WHERE employee_id = $1 AND deleted_at IS NULL
 ORDER BY created_at DESC
 LIMIT $2
 OFFSET $3;
 
 -- name: CountMedicalHistoryByVet :one
 SELECT COUNT(*) FROM medical_history
-WHERE veterinarian_id = $1 AND deleted_at IS NULL;
+WHERE employee_id = $1 AND deleted_at IS NULL;
 
 -- name: SearchMedicalHistory :many
 SELECT * FROM medical_history
@@ -41,8 +41,8 @@ LIMIT $2;
 -- name: CreateMedicalHistory :one
 INSERT INTO medical_history (
     pet_id, 
-    owner_id,
-    veterinarian_id,
+    customer_id,
+    employee_id,
     visit_date,
     visit_type,
     diagnosis, 
@@ -59,8 +59,8 @@ RETURNING *;
 UPDATE medical_history
 SET 
     pet_id = $2, 
-    owner_id = $3,
-    veterinarian_id = $4,
+    customer_id = $3,
+    employee_id = $4,
     visit_date = $5, 
     diagnosis = $6, 
     visit_type = $7,

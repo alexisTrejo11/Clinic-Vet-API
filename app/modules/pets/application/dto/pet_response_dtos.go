@@ -3,7 +3,7 @@ package dto
 // @Description Represents the response structure for a pet.
 type PetResponse struct {
 	// The unique ID of the pet.
-	ID int `json:"id"`
+	ID uint `json:"id"`
 	// The name of the pet.
 	Name string `json:"name"`
 	// The URL of the pet's photo.
@@ -25,7 +25,7 @@ type PetResponse struct {
 	// Indicates if the pet is neutered.
 	IsNeutered *bool `json:"is_neutered,omitempty"`
 	// The unique ID of the pet's owner.
-	OwnerID int `json:"owner_id"`
+	CustomerID uint `json:"customer_id"`
 	// A list of the pet's known allergies.
 	Allergies *string `json:"allergies,omitempty"`
 	// The pet's current medications.

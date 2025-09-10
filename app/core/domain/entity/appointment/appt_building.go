@@ -1,6 +1,7 @@
 package appointment
 
 import (
+	"errors"
 	"time"
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/base"
@@ -53,9 +54,12 @@ func WithNotes(notes *string) AppointmentOption {
 	}
 }
 
-func WithVetID(vetID *valueobject.VetID) AppointmentOption {
+func WithEmployeeID(employeeID *valueobject.EmployeeID) AppointmentOption {
 	return func(a *Appointment) error {
-		a.vetID = vetID
+		if employeeID == nil || employeeID.IsZero() {
+			return errors.New("employee ID cannot be nil or zero")
+		}
+		a.employeeID = employeeID
 		return nil
 	}
 }
@@ -64,14 +68,14 @@ func WithVetID(vetID *valueobject.VetID) AppointmentOption {
 func NewAppointment(
 	id valueobject.AppointmentID,
 	petID valueobject.PetID,
-	ownerID valueobject.OwnerID,
+	customerID valueobject.CustomerID,
 	opts ...AppointmentOption,
 ) (*Appointment, error) {
 	appointment := &Appointment{
-		Entity:  base.NewEntity(id, time.Now(), time.Now(), 1),
-		petID:   petID,
-		ownerID: ownerID,
-		status:  enum.AppointmentStatusPending, // Default status
+		Entity:     base.NewEntity(id, time.Now(), time.Now(), 1),
+		petID:      petID,
+		customerID: customerID,
+		status:     enum.AppointmentStatusPending, // Default status
 	}
 
 	for _, opt := range opts {
@@ -85,21 +89,21 @@ func NewAppointment(
 
 func CreateAppointment(
 	petID valueobject.PetID,
-	ownerID valueobject.OwnerID,
+	customerID valueobject.CustomerID,
 	opts ...AppointmentOption,
 ) (*Appointment, error) {
 	if petID.IsZero() {
 		return nil, domainerr.NewValidationError("appointment", "pet-ID", "pet ID is required")
 	}
-	if ownerID.IsZero() {
-		return nil, domainerr.NewValidationError("appointment", "owner-ID", "owner ID is required")
+	if customerID.IsZero() {
+		return nil, domainerr.NewValidationError("appointment", "customer-ID", "customer ID is required")
 	}
 
 	appointment := &Appointment{
-		Entity:  base.CreateEntity(valueobject.AppointmentID{}),
-		petID:   petID,
-		ownerID: ownerID,
-		status:  enum.AppointmentStatusPending, // Default status
+		Entity:     base.CreateEntity(valueobject.AppointmentID{}),
+		petID:      petID,
+		customerID: customerID,
+		status:     enum.AppointmentStatusPending, // Default status
 	}
 
 	for _, opt := range opts {

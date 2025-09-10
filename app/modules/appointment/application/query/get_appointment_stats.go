@@ -12,35 +12,35 @@ import (
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 )
 
-type GetAppointmentStatsQuery struct {
-	vetID     *uint
-	ownerID   *uint
-	startDate *time.Time
-	endDate   *time.Time
-	ctx       context.Context
+type GetApptStatsQuery struct {
+	employeeID *uint
+	customerID *uint
+	startDate  *time.Time
+	endDate    *time.Time
+	ctx        context.Context
 }
 
-func NewGetAppointmentStatsQuery(vetID, ownerID *uint, startDate, endDate *time.Time) GetAppointmentStatsQuery {
-	return GetAppointmentStatsQuery{
-		vetID:     vetID,
-		ownerID:   ownerID,
-		startDate: startDate,
-		endDate:   endDate,
+func NewGetApptStatsQuery(employeeID, customerID *uint, startDate, endDate *time.Time) GetApptStatsQuery {
+	return GetApptStatsQuery{
+		employeeID: employeeID,
+		customerID: customerID,
+		startDate:  startDate,
+		endDate:    endDate,
 	}
 }
 
-type GetAppointmentStatsHandler struct {
+type GetApptStatsHandler struct {
 	apptRepo repository.AppointmentRepository
 }
 
-func NewGetAppointmentStatsHandler(apptRepo repository.AppointmentRepository) cqrs.QueryHandler[ApptStatsResponse] {
-	return &GetAppointmentStatsHandler{
+func NewGetApptStatsHandler(apptRepo repository.AppointmentRepository) cqrs.QueryHandler[ApptStatsResponse] {
+	return &GetApptStatsHandler{
 		apptRepo: apptRepo,
 	}
 }
 
-func (h *GetAppointmentStatsHandler) Handle(q cqrs.Query) (ApptStatsResponse, error) {
-	query := q.(GetAppointmentStatsQuery)
+func (h *GetApptStatsHandler) Handle(q cqrs.Query) (ApptStatsResponse, error) {
+	query := q.(GetApptStatsQuery)
 
 	var appointments []appointment.Appointment
 	var err error
@@ -68,14 +68,14 @@ func (h *GetAppointmentStatsHandler) Handle(q cqrs.Query) (ApptStatsResponse, er
 		includeAppointment := true
 
 		// Filter by vet ID
-		if query.vetID != nil {
-			if appointment.VetID() == nil || appointment.VetID().Value() != *query.vetID {
+		if query.employeeID != nil {
+			if appointment.EmployeeID() == nil || appointment.EmployeeID().Value() != *query.employeeID {
 				includeAppointment = false
 			}
 		}
 
 		// Filter by owner ID
-		if query.ownerID != nil && appointment.OwnerID().Equals(*query.ownerID) {
+		if query.customerID != nil && appointment.CustomerID().Equals(*query.customerID) {
 			includeAppointment = false
 		}
 
@@ -89,7 +89,7 @@ func (h *GetAppointmentStatsHandler) Handle(q cqrs.Query) (ApptStatsResponse, er
 	return stats, nil
 }
 
-func (h *GetAppointmentStatsHandler) calculateStats(appointments []appointment.Appointment, query GetAppointmentStatsQuery) ApptStatsResponse {
+func (h *GetApptStatsHandler) calculateStats(appointments []appointment.Appointment, query GetApptStatsQuery) ApptStatsResponse {
 	totalAppointments := len(appointments)
 	pendingCount := 0
 	confirmedCount := 0

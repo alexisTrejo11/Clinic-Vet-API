@@ -10,45 +10,45 @@ import (
 	apperror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/application"
 )
 
-type GetApptByIDAndOwnerIDQuery struct {
-	apptID  valueobject.AppointmentID
-	ownerID valueobject.OwnerID
-	ctx     context.Context
+type GetApptByIDAndCustomerIDQuery struct {
+	apptID     valueobject.AppointmentID
+	customerID valueobject.CustomerID
+	ctx        context.Context
 }
 
-func NewGetApptByIDAndOwnerIDQuery(ctx context.Context, apptID uint, ownerID uint) *GetApptByIDAndOwnerIDQuery {
-	return &GetApptByIDAndOwnerIDQuery{
-		apptID:  valueobject.NewAppointmentID(apptID),
-		ownerID: valueobject.NewOwnerID(ownerID),
+func NewGetApptByIDAndCustomerIDQuery(ctx context.Context, apptID uint, customerID uint) *GetApptByIDAndCustomerIDQuery {
+	return &GetApptByIDAndCustomerIDQuery{
+		apptID:     valueobject.NewAppointmentID(apptID),
+		customerID: valueobject.NewCustomerID(customerID),
 	}
 }
 
-type GetApptByIDAndOwnerIDHandler struct {
+type GetApptByIDAndCustomerIDHandler struct {
 	appointmentRepo repository.AppointmentRepository
-	ownerRepo       repository.OwnerRepository
+	ownerRepo       repository.CustomerRepository
 }
 
-func NewGetApptByIDAndOwnerIDHandler(
+func NewGetApptByIDAndCustomerIDHandler(
 	appointmentRepo repository.AppointmentRepository,
-	ownerRepo repository.OwnerRepository,
+	ownerRepo repository.CustomerRepository,
 ) cqrs.QueryHandler[ApptResponse] {
-	return &GetApptByIDAndOwnerIDHandler{
+	return &GetApptByIDAndCustomerIDHandler{
 		appointmentRepo: appointmentRepo,
 		ownerRepo:       ownerRepo,
 	}
 }
 
-func (h *GetApptByIDAndOwnerIDHandler) Handle(q cqrs.Query) (ApptResponse, error) {
-	query, valid := q.(GetApptByIDAndOwnerIDQuery)
+func (h *GetApptByIDAndCustomerIDHandler) Handle(q cqrs.Query) (ApptResponse, error) {
+	query, valid := q.(GetApptByIDAndCustomerIDQuery)
 	if !valid {
 		return ApptResponse{}, errors.New("invalid query type")
 	}
 
-	if err := h.validateExistingOwner(query.ctx, query.ownerID); err != nil {
+	if err := h.validateExistingCustomer(query.ctx, query.customerID); err != nil {
 		return ApptResponse{}, err
 	}
 
-	appointment, err := h.appointmentRepo.GetByIDAndOwnerID(query.ctx, query.apptID, query.ownerID)
+	appointment, err := h.appointmentRepo.GetByIDAndCustomerID(query.ctx, query.apptID, query.customerID)
 	if err != nil {
 		return ApptResponse{}, err
 	}
@@ -56,14 +56,14 @@ func (h *GetApptByIDAndOwnerIDHandler) Handle(q cqrs.Query) (ApptResponse, error
 	return NewApptResponse(&appointment), nil
 }
 
-func (h *GetApptByIDAndOwnerIDHandler) validateExistingOwner(ctx context.Context, ownerID valueobject.OwnerID) error {
-	exists, err := h.ownerRepo.ExistsByID(ctx, ownerID)
+func (h *GetApptByIDAndCustomerIDHandler) validateExistingCustomer(ctx context.Context, customerID valueobject.CustomerID) error {
+	exists, err := h.ownerRepo.ExistsByID(ctx, customerID)
 	if err != nil {
 		return err
 	}
 
 	if !exists {
-		return apperror.EntityValidationError("owner", "id", ownerID.String())
+		return apperror.EntityValidationError("owner", "id", customerID.String())
 	}
 
 	return nil

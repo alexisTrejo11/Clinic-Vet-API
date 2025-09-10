@@ -23,7 +23,7 @@ INSERT INTO pets (
     color, 
     microchip, 
     is_neutered, 
-    owner_id, 
+    customer_id, 
     allergies, 
     current_medications, 
     special_needs, 
@@ -35,7 +35,7 @@ VALUES (
     $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15,
     CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 )
-RETURNING id, name, photo, species, breed, age, gender, weight, color, microchip, is_neutered, owner_id, allergies, current_medications, special_needs, is_active, created_at, updated_at
+RETURNING id, name, photo, species, breed, age, gender, weight, color, microchip, is_neutered, customer_id, allergies, current_medications, special_needs, is_active, created_at, updated_at
 `
 
 type CreatePetParams struct {
@@ -49,7 +49,7 @@ type CreatePetParams struct {
 	Color              pgtype.Text
 	Microchip          pgtype.Text
 	IsNeutered         pgtype.Bool
-	OwnerID            int32
+	CustomerID         int32
 	Allergies          pgtype.Text
 	CurrentMedications pgtype.Text
 	SpecialNeeds       pgtype.Text
@@ -68,7 +68,7 @@ func (q *Queries) CreatePet(ctx context.Context, arg CreatePetParams) (Pet, erro
 		arg.Color,
 		arg.Microchip,
 		arg.IsNeutered,
-		arg.OwnerID,
+		arg.CustomerID,
 		arg.Allergies,
 		arg.CurrentMedications,
 		arg.SpecialNeeds,
@@ -87,7 +87,7 @@ func (q *Queries) CreatePet(ctx context.Context, arg CreatePetParams) (Pet, erro
 		&i.Color,
 		&i.Microchip,
 		&i.IsNeutered,
-		&i.OwnerID,
+		&i.CustomerID,
 		&i.Allergies,
 		&i.CurrentMedications,
 		&i.SpecialNeeds,
@@ -109,7 +109,7 @@ func (q *Queries) DeletePet(ctx context.Context, id int32) error {
 }
 
 const getPetByID = `-- name: GetPetByID :one
-SELECT id, name, photo, species, breed, age, gender, weight, color, microchip, is_neutered, owner_id, allergies, current_medications, special_needs, is_active, created_at, updated_at FROM pets
+SELECT id, name, photo, species, breed, age, gender, weight, color, microchip, is_neutered, customer_id, allergies, current_medications, special_needs, is_active, created_at, updated_at FROM pets
 WHERE id = $1
 `
 
@@ -128,7 +128,7 @@ func (q *Queries) GetPetByID(ctx context.Context, id int32) (Pet, error) {
 		&i.Color,
 		&i.Microchip,
 		&i.IsNeutered,
-		&i.OwnerID,
+		&i.CustomerID,
 		&i.Allergies,
 		&i.CurrentMedications,
 		&i.SpecialNeeds,
@@ -139,18 +139,18 @@ func (q *Queries) GetPetByID(ctx context.Context, id int32) (Pet, error) {
 	return i, err
 }
 
-const getPetByIDAndOwnerID = `-- name: GetPetByIDAndOwnerID :one
-SELECT id, name, photo, species, breed, age, gender, weight, color, microchip, is_neutered, owner_id, allergies, current_medications, special_needs, is_active, created_at, updated_at FROM pets
-WHERE id = $1 AND owner_id = $2
+const getPetByIDAndCustomerID = `-- name: GetPetByIDAndCustomerID :one
+SELECT id, name, photo, species, breed, age, gender, weight, color, microchip, is_neutered, customer_id, allergies, current_medications, special_needs, is_active, created_at, updated_at FROM pets
+WHERE id = $1 AND customer_id = $2
 `
 
-type GetPetByIDAndOwnerIDParams struct {
-	ID      int32
-	OwnerID int32
+type GetPetByIDAndCustomerIDParams struct {
+	ID         int32
+	CustomerID int32
 }
 
-func (q *Queries) GetPetByIDAndOwnerID(ctx context.Context, arg GetPetByIDAndOwnerIDParams) (Pet, error) {
-	row := q.db.QueryRow(ctx, getPetByIDAndOwnerID, arg.ID, arg.OwnerID)
+func (q *Queries) GetPetByIDAndCustomerID(ctx context.Context, arg GetPetByIDAndCustomerIDParams) (Pet, error) {
+	row := q.db.QueryRow(ctx, getPetByIDAndCustomerID, arg.ID, arg.CustomerID)
 	var i Pet
 	err := row.Scan(
 		&i.ID,
@@ -164,7 +164,7 @@ func (q *Queries) GetPetByIDAndOwnerID(ctx context.Context, arg GetPetByIDAndOwn
 		&i.Color,
 		&i.Microchip,
 		&i.IsNeutered,
-		&i.OwnerID,
+		&i.CustomerID,
 		&i.Allergies,
 		&i.CurrentMedications,
 		&i.SpecialNeeds,
@@ -175,14 +175,14 @@ func (q *Queries) GetPetByIDAndOwnerID(ctx context.Context, arg GetPetByIDAndOwn
 	return i, err
 }
 
-const getPetsByOwnerID = `-- name: GetPetsByOwnerID :many
-SELECT id, name, photo, species, breed, age, gender, weight, color, microchip, is_neutered, owner_id, allergies, current_medications, special_needs, is_active, created_at, updated_at FROM pets
-WHERE owner_id = $1
+const getPetsByCustomerID = `-- name: GetPetsByCustomerID :many
+SELECT id, name, photo, species, breed, age, gender, weight, color, microchip, is_neutered, customer_id, allergies, current_medications, special_needs, is_active, created_at, updated_at FROM pets
+WHERE customer_id = $1
 ORDER BY id
 `
 
-func (q *Queries) GetPetsByOwnerID(ctx context.Context, ownerID int32) ([]Pet, error) {
-	rows, err := q.db.Query(ctx, getPetsByOwnerID, ownerID)
+func (q *Queries) GetPetsByCustomerID(ctx context.Context, customerID int32) ([]Pet, error) {
+	rows, err := q.db.Query(ctx, getPetsByCustomerID, customerID)
 	if err != nil {
 		return nil, err
 	}
@@ -202,7 +202,7 @@ func (q *Queries) GetPetsByOwnerID(ctx context.Context, ownerID int32) ([]Pet, e
 			&i.Color,
 			&i.Microchip,
 			&i.IsNeutered,
-			&i.OwnerID,
+			&i.CustomerID,
 			&i.Allergies,
 			&i.CurrentMedications,
 			&i.SpecialNeeds,
@@ -221,7 +221,7 @@ func (q *Queries) GetPetsByOwnerID(ctx context.Context, ownerID int32) ([]Pet, e
 }
 
 const listPets = `-- name: ListPets :many
-SELECT id, name, photo, species, breed, age, gender, weight, color, microchip, is_neutered, owner_id, allergies, current_medications, special_needs, is_active, created_at, updated_at FROM pets
+SELECT id, name, photo, species, breed, age, gender, weight, color, microchip, is_neutered, customer_id, allergies, current_medications, special_needs, is_active, created_at, updated_at FROM pets
 ORDER BY id
 `
 
@@ -246,7 +246,7 @@ func (q *Queries) ListPets(ctx context.Context) ([]Pet, error) {
 			&i.Color,
 			&i.Microchip,
 			&i.IsNeutered,
-			&i.OwnerID,
+			&i.CustomerID,
 			&i.Allergies,
 			&i.CurrentMedications,
 			&i.SpecialNeeds,
@@ -277,14 +277,14 @@ SET
     color = $9,
     microchip = $10,
     is_neutered = $11,
-    owner_id = $12,
+    customer_id = $12,
     allergies = $13,
     current_medications = $14,
     special_needs = $15,
     is_active = $16,
     updated_at = CURRENT_TIMESTAMP
 WHERE id = $1
-RETURNING id, name, photo, species, breed, age, gender, weight, color, microchip, is_neutered, owner_id, allergies, current_medications, special_needs, is_active, created_at, updated_at
+RETURNING id, name, photo, species, breed, age, gender, weight, color, microchip, is_neutered, customer_id, allergies, current_medications, special_needs, is_active, created_at, updated_at
 `
 
 type UpdatePetParams struct {
@@ -299,7 +299,7 @@ type UpdatePetParams struct {
 	Color              pgtype.Text
 	Microchip          pgtype.Text
 	IsNeutered         pgtype.Bool
-	OwnerID            int32
+	CustomerID         int32
 	Allergies          pgtype.Text
 	CurrentMedications pgtype.Text
 	SpecialNeeds       pgtype.Text
@@ -319,7 +319,7 @@ func (q *Queries) UpdatePet(ctx context.Context, arg UpdatePetParams) error {
 		arg.Color,
 		arg.Microchip,
 		arg.IsNeutered,
-		arg.OwnerID,
+		arg.CustomerID,
 		arg.Allergies,
 		arg.CurrentMedications,
 		arg.SpecialNeeds,

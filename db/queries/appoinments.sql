@@ -3,39 +3,39 @@ SELECT * FROM appoinments
 WHERE id = $1 
 AND deleted_at IS NULL;
 
--- name: GetAppointmentByIDAndOwnerID :one
+-- name: GetAppointmentByIDAndCustomerID :one
 SELECT * FROM appoinments 
 WHERE id = $1 
-AND owner_id = $2
+AND customer_id = $2
 AND deleted_at IS NULL;
 
--- name: GetAppointmentByIDAndVeterinarianID :one
+-- name: GetAppointmentByIDAndEmployeeID :one
 SELECT * FROM appoinments 
 WHERE id = $1 
-AND veterinarian_id = $2
+AND employee_id = $2
 AND deleted_at IS NULL;
 
--- name: ListAppoinmentsByOwnerID :many
+-- name: ListAppoinmentsByCustomerID :many
 SELECT * FROM appoinments 
-WHERE owner_id = $1
+WHERE customer_id = $1
 AND deleted_at IS NULL
 ORDER BY created_at DESC LIMIT $2 OFFSET $3;
 
--- name: CountAppoinmentsByOwnerID :one
+-- name: CountAppoinmentsByCustomerID :one
 SELECT COUNT(*) FROM appoinments
-WHERE owner_id = $1
+WHERE customer_id = $1
 AND deleted_at IS NULL;
 
 
--- name: ListAppoinmentsByVeterinarianID :many
+-- name: ListAppoinmentsByEmployeeID :many
 SELECT * FROM appoinments
-WHERE veterinarian_id = $1
+WHERE employee_id = $1
 AND deleted_at IS NULL
 ORDER BY created_at DESC LIMIT $2 OFFSET $3;
 
--- name: CountAppoinmentsByVeterinarianID :one
+-- name: CountAppoinmentsByEmployeeID :one
 SELECT COUNT(*) FROM appoinments
-WHERE veterinarian_id = $1
+WHERE employee_id = $1
 AND deleted_at IS NULL;
 
 -- name: ListAppoinmentsByPetID :many
@@ -89,8 +89,8 @@ INSERT INTO appoinments (
     status, 
     reason, 
     notes, 
-    owner_id, 
-    veterinarian_id,
+    customer_id, 
+    employee_id,
     pet_id,
     created_at,
     updated_at,
@@ -106,8 +106,8 @@ UPDATE appoinments SET
     status = $4,
     reason = $5,
     notes = $6,
-    owner_id = $7,
-    veterinarian_id = $8,
+    customer_id = $7,
+    employee_id = $8,
     pet_id = $9,
     updated_at = CURRENT_TIMESTAMP
 WHERE id = $1

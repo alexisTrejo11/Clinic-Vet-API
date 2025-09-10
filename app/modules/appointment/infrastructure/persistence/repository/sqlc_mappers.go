@@ -12,30 +12,15 @@ import (
 
 func sqlRowToDomain(row sqlc.Appoinment) (*appointment.Appointment, error) {
 	errorMessage := make([]string, 0)
-
-	id, err := valueobject.NewAppointmentID(int(row.ID))
-	if err != nil {
-		errorMessage = append(errorMessage, err.Error())
-	}
-
-	vetID, err := valueobject.NewVetID(int(row.VeterinarianID.Int32))
-	if err != nil {
-		errorMessage = append(errorMessage, err.Error())
-	}
-	petID, err := valueobject.NewPetID(int(row.PetID))
-	if err != nil {
-		errorMessage = append(errorMessage, err.Error())
-	}
-
+	id := valueobject.NewAppointmentID(uint(row.ID))
+	vetID := valueobject.NewEmployeeID(uint(row.EmployeeID.Int32))
+	petID := valueobject.NewPetID(uint(row.PetID))
 	statusEnum, err := enum.ParseAppointmentStatus(string(row.Status))
 	if err != nil {
 		errorMessage = append(errorMessage, err.Error())
 	}
 
-	ownerID, err := valueobject.NewOwnerID(int(row.OwnerID))
-	if err != nil {
-		errorMessage = append(errorMessage, err.Error())
-	}
+	ownerID := valueobject.NewCustomerID(uint(row.CustomerID))
 	reason, err := enum.ParseVisitReason(row.Reason)
 	if err != nil {
 		errorMessage = append(errorMessage, err.Error())
@@ -52,7 +37,7 @@ func sqlRowToDomain(row sqlc.Appoinment) (*appointment.Appointment, error) {
 
 	return appointment.NewAppointment(
 		id, petID, ownerID,
-		appointment.WithVetID(&vetID),
+		appointment.WithEmployeeID(&vetID),
 		appointment.WithStatus(statusEnum),
 		appointment.WithScheduledDate(row.ScheduleDate.Time),
 		appointment.WithReason(reason),
@@ -78,23 +63,23 @@ func sqlRowsToDomainList(rows []sqlc.Appoinment) ([]appointment.Appointment, err
 
 func domainToCreateParams(appointment *appointment.Appointment) sqlc.CreateAppoinmentParams {
 	return sqlc.CreateAppoinmentParams{
-		OwnerID:        int32(appointment.OwnerID().Value()),
-		VeterinarianID: pgtype.Int4{Int32: int32(appointment.VetID().Value()), Valid: appointment.VetID().IsZero()},
-		PetID:          int32(appointment.PetID().Value()),
-		ScheduleDate:   pgtype.Timestamptz{Time: appointment.ScheduledDate(), Valid: true},
-		Notes:          pgtype.Text{String: *appointment.Notes(), Valid: appointment.Notes() != nil},
-		Status:         models.AppointmentStatus(string(appointment.Status())),
+		CustomerID:   int32(appointment.CustomerID().Value()),
+		EmployeeID:   pgtype.Int4{Int32: int32(appointment.EmployeeID().Value()), Valid: appointment.EmployeeID().IsZero()},
+		PetID:        int32(appointment.PetID().Value()),
+		ScheduleDate: pgtype.Timestamptz{Time: appointment.ScheduledDate(), Valid: true},
+		Notes:        pgtype.Text{String: *appointment.Notes(), Valid: appointment.Notes() != nil},
+		Status:       models.AppointmentStatus(string(appointment.Status())),
 	}
 }
 
 func domainToUpdateParams(appointment *appointment.Appointment) sqlc.UpdateAppoinmentParams {
 	return sqlc.UpdateAppoinmentParams{
-		ID:             int32(appointment.ID().Value()),
-		OwnerID:        int32(appointment.OwnerID().Value()),
-		VeterinarianID: pgtype.Int4{Int32: int32(appointment.VetID().Value()), Valid: appointment.VetID().IsZero()},
-		PetID:          int32(appointment.PetID().Value()),
-		ScheduleDate:   pgtype.Timestamptz{Time: appointment.ScheduledDate(), Valid: true},
-		Notes:          pgtype.Text{String: *appointment.Notes(), Valid: appointment.Notes() != nil},
-		Status:         models.AppointmentStatus(string(appointment.Status())),
+		ID:           int32(appointment.ID().Value()),
+		CustomerID:   int32(appointment.CustomerID().Value()),
+		EmployeeID:   pgtype.Int4{Int32: int32(appointment.EmployeeID().Value()), Valid: appointment.EmployeeID().IsZero()},
+		PetID:        int32(appointment.PetID().Value()),
+		ScheduleDate: pgtype.Timestamptz{Time: appointment.ScheduledDate(), Valid: true},
+		Notes:        pgtype.Text{String: *appointment.Notes(), Valid: appointment.Notes() != nil},
+		Status:       models.AppointmentStatus(string(appointment.Status())),
 	}
 }

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"reflect"
 
-	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/repository"
 	appointcommand "github.com/alexisTrejo11/Clinic-Vet-API/app/modules/appointment/application/command"
 	icqrs "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
 	infraerr "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/infrastructure"
@@ -14,7 +14,7 @@ type appointmentCommandBus struct {
 	handlers map[reflect.Type]icqrs.CommandHandler
 }
 
-func NewAppointmentCommandBus(appointmentRepo repository.AppointmentRepository) icqrs.CommandBus {
+func NewApptCommandBus(appointmentRepo repository.AppointmentRepository) icqrs.CommandBus {
 	bus := &appointmentCommandBus{
 		handlers: make(map[reflect.Type]icqrs.CommandHandler),
 	}
@@ -24,14 +24,14 @@ func NewAppointmentCommandBus(appointmentRepo repository.AppointmentRepository) 
 }
 
 func (bus *appointmentCommandBus) registerHandlers(appointmentRepo repository.AppointmentRepository) {
-	bus.Register(reflect.TypeOf(appointcommand.CreateAppointmentCommand{}), appointcommand.NewCreateAppointmentHandler(appointmentRepo))
-	bus.Register(reflect.TypeOf(appointcommand.UpdateAppointmentCommand{}), appointcommand.NewUpdateAppointmentHandler(appointmentRepo))
-	bus.Register(reflect.TypeOf(appointcommand.DeleteAppointmentCommand{}), appointcommand.NewDeleteAppointmentHandler(appointmentRepo))
-	bus.Register(reflect.TypeOf(appointcommand.RescheduleAppointmentCommand{}), appointcommand.NewRescheduleAppointmentHandler(appointmentRepo))
-	bus.Register(reflect.TypeOf(appointcommand.ConfirmAppointmentCommand{}), appointcommand.NewConfirmAppointmentHandler(appointmentRepo))
-	bus.Register(reflect.TypeOf(appointcommand.CancelAppointmentCommand{}), appointcommand.NewCancelAppointmentHandler(appointmentRepo))
-	bus.Register(reflect.TypeOf(appointcommand.CompleteAppointmentCommand{}), appointcommand.NewCompleteAppointmentHandler(appointmentRepo))
-	bus.Register(reflect.TypeOf(appointcommand.NotAttendAppointmentCommand{}), appointcommand.NewNotAttendAppointmentHandler(appointmentRepo))
+	bus.Register(reflect.TypeOf(appointcommand.CreateApptCommand{}), appointcommand.NewCreateApptHandler(appointmentRepo))
+	bus.Register(reflect.TypeOf(appointcommand.UpdateApptCommand{}), appointcommand.NewUpdateApptHandler(appointmentRepo))
+	bus.Register(reflect.TypeOf(appointcommand.DeleteApptCommand{}), appointcommand.NewDeleteApptHandler(appointmentRepo))
+	bus.Register(reflect.TypeOf(appointcommand.RescheduleApptCommand{}), appointcommand.NewRescheduleApptHandler(appointmentRepo))
+	bus.Register(reflect.TypeOf(appointcommand.ConfirmApptCommand{}), appointcommand.NewConfirmApptHandler(appointmentRepo))
+	bus.Register(reflect.TypeOf(appointcommand.CancelApptCommand{}), appointcommand.NewCancelApptHandler(appointmentRepo))
+	bus.Register(reflect.TypeOf(appointcommand.CompleteApptCommand{}), appointcommand.NewCompleteApptHandler(appointmentRepo))
+	bus.Register(reflect.TypeOf(appointcommand.NotAttendApptCommand{}), appointcommand.NewNotAttendApptHandler(appointmentRepo))
 }
 
 func (bus *appointmentCommandBus) Register(commandType reflect.Type, handler icqrs.CommandHandler) error {
@@ -55,36 +55,36 @@ func (bus *appointmentCommandBus) Execute(command icqrs.Command) icqrs.CommandRe
 	}
 
 	switch cmd := command.(type) {
-	case appointcommand.CreateAppointmentCommand:
-		h := handler.(*appointcommand.CreateAppointmentHandler)
+	case appointcommand.CreateApptCommand:
+		h := handler.(*appointcommand.CreateApptHandler)
 		return h.Handle(cmd)
 
-	case appointcommand.UpdateAppointmentCommand:
-		h := handler.(*appointcommand.UpdateAppointmentHandler)
+	case appointcommand.UpdateApptCommand:
+		h := handler.(*appointcommand.UpdateApptHandler)
 		return h.Handle(cmd)
 
-	case appointcommand.DeleteAppointmentCommand:
-		h := handler.(*appointcommand.DeleteAppointmentHandler)
+	case appointcommand.DeleteApptCommand:
+		h := handler.(*appointcommand.DeleteApptHandler)
 		return h.Handle(cmd)
 
-	case appointcommand.RescheduleAppointmentCommand:
-		h := handler.(*appointcommand.RescheduleAppointmentHandler)
+	case appointcommand.RescheduleApptCommand:
+		h := handler.(*appointcommand.RescheduleApptHandler)
 		return h.Handle(cmd)
 
-	case appointcommand.ConfirmAppointmentCommand:
-		h := handler.(*appointcommand.ConfirmAppointmentHandler)
+	case appointcommand.ConfirmApptCommand:
+		h := handler.(*appointcommand.ConfirmApptHandler)
 		return h.Handle(cmd)
 
-	case appointcommand.CancelAppointmentCommand:
-		h := handler.(*appointcommand.CancelAppointmentHandler)
+	case appointcommand.CancelApptCommand:
+		h := handler.(*appointcommand.CancelApptHandler)
 		return h.Handle(cmd)
 
-	case appointcommand.CompleteAppointmentCommand:
-		h := handler.(*appointcommand.CompleteAppointmentHandler)
+	case appointcommand.CompleteApptCommand:
+		h := handler.(*appointcommand.CompleteApptHandler)
 		return h.Handle(cmd)
 
-	case appointcommand.NotAttendAppointmentCommand:
-		h := handler.(*appointcommand.NotAttendAppointmentHandler)
+	case appointcommand.NotAttendApptCommand:
+		h := handler.(*appointcommand.NotAttendApptHandler)
 		return h.Handle(cmd)
 
 	default:
@@ -95,47 +95,47 @@ func (bus *appointmentCommandBus) Execute(command icqrs.Command) icqrs.CommandRe
 	}
 }
 
-type AppointmentCommandService struct {
+type ApptCommandService struct {
 	commandBus      icqrs.CommandBus
 	appointmentRepo repository.AppointmentRepository
 }
 
-func NewAppointmentCommandService(commandBus icqrs.CommandBus, appointmentRepo repository.AppointmentRepository) *AppointmentCommandService {
-	return &AppointmentCommandService{
+func NewApptCommandService(commandBus icqrs.CommandBus, appointmentRepo repository.AppointmentRepository) *ApptCommandService {
+	return &ApptCommandService{
 		commandBus:      commandBus,
 		appointmentRepo: appointmentRepo,
 	}
 }
 
 // Convenience methods for common operations
-func (s *AppointmentCommandService) CreateAppointment(cmd appointcommand.CreateAppointmentCommand) icqrs.CommandResult {
+func (s *ApptCommandService) CreateAppointment(cmd appointcommand.CreateApptCommand) icqrs.CommandResult {
 	return s.commandBus.Execute(cmd)
 }
 
-func (s *AppointmentCommandService) UpdateAppointment(cmd appointcommand.UpdateAppointmentCommand) icqrs.CommandResult {
+func (s *ApptCommandService) UpdateAppointment(cmd appointcommand.UpdateApptCommand) icqrs.CommandResult {
 	return s.commandBus.Execute(cmd)
 }
 
-func (s *AppointmentCommandService) DeleteAppointment(cmd appointcommand.DeleteAppointmentCommand) icqrs.CommandResult {
+func (s *ApptCommandService) DeleteAppointment(cmd appointcommand.DeleteApptCommand) icqrs.CommandResult {
 	return s.commandBus.Execute(cmd)
 }
 
-func (s *AppointmentCommandService) RescheduleAppointment(cmd appointcommand.RescheduleAppointmentCommand) icqrs.CommandResult {
+func (s *ApptCommandService) RescheduleAppointment(cmd appointcommand.RescheduleApptCommand) icqrs.CommandResult {
 	return s.commandBus.Execute(cmd)
 }
 
-func (s *AppointmentCommandService) ConfirmAppointment(cmd appointcommand.ConfirmAppointmentCommand) icqrs.CommandResult {
+func (s *ApptCommandService) ConfirmAppointment(cmd appointcommand.ConfirmApptCommand) icqrs.CommandResult {
 	return s.commandBus.Execute(cmd)
 }
 
-func (s *AppointmentCommandService) CancelAppointment(cmd appointcommand.CancelAppointmentCommand) icqrs.CommandResult {
+func (s *ApptCommandService) CancelAppointment(cmd appointcommand.CancelApptCommand) icqrs.CommandResult {
 	return s.commandBus.Execute(cmd)
 }
 
-func (s *AppointmentCommandService) CompleteAppointment(cmd appointcommand.CompleteAppointmentCommand) icqrs.CommandResult {
+func (s *ApptCommandService) CompleteAppointment(cmd appointcommand.CompleteApptCommand) icqrs.CommandResult {
 	return s.commandBus.Execute(cmd)
 }
 
-func (s *AppointmentCommandService) MarkAsNotPresented(cmd appointcommand.NotAttendAppointmentCommand) icqrs.CommandResult {
+func (s *ApptCommandService) MarkAsNotPresented(cmd appointcommand.NotAttendApptCommand) icqrs.CommandResult {
 	return s.commandBus.Execute(cmd)
 }

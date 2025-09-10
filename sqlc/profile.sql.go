@@ -12,33 +12,23 @@ import (
 )
 
 const createProfile = `-- name: CreateProfile :one
-INSERT INTO profiles (user_id, bio, owner_id, veterinarian_id, profile_pic, created_at, last_update)
-VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-RETURNING id, user_id, veterinarian_id, owner_id, bio, profile_pic, created_at, last_update
+INSERT INTO profiles (user_id, bio, profile_pic, created_at, last_update)
+VALUES ($1, $2, $3,  CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+RETURNING id, user_id, bio, profile_pic, created_at, last_update
 `
 
 type CreateProfileParams struct {
-	UserID         pgtype.Int4
-	Bio            pgtype.Text
-	OwnerID        pgtype.Int4
-	VeterinarianID pgtype.Int4
-	ProfilePic     pgtype.Text
+	UserID     pgtype.Int4
+	Bio        pgtype.Text
+	ProfilePic pgtype.Text
 }
 
 func (q *Queries) CreateProfile(ctx context.Context, arg CreateProfileParams) (Profile, error) {
-	row := q.db.QueryRow(ctx, createProfile,
-		arg.UserID,
-		arg.Bio,
-		arg.OwnerID,
-		arg.VeterinarianID,
-		arg.ProfilePic,
-	)
+	row := q.db.QueryRow(ctx, createProfile, arg.UserID, arg.Bio, arg.ProfilePic)
 	var i Profile
 	err := row.Scan(
 		&i.ID,
 		&i.UserID,
-		&i.VeterinarianID,
-		&i.OwnerID,
 		&i.Bio,
 		&i.ProfilePic,
 		&i.CreatedAt,
@@ -58,7 +48,7 @@ func (q *Queries) DeleteUserProfile(ctx context.Context, userID pgtype.Int4) err
 }
 
 const getUserProfile = `-- name: GetUserProfile :one
-SELECT id, user_id, veterinarian_id, owner_id, bio, profile_pic, created_at, last_update FROM profiles
+SELECT id, user_id, bio, profile_pic, created_at, last_update FROM profiles
 WHERE user_id = $1
 `
 
@@ -68,8 +58,6 @@ func (q *Queries) GetUserProfile(ctx context.Context, userID pgtype.Int4) (Profi
 	err := row.Scan(
 		&i.ID,
 		&i.UserID,
-		&i.VeterinarianID,
-		&i.OwnerID,
 		&i.Bio,
 		&i.ProfilePic,
 		&i.CreatedAt,
@@ -83,36 +71,24 @@ UPDATE profiles
 SET 
     bio = $2, 
     profile_pic = $3, 
-    owner_id = $4,
-    veterinarian_id = $5,
     last_update = CURRENT_TIMESTAMP
 WHERE 
     user_id = $1
-RETURNING id, user_id, veterinarian_id, owner_id, bio, profile_pic, created_at, last_update
+RETURNING id, user_id, bio, profile_pic, created_at, last_update
 `
 
 type UpdateUserProfileParams struct {
-	UserID         pgtype.Int4
-	Bio            pgtype.Text
-	ProfilePic     pgtype.Text
-	OwnerID        pgtype.Int4
-	VeterinarianID pgtype.Int4
+	UserID     pgtype.Int4
+	Bio        pgtype.Text
+	ProfilePic pgtype.Text
 }
 
 func (q *Queries) UpdateUserProfile(ctx context.Context, arg UpdateUserProfileParams) (Profile, error) {
-	row := q.db.QueryRow(ctx, updateUserProfile,
-		arg.UserID,
-		arg.Bio,
-		arg.ProfilePic,
-		arg.OwnerID,
-		arg.VeterinarianID,
-	)
+	row := q.db.QueryRow(ctx, updateUserProfile, arg.UserID, arg.Bio, arg.ProfilePic)
 	var i Profile
 	err := row.Scan(
 		&i.ID,
 		&i.UserID,
-		&i.VeterinarianID,
-		&i.OwnerID,
 		&i.Bio,
 		&i.ProfilePic,
 		&i.CreatedAt,

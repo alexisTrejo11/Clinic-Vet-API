@@ -14,7 +14,7 @@ const (
 	MaxAllowedDaysToSchedule = 30
 )
 
-func (a *Appointment) Update(notes *string, vetID *valueobject.VetID, service *enum.ClinicService, reason *string) error {
+func (a *Appointment) Update(notes *string, employeeID *valueobject.EmployeeID, service *enum.ClinicService, reason *string) error {
 	if notes != nil {
 		if len(*notes) > 1000 {
 			return domainerr.NewValidationError("appointment", "notes", "notes too long")
@@ -22,8 +22,8 @@ func (a *Appointment) Update(notes *string, vetID *valueobject.VetID, service *e
 		a.notes = notes
 	}
 
-	if vetID != nil {
-		a.vetID = vetID
+	if employeeID != nil {
+		a.employeeID = employeeID
 	}
 
 	if service != nil {
@@ -91,12 +91,12 @@ func (a *Appointment) MarkAsNotPresented() error {
 	return nil
 }
 
-func (a *Appointment) Confirm(vetID valueobject.VetID) error {
+func (a *Appointment) Confirm(employeeID valueobject.EmployeeID) error {
 	if !a.canTransitionTo(enum.AppointmentStatusConfirmed) {
 		return domainerr.NewBusinessRuleError("appointment", "confirm", "appointment cannot be confirmed in current status")
 	}
 
-	a.vetID = &vetID
+	a.employeeID = &employeeID
 	a.status = enum.AppointmentStatusConfirmed
 	a.IncrementVersion()
 	return nil

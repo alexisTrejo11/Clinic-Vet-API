@@ -13,15 +13,15 @@ import (
 type RescheduleApptCommand struct {
 	ctx            context.Context
 	appointmentID  valueobject.AppointmentID
-	veterinarianID *valueobject.VetID
+	veterinarianID *valueobject.EmployeeID
 	datetime       time.Time
 	reason         *string
 }
 
 func NewRescheduleApptCommand(ctx context.Context, appointIDInt uint, vetID *uint, dateTime time.Time, reason *string) *RescheduleApptCommand {
-	var veterinarianID *valueobject.VetID
+	var veterinarianID *valueobject.EmployeeID
 	if vetID != nil {
-		vetIDVal := valueobject.NewVetID(*vetID)
+		vetIDVal := valueobject.NewEmployeeID(*vetID)
 		veterinarianID = &vetIDVal
 	}
 
@@ -34,15 +34,15 @@ func NewRescheduleApptCommand(ctx context.Context, appointIDInt uint, vetID *uin
 	}
 }
 
-type RescheduleApptHander struct {
+type RescheduleApptHandler struct {
 	appointmentRepo repository.AppointmentRepository
 }
 
 func NewRescheduleApptHandler(appointmentRepo repository.AppointmentRepository) cqrs.CommandHandler {
-	return &RescheduleApptHander{appointmentRepo: appointmentRepo}
+	return &RescheduleApptHandler{appointmentRepo: appointmentRepo}
 }
 
-func (h *RescheduleApptHander) Handle(cmd cqrs.Command) cqrs.CommandResult {
+func (h *RescheduleApptHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
 	command, valid := cmd.(RescheduleApptCommand)
 	if !valid {
 		return cqrs.FailureResult("invalid command type", errors.New("expected RescheduleApptCommand"))

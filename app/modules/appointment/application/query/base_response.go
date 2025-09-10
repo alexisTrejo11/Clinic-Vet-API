@@ -10,9 +10,9 @@ import (
 
 type ApptResponse struct {
 	ID            uint                   `json:"id"`
-	OwnerID       uint                   `json:"owner_id"`
+	CustomerID    uint                   `json:"owner_id"`
 	PetID         uint                   `json:"pet_id"`
-	VetID         *uint                  `json:"vet_id,omitempty"`
+	EmployeeID    *uint                  `json:"vet_id,omitempty"`
 	Service       enum.ClinicService     `json:"service"`
 	ScheduledDate string                 `json:"scheduled_date"`
 	Status        enum.AppointmentStatus `json:"status"`
@@ -25,16 +25,16 @@ type ApptResponse struct {
 
 func NewApptResponse(appointment *appointment.Appointment) ApptResponse {
 	var vetID *uint
-	if appointment.VetID() != nil {
-		id := appointment.VetID().Value()
+	if appointment.EmployeeID() != nil {
+		id := appointment.EmployeeID().Value()
 		vetID = &id
 	}
 
 	return ApptResponse{
 		ID:            appointment.ID().Value(),
-		OwnerID:       appointment.OwnerID().Value(),
+		CustomerID:    appointment.CustomerID().Value(),
 		PetID:         appointment.PetID().Value(),
-		VetID:         vetID,
+		EmployeeID:    vetID,
 		Service:       appointment.Service(),
 		ScheduledDate: appointment.ScheduledDate().Format(time.RFC3339),
 		Status:        appointment.Status(),

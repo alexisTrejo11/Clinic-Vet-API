@@ -11,8 +11,8 @@ import (
 )
 
 type ApptSearchSpecification struct {
-	OwnerID    *valueobject.OwnerID
-	VetID      *valueobject.VetID
+	CustomerID *valueobject.CustomerID
+	EmployeeID *valueobject.EmployeeID
 	PetID      *valueobject.PetID
 	Service    *enum.ClinicService
 	Status     *enum.AppointmentStatus
@@ -34,13 +34,13 @@ func NewAppointmentSearchSpecification() *ApptSearchSpecification {
 	}
 }
 
-func (a *ApptSearchSpecification) WithOwnerID(ownerID valueobject.OwnerID) *ApptSearchSpecification {
-	a.OwnerID = &ownerID
+func (a *ApptSearchSpecification) WithCustomerID(customerID valueobject.CustomerID) *ApptSearchSpecification {
+	a.CustomerID = &customerID
 	return a
 }
 
-func (a *ApptSearchSpecification) WithVetID(vetID valueobject.VetID) *ApptSearchSpecification {
-	a.VetID = &vetID
+func (a *ApptSearchSpecification) WithEmployeeID(vetID valueobject.EmployeeID) *ApptSearchSpecification {
+	a.EmployeeID = &vetID
 	return a
 }
 
@@ -101,15 +101,15 @@ func (a *ApptSearchSpecification) IsSatisfiedBy(candidate any) bool {
 		return false
 	}
 
-	if a.OwnerID != nil && appt.OwnerID() != *a.OwnerID {
+	if a.CustomerID != nil && appt.CustomerID() != *a.CustomerID {
 		return false
 	}
 
-	if a.VetID != nil {
-		if appt.VetID() == nil {
+	if a.EmployeeID != nil {
+		if appt.EmployeeID() == nil {
 			return false
 		}
-		if *appt.VetID() != *a.VetID {
+		if *appt.EmployeeID() != *a.EmployeeID {
 			return false
 		}
 	}
@@ -153,15 +153,15 @@ func (a *ApptSearchSpecification) ToSQL() (string, []any) {
 	var params []any
 	paramCount := 1
 
-	if a.OwnerID != nil {
-		conditions = append(conditions, fmt.Sprintf("owner_id = $%d", paramCount))
-		params = append(params, a.OwnerID.Value())
+	if a.CustomerID != nil {
+		conditions = append(conditions, fmt.Sprintf("customer_id = $%d", paramCount))
+		params = append(params, a.CustomerID.Value())
 		paramCount++
 	}
 
-	if a.VetID != nil {
-		conditions = append(conditions, fmt.Sprintf("vet_id = $%d", paramCount))
-		params = append(params, a.VetID.Value())
+	if a.EmployeeID != nil {
+		conditions = append(conditions, fmt.Sprintf("employee_id = $%d", paramCount))
+		params = append(params, a.EmployeeID.Value())
 		paramCount++
 	}
 

@@ -5,20 +5,20 @@ import (
 	"context"
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
-	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
-	petApplicationError "github.com/alexisTrejo11/Clinic-Vet-API/app/modules/pets/application"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/repository"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/pets/application/dto"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/pets/application/mapper"
+	apperror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/application"
 )
 
 type CreatePetUseCase struct {
 	petRepository   repository.PetRepository
-	ownerRepository repository.OwnerRepository
+	ownerRepository repository.CustomerRepository
 }
 
 func NewCreatePetUseCase(
 	petRepository repository.PetRepository,
-	ownerRepository repository.OwnerRepository,
+	ownerRepository repository.CustomerRepository,
 ) *CreatePetUseCase {
 	return &CreatePetUseCase{
 		petRepository:   petRepository,
@@ -27,7 +27,7 @@ func NewCreatePetUseCase(
 }
 
 func (uc CreatePetUseCase) Execute(ctx context.Context, petCreate dto.CreatePetData) (dto.PetResponse, error) {
-	if err := uc.validateOwner(ctx, petCreate.OwnerID); err != nil {
+	if err := uc.validateCustomer(ctx, petCreate.CustomerID); err != nil {
 		return dto.PetResponse{}, err
 	}
 
@@ -43,14 +43,14 @@ func (uc CreatePetUseCase) Execute(ctx context.Context, petCreate dto.CreatePetD
 	return mapper.ToResponse(newPet), nil
 }
 
-func (uc CreatePetUseCase) validateOwner(ctx context.Context, ownerID valueobject.OwnerID) error {
-	exists, err := uc.ownerRepository.ExistsByID(ctx, ownerID)
+func (uc CreatePetUseCase) validateCustomer(ctx context.Context, customerID valueobject.CustomerID) error {
+	exists, err := uc.ownerRepository.ExistsByID(ctx, customerID)
 	if err != nil {
 		return err
 	}
 
 	if !exists {
-		petApplicationError.OwnerNotFoundError(ownerID.Value())
+		apperror.EntityValidationError("customer", "id", customerID.String())
 	}
 
 	return nil

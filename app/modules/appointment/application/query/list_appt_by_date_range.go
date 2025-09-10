@@ -11,47 +11,47 @@ import (
 	p "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 )
 
-type ListApptByDateRangeQuery struct {
+type ListApptsByDateRangeQuery struct {
 	startDate time.Time
 	endDate   time.Time
 	ctx       context.Context
 	pageInput p.PageInput
 }
 
-func NewListApptByDateRangeQuery(startDate, endDate time.Time, pageInput p.PageInput) (ListApptByDateRangeQuery, error) {
-	qry := &ListApptByDateRangeQuery{
+func NewListApptsByDateRangeQuery(startDate, endDate time.Time, pageInput p.PageInput) (ListApptsByDateRangeQuery, error) {
+	qry := &ListApptsByDateRangeQuery{
 		startDate: startDate,
 		endDate:   endDate,
 		pageInput: pageInput,
 	}
 
 	if startDate.IsZero() {
-		return ListApptByDateRangeQuery{}, apperror.FieldValidationError("startDate", "zero", "startDate can't be zero")
+		return ListApptsByDateRangeQuery{}, apperror.FieldValidationError("startDate", "zero", "startDate can't be zero")
 	}
 
 	if endDate.IsZero() {
-		return ListApptByDateRangeQuery{}, apperror.FieldValidationError("endDate", "zero", "endDate can't be zero")
+		return ListApptsByDateRangeQuery{}, apperror.FieldValidationError("endDate", "zero", "endDate can't be zero")
 	}
 
 	if startDate.Before(endDate) {
-		return ListApptByDateRangeQuery{}, apperror.FieldValidationError("date-range", "", "startDate can't be before endDate")
+		return ListApptsByDateRangeQuery{}, apperror.FieldValidationError("date-range", "", "startDate can't be before endDate")
 	}
 
 	return *qry, nil
 }
 
-type ListAppointmentByDateRangeHandler struct {
+type ListApptsByDateRangeHandler struct {
 	appointmentRepo repo.AppointmentRepository
 }
 
-func NewListAppointmentsByDateRangeHandler(appointmentRepo repo.AppointmentRepository) cqrs.QueryHandler[p.Page[[]ApptResponse]] {
-	return &ListAppointmentByDateRangeHandler{
+func NewListApptsByDateRangeHandler(appointmentRepo repo.AppointmentRepository) cqrs.QueryHandler[p.Page[[]ApptResponse]] {
+	return &ListApptsByDateRangeHandler{
 		appointmentRepo: appointmentRepo,
 	}
 }
 
-func (h *ListAppointmentByDateRangeHandler) Handle(q cqrs.Query) (p.Page[[]ApptResponse], error) {
-	query, valid := q.(ListApptByDateRangeQuery)
+func (h *ListApptsByDateRangeHandler) Handle(q cqrs.Query) (p.Page[[]ApptResponse], error) {
+	query, valid := q.(ListApptsByDateRangeQuery)
 	if !valid {
 		return p.Page[[]ApptResponse]{}, errors.New("invalid query type")
 	}

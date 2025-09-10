@@ -16,8 +16,8 @@ type Appointment struct {
 	status        enum.AppointmentStatus
 	reason        enum.VisitReason
 	notes         *string
-	ownerID       valueobject.OwnerID
-	vetID         *valueobject.VetID
+	customerID    valueobject.CustomerID
+	employeeID    *valueobject.EmployeeID
 	petID         valueobject.PetID
 }
 
@@ -29,12 +29,12 @@ func (a *Appointment) PetID() valueobject.PetID {
 	return a.petID
 }
 
-func (a *Appointment) OwnerID() valueobject.OwnerID {
-	return a.ownerID
+func (a *Appointment) CustomerID() valueobject.CustomerID {
+	return a.customerID
 }
 
-func (a *Appointment) VetID() *valueobject.VetID {
-	return a.vetID
+func (a *Appointment) EmployeeID() *valueobject.EmployeeID {
+	return a.employeeID
 }
 
 func (a *Appointment) Service() enum.ClinicService {

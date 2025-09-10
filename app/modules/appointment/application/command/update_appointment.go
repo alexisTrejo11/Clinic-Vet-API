@@ -12,7 +12,7 @@ import (
 type UpdateApptCommand struct {
 	ctx           context.Context
 	appointmentID valueobject.AppointmentID
-	vetID         *valueobject.VetID
+	vetID         *valueobject.EmployeeID
 	status        *enum.AppointmentStatus
 	reason        *string
 	notes         *string
@@ -20,9 +20,9 @@ type UpdateApptCommand struct {
 }
 
 func NewUpdateApptCommand(ctx context.Context, appointIDInt uint, vetIDInt *uint, status string, reason, notes *string, service *enum.ClinicService) *UpdateApptCommand {
-	var vetID *valueobject.VetID
+	var vetID *valueobject.EmployeeID
 	if vetIDInt != nil {
-		vetIDObj := valueobject.NewVetID(*vetIDInt)
+		vetIDObj := valueobject.NewEmployeeID(*vetIDInt)
 		vetID = &vetIDObj
 	}
 

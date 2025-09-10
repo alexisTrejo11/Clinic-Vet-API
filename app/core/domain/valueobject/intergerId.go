@@ -36,11 +36,11 @@ func (id baseID) IsZero() bool {
 
 type (
 	PaymentID     struct{ baseID }
-	VetID         struct{ baseID }
+	EmployeeID    struct{ baseID }
 	PetID         struct{ baseID }
 	AppointmentID struct{ baseID }
 	UserID        struct{ baseID }
-	OwnerID       struct{ baseID }
+	CustomerID    struct{ baseID }
 	MedHistoryID  struct{ baseID }
 )
 
@@ -52,16 +52,16 @@ func NewPaymentID(value uint) PaymentID {
 	return PaymentID{baseID{value}}
 }
 
-func NewVetID(value uint) VetID {
-	return VetID{baseID{value}}
+func NewEmployeeID(value uint) EmployeeID {
+	return EmployeeID{baseID{value}}
 }
 
 func NewUserID(value uint) UserID {
 	return UserID{baseID{value}}
 }
 
-func NewOwnerID(value uint) OwnerID {
-	return OwnerID{baseID{value}}
+func NewCustomerID(value uint) CustomerID {
+	return CustomerID{baseID{value}}
 }
 
 func NewMedHistoryID(value uint) MedHistoryID {
@@ -76,25 +76,19 @@ func NewIDFactory(value uint, entity string) (IntegerID, error) {
 	switch entity {
 	case "payment":
 		return NewPaymentID(value), nil
-	case "veterinarian", "vet":
-		return NewVetID(value), nil
+	case "veterinarian", "employee", "vet":
+		return NewEmployeeID(value), nil
 	case "user":
 		return NewUserID(value), nil
-	case "owner":
-		return NewOwnerID(value), nil
+	case "customer", "owner":
+		return NewCustomerID(value), nil
 	case "medical_history", "medicalhistory":
 		return NewMedHistoryID(value), nil
 	case "appointment":
 		return NewAppointmentID(value), nil
 	case "pet":
-		return NewVetID(value), nil
+		return NewPetID(value), nil
 	default:
 		return nil, fmt.Errorf("%w: %s", ErrEntityNotFound, entity)
 	}
 }
-
-func (id PaymentID) IsPayment() bool         { return true }
-func (id VetID) IsVet() bool                 { return true }
-func (id UserID) IsUser() bool               { return true }
-func (id OwnerID) IsOwner() bool             { return true }
-func (id AppointmentID) IsAppointment() bool { return true }

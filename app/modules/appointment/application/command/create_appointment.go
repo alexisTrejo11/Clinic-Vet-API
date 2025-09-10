@@ -15,9 +15,9 @@ import (
 
 type CreateApptCommand struct {
 	ctx      context.Context
-	ownerID  valueobject.OwnerID
+	ownerID  valueobject.CustomerID
 	petID    valueobject.PetID
-	vetID    *valueobject.VetID
+	vetID    *valueobject.EmployeeID
 	service  enum.ClinicService
 	datetime time.Time
 	status   *enum.AppointmentStatus
@@ -36,14 +36,14 @@ func NewCreateApptCommand(
 	reason enum.VisitReason,
 	notes *string,
 ) *CreateApptCommand {
-	var vetID *valueobject.VetID
+	var vetID *valueobject.EmployeeID
 	if vetIDInt != nil {
-		vetIDObj := valueobject.NewVetID(*vetIDInt)
+		vetIDObj := valueobject.NewEmployeeID(*vetIDInt)
 		vetID = &vetIDObj
 	}
 
 	return &CreateApptCommand{
-		ownerID:  valueobject.NewOwnerID(ownerIDInt),
+		ownerID:  valueobject.NewCustomerID(ownerIDInt),
 		petID:    valueobject.NewPetID(petIDInt),
 		vetID:    vetID,
 		datetime: dateTime,
@@ -91,7 +91,7 @@ func (h *CreateApptHandler) commandToDomain(command CreateApptCommand) (*appt.Ap
 	appointmentEntity, err := appt.CreateAppointment(
 		command.petID,
 		command.ownerID,
-		appt.WithVetID(command.vetID),
+		appt.WithEmployeeID(command.vetID),
 		appt.WithService(command.service),
 		appt.WithScheduledDate(command.datetime),
 		appt.WithReason(command.reason),

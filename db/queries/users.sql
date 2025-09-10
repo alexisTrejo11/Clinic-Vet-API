@@ -6,11 +6,13 @@ INSERT INTO users (
     status, 
     role, 
     profile_id,
+    customer_id,
+    employee_id,
     created_at,
     updated_at
 )
 VALUES (
-    $1, $2, $3, $4, $5, $6,
+    $1, $2, $3, $4, $5, $6, $7, $8,
     CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 )
 RETURNING *;

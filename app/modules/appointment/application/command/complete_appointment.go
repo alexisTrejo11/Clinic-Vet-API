@@ -10,10 +10,10 @@ import (
 )
 
 type CompleteApptCommand struct {
-	id    valueobject.AppointmentID
-	vetID *valueobject.VetID
-	notes *string
-	ctx   context.Context
+	id         valueobject.AppointmentID
+	employeeID *valueobject.EmployeeID
+	notes      *string
+	ctx        context.Context
 }
 
 func NewCompleteApptCommand(ctx context.Context, id uint, vetIDInt *uint, notes string) *CompleteApptCommand {
@@ -24,8 +24,8 @@ func NewCompleteApptCommand(ctx context.Context, id uint, vetIDInt *uint, notes 
 	}
 
 	if vetIDInt != nil {
-		vetID := valueobject.NewVetID(*vetIDInt)
-		cmd.vetID = &vetID
+		employeeID := valueobject.NewEmployeeID(*vetIDInt)
+		cmd.employeeID = &employeeID
 	}
 	return cmd
 }
@@ -63,8 +63,8 @@ func (h *CompleteApptHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
 }
 
 func (h *CompleteApptHandler) getAppt(command CompleteApptCommand) (appointment.Appointment, error) {
-	if command.vetID != nil {
-		appointment, err := h.apptRepository.GetByIDAndVetID(command.ctx, command.id, *command.vetID)
+	if command.employeeID != nil {
+		appointment, err := h.apptRepository.GetByIDAndEmployeeID(command.ctx, command.id, *command.employeeID)
 		if err != nil {
 			return appointment, err
 		}

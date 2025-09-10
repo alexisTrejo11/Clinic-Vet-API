@@ -1,24 +1,24 @@
--- name: GetPaymentById :one
+-- name: GetPaymentByID :one
 SELECT *
 FROM payments
 WHERE id = $1 AND deleted_at IS NULL;
 
--- name: GetPaymentByTransactionId :one
+-- name: GetPaymentByTransactionID :one
 SELECT *
 FROM payments
 WHERE transaction_id = $1 AND deleted_at IS NULL;
 
--- name: ListPaymentsByUserId :many
+-- name: ListPaymentsByCustomerID :many
 SELECT *
 FROM payments
-WHERE user_id = $1 AND deleted_at IS NULL
+WHERE paid_from_customer  = $1 AND deleted_at IS NULL
 ORDER BY created_at DESC
 LIMIT $2 OFFSET $3;
 
--- name: CountPaymentsByUserId :one
+-- name: CountPaymentsByCustomerID :one
 SELECT COUNT(*)
 FROM payments
-WHERE user_id = $1 AND deleted_at IS NULL;
+WHERE paid_from_customer  = $1 AND deleted_at IS NULL;
 
 -- name: ListPaymentsByStatus :many
 SELECT *
@@ -66,7 +66,8 @@ INSERT INTO payments (
     duedate,
     paid_at,
     refunded_at,
-    user_id,
+    paid_from_customer,
+    paid_to_employee,
     is_active,
     created_at,
     updated_at,
@@ -82,6 +83,7 @@ INSERT INTO payments (
     $8,
     $9,
     $10,
+    $11,
     TRUE,
     CURRENT_TIMESTAMP,
     CURRENT_TIMESTAMP,
@@ -102,7 +104,8 @@ SET
     paid_at = $8,
     refunded_at = $9,
     is_active = $10,
-    user_id = $11,
+    paid_from_customer = $11,
+    paid_to_employee = $12,
     updated_at = CURRENT_TIMESTAMP
 WHERE id = $12
 RETURNING *;

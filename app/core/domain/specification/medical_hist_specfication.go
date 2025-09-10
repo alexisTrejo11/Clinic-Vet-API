@@ -10,8 +10,8 @@ import (
 
 type MedicalHistorySpecification struct {
 	PetIDs          []valueobject.PetID
-	OwnerIDs        []valueobject.OwnerID
-	VetIDs          []valueobject.VetID
+	CustomerID      []valueobject.CustomerID
+	EmployeeIDs     []valueobject.EmployeeID
 	VisitReasons    []enum.VisitReason
 	VisitTypes      []enum.VisitType
 	Conditions      []enum.PetCondition
@@ -28,8 +28,8 @@ type MedicalHistorySpecification struct {
 func (s *MedicalHistorySpecification) IsSatisfiedBy(entity any) bool {
 	history, ok := entity.(interface {
 		PetID() valueobject.PetID
-		OwnerID() valueobject.OwnerID
-		VetID() valueobject.VetID
+		OwnerID() valueobject.CustomerID
+		EmployeeID() valueobject.EmployeeID
 		VisitReason() enum.VisitReason
 		VisitType() enum.VisitType
 		VisitDate() time.Time
@@ -56,9 +56,9 @@ func (s *MedicalHistorySpecification) IsSatisfiedBy(entity any) bool {
 		}
 	}
 
-	if len(s.OwnerIDs) > 0 {
+	if len(s.CustomerID) > 0 {
 		found := false
-		for _, ownerID := range s.OwnerIDs {
+		for _, ownerID := range s.CustomerID {
 			if ownerID.Value() == history.OwnerID().Value() {
 				found = true
 				break
@@ -69,10 +69,10 @@ func (s *MedicalHistorySpecification) IsSatisfiedBy(entity any) bool {
 		}
 	}
 
-	if len(s.VetIDs) > 0 {
+	if len(s.EmployeeIDs) > 0 {
 		found := false
-		for _, vetID := range s.VetIDs {
-			if vetID.Value() == history.VetID().Value() {
+		for _, vetID := range s.EmployeeIDs {
+			if vetID.Value() == history.EmployeeID().Value() {
 				found = true
 				break
 			}
@@ -177,21 +177,21 @@ func (s *MedicalHistorySpecification) ToSQL() (string, []any) {
 		args = append(args, petIDs)
 	}
 
-	if len(s.OwnerIDs) > 0 {
-		ownerIDs := make([]any, len(s.OwnerIDs))
-		for i, ownerID := range s.OwnerIDs {
+	if len(s.CustomerID) > 0 {
+		ownerIDs := make([]any, len(s.CustomerID))
+		for i, ownerID := range s.CustomerID {
 			ownerIDs[i] = ownerID.Value()
 		}
-		conditions = append(conditions, "owner_id IN (?)")
+		conditions = append(conditions, "customer_id IN (?)")
 		args = append(args, ownerIDs)
 	}
 
-	if len(s.VetIDs) > 0 {
-		vetIDs := make([]any, len(s.VetIDs))
-		for i, vetID := range s.VetIDs {
+	if len(s.EmployeeIDs) > 0 {
+		vetIDs := make([]any, len(s.EmployeeIDs))
+		for i, vetID := range s.EmployeeIDs {
 			vetIDs[i] = vetID.Value()
 		}
-		conditions = append(conditions, "vet_id IN (?)")
+		conditions = append(conditions, "employee_id IN (?)")
 		args = append(args, vetIDs)
 	}
 
@@ -276,13 +276,13 @@ func (s *MedicalHistorySpecification) WithPetIDs(petIDs ...valueobject.PetID) *M
 	return s
 }
 
-func (s *MedicalHistorySpecification) WithOwnerIDs(ownerIDs ...valueobject.OwnerID) *MedicalHistorySpecification {
-	s.OwnerIDs = ownerIDs
+func (s *MedicalHistorySpecification) WithOwnerIDs(ownerIDs ...valueobject.CustomerID) *MedicalHistorySpecification {
+	s.CustomerID = ownerIDs
 	return s
 }
 
-func (s *MedicalHistorySpecification) WithVetIDs(vetIDs ...valueobject.VetID) *MedicalHistorySpecification {
-	s.VetIDs = vetIDs
+func (s *MedicalHistorySpecification) WithEmployeeIDs(vetIDs ...valueobject.EmployeeID) *MedicalHistorySpecification {
+	s.EmployeeIDs = vetIDs
 	return s
 }
 

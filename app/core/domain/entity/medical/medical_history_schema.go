@@ -12,7 +12,7 @@ import (
 type MedicalHistory struct {
 	base.Entity[valueobject.MedHistoryID]
 	petID       valueobject.PetID
-	ownerID     valueobject.OwnerID
+	customerID  valueobject.CustomerID
 	visitReason enum.VisitReason
 	visitType   enum.VisitType
 	visitDate   time.Time
@@ -20,7 +20,7 @@ type MedicalHistory struct {
 	diagnosis   string
 	treatment   string
 	condition   enum.PetCondition
-	vetID       valueobject.VetID
+	employeeID  valueobject.EmployeeID
 }
 
 func (mh *MedicalHistory) ID() valueobject.MedHistoryID {
@@ -31,8 +31,8 @@ func (mh *MedicalHistory) PetID() valueobject.PetID {
 	return mh.petID
 }
 
-func (mh *MedicalHistory) OwnerID() valueobject.OwnerID {
-	return mh.ownerID
+func (mh *MedicalHistory) OwnerID() valueobject.CustomerID {
+	return mh.customerID
 }
 
 func (mh *MedicalHistory) VisitReason() enum.VisitReason {
@@ -63,8 +63,8 @@ func (mh *MedicalHistory) Condition() enum.PetCondition {
 	return mh.condition
 }
 
-func (mh *MedicalHistory) VetID() valueobject.VetID {
-	return mh.vetID
+func (mh *MedicalHistory) EmployeeID() valueobject.EmployeeID {
+	return mh.employeeID
 }
 
 func (mh *MedicalHistory) CreatedAt() time.Time {

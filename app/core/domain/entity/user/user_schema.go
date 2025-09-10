@@ -19,8 +19,8 @@ type User struct {
 	status        enum.UserStatus
 	lastLoginAt   *time.Time
 	twoFactorAuth auth.TwoFactorAuth
-	employeeID    *valueobject.VetID
-	customerID    *valueobject.OwnerID
+	employeeID    *valueobject.EmployeeID
+	customerID    *valueobject.CustomerID
 }
 
 func (u *User) ID() valueobject.UserID {
@@ -55,7 +55,7 @@ func (u *User) JoinedAt() time.Time {
 	return u.CreatedAt()
 }
 
-func (u *User) EmployeeID() *valueobject.VetID {
+func (u *User) EmployeeID() *valueobject.EmployeeID {
 	return u.employeeID
 }
 
@@ -67,7 +67,7 @@ func (u *User) IsCustomer() bool {
 	return u.customerID != nil
 }
 
-func (u *User) CustomerID() *valueobject.OwnerID {
+func (u *User) CustomerID() *valueobject.CustomerID {
 	return u.customerID
 }
 

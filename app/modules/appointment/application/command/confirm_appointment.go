@@ -10,16 +10,16 @@ import (
 )
 
 type ConfirmApptCommand struct {
-	id    valueobject.AppointmentID
-	vetID valueobject.VetID
-	ctx   context.Context
+	id         valueobject.AppointmentID
+	employeeID valueobject.EmployeeID
+	ctx        context.Context
 }
 
 func NewConfirmAppointmentCommand(ctx context.Context, appointIDInt, vetIDInt uint) *ConfirmApptCommand {
 	return &ConfirmApptCommand{
-		ctx:   ctx,
-		id:    valueobject.NewAppointmentID(appointIDInt),
-		vetID: valueobject.NewVetID(vetIDInt),
+		ctx:        ctx,
+		id:         valueobject.NewAppointmentID(appointIDInt),
+		employeeID: valueobject.NewEmployeeID(vetIDInt),
 	}
 }
 
@@ -42,7 +42,7 @@ func (h *ConfirmApptHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
 		return cqrs.FailureResult("appointment not found", err)
 	}
 
-	if err := appointment.Confirm(command.vetID); err != nil {
+	if err := appointment.Confirm(command.employeeID); err != nil {
 		return cqrs.FailureResult("failed to confirm appointment", err)
 	}
 

@@ -12,15 +12,15 @@ import (
 
 type CancelApptCommand struct {
 	appointmentID valueobject.AppointmentID
-	vetID         *valueobject.VetID
+	vetID         *valueobject.EmployeeID
 	reason        string
 	ctx           context.Context
 }
 
 func NewCancelApptCommand(ctx context.Context, id uint, vetID *uint, reason string) *CancelApptCommand {
-	var vetIDObj *valueobject.VetID
+	var vetIDObj *valueobject.EmployeeID
 	if vetID != nil {
-		vetIDVal := valueobject.NewVetID(*vetID)
+		vetIDVal := valueobject.NewEmployeeID(*vetID)
 		vetIDObj = &vetIDVal
 	}
 
@@ -66,7 +66,7 @@ func (h *CancelApptHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
 
 func (h *CancelApptHandler) getAppointment(cmd CancelApptCommand) (appt.Appointment, error) {
 	if cmd.vetID != nil {
-		return h.apptRepository.GetByIDAndVetID(cmd.ctx, cmd.appointmentID, *cmd.vetID)
+		return h.apptRepository.GetByIDAndEmployeeID(cmd.ctx, cmd.appointmentID, *cmd.vetID)
 	}
 	return h.apptRepository.GetByID(cmd.ctx, cmd.appointmentID)
 }

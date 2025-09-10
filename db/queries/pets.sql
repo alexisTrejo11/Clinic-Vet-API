@@ -2,13 +2,13 @@
 SELECT * FROM pets
 WHERE id = $1;
 
--- name: GetPetByIDAndOwnerID :one
+-- name: GetPetByIDAndCustomerID :one
 SELECT * FROM pets
-WHERE id = $1 AND owner_id = $2;
+WHERE id = $1 AND customer_id = $2;
 
--- name: GetPetsByOwnerID :many
+-- name: GetPetsByCustomerID :many
 SELECT * FROM pets
-WHERE owner_id = $1
+WHERE customer_id = $1
 ORDER BY id;
 
 -- name: ListPets :many
@@ -27,7 +27,7 @@ INSERT INTO pets (
     color, 
     microchip, 
     is_neutered, 
-    owner_id, 
+    customer_id, 
     allergies, 
     current_medications, 
     special_needs, 
@@ -54,7 +54,7 @@ SET
     color = $9,
     microchip = $10,
     is_neutered = $11,
-    owner_id = $12,
+    customer_id = $12,
     allergies = $13,
     current_medications = $14,
     special_needs = $15,

@@ -11,7 +11,7 @@ import (
 func FromCreateDTO(dto MedicalHistoryCreate) (medical.MedicalHistory, error) {
 	medHistory, err := medical.NewMedicalHistory(
 		valueobject.MedHistoryID{},
-		dto.PetID, dto.OwnerID, dto.VetID,
+		dto.PetID, dto.CustomerID, dto.VetID,
 		medical.WithVisitDate(dto.Date),
 		medical.WithDiagnosis(dto.Diagnosis),
 		medical.WithTreatment(dto.Treatment),
@@ -30,7 +30,7 @@ func ToResponse(medHistory medical.MedicalHistory) MedHistResponse {
 	return MedHistResponse{
 		ID:          medHistory.ID().Value(),
 		PetID:       medHistory.PetID().Value(),
-		OwnerID:     medHistory.OwnerID().Value(),
+		CustomerID:  medHistory.CustomerID().Value(),
 		Date:        medHistory.VisitDate(),
 		Notes:       medHistory.Notes(),
 		Diagnosis:   medHistory.Diagnosis(),
@@ -59,7 +59,7 @@ func ListToResponse(medHistories []medical.MedicalHistory) []MedHistResponse {
 
 func ToResponseDetail(
 	medHistory medical.MedicalHistory,
-	owner owner.Owner,
+	owner owner.Customer,
 	vet veterinarian.Veterinarian,
 	pet pet.Pet,
 ) MedHistResponseDetail {
@@ -86,7 +86,7 @@ func ToResponseDetail(
 	detail := &MedHistResponseDetail{
 		ID:  medHistory.ID().Value(),
 		Pet: *petDetail,
-		Owner: OwnerDetails{
+		Customer: CustomerDetails{
 			ID:        owner.ID().Value(),
 			FirstName: owner.FullName().FirstName,
 			LastName:  owner.FullName().LastName,

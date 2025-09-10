@@ -15,38 +15,38 @@ const (
 	OpCount  = "count"
 	OpSearch = "search"
 
-	TableAppointments = "appointments"
-	DriverSQL         = "sql"
+	TableAppts = "appointments"
+	DriverSQL  = "sql"
 )
 
 const (
-	ErrMsgListAppointments   = "failed to list appointments"
-	ErrMsgGetAppointment     = "failed to get appointment"
-	ErrMsgSearchAppointments = "failed to search appointments"
-	ErrMsgCountAppointments  = "failed to count appointments"
-	ErrMsgCreateAppointment  = "failed to create appointment"
-	ErrMsgUpdateAppointment  = "failed to update appointment"
-	ErrMsgDeleteAppointment  = "failed to delete appointment"
-	ErrMsgConvertToDomain    = "failed to convert to domain entity"
-	ErrMsgNotFound           = "appointment not found"
+	ErrMsgListAppts       = "failed to list appointments"
+	ErrMsgGetAppt         = "failed to get appointment"
+	ErrMsgSearchAppts     = "failed to search appointments"
+	ErrMsgCountAppts      = "failed to count appointments"
+	ErrMsgCreateAppt      = "failed to create appointment"
+	ErrMsgUpdateAppt      = "failed to update appointment"
+	ErrMsgDeleteAppt      = "failed to delete appointment"
+	ErrMsgConvertToDomain = "failed to convert to domain entity"
+	ErrMsgNotFound        = "appointment not found"
 )
 
 // calculateOffset computes the database offset for pagination
-func (r *SQLCAppointmentRepository) calculateOffset(pageInput page.PageInput) int32 {
+func (r *SQLCApptRepository) calculateOffset(pageInput page.PageInput) int32 {
 	return int32(pageInput.PageNumber-1) * int32(pageInput.PageSize)
 }
 
 // dbError creates a standardized database operation error
-func (r *SQLCAppointmentRepository) dbError(operation, message string, err error) error {
-	return dberr.DatabaseOperationError(operation, TableAppointments, DriverSQL, fmt.Sprintf("%s: %v", message, err))
+func (r *SQLCApptRepository) dbError(operation, message string, err error) error {
+	return dberr.DatabaseOperationError(operation, TableAppts, DriverSQL, fmt.Sprintf("%s: %v", message, err))
 }
 
 // notFoundError creates a standardized entity not found error
-func (r *SQLCAppointmentRepository) notFoundError(parameterName, parameterValue string) error {
-	return dberr.EntityNotFoundError(parameterName, parameterValue, OpSelect, TableAppointments, DriverSQL)
+func (r *SQLCApptRepository) notFoundError(parameterName, parameterValue string) error {
+	return dberr.EntityNotFoundError(parameterName, parameterValue, OpSelect, TableAppts, DriverSQL)
 }
 
 // wrapConversionError wraps domain conversion errors
-func (r *SQLCAppointmentRepository) wrapConversionError(err error) error {
+func (r *SQLCApptRepository) wrapConversionError(err error) error {
 	return fmt.Errorf("%s: %w", ErrMsgConvertToDomain, err)
 }

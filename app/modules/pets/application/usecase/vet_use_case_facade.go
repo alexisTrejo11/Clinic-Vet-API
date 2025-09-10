@@ -3,33 +3,49 @@ package usecase
 import (
 	"context"
 
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/specification"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
-	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/repository"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/pets/application/dto"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 )
 
 type PetUseCasesFacade interface {
-	SearchPets(ctx context.Context, params any) ([]dto.PetResponse, error)
+	SearchPets(ctx context.Context, spec specification.PetSpecification) (page.Page[[]dto.PetResponse], error)
 	GetPetByID(ctx context.Context, petID valueobject.PetID) (dto.PetResponse, error)
+	GetPetByIDAndCustomerID(ctx context.Context, petID valueobject.PetID, customerID valueobject.CustomerID) (dto.PetResponse, error)
+	ListPetByCustomerID(ctx context.Context, customerID valueobject.CustomerID) (page.Page[[]dto.PetResponse], error)
+
 	CreatePet(ctx context.Context, petCreate dto.CreatePetData) (dto.PetResponse, error)
-	UpdatePet(ctx context.Context, petUpdate dto.PetUpdate) (dto.PetResponse, error)
+	UpdatePet(ctx context.Context, petUpdate dto.PetUpdateData) (dto.PetResponse, error)
 	DeletePet(ctx context.Context, petID valueobject.PetID, isSoftDelete bool) error
 }
 
 type petUseCaseFacade struct {
 	petRepository   repository.PetRepository
-	ownerRepository repository.OwnerRepository
+	ownerRepository repository.CustomerRepository
 }
 
-func NewPetUseCasesFacade(petRepo repository.PetRepository, ownerRepo repository.OwnerRepository) PetUseCasesFacade {
+func NewPetUseCasesFacade(petRepo repository.PetRepository, ownerRepo repository.CustomerRepository) PetUseCasesFacade {
 	return &petUseCaseFacade{
 		petRepository:   petRepo,
 		ownerRepository: ownerRepo,
 	}
 }
 
-func (f *petUseCaseFacade) SearchPets(ctx context.Context, params any) ([]dto.PetResponse, error) {
-	return []dto.PetResponse{}, nil
+func (f *petUseCaseFacade) SearchPets(ctx context.Context, spec specification.PetSpecification) (page.Page[[]dto.PetResponse], error) {
+	useCase := NewSearchPetsUseCase(f.petRepository)
+	return useCase.Execute(ctx, spec)
+}
+
+func (f *petUseCaseFacade) ListPetByCustomerID(ctx context.Context, customerID valueobject.CustomerID) (page.Page[[]dto.PetResponse], error) {
+	useCase := NewListPetsByCustomerIDUseCase(f.petRepository)
+	return useCase.Execute(ctx, customerID)
+}
+
+func (f *petUseCaseFacade) GetPetByIDAndCustomerID(ctx context.Context, petID valueobject.PetID, customerID valueobject.CustomerID) (dto.PetResponse, error) {
+	useCase := NewGetPetByIDAndCustomerIDUseCase(f.petRepository)
+	return useCase.Execute(ctx, petID, customerID)
 }
 
 func (f *petUseCaseFacade) CreatePet(ctx context.Context, petCreate dto.CreatePetData) (dto.PetResponse, error) {
@@ -37,7 +53,7 @@ func (f *petUseCaseFacade) CreatePet(ctx context.Context, petCreate dto.CreatePe
 	return useCase.Execute(ctx, petCreate)
 }
 
-func (f *petUseCaseFacade) UpdatePet(ctx context.Context, petUpdate dto.PetUpdate) (dto.PetResponse, error) {
+func (f *petUseCaseFacade) UpdatePet(ctx context.Context, petUpdate dto.PetUpdateData) (dto.PetResponse, error) {
 	useCase := NewUpdatePetUseCase(f.petRepository, f.ownerRepository)
 	return useCase.Execute(ctx, petUpdate)
 }

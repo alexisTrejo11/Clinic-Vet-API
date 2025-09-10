@@ -34,14 +34,16 @@ INSERT INTO users (
     status, 
     role, 
     profile_id,
+    customer_id,
+    employee_id,
     created_at,
     updated_at
 )
 VALUES (
-    $1, $2, $3, $4, $5, $6,
+    $1, $2, $3, $4, $5, $6, $7, $8,
     CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 )
-RETURNING id, email, phone_number, password, status, role, profile_id, created_at, updated_at, deleted_at
+RETURNING id, email, phone_number, password, status, role, profile_id, customer_id, employee_id, created_at, updated_at, deleted_at
 `
 
 type CreateUserParams struct {
@@ -51,6 +53,8 @@ type CreateUserParams struct {
 	Status      models.UserStatus
 	Role        models.UserRole
 	ProfileID   pgtype.Int4
+	CustomerID  pgtype.Int4
+	EmployeeID  pgtype.Int4
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
@@ -61,6 +65,8 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		arg.Status,
 		arg.Role,
 		arg.ProfileID,
+		arg.CustomerID,
+		arg.EmployeeID,
 	)
 	var i User
 	err := row.Scan(
@@ -71,6 +77,8 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.Status,
 		&i.Role,
 		&i.ProfileID,
+		&i.CustomerID,
+		&i.EmployeeID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.DeletedAt,
@@ -118,7 +126,7 @@ func (q *Queries) ExistsUserByPhoneNumber(ctx context.Context, phoneNumber pgtyp
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, email, phone_number, password, status, role, profile_id, created_at, updated_at, deleted_at
+SELECT id, email, phone_number, password, status, role, profile_id, customer_id, employee_id, created_at, updated_at, deleted_at
 FROM users
 WHERE email = $1
 AND deleted_at IS NULL
@@ -135,6 +143,8 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email pgtype.Text) (User, 
 		&i.Status,
 		&i.Role,
 		&i.ProfileID,
+		&i.CustomerID,
+		&i.EmployeeID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.DeletedAt,
@@ -143,7 +153,7 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email pgtype.Text) (User, 
 }
 
 const getUserByID = `-- name: GetUserByID :one
-SELECT id, email, phone_number, password, status, role, profile_id, created_at, updated_at, deleted_at
+SELECT id, email, phone_number, password, status, role, profile_id, customer_id, employee_id, created_at, updated_at, deleted_at
 FROM users
 WHERE id = $1 
 AND deleted_at IS NULL
@@ -160,6 +170,8 @@ func (q *Queries) GetUserByID(ctx context.Context, id int32) (User, error) {
 		&i.Status,
 		&i.Role,
 		&i.ProfileID,
+		&i.CustomerID,
+		&i.EmployeeID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.DeletedAt,
@@ -168,7 +180,7 @@ func (q *Queries) GetUserByID(ctx context.Context, id int32) (User, error) {
 }
 
 const getUserByPhoneNumber = `-- name: GetUserByPhoneNumber :one
-SELECT id, email, phone_number, password, status, role, profile_id, created_at, updated_at, deleted_at
+SELECT id, email, phone_number, password, status, role, profile_id, customer_id, employee_id, created_at, updated_at, deleted_at
 FROM users
 WHERE phone_number = $1
 AND deleted_at IS NULL
@@ -185,6 +197,8 @@ func (q *Queries) GetUserByPhoneNumber(ctx context.Context, phoneNumber pgtype.T
 		&i.Status,
 		&i.Role,
 		&i.ProfileID,
+		&i.CustomerID,
+		&i.EmployeeID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.DeletedAt,
@@ -203,7 +217,7 @@ func (q *Queries) HardDeleteUser(ctx context.Context, id int32) error {
 }
 
 const listUsers = `-- name: ListUsers :many
-SELECT id, email, phone_number, password, status, role, profile_id, created_at, updated_at, deleted_at
+SELECT id, email, phone_number, password, status, role, profile_id, customer_id, employee_id, created_at, updated_at, deleted_at
 FROM users
 WHERE deleted_at IS NULL
 ORDER BY created_at DESC
@@ -233,6 +247,8 @@ func (q *Queries) ListUsers(ctx context.Context, arg ListUsersParams) ([]User, e
 			&i.Status,
 			&i.Role,
 			&i.ProfileID,
+			&i.CustomerID,
+			&i.EmployeeID,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.DeletedAt,
@@ -248,7 +264,7 @@ func (q *Queries) ListUsers(ctx context.Context, arg ListUsersParams) ([]User, e
 }
 
 const listUsersByRole = `-- name: ListUsersByRole :many
-SELECT id, email, phone_number, password, status, role, profile_id, created_at, updated_at, deleted_at
+SELECT id, email, phone_number, password, status, role, profile_id, customer_id, employee_id, created_at, updated_at, deleted_at
 FROM users
 WHERE role = $1
 AND deleted_at IS NULL
@@ -280,6 +296,8 @@ func (q *Queries) ListUsersByRole(ctx context.Context, arg ListUsersByRoleParams
 			&i.Status,
 			&i.Role,
 			&i.ProfileID,
+			&i.CustomerID,
+			&i.EmployeeID,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.DeletedAt,
@@ -327,7 +345,7 @@ SET
     profile_id = $7,
     updated_at = CURRENT_TIMESTAMP
 WHERE id = $1
-RETURNING id, email, phone_number, password, status, role, profile_id, created_at, updated_at, deleted_at
+RETURNING id, email, phone_number, password, status, role, profile_id, customer_id, employee_id, created_at, updated_at, deleted_at
 `
 
 type UpdateUserParams struct {
@@ -359,6 +377,8 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, e
 		&i.Status,
 		&i.Role,
 		&i.ProfileID,
+		&i.CustomerID,
+		&i.EmployeeID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.DeletedAt,

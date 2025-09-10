@@ -9,17 +9,11 @@ import (
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/pets/application/dto"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 )
 
 func ToDomainFromCreate(dto dto.CreatePetData) (*pet.Pet, error) {
-	// Convertir y validar los IDs de value objects
-
-	ownerID, err := valueobject.NewOwnerID(dto.OwnerID.Value())
-	if err != nil {
-		return nil, fmt.Errorf("invalid owner ID: %w", err)
-	}
-
-	// Crear options básicas
+	customerID := valueobject.NewCustomerID(dto.CustomerID.Value())
 	opts := []pet.PetOption{
 		pet.WithName(dto.Name),
 		pet.WithSpecies(dto.Species),
@@ -78,7 +72,7 @@ func ToDomainFromCreate(dto dto.CreatePetData) (*pet.Pet, error) {
 	// Crear la entidad Pet
 	petEntity, err := pet.NewPet(
 		valueobject.PetID{}, // ID will be generated inside NewPet
-		ownerID,
+		customerID,
 		opts...,
 	)
 	if err != nil {
@@ -89,7 +83,7 @@ func ToDomainFromCreate(dto dto.CreatePetData) (*pet.Pet, error) {
 }
 
 // TODO: implement ToDomainFromUpdate
-func ToDomainFromUpdate(pet *pet.Pet, dto dto.PetUpdate) {
+func ToDomainFromUpdate(pet *pet.Pet, dto dto.PetUpdateData) {
 }
 
 func ToResponse(pet *pet.Pet) dto.PetResponse {
@@ -103,7 +97,7 @@ func ToResponse(pet *pet.Pet) dto.PetResponse {
 		Color:              pet.Color(),
 		Microchip:          pet.Microchip(),
 		IsNeutered:         pet.IsNeutered(),
-		OwnerID:            pet.OwnerID().Value(),
+		CustomerID:         pet.CustomerID().Value(),
 		Allergies:          pet.Allergies(),
 		CurrentMedications: pet.CurrentMedications(),
 		SpecialNeeds:       pet.SpecialNeeds(),
@@ -122,7 +116,7 @@ func ToResponse(pet *pet.Pet) dto.PetResponse {
 	return response
 }
 
-func ToResponseList(pets []pet.Pet) []dto.PetResponse {
+func ToResponses(pets []pet.Pet) []dto.PetResponse {
 	if pets == nil {
 		return []dto.PetResponse{}
 	}
@@ -131,4 +125,14 @@ func ToResponseList(pets []pet.Pet) []dto.PetResponse {
 		dtos[i] = ToResponse(&pet)
 	}
 	return dtos
+}
+
+func ToResponsesPage(petPage page.Page[[]pet.Pet]) page.Page[[]dto.PetResponse] {
+	items := petPage.Data
+	if len(items) == 0 {
+		return page.EmptyPage[[]dto.PetResponse]()
+	}
+
+	dtos := ToResponses(items)
+	return page.NewPage(dtos, petPage.Metadata)
 }

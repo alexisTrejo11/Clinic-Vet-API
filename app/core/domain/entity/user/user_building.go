@@ -52,7 +52,7 @@ func WithTwoFactorAuth(twoFA auth.TwoFactorAuth) UserOption {
 	}
 }
 
-func WithEmployeeID(employeeID valueobject.VetID) UserOption {
+func WithEmployeeID(employeeID valueobject.EmployeeID) UserOption {
 	return func(u *User) error {
 		u.employeeID = &employeeID
 		return nil
