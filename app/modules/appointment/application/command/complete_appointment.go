@@ -64,14 +64,14 @@ func (h *CompleteApptHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
 
 func (h *CompleteApptHandler) getAppt(command CompleteApptCommand) (appointment.Appointment, error) {
 	if command.employeeID != nil {
-		appointment, err := h.apptRepository.GetByIDAndEmployeeID(command.ctx, command.id, *command.employeeID)
+		appointment, err := h.apptRepository.FindByIDAndEmployeeID(command.ctx, command.id, *command.employeeID)
 		if err != nil {
 			return appointment, err
 		}
 		return appointment, nil
 	}
 
-	appointment, err := h.apptRepository.GetByID(command.ctx, command.id)
+	appointment, err := h.apptRepository.FindByID(command.ctx, command.id)
 	if err != nil {
 		return appointment, err
 	}

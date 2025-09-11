@@ -6,7 +6,7 @@ import (
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/payment"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
-	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/repository"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 )
@@ -26,10 +26,9 @@ func NewMarkOverduePaymentsHandler(paymentRepo repository.PaymentRepository) cqr
 }
 
 func (h *MarkOverduePaymentsHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
-	command := cmd.(MarkOverduePaymentsCommand)
-
-	searchCriteria := map[string]any{
-		"status": enum.PaymentStatusPending,
+	command, ok := cmd.(MarkOverduePaymentsCommand)
+	if !ok {
+		return cqrs.FailureResult("invalid command type", nil)
 	}
 
 	pagination := page.PageInput{
@@ -39,12 +38,12 @@ func (h *MarkOverduePaymentsHandler) Handle(cmd cqrs.Command) cqrs.CommandResult
 
 	var updatedCount int
 	for {
-		paymentsPage, err := h.paymentRepo.Search(command.context, pagination, searchCriteria)
+		paymentsPage, err := h.paymentRepo.FindByStatus(command.context, enum.PaymentStatusOverdue, pagination)
 		if err != nil {
 			return cqrs.FailureResult("failed to search payments", err)
 		}
 
-		payments := paymentsPage.Data
+		payments := paymentsPage.Items
 		if h.IsEmptyList(payments) {
 			break
 		}

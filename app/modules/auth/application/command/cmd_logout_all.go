@@ -38,7 +38,7 @@ func (h *logoutAllHandler) Handle(cmd any) AuthCommandResult {
 		return FailureAuthResult(ErrAuthenticationFailed, errors.New("invalid command type"))
 	}
 
-	user, err := h.userRepository.GetByID(command.ctx, command.userID)
+	user, err := h.userRepository.FindByID(command.ctx, command.userID)
 	if err != nil {
 		return FailureAuthResult("an error ocurred finding user", err)
 	}

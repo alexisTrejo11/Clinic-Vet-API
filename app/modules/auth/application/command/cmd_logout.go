@@ -31,7 +31,7 @@ func NewLogoutHandler(
 func (h *logoutHandler) Handle(cmd any) AuthCommandResult {
 	command := cmd.(LogoutCommand)
 
-	user, err := h.userRepository.GetByID(command.CTX, command.UserID)
+	user, err := h.userRepository.FindByID(command.CTX, command.UserID)
 	if err != nil {
 		return FailureAuthResult("an error ocurred finding user", err)
 	}

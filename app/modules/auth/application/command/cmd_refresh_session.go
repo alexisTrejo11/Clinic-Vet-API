@@ -42,7 +42,7 @@ func (h *RefreshSessionHandler) Handle(cmd any) AuthCommandResult {
 	}
 
 	if err := h.validateExisitngUser(command); err != nil {
-		return FailureAuthResult("Error ocurred validatin user", err)
+		return FailureAuthResult("Error occurred in user validation", err)
 	}
 
 	session, err := h.sessionRepo.GetByUserAndID(command.CTX, command.UserID, command.RefreshToken)

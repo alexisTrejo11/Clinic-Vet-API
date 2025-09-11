@@ -52,7 +52,7 @@ func (h *UpdateApptHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
 		return cqrs.FailureResult(ErrInvalidCommandType, nil)
 	}
 
-	appointment, err := h.apptRepository.GetByID(command.ctx, command.appointmentID)
+	appointment, err := h.apptRepository.FindByID(command.ctx, command.appointmentID)
 	if err != nil {
 		return cqrs.FailureResult(ErrApptNotFound, err)
 	}

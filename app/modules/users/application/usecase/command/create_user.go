@@ -6,26 +6,23 @@ import (
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
-	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/repository"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/service"
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
 	apperror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/application"
 )
 
-// CreateUserCommand represents the command to create a new user.
 type CreateUserCommand struct {
 	email       valueobject.Email
-	phoneNumber valueobject.PhoneNumber
+	phoneNumber *valueobject.PhoneNumber
 	password    string
 	role        enum.UserRole
 	status      enum.UserStatus
-	profile     CreateProfileCommand
 	ctx         context.Context
 }
 
-// NewCreateUserCommand creates a new instance of CreateUserCommand mapping primitive data types.
-func NewCreateUserCommand(ctx context.Context, email, phoneNumber, password, role string, status string) (CreateUserCommand, error) {
+func NewCreateUserCommand(ctx context.Context, email string, phoneNumber *string, password, role string, status string) (CreateUserCommand, error) {
 	var errorsMessages []string
 
 	emailVO, err := valueobject.NewEmail(email)
@@ -33,9 +30,14 @@ func NewCreateUserCommand(ctx context.Context, email, phoneNumber, password, rol
 		errorsMessages = append(errorsMessages, err.Error())
 	}
 
-	phoneNumberVO, err := valueobject.NewPhoneNumber(phoneNumber)
-	if err != nil {
-		errorsMessages = append(errorsMessages, err.Error())
+	var phoneNumberVO *valueobject.PhoneNumber
+	if phoneNumber != nil {
+		phoneNumber, err := valueobject.NewPhoneNumber(*phoneNumber)
+		if err != nil {
+			errorsMessages = append(errorsMessages, err.Error())
+		}
+
+		phoneNumberVO = &phoneNumber
 	}
 
 	userRole, err := enum.ParseUserRole(role)
@@ -48,12 +50,12 @@ func NewCreateUserCommand(ctx context.Context, email, phoneNumber, password, rol
 		errorsMessages = append(errorsMessages, err.Error())
 	}
 
-	if len(errorsMessages) > 0 {
-		return CreateUserCommand{}, apperror.MappingError(errorsMessages, "constructor", "CreateUserCommand", "user")
-	}
-
 	if password == "" {
 		errorsMessages = append(errorsMessages, "password cannot be empty")
+	}
+
+	if len(errorsMessages) > 0 {
+		return CreateUserCommand{}, apperror.MappingError(errorsMessages, "constructor", "Create User Command", "user")
 	}
 
 	return CreateUserCommand{
@@ -66,7 +68,6 @@ func NewCreateUserCommand(ctx context.Context, email, phoneNumber, password, rol
 	}, nil
 }
 
-// CreateUserHandler handles the creation of a new user.
 type CreateUserHandler struct {
 	repo            repository.UserRepository
 	securityService service.UserSecurityService
@@ -90,16 +91,12 @@ func (uc *CreateUserHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
 		return cqrs.FailureResult(ErrFailedMappingUser, err)
 	}
 
-	if err := uc.securityService.ValidateUserCreation(
-		command.ctx,
-		command.email,
-		command.phoneNumber,
-		command.password,
-	); err != nil {
+	err = uc.securityService.ValidateUserCredentials(command.ctx, command.email, command.phoneNumber, command.password)
+	if err != nil {
 		return cqrs.FailureResult(ErrFailedValidatingUser, err)
 	}
 
-	if err := uc.securityService.ProccesUserCreation(command.ctx, *user); err != nil {
+	if err := uc.securityService.ProcessUserCreation(command.ctx, user); err != nil {
 		return cqrs.FailureResult(ErrFailedProcessingUser, err)
 	}
 	return cqrs.SuccessResult(user.ID().String(), ErrUserCreationSuccess)

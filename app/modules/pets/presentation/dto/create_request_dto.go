@@ -6,45 +6,136 @@ import (
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/pets/application/dto"
 )
 
-// @Description Represents the request body for creating a  new pet.
-type CreatePetRequest struct {
-	// The name of the pet. (required, min 2, max 100)
-	Name string `json:"name" validate:"required,min=2,max=100"`
-	// The unique ID of the pet's owner. (required, greater than 0)
+// AdminCreatePetRequest represents the request payload for creating a new pet by an admin user
+// swagger:model AdminCreatePetRequest
+type AdminCreatePetRequest struct {
+	PetRequestData
+	// ID of the customer who owns the pet
+	// Required: true
+	// Minimum: 1
+	// Example: 123
 	CustomerID uint `json:"owner_id" validate:"required,gt=0"`
-	// The species of the pet. (required, min 2, max 50)
-	Species string `json:"species" validate:"required,min=2,max=50"`
-	// The URL of the pet's photo. (optional, must be a valid URL)
-	Photo *string `json:"photo,omitempty" validate:"omitempty,url"`
-	// The breed of the pet. (optional, min 2, max 50)
-	Breed *string `json:"breed,omitempty" validate:"omitempty,min=2,max=50"`
-	// The age of the pet in years. (optional)
-	Age *int `json:"age,omitempty" validate:"omitempty"`
-	// The gender of the pet. (optional, must be one of "Male", "Female", or "Unknown")
-	Gender *string `json:"gender,omitempty" validate:"omitempty,oneof=Male Female Unknown"`
-	// The weight of the pet in kilograms. (optional, greater than 0, less than or equal to 1000)
-	Weight *float64 `json:"weight,omitempty" validate:"omitempty,gt=0,lte=1000"`
-	// The color of the pet's fur/coat. (optional, min 2, max 50)
-	Color *string `json:"color,omitempty" validate:"omitempty,min=2,max=50"`
-	// The pet's microchip number. (optional, must be 15 digits)
-	Microchip *string `json:"microchip,omitempty" validate:"omitempty,len=15,numeric"`
-	// Indicates if the pet is neutered. (optional)
-	IsNeutered *bool `json:"is_neutered,omitempty"`
-	// A list of the pet's known allergies. (optional, max 500)
-	Allergies *string `json:"allergies,omitempty" validate:"omitempty,max=500"`
-	// The pet's current medications. (optional, max 500)
-	CurrentMedications *string `json:"current_medications,omitempty" validate:"omitempty,max=500"`
-	// Any special needs the pet may have. (optional, max 500)
-	SpecialNeeds *string `json:"special_needs,omitempty" validate:"omitempty,max=500"`
-	// Indicates if the pet's record is active. (required)
+
+	// Indicates if the pet record is active in the system
+	// Required: true
+	// Example: true
 	IsActive bool `json:"is_active"`
 }
 
-func (r *CreatePetRequest) ToCreateData() dto.CreatePetData {
+// CustomerCreatePetRequest represents the request payload for creating a new pet by a customer user
+// swagger:model CustomerCreatePetRequest
+type CustomerCreatePetRequest struct {
+	PetRequestData
+}
+
+type PetRequestData struct {
+	// Name of the pet
+	// Required: true
+	// Minimum length: 2
+	// Maximum length: 100
+	// Example: Buddy
+	Name string `json:"name" validate:"required,min=2,max=100"`
+
+	// Species of the pet (e.g., Dog, Cat, Bird)
+	// Required: true
+	// Minimum length: 2
+	// Maximum length: 50
+	// Example: Dog
+	Species string `json:"species" validate:"required,min=2,max=50"`
+
+	// URL to the pet's photo
+	// Required: false
+	// Format: uri
+	// Example: https://example.com/pet-photo.jpg
+	Photo *string `json:"photo,omitempty" validate:"omitempty,url"`
+
+	// Breed of the pet
+	// Required: false
+	// Minimum length: 2
+	// Maximum length: 50
+	// Example: Golden Retriever
+	Breed *string `json:"breed,omitempty" validate:"omitempty,min=2,max=50"`
+
+	// Age of the pet in years
+	// Required: false
+	// Minimum: 0
+	// Maximum: 30
+	// Example: 5
+	Age *int `json:"age,omitempty" validate:"omitempty,min=0,max=30"`
+
+	// Gender of the pet
+	// Required: false
+	// Enum: Male, Female, Unknown
+	// Example: Male
+	Gender *string `json:"gender,omitempty" validate:"omitempty,oneof=Male Female Unknown"`
+
+	// Weight of the pet in kilograms
+	// Required: false
+	// Minimum: 0.1
+	// Maximum: 1000.0
+	// Example: 25.5
+	Weight *float64 `json:"weight,omitempty" validate:"omitempty,gt=0,lte=1000"`
+
+	// Color of the pet's fur or coat
+	// Required: false
+	// Minimum length: 2
+	// Maximum length: 50
+	// Example: Golden
+	Color *string `json:"color,omitempty" validate:"omitempty,min=2,max=50"`
+
+	// Microchip identification number (15 digits)
+	// Required: false
+	// Pattern: ^[0-9]{15}$
+	// Example: 123456789012345
+	Microchip *string `json:"microchip,omitempty" validate:"omitempty,len=15,numeric"`
+
+	// Indicates if the pet is neutered or spayed
+	// Required: false
+	// Example: true
+	IsNeutered *bool `json:"is_neutered,omitempty"`
+
+	// Known allergies of the pet
+	// Required: false
+	// Maximum length: 500
+	// Example: Pollen, Chicken, Wheat
+	Allergies *string `json:"allergies,omitempty" validate:"omitempty,max=500"`
+
+	// Current medications the pet is taking
+	// Required: false
+	// Maximum length: 500
+	// Example: Heartworm prevention, Flea treatment
+	CurrentMedications *string `json:"current_medications,omitempty" validate:"omitempty,max=500"`
+
+	// Special needs or care instructions for the pet
+	// Required: false
+	// Maximum length: 500
+	// Example: Requires daily medication, Blind in left eye
+	SpecialNeeds *string `json:"special_needs,omitempty" validate:"omitempty,max=500"`
+}
+
+func (r *AdminCreatePetRequest) ToCreateData() dto.CreatePetData {
 	return dto.CreatePetData{
 		Name:               r.Name,
 		Photo:              r.Photo,
 		CustomerID:         valueobject.NewCustomerID(r.CustomerID),
+		Species:            r.Species,
+		Breed:              r.Breed,
+		Age:                r.Age,
+		Gender:             r.Gender,
+		Weight:             r.Weight,
+		Color:              r.Color,
+		Microchip:          r.Microchip,
+		IsNeutered:         r.IsNeutered,
+		Allergies:          r.Allergies,
+		CurrentMedications: r.CurrentMedications,
+	}
+}
+
+func (r *CustomerCreatePetRequest) ToCreateData(customerID uint) dto.CreatePetData {
+	return dto.CreatePetData{
+		Name:               r.Name,
+		Photo:              r.Photo,
+		CustomerID:         valueobject.NewCustomerID(customerID),
 		Species:            r.Species,
 		Breed:              r.Breed,
 		Age:                r.Age,

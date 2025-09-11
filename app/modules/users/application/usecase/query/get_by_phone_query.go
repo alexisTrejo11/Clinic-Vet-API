@@ -5,36 +5,49 @@ import (
 	"errors"
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
-	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/repository"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
 )
 
 type GetUserByPhoneQuery struct {
-	Phone          valueobject.PhoneNumber `json:"phone"`
-	Ctx            context.Context         `json:"-"`
-	IncludeProfile bool                    `json:"include_profile"`
+	phone          valueobject.PhoneNumber
+	ctx            context.Context
+	includeProfile bool
+}
+
+func NewGetUserByPhoneQuery(ctx context.Context, phone string, includeProfile bool) (*GetUserByPhoneQuery, error) {
+	phoneVO, err := valueobject.NewPhoneNumber(phone)
+	if err != nil {
+		return nil, err
+	}
+
+	return &GetUserByPhoneQuery{
+		phone:          phoneVO,
+		ctx:            ctx,
+		includeProfile: includeProfile,
+	}, nil
 }
 
 type GetUserByPhoneHandler struct {
 	userRepository repository.UserRepository
 }
 
-func NewGetUserByPhoneHandler(userRepository repository.UserRepository) cqrs.QueryHandler[UserResponse] {
+func NewGetUserByPhoneHandler(userRepository repository.UserRepository) cqrs.QueryHandler[UserResult] {
 	return &GetUserByPhoneHandler{
 		userRepository: userRepository,
 	}
 }
 
-func (h *GetUserByPhoneHandler) Handle(q cqrs.Query) (UserResponse, error) {
+func (h *GetUserByPhoneHandler) Handle(q cqrs.Query) (UserResult, error) {
 	query, valid := q.(GetUserByPhoneQuery)
 	if !valid {
-		return UserResponse{}, errors.New("invalid query type")
+		return UserResult{}, errors.New("invalid query type")
 	}
 
-	user, err := h.userRepository.GetByPhone(query.Ctx, query.Phone.Value())
+	user, err := h.userRepository.FindByPhone(query.ctx, query.phone.Value())
 	if err != nil {
-		return UserResponse{}, err
+		return UserResult{}, err
 	}
 
-	return toResponse(user), nil
+	return userToResult(user), nil
 }

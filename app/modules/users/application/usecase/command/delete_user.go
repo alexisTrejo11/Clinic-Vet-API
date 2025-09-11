@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
-	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/repository"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
 )
 
@@ -18,17 +18,14 @@ type DeleteUserCommand struct {
 	ctx        context.Context
 }
 
-func NewDeleteUserCommand(ctx context.Context, userID int, softDelete bool) (DeleteUserCommand, error) {
-	uid, err := valueobject.NewUserID(userID)
-	if err != nil {
-		return DeleteUserCommand{}, err
-	}
+func NewDeleteUserCommand(ctx context.Context, userID uint, softDelete bool) DeleteUserCommand {
+	uid := valueobject.NewUserID(userID)
 	cmd := &DeleteUserCommand{
 		userID:     uid,
 		softDelete: softDelete,
 		ctx:        ctx,
 	}
-	return *cmd, nil
+	return *cmd
 }
 
 func NewDeleteUserHandler(userRepo repository.UserRepository) cqrs.CommandHandler {
@@ -38,13 +35,23 @@ func NewDeleteUserHandler(userRepo repository.UserRepository) cqrs.CommandHandle
 }
 
 func (d *DeleteUserHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
-	command := cmd.(DeleteUserCommand)
+	command, ok := cmd.(DeleteUserCommand)
+	if !ok {
+		return cqrs.FailureResult("invalid command type", nil)
+	}
 
-	if _, err := d.userRepository.GetByID(command.ctx, command.userID); err != nil {
+	if _, err := d.userRepository.FindByID(command.ctx, command.userID); err != nil {
 		return cqrs.FailureResult("failed to find user", err)
 	}
 
-	err := d.userRepository.Delete(command.ctx, command.userID, command.softDelete)
+	if command.softDelete {
+		err := d.userRepository.SoftDelete(command.ctx, command.userID)
+		if err != nil {
+			return cqrs.FailureResult("failed to delete user", err)
+		}
+	}
+
+	err := d.userRepository.HardDelete(command.ctx, command.userID)
 	if err != nil {
 		return cqrs.FailureResult("failed to delete user", err)
 	}

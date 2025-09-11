@@ -25,18 +25,18 @@ type SearchApptsHandler struct {
 	apptRepo repository.AppointmentRepository
 }
 
-func NewSearchApptsHandler(apptRepo repository.AppointmentRepository) cqrs.QueryHandler[(page.Page[[]ApptResponse])] {
+func NewSearchApptsHandler(apptRepo repository.AppointmentRepository) cqrs.QueryHandler[(page.Page[ApptResponse])] {
 	return &SearchApptsHandler{apptRepo: apptRepo}
 }
 
-func (h *SearchApptsHandler) Handle(q cqrs.Query) (page.Page[[]ApptResponse], error) {
+func (h *SearchApptsHandler) Handle(q cqrs.Query) (page.Page[ApptResponse], error) {
 	query := q.(SearchApptsQuery)
 
-	appointmentPage, err := h.apptRepo.Search(query.ctx, query.spec)
+	appointmentPage, err := h.apptRepo.FindBySpecification(query.ctx, query.spec)
 	if err != nil {
-		return page.Page[[]ApptResponse]{}, err
+		return page.Page[ApptResponse]{}, err
 	}
 
-	responses := mapApptsToResponse(appointmentPage.Data)
+	responses := mapApptsToResponse(appointmentPage.Items)
 	return page.NewPage(responses, appointmentPage.Metadata), nil
 }

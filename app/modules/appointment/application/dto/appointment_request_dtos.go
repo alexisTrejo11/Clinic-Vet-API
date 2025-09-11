@@ -71,47 +71,47 @@ type AppointmentSearch struct {
 	Page      page.PageInput          `json:"page"`
 }
 
-type ListAppointmentsByDateRangeRequest struct {
+type FindAppointmentsByDateRangeRequest struct {
 	StartDate time.Time      `json:"start_date" validate:"required"`
 	EndDate   time.Time      `json:"end_date" validate:"required"`
 	Page      page.PageInput `json:"page"`
 }
 
-func (r *ListAppointmentsByDateRangeRequest) toQuery() (query.ListAppointmentsByDateRangeQuery, error) {
-	qry, err := query.NewListAppointmentsByDateRangeQuery(r.StartDate, r.EndDate, r.Page)
+func (r *FindAppointmentsByDateRangeRequest) toQuery() (query.FindApptsByDateRangeQuery, error) {
+	qry, err := query.NewFindApptsByDateRangeQuery(r.StartDate, r.EndDate, r.Page)
 	if err != nil {
-		return query.ListAppointmentsByDateRangeQuery{}, err
+		return query.FindApptsByDateRangeQuery{}, err
 	}
 
 	return qry, nil
 }
 
-type GetAllAppointmentsRequest struct {
+type FindAllAppointmentsRequest struct {
 	Page page.PageInput `json:"page"`
 }
 
-type GetAppointmentsByVetRequest struct {
+type FindAppointmentsByVetRequest struct {
 	VetID int            `json:"vet_id" validate:"required,min=1"`
 	Page  page.PageInput `json:"page"`
 }
 
-type GetAppointmentsByPetRequest struct {
+type FindAppointmentsByPetRequest struct {
 	PetID int            `json:"vet_id" validate:"required,min=1"`
 	Page  page.PageInput `json:"page"`
 }
 
-type GetAppointmentByOwner struct {
+type FindAppointmentByOwner struct {
 	OwnerID int            `json:"owner_id" validate:"required,min=1"`
 	Page    page.PageInput `json:"page"`
 }
 
-type GetAppointmentStatsRequest struct {
+type FindAppointmentStatsRequest struct {
 	VetID     *int       `json:"vet_id,omitempty"`
 	OwnerID   *int       `json:"owner_id,omitempty"`
 	StartDate *time.Time `json:"start_date,omitempty"`
 	EndDate   *time.Time `json:"end_date,omitempty"`
 }
 
-type GetAppointmentByIDRequest struct {
+type FindAppointmentByIDRequest struct {
 	ID int `json:"id" validate:"required,min=1"`
 }

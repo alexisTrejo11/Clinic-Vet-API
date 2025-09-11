@@ -70,15 +70,15 @@ func WithCondition(condition enum.PetCondition) MedicalHistoryOptions {
 func NewMedicalHistory(
 	medhistoryID valueobject.MedHistoryID,
 	petID valueobject.PetID,
-	ownerID valueobject.OwnerID,
-	vetID valueobject.VetID,
+	customerID valueobject.CustomerID,
+	employeeID valueobject.EmployeeID,
 	opts ...MedicalHistoryOptions,
 ) (*MedicalHistory, error) {
 	mh := &MedicalHistory{
-		Entity:  base.NewEntity(medhistoryID, time.Now(), time.Now(), 1),
-		petID:   petID,
-		ownerID: ownerID,
-		vetID:   vetID,
+		Entity:     base.NewEntity(medhistoryID, time.Now(), time.Now(), 1),
+		petID:      petID,
+		customerID: customerID,
+		employeeID: employeeID,
 	}
 
 	for _, opt := range opts {
@@ -92,15 +92,15 @@ func NewMedicalHistory(
 
 func CreateMedicalHistory(
 	petID valueobject.PetID,
-	ownerID valueobject.OwnerID,
-	vetID valueobject.VetID,
+	customerID valueobject.CustomerID,
+	employeeID valueobject.EmployeeID,
 	opts ...MedicalHistoryOptions,
 ) (*MedicalHistory, error) {
 	mh := &MedicalHistory{
-		Entity:  base.CreateEntity(valueobject.MedHistoryID{}),
-		petID:   petID,
-		ownerID: ownerID,
-		vetID:   vetID,
+		Entity:     base.CreateEntity(valueobject.MedHistoryID{}),
+		petID:      petID,
+		customerID: customerID,
+		employeeID: employeeID,
 	}
 
 	for _, opt := range opts {

@@ -6,7 +6,7 @@ import (
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/user"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
-	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/repository"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
 )
 
@@ -22,12 +22,8 @@ type ChangePhoneCommand struct {
 	ctx    context.Context
 }
 
-func NewChangeEmailCommand(ctx context.Context, userIDInt int, emailStr string) (ChangeEmailCommand, error) {
-	userID, err := valueobject.NewUserID(userIDInt)
-	if err != nil {
-		return ChangeEmailCommand{}, errors.New(ErrInvalidUserID)
-	}
-
+func NewChangeEmailCommand(ctx context.Context, userIDInt uint, emailStr string) (ChangeEmailCommand, error) {
+	userID := valueobject.NewUserID(userIDInt)
 	email, err := valueobject.NewEmail(emailStr)
 	if err != nil {
 		return ChangeEmailCommand{}, errors.New(ErrInvalidEmail)
@@ -42,12 +38,8 @@ func NewChangeEmailCommand(ctx context.Context, userIDInt int, emailStr string) 
 	return *cmd, nil
 }
 
-func NewChangePhoneCommand(ctx context.Context, userIDInt int, phoneStr string) (ChangePhoneCommand, error) {
-	userID, err := valueobject.NewUserID(userIDInt)
-	if err != nil {
-		return ChangePhoneCommand{}, errors.New(ErrInvalidUserID)
-	}
-
+func NewChangePhoneCommand(ctx context.Context, userIDInt uint, phoneStr string) (ChangePhoneCommand, error) {
+	userID := valueobject.NewUserID(userIDInt)
 	phone, err := valueobject.NewPhoneNumber(phoneStr)
 	if err != nil {
 		return ChangePhoneCommand{}, errors.New(ErrInvalidPhone)
@@ -88,7 +80,7 @@ func (h ChangePhoneHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
 		return cqrs.FailureResult(ErrFailedChangePhone, errors.New("invalid command type"))
 	}
 
-	user, err := h.userRepository.GetByID(command.ctx, command.userID)
+	user, err := h.userRepository.FindByID(command.ctx, command.userID)
 	if err != nil {
 		return cqrs.FailureResult(ErrFailedFindUser, err)
 	}
@@ -112,7 +104,7 @@ func (h ChangeEmailHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
 		return cqrs.FailureResult(ErrFailedChangeEmail, errors.New("invalid command type"))
 	}
 
-	user, err := h.userRepository.GetByID(command.ctx, command.userID)
+	user, err := h.userRepository.FindByID(command.ctx, command.userID)
 	if err != nil {
 		return cqrs.FailureResult(ErrFailedFindUser, err)
 	}

@@ -6,14 +6,29 @@ import (
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
-	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/repository"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
 )
 
 type ChangeUserStatusCommand struct {
-	UserID valueobject.UserID `json:"user_id"`
-	Status enum.UserStatus    `json:"status"`
-	CTX    context.Context    `json:"ctx"`
+	userID valueobject.UserID
+	status enum.UserStatus
+	ctx    context.Context
+}
+
+func NewChangeUserStatusCommand(ctx context.Context, userID uint, status string) (ChangeUserStatusCommand, error) {
+	uid := valueobject.NewUserID(userID)
+	userStatus, err := enum.ParseUserStatus(status)
+	if err != nil {
+		return ChangeUserStatusCommand{}, err
+	}
+
+	cmd := &ChangeUserStatusCommand{
+		userID: uid,
+		status: userStatus,
+		ctx:    ctx,
+	}
+	return *cmd, nil
 }
 
 type ChangeUserStatusHandler struct {
@@ -32,22 +47,22 @@ func (h *ChangeUserStatusHandler) Handle(cmd cqrs.Command) error {
 		return errors.New("invalid command type")
 	}
 
-	if command.UserID.IsZero() {
+	if command.userID.IsZero() {
 		return errors.New("user ID is required")
 	}
 
-	if command.Status == "" {
+	if command.status == "" {
 		return errors.New("status is required")
 	}
 
-	user, err := h.userRepository.GetByID(command.CTX, command.UserID)
+	user, err := h.userRepository.FindByID(command.ctx, command.userID)
 	if err != nil {
 		return err
 	}
 
 	// TODO: Implement
 
-	err = h.userRepository.Save(command.CTX, &user)
+	err = h.userRepository.Save(command.ctx, &user)
 	if err != nil {
 		return err
 	}

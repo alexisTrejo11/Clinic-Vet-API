@@ -4,40 +4,45 @@ import (
 	"context"
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
-	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/repository"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 )
 
-type ListPaymentsByStatusQuery struct {
+type FindPaymentsByStatusQuery struct {
 	status     enum.PaymentStatus
 	pagination page.PageInput
 	ctx        context.Context
 }
 
-func NewListPaymentsByStatusQuery(status enum.PaymentStatus, pagination page.PageInput) ListPaymentsByStatusQuery {
-	return ListPaymentsByStatusQuery{
-		status:     status,
-		pagination: pagination,
+func NewFindPaymentsByStatusQuery(status string, pagination page.PageInput) (*FindPaymentsByStatusQuery, error) {
+	statusEnum, err := enum.ParsePaymentStatus(status)
+	if err != nil {
+		return nil, err
 	}
+
+	return &FindPaymentsByStatusQuery{
+		status:     statusEnum,
+		pagination: pagination,
+	}, nil
 }
 
-type ListPaymentsByStatusHandler struct {
+type FindPaymentsByStatusHandler struct {
 	repo repository.PaymentRepository
 }
 
-func NewListPaymentsByStatusHandler(repo repository.PaymentRepository) cqrs.QueryHandler[page.Page[[]PaymentResponse]] {
-	return &ListPaymentsByStatusHandler{repo: repo}
+func NewFindPaymentsByStatusHandler(repo repository.PaymentRepository) cqrs.QueryHandler[page.Page[PaymentResponse]] {
+	return &FindPaymentsByStatusHandler{repo: repo}
 }
 
-func (h *ListPaymentsByStatusHandler) Handle(q cqrs.Query) (page.Page[[]PaymentResponse], error) {
-	query := q.(ListPaymentsByStatusQuery)
+func (h *FindPaymentsByStatusHandler) Handle(q cqrs.Query) (page.Page[PaymentResponse], error) {
+	query := q.(FindPaymentsByStatusQuery)
 
-	paymentPage, err := h.repo.ListByStatus(query.ctx, query.status, query.pagination)
+	paymentPage, err := h.repo.FindByStatus(query.ctx, query.status, query.pagination)
 	if err != nil {
-		return page.Page[[]PaymentResponse]{}, err
+		return page.Page[PaymentResponse]{}, err
 	}
 
-	paymentsResponse := mapPaymentsToResponses(paymentPage.Data)
+	paymentsResponse := mapPaymentsToResponses(paymentPage.Items)
 	return page.NewPage(paymentsResponse, paymentPage.Metadata), nil
 }

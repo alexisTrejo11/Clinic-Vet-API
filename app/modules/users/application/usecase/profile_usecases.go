@@ -3,32 +3,22 @@ package usecase
 
 import (
 	"context"
-	"time"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/user/address"
 	p "github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/user/profile"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
-	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/repository"
 )
 
 type CreateProfileData struct {
-	UserID      valueobject.UserID     `json:"user_id"`
-	Name        valueobject.PersonName `json:"name"`
-	Gender      enum.PersonGender      `json:"gender"`
-	ProfilePic  string                 `json:"profile_pic"`
-	Bio         string                 `json:"bio"`
-	DateOfBirth time.Time              `json:"date_of_birth"`
-	Address     *address.Address       `json:"address"`
+	UserID     valueobject.UserID `json:"user_id"`
+	ProfilePic string             `json:"profile_pic"`
+	Bio        string             `json:"bio"`
 }
 
 type UpdateProfileData struct {
-	UserID      valueobject.UserID      `json:"user_id"`
-	Name        *valueobject.PersonName `json:"name"`
-	Gender      *string                 `json:"gender"`
-	ProfilePic  *string                 `json:"profile_pic"`
-	Bio         *string                 `json:"bio"`
-	DateOfBirth *time.Time              `json:"date_of_birth"`
+	UserID     valueobject.UserID `json:"user_id"`
+	ProfilePic *string            `json:"profile_pic"`
+	Bio        *string            `json:"bio"`
 }
 
 type ProfileUseCases interface {
@@ -76,9 +66,6 @@ func (uc *profileUseCasesImpl) UpdateProfile(ctx context.Context, request Update
 func applyProfileUpdates(profile *p.Profile, request UpdateProfileData) {
 	if request.Bio != nil {
 		profile.Bio = *request.Bio
-	}
-	if request.DateOfBirth != nil {
-		profile.DateOfBirth = request.DateOfBirth
 	}
 	if request.ProfilePic != nil {
 		profile.PhotoURL = *request.ProfilePic

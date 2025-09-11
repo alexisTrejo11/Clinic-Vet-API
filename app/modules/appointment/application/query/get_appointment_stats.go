@@ -12,7 +12,7 @@ import (
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 )
 
-type GetApptStatsQuery struct {
+type FindApptStatsQuery struct {
 	employeeID *uint
 	customerID *uint
 	startDate  *time.Time
@@ -20,8 +20,8 @@ type GetApptStatsQuery struct {
 	ctx        context.Context
 }
 
-func NewGetApptStatsQuery(employeeID, customerID *uint, startDate, endDate *time.Time) GetApptStatsQuery {
-	return GetApptStatsQuery{
+func NewFindApptStatsQuery(employeeID, customerID *uint, startDate, endDate *time.Time) FindApptStatsQuery {
+	return FindApptStatsQuery{
 		employeeID: employeeID,
 		customerID: customerID,
 		startDate:  startDate,
@@ -29,18 +29,18 @@ func NewGetApptStatsQuery(employeeID, customerID *uint, startDate, endDate *time
 	}
 }
 
-type GetApptStatsHandler struct {
+type FindApptStatsHandler struct {
 	apptRepo repository.AppointmentRepository
 }
 
-func NewGetApptStatsHandler(apptRepo repository.AppointmentRepository) cqrs.QueryHandler[ApptStatsResponse] {
-	return &GetApptStatsHandler{
+func NewFindApptStatsHandler(apptRepo repository.AppointmentRepository) cqrs.QueryHandler[ApptStatsResponse] {
+	return &FindApptStatsHandler{
 		apptRepo: apptRepo,
 	}
 }
 
-func (h *GetApptStatsHandler) Handle(q cqrs.Query) (ApptStatsResponse, error) {
-	query := q.(GetApptStatsQuery)
+func (h *FindApptStatsHandler) Handle(q cqrs.Query) (ApptStatsResponse, error) {
+	query := q.(FindApptStatsQuery)
 
 	var appointments []appointment.Appointment
 	var err error
@@ -50,12 +50,12 @@ func (h *GetApptStatsHandler) Handle(q cqrs.Query) (ApptStatsResponse, error) {
 	}
 
 	if query.startDate != nil && query.endDate != nil {
-		appointmentsPage, dberr := h.apptRepo.ListByDateRange(query.ctx, *query.startDate, *query.endDate, maxPage)
-		appointments = appointmentsPage.Data
+		appointmentsPage, dberr := h.apptRepo.FindByDateRange(query.ctx, *query.startDate, *query.endDate, maxPage)
+		appointments = appointmentsPage.Items
 		err = dberr
 	} else {
-		appointmentsPage, dberr := h.apptRepo.ListAll(query.ctx, maxPage)
-		appointments = appointmentsPage.Data
+		appointmentsPage, dberr := h.apptRepo.FindAll(query.ctx, maxPage)
+		appointments = appointmentsPage.Items
 		err = dberr
 	}
 
@@ -89,7 +89,7 @@ func (h *GetApptStatsHandler) Handle(q cqrs.Query) (ApptStatsResponse, error) {
 	return stats, nil
 }
 
-func (h *GetApptStatsHandler) calculateStats(appointments []appointment.Appointment, query GetApptStatsQuery) ApptStatsResponse {
+func (h *FindApptStatsHandler) calculateStats(appointments []appointment.Appointment, query FindApptStatsQuery) ApptStatsResponse {
 	totalAppointments := len(appointments)
 	pendingCount := 0
 	confirmedCount := 0

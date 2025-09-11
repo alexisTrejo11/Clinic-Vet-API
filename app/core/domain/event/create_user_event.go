@@ -9,10 +9,10 @@ import (
 )
 
 type CreateUserEmployeeEvent struct {
-	UserID     valueobject.UserID `json:"user_id"`
-	Email      valueobject.Email  `json:"email"`
-	Role       enum.UserRole      `json:"role"`
-	EmployeeID valueobject.VetID  `json:"employee_id"`
+	UserID     valueobject.UserID     `json:"user_id"`
+	Email      valueobject.Email      `json:"email"`
+	Role       enum.UserRole          `json:"role"`
+	EmployeeID valueobject.EmployeeID `json:"employee_id"`
 }
 
 type CreateUserCustomerEvent struct {

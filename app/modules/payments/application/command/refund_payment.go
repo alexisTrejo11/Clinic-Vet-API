@@ -4,8 +4,9 @@ import (
 	"context"
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
-	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/repository"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
+	apperror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/application"
 )
 
 type RefundPaymentCommand struct {
@@ -14,19 +15,18 @@ type RefundPaymentCommand struct {
 	ctx       context.Context
 }
 
-func NewRefundPaymentCommand(paymentID int, reason string) (RefundPaymentCommand, error) {
-	paymentIDVO, err := valueobject.NewPaymentID(paymentID)
-	if err != nil {
-		return RefundPaymentCommand{}, err
+func NewRefundPaymentCommand(paymentID uint, reason string) (*RefundPaymentCommand, error) {
+	if paymentID == 0 {
+		return nil, apperror.FieldValidationError("id", "0", "Payment ID cannot be zero")
 	}
 
-	cmd := &RefundPaymentCommand{
+	paymentIDVO := valueobject.NewPaymentID(paymentID)
+
+	return &RefundPaymentCommand{
 		paymentID: paymentIDVO,
 		reason:    reason,
 		ctx:       context.Background(),
-	}
-
-	return *cmd, nil
+	}, nil
 }
 
 type RefundPaymentHandler struct {
@@ -42,7 +42,7 @@ func NewRefundPaymentHandler(paymentRepo repository.PaymentRepository) cqrs.Comm
 func (h *RefundPaymentHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
 	command := cmd.(RefundPaymentCommand)
 
-	payment, err := h.paymentRepo.GetByID(command.ctx, command.paymentID)
+	payment, err := h.paymentRepo.FindByID(command.ctx, command.paymentID)
 	if err != nil {
 		return cqrs.FailureResult("failed to retrieve payment", err)
 	}

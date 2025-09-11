@@ -1,4 +1,4 @@
-// Package page provides utilities for paginating data queries in Go applications.
+// Package page provides utilities for paginating items queries in Go applications.
 // It offers a type-safe, generic approach to handle common pagination requirements
 // including page metadata calculation, sorting direction, and empty page handling.
 //
@@ -65,39 +65,43 @@ type PageMetadata struct {
 	HasPreviousPage bool          `json:"has_previous_page"` // True if a page exists before current
 }
 
-// Page represents a paginated response containing data and metadata.
-// Uses generics to provide type safety for the data field.
+// Page represents a paginated response containing items and metadata.
+// Uses generics to provide type safety for the items field.
 type Page[T any] struct {
-	Data     T            `json:"data"`     // The paginated data slice
+	Items    []T          `json:"items"`    // The paginated items slice
 	Metadata PageMetadata `json:"metadata"` // Pagination metadata
 }
 
-// NewPage creates a new Page instance with the provided data and metadata.
-func NewPage[T any](data T, metadata PageMetadata) Page[T] {
+// NewPage creates a new Page instance with the provided items and metadata.
+func NewPage[T any](items []T, metadata PageMetadata) Page[T] {
 	page := &Page[T]{
-		Data:     data,
+		Items:    items,
 		Metadata: metadata,
 	}
 
 	return *page
 }
 
-// EmptyPage creates an empty Page instance with properly initialized empty data.
+// EmptyPage creates an empty Page instance with properly initialized empty items.
 // Handles slice types specially to ensure they're non-nil empty slices.
 func EmptyPage[T any]() Page[T] {
-	var zero T
-	if v := reflect.ValueOf(zero); v.Kind() == reflect.Slice {
-		zero = reflect.MakeSlice(v.Type(), 0, 0).Interface().(T)
-
-		return Page[T]{
-			Data:     zero,
-			Metadata: PageMetadata{},
-		}
+	var emptyItems []T
+	// Ensure emptyItems is a non-nil empty slice if T is a slice type
+	if reflect.TypeOf(emptyItems).Kind() == reflect.Slice {
+		emptyItems = make([]T, 0)
 	}
 
 	return Page[T]{
-		Data:     *new(T),
-		Metadata: PageMetadata{},
+		Items: emptyItems,
+		Metadata: PageMetadata{
+			TotalCount:      0,
+			TotalPages:      0,
+			CurrentPage:     1,
+			PageSize:        0,
+			SortDirection:   ASC,
+			HasNextPage:     false,
+			HasPreviousPage: false,
+		},
 	}
 }
 

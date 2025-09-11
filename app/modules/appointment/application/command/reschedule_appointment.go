@@ -48,7 +48,7 @@ func (h *RescheduleApptHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
 		return cqrs.FailureResult("invalid command type", errors.New("expected RescheduleApptCommand"))
 	}
 
-	appointment, err := h.appointmentRepo.GetByID(command.ctx, command.appointmentID)
+	appointment, err := h.appointmentRepo.FindByID(command.ctx, command.appointmentID)
 	if err != nil {
 		return cqrs.FailureResult("appointment not found", err)
 	}

@@ -3,7 +3,7 @@ package controller
 import (
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/pets/application/usecase"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/pets/infrastructure/presentation/dto"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/pets/presentation/dto"
 	httpError "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/infrastructure/http"
 	ginUtils "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/gin_utils"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/response"
@@ -13,12 +13,12 @@ import (
 
 type PetController struct {
 	validator   *validator.Validate
-	petUseCases usecase.PetUseCasesFacade
+	petUseCases usecase.PetUseCases
 }
 
 func NewPetController(
 	validator *validator.Validate,
-	petUseCases usecase.PetUseCasesFacade,
+	petUseCases usecase.PetUseCases,
 ) *PetController {
 	return &PetController{
 		validator:   validator,
@@ -47,7 +47,7 @@ func (c *PetController) SearchPets(ctx *gin.Context) {
 	}
 
 	searchSpecification := searchParams.ToSpecification()
-	pets, err := c.petUseCases.SearchPets(ctx, searchSpecification)
+	pets, err := c.petUseCases.SearchPets(ctx, *searchSpecification)
 	if err != nil {
 		response.ApplicationError(ctx, err)
 		return
@@ -95,7 +95,7 @@ func (c *PetController) GetPetByID(ctx *gin.Context) {
 // @Failure 500 {object} response.APIResponse "Internal server error"
 // @Router /pets [post]
 func (c *PetController) CreatePet(ctx *gin.Context) {
-	var requestData dto.CreatePetRequest
+	var requestData dto.AdminCreatePetRequest
 
 	if err := ctx.ShouldBindBodyWithJSON(&requestData); err != nil {
 		response.BadRequest(ctx, httpError.RequestBodyDataError(err))
@@ -149,7 +149,7 @@ func (c *PetController) UpdatePet(ctx *gin.Context) {
 	}
 
 	updatePetData := requestData.ToUpdatePet(id)
-	pet, err := c.petUseCases.UpdatePet(ctx, updatePetData)
+	pet, err := c.petUseCases.UpdatePet(ctx, *updatePetData)
 	if err != nil {
 		response.ApplicationError(ctx, err)
 		return

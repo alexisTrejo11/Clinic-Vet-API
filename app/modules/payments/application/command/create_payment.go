@@ -7,7 +7,7 @@ import (
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/payment"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
-	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/repository"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
 	apperror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/application"
 )
@@ -25,8 +25,8 @@ type CreatePaymentCommand struct {
 
 func NewCreatePaymentCommand(
 	ctx context.Context,
-	appointmentIDInt int,
-	userIDInt int,
+	appointmentIDInt uint,
+	userIDInt uint,
 	amountValue float64,
 	amountCurrency string,
 	paymentMethodStr string,
@@ -36,18 +36,9 @@ func NewCreatePaymentCommand(
 ) (CreatePaymentCommand, error) {
 	var errors []string
 
-	appointmentID, err := valueobject.NewAppointmentID(appointmentIDInt)
-	if err != nil {
-		errors = append(errors, err.Error())
-	}
-
-	userID, err := valueobject.NewUserID(userIDInt)
-	if err != nil {
-		errors = append(errors, err.Error())
-	}
-
+	appointmentID := valueobject.NewAppointmentID(appointmentIDInt)
+	userID := valueobject.NewUserID(userIDInt)
 	amount := valueobject.NewMoney(amountValue, amountCurrency)
-
 	paymentMethod, err := enum.ParsePaymentMethod(paymentMethodStr)
 	if err != nil {
 		errors = append(errors, err.Error())

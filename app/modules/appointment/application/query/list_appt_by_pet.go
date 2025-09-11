@@ -9,37 +9,37 @@ import (
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 )
 
-type ListApptsByPetQuery struct {
+type FindApptsByPetQuery struct {
 	petID     valueobject.PetID
 	ctx       context.Context
 	pageInput page.PageInput
 }
 
-func NewListApptsByPetQuery(ctx context.Context, vetID uint, pagination page.PageInput) *ListApptsByPetQuery {
-	return &ListApptsByPetQuery{
+func NewFindApptsByPetQuery(ctx context.Context, vetID uint, pagination page.PageInput) *FindApptsByPetQuery {
+	return &FindApptsByPetQuery{
 		petID:     valueobject.NewPetID(vetID),
 		ctx:       ctx,
 		pageInput: pagination,
 	}
 }
 
-type ListApptsByPetHandler struct {
+type FindApptsByPetHandler struct {
 	appointmentRepo repository.AppointmentRepository
 }
 
-func NewListApptsByPetHandler(appointmentRepo repository.AppointmentRepository) cqrs.QueryHandler[(page.Page[[]ApptResponse])] {
-	return &ListApptsByPetHandler{appointmentRepo: appointmentRepo}
+func NewFindApptsByPetHandler(appointmentRepo repository.AppointmentRepository) cqrs.QueryHandler[(page.Page[ApptResponse])] {
+	return &FindApptsByPetHandler{appointmentRepo: appointmentRepo}
 }
 
-func (h *ListApptsByPetHandler) Handle(q cqrs.Query) (page.Page[[]ApptResponse], error) {
-	query := q.(ListApptsByPetQuery)
-	appointmentsPage, err := h.appointmentRepo.ListByPetID(query.ctx, query.petID, query.pageInput)
+func (h *FindApptsByPetHandler) Handle(q cqrs.Query) (page.Page[ApptResponse], error) {
+	query := q.(FindApptsByPetQuery)
+	appointmentsPage, err := h.appointmentRepo.FindByPetID(query.ctx, query.petID, query.pageInput)
 	if err != nil {
-		return page.Page[[]ApptResponse]{}, err
+		return page.Page[ApptResponse]{}, err
 	}
 
 	return page.NewPage(
-		mapApptsToResponse(appointmentsPage.Data),
+		mapApptsToResponse(appointmentsPage.Items),
 		appointmentsPage.Metadata,
 	), nil
 }

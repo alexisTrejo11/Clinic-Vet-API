@@ -6,7 +6,7 @@ import (
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
-	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/repository"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
 	apperror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/application"
 )
@@ -22,7 +22,7 @@ type UpdatePaymentCommand struct {
 
 func NewUpdatePaymentCommand(
 	ctx context.Context,
-	idInt int,
+	idInt uint,
 	amountValue *float64,
 	amountCurrency *string,
 	paymentMethodStr *string,
@@ -31,10 +31,10 @@ func NewUpdatePaymentCommand(
 ) (UpdatePaymentCommand, error) {
 	var errors []string
 
-	paymentID, err := valueobject.NewPaymentID(idInt)
-	if err != nil {
-		errors = append(errors, err.Error())
+	if idInt == 0 {
+		errors = append(errors, "payment ID is required")
 	}
+	paymentID := valueobject.NewPaymentID(idInt)
 
 	var amount *valueobject.Money
 	if amountValue != nil {
@@ -92,7 +92,7 @@ func NewUpdatePaymentHandler(paymentRepo repository.PaymentRepository) cqrs.Comm
 
 func (h *UpdatePaymentHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
 	command := cmd.(UpdatePaymentCommand)
-	payment, err := h.paymentRepo.GetByID(command.ctx, command.paymentID)
+	payment, err := h.paymentRepo.FindByID(command.ctx, command.paymentID)
 	if err != nil {
 		return cqrs.FailureResult("error fetching payment", err)
 	}

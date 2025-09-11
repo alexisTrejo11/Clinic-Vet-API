@@ -2,34 +2,52 @@ package query
 
 import (
 	"context"
+	"errors"
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
-	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/repository"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
 )
 
-type GetByEmailQuery struct {
-	Email          valueobject.Email `json:"email"`
-	IncludeProfile bool              `json:"include_profile"`
-	Ctx            context.Context   `json:"-"`
+type GetUserByEmailQuery struct {
+	email          valueobject.Email
+	includeProfile bool
+	ctx            context.Context
 }
 
-type GetByEmailHandler struct {
+func NewGetUserByEmailQuery(ctx context.Context, email string, includeProfile bool) (*GetUserByEmailQuery, error) {
+	emailVO, err := valueobject.NewEmail(email)
+	if err != nil {
+		return nil, err
+	}
+
+	return &GetUserByEmailQuery{
+		email:          emailVO,
+		includeProfile: includeProfile,
+		ctx:            ctx,
+	}, nil
+}
+
+type GetUserByEmailHandler struct {
 	userRepository repository.UserRepository
 }
 
-func NewGetByEmailHandler(userRepository repository.UserRepository) cqrs.QueryHandler[UserResponse] {
-	return &GetByEmailHandler{
+func NewGetUserByEmailHandler(userRepository repository.UserRepository) cqrs.QueryHandler[UserResult] {
+	return &GetUserByEmailHandler{
 		userRepository: userRepository,
 	}
 }
 
-func (h *GetByEmailHandler) Handle(q cqrs.Query) (UserResponse, error) {
-	query := q.(GetByEmailQuery)
-	user, err := h.userRepository.GetByEmail(query.Ctx, query.Email.Value())
-	if err != nil {
-		return UserResponse{}, err
+func (h *GetUserByEmailHandler) Handle(q cqrs.Query) (UserResult, error) {
+	query, ok := q.(GetUserByEmailQuery)
+	if !ok {
+		return UserResult{}, errors.New("invalid query type")
 	}
 
-	return toResponse(user), nil
+	user, err := h.userRepository.FindByEmail(query.ctx, query.email.Value())
+	if err != nil {
+		return UserResult{}, err
+	}
+
+	return userToResult(user), nil
 }

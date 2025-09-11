@@ -63,8 +63,8 @@ func (h *NotAttendApptHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
 
 func (h *NotAttendApptHandler) getAppointment(command *NotAttendApptCommand) (appointment.Appointment, error) {
 	if command.vetID != nil {
-		return h.appointmentRepo.GetByIDAndEmployeeID(command.ctx, command.appointmentID, *command.vetID)
+		return h.appointmentRepo.FindByIDAndEmployeeID(command.ctx, command.appointmentID, *command.vetID)
 	}
 
-	return h.appointmentRepo.GetByID(command.ctx, command.appointmentID)
+	return h.appointmentRepo.FindByID(command.ctx, command.appointmentID)
 }

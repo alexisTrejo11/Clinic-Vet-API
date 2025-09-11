@@ -37,7 +37,7 @@ func (h *ConfirmApptHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
 		return cqrs.FailureResult("invalid command type", errors.New("invalid command type"))
 	}
 
-	appointment, err := h.appointmentRepo.GetByID(command.ctx, command.id)
+	appointment, err := h.appointmentRepo.FindByID(command.ctx, command.id)
 	if err != nil {
 		return cqrs.FailureResult("appointment not found", err)
 	}

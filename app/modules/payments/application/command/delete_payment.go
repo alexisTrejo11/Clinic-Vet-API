@@ -4,9 +4,8 @@ import (
 	"context"
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
-	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/repository"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
-	apperror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/application"
 )
 
 type DeletePaymentCommand struct {
@@ -14,18 +13,11 @@ type DeletePaymentCommand struct {
 	ctx       context.Context
 }
 
-func NewDeletePaymentCommand(idInt int) (DeletePaymentCommand, error) {
-	paymentID, err := valueobject.NewPaymentID(idInt)
-	if err != nil {
-		return DeletePaymentCommand{}, apperror.MappingError([]string{err.Error()}, "constructor", "command", "payment")
+func NewDeletePaymentCommand(ctx context.Context, idInt uint) *DeletePaymentCommand {
+	return &DeletePaymentCommand{
+		paymentID: valueobject.NewPaymentID(idInt),
+		ctx:       ctx,
 	}
-
-	cmd := &DeletePaymentCommand{
-		paymentID: paymentID,
-		ctx:       context.Background(),
-	}
-
-	return *cmd, nil
 }
 
 type DeletePaymentHandler struct {
@@ -40,7 +32,7 @@ func NewDeletePaymentHandler(paymentRepo repository.PaymentRepository) cqrs.Comm
 
 func (h *DeletePaymentHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
 	command := cmd.(DeletePaymentCommand)
-	payment, err := h.paymentRepo.GetByID(command.ctx, command.paymentID)
+	payment, err := h.paymentRepo.FindByID(command.ctx, command.paymentID)
 	if err != nil {
 		return cqrs.FailureResult("error fetching payment", err)
 	}

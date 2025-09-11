@@ -10,36 +10,36 @@ import (
 	apperror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/application"
 )
 
-type GetApptByIDAndCustomerIDQuery struct {
+type FindApptByIDAndCustomerIDQuery struct {
 	apptID     valueobject.AppointmentID
 	customerID valueobject.CustomerID
 	ctx        context.Context
 }
 
-func NewGetApptByIDAndCustomerIDQuery(ctx context.Context, apptID uint, customerID uint) *GetApptByIDAndCustomerIDQuery {
-	return &GetApptByIDAndCustomerIDQuery{
+func NewFindApptByIDAndCustomerIDQuery(ctx context.Context, apptID uint, customerID uint) *FindApptByIDAndCustomerIDQuery {
+	return &FindApptByIDAndCustomerIDQuery{
 		apptID:     valueobject.NewAppointmentID(apptID),
 		customerID: valueobject.NewCustomerID(customerID),
 	}
 }
 
-type GetApptByIDAndCustomerIDHandler struct {
+type FindApptByIDAndCustomerIDHandler struct {
 	appointmentRepo repository.AppointmentRepository
 	ownerRepo       repository.CustomerRepository
 }
 
-func NewGetApptByIDAndCustomerIDHandler(
+func NewFindApptByIDAndCustomerIDHandler(
 	appointmentRepo repository.AppointmentRepository,
 	ownerRepo repository.CustomerRepository,
 ) cqrs.QueryHandler[ApptResponse] {
-	return &GetApptByIDAndCustomerIDHandler{
+	return &FindApptByIDAndCustomerIDHandler{
 		appointmentRepo: appointmentRepo,
 		ownerRepo:       ownerRepo,
 	}
 }
 
-func (h *GetApptByIDAndCustomerIDHandler) Handle(q cqrs.Query) (ApptResponse, error) {
-	query, valid := q.(GetApptByIDAndCustomerIDQuery)
+func (h *FindApptByIDAndCustomerIDHandler) Handle(q cqrs.Query) (ApptResponse, error) {
+	query, valid := q.(FindApptByIDAndCustomerIDQuery)
 	if !valid {
 		return ApptResponse{}, errors.New("invalid query type")
 	}
@@ -48,7 +48,7 @@ func (h *GetApptByIDAndCustomerIDHandler) Handle(q cqrs.Query) (ApptResponse, er
 		return ApptResponse{}, err
 	}
 
-	appointment, err := h.appointmentRepo.GetByIDAndCustomerID(query.ctx, query.apptID, query.customerID)
+	appointment, err := h.appointmentRepo.FindByIDAndCustomerID(query.ctx, query.apptID, query.customerID)
 	if err != nil {
 		return ApptResponse{}, err
 	}
@@ -56,7 +56,7 @@ func (h *GetApptByIDAndCustomerIDHandler) Handle(q cqrs.Query) (ApptResponse, er
 	return NewApptResponse(&appointment), nil
 }
 
-func (h *GetApptByIDAndCustomerIDHandler) validateExistingCustomer(ctx context.Context, customerID valueobject.CustomerID) error {
+func (h *FindApptByIDAndCustomerIDHandler) validateExistingCustomer(ctx context.Context, customerID valueobject.CustomerID) error {
 	exists, err := h.ownerRepo.ExistsByID(ctx, customerID)
 	if err != nil {
 		return err

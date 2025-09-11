@@ -4,8 +4,8 @@ package service
 import (
 	"context"
 	"errors"
-	"regexp"
 	"sync"
+	"unicode"
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/user"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/event"
@@ -21,14 +21,14 @@ type EventPublisher interface {
 
 type UserSecurityService struct {
 	userRepo        repository.UserRepository
-	employeeRepo    repository.VetRepository
+	employeeRepo    repository.EmployeeRepository
 	passwordEncoder password.PasswordEncoder
 	eventPublisher  EventPublisher
 }
 
 func NewUserSecurityService(
 	userRepo repository.UserRepository,
-	employeeRepo repository.VetRepository,
+	employeeRepo repository.EmployeeRepository,
 	passwordEncoder password.PasswordEncoder,
 	eventPublisher EventPublisher,
 ) *UserSecurityService {
@@ -106,14 +106,14 @@ func (s *UserSecurityService) ValidateUserCredentials(ctx context.Context, email
 	return nil
 }
 
-func (s *UserSecurityService) ValidateEmployeeAccount(ctx context.Context, employeeID valueobject.VetID) error {
+func (s *UserSecurityService) ValidateEmployeeAccount(ctx context.Context, employeeID valueobject.EmployeeID) error {
 	var wg sync.WaitGroup
 	errorChannel := make(chan error, 3)
 	var validationErrors []error
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		exists, err := s.employeeRepo.Exists(ctx, employeeID)
+		exists, err := s.employeeRepo.ExistsByID(ctx, employeeID)
 		if err != nil {
 			errorChannel <- err
 			return
@@ -191,9 +191,41 @@ func (s *UserSecurityService) ValidateRawPassword(rawPassword string) error {
 		return errors.New("password must be at least 8 characters long")
 	}
 
-	regex := regexp.MustCompile(`^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$`)
-	if !regex.MatchString(rawPassword) {
-		return errors.New("password must contain at least one uppercase letter, one lowercase letter, one number, and one special character")
+	if len(rawPassword) > 72 {
+		return errors.New("password must be less than 72 characters")
+	}
+
+	var (
+		hasUpper   = false
+		hasLower   = false
+		hasNumber  = false
+		hasSpecial = false
+	)
+
+	for _, char := range rawPassword {
+		switch {
+		case unicode.IsUpper(char):
+			hasUpper = true
+		case unicode.IsLower(char):
+			hasLower = true
+		case unicode.IsDigit(char):
+			hasNumber = true
+		case !unicode.IsLetter(char) && !unicode.IsDigit(char):
+			hasSpecial = true
+		}
+	}
+
+	if !hasUpper {
+		return errors.New("password must contain at least one uppercase letter")
+	}
+	if !hasLower {
+		return errors.New("password must contain at least one lowercase letter")
+	}
+	if !hasNumber {
+		return errors.New("password must contain at least one number")
+	}
+	if !hasSpecial {
+		return errors.New("password must contain at least one special character")
 	}
 
 	return nil

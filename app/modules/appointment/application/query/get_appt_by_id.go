@@ -9,35 +9,35 @@ import (
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
 )
 
-type GetApptByIDQuery struct {
+type FindApptByIDQuery struct {
 	appointmentID valueobject.AppointmentID
 	ctx           context.Context
 }
 
-func NewGetApptByIDQuery(ctx context.Context, id uint) *GetApptByIDQuery {
-	return &GetApptByIDQuery{
+func NewFindApptByIDQuery(ctx context.Context, id uint) *FindApptByIDQuery {
+	return &FindApptByIDQuery{
 		appointmentID: valueobject.NewAppointmentID(id),
 		ctx:           ctx,
 	}
 }
 
-type GetApptByIDHandler struct {
+type FindApptByIDHandler struct {
 	apptRepo repository.AppointmentRepository
 }
 
-func NewGetApptByIDHandler(apptRepo repository.AppointmentRepository) cqrs.QueryHandler[ApptResponse] {
-	return &GetApptByIDHandler{
+func NewFindApptByIDHandler(apptRepo repository.AppointmentRepository) cqrs.QueryHandler[ApptResponse] {
+	return &FindApptByIDHandler{
 		apptRepo: apptRepo,
 	}
 }
 
-func (h *GetApptByIDHandler) Handle(c cqrs.Query) (ApptResponse, error) {
-	query, valid := c.(GetApptByIDQuery)
+func (h *FindApptByIDHandler) Handle(c cqrs.Query) (ApptResponse, error) {
+	query, valid := c.(FindApptByIDQuery)
 	if !valid {
 		return ApptResponse{}, errors.New("invalid query type")
 	}
 
-	appointment, err := h.apptRepo.GetByID(query.ctx, query.appointmentID)
+	appointment, err := h.apptRepo.FindByID(query.ctx, query.appointmentID)
 	if err != nil {
 		return ApptResponse{}, err
 	}

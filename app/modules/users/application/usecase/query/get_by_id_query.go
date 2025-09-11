@@ -5,7 +5,7 @@ import (
 	"errors"
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
-	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/repository"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
 )
 
@@ -15,39 +15,35 @@ type GetUserByIDQuery struct {
 	ctx            context.Context
 }
 
-func NewGetUserByIDQuery(ctx context.Context, id int, includeProfile bool) (GetUserByIDQuery, error) {
-	userID, err := valueobject.NewUserID(id)
-	if err != nil {
-		return GetUserByIDQuery{}, err
-	}
-
-	return GetUserByIDQuery{
+func NewGetUserByIDQuery(ctx context.Context, id uint, includeProfile bool) *GetUserByIDQuery {
+	userID := valueobject.NewUserID(id)
+	return &GetUserByIDQuery{
 		id:             userID,
 		includeProfile: includeProfile,
 		ctx:            ctx,
-	}, nil
+	}
 }
 
 type GetUserByIDHandler struct {
 	userRepository repository.UserRepository
 }
 
-func NewGetUserByIDHandler(userRepository repository.UserRepository) cqrs.QueryHandler[UserResponse] {
+func NewGetUserByIDHandler(userRepository repository.UserRepository) cqrs.QueryHandler[UserResult] {
 	return &GetUserByIDHandler{
 		userRepository: userRepository,
 	}
 }
 
-func (h *GetUserByIDHandler) Handle(q cqrs.Query) (UserResponse, error) {
+func (h *GetUserByIDHandler) Handle(q cqrs.Query) (UserResult, error) {
 	query, valid := q.(GetUserByIDQuery)
 	if !valid {
-		return UserResponse{}, errors.New("invalid query type")
+		return UserResult{}, errors.New("invalid query type")
 	}
 
-	user, err := h.userRepository.GetByID(query.ctx, query.id)
+	user, err := h.userRepository.FindByID(query.ctx, query.id)
 	if err != nil {
-		return UserResponse{}, err
+		return UserResult{}, err
 	}
 
-	return toResponse(user), nil
+	return userToResult(user), nil
 }

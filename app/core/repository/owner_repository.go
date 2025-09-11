@@ -9,12 +9,23 @@ import (
 )
 
 type CustomerRepository interface {
-	Save(ctx context.Context, customer *customer.Customer) error
-	Search(ctx context.Context, search any) (page.Page[[]customer.Customer], error)
-	GetByID(ctx context.Context, id valueobject.CustomerID) (customer.Customer, error)
-	GetByPhone(ctx context.Context, phone string) (customer.Customer, error)
-	SoftDelete(ctx context.Context, id valueobject.CustomerID) error
+	FindBySpecification(ctx context.Context, spec any) (page.Page[customer.Customer], error)
+	FindByID(ctx context.Context, id valueobject.CustomerID) (customer.Customer, error)
+	FindByPhone(ctx context.Context, phone string) (customer.Customer, error)
+	FindByEmail(ctx context.Context, email string) (customer.Customer, error)
 
-	ExistsByPhone(ctx context.Context, phone string) (bool, error)
+	FindAll(ctx context.Context, pageInput page.PageInput) (page.Page[customer.Customer], error)
+	FindActive(ctx context.Context, pageInput page.PageInput) (page.Page[customer.Customer], error)
+
 	ExistsByID(ctx context.Context, id valueobject.CustomerID) (bool, error)
+	ExistsByPhone(ctx context.Context, phone string) (bool, error)
+	ExistsByEmail(ctx context.Context, email string) (bool, error)
+
+	Save(ctx context.Context, customer *customer.Customer) error
+	Update(ctx context.Context, customer *customer.Customer) error
+	SoftDelete(ctx context.Context, id valueobject.CustomerID) error
+	HardDelete(ctx context.Context, id valueobject.CustomerID) error
+
+	CountAll(ctx context.Context) (int64, error)
+	CountActive(ctx context.Context) (int64, error)
 }

@@ -66,7 +66,7 @@ func (h *CancelApptHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
 
 func (h *CancelApptHandler) getAppointment(cmd CancelApptCommand) (appt.Appointment, error) {
 	if cmd.vetID != nil {
-		return h.apptRepository.GetByIDAndEmployeeID(cmd.ctx, cmd.appointmentID, *cmd.vetID)
+		return h.apptRepository.FindByIDAndEmployeeID(cmd.ctx, cmd.appointmentID, *cmd.vetID)
 	}
-	return h.apptRepository.GetByID(cmd.ctx, cmd.appointmentID)
+	return h.apptRepository.FindByID(cmd.ctx, cmd.appointmentID)
 }

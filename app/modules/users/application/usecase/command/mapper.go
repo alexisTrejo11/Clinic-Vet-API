@@ -1,23 +1,22 @@
+// Package command implements the command handlers for user-related operations.
 package command
 
 import (
 	"time"
 
 	u "github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/user"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
 )
 
 func fromCreateCommand(cmd CreateUserCommand) (*u.User, error) {
-	userIDZero, _ := valueobject.NewUserID(0)
 	now := time.Now()
-	user, err := u.NewUser(
-		userIDZero,
+	user, err := u.CreateUser(
 		cmd.role,
 		cmd.status,
 		u.WithEmail(cmd.email),
 		u.WithPassword(cmd.password),
 		u.WithPhoneNumber(cmd.phoneNumber),
 		u.WithLastLoginAt(now),
+		u.WithJoinedAt(now),
 	)
 	if err != nil {
 		return nil, err

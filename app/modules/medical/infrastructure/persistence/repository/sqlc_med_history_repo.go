@@ -9,7 +9,7 @@ import (
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/medical"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
-	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/repository"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
 )

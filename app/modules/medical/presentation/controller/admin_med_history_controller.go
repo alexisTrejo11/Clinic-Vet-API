@@ -5,8 +5,10 @@ import (
 	"errors"
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/medical/application/dto"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/medical/application/usecase"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/medical/application/query"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/medical/infrastructure/bus"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/medical/presentation/dto"
+
 	httpError "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/infrastructure/http"
 	ginUtils "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/gin_utils"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/response"
@@ -15,37 +17,22 @@ import (
 )
 
 type AdminMedicalHistoryController struct {
-	usecase   *usecase.MedicalHistoryUseCase
+	bus       *bus.MedicalHistoryBus
 	validator *validator.Validate
 }
 
-func NewAdminMedicalHistoryController(usecases *usecase.MedicalHistoryUseCase) *AdminMedicalHistoryController {
-	return &AdminMedicalHistoryController{usecase: usecases, validator: validator.New()}
+func NewAdminMedicalHistoryController(bus *bus.MedicalHistoryBus) *AdminMedicalHistoryController {
+	return &AdminMedicalHistoryController{
+		bus:       bus,
+		validator: validator.New(),
+	}
 }
 
 func (ctlr AdminMedicalHistoryController) SearchMedicalHistories(c *gin.Context) {
-	var serachParams dto.MedHistSearchParams
-	if err := c.ShouldBindQuery(&serachParams); err != nil {
-		response.BadRequest(c, httpError.RequestURLQueryError(err, c.Request.URL.RawQuery))
-		return
-	}
-
-	if err := ctlr.validator.Struct(serachParams); err != nil {
-		response.BadRequest(c, httpError.InvalidDataError(err))
-		return
-	}
-
-	medHistories, err := ctlr.usecase.Search(c.Request.Context(), serachParams)
-	if err != nil {
-		response.ApplicationError(c, err)
-		return
-	}
-
-	response.SuccessWithMeta(c, medHistories.Data, gin.H{"pagination": medHistories.Metadata})
 }
 
 func (ctlr AdminMedicalHistoryController) GetMedicalHistoryDetails(c *gin.Context) {
-	idInterface, err := ginUtils.ParseParamToEntityID(c, "id", "medical_history")
+	idInterface, err := ginUtils.ParseParamToEntityID(c, "medical_history")
 	if err != nil {
 		response.BadRequest(c, httpError.RequestURLParamError(err, "medical-history", c.Param("id")))
 		return
@@ -57,17 +44,22 @@ func (ctlr AdminMedicalHistoryController) GetMedicalHistoryDetails(c *gin.Contex
 		return
 	}
 
-	medHistory, err := ctlr.usecase.GetByIDWithDeatils(c.Request.Context(), mediHistID)
+	query := query.GetMedHistByIDQuery{
+		ID:  mediHistID,
+		CTX: c.Request.Context(),
+	}
+
+	medHistory, err := ctlr.bus.QueryBus.GetMedHistByID(query)
 	if err != nil {
 		response.ApplicationError(c, err)
 		return
 	}
 
-	response.Success(c, medHistory)
+	response.Found(c, medHistory, "Medical History")
 }
 
-func (ctlr AdminMedicalHistoryController) CreateMedicalHistories(c *gin.Context) {
-	var createData dto.MedicalHistoryCreate
+func (ctlr AdminMedicalHistoryController) CreateMedicalHistory(c *gin.Context) {
+	var createData dto.AdminMedHistoryRequest
 	if err := c.ShouldBindJSON(&createData); err != nil {
 		response.BadRequest(c, httpError.RequestBodyDataError(err))
 		return
@@ -79,16 +71,18 @@ func (ctlr AdminMedicalHistoryController) CreateMedicalHistories(c *gin.Context)
 
 	}
 
-	if err := ctlr.usecase.Create(c.Request.Context(), createData); err != nil {
+	command := createData.ToCommand()
+	result, err := ctlr.bus.CommandBus.CreateMedicalHistory(*command)
+	if err != nil {
 		response.ApplicationError(c, err)
 		return
 	}
 
-	response.Created(c, "Medical history created successfully")
+	response.Created(c, result.ID, "Medical History")
 }
 
 func (ctlr AdminMedicalHistoryController) DeleteMedicalHistories(c *gin.Context) {
-	idInterface, err := ginUtils.ParseParamToEntityID(c, "id", "medical_history")
+	idInterface, err := ginUtils.ParseParamToEntityID(c, "medical_history")
 	if err != nil {
 		response.BadRequest(c, httpError.RequestURLParamError(err, "medical-history", c.Param("id")))
 		return

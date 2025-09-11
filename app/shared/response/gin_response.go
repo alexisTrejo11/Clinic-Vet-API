@@ -9,9 +9,9 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func Success(ctx *gin.Context, data any) {
+func Success(ctx *gin.Context, data any, message string) {
 	response := APIResponse{}
-	response.SuccessRequest(data)
+	response.SuccessRequest(data, message)
 
 	ctx.JSON(200, response)
 }
@@ -23,16 +23,37 @@ func SuccessWithMeta(ctx *gin.Context, data any, meta any) {
 	ctx.JSON(200, response)
 }
 
-func Created(ctx *gin.Context, data any) {
+func Found(ctx *gin.Context, data any, entityName string) {
+	if entityName == "" {
+		entityName = "Resource"
+	}
+	messsage := entityName + " found successfully"
+
 	response := APIResponse{}
-	response.SuccessRequest(data)
+	response.SuccessRequest(data, messsage)
+
+	ctx.JSON(200, response)
+}
+
+func Created(ctx *gin.Context, data any, entityName string) {
+	messsage := entityName + " has been created successfully"
+	response := APIResponse{}
+	response.SuccessRequest(data, messsage)
 
 	ctx.JSON(201, response)
 }
 
+func Updated(ctx *gin.Context, data any, entityName string) {
+	messsage := entityName + " has been updated successfully"
+	response := APIResponse{}
+	response.SuccessRequest(data, messsage)
+
+	ctx.JSON(200, response)
+}
+
 func NoContent(ctx *gin.Context) {
 	response := APIResponse{}
-	response.SuccessRequest(nil)
+	response.SuccessRequest(nil, "No content")
 	ctx.JSON(204, response)
 }
 

@@ -7,29 +7,17 @@ import (
 
 // @Description Represents the request body for updating a user's profile.
 type UpdateProfileRequest struct {
-	// The unique ID of the userDomain. (required)
-	UserID int `json:"user_id" validate:"required"`
 	// A brief biography of the userDomain. (optional, max 500 characters)
 	Bio *string `json:"bio" validate:"min=0,max=500"`
 	// The URL of the user's profile photo. (optional, must be a valid URL)
 	PhotoURL *string `json:"photo_url" validate:"omitempty,url"`
-	// The name of the userDomain. (optional)
-	Name *string `json:"name" validate:"omitempty"`
 }
 
-func (request *UpdateProfileRequest) ToProfileUpdateDTO(id int) usecase.UpdateProfileData {
-	userID, _ := valueobject.NewUserID(id)
+func (request *UpdateProfileRequest) ToProfileUpdateDTO(userID valueobject.UserID) usecase.UpdateProfileData {
 	updateData := usecase.UpdateProfileData{
 		UserID:     userID,
 		Bio:        request.Bio,
 		ProfilePic: request.PhotoURL,
-	}
-
-	if request.Name != nil {
-		updateData.Name = &valueobject.PersonName{
-			FirstName: *request.Name,
-			LastName:  *request.Name,
-		}
 	}
 	return updateData
 }

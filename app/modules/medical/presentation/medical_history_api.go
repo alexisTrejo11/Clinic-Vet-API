@@ -3,11 +3,13 @@ package medHistoryAPI
 import (
 	"fmt"
 
-	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/medical/application/usecase"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/medical/infrastructure/api/controller"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/medical/infrastructure/api/routes"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/repository"
+	medHistCommand "github.com/alexisTrejo11/Clinic-Vet-API/app/modules/medical/application/command"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/medical/application/query"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/medical/infrastructure/bus"
 	repositoryimpl "github.com/alexisTrejo11/Clinic-Vet-API/app/modules/medical/infrastructure/persistence/repository"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/medical/infrastructure/presentation/controller"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/medical/infrastructure/presentation/routes"
 	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -17,14 +19,14 @@ type MedicalHistoryModuleConfig struct {
 	Router    *gin.Engine
 	Queries   *sqlc.Queries
 	Validator *validator.Validate
-	OwnerRepo *repository.OwnerRepository
-	VetRepo   *repository.VetRepository
+	OwnerRepo *repository.CustomerRepository
+	VetRepo   *repository.EmployeeRepository
 	PetRepo   *repository.PetRepository
 }
 
 type MedicalHistoryModuleComponents struct {
 	Repository repository.MedicalHistoryRepository
-	UseCase    *usecase.MedicalHistoryUseCase
+	Bus        *bus.MedicalHistoryBus
 	Controller *controller.AdminMedicalHistoryController
 }
 
@@ -51,16 +53,13 @@ func (m *MedicalHistoryModule) Bootstrap() error {
 	}
 
 	repository := m.createRepository()
-
-	useCase := m.createUseCase(repository)
-
-	controller := m.createController(useCase)
-
+	medHistbus := m.createBus(repository)
+	controller := m.createController(medHistbus)
 	m.registerRoutes(controller)
 
 	m.components = &MedicalHistoryModuleComponents{
 		Repository: repository,
-		UseCase:    useCase,
+		Bus:        medHistbus,
 		Controller: controller,
 	}
 
@@ -72,17 +71,15 @@ func (m *MedicalHistoryModule) createRepository() repository.MedicalHistoryRepos
 	return repositoryimpl.NewSQLCMedHistRepository(m.config.Queries)
 }
 
-func (m *MedicalHistoryModule) createUseCase(repository repository.MedicalHistoryRepository) *usecase.MedicalHistoryUseCase {
-	return usecase.NewMedicalHistoryUseCase(
-		repository,
-		*m.config.OwnerRepo,
-		*m.config.VetRepo,
-		*m.config.PetRepo,
+func (m *MedicalHistoryModule) createBus(repository repository.MedicalHistoryRepository) *bus.MedicalHistoryBus {
+	return bus.NewMedicalHistoryBus(
+		medHistCommand.NewMedicalHistoryCommandHandlers(repository),
+		query.NewMedicalHistoryQueryHandlers(repository),
 	)
 }
 
-func (m *MedicalHistoryModule) createController(useCase *usecase.MedicalHistoryUseCase) *controller.AdminMedicalHistoryController {
-	return controller.NewAdminMedicalHistoryController(useCase)
+func (m *MedicalHistoryModule) createController(medHistBus *bus.MedicalHistoryBus) *controller.AdminMedicalHistoryController {
+	return controller.NewAdminMedicalHistoryController(medHistBus)
 }
 
 func (m *MedicalHistoryModule) registerRoutes(controller *controller.AdminMedicalHistoryController) {
@@ -131,7 +128,7 @@ func (m *MedicalHistoryModule) GetRepository() (repository.MedicalHistoryReposit
 	return components.Repository, nil
 }
 
-func (m *MedicalHistoryModule) GetUseCase() (*usecase.MedicalHistoryUseCase, error) {
+func (m *MedicalHistoryModule) GetBus() (*usecase.MedicalHistoryUseCase, error) {
 	components, err := m.GetComponents()
 	if err != nil {
 		return nil, err

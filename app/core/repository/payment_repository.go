@@ -4,31 +4,44 @@ import (
 	"context"
 	"time"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/payment"
+	p "github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/payment"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
+	vo "github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 )
 
 type PaymentRepository interface {
-	Save(ctx context.Context, paymentEntity *payment.Payment) error
+	FindBySpecification(ctx context.Context, spec any) (page.Page[p.Payment], error)
+	FindByID(ctx context.Context, id vo.PaymentID) (p.Payment, error)
+	FindByTransactionID(ctx context.Context, transactionID string) (p.Payment, error)
+	FindByIDAndCustomerID(ctx context.Context, id vo.PaymentID, customerID vo.CustomerID) (p.Payment, error)
 
-	Search(ctx context.Context, pagination page.PageInput, searchCriteria map[string]any) (page.Page[[]payment.Payment], error)
-	GetByID(ctx context.Context, id valueobject.PaymentID) (payment.Payment, error)
-	GetByIDAndPaidFrom(ctx context.Context, CustomerID valueobject.CustomerID) (payment.Payment, error)
+	FindAll(ctx context.Context, pageInput page.PageInput) (page.Page[p.Payment], error)
+	FindByCustomerID(ctx context.Context, customerID vo.CustomerID, pageInput page.PageInput) (page.Page[p.Payment], error)
+	FindByStatus(ctx context.Context, status enum.PaymentStatus, pageInput page.PageInput) (page.Page[p.Payment], error)
+	FindOverdue(ctx context.Context, pageInput page.PageInput) (page.Page[p.Payment], error)
+	FindByDateRange(ctx context.Context, startDate, endDate time.Time, pageInput page.PageInput) (page.Page[p.Payment], error)
 
-	ListByPaidFrom(ctx context.Context, customerID valueobject.CustomerID, pagination page.PageInput) (page.Page[[]payment.Payment], error)
-	ListByStatus(ctx context.Context, status enum.PaymentStatus, pagination page.PageInput) (page.Page[[]payment.Payment], error)
-	ListOverduePayments(ctx context.Context, pagination page.PageInput) (page.Page[[]payment.Payment], error)
-	ListPaymentsByDateRange(ctx context.Context, startDate, endDate time.Time, pagination page.PageInput) (page.Page[[]payment.Payment], error)
+	FindRecentByCustomerID(ctx context.Context, customerID vo.CustomerID, limit int) (p.Payment, error)
+	FindPendingPayments(ctx context.Context, pageInput page.PageInput) (page.Page[p.Payment], error)
+	FindSuccessfulPayments(ctx context.Context, pageInput page.PageInput) (page.Page[p.Payment], error)
 
-	SoftDelete(ctx context.Context, id valueobject.PaymentID) error
+	ExistsByID(ctx context.Context, id vo.PaymentID) (bool, error)
+	ExistsByTransactionID(ctx context.Context, transactionID string) (bool, error)
+	ExistsPendingByCustomerID(ctx context.Context, customerID vo.CustomerID) (bool, error)
 
-	// GetTotalCount() (int, error)
-	GetByTransactionID(ctx context.Context, transactionID string) (payment.Payment, error)
+	Save(ctx context.Context, paymentEntity *p.Payment) error
+	Update(ctx context.Context, paymentEntity *p.Payment) error
+	SoftDelete(ctx context.Context, id vo.PaymentID) error
+	HardDelete(ctx context.Context, id vo.PaymentID) error
+
+	CountByStatus(ctx context.Context, status enum.PaymentStatus) (int64, error)
+	CountByCustomerID(ctx context.Context, customerID vo.CustomerID) (int64, error)
+	CountOverdue(ctx context.Context) (int64, error)
+	TotalRevenueByDateRange(ctx context.Context, startDate, endDate time.Time) (float64, error)
 }
 
 type PaymentSummary struct {
-	Count  int               `json:"count"`
-	Amount valueobject.Money `json:"amount"`
+	Count  int      `json:"count"`
+	Amount vo.Money `json:"amount"`
 }

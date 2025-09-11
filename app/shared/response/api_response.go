@@ -14,6 +14,8 @@ type APIResponse struct {
 	Success bool `json:"success"`
 	// The data payload of the response for successful requests.
 	Data any `json:"data,omitempty"`
+	// A message providing additional context about the response.
+	Message string `json:"message,omitempty"`
 	// Details of the error if the request was not successful.
 	Error *ErrorInfo `json:"error,omitempty"`
 	// Additional metadata for the response, such as pagination info.
@@ -66,9 +68,10 @@ type PaginationMeta struct {
 	HasPrev bool `json:"has_prev"`
 }
 
-func (r *APIResponse) SuccessRequest(data any) {
+func (r *APIResponse) SuccessRequest(data any, message string) {
 	r.Success = true
 	r.Data = data
+	r.Message = message
 	r.Timestamp = time.Now()
 }
 

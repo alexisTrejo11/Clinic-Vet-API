@@ -31,7 +31,7 @@ func (mh *MedicalHistory) PetID() valueobject.PetID {
 	return mh.petID
 }
 
-func (mh *MedicalHistory) OwnerID() valueobject.CustomerID {
+func (mh *MedicalHistory) CustomerID() valueobject.CustomerID {
 	return mh.customerID
 }
 

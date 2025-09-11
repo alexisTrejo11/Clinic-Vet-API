@@ -36,11 +36,11 @@ func (h *DeleteApptHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
 		return cqrs.FailureResult(ErrInvalidCommandType, nil)
 	}
 
-	appointment, err := h.appointmentRepo.GetByID(command.ctx, command.appointmentID)
+	appointment, err := h.appointmentRepo.FindByID(command.ctx, command.appointmentID)
 	if err != nil {
 		return cqrs.FailureResult(ErrFindingAppt, err)
 	}
-	if err := h.appointmentRepo.Delete(command.appointmentID); err != nil {
+	if err := h.appointmentRepo.Delete(command.ctx, command.appointmentID); err != nil {
 		return cqrs.FailureResult(ErrFailedToDelete, err)
 	}
 

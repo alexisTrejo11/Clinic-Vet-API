@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
-	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/repository"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
 	apperror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/application"
 )
@@ -14,15 +14,13 @@ type GetPaymentByIDQuery struct {
 	ctx context.Context
 }
 
-func NewGetPaymentByIDQuery(idInt int) (GetPaymentByIDQuery, error) {
-	paymentID, err := valueobject.NewPaymentID(idInt)
-	if err != nil {
-		return GetPaymentByIDQuery{}, apperror.MappingError([]string{err.Error()}, "constructor", "command", "payment")
+func NewGetPaymentByIDQuery(idInt uint) (*GetPaymentByIDQuery, error) {
+	paymentID := valueobject.NewPaymentID(idInt)
+	if paymentID.IsZero() {
+		return nil, apperror.FieldValidationError("id", "0", "invalid payment id")
 	}
 
-	q := &GetPaymentByIDQuery{id: paymentID}
-
-	return *q, nil
+	return &GetPaymentByIDQuery{id: paymentID}, nil
 }
 
 type GetPaymentByIDHandler struct {
@@ -37,7 +35,7 @@ func NewGetPaymentByIDHandler(repository repository.PaymentRepository) cqrs.Quer
 
 func (h *GetPaymentByIDHandler) Handle(q cqrs.Query) (PaymentResponse, error) {
 	query := q.(GetPaymentByIDQuery)
-	payment, err := h.repository.GetByID(query.ctx, query.id)
+	payment, err := h.repository.FindByID(query.ctx, query.id)
 	if err != nil {
 		return PaymentResponse{}, err
 	}

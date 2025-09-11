@@ -8,9 +8,9 @@ import (
 )
 
 type PaymentResponse struct {
-	ID            int     `json:"id"`
-	AppointmentID int     `json:"appointment_id"`
-	UserID        int     `json:"owner_id"`
+	ID            uint    `json:"id"`
+	AppointmentID uint    `json:"appointment_id"`
+	UserID        uint    `json:"owner_id"`
 	Amount        float64 `json:"amount"`
 	Currency      string  `json:"currency"`
 	PaymentMethod string  `json:"payment_method"`

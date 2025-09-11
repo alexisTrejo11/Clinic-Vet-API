@@ -2,28 +2,50 @@ package repository
 
 import (
 	"context"
+	"time"
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/user"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/user/profile"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/specification"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 )
 
 type UserRepository interface {
-	Save(ctx context.Context, user *user.User) error
-	Delete(ctx context.Context, id valueobject.UserID, softDelete bool) error
+	FindSpecification(ctx context.Context, spec specification.UserSpecification) (page.Page[user.User], error)
+	FindByID(ctx context.Context, id valueobject.UserID) (user.User, error)
+	FindByEmail(ctx context.Context, email string) (user.User, error)
+	FindByPhone(ctx context.Context, phone string) (user.User, error)
 
-	GetByID(ctx context.Context, id valueobject.UserID) (user.User, error)
-	GetByEmail(ctx context.Context, email string) (user.User, error)
-	GetByPhone(ctx context.Context, phone string) (user.User, error)
-	ListByRole(ctx context.Context, role string, pageInput page.PageInput) (page.Page[[]user.User], error)
-	Search(ctx context.Context, filterParams any, pageInput page.PageInput) (page.Page[[]user.User], error)
+	FindAll(ctx context.Context, pageInput page.PageInput) (page.Page[user.User], error)
+	FindByRole(ctx context.Context, role string, pageInput page.PageInput) (page.Page[user.User], error)
+	FindActive(ctx context.Context, pageInput page.PageInput) (page.Page[user.User], error)
+	FindInactive(ctx context.Context, pageInput page.PageInput) (page.Page[user.User], error)
 
+	FindByEmployeeID(ctx context.Context, employeeID valueobject.EmployeeID) (user.User, error)
+	FindByCustomerID(ctx context.Context, customerID valueobject.CustomerID) (user.User, error)
+	FindRecentlyLoggedIn(ctx context.Context, since time.Time, pageInput page.PageInput) (page.Page[user.User], error)
+
+	ExistsByID(ctx context.Context, id valueobject.UserID) (bool, error)
 	ExistsByEmail(ctx context.Context, email string) (bool, error)
 	ExistsByPhone(ctx context.Context, phone string) (bool, error)
-	ExistsByID(ctx context.Context, id valueobject.UserID) (bool, error)
-	ExistsByEmployeeID(ctx context.Context, id valueobject.EmployeeID) (bool, error)
+	ExistsByEmployeeID(ctx context.Context, employeeID valueobject.EmployeeID) (bool, error)
+	ExistsByCustomerID(ctx context.Context, customerID valueobject.CustomerID) (bool, error)
+
+	Save(ctx context.Context, user *user.User) error
+	Update(ctx context.Context, user *user.User) error
+	SoftDelete(ctx context.Context, id valueobject.UserID) error
+	HardDelete(ctx context.Context, id valueobject.UserID) error
+
 	UpdateLastLogin(ctx context.Context, id valueobject.UserID) error
+	UpdatePassword(ctx context.Context, id valueobject.UserID, hashedPassword string) error
+	UpdateStatus(ctx context.Context, id valueobject.UserID, status enum.UserStatus) error
+
+	CountAll(ctx context.Context) (int64, error)
+	CountByRole(ctx context.Context, role string) (int64, error)
+	CountByStatus(ctx context.Context, status enum.UserStatus) (int64, error)
+	CountActive(ctx context.Context) (int64, error)
 }
 
 type ProfileRepository interface {

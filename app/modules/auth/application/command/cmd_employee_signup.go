@@ -16,7 +16,7 @@ type EmployeeSignupCommand struct {
 	email       valueobject.Email
 	password    string
 	phoneNumber *valueobject.PhoneNumber
-	employeeID  valueobject.VetID
+	employeeID  valueobject.EmployeeID
 	ctx         context.Context
 }
 
@@ -25,7 +25,7 @@ func NewEmployeeSignupCommand(
 	email valueobject.Email,
 	password string,
 	phoneNumber *valueobject.PhoneNumber,
-	employeeID valueobject.VetID,
+	employeeID valueobject.EmployeeID,
 ) *EmployeeSignupCommand {
 	return &EmployeeSignupCommand{
 		email:       email,
@@ -38,13 +38,13 @@ func NewEmployeeSignupCommand(
 
 type EmployeeSignupHandler struct {
 	userRepository      repository.UserRepository
-	employeeRepository  repository.VetRepository
+	employeeRepository  repository.EmployeeRepository
 	userSecurityService service.UserSecurityService
 }
 
 func NewEmployeeSignupHandler(
 	userRepository repository.UserRepository,
-	employeeRepository repository.VetRepository,
+	employeeRepository repository.EmployeeRepository,
 	userSecurityService service.UserSecurityService,
 ) *EmployeeSignupHandler {
 	return &EmployeeSignupHandler{

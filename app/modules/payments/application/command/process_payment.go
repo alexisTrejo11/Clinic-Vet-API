@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
-	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/repository"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
 	apperror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/application"
 )
@@ -15,19 +15,20 @@ type ProcessPaymentCommand struct {
 	ctx           context.Context
 }
 
-func NewProcessPaymentCommand(idInt int, transactionID string) (ProcessPaymentCommand, error) {
-	paymentID, err := valueobject.NewPaymentID(idInt)
-	if err != nil {
-		return ProcessPaymentCommand{}, apperror.MappingError([]string{err.Error()}, "constructor", "command", "payment")
+func NewProcessPaymentCommand(idInt uint, transactionID string) (*ProcessPaymentCommand, error) {
+	if idInt == 0 {
+		return nil, apperror.FieldValidationError("id", "", "Payment ID cannot be zero")
 	}
 
-	cmd := &ProcessPaymentCommand{
-		paymentID:     paymentID,
+	if transactionID == "" {
+		return nil, apperror.FieldValidationError("transaction_id", "", "Transaction ID cannot be empty")
+	}
+
+	return &ProcessPaymentCommand{
+		paymentID:     valueobject.NewPaymentID(idInt),
 		transactionID: transactionID,
 		ctx:           context.Background(),
-	}
-
-	return *cmd, nil
+	}, nil
 }
 
 type ProcessPaymentHandler struct {
@@ -40,7 +41,7 @@ func NewProcessPaymentHandler(paymentRepo repository.PaymentRepository) cqrs.Com
 
 func (h *ProcessPaymentHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
 	command := cmd.(ProcessPaymentCommand)
-	payment, err := h.paymentRepo.GetByID(command.ctx, command.paymentID)
+	payment, err := h.paymentRepo.FindByID(command.ctx, command.paymentID)
 	if err != nil {
 		return cqrs.FailureResult("failed to retrieve payment", err)
 	}

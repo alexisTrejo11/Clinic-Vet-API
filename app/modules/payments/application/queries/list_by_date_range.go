@@ -2,57 +2,60 @@ package query
 
 import (
 	"context"
+	"errors"
 	"time"
 
-	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/repository"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
 	apperror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/application"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 )
 
-type ListPaymentsByDateRangeQuery struct {
+type FindPaymentsByDateRangeQuery struct {
 	startDate time.Time
 	endDate   time.Time
+	ctx       context.Context
 	page.PageInput
 }
 
-func NewListPaymentsByDateRangeQuery(startDate, endDate time.Time, pageData page.PageInput) ListPaymentsByDateRangeQuery {
-	return ListPaymentsByDateRangeQuery{
+func NewFindPaymentsByDateRangeQuery(startDate, endDate time.Time, pageData page.PageInput) *FindPaymentsByDateRangeQuery {
+	return &FindPaymentsByDateRangeQuery{
 		startDate: startDate,
 		endDate:   endDate,
 		PageInput: pageData,
 	}
 }
 
-type ListPaymentsByDateRangeQueryHandler interface {
-	Handle(ctx context.Context, query ListPaymentsByDateRangeQuery) (page.Page[[]PaymentResponse], error)
-}
-
-type ListPaymentsByDateRangeHandler struct {
+type FindPaymentsByDateRangeHandler struct {
 	paymentRepository repository.PaymentRepository
 }
 
-func NewListPaymentsByDateRangeHandler(paymentRepository repository.PaymentRepository) ListPaymentsByDateRangeQueryHandler {
-	return &ListPaymentsByDateRangeHandler{
+func NewFindPaymentsByDateRangeHandler(paymentRepository repository.PaymentRepository) cqrs.QueryHandler[page.Page[PaymentResponse]] {
+	return &FindPaymentsByDateRangeHandler{
 		paymentRepository: paymentRepository,
 	}
 }
 
-func (h *ListPaymentsByDateRangeHandler) Handle(ctx context.Context, query ListPaymentsByDateRangeQuery) (page.Page[[]PaymentResponse], error) {
+func (h *FindPaymentsByDateRangeHandler) Handle(q cqrs.Query) (page.Page[PaymentResponse], error) {
+	query, valid := q.(FindPaymentsByDateRangeQuery)
+	if !valid {
+		return page.Page[PaymentResponse]{}, errors.New("invalid query type")
+	}
 	if query.startDate.After(query.endDate) {
-		return page.Page[[]PaymentResponse]{}, PaymentRangeDateErr(query.startDate, query.endDate)
+		return page.Page[PaymentResponse]{}, PaymentRangeDateErr(query.startDate, query.endDate)
 	}
 
-	paymentsPage, err := h.paymentRepository.ListPaymentsByDateRange(ctx, query.startDate, query.endDate, query.PageInput)
+	paymentsPage, err := h.paymentRepository.FindByDateRange(query.ctx, query.startDate, query.endDate, query.PageInput)
 	if err != nil {
-		return page.Page[[]PaymentResponse]{}, err
+		return page.Page[PaymentResponse]{}, err
 	}
 
-	response := mapPaymentsToResponses(paymentsPage.Data)
+	response := mapPaymentsToResponses(paymentsPage.Items)
 	return page.NewPage(response, paymentsPage.Metadata), nil
 }
 
 func PaymentRangeDateErr(startDate, endDate time.Time) error {
 	return apperror.FieldValidationError("start_date",
-		"startdate:"+startDate.String()+"- enddate"+endDate.String(),
+		"start date:"+startDate.String()+"- end date"+endDate.String(),
 		"Start date cannot be after end date")
 }

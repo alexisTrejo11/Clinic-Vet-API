@@ -91,9 +91,9 @@ func (h *loginHandler) Handle(cmd any) AuthCommandResult {
 }
 
 func (h *loginHandler) authenticate(command *LoginCommand) (user.User, error) {
-	userEntity, err := h.userRepo.GetByEmail(command.CTX, command.Identifier)
+	userEntity, err := h.userRepo.FindByEmail(command.CTX, command.Identifier)
 	if err != nil {
-		userEntity, err = h.userRepo.GetByPhone(command.CTX, command.Identifier)
+		userEntity, err = h.userRepo.FindByPhone(command.CTX, command.Identifier)
 		if err != nil {
 			return user.User{}, errors.New(ErrInvalidCredentials)
 		}

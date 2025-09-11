@@ -5,9 +5,8 @@ import (
 	"context"
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
-	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/repository"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
-	appError "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/application"
 )
 
 type CancelPaymentCommand struct {
@@ -16,17 +15,11 @@ type CancelPaymentCommand struct {
 	reason    string
 }
 
-func NewCancelPaymentCommand(idInt int, reason string) (CancelPaymentCommand, error) {
-	paymentID, err := valueobject.NewPaymentID(idInt)
-	if err != nil {
-		return CancelPaymentCommand{}, appError.MappingError([]string{err.Error()}, "constructor", "command", "payment")
-	}
-
-	cmd := &CancelPaymentCommand{
-		paymentID: paymentID,
+func NewCancelPaymentCommand(idInt uint, reason string) *CancelPaymentCommand {
+	return &CancelPaymentCommand{
+		paymentID: valueobject.NewPaymentID(idInt),
 		reason:    reason,
 	}
-	return *cmd, nil
 }
 
 type CancelPaymentHandler struct {
@@ -40,7 +33,7 @@ func NewCancelPaymentHandler(paymentRepo repository.PaymentRepository) cqrs.Comm
 func (h *CancelPaymentHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
 	command := cmd.(CancelPaymentCommand)
 
-	payment, err := h.paymentRepo.GetByID(command.ctx, command.paymentID)
+	payment, err := h.paymentRepo.FindByID(command.ctx, command.paymentID)
 	if err != nil {
 		return cqrs.FailureResult("failed to retrieve payment", err)
 	}

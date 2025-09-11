@@ -27,8 +27,8 @@ func ParseParamToUInt(c *gin.Context, paramName string) (uint, error) {
 	return uint(intValue), nil
 }
 
-func ParseParamToEntityID(c *gin.Context, idParam string, entity string) (valueobject.IntegerID, error) {
-	intValue, err := ParseParamToUInt(c, idParam)
+func ParseParamToEntityID(c *gin.Context, entity string) (valueobject.IntegerID, error) {
+	intValue, err := ParseParamToUInt(c, c.Param("id"))
 	if err != nil {
 		return nil, err
 	}

@@ -6,7 +6,7 @@ import (
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/user"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
-	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/repository"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/auth/application/jwt"
 	autherror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/auth"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/response"
@@ -59,23 +59,14 @@ func (am *AuthMiddleware) Authenticate() gin.HandlerFunc {
 			response.Unauthorized(c, autherror.UnauthorizedError(err.Error()))
 		}
 
-		ctx := context.Background()
-
-		idINT, err := strconv.Atoi(idSTR)
+		idUInt, err := strconv.ParseUint(idSTR, 10, 0)
 		if err != nil {
 			response.ServerError(c, err)
 			c.Abort()
 			return
 		}
 
-		userID, err := valueobject.NewUserID(idINT)
-		if err != nil {
-			response.ServerError(c, err)
-			c.Abort()
-			return
-		}
-
-		user, err := am.userRepo.GetByID(ctx, userID)
+		user, err := am.userRepo.GetByID(c.Request.Context(), valueobject.NewUserID(uint(idUInt)))
 		if err != nil {
 			response.ApplicationError(c, err)
 		}
@@ -109,21 +100,14 @@ func (am *AuthMiddleware) OptionalAuth() gin.HandlerFunc {
 			return
 		}
 
-		idINT, err := strconv.Atoi(claims.ID)
+		idUInt, err := strconv.ParseUint(claims.ID, 10, 0)
 		if err != nil {
 			response.ServerError(c, err)
 			c.Abort()
 			return
 		}
 
-		userID, err := valueobject.NewUserID(idINT)
-		if err != nil {
-			response.ServerError(c, err)
-			c.Abort()
-			return
-		}
-
-		user, err := am.userRepo.GetByID(context.Background(), userID)
+		user, err := am.userRepo.GetByID(context.Background(), valueobject.NewUserID(uint(idUInt)))
 		if err != nil {
 			response.ApplicationError(c, err)
 		}
@@ -147,12 +131,14 @@ func GetUserFromContext(c *gin.Context) (*UserContext, bool) {
 }
 
 // GetUserIDFromContext obtiene solo el ID del usuario
-func GetUserIDFromContext(c *gin.Context) (int, bool) {
+func GetUserIDFromContext(c *gin.Context) (valueobject.UserID, bool) {
 	userID, exists := c.Get("userID")
 	if !exists {
-		return 0, false
+		return valueobject.UserID{}, false
 	}
-	return userID.(int), true
+
+	idUint := userID.(uint)
+	return valueobject.NewUserID(idUint), true
 }
 
 // GetUserEmailFromContext obtiene solo el email del usuario

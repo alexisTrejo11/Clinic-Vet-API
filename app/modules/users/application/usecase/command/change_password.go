@@ -6,7 +6,7 @@ import (
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/user"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
-	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/repository"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/password"
 )
@@ -33,7 +33,7 @@ func NewChangePasswordHandler(userRepo repository.UserRepository, passwordEncode
 func (c *ChangePasswordHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
 	command := cmd.(ChangePasswordCommand)
 
-	user, err := c.userRepository.GetByID(command.CTX, command.UserID)
+	user, err := c.userRepository.FindByID(command.CTX, command.UserID)
 	if err != nil {
 		return cqrs.FailureResult("failed to find user", err)
 	}

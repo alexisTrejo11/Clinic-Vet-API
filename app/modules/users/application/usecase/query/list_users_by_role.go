@@ -5,37 +5,50 @@ import (
 	"errors"
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
-	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/repository"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
+	p "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 )
 
 type ListUsersByRoleQuery struct {
-	Role       enum.UserRole   `json:"role"`
-	Pagination page.PageInput  `json:"pagination"`
-	Ctx        context.Context `json:"-"`
+	role       enum.UserRole
+	pagination p.PageInput
+	ctx        context.Context
+}
+
+func NewListUsersByRoleQuery(ctx context.Context, role string, pagination p.PageInput) (*ListUsersByRoleQuery, error) {
+	roleEnum, err := enum.ParseUserRole(role)
+	if err != nil {
+		return nil, err
+	}
+
+	return &ListUsersByRoleQuery{
+		role:       roleEnum,
+		pagination: pagination,
+		ctx:        ctx,
+	}, nil
 }
 
 type ListUsersByRoleHandler struct {
 	userRepository repository.UserRepository
 }
 
-func NewListUsersByRoleHandler(userRepository repository.UserRepository) cqrs.QueryHandler[page.Page[[]UserResponse]] {
+func NewListUsersByRoleHandler(userRepository repository.UserRepository) cqrs.QueryHandler[p.Page[UserResult]] {
 	return &ListUsersByRoleHandler{
 		userRepository: userRepository,
 	}
 }
 
-func (h *ListUsersByRoleHandler) Handle(q cqrs.Query) (page.Page[[]UserResponse], error) {
+func (h *ListUsersByRoleHandler) Handle(q cqrs.Query) (p.Page[UserResult], error) {
 	query, valid := q.(ListUsersByRoleQuery)
 	if !valid {
-		return page.Page[[]UserResponse]{}, errors.New("invalid query type")
+		return p.Page[UserResult]{}, errors.New("invalid query type")
 	}
 
-	users, err := h.userRepository.ListByRole(query.Ctx, query.Role.String(), query.Pagination)
+	users, err := h.userRepository.FindByRole(query.ctx, query.role.String(), query.pagination)
 	if err != nil {
-		return page.Page[[]UserResponse]{}, err
+		return p.Page[UserResult]{}, err
 	}
 
-	return toResponsePage(users), nil
+	return toResultPage(users), nil
 }
