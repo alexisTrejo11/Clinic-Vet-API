@@ -11,11 +11,11 @@ type RequestLogout struct {
 	RefreshToken string `json:"refresh_token" binding:"required"`
 }
 
-func (r *RequestLogout) ToCommand(userIdInt uint) (command.LogoutCommand, error) {
+func (r *RequestLogout) ToCommand(ctx context.Context, userIdInt uint) (command.LogoutCommand, error) {
 	cmd := &command.LogoutCommand{
 		RefreshToken: r.RefreshToken,
 		UserID:       valueobject.NewUserID(userIdInt),
-		CTX:          context.Background(),
+		CTX:          ctx,
 	}
 
 	return *cmd, nil

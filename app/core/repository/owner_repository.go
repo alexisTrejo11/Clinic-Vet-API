@@ -4,17 +4,14 @@ import (
 	"context"
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/customer"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/specification"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 )
 
 type CustomerRepository interface {
-	FindBySpecification(ctx context.Context, spec any) (page.Page[customer.Customer], error)
+	FindBySpecification(ctx context.Context, spec specification.CustomerSpecification) (page.Page[customer.Customer], error)
 	FindByID(ctx context.Context, id valueobject.CustomerID) (customer.Customer, error)
-	FindByPhone(ctx context.Context, phone string) (customer.Customer, error)
-	FindByEmail(ctx context.Context, email string) (customer.Customer, error)
-
-	FindAll(ctx context.Context, pageInput page.PageInput) (page.Page[customer.Customer], error)
 	FindActive(ctx context.Context, pageInput page.PageInput) (page.Page[customer.Customer], error)
 
 	ExistsByID(ctx context.Context, id valueobject.CustomerID) (bool, error)

@@ -2,15 +2,10 @@ package command
 
 import (
 	"context"
-	"errors"
 	"time"
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/auth"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/user"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/repository"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/auth/application/jwt"
 	apperror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/application"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/password"
 )
 
 // LoginCommand represents the login request data
@@ -24,37 +19,8 @@ type LoginCommand struct {
 	CTX        context.Context `json:"-"`
 }
 
-// loginHandler handles user authentication and session creation
-type loginHandler struct {
-	userRepo        repository.UserRepository
-	sessionRepo     repository.SessionRepository
-	jwtService      jwt.JWTService
-	passwordEncoder password.PasswordEncoder
-}
-
-// NewLoginHandler creates a new instance of loginHandler
-func NewLoginHandler(
-	userRepo repository.UserRepository,
-	sessionRepo repository.SessionRepository,
-	jwtService jwt.JWTService,
-	passwordEncoder password.PasswordEncoder,
-) AuthCommandHandler {
-	return &loginHandler{
-		userRepo:        userRepo,
-		sessionRepo:     sessionRepo,
-		jwtService:      jwtService,
-		passwordEncoder: passwordEncoder,
-	}
-}
-
-// Handle processes the login command and returns authentication result
-func (h *loginHandler) Handle(cmd any) AuthCommandResult {
-	command, ok := cmd.(LoginCommand)
-	if !ok {
-		return FailureAuthResult(ErrAuthenticationFailed, errors.New("invalid command type"))
-	}
-
-	user, err := h.authenticate(&command)
+func (h *authCommandHandler) Login(command LoginCommand) AuthCommandResult {
+	user, err := h.userAuthService.AuthenticateUser(command.CTX, command.Identifier)
 	if err != nil {
 		return FailureAuthResult(ErrAuthenticationFailed, err)
 	}
@@ -62,14 +28,14 @@ func (h *loginHandler) Handle(cmd any) AuthCommandResult {
 	if user.CanLogin() {
 		return FailureAuthResult(
 			ErrAuthenticationFailed,
-			apperror.ConflictError("UserStatus", "user is not active, please contact support"),
+			apperror.ConflictError("User Status", "user is not active, please contact support"),
 		)
 	}
 
 	if user.IsTwoFactorEnabled() {
 		return FailureAuthResult(
 			ErrTwoFactorRequired,
-			apperror.ConflictError("TwoFactorAuth", ErrTwoFactorAuthConflict),
+			apperror.ConflictError("Two Factor Authorization", ErrTwoFactorAuthConflict),
 		)
 	}
 
@@ -90,24 +56,7 @@ func (h *loginHandler) Handle(cmd any) AuthCommandResult {
 	)
 }
 
-func (h *loginHandler) authenticate(command *LoginCommand) (user.User, error) {
-	userEntity, err := h.userRepo.FindByEmail(command.CTX, command.Identifier)
-	if err != nil {
-		userEntity, err = h.userRepo.FindByPhone(command.CTX, command.Identifier)
-		if err != nil {
-			return user.User{}, errors.New(ErrInvalidCredentials)
-		}
-	}
-
-	if err := h.passwordEncoder.CheckPassword(command.Password, userEntity.Password()); err != nil {
-		return user.User{}, errors.New(ErrInvalidCredentials)
-	}
-
-	return userEntity, nil
-}
-
-// createSession creates and persists a new user session
-func (h *loginHandler) createSession(userID string, command LoginCommand) (auth.Session, error) {
+func (h *authCommandHandler) createSession(userID string, command LoginCommand) (auth.Session, error) {
 	refreshToken, err := h.jwtService.GenerateRefreshToken(userID)
 	if err != nil {
 		return auth.Session{}, err

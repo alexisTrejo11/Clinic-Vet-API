@@ -7,12 +7,9 @@ import (
 	u "github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/user"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/repository"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/service"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
 )
 
-type EmployeeSignupCommand struct {
+type EmployeeRegisterCommand struct {
 	email       valueobject.Email
 	password    string
 	phoneNumber *valueobject.PhoneNumber
@@ -20,14 +17,14 @@ type EmployeeSignupCommand struct {
 	ctx         context.Context
 }
 
-func NewEmployeeSignupCommand(
+func NewEmployeeRegisterCommand(
 	ctx context.Context,
 	email valueobject.Email,
 	password string,
 	phoneNumber *valueobject.PhoneNumber,
 	employeeID valueobject.EmployeeID,
-) *EmployeeSignupCommand {
-	return &EmployeeSignupCommand{
+) *EmployeeRegisterCommand {
+	return &EmployeeRegisterCommand{
 		email:       email,
 		password:    password,
 		phoneNumber: phoneNumber,
@@ -36,52 +33,29 @@ func NewEmployeeSignupCommand(
 	}
 }
 
-type EmployeeSignupHandler struct {
-	userRepository      repository.UserRepository
-	employeeRepository  repository.EmployeeRepository
-	userSecurityService service.UserSecurityService
-}
-
-func NewEmployeeSignupHandler(
-	userRepository repository.UserRepository,
-	employeeRepository repository.EmployeeRepository,
-	userSecurityService service.UserSecurityService,
-) *EmployeeSignupHandler {
-	return &EmployeeSignupHandler{
-		userRepository:      userRepository,
-		employeeRepository:  employeeRepository,
-		userSecurityService: userSecurityService,
-	}
-}
-
-func (h *EmployeeSignupHandler) Handle(cmd cqrs.Command) AuthCommandResult {
-	command, ok := cmd.(*EmployeeSignupCommand)
-	if !ok {
-		return FailureAuthResult(ErrAuthenticationFailed, ErrInvalidCommand)
-	}
-
-	if err := h.userSecurityService.ValidateUserCredentials(
+func (h *authCommandHandler) EmployeeRegister(command EmployeeRegisterCommand) AuthCommandResult {
+	if err := h.userAuthService.ValidateUserCredentials(
 		command.ctx, command.email, command.phoneNumber, command.password); err != nil {
 		return FailureAuthResult(ErrValidationFailed, err)
 	}
 
-	if err := h.userSecurityService.ValidateEmployeeAccount(command.ctx, command.employeeID); err != nil {
+	if err := h.userAuthService.ValidateEmployeeAccount(command.ctx, command.employeeID); err != nil {
 		return FailureAuthResult(ErrValidationFailed, err)
 	}
 
-	user, err := h.createUser(command)
+	user, err := command.toEntity()
 	if err != nil {
 		return FailureAuthResult(ErrUserCreationFailed, err)
 	}
 
-	if err := h.userSecurityService.ProcessUserCreation(command.ctx, user); err != nil {
+	if err := h.userAuthService.ProcessUserCreation(command.ctx, user); err != nil {
 		return FailureAuthResult(ErrUserCreationFailed, err)
 	}
 
 	return SuccessAuthResult(nil, user.ID().String(), "user successfully created")
 }
 
-func (h *EmployeeSignupHandler) createUser(command *EmployeeSignupCommand) (*u.User, error) {
+func (command *EmployeeRegisterCommand) toEntity() (*u.User, error) {
 	user, err := u.CreateUser(
 		enum.UserRoleVeterinarian,
 		enum.UserStatusPending,

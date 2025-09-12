@@ -75,7 +75,7 @@ func (c *AdminPaymentController) MarkOverduePayments(ctx *gin.Context) {
 		return
 	}
 
-	response.Success(ctx, commandResult)
+	response.Success(ctx, commandResult, "Overdue payments marked successfully")
 }
 
 // GetOverduePayments delegates to query controller

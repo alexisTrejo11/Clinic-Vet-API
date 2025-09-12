@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/payment"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
 	cmd "github.com/alexisTrejo11/Clinic-Vet-API/app/modules/payments/application/command"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 )
@@ -12,8 +11,8 @@ import (
 func (req CreatePaymentRequest) ToCreatePaymentCommand() (cmd.CreatePaymentCommand, error) {
 	c, err := cmd.NewCreatePaymentCommand(
 		context.Background(),
-		req.AppointmentID,
-		req.UserID,
+		uint(req.AppointmentID),
+		uint(req.UserID),
 		req.Amount,
 		req.Currency,
 		req.PaymentMethod,
@@ -28,7 +27,7 @@ func (req CreatePaymentRequest) ToCreatePaymentCommand() (cmd.CreatePaymentComma
 	return c, nil
 }
 
-func (req UpdatePaymentRequest) ToUpdatePaymentCommand(ctx context.Context, paymentID int) (cmd.UpdatePaymentCommand, error) {
+func (req UpdatePaymentRequest) ToUpdatePaymentCommand(ctx context.Context, paymentID uint) (cmd.UpdatePaymentCommand, error) {
 	command, errors := cmd.NewUpdatePaymentCommand(
 		ctx,
 		paymentID,
@@ -46,15 +45,15 @@ func (req UpdatePaymentRequest) ToUpdatePaymentCommand(ctx context.Context, paym
 	return command, nil
 }
 
-func (req ProcessPaymentRequest) ToProcessPaymentCommand(paymentID int) (cmd.ProcessPaymentCommand, error) {
+func (req ProcessPaymentRequest) ToProcessPaymentCommand(paymentID uint) (*cmd.ProcessPaymentCommand, error) {
 	return cmd.NewProcessPaymentCommand(paymentID, req.TransactionID)
 }
 
-func (req RefundPaymentRequest) ToRefundPaymentCommand(paymentID int) (cmd.RefundPaymentCommand, error) {
+func (req RefundPaymentRequest) ToRefundPaymentCommand(paymentID uint) (*cmd.RefundPaymentCommand, error) {
 	return cmd.NewRefundPaymentCommand(paymentID, req.Reason)
 }
 
-func (req CancelPaymentRequest) ToCancelPaymentCommand(paymentID int) (cmd.CancelPaymentCommand, error) {
+func (req CancelPaymentRequest) ToCancelPaymentCommand(paymentID uint) *cmd.CancelPaymentCommand {
 	return cmd.NewCancelPaymentCommand(paymentID, req.Reason)
 }
 
@@ -79,20 +78,19 @@ func ToPaymentResponse(pay any) PaymentResponse {
 	}
 }
 
-func ToPaymentListResponse(data interface{}) PaymentListResponse {
-	paymentsPage := data.(page.Page[[]payment.Payment])
-
-	responses := make([]PaymentResponse, len(paymentsPage.Data))
-	for i, payment := range paymentsPage.Data {
+func ToPaymentListResponse(paymentsPage page.Page[[]payment.Payment]) PaymentListResponse {
+	responses := make([]PaymentResponse, len(paymentsPage.Items))
+	for i, payment := range paymentsPage.Items {
 		responses[i] = ToPaymentResponse(&payment)
 	}
 
 	return PaymentListResponse{
-		Data:     responses,
+		Items:    responses,
 		Metadata: paymentsPage.Metadata,
 	}
 }
 
+/*
 func ToPaymentReportResponse(report PaymentReport) PaymentReportResponse {
 	paymentsByMethod := make(map[enum.PaymentMethod]PaymentSummary)
 	for method, summary := range report.PaymentsByMethod {
@@ -124,37 +122,4 @@ func ToPaymentReportResponse(report PaymentReport) PaymentReportResponse {
 		PaymentsByStatus: paymentsByStatus,
 	}
 }
-
-func (req PaymentSearchRequest) ToSearchCriteria() map[string]any {
-	criteria := make(map[string]interface{})
-
-	if req.UserID != nil {
-		criteria["owner_id"] = *req.UserID
-	}
-	if req.AppointmentID != nil {
-		criteria["appointment_id"] = *req.AppointmentID
-	}
-	if req.Status != nil {
-		criteria["status"] = *req.Status
-	}
-	if req.PaymentMethod != nil {
-		criteria["payment_method"] = *req.PaymentMethod
-	}
-	if req.MinAmount != nil {
-		criteria["min_amount"] = *req.MinAmount
-	}
-	if req.MaxAmount != nil {
-		criteria["max_amount"] = *req.MaxAmount
-	}
-	if req.Currency != nil {
-		criteria["currency"] = *req.Currency
-	}
-	if req.StartDate != nil {
-		criteria["start_date"] = *req.StartDate
-	}
-	if req.EndDate != nil {
-		criteria["end_date"] = *req.EndDate
-	}
-
-	return criteria
-}
+*/

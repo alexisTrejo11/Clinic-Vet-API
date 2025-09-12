@@ -5,10 +5,38 @@ import (
 )
 
 type CommandResult struct {
-	IsSuccess bool   `json:"isSuccess"`
-	ID        string `json:"id,omitempty"`
-	Message   string `json:"message,omitempty"`
-	Error     error  `json:"error,omitempty"`
+	isSuccess bool
+	id        string
+	message   string
+	error     error
+}
+
+func (c CommandResult) IsSuccess() bool {
+	return c.isSuccess
+}
+
+func (c CommandResult) ID() string {
+	return c.id
+}
+
+func (c CommandResult) Message() string {
+	return c.message
+}
+
+func (c CommandResult) Error() error {
+	return c.error
+}
+
+func (c CommandResult) ToMap() map[string]any {
+	result := map[string]any{
+		"isSuccess": c.isSuccess,
+		"id":        c.id,
+		"message":   c.message,
+	}
+	if c.error != nil {
+		result["error"] = c.error.Error()
+	}
+	return result
 }
 
 func (c CommandResult) MarshalJSON() ([]byte, error) {
@@ -23,39 +51,25 @@ func (c CommandResult) MarshalJSON() ([]byte, error) {
 }
 
 func (c CommandResult) getErrorString() string {
-	if c.Error != nil {
-		return c.Error.Error()
+	if c.error != nil {
+		return c.error.Error()
 	}
 	return ""
 }
 
 func FailureResult(message string, err error) CommandResult {
 	return CommandResult{
-		IsSuccess: false,
-		Message:   message,
-		Error:     err,
+		isSuccess: false,
+		message:   message,
+		error:     err,
 	}
 }
 
 func SuccessResult(id, message string) CommandResult {
 	return CommandResult{
-		IsSuccess: true,
-		ID:        id,
-		Message:   message,
-		Error:     nil,
+		isSuccess: true,
+		id:        id,
+		message:   message,
+		error:     nil,
 	}
-}
-
-func (c CommandResult) ToMap() map[string]any {
-	result := map[string]any{
-		"isSuccess": c.IsSuccess,
-		"id":        c.ID,
-		"message":   c.Message,
-	}
-
-	if c.Error != nil {
-		result["error"] = c.Error.Error()
-	}
-
-	return result
 }

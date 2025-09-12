@@ -29,6 +29,16 @@ type PageInput struct {
 	PageSize      int           `json:"page_limit" validate:"omitempty,min=1,max=100"`
 	PageNumber    int           `json:"page_number" validate:"omitempty,min=1"`
 	SortDirection SortDirection `json:"sort_direction" validate:"omitempty,min=0"`
+	OrderBy       string        `json:"order_by" validate:"omitempty,max=50"`
+}
+
+func (p PageInput) ToMap() map[string]any {
+	return map[string]any{
+		"page_limit":     p.PageSize,
+		"page_number":    p.PageNumber,
+		"sort_direction": p.SortDirection,
+		"order_by":       p.OrderBy,
+	}
 }
 
 // SetDefaultsFieldsIfEmpty sets default values for PageInput fields if they are empty or invalid.

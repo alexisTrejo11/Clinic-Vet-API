@@ -2,10 +2,8 @@ package command
 
 import (
 	"context"
-	"errors"
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/repository"
 )
 
 type LogoutAllCommand struct {
@@ -20,33 +18,16 @@ func NewLogoutAllCommand(ctx context.Context, useridnUInt uint) *LogoutAllComman
 	}
 }
 
-type logoutAllHandler struct {
-	userRepository    repository.UserRepository
-	sessionRepository repository.SessionRepository
-}
-
-func NewLogoutAllHandler(userRepository repository.UserRepository, sessionRepository repository.SessionRepository) *logoutAllHandler {
-	return &logoutAllHandler{
-		userRepository:    userRepository,
-		sessionRepository: sessionRepository,
-	}
-}
-
-func (h *logoutAllHandler) Handle(cmd any) AuthCommandResult {
-	command, ok := cmd.(LogoutAllCommand)
-	if !ok {
-		return FailureAuthResult(ErrAuthenticationFailed, errors.New("invalid command type"))
-	}
-
+func (h *authCommandHandler) LogoutAll(command LogoutAllCommand) AuthCommandResult {
 	user, err := h.userRepository.FindByID(command.ctx, command.userID)
 	if err != nil {
-		return FailureAuthResult("an error ocurred finding user", err)
+		return FailureAuthResult("an error occurred finding user", err)
 	}
 
-	err = h.sessionRepository.DeleteAllUserSessions(command.ctx, user.ID())
+	err = h.sessionRepo.DeleteAllUserSessions(command.ctx, user.ID())
 	if err != nil {
-		return FailureAuthResult("an error ocurred delete user sessions", err)
+		return FailureAuthResult("an error occurred delete user sessions", err)
 	}
 
-	return SuccessAuthResult(nil, user.ID().String(), "user sessions sucessfully deleted on all devices")
+	return SuccessAuthResult(nil, user.ID().String(), "user sessions successfully deleted on all devices")
 }

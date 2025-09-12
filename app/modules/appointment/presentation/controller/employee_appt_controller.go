@@ -69,14 +69,14 @@ func (controller *EmployeeApptController) GetMyAppointments(c *gin.Context) {
 		return
 	}
 
-	listApptByVetQuery := query.NewListApptByVetQuery(c.Request.Context(), userCTX.EmployeeID, pagination)
-	result, err := controller.queryBus.Execute(listApptByVetQuery)
+	query := query.NewFindApptsByEmployeeIDQuery(c.Request.Context(), userCTX.EmployeeID, pagination)
+	resultPage, err := controller.queryBus.Execute(query)
 	if err != nil {
 		response.ApplicationError(c, err)
 		return
 	}
 
-	response.Success(c, result)
+	response.Found(c, nil, result.Message())
 }
 
 // CompleteAppointment godoc
@@ -104,12 +104,12 @@ func (controller *EmployeeApptController) CompleteAppointment(c *gin.Context) {
 
 	completeAppointmentCommand := command.NewCompleteApptCommand(c.Request.Context(), appointmentID, &userCTX.EmployeeID, notes)
 	result := controller.commandBus.Execute(completeAppointmentCommand)
-	if !result.IsSuccess {
-		response.ApplicationError(c, result.Error)
+	if !result.IsSuccess() {
+		response.ApplicationError(c, result.Error())
 		return
 	}
 
-	response.Success(c, result)
+	response.Success(c, nil, result.Message())
 }
 
 // CancelAppointment godoc
@@ -138,12 +138,12 @@ func (controller *EmployeeApptController) CancelAppointment(c *gin.Context) {
 
 	cancelAppointmentCommand := command.NewCancelApptCommand(c.Request.Context(), appointmentID, &userCTX.EmployeeID, reason)
 	result := controller.commandBus.Execute(cancelAppointmentCommand)
-	if !result.IsSuccess {
-		response.ApplicationError(c, result.Error)
+	if !result.IsSuccess() {
+		response.ApplicationError(c, result.Error())
 		return
 	}
 
-	response.Success(c, result)
+	response.Success(c, nil, result.Message())
 }
 
 // ConfirmAppointment godoc
@@ -176,12 +176,12 @@ func (controller *EmployeeApptController) ConfirmAppointment(c *gin.Context) {
 
 	vetConfirmApptCommand := command.NewConfirmAppointmentCommand(c.Request.Context(), appointmentID, userCTX.EmployeeID)
 	result := controller.commandBus.Execute(vetConfirmApptCommand)
-	if !result.IsSuccess {
-		response.ApplicationError(c, result.Error)
+	if !result.IsSuccess() {
+		response.ApplicationError(c, result.Error())
 		return
 	}
 
-	response.Success(c, result)
+	response.Success(c, nil, result.Message())
 }
 
 // MarkAsNoShow godoc

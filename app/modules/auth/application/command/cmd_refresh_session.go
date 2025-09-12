@@ -2,12 +2,9 @@ package command
 
 import (
 	"context"
-	"errors"
 
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/auth"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/repository"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/auth/application/jwt"
 	apperror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/application"
 )
 
@@ -17,30 +14,7 @@ type RefreshSessionCommand struct {
 	CTX          context.Context    `json:"-"`
 }
 
-type RefreshSessionHandler struct {
-	userRepo    repository.UserRepository
-	sessionRepo repository.SessionRepository
-	jwtService  jwt.JWTService
-}
-
-func NewRefreshSessionHandler(
-	userRepo repository.UserRepository,
-	sessionRepo repository.SessionRepository,
-	jwtService jwt.JWTService,
-) AuthCommandHandler {
-	return &RefreshSessionHandler{
-		userRepo:    userRepo,
-		sessionRepo: sessionRepo,
-		jwtService:  jwtService,
-	}
-}
-
-func (h *RefreshSessionHandler) Handle(cmd any) AuthCommandResult {
-	command, ok := cmd.(RefreshSessionCommand)
-	if !ok {
-		return FailureAuthResult(ErrAuthenticationFailed, errors.New("invalid command type"))
-	}
-
+func (h *authCommandHandler) RefreshSession(command RefreshSessionCommand) AuthCommandResult {
 	if err := h.validateExisitngUser(command); err != nil {
 		return FailureAuthResult("Error occurred in user validation", err)
 	}
@@ -59,8 +33,8 @@ func (h *RefreshSessionHandler) Handle(cmd any) AuthCommandResult {
 	return SuccessAuthResult(response, session.ID, "session successfully refreshed")
 }
 
-func (h *RefreshSessionHandler) validateExisitngUser(command RefreshSessionCommand) error {
-	exists, err := h.userRepo.ExistsByID(command.CTX, command.UserID)
+func (h *authCommandHandler) validateExisitngUser(command RefreshSessionCommand) error {
+	exists, err := h.userRepository.ExistsByID(command.CTX, command.UserID)
 	if err != nil {
 		return err
 	}

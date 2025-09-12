@@ -1,3 +1,4 @@
+// Package middleware contains middleware for authentication and user context management
 package middleware
 
 import (
@@ -66,7 +67,7 @@ func (am *AuthMiddleware) Authenticate() gin.HandlerFunc {
 			return
 		}
 
-		user, err := am.userRepo.GetByID(c.Request.Context(), valueobject.NewUserID(uint(idUInt)))
+		user, err := am.userRepo.FindByID(c.Request.Context(), valueobject.NewUserID(uint(idUInt)))
 		if err != nil {
 			response.ApplicationError(c, err)
 		}
@@ -107,7 +108,7 @@ func (am *AuthMiddleware) OptionalAuth() gin.HandlerFunc {
 			return
 		}
 
-		user, err := am.userRepo.GetByID(context.Background(), valueobject.NewUserID(uint(idUInt)))
+		user, err := am.userRepo.FindByID(context.Background(), valueobject.NewUserID(uint(idUInt)))
 		if err != nil {
 			response.ApplicationError(c, err)
 		}

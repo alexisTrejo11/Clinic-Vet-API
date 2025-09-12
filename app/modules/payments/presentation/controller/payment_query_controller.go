@@ -42,7 +42,7 @@ func (c *PaymentQueryController) SearchPayments(ctx *gin.Context) {
 	}
 
 	paymentPage := dto.ToPaymentListResponse(payments)
-	response.Success(ctx, paymentPage)
+	response.Success(ctx, paymentPage, "Payments retrieved successfully")
 }
 
 func (c *PaymentQueryController) GetPayment(ctx *gin.Context) {
@@ -65,16 +65,10 @@ func (c *PaymentQueryController) GetPayment(ctx *gin.Context) {
 	}
 
 	paymentPage := dto.ToPaymentResponse(payment)
-	response.Success(ctx, paymentPage)
+	response.Success(ctx, paymentPage, "Payment retrieved successfully")
 }
 
-func (c *PaymentQueryController) GetPaymentsByUser(ctx *gin.Context) {
-	userID, err := ginUtils.ParseParamToInt(ctx, ctx.Param("user_id"))
-	if err != nil {
-		response.BadRequest(ctx, httpError.RequestURLParamError(err, "user_id", ctx.Param("user_id")))
-		return
-	}
-
+func (c *PaymentQueryController) GetPaymentsByCustomer(ctx *gin.Context, customerID uint) {
 	var pagination *page.PageInput
 	if err := ctx.ShouldBindQuery(&pagination); err != nil {
 		response.BadRequest(ctx, httpError.RequestURLQueryError(err, ctx.Request.URL.RawQuery))
@@ -86,7 +80,7 @@ func (c *PaymentQueryController) GetPaymentsByUser(ctx *gin.Context) {
 		return
 	}
 
-	listByUserQuery := query.NewListPaymentsByUserQuery(userID, *pagination)
+	listByUserQuery := query.NewListPaymentsByCustomerID(customerID, *pagination)
 	paymentPage, err := c.queryBus.Execute(listByUserQuery)
 	if err != nil {
 		response.ApplicationError(ctx, err)

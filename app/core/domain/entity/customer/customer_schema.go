@@ -13,11 +13,12 @@ import (
 type Customer struct {
 	base.Entity[valueobject.CustomerID]
 	base.Person
-	photo       string
-	phoneNumber string
-	userID      *valueobject.UserID
-	isActive    bool
-	pets        []pet.Pet
+	photo     string
+	gender    enum.PersonGender
+	birthDate time.Time
+	userID    *valueobject.UserID
+	isActive  bool
+	pets      []pet.Pet
 }
 
 func (o *Customer) ID() valueobject.CustomerID {
@@ -29,19 +30,11 @@ func (o *Customer) Photo() string {
 }
 
 func (o *Customer) FullName() valueobject.PersonName {
-	return o.Person.Name()
-}
-
-func (o *Customer) Gender() enum.PersonGender {
-	return o.Person.Gender()
+	return o.Name()
 }
 
 func (o *Customer) DateOfBirth() time.Time {
 	return o.Person.DateOfBirth()
-}
-
-func (o *Customer) PhoneNumber() string {
-	return o.phoneNumber
 }
 
 func (o *Customer) UserID() *valueobject.UserID {
@@ -54,8 +47,4 @@ func (o *Customer) IsActive() bool {
 
 func (o *Customer) Pets() []pet.Pet {
 	return o.pets
-}
-
-func (o *Customer) Age() int {
-	return o.Person.Age()
 }

@@ -2,7 +2,6 @@ package controller
 
 import (
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/payments/application/command"
-	dto "github.com/alexisTrejo11/Clinic-Vet-API/app/modules/payments/infrastructure/api/dtos"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
 	httpError "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/infrastructure/http"
 	ginUtils "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/gin_utils"
@@ -28,7 +27,7 @@ func NewPaymentController(
 
 // CreatePayment creates a new payment
 func (c *PaymentController) CreatePayment(ctx *gin.Context) {
-	var req dto.CreatePaymentRequest
+	var req dto.
 
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		response.BadRequest(ctx, httpError.RequestBodyDataError(err))

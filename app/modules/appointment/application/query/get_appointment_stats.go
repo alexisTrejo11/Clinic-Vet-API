@@ -33,13 +33,13 @@ type FindApptStatsHandler struct {
 	apptRepo repository.AppointmentRepository
 }
 
-func NewFindApptStatsHandler(apptRepo repository.AppointmentRepository) cqrs.QueryHandler[ApptStatsResponse] {
+func NewFindApptStatsHandler(apptRepo repository.AppointmentRepository) cqrs.QueryHandler[ApptStatsResult] {
 	return &FindApptStatsHandler{
 		apptRepo: apptRepo,
 	}
 }
 
-func (h *FindApptStatsHandler) Handle(q cqrs.Query) (ApptStatsResponse, error) {
+func (h *FindApptStatsHandler) Handle(q cqrs.Query) (ApptStatsResult, error) {
 	query := q.(FindApptStatsQuery)
 
 	var appointments []appointment.Appointment
@@ -60,7 +60,7 @@ func (h *FindApptStatsHandler) Handle(q cqrs.Query) (ApptStatsResponse, error) {
 	}
 
 	if err != nil {
-		return ApptStatsResponse{}, err
+		return ApptStatsResult{}, err
 	}
 	// Apply additional filters
 	var filteredAppointments []appointment.Appointment
@@ -89,7 +89,7 @@ func (h *FindApptStatsHandler) Handle(q cqrs.Query) (ApptStatsResponse, error) {
 	return stats, nil
 }
 
-func (h *FindApptStatsHandler) calculateStats(appointments []appointment.Appointment, query FindApptStatsQuery) ApptStatsResponse {
+func (h *FindApptStatsHandler) calculateStats(appointments []appointment.Appointment, query FindApptStatsQuery) ApptStatsResult {
 	totalAppointments := len(appointments)
 	pendingCount := 0
 	confirmedCount := 0
@@ -135,7 +135,7 @@ func (h *FindApptStatsHandler) calculateStats(appointments []appointment.Appoint
 		period = &periodStr
 	}
 
-	return NewApptStatsResponse(
+	return NewApptStatsResult(
 		totalAppointments,
 		pendingCount,
 		confirmedCount,

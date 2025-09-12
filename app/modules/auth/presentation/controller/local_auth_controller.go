@@ -3,6 +3,8 @@ package controller
 
 import (
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/auth/application/command"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/auth/infrastructure/bus"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/auth/presentation/dto"
 	autherror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/auth"
 	httpError "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/infrastructure/http"
 	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/response"
@@ -12,51 +14,47 @@ import (
 )
 
 type AuthController struct {
-	validator      *validator.Validate
-	authCommandBus command.AuthCommandBus
+	validator *validator.Validate
+	bus       *bus.AuthBus
 }
 
-func NewAuthController(
-	validator *validator.Validate,
-	authCommandBus command.AuthCommandBus,
-) *AuthController {
+func NewAuthController(validator *validator.Validate, bus *bus.AuthBus) *AuthController {
 	return &AuthController{
-		validator:      validator,
-		authCommandBus: authCommandBus,
+		validator: validator,
+		bus:       bus,
 	}
 }
 
-func (controller *AuthController) Signup(c *gin.Context) {
-	var singupRequest RequestSignup
+func (controller *AuthController) CustomerSignup(c *gin.Context) {
+	var reuqestBodyData dto.CustomerRequestSingup
 
-	if err := c.ShouldBindBodyWithJSON(&singupRequest); err != nil {
+	if err := c.ShouldBindBodyWithJSON(&reuqestBodyData); err != nil {
 		response.BadRequest(c, httpError.RequestBodyDataError(err))
 		return
 	}
 
-	if err := controller.validator.Struct(&singupRequest); err != nil {
+	if err := controller.validator.Struct(&reuqestBodyData); err != nil {
 		response.BadRequest(c, httpError.InvalidDataError(err))
 		return
 	}
 
-	signupCommand, err := singupRequest.ToCommand()
+	signupCommand, err := reuqestBodyData.ToCommand()
 	if err != nil {
 		response.ApplicationError(c, err)
 		return
 	}
 
-	result := controller.authCommandBus.Dispatch(signupCommand)
+	result := controller.bus.CustomerRegister(signupCommand)
 	if !result.IsSuccess() {
 		response.ApplicationError(c, result.Error())
 		return
 	}
 
-	response.Created(c, result)
+	response.Created(c, result, "User")
 }
 
 func (controller *AuthController) Login(c *gin.Context) {
-	var requestlogin *RequestLogin
-
+	var requestlogin *dto.RequestLogin
 	if err := c.ShouldBindBodyWithJSON(&requestlogin); err != nil {
 		response.BadRequest(c, httpError.RequestBodyDataError(err))
 		return
@@ -68,14 +66,13 @@ func (controller *AuthController) Login(c *gin.Context) {
 	}
 
 	loginCommand := requestlogin.ToCommand()
-
-	result := controller.authCommandBus.Dispatch(loginCommand)
+	result := controller.bus.Login(*loginCommand)
 	if !result.IsSuccess() {
 		response.ApplicationError(c, result.Error())
 		return
 	}
 
-	response.Success(c, result.Session)
+	response.Success(c, result.Session(), result.Message())
 }
 
 func (controller *AuthController) Logout(c *gin.Context) {
@@ -85,8 +82,7 @@ func (controller *AuthController) Logout(c *gin.Context) {
 		return
 	}
 
-	var requestLogout RequestLogout
-
+	var requestLogout dto.RequestLogout
 	if err := c.ShouldBindBodyWithJSON(&requestLogout); err != nil {
 		response.BadRequest(c, httpError.RequestBodyDataError(err))
 		return
@@ -94,23 +90,22 @@ func (controller *AuthController) Logout(c *gin.Context) {
 
 	if err := controller.validator.Struct(&requestLogout); err != nil {
 		response.BadRequest(c, httpError.InvalidDataError(err))
-
 		return
 	}
 
-	logoutCommand, err := requestLogout.ToCommand(id)
+	logoutCommand, err := requestLogout.ToCommand(c.Request.Context(), id.Value())
 	if err != nil {
 		response.ApplicationError(c, err)
 		return
 	}
 
-	result := controller.authCommandBus.Dispatch(logoutCommand)
+	result := controller.bus.Logout(logoutCommand)
 	if !result.IsSuccess() {
 		response.ApplicationError(c, result.Error())
 		return
 	}
 
-	response.Success(c, result.Message)
+	response.Success(c, nil, result.Message())
 }
 
 func (controller *AuthController) LogoutAll(c *gin.Context) {
@@ -120,17 +115,12 @@ func (controller *AuthController) LogoutAll(c *gin.Context) {
 		return
 	}
 
-	logoutAllCommand, err := command.NewLogoutAllCommand(id)
-	if err != nil {
-		response.ApplicationError(c, err)
-		return
-	}
-
-	result := controller.authCommandBus.Dispatch(logoutAllCommand)
+	logoutAllCommand := command.NewLogoutAllCommand(c.Request.Context(), id.Value())
+	result := controller.bus.LogoutAll(*logoutAllCommand)
 	if !result.IsSuccess() {
 		response.ApplicationError(c, result.Error())
 		return
 	}
 
-	response.Success(c, result.Message())
+	response.Success(c, nil, result.Message())
 }

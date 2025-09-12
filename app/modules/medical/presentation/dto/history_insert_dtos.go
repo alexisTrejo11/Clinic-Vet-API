@@ -5,10 +5,10 @@ import (
 	"time"
 )
 
-type AdminMedHistoryRequest struct {
+type AdminCreateMedHistoryRequest struct {
 	PetID      uint `json:"pet_id" validate:"required"`
 	CustomerID uint `json:"customer_id" validate:"required"`
-	EmployeeID uint `json:"employee_id" validate:"required"`
+	EmployeeID uint `json:"employee_id"`
 	CreateMedHistoryRequest
 }
 

@@ -5,7 +5,7 @@ import (
 )
 
 type RequestLogin struct {
-	Identifier string `json:"identifier" binding:"required"`
+	Identifier string `json:"identifier" binding:"required"` // Can be email or phoneNumber
 	Password   string `json:"password" binding:"required,min=8"`
 }
 

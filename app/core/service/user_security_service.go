@@ -55,7 +55,7 @@ func (s *UserSecurityService) ProcessUserCreation(ctx context.Context, user *use
 	return nil
 }
 
-func (s *UserSecurityService) AuthenticateUser(ctx context.Context, email string, password string) (user.User, error) {
+func (s *UserSecurityService) AuthenticateUser(ctx context.Context, EmailOrPhone string) (user.User, error) {
 	return user.User{}, nil
 }
 

@@ -7,7 +7,7 @@ import (
 	commondto "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/dto"
 )
 
-func (req *AdminMedHistoryRequest) ToCommand() *command.CreateMedHistCommand {
+func (req *AdminCreateMedHistoryRequest) ToCommand() *command.CreateMedHistCommand {
 	return &command.CreateMedHistCommand{
 		PetID:       valueobject.NewPetID(req.PetID),
 		CustomerID:  valueobject.NewCustomerID(req.CustomerID),

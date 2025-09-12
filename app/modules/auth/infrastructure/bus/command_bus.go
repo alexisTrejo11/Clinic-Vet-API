@@ -1,59 +1,37 @@
 package bus
 
-import (
-	"errors"
-	"fmt"
-	"reflect"
+import "github.com/alexisTrejo11/Clinic-Vet-API/app/modules/auth/application/command"
 
-	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/service"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/auth/application/command"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/auth/application/jwt"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/password"
-)
-
-type authCommandBus struct {
-	handlers map[reflect.Type]command.AuthCommandHandler
+type AuthBus struct {
+	CommandBus command.AuthCommandHandler
 }
 
-func NewAuthCommandBus(
-	sessionRepo repository.SessionRepository,
-	userRepo repository.UserRepository,
-	jwtService jwt.JWTService,
-) command.AuthCommandBus {
-	bus := &authCommandBus{
-		handlers: make(map[reflect.Type]command.AuthCommandHandler),
+func NewAuthBus(commandBus command.AuthCommandHandler) *AuthBus {
+	return &AuthBus{
+		CommandBus: commandBus,
 	}
-
-	bus.Register(reflect.TypeOf(command.RefreshSessionCommand{}), command.NewRefreshSessionHandler(userRepo, sessionRepo, jwtService))
-	bus.Register(reflect.TypeOf(command.SignupCommand{}), command.NewSignupCommandHandler(userRepo, *service.NewUserSecurityService(userRepo)))
-	bus.Register(reflect.TypeOf(command.LogoutCommand{}), command.NewLogoutHandler(userRepo, sessionRepo))
-	bus.Register(reflect.TypeOf(command.LoginCommand{}), command.NewLoginHandler(userRepo, sessionRepo, jwtService, &password.PasswordEncoderImpl{}))
-	bus.Register(reflect.TypeOf(command.LogoutAllCommand{}), command.NewLogoutAllHandler(userRepo, sessionRepo))
-
-	return bus
 }
 
-func (bus *authCommandBus) Register(commandType reflect.Type, handler command.AuthCommandHandler) error {
-	if handler == nil {
-		return fmt.Errorf("handler is nil")
-	}
-
-	bus.handlers[commandType] = handler
-	return nil
+func (bus *AuthBus) CustomerRegister(command command.CustomerRegisterCommand) command.AuthCommandResult {
+	return bus.CommandBus.CustomerRegister(command)
 }
 
-func (bus *authCommandBus) Dispatch(cmd any) command.AuthCommandResult {
-	commandType := reflect.TypeOf(cmd)
-	handler, exists := bus.handlers[commandType]
-	if !exists {
-		return command.FailureAuthResult(
-			fmt.Sprintf("No handler for command type: %s", commandType.Name()),
-			errors.New("unhandled command type"),
-		)
-	}
+func (bus *AuthBus) EmployeeRegister(command command.EmployeeRegisterCommand) command.AuthCommandResult {
+	return bus.CommandBus.EmployeeRegister(command)
+}
 
-	result := handler.Handle(cmd)
+func (bus *AuthBus) Login(command command.LoginCommand) command.AuthCommandResult {
+	return bus.CommandBus.Login(command)
+}
 
-	return result
+func (bus *AuthBus) RefreshSession(command command.RefreshSessionCommand) command.AuthCommandResult {
+	return bus.CommandBus.RefreshSession(command)
+}
+
+func (bus *AuthBus) Logout(command command.LogoutCommand) command.AuthCommandResult {
+	return bus.CommandBus.Logout(command)
+}
+
+func (bus *AuthBus) LogoutAll(command command.LogoutAllCommand) command.AuthCommandResult {
+	return bus.CommandBus.LogoutAll(command)
 }

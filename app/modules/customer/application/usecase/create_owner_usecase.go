@@ -1,40 +1,39 @@
-// Package usecase contains all the implementation to handle all the business logic related to owner entity
+// Package usecase contains all the implementation to handle all the business logic related to customer entity
 package usecase
 
 import (
 	"context"
 
 	domainerr "github.com/alexisTrejo11/Clinic-Vet-API/app/core/error"
-	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/owners/application/dto"
-	mapper "github.com/alexisTrejo11/Clinic-Vet-API/app/modules/owners/application/mappers"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/repository"
+	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/customer/application/dto"
 )
 
-type CreateOwnerUseCase struct {
-	ownerRepo repository.OwnerRepository
+type CreateCustomerUseCase struct {
+	customerRepo repository.customerRepository
 }
 
-func NewCreateOwnerUseCase(ownerRepo repository.OwnerRepository) *CreateOwnerUseCase {
-	return &CreateOwnerUseCase{
-		ownerRepo: ownerRepo,
+func NewCreatecustomerUseCase(customerRepo repository.CustomerRepository) *CreateCustomerUseCase {
+	return &CreatecustomerUseCase{
+		customerRepo: customerRepo,
 	}
 }
 
-func (uc *CreateOwnerUseCase) Execute(ctx context.Context, createData dto.OwnerCreate) (dto.OwnerDetail, error) {
-	if exists, err := uc.ownerRepo.ExistsByPhone(ctx, createData.PhoneNumber); err != nil {
-		return dto.OwnerDetail{}, err
+func (uc *CreatecustomerUseCase) Execute(ctx context.Context, createData dto.customerCreate) (dto.CustomerDetail, error) {
+	if exists, err := uc.customerRepo.ExistsByPhone(ctx, createData.PhoneNumber); err != nil {
+		return dto.CustomerDetail{}, err
 	} else if exists {
-		return dto.OwnerDetail{}, domainerr.HandlePhoneConflictError()
+		return dto.CustomerDetail{}, domainerr.HandlePhoneConflictError()
 	}
 
-	owner, err := mapper.FromRequestCreate(createData)
+	customer, err := mapper.FromRequestCreate(createData)
 	if err != nil {
-		return dto.OwnerDetail{}, err
+		return dto.CustomerDetail{}, err
 	}
 
-	if err := uc.ownerRepo.Save(ctx, owner); err != nil {
-		return dto.OwnerDetail{}, err
+	if err := uc.customerRepo.Save(ctx, customer); err != nil {
+		return dto.CustomerDetail{}, err
 	}
 
-	return mapper.ToResponse(owner), nil
+	return mapper.ToResponse(customer), nil
 }
