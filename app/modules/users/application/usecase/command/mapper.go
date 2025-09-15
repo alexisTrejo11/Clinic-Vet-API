@@ -4,7 +4,7 @@ package command
 import (
 	"time"
 
-	u "github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/user"
+	u "clinic-vet-api/app/core/domain/entity/user"
 )
 
 func fromCreateCommand(cmd CreateUserCommand) (*u.User, error) {

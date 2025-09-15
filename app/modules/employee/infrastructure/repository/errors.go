@@ -1,9 +1,9 @@
-package repositoryimpl
+package repository
 
 import (
 	"fmt"
 
-	dberr "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/infrastructure/database"
+	dberr "clinic-vet-api/app/shared/error/infrastructure/database"
 )
 
 const (

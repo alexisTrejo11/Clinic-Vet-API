@@ -1,8 +1,8 @@
 package dto
 
 import (
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/pets/application/dto"
+	"clinic-vet-api/app/core/domain/valueobject"
+	"clinic-vet-api/app/modules/pets/application/dto"
 )
 
 // AdminUpdatePetRequest represents the payload for updating an existing pet's information by an admin

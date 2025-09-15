@@ -3,7 +3,7 @@ package command
 import (
 	"time"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
+	"clinic-vet-api/app/shared/cqrs"
 )
 
 type SessionResponse struct {

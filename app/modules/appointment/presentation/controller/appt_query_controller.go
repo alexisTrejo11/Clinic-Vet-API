@@ -2,12 +2,14 @@
 package controller
 
 import (
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/appointment/application/query"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/appointment/infrastructure/bus"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/appointment/presentation/dto"
-	httpError "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/infrastructure/http"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/response"
+	"clinic-vet-api/app/modules/appointment/application/query"
+	"clinic-vet-api/app/modules/appointment/infrastructure/bus"
+	"clinic-vet-api/app/modules/appointment/presentation/dto"
+	httpError "clinic-vet-api/app/shared/error/infrastructure/http"
+	ginutils "clinic-vet-api/app/shared/gin_utils"
+	"clinic-vet-api/app/shared/page"
+	"clinic-vet-api/app/shared/response"
+
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )
@@ -18,7 +20,11 @@ type AppointmentQueryController struct {
 	responseMapper *dto.ResponseMapper
 }
 
-func NewApptQueryController(bus bus.AppointmentBus, validate *validator.Validate, responseMapper *dto.ResponseMapper) *AppointmentQueryController {
+func NewApptQueryController(
+	bus bus.AppointmentBus,
+	validate *validator.Validate,
+	responseMapper *dto.ResponseMapper,
+) *AppointmentQueryController {
 	return &AppointmentQueryController{
 		bus:            bus,
 		validate:       validate,
@@ -26,8 +32,24 @@ func NewApptQueryController(bus bus.AppointmentBus, validate *validator.Validate
 	}
 }
 
-func (ctrl *AppointmentQueryController) GetAppointmentByID(c *gin.Context, appointmentID uint) {
-	appointmentQuery := query.NewFindApptByIDQuery(c.Request.Context(), appointmentID)
+type GetByIDExtraArgs struct {
+	employeeID *uint
+	customerID *uint
+}
+
+func (ctrl *AppointmentQueryController) GetAppointmentDetailByID(c *gin.Context, args GetByIDExtraArgs) {
+	appointmentID, err := ginutils.ParseParamToUInt(c, "id")
+	if err != nil {
+		response.BadRequest(c, httpError.RequestURLParamError(err, "id", c.Param("id")))
+		return
+	}
+
+	appointmentQuery := query.NewFindApptByIDQuery(
+		c.Request.Context(),
+		appointmentID,
+		args.employeeID,
+		args.customerID,
+	)
 
 	result, err := ctrl.bus.QueryBus.FindByID(*appointmentQuery)
 	if err != nil {
@@ -41,6 +63,11 @@ func (ctrl *AppointmentQueryController) GetAppointmentByID(c *gin.Context, appoi
 
 func (ctrl *AppointmentQueryController) FindAppointmentsBySpecification(c *gin.Context) {
 	searchSpecification, err := dto.NewApptSearchRequestFromContext(c)
+	if err != nil {
+		response.BadRequest(c, httpError.RequestURLQueryError(err, c.Request.URL.RawQuery))
+		return
+	}
+
 	if err := ctrl.validate.Struct(searchSpecification); err != nil {
 		response.BadRequest(c, httpError.InvalidDataError(err))
 		return
@@ -110,14 +137,14 @@ func (ctrl *AppointmentQueryController) FindAppointmentsByCustomer(c *gin.Contex
 	ctrl.HandlePaginatedResult(c, appointPage, pageParams.ToMap())
 }
 
-func (ctrl *AppointmentQueryController) GetAppointmentsByVet(c *gin.Context, ownerID uint) {
+func (ctrl *AppointmentQueryController) GetAppointmentsByEmployee(c *gin.Context, employeeID uint) {
 	var pageParams page.PageInput
 	if err := c.ShouldBindQuery(&pageParams); err != nil {
 		response.BadRequest(c, httpError.RequestURLQueryError(err, c.Request.URL.RawQuery))
 		return
 	}
 
-	query := query.NewFindApptsByEmployeeIDQuery(c.Request.Context(), ownerID, pageParams)
+	query := query.NewFindApptsByEmployeeIDQuery(c.Request.Context(), employeeID, pageParams)
 	appointmentPage, err := ctrl.bus.QueryBus.FindByEmployeeID(*query)
 	if err != nil {
 		response.ApplicationError(c, err)
@@ -150,5 +177,5 @@ func (ctrl *AppointmentQueryController) GetAppointmentStats(c *gin.Context) {
 func (ctrl *AppointmentQueryController) HandlePaginatedResult(c *gin.Context, pageResponse page.Page[query.ApptResult], queryParams map[string]any) {
 	appointmentsResponse := ctrl.responseMapper.FromResults(pageResponse.Items)
 	metadata := gin.H{"page_meta": pageResponse.Metadata, "request_params": queryParams}
-	response.SuccessWithMeta(c, appointmentsResponse, metadata)
+	response.SuccessWithMeta(c, appointmentsResponse, "Appointment ", metadata)
 }

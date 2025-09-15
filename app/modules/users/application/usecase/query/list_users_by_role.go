@@ -4,10 +4,10 @@ import (
 	"context"
 	"errors"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/repository"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
-	p "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
+	"clinic-vet-api/app/core/domain/enum"
+	"clinic-vet-api/app/core/repository"
+	"clinic-vet-api/app/shared/cqrs"
+	p "clinic-vet-api/app/shared/page"
 )
 
 type ListUsersByRoleQuery struct {

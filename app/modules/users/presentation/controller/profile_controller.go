@@ -3,11 +3,11 @@ package controller
 import (
 	"context"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/users/application/usecase"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/users/presentation/dto"
-	authError "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/auth"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/response"
-	"github.com/alexisTrejo11/Clinic-Vet-API/middleware"
+	"clinic-vet-api/app/modules/users/application/usecase"
+	"clinic-vet-api/app/modules/users/presentation/dto"
+	authError "clinic-vet-api/app/shared/error/auth"
+	"clinic-vet-api/app/shared/response"
+	"clinic-vet-api/middleware"
 	"github.com/gin-gonic/gin"
 )
 

@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"reflect"
 
-	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/service"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/users/application/usecase/command"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/password"
+	repository "clinic-vet-api/app/core/repositories"
+	"clinic-vet-api/app/core/service"
+	"clinic-vet-api/app/modules/users/application/usecase/command"
+	"clinic-vet-api/app/shared/cqrs"
+	"clinic-vet-api/app/shared/password"
 )
 
 type UserCommandBus struct {

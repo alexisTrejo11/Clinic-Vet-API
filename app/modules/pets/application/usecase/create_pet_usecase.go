@@ -4,11 +4,11 @@ package usecase
 import (
 	"context"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/repository"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/pets/application/dto"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/pets/application/mapper"
-	apperror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/application"
+	"clinic-vet-api/app/core/domain/valueobject"
+	"clinic-vet-api/app/core/repository"
+	"clinic-vet-api/app/modules/pets/application/dto"
+	"clinic-vet-api/app/modules/pets/application/mapper"
+	apperror "clinic-vet-api/app/shared/error/application"
 )
 
 type CreatePetUseCase struct {

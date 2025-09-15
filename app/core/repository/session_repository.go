@@ -3,8 +3,8 @@ package repository
 import (
 	"context"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/auth"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
+	"clinic-vet-api/app/core/domain/entity/auth"
+	"clinic-vet-api/app/core/domain/valueobject"
 )
 
 type SessionRepository interface {

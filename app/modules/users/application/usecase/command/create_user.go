@@ -4,13 +4,13 @@ import (
 	"context"
 	"errors"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/repository"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/service"
+	"clinic-vet-api/app/core/domain/enum"
+	"clinic-vet-api/app/core/domain/valueobject"
+	"clinic-vet-api/app/core/repository"
+	"clinic-vet-api/app/core/service"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
-	apperror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/application"
+	"clinic-vet-api/app/shared/cqrs"
+	apperror "clinic-vet-api/app/shared/error/application"
 )
 
 type CreateUserCommand struct {

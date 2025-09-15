@@ -2,14 +2,14 @@
 package repositoryimpl
 
 import (
+	"clinic-vet-api/app/core/domain/entity/auth"
+	"clinic-vet-api/app/core/domain/valueobject"
+	"clinic-vet-api/app/core/repository"
 	"context"
 	"encoding/json"
 	"fmt"
 	"time"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/auth"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
-	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
 	"github.com/redis/go-redis/v9"
 )
 

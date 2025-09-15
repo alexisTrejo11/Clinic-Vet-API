@@ -1,10 +1,11 @@
+// Package command contains command handlers for authentication operations
 package command
 
 import (
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/repository"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/service"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/auth/application/jwt"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/password"
+	"clinic-vet-api/app/core/repository"
+	"clinic-vet-api/app/core/service"
+	"clinic-vet-api/app/modules/auth/application/jwt"
+	"clinic-vet-api/app/shared/password"
 )
 
 type AuthCommandHandler interface {

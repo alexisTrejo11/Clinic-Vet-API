@@ -2,13 +2,14 @@
 package controller
 
 import (
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/auth/application/command"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/auth/infrastructure/bus"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/auth/presentation/dto"
-	autherror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/auth"
-	httpError "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/infrastructure/http"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/response"
-	"github.com/alexisTrejo11/Clinic-Vet-API/middleware"
+	"clinic-vet-api/app/modules/auth/application/command"
+	"clinic-vet-api/app/modules/auth/infrastructure/bus"
+	"clinic-vet-api/app/modules/auth/presentation/dto"
+	autherror "clinic-vet-api/app/shared/error/auth"
+	httpError "clinic-vet-api/app/shared/error/infrastructure/http"
+	"clinic-vet-api/app/shared/response"
+	"clinic-vet-api/middleware"
+
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )
@@ -51,6 +52,33 @@ func (controller *AuthController) CustomerSignup(c *gin.Context) {
 	}
 
 	response.Created(c, result, "User")
+}
+
+func (controller *AuthController) EmployeeSignup(c *gin.Context) {
+	var requestBodyData dto.EmployeeRequestRegister
+
+	if err := c.ShouldBindBodyWithJSON(&requestBodyData); err != nil {
+		response.BadRequest(c, httpError.RequestBodyDataError(err))
+	}
+
+	if err := controller.validator.Struct(&requestBodyData); err != nil {
+		response.BadRequest(c, httpError.InvalidDataError(err))
+		return
+	}
+
+	command, err := requestBodyData.ToCommand(c.Request.Context())
+	if err != nil {
+		response.ApplicationError(c, err)
+		return
+	}
+
+	createResult := controller.bus.EmployeeRegister(command)
+	if !createResult.IsSuccess() {
+		response.ApplicationError(c, createResult.Error())
+		return
+	}
+
+	response.Created(c, createResult, "User")
 }
 
 func (controller *AuthController) Login(c *gin.Context) {

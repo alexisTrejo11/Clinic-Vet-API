@@ -2,8 +2,8 @@
 package dto
 
 import (
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/pets/application/dto"
+	"clinic-vet-api/app/core/domain/valueobject"
+	"clinic-vet-api/app/modules/pets/application/dto"
 )
 
 // AdminCreatePetRequest represents the request payload for creating a new pet by an admin user

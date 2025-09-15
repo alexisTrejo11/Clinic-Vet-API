@@ -1,89 +1,89 @@
--- name: GetAppoinmentByID :one
-SELECT * FROM appoinments 
+-- name: FindAppointmentByID :one
+SELECT * FROM appointments 
 WHERE id = $1 
 AND deleted_at IS NULL;
 
--- name: GetAppointmentByIDAndCustomerID :one
-SELECT * FROM appoinments 
+-- name: FindAppointmentByIDAndCustomerID :one
+SELECT * FROM appointments 
 WHERE id = $1 
 AND customer_id = $2
 AND deleted_at IS NULL;
 
--- name: GetAppointmentByIDAndEmployeeID :one
-SELECT * FROM appoinments 
+-- name: FindAppointmentByIDAndEmployeeID :one
+SELECT * FROM appointments 
 WHERE id = $1 
 AND employee_id = $2
 AND deleted_at IS NULL;
 
--- name: ListAppoinmentsByCustomerID :many
-SELECT * FROM appoinments 
+-- name: FindAppointmentsByCustomerID :many
+SELECT * FROM appointments 
 WHERE customer_id = $1
 AND deleted_at IS NULL
 ORDER BY created_at DESC LIMIT $2 OFFSET $3;
 
--- name: CountAppoinmentsByCustomerID :one
-SELECT COUNT(*) FROM appoinments
+-- name: CountAppointmentsByCustomerID :one
+SELECT COUNT(*) FROM appointments
 WHERE customer_id = $1
 AND deleted_at IS NULL;
 
 
--- name: ListAppoinmentsByEmployeeID :many
-SELECT * FROM appoinments
+-- name: FindAppointmentsByEmployeeID :many
+SELECT * FROM appointments
 WHERE employee_id = $1
 AND deleted_at IS NULL
 ORDER BY created_at DESC LIMIT $2 OFFSET $3;
 
--- name: CountAppoinmentsByEmployeeID :one
-SELECT COUNT(*) FROM appoinments
+-- name: CountAppointmentsByEmployeeID :one
+SELECT COUNT(*) FROM appointments
 WHERE employee_id = $1
 AND deleted_at IS NULL;
 
--- name: ListAppoinmentsByPetID :many
-SELECT * FROM appoinments
+-- name: FindAppointmentsByPetID :many
+SELECT * FROM appointments
 WHERE pet_id = $1
 AND deleted_at IS NULL
 ORDER BY created_at DESC LIMIT $2 OFFSET $3;
 
--- name: CountAppoinmentsByPetID :one
-SELECT COUNT(*) FROM appoinments
+-- name: CountAppointmentsByPetID :one
+SELECT COUNT(*) FROM appointments
 WHERE pet_id = $1
 AND deleted_at IS NULL;
 
--- name: ListAppoinments :many
-SELECT * FROM appoinments 
+-- name: FindAppointments :many
+SELECT * FROM appointments 
 WHERE deleted_at IS NULL 
 ORDER BY created_at DESC LIMIT $1 OFFSET $2;
 
--- name: CountAppoinments :one
-SELECT COUNT(*) FROM appoinments
+-- name: CountAppointments :one
+SELECT COUNT(*) FROM appointments
 WHERE deleted_at IS NULL;
 
 
--- name: ListAppoinmentsByDateRange :many
-SELECT * FROM appoinments
+-- name: FindAppointmentsByDateRange :many
+SELECT * FROM appointments
 WHERE schedule_date BETWEEN $1 AND $2
 AND deleted_at IS NULL
 ORDER BY schedule_date DESC LIMIT $3 OFFSET $4;
 
--- name: CountAppoinmentsByDateRange :one
-SELECT COUNT(*) FROM appoinments
+-- name: CountAppointmentsByDateRange :one
+SELECT COUNT(*) FROM appointments
 WHERE schedule_date BETWEEN $1 AND $2
 AND deleted_at IS NULL;
 
--- name: ListAppoinmentsByStatus :many
-SELECT * FROM appoinments
+-- name: FindAppointmentsByStatus :many
+SELECT * FROM appointments
 WHERE status = $1
 AND deleted_at IS NULL
 ORDER BY created_at DESC LIMIT $2 OFFSET $3;
 
--- name: CountAppoinmentsByStatus :one
-SELECT COUNT(*) FROM appoinments
+-- name: CountAppointmentsByStatus :one
+SELECT COUNT(*) FROM appointments
 WHERE status = $1
 AND deleted_at IS NULL;
 
 
--- name: CreateAppoinment :one
-INSERT INTO appoinments (
+-- name: CreateAppointment :one
+INSERT INTO appointments (
     clinic_service, 
     schedule_date, 
     status, 
@@ -99,8 +99,8 @@ INSERT INTO appoinments (
     $1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL
 ) RETURNING *;
 
--- name: UpdateAppoinment :one
-UPDATE appoinments SET
+-- name: UpdateAppointment :one
+UPDATE appointments SET
     clinic_service = $2,
     schedule_date = $3,
     status = $4,
@@ -113,7 +113,16 @@ UPDATE appoinments SET
 WHERE id = $1
 RETURNING *;
 
--- name: DeleteAppoinment :exec
-UPDATE appoinments SET
+-- name: DeleteAppointment :exec
+UPDATE appointments SET
     deleted_at = CURRENT_TIMESTAMP
 WHERE id = $1;
+
+-- name: ExistsAppointmentID :one
+SELECT COUNT(*) > 0 FROM appointments
+WHERE id = $1 AND deleted_at IS NULL;
+
+
+-- name: ExistsConflictingAppointment :one
+SELECT COUNT(*) > 0 FROM appointments
+WHERE (schedule_date BETWEEN $1 AND $2) AND employee_id = $3;

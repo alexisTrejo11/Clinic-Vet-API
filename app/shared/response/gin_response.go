@@ -3,9 +3,9 @@ package response
 import (
 	"net/http"
 
-	domainerr "github.com/alexisTrejo11/Clinic-Vet-API/app/core/error"
-	apperror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/application"
-	infraerr "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/infrastructure"
+	domainerr "clinic-vet-api/app/core/error"
+	apperror "clinic-vet-api/app/shared/error/application"
+	infraerr "clinic-vet-api/app/shared/error/infrastructure"
 	"github.com/gin-gonic/gin"
 )
 
@@ -16,9 +16,9 @@ func Success(ctx *gin.Context, data any, message string) {
 	ctx.JSON(200, response)
 }
 
-func SuccessWithMeta(ctx *gin.Context, data any, meta any) {
+func SuccessWithMeta(ctx *gin.Context, data any, message string, meta any) {
 	response := APIResponse{}
-	response.SuccessWithMeta(data, meta)
+	response.SuccessWithMeta(data, meta, message)
 
 	ctx.JSON(200, response)
 }

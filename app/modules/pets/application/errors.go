@@ -4,7 +4,7 @@ package petApplicationError
 import (
 	"strconv"
 
-	apperror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/application"
+	apperror "clinic-vet-api/app/shared/error/application"
 )
 
 func OwnerNotFoundError(id int) error {

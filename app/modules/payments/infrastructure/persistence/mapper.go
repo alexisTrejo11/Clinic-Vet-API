@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/payment"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
-	"github.com/alexisTrejo11/Clinic-Vet-API/db/models"
-	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
+	"clinic-vet-api/app/core/domain/entity/payment"
+	"clinic-vet-api/app/core/domain/enum"
+	"clinic-vet-api/app/core/domain/valueobject"
+	"clinic-vet-api/db/models"
+	"clinic-vet-api/sqlc"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 

@@ -1,9 +1,7 @@
 package controller
 
 import (
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/payments/application/command"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/response"
+	"clinic-vet-api/app/shared/cqrs"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )
@@ -28,72 +26,61 @@ func NewAdminPaymentController(
 }
 
 // SearchPayments delegates to query controller
-func (c *AdminPaymentController) SearchPayments(ctx *gin.Context) {
-	c.queryController.SearchPayments(ctx)
+func (ctrl *AdminPaymentController) SearchPayments(c *gin.Context) {
+	ctrl.queryController.SearchPayments(c)
 }
 
 // CreatePayment delegates to payment controller
-func (c *AdminPaymentController) CreatePayment(ctx *gin.Context) {
-	c.paymentController.CreatePayment(ctx)
+func (ctrl *AdminPaymentController) CreatePayment(c *gin.Context) {
+	ctrl.paymentController.CreatePayment(c)
 }
 
 // GetPayment delegates to payment controller
-func (c *AdminPaymentController) GetPayment(ctx *gin.Context) {
-	c.queryController.GetPayment(ctx)
+func (ctrl *AdminPaymentController) GetPayment(c *gin.Context) {
+	ctrl.queryController.GetPayment(c)
 }
 
 // UpdatePayment delegates to payment controller
-func (c *AdminPaymentController) UpdatePayment(ctx *gin.Context) {
-	c.paymentController.UpdatePayment(ctx)
+func (ctrl *AdminPaymentController) UpdatePayment(c *gin.Context) {
+	ctrl.paymentController.UpdatePayment(c)
 }
 
 // DeletePayment delegates to payment controller
-func (c *AdminPaymentController) DeletePayment(ctx *gin.Context) {
-	c.paymentController.DeletePayment(ctx)
+func (ctrl *AdminPaymentController) DeletePayment(c *gin.Context) {
+	ctrl.paymentController.DeletePayment(c)
 }
 
 // ProcessPayment delegates to payment controller
-func (c *AdminPaymentController) ProcessPayment(ctx *gin.Context) {
-	c.paymentController.ProcessPayment(ctx)
+func (ctrl *AdminPaymentController) ProcessPayment(c *gin.Context) {
+	ctrl.paymentController.ProcessPayment(c)
 }
 
 // RefundPayment delegates to payment controller
-func (c *AdminPaymentController) RefundPayment(ctx *gin.Context) {
-	c.paymentController.RefundPayment(ctx)
+func (ctrl *AdminPaymentController) RefundPayment(c *gin.Context) {
+	ctrl.paymentController.RefundPayment(c)
 }
 
 // CancelPayment delegates to payment controller
-func (c *AdminPaymentController) CancelPayment(ctx *gin.Context) {
-	c.paymentController.CancelPayment(ctx)
-}
-
-// MarkOverduePayments marks all overdue payments
-func (c *AdminPaymentController) MarkOverduePayments(ctx *gin.Context) {
-	commandResult := c.commandBus.Execute(command.MarkOverduePaymentsCommand{})
-	if !commandResult.IsSuccess {
-		response.ApplicationError(ctx, commandResult.Error)
-		return
-	}
-
-	response.Success(ctx, commandResult, "Overdue payments marked successfully")
+func (ctrl *AdminPaymentController) CancelPayment(c *gin.Context) {
+	ctrl.paymentController.CancelPayment(c)
 }
 
 // GetOverduePayments delegates to query controller
-func (c *AdminPaymentController) GetOverduePayments(ctx *gin.Context) {
-	c.queryController.GetOverduePayments(ctx)
+func (ctrl *AdminPaymentController) GetOverduePayments(c *gin.Context) {
+	ctrl.queryController.GetOverduePayments(c)
 }
 
 // GeneratePaymentReport delegates to query controller
-/* func (c *AdminPaymentController) GeneratePaymentReport(ctx *gin.Context) {
-	c.queryController.GeneratePaymentReport(ctx)
+/* func (c *AdminPaymentController) GeneratePaymentReport(c *gin.Context) {
+	c.queryController.GeneratePaymentReport(c)
 } */
 
 // GetPaymentsByDateRange delegates to query controller
-func (c *AdminPaymentController) GetPaymentsByDateRange(ctx *gin.Context) {
-	c.queryController.GetPaymentsByDateRange(ctx)
+func (ctrl *AdminPaymentController) GetPaymentsByDateRange(c *gin.Context) {
+	ctrl.queryController.GetPaymentsByDateRange(c)
 }
 
 // GetPaymentsByStatus delegates to query controller
-func (c *AdminPaymentController) GetPaymentsByStatus(ctx *gin.Context) {
-	c.queryController.GetPaymentsByStatus(ctx)
+func (ctrl *AdminPaymentController) GetPaymentsByStatus(c *gin.Context) {
+	ctrl.queryController.GetPaymentsByStatus(c)
 }

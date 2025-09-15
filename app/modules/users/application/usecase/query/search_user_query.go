@@ -4,10 +4,10 @@ import (
 	"context"
 	"errors"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/specification"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/repository"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
+	"clinic-vet-api/app/core/domain/specification"
+	"clinic-vet-api/app/core/repository"
+	"clinic-vet-api/app/shared/cqrs"
+	"clinic-vet-api/app/shared/page"
 )
 
 type UserSearchQuery struct {

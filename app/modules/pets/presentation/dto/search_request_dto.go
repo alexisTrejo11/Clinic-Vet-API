@@ -1,9 +1,9 @@
 package dto
 
 import (
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/specification"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
+	"clinic-vet-api/app/core/domain/enum"
+	"clinic-vet-api/app/core/domain/specification"
+	"clinic-vet-api/app/core/domain/valueobject"
 )
 
 type PetSearchRequest struct {

@@ -5,7 +5,7 @@ import (
 	"io"
 	"time"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/log"
+	"clinic-vet-api/app/shared/log"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"go.uber.org/zap"

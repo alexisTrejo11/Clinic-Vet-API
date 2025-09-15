@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	infraerr "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/infrastructure"
+	infraerr "clinic-vet-api/app/shared/error/infrastructure"
 )
 
 func DatabaseOperationError(operation, tableName, dbType, errorMessage string) error {

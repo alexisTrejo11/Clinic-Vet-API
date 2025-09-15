@@ -2,15 +2,16 @@
 package controller
 
 import (
+	"clinic-vet-api/app/modules/appointment/infrastructure/bus"
+	"clinic-vet-api/app/modules/appointment/presentation/dto"
+	"clinic-vet-api/app/shared/response"
+	"clinic-vet-api/middleware"
 	"errors"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/appointment/infrastructure/bus"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/appointment/presentation/dto"
-	authError "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/auth"
-	httpError "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/infrastructure/http"
-	ginUtils "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/gin_utils"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/response"
-	"github.com/alexisTrejo11/Clinic-Vet-API/middleware"
+	authError "clinic-vet-api/app/shared/error/auth"
+	httpError "clinic-vet-api/app/shared/error/infrastructure/http"
+	ginUtils "clinic-vet-api/app/shared/gin_utils"
+
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )
@@ -20,21 +21,21 @@ type OwnerQueryExtraArgs struct {
 	Status *string
 }
 
-// CustomerApptControleer handles owner-specific appointment operations
+// CustomerAppointmetController handles owner-specific appointment operations
 // @title Veterinary Clinic API - Owner Appt Management
 // @version 1.0
 // @description This controller manages appointment operations specific to pet owners including scheduling, rescheduling, and viewing appointments
 // @securityDefinitions.apikey BearerAuth
 // @in header
 // @name Authorization
-type CustomerApptControleer struct {
+type CustomerAppointmetController struct {
 	bus             *bus.AppointmentBus
 	validator       *validator.Validate
 	queryController *AppointmentQueryController
 }
 
-func NewCustomerApptControleer(bus *bus.AppointmentBus, validator *validator.Validate, queryController *AppointmentQueryController) *CustomerApptControleer {
-	return &CustomerApptControleer{
+func NewCustomerApptControleer(bus *bus.AppointmentBus, validator *validator.Validate, queryController *AppointmentQueryController) *CustomerAppointmetController {
+	return &CustomerAppointmetController{
 		bus:             bus,
 		validator:       validator,
 		queryController: queryController,
@@ -50,7 +51,7 @@ func NewCustomerApptControleer(bus *bus.AppointmentBus, validator *validator.Val
 // @Param appointment body command.CreateApptCommand true "Appointment details"
 // @Security BearerAuth
 // @Router /owner/appointments [post]
-func (ctrl *CustomerApptControleer) RequestAppointment(c *gin.Context) {
+func (ctrl *CustomerAppointmetController) RequestAppointment(c *gin.Context) {
 	userCtx, exists := middleware.GetUserFromContext(c)
 	if !exists {
 		response.Unauthorized(c, authError.UnauthorizedCTXError())
@@ -92,7 +93,7 @@ func (ctrl *CustomerApptControleer) RequestAppointment(c *gin.Context) {
 // @Param limit query int false "Items per page" default(10)
 // @Security BearerAuth
 // @Router /owner/appointments [get]
-func (ctrl *CustomerApptControleer) GetMyAppointments(c *gin.Context) {
+func (ctrl *CustomerAppointmetController) GetMyAppointments(c *gin.Context) {
 	userCtx, exists := middleware.GetUserFromContext(c)
 	if !exists {
 		response.Unauthorized(c, authError.UnauthorizedCTXError())
@@ -101,6 +102,17 @@ func (ctrl *CustomerApptControleer) GetMyAppointments(c *gin.Context) {
 
 	noArgs := OwnerQueryExtraArgs{}
 	ctrl.queryController.FindAppointmentsByCustomer(c, userCtx.CustomerID, noArgs)
+}
+
+func (ctrl *CustomerAppointmetController) GetMyAppointmentByID(c *gin.Context) {
+	userCtx, exists := middleware.GetUserFromContext(c)
+	if !exists {
+		response.Unauthorized(c, authError.UnauthorizedCTXError())
+		return
+	}
+
+	args := GetByIDExtraArgs{employeeID: nil, customerID: &userCtx.CustomerID}
+	ctrl.queryController.GetAppointmentDetailByID(c, args)
 }
 
 // GetApptsByPet godoc
@@ -114,7 +126,7 @@ func (ctrl *CustomerApptControleer) GetMyAppointments(c *gin.Context) {
 // @Param limit query int false "Items per page" default(10)
 // @Security BearerAuth
 // @Router /owner/appointments/pet/{petID} [get]
-func (ctrl *CustomerApptControleer) GetAppointmentsByPet(c *gin.Context) {
+func (ctrl *CustomerAppointmetController) GetAppointmentsByPet(c *gin.Context) {
 	userCTX, exists := middleware.GetUserFromContext(c)
 	if !exists {
 		response.Unauthorized(c, errors.New("unauthorized"))
@@ -141,7 +153,7 @@ func (ctrl *CustomerApptControleer) GetAppointmentsByPet(c *gin.Context) {
 // @Param limit query int false "Items per page" default(10)
 // @Security BearerAuth
 // @Router /owner/appointments/upcoming [get]
-func (controller *CustomerApptControleer) GetUpcomingAppointments(c *gin.Context) {
+func (ctrl *CustomerAppointmetController) GetUpcomingAppointments(c *gin.Context) {
 	userCTX, exists := middleware.GetUserFromContext(c)
 	if !exists {
 		response.Unauthorized(c, errors.New("unauthorized"))
@@ -150,5 +162,5 @@ func (controller *CustomerApptControleer) GetUpcomingAppointments(c *gin.Context
 
 	upcomingStatus := "upcoming"
 	extraArgs := &OwnerQueryExtraArgs{Status: &upcomingStatus}
-	controller.queryController.FindAppointmentsByCustomer(c, userCTX.CustomerID, *extraArgs)
+	ctrl.queryController.FindAppointmentsByCustomer(c, userCTX.CustomerID, *extraArgs)
 }

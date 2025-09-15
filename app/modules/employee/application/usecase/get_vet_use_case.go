@@ -3,14 +3,14 @@ package usecase
 import (
 	"context"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
-	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/veterinarians/application/dto"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/veterinarians/application/mapper"
+	"clinic-vet-api/app/core/domain/valueobject"
+	"clinic-vet-api/app/core/repository"
+	"clinic-vet-api/app/modules/veterinarians/application/dto"
+	"clinic-vet-api/app/modules/veterinarians/application/mapper"
 )
 
 type GetVetByIDUseCase struct {
-	repository repository.VetRepository
+	repository repository.CustomerRepository
 }
 
 func NewGetVetByIDUseCase(repository repository.VetRepository) *GetVetByIDUseCase {
@@ -26,4 +26,4 @@ func (uc *GetVetByIDUseCase) Execute(ctx context.Context, vetID valueobject.VetI
 	}
 
 	return mapper.ToResponse(&veterinarian), nil
-}
+

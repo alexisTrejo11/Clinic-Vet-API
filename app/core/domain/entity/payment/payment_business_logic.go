@@ -4,9 +4,9 @@ import (
 	"slices"
 	"time"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
-	domainerr "github.com/alexisTrejo11/Clinic-Vet-API/app/core/error"
+	"clinic-vet-api/app/core/domain/enum"
+	"clinic-vet-api/app/core/domain/valueobject"
+	domainerr "clinic-vet-api/app/core/error"
 )
 
 func (p *Payment) Cancel(reason string) error {

@@ -4,7 +4,7 @@ package autherror
 import (
 	"net/http"
 
-	apperror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/application"
+	apperror "clinic-vet-api/app/shared/error/application"
 )
 
 func UnauthorizedError(message string) error {

@@ -2,10 +2,10 @@
 package bus
 
 import (
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/customer/application/command"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/customer/application/query"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
+	"clinic-vet-api/app/modules/customer/application/command"
+	"clinic-vet-api/app/modules/customer/application/query"
+	"clinic-vet-api/app/shared/cqrs"
+	"clinic-vet-api/app/shared/page"
 )
 
 type CustomerBus struct {
@@ -24,7 +24,7 @@ type CustomerCommandBus struct {
 	CommandBus command.CustomerCommandHandler
 }
 
-func NewCustomerBus(commandBus command.CustomerCommandHandler) *CustomerCommandBus {
+func NewCustomerCommandBus(commandBus command.CustomerCommandHandler) *CustomerCommandBus {
 	return &CustomerCommandBus{
 		CommandBus: commandBus,
 	}

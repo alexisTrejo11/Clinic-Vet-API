@@ -3,7 +3,7 @@ package notification
 import (
 	"time"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
+	"clinic-vet-api/app/core/domain/enum"
 )
 
 type Notification struct {

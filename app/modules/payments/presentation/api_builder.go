@@ -1,11 +1,11 @@
 package paymentAPI
 
 import (
-	domainerr "github.com/alexisTrejo11/Clinic-Vet-API/app/core/error"
-	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/payments/infrastructure/api/controller"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/payments/infrastructure/api/routes"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/payments/infrastructure/bus"
+	domainerr "clinic-vet-api/app/core/error"
+	repository "clinic-vet-api/app/core/repositories"
+	"clinic-vet-api/app/modules/payments/infrastructure/api/controller"
+	"clinic-vet-api/app/modules/payments/infrastructure/api/routes"
+	"clinic-vet-api/app/modules/payments/infrastructure/bus"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )

@@ -4,8 +4,8 @@ import (
 	context "context"
 	reflect "reflect"
 
-	vetDtos "github.com/alexisTrejo11/Clinic-Vet-API/app/veterinarians/application/dtos"
-	vetDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/veterinarians/domain"
+	vetDtos "clinic-vet-api/app/veterinarians/application/dtos"
+	vetDomain "clinic-vet-api/app/veterinarians/domain"
 	gomock "github.com/golang/mock/gomock"
 )
 

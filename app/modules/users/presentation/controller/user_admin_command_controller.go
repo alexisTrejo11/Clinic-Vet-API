@@ -1,13 +1,13 @@
 package controller
 
 import (
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/users/application/usecase/command"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/users/presentation/dto"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
-	httpError "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/infrastructure/http"
-	ginUtils "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/gin_utils"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/response"
+	"clinic-vet-api/app/core/domain/enum"
+	"clinic-vet-api/app/modules/users/application/usecase/command"
+	"clinic-vet-api/app/modules/users/presentation/dto"
+	"clinic-vet-api/app/shared/cqrs"
+	httpError "clinic-vet-api/app/shared/error/infrastructure/http"
+	ginUtils "clinic-vet-api/app/shared/gin_utils"
+	"clinic-vet-api/app/shared/response"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )

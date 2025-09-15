@@ -1,7 +1,7 @@
 package command
 
 import (
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/repository"
+	"clinic-vet-api/app/core/repository"
 )
 
 type MedicalHistoryCommandHandlers interface {

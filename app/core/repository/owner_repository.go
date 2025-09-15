@@ -3,10 +3,10 @@ package repository
 import (
 	"context"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/customer"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/specification"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
+	"clinic-vet-api/app/core/domain/entity/customer"
+	"clinic-vet-api/app/core/domain/specification"
+	"clinic-vet-api/app/core/domain/valueobject"
+	"clinic-vet-api/app/shared/page"
 )
 
 type CustomerRepository interface {

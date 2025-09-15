@@ -1,11 +1,11 @@
+// Package dto contains Data Transfer Objects for the customer module
 package dto
 
 import (
+	"clinic-vet-api/app/core/domain/enum"
+	"clinic-vet-api/app/modules/customer/application/command"
 	"context"
 	"time"
-
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/customer/application/command"
 )
 
 // CreateCustomerRequest represents the request to create a new customer

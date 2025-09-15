@@ -12,6 +12,10 @@ type PasswordEncoder interface {
 
 type PasswordEncoderImpl struct{}
 
+func NewPasswordEncoder() PasswordEncoder {
+	return &PasswordEncoderImpl{}
+}
+
 func (p *PasswordEncoderImpl) HashPassword(password string) (string, error) {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {

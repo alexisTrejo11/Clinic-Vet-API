@@ -5,12 +5,12 @@ import (
 	"context"
 	"strconv"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/user"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/repository"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/auth/application/jwt"
-	autherror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/auth"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/response"
+	"clinic-vet-api/app/core/domain/entity/user"
+	"clinic-vet-api/app/core/domain/valueobject"
+	"clinic-vet-api/app/core/repository"
+	"clinic-vet-api/app/modules/auth/application/jwt"
+	autherror "clinic-vet-api/app/shared/error/auth"
+	"clinic-vet-api/app/shared/response"
 	"github.com/gin-gonic/gin"
 )
 

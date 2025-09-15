@@ -3,9 +3,9 @@ package dto
 import (
 	"context"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/payment"
-	cmd "github.com/alexisTrejo11/Clinic-Vet-API/app/modules/payments/application/command"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
+	"clinic-vet-api/app/core/domain/entity/payment"
+	cmd "clinic-vet-api/app/modules/payments/application/command"
+	query "clinic-vet-api/app/modules/payments/application/queries"
 )
 
 func (req CreatePaymentRequest) ToCreatePaymentCommand() (cmd.CreatePaymentCommand, error) {
@@ -49,8 +49,8 @@ func (req ProcessPaymentRequest) ToProcessPaymentCommand(paymentID uint) (*cmd.P
 	return cmd.NewProcessPaymentCommand(paymentID, req.TransactionID)
 }
 
-func (req RefundPaymentRequest) ToRefundPaymentCommand(paymentID uint) (*cmd.RefundPaymentCommand, error) {
-	return cmd.NewRefundPaymentCommand(paymentID, req.Reason)
+func (req RefundPaymentRequest) ToRefundPaymentCommand(ctx context.Context, paymentID uint) *cmd.RefundPaymentCommand {
+	return cmd.NewRefundPaymentCommand(ctx, paymentID, req.Reason)
 }
 
 func (req CancelPaymentRequest) ToCancelPaymentCommand(paymentID uint) *cmd.CancelPaymentCommand {
@@ -78,16 +78,13 @@ func ToPaymentResponse(pay any) PaymentResponse {
 	}
 }
 
-func ToPaymentListResponse(paymentsPage page.Page[[]payment.Payment]) PaymentListResponse {
-	responses := make([]PaymentResponse, len(paymentsPage.Items))
-	for i, payment := range paymentsPage.Items {
+func ToPaymentListResponse(payments []query.PaymentResult) []PaymentResponse {
+	responses := make([]PaymentResponse, len(payments))
+	for i, payment := range payments {
 		responses[i] = ToPaymentResponse(&payment)
 	}
 
-	return PaymentListResponse{
-		Items:    responses,
-		Metadata: paymentsPage.Metadata,
-	}
+	return responses
 }
 
 /*

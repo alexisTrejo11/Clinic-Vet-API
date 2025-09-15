@@ -3,10 +3,10 @@ package persistence
 import (
 	"fmt"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/pet"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
-	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
+	"clinic-vet-api/app/core/domain/entity/pet"
+	"clinic-vet-api/app/core/domain/enum"
+	"clinic-vet-api/app/core/domain/valueobject"
+	"clinic-vet-api/sqlc"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 

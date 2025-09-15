@@ -3,13 +3,14 @@ package repository
 import (
 	"context"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/pet"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
+	"clinic-vet-api/app/core/domain/entity/pet"
+	"clinic-vet-api/app/core/domain/valueobject"
+	"clinic-vet-api/app/shared/page"
 )
 
 type PetRepository interface {
 	FindByCriteria(ctx context.Context, criteria map[string]any) (page.Page[[]pet.Pet], error)
+	FindAllByCustomerID(ctx context.Context, customerID valueobject.CustomerID) ([]pet.Pet, error)
 	FindByCustomerID(ctx context.Context, customerID valueobject.CustomerID) (page.Page[[]pet.Pet], error)
 	FindByID(ctx context.Context, petID valueobject.PetID) (pet.Pet, error)
 	FindByIDAndCustomerID(ctx context.Context, id valueobject.PetID, customerID valueobject.CustomerID) (pet.Pet, error)

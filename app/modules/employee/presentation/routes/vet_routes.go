@@ -1,7 +1,7 @@
 package routes
 
 import (
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/veterinarians/infrastructure/api/controller"
+	"clinic-vet-api/app/modules/veterinarians/infrastructure/api/controller"
 	"github.com/gin-gonic/gin"
 )
 

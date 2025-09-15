@@ -227,7 +227,6 @@ func normalizeGenderInput(input string) string {
 	return input
 }
 
-// Utility functions for all enums
 func GetAllUserRoles() []UserRole {
 	return ValidUserRoles
 }

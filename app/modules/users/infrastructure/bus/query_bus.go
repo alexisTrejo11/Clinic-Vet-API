@@ -4,9 +4,9 @@ import (
 	"errors"
 	"reflect"
 
-	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/users/application/usecase/query"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
+	repository "clinic-vet-api/app/core/repositories"
+	"clinic-vet-api/app/modules/users/application/usecase/query"
+	"clinic-vet-api/app/shared/cqrs"
 )
 
 type UserQueryBus struct {

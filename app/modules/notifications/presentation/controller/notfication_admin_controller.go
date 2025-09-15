@@ -1,7 +1,7 @@
 package controller
 
 import (
-	service "github.com/alexisTrejo11/Clinic-Vet-API/app/modules/notifications/application"
+	service "clinic-vet-api/app/modules/notifications/application"
 	"github.com/gin-gonic/gin"
 )
 

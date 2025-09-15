@@ -2,10 +2,10 @@
 package dto
 
 import (
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/employee/application/dto"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
+	"clinic-vet-api/app/core/domain/enum"
+	"clinic-vet-api/app/core/domain/valueobject"
+	"clinic-vet-api/app/modules/employee/application/dto"
+	"clinic-vet-api/app/shared/page"
 )
 
 // CreateEmployeeRequest represents the data transfer object for creating a new veterinarian.

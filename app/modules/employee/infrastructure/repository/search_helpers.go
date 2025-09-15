@@ -1,13 +1,12 @@
-package repositoryimpl
+package repository
 
 import (
+	"clinic-vet-api/app/core/domain/specification"
 	"context"
 	"strings"
-
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/specification"
 )
 
-func (r *SqlcVetRepository) getTotalCountWithFilters(ctx context.Context, spec *specification.VetSearchSpecification) (int, error) {
+func (r *SqlcEmployeeRepository) getTotalCountWithFilters(ctx context.Context, spec *specification.EmployeeSearchSpecification) (int, error) {
 	query, params := r.buildCountQuery(spec)
 
 	var totalCount int
@@ -19,7 +18,7 @@ func (r *SqlcVetRepository) getTotalCountWithFilters(ctx context.Context, spec *
 	return totalCount, nil
 }
 
-func (r *SqlcVetRepository) buildCountQuery(spec *specification.VetSearchSpecification) (string, []any) {
+func (r *SqlcEmployeeRepository) buildCountQuery(spec *specification.EmployeeSearchSpecification) (string, []any) {
 	query, params := spec.ToSQL()
 
 	// Extraer solo la parte WHERE de la consulta original
@@ -51,3 +50,45 @@ func (r *SqlcVetRepository) buildCountQuery(spec *specification.VetSearchSpecifi
 
 	return countQuery, params
 }
+
+/*
+func (r *SqlcEmployeeRepository) Search(ctx context.Context, spec specification) (page.Page[[]customer.Customer], error) {
+	query, params := spec.ToSQL()
+
+	// Execute the query
+	rows, err := r.pool.Query(ctx, query, params...)
+	if err != nil {
+		return page.Page[[]customer.Customer]{}, r.dbError(OpSelect, "failed to search veterinarians", err)
+	}
+	defer rows.Close()
+
+	// Iterate through the rows and scan into Customer structs
+	var vets []customer.Customer
+	for rows.Next() {
+		var veterinarian customer.Customer
+		err := r.scanEmployeeFromRow(rows, &veterinarian)
+		if err != nil {
+			return page.Page[[]customer.Customer]{}, r.wrapConversionError(err)
+		}
+		vets = append(vets, veterinarian)
+	}
+
+	if err := rows.Err(); err != nil {
+		return page.Page[[]customer.Customer]{}, r.dbError(OpSelect, "error iterating search results", err)
+	}
+
+	// Get total count for pagination
+	totalCount, err := r.getTotalCountWithFilters(ctx, &spec)
+	if err != nil {
+		return page.Page[[]customer.Customer]{}, err
+	}
+
+	// Handle pagination
+	pageMetadata := page.GetPageMetadata(totalCount, page.PageInput{
+		PageNumber: spec.GetPagination().Page,
+		PageSize:   spec.GetPagination().PageSize,
+	})
+
+	return page.NewPage(vets, *pageMetadata), nil
+}
+*/

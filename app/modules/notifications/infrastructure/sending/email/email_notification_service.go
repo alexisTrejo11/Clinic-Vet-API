@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"html/template"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/notification"
-	service "github.com/alexisTrejo11/Clinic-Vet-API/app/modules/notifications/application"
+	"clinic-vet-api/app/core/domain/entity/notification"
+	service "clinic-vet-api/app/modules/notifications/application"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/config"
+	"clinic-vet-api/config"
 )
 
 type EmailSender interface {

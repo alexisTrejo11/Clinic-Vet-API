@@ -3,7 +3,7 @@ package config
 import (
 	"os"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/log"
+	"clinic-vet-api/app/shared/log"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"gopkg.in/natefinch/lumberjack.v2"

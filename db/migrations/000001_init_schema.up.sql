@@ -215,7 +215,7 @@ CREATE TABLE IF NOT EXISTS payments (
 );
 
 
-CREATE TABLE IF NOT EXISTS appoinments(
+CREATE TABLE IF NOT EXISTS appointments(
     id SERIAL PRIMARY KEY,
     clinic_service clinic_service NOT NULL,
     schedule_date TIMESTAMP WITH TIME ZONE NOT NULL,

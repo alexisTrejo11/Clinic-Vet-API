@@ -27,7 +27,7 @@ const (
 // Uses JSON tags for API serialization and validate tags for input validation.
 type PageInput struct {
 	PageSize      int           `json:"page_limit" validate:"omitempty,min=1,max=100"`
-	PageNumber    int           `json:"page_number" validate:"omitempty,min=1"`
+	Page          int           `json:"page" validate:"omitempty,min=1"`
 	SortDirection SortDirection `json:"sort_direction" validate:"omitempty,min=0"`
 	OrderBy       string        `json:"order_by" validate:"omitempty,max=50"`
 }
@@ -35,7 +35,7 @@ type PageInput struct {
 func (p PageInput) ToMap() map[string]any {
 	return map[string]any{
 		"page_limit":     p.PageSize,
-		"page_number":    p.PageNumber,
+		"page":           p.Page,
 		"sort_direction": p.SortDirection,
 		"order_by":       p.OrderBy,
 	}
@@ -44,15 +44,15 @@ func (p PageInput) ToMap() map[string]any {
 // SetDefaultsFieldsIfEmpty sets default values for PageInput fields if they are empty or invalid.
 // Defaults:
 // - SortDirection: ASC (if empty)
-// - PageNumber: 1 (if ≤ 0)
+// - Page: 1 (if ≤ 0)
 // - PageSize: 10 (if ≤ 0)
 func (p *PageInput) SetDefaultsFieldsIfEmpty() {
 	if p.SortDirection == "" {
 		p.SortDirection = ASC
 	}
 
-	if p.PageNumber <= 0 {
-		p.PageNumber = 1
+	if p.Page <= 0 {
+		p.Page = 1
 	}
 
 	if p.PageSize <= 0 {
@@ -61,7 +61,7 @@ func (p *PageInput) SetDefaultsFieldsIfEmpty() {
 }
 
 func (p PageInput) Offset() int {
-	return (p.PageNumber - 1) * p.PageSize
+	return (p.Page - 1) * p.PageSize
 }
 
 // PageMetadata contains comprehensive information about the pagination state.
@@ -128,10 +128,10 @@ func GetPageMetadata(totalItems int, page PageInput) *PageMetadata {
 	return &PageMetadata{
 		TotalCount:      totalItems,
 		TotalPages:      totalPages,
-		CurrentPage:     page.PageNumber,
+		CurrentPage:     page.Page,
 		PageSize:        page.PageSize,
 		SortDirection:   page.SortDirection,
-		HasNextPage:     page.PageNumber < totalPages,
-		HasPreviousPage: page.PageNumber > 1,
+		HasNextPage:     page.Page < totalPages,
+		HasPreviousPage: page.Page > 1,
 	}
 }

@@ -4,9 +4,9 @@ package usecase
 import (
 	"context"
 
-	p "github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/user/profile"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/repository"
+	p "clinic-vet-api/app/core/domain/entity/user/profile"
+	"clinic-vet-api/app/core/domain/valueobject"
+	"clinic-vet-api/app/core/repository"
 )
 
 type CreateProfileData struct {

@@ -1,8 +1,8 @@
 package query
 
 import (
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/medical"
-	p "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
+	"clinic-vet-api/app/core/domain/entity/medical"
+	p "clinic-vet-api/app/shared/page"
 )
 
 func toResult(entity medical.MedicalHistory) MedHistoryResult {

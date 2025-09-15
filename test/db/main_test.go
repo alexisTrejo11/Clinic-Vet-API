@@ -9,7 +9,7 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
+	"clinic-vet-api/sqlc"
 	"github.com/jackc/pgx/v5"
 )
 

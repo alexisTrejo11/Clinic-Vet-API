@@ -1,12 +1,16 @@
 package bus
 
 import (
-	appointcommand "github.com/alexisTrejo11/Clinic-Vet-API/app/modules/appointment/application/command"
-	icqrs "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
+	appointcommand "clinic-vet-api/app/modules/appointment/application/command"
+	icqrs "clinic-vet-api/app/shared/cqrs"
 )
 
 type AppointmentCommandBus struct {
 	handler appointcommand.AppointementCommandHandler
+}
+
+func NewAppointmentCommandBus(handler appointcommand.AppointementCommandHandler) *AppointmentCommandBus {
+	return &AppointmentCommandBus{handler: handler}
 }
 
 func (bus *AppointmentCommandBus) RequestAppointmentByCustomer(cmd appointcommand.RequestApptByCustomerCommand) icqrs.CommandResult {

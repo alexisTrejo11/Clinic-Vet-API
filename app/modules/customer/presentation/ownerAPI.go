@@ -1,44 +1,47 @@
-package ownerAPI
+package customerAPI
 
 import (
-	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/owners/application/usecase"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/owners/infrastructure/api/controller"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/owners/infrastructure/api/routes"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/owners/infrastructure/persistence"
-	appError "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/application"
-	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
+	"clinic-vet-api/app/core/repository"
+	"clinic-vet-api/app/modules/customer/application/command"
+	"clinic-vet-api/app/modules/customer/application/query"
+	"clinic-vet-api/app/modules/customer/infrastructure/bus"
+	customerRepo "clinic-vet-api/app/modules/customer/infrastructure/repository"
+	"clinic-vet-api/app/modules/customer/presentation/controller"
+	"clinic-vet-api/app/modules/customer/presentation/routes"
+	appError "clinic-vet-api/app/shared/error/application"
+	"clinic-vet-api/sqlc"
+
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )
 
-type OwnerAPIConfig struct {
+type CustomerAPIConfig struct {
 	Router    *gin.Engine
 	Validator *validator.Validate
 	Queries   *sqlc.Queries
 	PetRepo   repository.PetRepository
 }
 
-type OwnerAPIComponents struct {
-	Repository repository.OwnerRepository
-	UseCase    usecase.OwnerServiceFacade
-	Controller *controller.OwnerController
+type CustomerAPIComponents struct {
+	Repository repository.CustomerRepository
+	Bus        bus.CustomerBus
+	Controller *controller.CustomerController
 }
 
-type OwnerAPIModule struct {
-	config     *OwnerAPIConfig
-	components *OwnerAPIComponents
+type CustomerAPIModule struct {
+	config     *CustomerAPIConfig
+	components *CustomerAPIComponents
 	isBuilt    bool
 }
 
-func NewOwnerAPIModule(config *OwnerAPIConfig) *OwnerAPIModule {
-	return &OwnerAPIModule{
+func NewCustomerAPIModule(config *CustomerAPIConfig) *CustomerAPIModule {
+	return &CustomerAPIModule{
 		config:  config,
 		isBuilt: false,
 	}
 }
 
-func (f *OwnerAPIModule) Bootstrap() error {
+func (f *CustomerAPIModule) Bootstrap() error {
 	if f.isBuilt {
 		return nil
 	}
@@ -48,21 +51,21 @@ func (f *OwnerAPIModule) Bootstrap() error {
 	}
 
 	// Create repository
-	ownerRepo := persistence.NewSqlcOwnerRepository(f.config.Queries, f.config.PetRepo)
+	customerRepo := customerRepo.NewSqlcCustomerRepository(f.config.Queries, f.config.PetRepo)
 
 	// Create use cases
-	useCases := f.createUseCases(ownerRepo)
+	customerBus := f.createBus(customerRepo)
 
 	// Create controller
-	controller := controller.NewOwnerController(f.config.Validator, useCases)
+	controller := controller.NewCustomerController(f.config.Validator, &customerBus)
 
 	// Register routes
-	routes.OwnerRoutes(f.config.Router, controller)
+	routes.CustomerRoutes(f.config.Router, controller)
 
 	// Store components
-	f.components = &OwnerAPIComponents{
-		Repository: ownerRepo,
-		UseCase:    useCases,
+	f.components = &CustomerAPIComponents{
+		Repository: customerRepo,
+		Bus:        customerBus,
 		Controller: controller,
 	}
 
@@ -71,18 +74,18 @@ func (f *OwnerAPIModule) Bootstrap() error {
 }
 
 // createUseCases creates and wires all use cases
-func (f *OwnerAPIModule) createUseCases(repo repository.OwnerRepository) usecase.OwnerServiceFacade {
-	getUseCase := usecase.NewGetOwnerByIDUseCase(repo)
-	listUseCase := usecase.NewSearchOwnersUseCase(repo)
-	createUseCase := usecase.NewCreateOwnerUseCase(repo)
-	updateUseCase := usecase.NewUpdateOwnerUseCase(repo)
-	deleteUseCase := usecase.NewSoftDeleteOwnerUseCase(repo)
+func (f *CustomerAPIModule) createBus(repo repository.CustomerRepository) bus.CustomerBus {
+	customerCommandHandler := command.NewCustomerCommandHandler(repo)
+	customerQueryHandler := query.NewCustomerQueryHandler(repo)
 
-	return usecase.NewOwnerUseCases(getUseCase, listUseCase, createUseCase, updateUseCase, deleteUseCase)
+	customerCommandBus := bus.NewCustomerCommandBus(customerCommandHandler)
+	customerQueryBus := bus.NewCustomerQueryBus(customerQueryHandler)
+
+	return *bus.NewCustomerModuleBus(customerCommandBus, customerQueryBus)
 }
 
 // validateConfig validates the Module configuration
-func (f *OwnerAPIModule) validateConfig() error {
+func (f *CustomerAPIModule) validateConfig() error {
 	if f.config == nil {
 		return appError.ConflictError("INVALID_CONFIG", "configuration cannot be nil")
 	}
@@ -101,7 +104,7 @@ func (f *OwnerAPIModule) validateConfig() error {
 	return nil
 }
 
-func (f *OwnerAPIModule) GetComponents() (*OwnerAPIComponents, error) {
+func (f *CustomerAPIModule) GetComponents() (*CustomerAPIComponents, error) {
 	if !f.isBuilt {
 		if err := f.Bootstrap(); err != nil {
 			return nil, err
@@ -110,7 +113,7 @@ func (f *OwnerAPIModule) GetComponents() (*OwnerAPIComponents, error) {
 	return f.components, nil
 }
 
-func (f *OwnerAPIModule) GetRepository() (repository.OwnerRepository, error) {
+func (f *CustomerAPIModule) GetRepository() (repository.CustomerRepository, error) {
 	components, err := f.GetComponents()
 	if err != nil {
 		return nil, err
@@ -118,15 +121,15 @@ func (f *OwnerAPIModule) GetRepository() (repository.OwnerRepository, error) {
 	return components.Repository, nil
 }
 
-func (f *OwnerAPIModule) GetUseCase() (usecase.OwnerServiceFacade, error) {
+func (f *CustomerAPIModule) GetBus() (*bus.CustomerBus, error) {
 	components, err := f.GetComponents()
 	if err != nil {
 		return nil, err
 	}
-	return components.UseCase, nil
+	return &components.Bus, nil
 }
 
-func (f *OwnerAPIModule) GetController() (*controller.OwnerController, error) {
+func (f *CustomerAPIModule) GetController() (*controller.CustomerController, error) {
 	components, err := f.GetComponents()
 	if err != nil {
 		return nil, err

@@ -7,10 +7,10 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/pet"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
-	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
-	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
+	"clinic-vet-api/app/core/domain/entity/pet"
+	"clinic-vet-api/app/core/domain/valueobject"
+	repository "clinic-vet-api/app/core/repositories"
+	"clinic-vet-api/sqlc"
 )
 
 type SqlcPetRepository struct {

@@ -3,10 +3,10 @@ package repositoryimpl
 import (
 	"context"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/user/profile"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
-	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
-	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
+	"clinic-vet-api/app/core/domain/entity/user/profile"
+	"clinic-vet-api/app/core/domain/valueobject"
+	repository "clinic-vet-api/app/core/repositories"
+	"clinic-vet-api/sqlc"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 

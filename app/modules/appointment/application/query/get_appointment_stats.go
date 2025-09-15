@@ -1,15 +1,14 @@
 package query
 
 import (
+	"clinic-vet-api/app/core/domain/entity/appointment"
+	"clinic-vet-api/app/core/domain/enum"
+	"clinic-vet-api/app/core/repository"
+	"clinic-vet-api/app/shared/cqrs"
+	"clinic-vet-api/app/shared/page"
 	"context"
 	"fmt"
 	"time"
-
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/appointment"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/repository"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 )
 
 type FindApptStatsQuery struct {
@@ -45,8 +44,8 @@ func (h *FindApptStatsHandler) Handle(q cqrs.Query) (ApptStatsResult, error) {
 	var appointments []appointment.Appointment
 	var err error
 	maxPage := page.PageInput{
-		PageNumber: 1,
-		PageSize:   10000,
+		Page:     1,
+		PageSize: 10000,
 	}
 
 	if query.startDate != nil && query.endDate != nil {

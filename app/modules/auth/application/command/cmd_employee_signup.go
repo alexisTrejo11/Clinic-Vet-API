@@ -4,9 +4,9 @@ import (
 	"context"
 	"time"
 
-	u "github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/user"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
+	u "clinic-vet-api/app/core/domain/entity/user"
+	"clinic-vet-api/app/core/domain/enum"
+	"clinic-vet-api/app/core/domain/valueobject"
 )
 
 type EmployeeRegisterCommand struct {

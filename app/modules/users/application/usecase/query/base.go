@@ -4,8 +4,8 @@ package query
 import (
 	"time"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/user"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
+	"clinic-vet-api/app/core/domain/entity/user"
+	"clinic-vet-api/app/shared/page"
 )
 
 type UserResult struct {

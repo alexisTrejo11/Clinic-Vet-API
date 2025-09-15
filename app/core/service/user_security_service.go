@@ -7,12 +7,12 @@ import (
 	"sync"
 	"unicode"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/user"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/event"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/repository"
-	apperror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/application"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/password"
+	"clinic-vet-api/app/core/domain/entity/user"
+	"clinic-vet-api/app/core/domain/event"
+	"clinic-vet-api/app/core/domain/valueobject"
+	"clinic-vet-api/app/core/repository"
+	apperror "clinic-vet-api/app/shared/error/application"
+	"clinic-vet-api/app/shared/password"
 )
 
 type EventPublisher interface {

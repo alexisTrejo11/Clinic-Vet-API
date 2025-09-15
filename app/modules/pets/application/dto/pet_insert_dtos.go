@@ -2,7 +2,7 @@
 package dto
 
 import (
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
+	"clinic-vet-api/app/core/domain/valueobject"
 )
 
 type CreatePetData struct {

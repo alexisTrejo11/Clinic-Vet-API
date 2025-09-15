@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/notification"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
-	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
+	"clinic-vet-api/app/core/domain/entity/notification"
+	"clinic-vet-api/app/core/domain/valueobject"
+	repository "clinic-vet-api/app/core/repositories"
+	"clinic-vet-api/app/shared/page"
 )
 
 type NotificationService interface {

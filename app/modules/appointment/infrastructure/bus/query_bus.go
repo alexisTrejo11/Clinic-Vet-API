@@ -1,9 +1,9 @@
 package bus
 
 import (
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/appointment/application/query"
-	icqrs "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
-	p "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
+	"clinic-vet-api/app/modules/appointment/application/query"
+	icqrs "clinic-vet-api/app/shared/cqrs"
+	p "clinic-vet-api/app/shared/page"
 )
 
 type AppointmentQueryBus struct {
@@ -11,10 +11,9 @@ type AppointmentQueryBus struct {
 	handler  query.AppointmentQueryHandler
 }
 
-func NewAppointmentQueryBus(queryBus icqrs.QueryBus, handler query.AppointmentQueryHandler) *AppointmentQueryBus {
+func NewAppointmentQueryBus(handler query.AppointmentQueryHandler) *AppointmentQueryBus {
 	return &AppointmentQueryBus{
-		queryBus: queryBus,
-		handler:  handler,
+		handler: handler,
 	}
 }
 

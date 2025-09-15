@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/auth"
-	apperror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/application"
+	"clinic-vet-api/app/core/domain/entity/auth"
+	apperror "clinic-vet-api/app/shared/error/application"
 )
 
 // LoginCommand represents the login request data

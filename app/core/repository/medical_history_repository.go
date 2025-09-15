@@ -4,10 +4,10 @@ import (
 	"context"
 	"time"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/medical"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/specification"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
-	p "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
+	"clinic-vet-api/app/core/domain/entity/medical"
+	"clinic-vet-api/app/core/domain/specification"
+	"clinic-vet-api/app/core/domain/valueobject"
+	p "clinic-vet-api/app/shared/page"
 )
 
 type MedicalHistoryRepository interface {

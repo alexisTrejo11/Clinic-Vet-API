@@ -2,16 +2,16 @@
 package controller
 
 import (
+	"clinic-vet-api/app/core/domain/valueobject"
+	"clinic-vet-api/app/modules/medical/application/query"
+	"clinic-vet-api/app/modules/medical/infrastructure/bus"
+	"clinic-vet-api/app/modules/medical/presentation/dto"
+	"clinic-vet-api/app/shared/response"
 	"errors"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/medical/application/query"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/medical/infrastructure/bus"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/medical/presentation/dto"
+	httpError "clinic-vet-api/app/shared/error/infrastructure/http"
+	ginUtils "clinic-vet-api/app/shared/gin_utils"
 
-	httpError "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/infrastructure/http"
-	ginUtils "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/gin_utils"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/response"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )
@@ -72,16 +72,16 @@ func (ctlr AdminMedicalHistoryController) CreateMedicalHistory(c *gin.Context) {
 	}
 
 	command := createData.ToCommand()
-	result, err := ctlr.bus.CommandBus.CreateMedicalHistory(*command)
-	if err != nil {
-		response.ApplicationError(c, err)
+	result := ctlr.bus.CommandBus.CreateMedicalHistory(*command)
+	if result.Error() {
+		response.ApplicationError(c, result.Error())
 		return
 	}
 
 	response.Created(c, result.ID, "Medical History")
 }
 
-func (ctlr AdminMedicalHistoryController) DeleteMedicalHistories(c *gin.Context) {
+func (ctrl AdminMedicalHistoryController) DeleteMedicalHistory(c *gin.Context) {
 	idInterface, err := ginUtils.ParseParamToEntityID(c, "medical_history")
 	if err != nil {
 		response.BadRequest(c, httpError.RequestURLParamError(err, "medical-history", c.Param("id")))
@@ -99,11 +99,11 @@ func (ctlr AdminMedicalHistoryController) DeleteMedicalHistories(c *gin.Context)
 		response.BadRequest(c, httpError.RequestURLQueryError(err, c.Request.URL.RawQuery))
 		return
 	}
+
 	isSoftDelete := softDelete == "true"
 
-	if err := ctlr.usecase.Delete(c.Request.Context(), mediHistID, isSoftDelete); err != nil {
-		response.ApplicationError(c, err)
-		return
+	result := ctrl.bus.CommandBus.DeleteMedicalHistory(mediHistID, isSoftDelete)
+	if result.IsError() {
 	}
 
 	response.NoContent(c)

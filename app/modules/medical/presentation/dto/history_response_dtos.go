@@ -3,7 +3,7 @@ package dto
 import (
 	"time"
 
-	commondto "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/dto"
+	commondto "clinic-vet-api/app/shared/dto"
 )
 
 // MedHistResponse represents a medical history record summary

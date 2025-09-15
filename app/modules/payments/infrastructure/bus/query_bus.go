@@ -1,72 +1,39 @@
+// Package bus contains all the setup for command and query bus related to payment
 package bus
 
 import (
-	"fmt"
-	"reflect"
-
-	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
-	query "github.com/alexisTrejo11/Clinic-Vet-API/app/modules/payments/application/queries"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
+	query "clinic-vet-api/app/modules/payments/application/queries"
+	"clinic-vet-api/app/shared/page"
 )
 
 type PaymentQueryBus struct {
-	handlers map[reflect.Type]any
+	handler query.PaymentQueryHandler
 }
 
-func NewQueryBus(paymentRepo repository.PaymentRepository) *PaymentQueryBus {
-	bus := &PaymentQueryBus{
-		handlers: make(map[reflect.Type]any),
-	}
-	bus.registerHandlers(paymentRepo)
-	return bus
+func NewPaymentQueryBus(handler query.PaymentQueryHandler) *PaymentQueryBus {
+	return &PaymentQueryBus{handler: handler}
 }
 
-func (bus *PaymentQueryBus) registerHandlers(paymentRepo repository.PaymentRepository) {
-	bus.Register(reflect.TypeOf(query.GetPaymentByIDQuery{}), query.NewGetPaymentByIDHandler(paymentRepo))
-	bus.Register(reflect.TypeOf(query.ListPaymentsByOwnerQuery{}), query.NewListByOwnerHandler(paymentRepo))
-	bus.Register(reflect.TypeOf(query.ListPaymentsByStatusQuery{}), query.NewListPaymentsByStatusHandler(paymentRepo))
-	bus.Register(reflect.TypeOf(query.ListOverduePaymentsQuery{}), query.NewListOverduePaymentsHandler(paymentRepo))
-	bus.Register(reflect.TypeOf(query.SearchPaymentsQuery{}), query.NewSearchPaymentsHandler(paymentRepo))
-	// bus.Register(reflect.TypeOf(query.GetPaymentHistoryQuery{}), query.NewGetPaymentHistoryHandler(paymentRepo))
+func (b *PaymentQueryBus) FindByID(qry query.FindPaymentByIDQuery) (query.PaymentResult, error) {
+	return b.handler.FindByID(qry)
 }
 
-func (bus *PaymentQueryBus) Execute(qry cqrs.Query) (any, error) {
-	queryType := reflect.TypeOf(qry)
-	handler, exists := bus.handlers[queryType]
-
-	if !exists {
-		return nil, fmt.Errorf("no handler registered for query type %s", queryType.Name())
-	}
-
-	switch q := qry.(type) {
-	case query.GetPaymentByIDQuery:
-		h := handler.(query.GetPaymentByIDHandler)
-		return h.Handle(q)
-	case query.ListPaymentsByOwnerQuery:
-		h := handler.(query.ListPaymentsByStatusHandler)
-		return h.Handle(q)
-
-	case query.ListPaymentsByStatusQuery:
-		h := handler.(query.ListPaymentsByStatusHandler)
-		return h.Handle(q)
-
-	case query.ListOverduePaymentsQuery:
-		h := handler.(query.ListOverduePaymentsHandler)
-		return h.Handle(q)
-
-	case query.SearchPaymentsQuery:
-		h := handler.(query.SearchPaymentsHandler)
-		return h.Handle(q)
-
-	default:
-		return nil, fmt.Errorf("unknown query type: %s", queryType.Name())
-	}
+func (b *PaymentQueryBus) FindOverdues(qry query.FindOverduePaymentsQuery) (page.Page[query.PaymentResult], error) {
+	return b.handler.FindOverdues(qry)
 }
 
-func (bus *PaymentQueryBus) Register(queryType reflect.Type, handler any) error {
-	if handler == nil {
-		return fmt.Errorf("handler cannot be nil for query type %s", queryType.Name())
-	}
-	bus.handlers[queryType] = handler
-	return nil
+func (b *PaymentQueryBus) FindByStatus(qry query.FindPaymentsByStatusQuery) (page.Page[query.PaymentResult], error) {
+	return b.handler.FindByStatus(qry)
+}
+
+func (b *PaymentQueryBus) FindByCustomer(qry query.FindPaymentsByCustomerQuery) (page.Page[query.PaymentResult], error) {
+	return b.handler.FindByCustomer(qry)
+}
+
+func (b *PaymentQueryBus) FindByDateRange(qry query.FindPaymentsByDateRangeQuery) (page.Page[query.PaymentResult], error) {
+	return b.handler.FindByDateRange(qry)
+}
+
+func (b *PaymentQueryBus) FindBySpecification(qry query.FindPaymentsBySpecification) (page.Page[query.PaymentResult], error) {
+	return b.handler.FindBySpecification(qry)
 }

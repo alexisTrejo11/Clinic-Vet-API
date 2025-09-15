@@ -8,8 +8,8 @@ import (
 	"net/smtp"
 	"strings"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/notification"
-	emailTemplates "github.com/alexisTrejo11/Clinic-Vet-API/app/modules/notifications/infrastructure/sending/email/templates"
+	"clinic-vet-api/app/core/domain/entity/notification"
+	emailTemplates "clinic-vet-api/app/modules/notifications/infrastructure/sending/email/templates"
 )
 
 func (s *emailSenderImpl) assignTemplate(notification *notification.Notification) (*template.Template, error) {

@@ -9,19 +9,19 @@ import (
 
 	config "command-line-arguments/Users/alexis/Documents/Clinic-Vet-API/config/postgres_config.go"
 
-	authApi "github.com/alexisTrejo11/Clinic-Vet-API/app/modules/auth/infrastructure/api"
-	mhDTOs "github.com/alexisTrejo11/Clinic-Vet-API/app/modules/medical/application/dto"
-	notification_api "github.com/alexisTrejo11/Clinic-Vet-API/app/modules/notifications/infrastructure/api"
+	authApi "clinic-vet-api/app/modules/auth/infrastructure/api"
+	mhDTOs "clinic-vet-api/app/modules/medical/application/dto"
+	notification_api "clinic-vet-api/app/modules/notifications/infrastructure/api"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/config"
-	"github.com/alexisTrejo11/Clinic-Vet-API/middleware"
-	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
+	"clinic-vet-api/config"
+	"clinic-vet-api/middleware"
+	"clinic-vet-api/sqlc"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
 	"github.com/joho/godotenv"
 
-	_ "github.com/alexisTrejo11/Clinic-Vet-API/docs"
+	_ "clinic-vet-api/docs"
 	swaggerfiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 )

@@ -4,12 +4,12 @@ package controller
 import (
 	"context"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/appointment/application/command"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/appointment/infrastructure/bus"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/appointment/presentation/dto"
-	httpError "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/infrastructure/http"
-	ginUtils "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/gin_utils"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/response"
+	"clinic-vet-api/app/modules/appointment/application/command"
+	"clinic-vet-api/app/modules/appointment/infrastructure/bus"
+	"clinic-vet-api/app/modules/appointment/presentation/dto"
+	httpError "clinic-vet-api/app/shared/error/infrastructure/http"
+	ginUtils "clinic-vet-api/app/shared/gin_utils"
+	"clinic-vet-api/app/shared/response"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )

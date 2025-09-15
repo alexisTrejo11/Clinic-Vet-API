@@ -1,8 +1,8 @@
 package dto
 
 import (
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/users/application/usecase"
+	"clinic-vet-api/app/core/domain/valueobject"
+	"clinic-vet-api/app/modules/users/application/usecase"
 )
 
 // @Description Represents the request body for updating a user's profile.

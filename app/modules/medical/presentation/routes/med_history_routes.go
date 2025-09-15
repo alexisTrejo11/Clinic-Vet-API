@@ -2,7 +2,8 @@
 package routes
 
 import (
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/medical/infrastructure/api/controller"
+	"clinic-vet-api/app/modules/medical/presentation/controller"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -10,6 +11,6 @@ func MedicalHistoryRoutes(router *gin.Engine, controller controller.AdminMedical
 	path := "/api/v2/admin/medical-history"
 	router.GET(path, controller.SearchMedicalHistories)
 	router.GET(path+"/:id", controller.GetMedicalHistoryDetails)
-	router.POST(path, controller.CreateMedicalHistories)
-	router.DELETE(path+"/:id", controller.DeleteMedicalHistories)
+	router.POST(path, controller.CreateMedicalHistory)
+	router.DELETE(path+"/:id", controller.DeleteMedicalHistory)
 }

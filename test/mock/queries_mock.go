@@ -8,7 +8,7 @@ import (
 	context "context"
 	reflect "reflect"
 
-	sqlc "github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
+	sqlc "clinic-vet-api/sqlc"
 	gomock "github.com/golang/mock/gomock"
 	pgx "github.com/jackc/pgx/v5"
 	pgtype "github.com/jackc/pgx/v5/pgtype"

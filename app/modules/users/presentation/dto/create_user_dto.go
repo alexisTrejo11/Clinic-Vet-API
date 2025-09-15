@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/users/application/usecase/command"
+	"clinic-vet-api/app/modules/users/application/usecase/command"
 )
 
 // AdminCreateUserRequest represents the payload for creating a new user by an administrator

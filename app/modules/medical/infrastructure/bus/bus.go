@@ -1,8 +1,8 @@
 package bus
 
 import (
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/medical/application/command"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/medical/application/query"
+	"clinic-vet-api/app/modules/medical/application/command"
+	"clinic-vet-api/app/modules/medical/application/query"
 )
 
 type MedicalHistoryBus struct {

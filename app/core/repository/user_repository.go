@@ -4,12 +4,12 @@ import (
 	"context"
 	"time"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/user"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/user/profile"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/specification"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
+	"clinic-vet-api/app/core/domain/entity/user"
+	"clinic-vet-api/app/core/domain/entity/user/profile"
+	"clinic-vet-api/app/core/domain/enum"
+	"clinic-vet-api/app/core/domain/specification"
+	"clinic-vet-api/app/core/domain/valueobject"
+	"clinic-vet-api/app/shared/page"
 )
 
 type UserRepository interface {

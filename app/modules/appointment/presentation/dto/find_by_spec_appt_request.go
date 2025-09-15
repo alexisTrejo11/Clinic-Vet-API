@@ -1,16 +1,17 @@
 package dto
 
 import (
+	"clinic-vet-api/app/core/domain/enum"
+	"clinic-vet-api/app/core/domain/specification"
+	"clinic-vet-api/app/core/domain/valueobject"
+	"clinic-vet-api/app/modules/appointment/application/query"
+	"clinic-vet-api/app/shared/page"
 	"context"
 	"fmt"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/specification"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/appointment/application/query"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )
@@ -26,10 +27,13 @@ type AppointmentSearchRequest struct {
 	EndDate    string `form:"end_date" validate:"omitempty,datetime=2006-01-02"`
 	HasNotes   *bool  `form:"has_notes" validate:"omitempty"`
 
-	Page     int    `form:"page" validate:"omitempty,min=1"`
-	PageSize int    `form:"page_size" validate:"omitempty,min=1,max=100"`
-	OrderBy  string `form:"order_by" validate:"omitempty,oneof=scheduled_date status service created_at updated_at"`
-	SortDir  string `form:"sort_dir" validate:"omitempty,oneof=ASC DESC asc desc"`
+	page.PageInput
+	/*
+		Page     int    `form:"page" validate:"omitempty,min=1"`
+		PageSize int    `form:"page_size" validate:"omitempty,min=1,max=100"`
+		OrderBy  string `form:"order_by" validate:"omitempty,oneof=scheduled_date status service created_at updated_at"`
+		SortDir  string `form:"sort_dir" validate:"omitempty,oneof=ASC DESC asc desc"`
+	*/
 }
 
 func (r *AppointmentSearchRequest) Pagination() map[string]any {
@@ -37,7 +41,7 @@ func (r *AppointmentSearchRequest) Pagination() map[string]any {
 		"page":      r.Page,
 		"page_size": r.PageSize,
 		"order_by":  r.OrderBy,
-		"sort_dir":  r.SortDir,
+		"sort_dir":  r.SortDirection,
 	}
 }
 
@@ -152,10 +156,9 @@ func (r *AppointmentSearchRequest) ToSpecification() (*specification.ApptSearchS
 	}
 
 	sortDir := "DESC"
-	if r.SortDir != "" {
-		sortDir = strings.ToUpper(r.SortDir)
+	if r.SortDirection != "" {
+		sortDir = strings.ToUpper(string(r.SortDirection))
 	}
-
 	spec = spec.WithPagination(page, pageSize, orderBy, sortDir)
 
 	return spec, nil

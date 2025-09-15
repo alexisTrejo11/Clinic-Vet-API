@@ -1,15 +1,18 @@
-package appointmentAPI
+package api
 
 import (
+	"clinic-vet-api/app/core/repository"
+	"clinic-vet-api/app/modules/appointment/application/command"
+	"clinic-vet-api/app/modules/appointment/application/query"
+	"clinic-vet-api/app/modules/appointment/infrastructure/bus"
+	"clinic-vet-api/app/modules/appointment/presentation/controller"
+	"clinic-vet-api/app/modules/appointment/presentation/dto"
+	"clinic-vet-api/app/modules/appointment/presentation/routes"
+	"clinic-vet-api/sqlc"
 	"fmt"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/repository"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/appointment/infrastructure/bus"
-	repositoryimpl "github.com/alexisTrejo11/Clinic-Vet-API/app/modules/appointment/infrastructure/persistence/repository"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/appointment/presentation/controller"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/appointment/presentation/routes"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
-	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
+	apptRepo "clinic-vet-api/app/modules/appointment/infrastructure/repository"
+
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )
@@ -24,19 +27,18 @@ type AppointmentAPIConfig struct {
 
 // AppointmentAPIComponents holds all created components
 type AppointmentAPIComponents struct {
-	Repository  repository.AppointmentRepository // Your appointment repository interface
-	CommandBus  *cqrs.CommandBus
-	QueryBus    *cqrs.QueryBus
+	Repository  repository.AppointmentRepository
+	Bus         *bus.AppointmentBus
 	Controllers *AppointmentControllers
 	Routes      *routes.AppointmentRoutes
 }
 
 // AppointmentControllers holds all appointment controllers
 type AppointmentControllers struct {
-	Command  *controller.ApptAdminCommandController
-	Query    *controller.ApptAdminQueryController
-	Customer *controller.CustomerOwnerApptController
-	Employee *controller.EmployeeApptController
+	Command  *controller.AppointmentCommandController
+	Query    *controller.AppointmentQueryController
+	Customer *controller.CustomerAppointmetController
+	Employee *controller.EmployeeAppointmentController
 }
 
 // AppointmentAPIBuilder creates and manages appointment API components
@@ -65,14 +67,18 @@ func (f *AppointmentAPIBuilder) Build() error {
 	}
 
 	// Create repository (single instance)
-	repository := repositoryimpl.NewSQLCAppointmentRepository(f.config.Queries)
+	repository := apptRepo.NewSqlcAppointmentRepository(f.config.Queries)
 
 	// Create buses
-	commandBus := bus.NewAppointmentCommandBus(repository)
-	queryBus := bus.NewAppointmentQueryBus(repository, f.config.CustomerRepo)
+	commandHandler := command.NewAppointmentCommandHandler(repository)
+	queryHandler := query.NewAppointmentQueryHandler(repository)
+
+	commandBus := bus.NewAppointmentCommandBus(commandHandler)
+	queryBus := bus.NewAppointmentQueryBus(queryHandler)
+	apptBus := bus.NewAppointmentBus(*commandBus, *queryBus)
 
 	// Create controllers
-	controllers := f.createControllers(&commandBus, &queryBus)
+	controllers := f.createControllers(*apptBus)
 
 	// Create and register routes
 	routes := f.createRoutes(controllers)
@@ -80,8 +86,7 @@ func (f *AppointmentAPIBuilder) Build() error {
 	// Store components
 	f.components = &AppointmentAPIComponents{
 		Repository:  repository,
-		CommandBus:  &commandBus,
-		QueryBus:    &queryBus,
+		Bus:         apptBus,
 		Controllers: controllers,
 		Routes:      routes,
 	}
@@ -92,14 +97,13 @@ func (f *AppointmentAPIBuilder) Build() error {
 
 // createControllers creates all appointment controllers
 func (f *AppointmentAPIBuilder) createControllers(
-	commandBus *cqrs.CommandBus,
-	queryBus *cqrs.QueryBus,
+	apptBus bus.AppointmentBus,
 ) *AppointmentControllers {
 	return &AppointmentControllers{
-		Command:  controller.NewApptCommandController(*commandBus, f.config.Validator),
-		Query:    controller.NewApptQueryController(*queryBus, f.config.Validator),
-		Customer: controller.NewCustomerOwnerApptController(*commandBus, *queryBus),
-		Employee: controller.NewEmployeeController(*commandBus, *queryBus, f.config.Validator),
+		Command:  controller.NewApptCommandController(apptBus, f.config.Validator),
+		Query:    controller.NewApptQueryController(apptBus, f.config.Validator, &dto.ResponseMapper{}),
+		Customer: controller.NewCustomerApptControleer(&apptBus, f.config.Validator, f.components.Controllers.Query),
+		Employee: controller.NewEmployeeController(f.components.Controllers.Command, f.config.Validator, f.components.Controllers.Query),
 	}
 }
 
@@ -108,8 +112,8 @@ func (f *AppointmentAPIBuilder) createRoutes(controllers *AppointmentControllers
 	routes := routes.NewAppointmentRoutes(
 		controllers.Command,
 		controllers.Query,
-		controllers.Customer,
 		controllers.Employee,
+		controllers.Customer,
 	)
 	routes.RegisterAdminRoutes(f.config.Router)
 	return routes

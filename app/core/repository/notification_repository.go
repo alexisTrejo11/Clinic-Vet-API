@@ -3,9 +3,9 @@ package repository
 import (
 	"context"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/notification"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
+	"clinic-vet-api/app/core/domain/entity/notification"
+	"clinic-vet-api/app/core/domain/valueobject"
+	"clinic-vet-api/app/shared/page"
 )
 
 // entity.NotificationRepository defines methods for persisting and tracking notifications

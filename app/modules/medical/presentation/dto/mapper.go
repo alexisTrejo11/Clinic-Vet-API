@@ -1,10 +1,10 @@
 package dto
 
 import (
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/medical/application/command"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/medical/application/query"
-	commondto "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/dto"
+	"clinic-vet-api/app/core/domain/valueobject"
+	"clinic-vet-api/app/modules/medical/application/command"
+	"clinic-vet-api/app/modules/medical/application/query"
+	commondto "clinic-vet-api/app/shared/dto"
 )
 
 func (req *AdminCreateMedHistoryRequest) ToCommand() *command.CreateMedHistCommand {

@@ -3,12 +3,12 @@ package api
 import (
 	"fmt"
 
-	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/pets/application/usecase"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/pets/infrastructure/api/controller"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/pets/infrastructure/api/routes"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/pets/infrastructure/persistence"
-	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
+	repository "clinic-vet-api/app/core/repositories"
+	"clinic-vet-api/app/modules/pets/application/usecase"
+	"clinic-vet-api/app/modules/pets/infrastructure/api/controller"
+	"clinic-vet-api/app/modules/pets/infrastructure/api/routes"
+	"clinic-vet-api/app/modules/pets/infrastructure/persistence"
+	"clinic-vet-api/sqlc"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )

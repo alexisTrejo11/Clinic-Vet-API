@@ -3,7 +3,7 @@ package repositoryimpl
 import (
 	"fmt"
 
-	dberr "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/infrastructure/database"
+	dberr "clinic-vet-api/app/shared/error/infrastructure/database"
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 

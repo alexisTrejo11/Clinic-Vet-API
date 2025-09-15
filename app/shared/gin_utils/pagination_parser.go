@@ -1,8 +1,8 @@
 package ginutils
 
 import (
-	htttpError "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/infrastructure/http"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
+	htttpError "clinic-vet-api/app/shared/error/infrastructure/http"
+	"clinic-vet-api/app/shared/page"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )

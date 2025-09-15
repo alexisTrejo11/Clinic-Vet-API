@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/medical/application/command"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
+	"clinic-vet-api/app/modules/medical/application/command"
+	"clinic-vet-api/app/shared/cqrs"
 )
 
 // CommandHandler maneja comandos específicos

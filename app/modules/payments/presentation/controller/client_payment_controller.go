@@ -1,9 +1,9 @@
 package controller
 
 import (
-	autherror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/auth"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/response"
-	"github.com/alexisTrejo11/Clinic-Vet-API/middleware"
+	autherror "clinic-vet-api/app/shared/error/auth"
+	"clinic-vet-api/app/shared/response"
+	"clinic-vet-api/middleware"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )
@@ -32,8 +32,4 @@ func (ctrl *ClientPaymentController) GetMyPayments(c *gin.Context) {
 	}
 
 	ctrl.queryController.GetPaymentsByCustomer(c, userCTX.CustomerID)
-}
-
-// GetMyPayment retrieves a specific payment for the authenticated owner
-func (ctrl *ClientPaymentController) GetMyPayment(c *gin.Context) {
 }

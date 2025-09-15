@@ -1,22 +1,41 @@
 package query
 
 import (
+	"clinic-vet-api/app/core/domain/specification"
+	"clinic-vet-api/app/core/domain/valueobject"
+	"clinic-vet-api/app/shared/page"
 	"context"
 	"time"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/specification"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
-	apperror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/application"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
+	apperror "clinic-vet-api/app/shared/error/application"
 )
 
 type FindApptByIDQuery struct {
 	appointmentID valueobject.AppointmentID
+	customerID    *valueobject.CustomerID
+	employeeID    *valueobject.EmployeeID
 	ctx           context.Context
 }
 
-func NewFindApptByIDQuery(ctx context.Context, id uint) *FindApptByIDQuery {
-	return &FindApptByIDQuery{appointmentID: valueobject.NewAppointmentID(id), ctx: ctx}
+func NewFindApptByIDQuery(ctx context.Context, id uint, employeeID *uint, customerID *uint) *FindApptByIDQuery {
+	var empID *valueobject.EmployeeID
+	if employeeID != nil {
+		val := valueobject.NewEmployeeID(*employeeID)
+		empID = &val
+	}
+
+	var custID *valueobject.CustomerID
+	if customerID != nil {
+		val := valueobject.NewCustomerID(*customerID)
+		custID = &val
+	}
+
+	return &FindApptByIDQuery{
+		appointmentID: valueobject.NewAppointmentID(id),
+		customerID:    custID,
+		employeeID:    empID,
+		ctx:           ctx,
+	}
 }
 
 type FindApptByIDAndCustomerIDQuery struct {

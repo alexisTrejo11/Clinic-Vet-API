@@ -1,11 +1,12 @@
 package controller
 
 import (
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/payments/application/command"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
-	httpError "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/infrastructure/http"
-	ginUtils "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/gin_utils"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/response"
+	"clinic-vet-api/app/modules/payments/application/command"
+	dto "clinic-vet-api/app/modules/payments/presentation/dtos"
+	"clinic-vet-api/app/shared/cqrs"
+	httpError "clinic-vet-api/app/shared/error/infrastructure/http"
+	ginUtils "clinic-vet-api/app/shared/gin_utils"
+	"clinic-vet-api/app/shared/response"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )
@@ -26,188 +27,176 @@ func NewPaymentController(
 }
 
 // CreatePayment creates a new payment
-func (c *PaymentController) CreatePayment(ctx *gin.Context) {
-	var req dto.
-
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(ctx, httpError.RequestBodyDataError(err))
+func (ctrl *PaymentController) CreatePayment(c *gin.Context) {
+	var req dto.CreatePaymentRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, httpError.RequestBodyDataError(err))
 		return
 	}
 
-	if err := c.validator.Struct(&req); err != nil {
-		response.BadRequest(ctx, httpError.InvalidDataError(err))
+	if err := ctrl.validator.Struct(&req); err != nil {
+		response.BadRequest(c, httpError.InvalidDataError(err))
 		return
 	}
 
 	createCommand, err := req.ToCreatePaymentCommand()
 	if err != nil {
-		response.ApplicationError(ctx, err)
+		response.ApplicationError(c, err)
 		return
 	}
 
-	commandResult := c.commandBus.Execute(createCommand)
-	if !commandResult.IsSuccess {
-		response.ApplicationError(ctx, commandResult.Error)
+	commandResult := ctrl.commandBus.Execute(createCommand)
+	if !commandResult.IsSuccess() {
+		response.ApplicationError(c, commandResult.Error())
 		return
 	}
 
-	response.Created(ctx, commandResult)
+	response.Created(c, gin.H{"id": commandResult.ID()}, commandResult.Message())
 }
 
 // UpdatePayment updates an existing payment
-func (c *PaymentController) UpdatePayment(ctx *gin.Context) {
-	id, err := ginUtils.ParseParamToInt(ctx, "id")
+func (ctrl *PaymentController) UpdatePayment(c *gin.Context) {
+	id, err := ginUtils.ParseParamToUInt(c, "id")
 	if err != nil {
-		response.BadRequest(ctx, httpError.RequestURLParamError(err, "payment_id", ctx.Param("id")))
+		response.BadRequest(c, httpError.RequestURLParamError(err, "payment_id", c.Param("id")))
 		return
 	}
 
 	var req dto.UpdatePaymentRequest
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(ctx, httpError.RequestBodyDataError(err))
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, httpError.RequestBodyDataError(err))
 		return
 	}
 
-	if err := c.validator.Struct(&req); err != nil {
-		response.BadRequest(ctx, httpError.InvalidDataError(err))
+	if err := ctrl.validator.Struct(&req); err != nil {
+		response.BadRequest(c, httpError.InvalidDataError(err))
 		return
 	}
 
-	updatePaymentCommand, err := req.ToUpdatePaymentCommand(ctx.Request.Context(), id)
+	updatePaymentCommand, err := req.ToUpdatePaymentCommand(c.Request.Context(), id)
 	if err != nil {
-		response.ApplicationError(ctx, err)
+		response.ApplicationError(c, err)
 		return
 	}
 
-	commandResult := c.commandBus.Execute(updatePaymentCommand)
-	if !commandResult.IsSuccess {
-		response.ApplicationError(ctx, commandResult.Error)
+	commandResult := ctrl.commandBus.Execute(updatePaymentCommand)
+	if !commandResult.IsSuccess() {
+		response.ApplicationError(c, commandResult.Error())
 		return
 	}
 
-	response.Success(ctx, commandResult)
+	response.Updated(c, nil, "Payment")
 }
 
 // DeletePayment soft deletes a payment
-func (c *PaymentController) DeletePayment(ctx *gin.Context) {
-	id, err := ginUtils.ParseParamToInt(ctx, "id")
+func (ctrl *PaymentController) DeletePayment(c *gin.Context) {
+	id, err := ginUtils.ParseParamToUInt(c, "id")
 	if err != nil {
-		response.BadRequest(ctx, httpError.RequestURLParamError(err, "payment_id", ctx.Param("id")))
+		response.BadRequest(c, httpError.RequestURLParamError(err, "payment_id", c.Param("id")))
 		return
 	}
 
-	deleteCommand, err := command.NewDeletePaymentCommand(id)
-	if err != nil {
-		response.ApplicationError(ctx, err)
+	deleteCommand := command.NewDeletePaymentCommand(c.Request.Context(), id)
+
+	commandResult := ctrl.commandBus.Execute(deleteCommand)
+	if !commandResult.IsSuccess() {
+		response.ApplicationError(c, commandResult.Error())
 		return
 	}
 
-	commandResult := c.commandBus.Execute(deleteCommand)
-	if !commandResult.IsSuccess {
-		response.ApplicationError(ctx, commandResult.Error)
-		return
-	}
-
-	response.NoContent(ctx)
+	response.NoContent(c)
 }
 
 // ProcessPayment processes a payment
-func (c *PaymentController) ProcessPayment(ctx *gin.Context) {
-	id, err := ginUtils.ParseParamToInt(ctx, "id")
+func (ctrl *PaymentController) ProcessPayment(c *gin.Context) {
+	id, err := ginUtils.ParseParamToUInt(c, "id")
 	if err != nil {
-		response.BadRequest(ctx, httpError.RequestURLParamError(err, "payment_id", ctx.Param("id")))
+		response.BadRequest(c, httpError.RequestURLParamError(err, "payment_id", c.Param("id")))
 		return
 	}
 
 	var req dto.ProcessPaymentRequest
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(ctx, httpError.RequestBodyDataError(err))
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, httpError.RequestBodyDataError(err))
 		return
 	}
 
-	if err := c.validator.Struct(&req); err != nil {
-		response.BadRequest(ctx, httpError.InvalidDataError(err))
+	if err := ctrl.validator.Struct(&req); err != nil {
+		response.BadRequest(c, httpError.InvalidDataError(err))
 		return
 	}
 
 	proccessPaymentCommand, err := command.NewProcessPaymentCommand(id, req.TransactionID)
 	if err != nil {
-		response.ApplicationError(ctx, err)
+		response.ApplicationError(c, err)
 		return
 	}
 
-	commandResult := c.commandBus.Execute(proccessPaymentCommand)
-	if !commandResult.IsSuccess {
-		response.ApplicationError(ctx, commandResult.Error)
+	commandResult := ctrl.commandBus.Execute(proccessPaymentCommand)
+	if !commandResult.IsSuccess() {
+		response.ApplicationError(c, commandResult.Error())
 		return
 	}
 
-	response.Success(ctx, commandResult)
+	response.Success(c, nil, commandResult.Message())
 }
 
 // RefundPayment refunds a payment
-func (c *PaymentController) RefundPayment(ctx *gin.Context) {
-	id, err := ginUtils.ParseParamToInt(ctx, "id")
+func (ctrl *PaymentController) RefundPayment(c *gin.Context) {
+	id, err := ginUtils.ParseParamToUInt(c, "id")
 	if err != nil {
-		response.BadRequest(ctx, httpError.RequestURLParamError(err, "payment_id", ctx.Param("id")))
+		response.BadRequest(c, httpError.RequestURLParamError(err, "payment_id", c.Param("id")))
 		return
 	}
 
 	var req dto.RefundPaymentRequest
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(ctx, httpError.RequestBodyDataError(err))
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, httpError.RequestBodyDataError(err))
 		return
 	}
 
-	if err := c.validator.Struct(&req); err != nil {
-		response.BadRequest(ctx, httpError.InvalidDataError(err))
+	if err := ctrl.validator.Struct(&req); err != nil {
+		response.BadRequest(c, httpError.InvalidDataError(err))
 		return
 	}
 
-	refundPaymentCommand, err := command.NewRefundPaymentCommand(id, req.Reason)
-	if err != nil {
-		response.ApplicationError(ctx, err)
-		return
-	}
-	commandResult := c.commandBus.Execute(refundPaymentCommand)
-	if !commandResult.IsSuccess {
-		response.ApplicationError(ctx, commandResult.Error)
+	refundPaymentCommand := command.NewRefundPaymentCommand(c.Request.Context(), id, req.Reason)
+
+	commandResult := ctrl.commandBus.Execute(refundPaymentCommand)
+	if !commandResult.IsSuccess() {
+		response.ApplicationError(c, commandResult.Error())
 		return
 	}
 
-	response.Success(ctx, commandResult)
+	response.Success(c, nil, commandResult.Message())
 }
 
 // CancelPayment cancels a payment
-func (c *PaymentController) CancelPayment(ctx *gin.Context) {
-	id, err := ginUtils.ParseParamToInt(ctx, "id")
+func (ctrl *PaymentController) CancelPayment(c *gin.Context) {
+	id, err := ginUtils.ParseParamToUInt(c, "id")
 	if err != nil {
-		response.BadRequest(ctx, httpError.RequestURLParamError(err, "payment_id", ctx.Param("id")))
+		response.BadRequest(c, httpError.RequestURLParamError(err, "payment_id", c.Param("id")))
 		return
 	}
 
 	var req dto.CancelPaymentRequest
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(ctx, httpError.RequestBodyDataError(err))
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, httpError.RequestBodyDataError(err))
 		return
 	}
 
-	if err := c.validator.Struct(&req); err != nil {
-		response.BadRequest(ctx, httpError.InvalidDataError(err))
+	if err := ctrl.validator.Struct(&req); err != nil {
+		response.BadRequest(c, httpError.InvalidDataError(err))
 		return
 	}
 
-	cancelPaymentCommand, err := command.NewCancelPaymentCommand(id, req.Reason)
-	if err != nil {
-		response.BadRequest(ctx, err)
+	cancelPaymentCommand := command.NewCancelPaymentCommand(id, req.Reason)
+
+	commandResult := ctrl.commandBus.Execute(cancelPaymentCommand)
+	if !commandResult.IsSuccess() {
+		response.ApplicationError(c, commandResult.Error())
 		return
 	}
 
-	commandResult := c.commandBus.Execute(cancelPaymentCommand)
-	if !commandResult.IsSuccess {
-		response.ApplicationError(ctx, commandResult.Error)
-		return
-	}
-
-	response.Success(ctx, commandResult)
+	response.Success(c, nil, "Payment Successfully Cancelled")
 }

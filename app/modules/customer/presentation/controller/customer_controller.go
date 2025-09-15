@@ -2,14 +2,14 @@
 package controller
 
 import (
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/customer/application/command"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/customer/application/query"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/customer/infrastructure/bus"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/customer/presentation/dto"
-	httpError "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/infrastructure/http"
-	ginUtils "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/gin_utils"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/response"
+	"clinic-vet-api/app/core/domain/valueobject"
+	"clinic-vet-api/app/modules/customer/application/command"
+	"clinic-vet-api/app/modules/customer/application/query"
+	"clinic-vet-api/app/modules/customer/infrastructure/bus"
+	"clinic-vet-api/app/modules/customer/presentation/dto"
+	httpError "clinic-vet-api/app/shared/error/infrastructure/http"
+	ginUtils "clinic-vet-api/app/shared/gin_utils"
+	"clinic-vet-api/app/shared/response"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )
@@ -19,10 +19,7 @@ type CustomerController struct {
 	bus       *bus.CustomerBus
 }
 
-func NewCustomerController(
-	validator *validator.Validate,
-	bus *bus.CustomerBus,
-) *CustomerController {
+func NewCustomerController(validator *validator.Validate, bus *bus.CustomerBus) *CustomerController {
 	return &CustomerController{
 		validator: validator,
 		bus:       bus,

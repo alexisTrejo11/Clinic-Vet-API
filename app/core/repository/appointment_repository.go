@@ -5,18 +5,17 @@ import (
 	"context"
 	"time"
 
-	appoint "github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/appointment"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/specification"
-	vo "github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
-	p "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
+	appoint "clinic-vet-api/app/core/domain/entity/appointment"
+	"clinic-vet-api/app/core/domain/enum"
+	"clinic-vet-api/app/core/domain/specification"
+	vo "clinic-vet-api/app/core/domain/valueobject"
+	p "clinic-vet-api/app/shared/page"
 )
 
 type AppointmentRepository interface {
 	FindByID(ctx context.Context, id vo.AppointmentID) (appoint.Appointment, error)
 	FindByIDAndCustomerID(ctx context.Context, id vo.AppointmentID, customerID vo.CustomerID) (appoint.Appointment, error)
 	FindByIDAndEmployeeID(ctx context.Context, id vo.AppointmentID, employeeID vo.EmployeeID) (appoint.Appointment, error)
-
 	FindBySpecification(ctx context.Context, spec specification.ApptSearchSpecification) (p.Page[appoint.Appointment], error)
 
 	FindAll(ctx context.Context, pageInput p.PageInput) (p.Page[appoint.Appointment], error)

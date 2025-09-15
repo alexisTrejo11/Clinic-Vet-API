@@ -4,10 +4,10 @@ import (
 	"context"
 	"time"
 
-	p "github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/payment"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
-	vo "github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
+	p "clinic-vet-api/app/core/domain/entity/payment"
+	"clinic-vet-api/app/core/domain/enum"
+	vo "clinic-vet-api/app/core/domain/valueobject"
+	"clinic-vet-api/app/shared/page"
 )
 
 type PaymentRepository interface {

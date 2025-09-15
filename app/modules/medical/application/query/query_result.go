@@ -3,7 +3,7 @@ package query
 import (
 	"time"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
+	"clinic-vet-api/app/core/domain/valueobject"
 )
 
 type MedHistoryResult struct {

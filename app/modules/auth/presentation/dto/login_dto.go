@@ -1,7 +1,8 @@
+// Package dto contains data transfer objects for authentication operations
 package dto
 
 import (
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/auth/application/command"
+	"clinic-vet-api/app/modules/auth/application/command"
 )
 
 type RequestLogin struct {

@@ -3,8 +3,8 @@ package repositoryimpl
 import (
 	"fmt"
 
-	dberr "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/infrastructure/database"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
+	dberr "clinic-vet-api/app/shared/error/infrastructure/database"
+	"clinic-vet-api/app/shared/page"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 

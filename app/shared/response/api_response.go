@@ -4,8 +4,8 @@ package response
 import (
 	"time"
 
-	domainerr "github.com/alexisTrejo11/Clinic-Vet-API/app/core/error"
-	apperror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/application"
+	domainerr "clinic-vet-api/app/core/error"
+	apperror "clinic-vet-api/app/shared/error/application"
 )
 
 // @Description Standardized API response structure.
@@ -75,8 +75,9 @@ func (r *APIResponse) SuccessRequest(data any, message string) {
 	r.Timestamp = time.Now()
 }
 
-func (r *APIResponse) SuccessWithMeta(data any, meta any) *APIResponse {
+func (r *APIResponse) SuccessWithMeta(data any, meta any, message string) *APIResponse {
 	r.Success = true
+	r.Message = message
 	r.Data = data
 	r.Meta = meta
 	r.Timestamp = time.Now()

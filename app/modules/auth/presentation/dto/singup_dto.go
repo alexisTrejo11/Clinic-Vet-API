@@ -1,12 +1,13 @@
 package dto
 
 import (
+	"clinic-vet-api/app/core/domain/enum"
+	"clinic-vet-api/app/core/domain/valueobject"
+	"clinic-vet-api/app/modules/auth/application/command"
+	"context"
 	"time"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/auth/application/command"
-	apperror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/application"
+	apperror "clinic-vet-api/app/shared/error/application"
 )
 
 // UserCredentials represents user login credentials
@@ -30,7 +31,7 @@ type UserCredentials struct {
 
 // EmployeeRequestSingup represents employee registration request
 // @Description Request body for employee registration/signup
-type EmployeeRequestSingup struct {
+type EmployeeRequestRegister struct {
 	UserCredentials
 
 	// Employee identification number
@@ -66,6 +67,26 @@ type CustomerRequestSingup struct {
 	// Customer's location or address
 	// Required: false
 	Location string `json:"location" example:"123 Main St, City, State"`
+}
+
+func (r *EmployeeRequestRegister) ToCommand(ctx context.Context) (command.EmployeeRegisterCommand, error) {
+	errorMessages := make([]string, 0)
+	emailVo, err := valueobject.NewEmail(r.Email)
+	if err != nil {
+		errorMessages = append(errorMessages, "email: "+err.Error())
+	}
+
+	phoneVo, err := valueobject.NewPhoneNumber(r.PhoneNumber)
+	if err != nil {
+		errorMessages = append(errorMessages, "phone: "+err.Error())
+	}
+
+	if len(errorMessages) > 0 {
+		return command.EmployeeRegisterCommand{}, apperror.MappingError(errorMessages, "request", "SignupRequest", "userSingup")
+	}
+
+	cmd := command.NewEmployeeRegisterCommand(ctx, emailVo, r.Password, &phoneVo, valueobject.NewEmployeeID(r.EmployeeID))
+	return *cmd, nil
 }
 
 func (r *CustomerRequestSingup) ToCommand() (command.CustomerRegisterCommand, error) {

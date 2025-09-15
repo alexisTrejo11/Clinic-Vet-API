@@ -1,271 +1,217 @@
+// Package controller contains all the HTTP controllers related to payment
 package controller
 
 import (
-	"strconv"
-	"time"
-
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
-	query "github.com/alexisTrejo11/Clinic-Vet-API/app/modules/payments/application/queries"
-	dto "github.com/alexisTrejo11/Clinic-Vet-API/app/modules/payments/infrastructure/api/dtos"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
-	httpError "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/infrastructure/http"
-	ginUtils "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/gin_utils"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/response"
+	query "clinic-vet-api/app/modules/payments/application/queries"
+	"clinic-vet-api/app/modules/payments/infrastructure/bus"
+	dto "clinic-vet-api/app/modules/payments/presentation/dtos"
+	httpError "clinic-vet-api/app/shared/error/infrastructure/http"
+	ginUtils "clinic-vet-api/app/shared/gin_utils"
+	"clinic-vet-api/app/shared/page"
+	"clinic-vet-api/app/shared/response"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )
 
 type PaymentQueryController struct {
 	validator *validator.Validate
-	queryBus  cqrs.QueryBus
+	bus       *bus.PaymentBus
 }
 
-func NewPaymentQueryController(
-	validator *validator.Validate,
-	queryBus cqrs.QueryBus,
-) *PaymentQueryController {
+func NewPaymentQueryController(validator *validator.Validate, bus *bus.PaymentBus) *PaymentQueryController {
 	return &PaymentQueryController{
 		validator: validator,
-		queryBus:  queryBus,
+		bus:       bus,
 	}
 }
 
-func (c *PaymentQueryController) SearchPayments(ctx *gin.Context) {
-	searchReq := c.parseSearchRequest(ctx)
-	searchPaymentCommand := ToSearchComand(searchReq)
+func (ctrl *PaymentQueryController) SearchPayments(c *gin.Context) {
+	var searchRequestData *dto.PaymentSearchRequest
 
-	payments, err := c.queryBus.Execute(searchPaymentCommand)
-	if err != nil {
-		response.ApplicationError(ctx, err)
+	if err := c.ShouldBindQuery(&searchRequestData); err != nil {
+		response.BadRequest(c, httpError.RequestURLQueryError(err, c.Request.URL.RawQuery))
 		return
 	}
 
-	paymentPage := dto.ToPaymentListResponse(payments)
-	response.Success(ctx, paymentPage, "Payments retrieved successfully")
+	if err := ctrl.validator.Struct(searchRequestData); err != nil {
+		response.BadRequest(c, httpError.InvalidDataError(err))
+		return
+	}
+
+	searchQuery, err := searchRequestData.ToQuery(c.Request.Context())
+	if err != nil {
+		response.ApplicationError(c, err)
+		return
+	}
+
+	paymentsPage, err := ctrl.bus.QueryBus.FindBySpecification(*searchQuery)
+	if err != nil {
+		response.ApplicationError(c, err)
+		return
+	}
+
+	ctrl.HandlePaginationResult(c, paymentsPage)
 }
 
-func (c *PaymentQueryController) GetPayment(ctx *gin.Context) {
-	paymentID, err := ginUtils.ParseParamToInt(ctx, ctx.Param("payment_id"))
+func (ctrl *PaymentQueryController) GetPayment(c *gin.Context) {
+	paymentID, err := ginUtils.ParseParamToUInt(c, c.Param("payment_id"))
 	if err != nil {
-		response.BadRequest(ctx, httpError.RequestURLParamError(err, "payment_id", ctx.Param("payment_id")))
+		response.BadRequest(c, httpError.RequestURLParamError(err, "payment_id", c.Param("payment_id")))
 		return
 	}
 
-	getPaymentQuery, err := query.NewGetPaymentByIDQuery(paymentID)
+	query, err := query.NewFindPaymentByIDQuery(paymentID)
 	if err != nil {
-		response.ApplicationError(ctx, err)
+		response.ApplicationError(c, err)
 		return
 	}
 
-	payment, err := c.queryBus.Execute(getPaymentQuery)
+	payment, err := ctrl.bus.QueryBus.FindByID(*query)
 	if err != nil {
-		response.ApplicationError(ctx, err)
+		response.ApplicationError(c, err)
 		return
 	}
 
 	paymentPage := dto.ToPaymentResponse(payment)
-	response.Success(ctx, paymentPage, "Payment retrieved successfully")
+	response.Success(c, paymentPage, "Payment retrieved successfully")
 }
 
-func (c *PaymentQueryController) GetPaymentsByCustomer(ctx *gin.Context, customerID uint) {
+func (ctrl *PaymentQueryController) GetPaymentsByCustomer(c *gin.Context, customerID uint) {
 	var pagination *page.PageInput
-	if err := ctx.ShouldBindQuery(&pagination); err != nil {
-		response.BadRequest(ctx, httpError.RequestURLQueryError(err, ctx.Request.URL.RawQuery))
+	if err := c.ShouldBindQuery(&pagination); err != nil {
+		response.BadRequest(c, httpError.RequestURLQueryError(err, c.Request.URL.RawQuery))
 		return
 	}
 
-	if err := c.validator.Struct(pagination); err != nil {
-		response.BadRequest(ctx, httpError.InvalidDataError(err))
+	if err := ctrl.validator.Struct(pagination); err != nil {
+		response.BadRequest(c, httpError.InvalidDataError(err))
 		return
 	}
 
-	listByUserQuery := query.NewListPaymentsByCustomerID(customerID, *pagination)
-	paymentPage, err := c.queryBus.Execute(listByUserQuery)
+	pagination.SetDefaultsFieldsIfEmpty()
+
+	query := query.NewFindPaymentsByCustomerQuery(c.Request.Context(), customerID, *pagination)
+	paymentPage, err := ctrl.bus.QueryBus.FindByCustomer(query)
 	if err != nil {
-		response.ApplicationError(ctx, err)
+		response.ApplicationError(c, err)
 		return
 	}
 
-	response.Success(ctx, paymentPage)
+	ctrl.HandlePaginationResult(c, paymentPage)
 }
 
-func (c *PaymentQueryController) GetPaymentsByStatus(ctx *gin.Context) {
-	statusStr := ctx.Param("status")
-	status, err := enum.ParsePaymentStatus(statusStr)
-	if err != nil {
-		response.BadRequest(ctx, httpError.RequestURLParamError(err, "status", statusStr))
-		return
-	}
-
+func (ctrl *PaymentQueryController) GetPaymentsByStatus(c *gin.Context) {
+	statusStr := c.Param("status")
 	var pagination *page.PageInput
-	if err := ctx.ShouldBindQuery(&pagination); err != nil {
-		response.BadRequest(ctx, httpError.RequestURLQueryError(err, ctx.Request.URL.RawQuery))
+	if err := c.ShouldBindQuery(&pagination); err != nil {
+		response.BadRequest(c, httpError.RequestURLQueryError(err, c.Request.URL.RawQuery))
 		return
 	}
 
-	if err := c.validator.Struct(pagination); err != nil {
-		response.BadRequest(ctx, httpError.InvalidDataError(err))
+	if err := ctrl.validator.Struct(pagination); err != nil {
+		response.BadRequest(c, httpError.InvalidDataError(err))
 		return
 	}
 
-	paymentPage, err := c.queryBus.Execute(query.NewListPaymentsByStatusQuery(status, *pagination))
+	pagination.SetDefaultsFieldsIfEmpty()
+
+	query, err := query.NewFindPaymentsByStatusQuery(c.Request.Context(), statusStr, *pagination)
 	if err != nil {
-		response.ApplicationError(ctx, err)
+		response.ApplicationError(c, err)
 		return
 	}
 
-	response.Success(ctx, paymentPage)
+	paymentPage, err := ctrl.bus.QueryBus.FindByStatus(*query)
+	if err != nil {
+		response.ApplicationError(c, err)
+		return
+	}
+
+	ctrl.HandlePaginationResult(c, paymentPage)
 }
 
-func (c *PaymentQueryController) GetOverduePayments(ctx *gin.Context) {
+func (ctrl *PaymentQueryController) GetPaymentsByDateRange(c *gin.Context) {
+	var requestData *dto.PaymentsByDateRangeRequest
+
+	if err := c.ShouldBindQuery(&requestData); err != nil {
+		response.BadRequest(c, httpError.RequestURLQueryError(err, c.Request.URL.RawQuery))
+		return
+	}
+
+	requestData.SetDefaultsFieldsIfEmpty()
+	if err := ctrl.validator.Struct(requestData); err != nil {
+		response.BadRequest(c, httpError.InvalidDataError(err))
+		return
+	}
+
+	query := requestData.ToQuery(c.Request.Context())
+
+	paymentPage, err := ctrl.bus.QueryBus.FindByDateRange(*query)
+	if err != nil {
+		response.ApplicationError(c, err)
+		return
+	}
+
+	ctrl.HandlePaginationResult(c, paymentPage)
+}
+
+func (ctrl *PaymentQueryController) GetOverduePayments(c *gin.Context) {
 	var pagination *page.PageInput
-	if err := ctx.ShouldBindQuery(&pagination); err != nil {
-		response.BadRequest(ctx, httpError.RequestURLQueryError(err, ctx.Request.URL.RawQuery))
+	if err := c.ShouldBindQuery(&pagination); err != nil {
+		response.BadRequest(c, httpError.RequestURLQueryError(err, c.Request.URL.RawQuery))
 		return
 	}
 
-	if err := c.validator.Struct(pagination); err != nil {
-		response.BadRequest(ctx, httpError.InvalidDataError(err))
+	if err := ctrl.validator.Struct(pagination); err != nil {
+		response.BadRequest(c, httpError.InvalidDataError(err))
 		return
 	}
 
-	paymentOverdueQuery := query.NewListOverduePaymentsQuery(*pagination)
+	paymentOverdueQuery := query.NewFindOverduePaymentsQuery(c.Request.Context(), *pagination)
 
-	paymentPage, err := c.queryBus.Execute(paymentOverdueQuery)
+	paymentPage, err := ctrl.bus.QueryBus.FindOverdues(paymentOverdueQuery)
 	if err != nil {
-		response.ApplicationError(ctx, err)
+		response.ApplicationError(c, err)
 		return
 	}
 
-	response.Success(ctx, paymentPage)
+	ctrl.HandlePaginationResult(c, paymentPage)
 }
 
-/* func (c *PaymentQueryController) GeneratePaymentReport(ctx *gin.Context) {
-	startDateStr := ctx.Query("start_date")
-	endDateStr := ctx.Query("end_date")
+/* func (c *PaymentQueryController) GeneratePaymentReport(c *gin.Context) {
+	startDateStr := c.Query("start_date")
+	endDateStr := c.Query("end_date")
 
 	if startDateStr == "" || endDateStr == "" {
-		response.RequestURLQueryError(ctx, paymentDomain.NewPaymentError("MISSING_DATES", "start_date and end_date are required", 0, ""))
+		response.RequestURLQueryError(c, paymentDomain.NewPaymentError("MISSING_DATES", "start_date and end_date are required", 0, ""))
 		return
 	}
 
 	startDate, err := time.Parse("2006-01-02", startDateStr)
 	if err != nil {
-		response.RequestURLQueryError(ctx, err)
+		response.RequestURLQueryError(c, err)
 		return
 	}
 
 	endDate, err := time.Parse("2006-01-02", endDateStr)
 	if err != nil {
-		response.RequestURLQueryError(ctx, err)
+		response.RequestURLQueryError(c, err)
 		return
 	}
 
 	report, err := c.paymentService.GeneratePaymentReport(startDate, endDate)
 	if err != nil {
-		response.ApplicationError(ctx, err)
+		response.ApplicationError(c, err)
 		return
 	}
 
 	response := dto.ToPaymentReportResponse(report)
-	response.Success(ctx, response)
+	response.Success(c, response)
 } */
 
-func (c *PaymentQueryController) GetPaymentsByDateRange(ctx *gin.Context) {
-	var pagination *page.PageInput
-	if err := ctx.ShouldBindQuery(&pagination); err != nil {
-		response.BadRequest(ctx, httpError.RequestURLQueryError(err, ctx.Request.URL.RawQuery))
-		return
-	}
+func (ctrl *PaymentQueryController) HandlePaginationResult(c *gin.Context, paymentsPage page.Page[query.PaymentResult]) {
+	paymentsResponses := dto.ToPaymentListResponse(paymentsPage.Items)
+	metadata := gin.H{"metadata": gin.H{"pagination": paymentsPage.Metadata, "requestURLParam": c.Request.URL.RawQuery}}
 
-	if err := c.validator.Struct(pagination); err != nil {
-		response.BadRequest(ctx, httpError.InvalidDataError(err))
-		return
-	}
-	// TODO: parse actual date range from query params
-	paymentsByDateRangeQuery := query.NewListPaymentsByDateRangeQuery(time.Now(), time.Now(), *pagination)
-
-	paymentPage, err := c.queryBus.Execute(paymentsByDateRangeQuery)
-	if err != nil {
-		response.ApplicationError(ctx, err)
-		return
-	}
-
-	response.Success(ctx, paymentPage)
-}
-
-func (c *PaymentQueryController) parseSearchRequest(ctx *gin.Context) dto.PaymentSearchRequest {
-	req := dto.PaymentSearchRequest{}
-
-	if UserIDStr := ctx.Query("owner_id"); UserIDStr != "" {
-		if UserID, err := strconv.Atoi(UserIDStr); err == nil {
-			req.UserID = &UserID
-		}
-	}
-
-	if appointmentIDStr := ctx.Query("appointment_id"); appointmentIDStr != "" {
-		if appointmentID, err := strconv.Atoi(appointmentIDStr); err == nil {
-			req.AppointmentID = &appointmentID
-		}
-	}
-
-	if statusStr := ctx.Query("status"); statusStr != "" {
-		status := enum.PaymentStatus(statusStr)
-		if status.IsValid() {
-			req.Status = &status
-		}
-	}
-
-	if methodStr := ctx.Query("payment_method"); methodStr != "" {
-		method := enum.PaymentMethod(methodStr)
-		if method.IsValid() {
-			req.PaymentMethod = &method
-		}
-	}
-
-	if minAmountStr := ctx.Query("min_amount"); minAmountStr != "" {
-		if minAmount, err := strconv.ParseFloat(minAmountStr, 64); err == nil {
-			req.MinAmount = &minAmount
-		}
-	}
-
-	if maxAmountStr := ctx.Query("max_amount"); maxAmountStr != "" {
-		if maxAmount, err := strconv.ParseFloat(maxAmountStr, 64); err == nil {
-			req.MaxAmount = &maxAmount
-		}
-	}
-
-	if currency := ctx.Query("currency"); currency != "" {
-		req.Currency = &currency
-	}
-
-	if startDateStr := ctx.Query("start_date"); startDateStr != "" {
-		if startDate, err := time.Parse("2006-01-02", startDateStr); err == nil {
-			req.StartDate = &startDate
-		}
-	}
-
-	if endDateStr := ctx.Query("end_date"); endDateStr != "" {
-		if endDate, err := time.Parse("2006-01-02", endDateStr); err == nil {
-			req.EndDate = &endDate
-		}
-	}
-
-	return req
-}
-
-func ToSearchComand(req dto.PaymentSearchRequest) query.SearchPaymentsQuery {
-	return query.SearchPaymentsQuery{
-		UserID:        req.UserID,
-		AppointmentID: req.AppointmentID,
-		Status:        req.Status,
-		PaymentMethod: req.PaymentMethod,
-		MinAmount:     req.MinAmount,
-		MaxAmount:     req.MaxAmount,
-		Currency:      req.Currency,
-		StartDate:     req.StartDate,
-		EndDate:       req.EndDate,
-		Pagination:    req.Page,
-	}
+	response.SuccessWithMeta(c, paymentsResponses, "Payments retrieved successfully", metadata)
 }

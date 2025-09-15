@@ -3,6 +3,7 @@ package enum
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 )
 
@@ -242,12 +243,7 @@ func (cs ClinicService) IsMedicalService() bool {
 		ClinicServiceWellnessExam,
 	}
 
-	for _, service := range medicalServices {
-		if cs == service {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(medicalServices, cs)
 }
 
 func (cs ClinicService) IsGroomingService() bool {

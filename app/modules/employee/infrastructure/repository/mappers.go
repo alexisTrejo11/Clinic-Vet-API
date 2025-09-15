@@ -1,6 +1,10 @@
-package repositoryimpl
+package repository
 
 import (
+	"clinic-vet-api/app/core/domain/entity/employee"
+	"clinic-vet-api/app/core/domain/enum"
+	"clinic-vet-api/app/core/domain/valueobject"
+	"clinic-vet-api/sqlc"
 	"database/sql"
 	"encoding/json"
 	"errors"
@@ -8,15 +12,10 @@ import (
 	"log"
 	"time"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/veterinarian"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
-	"github.com/alexisTrejo11/Clinic-Vet-API/db/models"
-	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-func SqlcVetToDomain(sql sqlc.Veterinarian) (*veterinarian.Veterinarian, error) {
+func SqlcEmployeeToDomain(sql sqlc.Employee) (*employee.Employee, error) {
 	if sql.FirstName == "" || sql.LastName == "" {
 		return nil, errors.New("first name and last name are required")
 	}
@@ -29,12 +28,8 @@ func SqlcVetToDomain(sql sqlc.Veterinarian) (*veterinarian.Veterinarian, error) 
 		return nil, errors.New("specialty is required")
 	}
 
-	vetID, err := valueobject.NewEmployeeID(int(sql.ID))
-	if err != nil {
-		return nil, fmt.Errorf("invalid vet ID: %w", err)
-	}
+	employeeID := valueobject.NewEmployeeID(uint(sql.ID))
 
-	// Mapeo del nombre
 	name, err := valueobject.NewPersonName(sql.FirstName, sql.LastName)
 	if err != nil {
 		return nil, fmt.Errorf("error creating person name: %w", err)
@@ -49,7 +44,7 @@ func SqlcVetToDomain(sql sqlc.Veterinarian) (*veterinarian.Veterinarian, error) 
 	// Mapeo del schedule
 	var schedule *valueobject.Schedule
 	if sql.ScheduleJson != nil {
-		schedule, err = UnmarshalVetSchedule(sql.ScheduleJson)
+		schedule, err = UnmarshalEmployeeSchedule(sql.ScheduleJson)
 		if err != nil {
 			// Log the error but continue with empty schedule
 			log.Printf("Warning: Failed to unmarshal schedule: %v", err)
@@ -62,33 +57,29 @@ func SqlcVetToDomain(sql sqlc.Veterinarian) (*veterinarian.Veterinarian, error) 
 	// Mapeo del userID
 	var userID *valueobject.UserID
 	if sql.UserID.Valid {
-		userIDVal, err := valueobject.NewUserID(int(sql.UserID.Int32))
-		if err != nil {
-			return nil, fmt.Errorf("invalid user ID: %w", err)
-		}
+		userIDVal := valueobject.NewUserID(uint(sql.UserID.Int32))
 		userID = &userIDVal
 	}
 
 	// Crear options
-	opts := []veterinarian.VeterinarianOption{
-		veterinarian.WithName(name),
-		veterinarian.WithPhoto(sql.Photo),
-		veterinarian.WithLicenseNumber(sql.LicenseNumber),
-		veterinarian.WithSpecialty(specialty),
-		veterinarian.WithYearsExperience(int(sql.YearsOfExperience)),
-		veterinarian.WithSchedule(schedule),
-		veterinarian.WithIsActive(getBoolFromNullBool(sql.IsActive, true)),
-		veterinarian.WithUserID(userID),
-		veterinarian.WithTimestamps(sql.CreatedAt.Time, sql.UpdatedAt.Time),
+	opts := []employee.EmployeeOption{
+		employee.WithName(name),
+		employee.WithPhoto(sql.Photo),
+		employee.WithLicenseNumber(sql.LicenseNumber),
+		employee.WithSpecialty(specialty),
+		employee.WithYearsExperience(int(sql.YearsOfExperience)),
+		employee.WithSchedule(schedule),
+		employee.WithIsActive(sql.IsActive),
+		employee.WithUserID(userID),
+		employee.WithTimestamps(sql.CreatedAt.Time, sql.UpdatedAt.Time),
 	}
 
-	// Crear la entidad
-	vet, err := veterinarian.NewVeterinarian(vetID, opts...)
+	employee, err := employee.NewEmployee(employeeID, opts...)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create veterinarian from database: %w", err)
+		return nil, fmt.Errorf("failed to create employee from database: %w", err)
 	}
 
-	return vet, nil
+	return employee, nil
 }
 
 // Estructura temporal para parsear el JSON de PostgreSQL
@@ -180,7 +171,7 @@ func parseBreak(breakStr string) *valueobject.Break {
 	}
 }
 
-func UnmarshalVetSchedule(sqlJSON []byte) (*valueobject.Schedule, error) {
+func UnmarshalEmployeeSchedule(sqlJSON []byte) (*valueobject.Schedule, error) {
 	if sqlJSON == nil {
 		return &valueobject.Schedule{}, nil
 	}
@@ -216,7 +207,7 @@ func getStringFromNullString(nullString sql.NullString, defaultValue string) str
 	return defaultValue
 }
 
-func (r *SqlcEmployeeRepository) scanVetFromRow(rows *sql.Rows, vet *veterinarian.Veterinarian) error {
+func (r *SqlcEmployeeRepository) scanEmployeeFromRow(rows *sql.Rows, employee *employee.Employee) error {
 	// Esta implementación depende de tu schema exacto
 	// Aquí un ejemplo genérico:
 	var (
@@ -245,33 +236,33 @@ func (r *SqlcEmployeeRepository) scanVetFromRow(rows *sql.Rows, vet *veterinaria
 	}
 
 	// TODO:
-	// Aquí construirías la entidad Veterinarian con los valores escaneados
+	// Aquí construirías la entidad Employee con los valores escaneados
 	// Esto es solo un ejemplo - debes adaptarlo a tu implementación real
 
 	return nil
 }
 
-func vetToUpdateParams(vet *veterinarian.Veterinarian) *sqlc.UpdateVeterinarianParams {
-	return &sqlc.UpdateVeterinarianParams{
-		ID:                int32(vet.ID().Value()),
-		FirstName:         vet.Name().FirstName,
-		LastName:          vet.Name().LastName,
-		LicenseNumber:     vet.LicenseNumber(),
-		Photo:             vet.Photo(),
-		Speciality:        models.VeterinarianSpeciality(vet.Specialty().String()),
-		YearsOfExperience: int32(vet.YearsExperience()),
-		IsActive:          pgtype.Bool{Bool: vet.IsActive(), Valid: true},
+func EmployeeToUpdateParams(employee *employee.Employee) *sqlc.UpdateEmployeeParams {
+	return &sqlc.UpdateEmployeeParams{
+		ID:                int32(employee.ID().Value()),
+		FirstName:         employee.Name().FirstName,
+		LastName:          employee.Name().LastName,
+		LicenseNumber:     employee.LicenseNumber(),
+		Photo:             employee.Photo(),
+		Speciality:        enum.VetSpecialty(employee.Specialty().DisplayName()),
+		YearsOfExperience: int32(employee.YearsExperience()),
+		IsActive:          employee.IsActive(),
 	}
 }
 
-func vetToCreateParams(vet *veterinarian.Veterinarian) *sqlc.CreateVeterinarianParams {
-	return &sqlc.CreateVeterinarianParams{
-		FirstName:         vet.Name().FirstName,
-		LastName:          vet.Name().LastName,
-		LicenseNumber:     vet.LicenseNumber(),
-		Photo:             vet.Photo(),
-		Speciality:        models.VeterinarianSpeciality(vet.Specialty().String()),
-		YearsOfExperience: int32(vet.YearsExperience()),
-		IsActive:          pgtype.Bool{Bool: vet.IsActive(), Valid: true},
+func EmployeeToCreateParams(employee *employee.Employee) *sqlc.CreateEmployeeParams {
+	return &sqlc.CreateEmployeeParams{
+		FirstName:         employee.Name().FirstName,
+		LastName:          employee.Name().LastName,
+		LicenseNumber:     employee.LicenseNumber(),
+		Photo:             employee.Photo(),
+		Speciality:        enum.EmployeeSpecialty(employee.Specialty().String()),
+		YearsOfExperience: int32(employee.YearsExperience()),
+		IsActive:          employee.IsActive(),
 	}
 }

@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/appointment/application/query"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
+	"clinic-vet-api/app/modules/appointment/application/query"
+	"clinic-vet-api/app/shared/page"
 )
 
 type ListApptByDateRangeRequest struct {

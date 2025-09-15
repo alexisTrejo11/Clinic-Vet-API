@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/auth/application/jwt"
+	"clinic-vet-api/app/modules/auth/application/jwt"
 	jwtLib "github.com/golang-jwt/jwt/v5"
 )
 

@@ -7,11 +7,11 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/medical"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/repository"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
-	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
+	"clinic-vet-api/app/core/domain/entity/medical"
+	"clinic-vet-api/app/core/domain/valueobject"
+	"clinic-vet-api/app/core/repository"
+	"clinic-vet-api/app/shared/page"
+	"clinic-vet-api/sqlc"
 )
 
 type SQLCMedHistRepository struct {

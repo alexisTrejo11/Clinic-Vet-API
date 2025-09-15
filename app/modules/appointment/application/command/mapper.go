@@ -1,9 +1,9 @@
 package command
 
 import (
-	appt "github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/appointment"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
-	apperror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/application"
+	appt "clinic-vet-api/app/core/domain/entity/appointment"
+	"clinic-vet-api/app/core/domain/enum"
+	apperror "clinic-vet-api/app/shared/error/application"
 )
 
 func createCommandToDomain(command CreateApptCommand) (*appt.Appointment, error) {

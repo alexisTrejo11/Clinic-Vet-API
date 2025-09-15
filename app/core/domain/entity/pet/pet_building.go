@@ -3,10 +3,10 @@ package pet
 import (
 	"time"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/base"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
-	domainerr "github.com/alexisTrejo11/Clinic-Vet-API/app/core/error"
+	"clinic-vet-api/app/core/domain/entity/base"
+	"clinic-vet-api/app/core/domain/enum"
+	"clinic-vet-api/app/core/domain/valueobject"
+	domainerr "clinic-vet-api/app/core/error"
 )
 
 // PetOption defines the functional option type

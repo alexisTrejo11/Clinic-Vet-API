@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/notification"
+	"clinic-vet-api/app/core/domain/entity/notification"
 )
 
 type Notifier struct {

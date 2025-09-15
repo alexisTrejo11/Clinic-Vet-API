@@ -3,10 +3,10 @@ package command
 import (
 	"context"
 
-	appt "github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/appointment"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/repository"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
+	appt "clinic-vet-api/app/core/domain/entity/appointment"
+	"clinic-vet-api/app/core/domain/valueobject"
+	"clinic-vet-api/app/core/repository"
+	"clinic-vet-api/app/shared/cqrs"
 )
 
 type AppointementCommandHandler interface {

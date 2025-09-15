@@ -1,8 +1,8 @@
 package command
 
 import (
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/repository"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
+	"clinic-vet-api/app/core/repository"
+	"clinic-vet-api/app/shared/cqrs"
 )
 
 type CustomerCommandHandler interface {

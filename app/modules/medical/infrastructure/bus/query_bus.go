@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/medical/application/query"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
-	p "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
+	"clinic-vet-api/app/modules/medical/application/query"
+	"clinic-vet-api/app/shared/cqrs"
+	p "clinic-vet-api/app/shared/page"
 )
 
 type QueryBus struct {

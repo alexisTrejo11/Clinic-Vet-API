@@ -3,10 +3,10 @@ package customer
 import (
 	"time"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/pet"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
-	domainerr "github.com/alexisTrejo11/Clinic-Vet-API/app/core/error"
+	"clinic-vet-api/app/core/domain/entity/pet"
+	"clinic-vet-api/app/core/domain/enum"
+	"clinic-vet-api/app/core/domain/valueobject"
+	domainerr "clinic-vet-api/app/core/error"
 )
 
 func validateDateOfBirth(dob time.Time) error {
@@ -24,23 +24,7 @@ func validateDateOfBirth(dob time.Time) error {
 	return nil
 }
 
-func validatePhoneNumber(phoneNumber string) error {
-	if phoneNumber == "" {
-		return domainerr.NewValidationError("customer", "phone-number", "phone number is required")
-	}
-	if len(phoneNumber) < 10 {
-		return domainerr.NewValidationError("customer", "phone-number", "phone number too short")
-	}
-	if len(phoneNumber) > 20 {
-		return domainerr.NewValidationError("customer", "phone-number", "phone number too long")
-	}
-	return nil
-}
-
 func (o *Customer) validate() error {
-	if err := validatePhoneNumber(o.phoneNumber); err != nil {
-		return err
-	}
 	if err := validateDateOfBirth(o.Person.DateOfBirth()); err != nil {
 		return err
 	}
@@ -71,15 +55,6 @@ func (o *Customer) UpdateGender(newGender enum.PersonGender) error {
 	if err := o.Person.UpdateGender(newGender); err != nil {
 		return err
 	}
-	o.IncrementVersion()
-	return nil
-}
-
-func (o *Customer) UpdatePhoneNumber(newPhone string) error {
-	if err := validatePhoneNumber(newPhone); err != nil {
-		return err
-	}
-	o.phoneNumber = newPhone
 	o.IncrementVersion()
 	return nil
 }

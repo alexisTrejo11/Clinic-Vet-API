@@ -1,8 +1,8 @@
 package query
 
 import (
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/repository"
-	p "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
+	"clinic-vet-api/app/core/repository"
+	p "clinic-vet-api/app/shared/page"
 )
 
 type MedicalHistoryQueryHandlers interface {

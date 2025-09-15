@@ -3,15 +3,15 @@ package api
 import (
 	"fmt"
 
-	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/users/application/usecase"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/users/infrastructure/api/controller"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/users/infrastructure/api/routes"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/users/infrastructure/bus"
-	persistence "github.com/alexisTrejo11/Clinic-Vet-API/app/modules/users/infrastructure/persistence/repository"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/cqrs"
+	repository "clinic-vet-api/app/core/repositories"
+	"clinic-vet-api/app/modules/users/application/usecase"
+	"clinic-vet-api/app/modules/users/infrastructure/api/controller"
+	"clinic-vet-api/app/modules/users/infrastructure/api/routes"
+	"clinic-vet-api/app/modules/users/infrastructure/bus"
+	persistence "clinic-vet-api/app/modules/users/infrastructure/persistence/repository"
+	"clinic-vet-api/app/shared/cqrs"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
+	"clinic-vet-api/sqlc"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )

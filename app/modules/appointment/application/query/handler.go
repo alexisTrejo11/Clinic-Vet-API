@@ -3,10 +3,10 @@ package query
 import (
 	"context"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/repository"
-	apperror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/application"
-	p "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
+	"clinic-vet-api/app/core/domain/valueobject"
+	"clinic-vet-api/app/core/repository"
+	apperror "clinic-vet-api/app/shared/error/application"
+	p "clinic-vet-api/app/shared/page"
 )
 
 type AppointmentQueryHandler interface {

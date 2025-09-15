@@ -1,14 +1,13 @@
 package dto
 
 import (
+	"clinic-vet-api/app/core/domain/enum"
+	"clinic-vet-api/app/core/domain/specification"
+	"clinic-vet-api/app/core/domain/valueobject"
+	"clinic-vet-api/app/modules/customer/application/query"
+	"clinic-vet-api/app/shared/page"
 	"context"
 	"time"
-
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/specification"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/customer/application/query"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
 )
 
 // CustomerSearchQuery represents query parameters for customer search
@@ -61,7 +60,7 @@ type CustomerSearchQuery struct {
 // ToPagination convierte los query params a estructura de paginación
 func (q *CustomerSearchQuery) ToPagination() specification.Pagination {
 	return specification.Pagination{
-		Page:     q.PageNumber,
+		Page:     q.Page,
 		PageSize: q.PageSize,
 		OrderBy:  q.OrderBy,
 		SortDir:  string(q.SortDirection),
@@ -103,7 +102,6 @@ func (q *CustomerSearchQuery) ToSpecification() specification.CustomerSpecificat
 	}
 }
 
-// ToSpecificationWithPagination mapea query a specification y pagination
 func (q *CustomerSearchQuery) ToQuery(ctx context.Context) *query.FindCustomerBySpecificationQuery {
 	spec := q.ToSpecification()
 	return query.NewFindCustomerBySpecificationQuery(ctx, spec)

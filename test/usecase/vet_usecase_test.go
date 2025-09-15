@@ -5,11 +5,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared"
-	vetDtos "github.com/alexisTrejo11/Clinic-Vet-API/app/veterinarians/application/dtos"
-	vetUsecase "github.com/alexisTrejo11/Clinic-Vet-API/app/veterinarians/application/usecase"
-	vetDomain "github.com/alexisTrejo11/Clinic-Vet-API/app/veterinarians/domain"
-	"github.com/alexisTrejo11/Clinic-Vet-API/test/mock"
+	"clinic-vet-api/app/shared"
+	vetDtos "clinic-vet-api/app/veterinarians/application/dtos"
+	vetUsecase "clinic-vet-api/app/veterinarians/application/usecase"
+	vetDomain "clinic-vet-api/app/veterinarians/domain"
+	"clinic-vet-api/test/mock"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 )

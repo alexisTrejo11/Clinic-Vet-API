@@ -3,14 +3,14 @@ package medHistoryAPI
 import (
 	"fmt"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/repository"
-	medHistCommand "github.com/alexisTrejo11/Clinic-Vet-API/app/modules/medical/application/command"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/medical/application/query"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/medical/infrastructure/bus"
-	repositoryimpl "github.com/alexisTrejo11/Clinic-Vet-API/app/modules/medical/infrastructure/persistence/repository"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/medical/infrastructure/presentation/controller"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/modules/medical/infrastructure/presentation/routes"
-	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
+	"clinic-vet-api/app/core/repository"
+	medHistCommand "clinic-vet-api/app/modules/medical/application/command"
+	"clinic-vet-api/app/modules/medical/application/query"
+	"clinic-vet-api/app/modules/medical/infrastructure/bus"
+	repositoryimpl "clinic-vet-api/app/modules/medical/infrastructure/persistence/repository"
+	"clinic-vet-api/app/modules/medical/infrastructure/presentation/controller"
+	"clinic-vet-api/app/modules/medical/infrastructure/presentation/routes"
+	"clinic-vet-api/sqlc"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )

@@ -7,14 +7,14 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/payment"
-	p "github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/payment"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
-	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
-	"github.com/alexisTrejo11/Clinic-Vet-API/db/models"
-	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
+	"clinic-vet-api/app/core/domain/entity/payment"
+	p "clinic-vet-api/app/core/domain/entity/payment"
+	"clinic-vet-api/app/core/domain/enum"
+	"clinic-vet-api/app/core/domain/valueobject"
+	repository "clinic-vet-api/app/core/repositories"
+	"clinic-vet-api/app/shared/page"
+	"clinic-vet-api/db/models"
+	"clinic-vet-api/sqlc"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 

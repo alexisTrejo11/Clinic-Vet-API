@@ -1,8 +1,9 @@
+// Package query contains all the application logic for handling customer queries
 package query
 
 import (
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/repository"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
+	"clinic-vet-api/app/core/repository"
+	"clinic-vet-api/app/shared/page"
 )
 
 type CustomerQueryHandler interface {

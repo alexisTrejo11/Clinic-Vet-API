@@ -3,9 +3,9 @@ package command
 import (
 	"context"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/auth"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
-	apperror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/application"
+	"clinic-vet-api/app/core/domain/entity/auth"
+	"clinic-vet-api/app/core/domain/valueobject"
+	apperror "clinic-vet-api/app/shared/error/application"
 )
 
 type RefreshSessionCommand struct {

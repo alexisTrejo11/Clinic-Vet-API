@@ -3,8 +3,8 @@ package command
 import (
 	"time"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/medical"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
+	"clinic-vet-api/app/core/domain/entity/medical"
+	"clinic-vet-api/app/core/domain/valueobject"
 )
 
 const (

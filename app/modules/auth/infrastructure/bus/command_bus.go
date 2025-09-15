@@ -1,6 +1,7 @@
+// Package bus implements the command bus for the auth module.
 package bus
 
-import "github.com/alexisTrejo11/Clinic-Vet-API/app/modules/auth/application/command"
+import "clinic-vet-api/app/modules/auth/application/command"
 
 type AuthBus struct {
 	CommandBus command.AuthCommandHandler

@@ -3,10 +3,10 @@ package customer
 import (
 	"time"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/base"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/pet"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/enum"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
+	"clinic-vet-api/app/core/domain/entity/base"
+	"clinic-vet-api/app/core/domain/entity/pet"
+	"clinic-vet-api/app/core/domain/enum"
+	"clinic-vet-api/app/core/domain/valueobject"
 )
 
 // CustomerOption defines the functional option type
@@ -34,16 +34,6 @@ func WithGender(gender enum.PersonGender) CustomerOption {
 func WithDateOfBirth(dob time.Time) CustomerOption {
 	return func(o *Customer) error {
 		return o.UpdateDateOfBirth(dob)
-	}
-}
-
-func WithPhoneNumber(phoneNumber string) CustomerOption {
-	return func(o *Customer) error {
-		if err := validatePhoneNumber(phoneNumber); err != nil {
-			return err
-		}
-		o.phoneNumber = phoneNumber
-		return nil
 	}
 }
 

@@ -7,14 +7,14 @@ import (
 	"errors"
 	"fmt"
 
-	u "github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/entity/user"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/core/domain/valueobject"
-	repository "github.com/alexisTrejo11/Clinic-Vet-API/app/core/repositories"
-	dberr "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/infrastructure/database"
-	"github.com/alexisTrejo11/Clinic-Vet-API/app/shared/page"
+	u "clinic-vet-api/app/core/domain/entity/user"
+	"clinic-vet-api/app/core/domain/valueobject"
+	repository "clinic-vet-api/app/core/repositories"
+	dberr "clinic-vet-api/app/shared/error/infrastructure/database"
+	"clinic-vet-api/app/shared/page"
 
-	"github.com/alexisTrejo11/Clinic-Vet-API/db/models"
-	"github.com/alexisTrejo11/Clinic-Vet-API/sqlc"
+	"clinic-vet-api/db/models"
+	"clinic-vet-api/sqlc"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 

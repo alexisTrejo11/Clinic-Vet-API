@@ -3,7 +3,7 @@ package http
 import (
 	"net/http"
 
-	apperror "github.com/alexisTrejo11/Clinic-Vet-API/app/shared/error/application"
+	apperror "clinic-vet-api/app/shared/error/application"
 )
 
 func RequestURLParamError(err error, field string, value string) error {
