@@ -1,10 +1,9 @@
 package command
 
 import (
-	"time"
-
 	"clinic-vet-api/app/core/domain/entity/medical"
 	"clinic-vet-api/app/core/domain/valueobject"
+	"clinic-vet-api/app/shared/cqrs"
 )
 
 const (
@@ -18,79 +17,24 @@ const (
 	msgErrorProcessingData           = "Error processing data: "
 )
 
-type CreateMedHistResult struct {
-	ID        valueobject.MedHistoryID
-	CreatedAt time.Time
-	Success   bool
-	Message   string
-	Error     error
+func successCreateResult(entity medical.MedicalHistory) cqrs.CommandResult {
+	return *cqrs.SuccessResult(entity.ID().String(), msgMedicalHistoryCreated)
 }
 
-type UpdateMedHistResult struct {
-	ID        valueobject.MedHistoryID
-	UpdatedAt time.Time
-	Success   bool
-	Message   string
-	Error     error
+func errorCreateResult(message string, err error) cqrs.CommandResult {
+	return *cqrs.FailureResult(message, err)
 }
 
-type DeleteMedHistResult struct {
-	ID      valueobject.MedHistoryID
-	Success bool
-	Message string
-	Error   error
+func successUpdateResult(entity medical.MedicalHistory) cqrs.CommandResult {
+	return *cqrs.SuccessResult(entity.ID().String(), msgMedicalHistoryUpdated)
 }
 
-func successCreateResult(entity medical.MedicalHistory) *CreateMedHistResult {
-	return &CreateMedHistResult{
-		ID:        entity.ID(),
-		CreatedAt: entity.CreatedAt(),
-		Success:   true,
-		Message:   msgMedicalHistoryCreated,
-		Error:     nil,
-	}
+func errorUpdateResult(message string, err error) cqrs.CommandResult {
+	return *cqrs.FailureResult(message, err)
 }
-
-func errorCreateResult(message string, err error) *CreateMedHistResult {
-	return &CreateMedHistResult{
-		Success: false,
-		Message: message,
-		Error:   err,
-	}
+func successDeleteResult(id valueobject.MedHistoryID, message string) cqrs.CommandResult {
+	return *cqrs.SuccessResult(id.String(), message)
 }
-
-func successUpdateResult(entity medical.MedicalHistory) *UpdateMedHistResult {
-	return &UpdateMedHistResult{
-		ID:        entity.ID(),
-		UpdatedAt: entity.UpdatedAt(),
-		Success:   true,
-		Message:   msgMedicalHistoryUpdated,
-		Error:     nil,
-	}
-}
-
-func errorUpdateResult(message string, err error) *UpdateMedHistResult {
-	return &UpdateMedHistResult{
-		Success: false,
-		Message: message,
-		Error:   err,
-	}
-}
-
-func successDeleteResult(id valueobject.MedHistoryID, message string) *DeleteMedHistResult {
-	return &DeleteMedHistResult{
-		ID:      id,
-		Success: true,
-		Message: message,
-		Error:   nil,
-	}
-}
-
-func errorDeleteResult(id valueobject.MedHistoryID, message string, err error) *DeleteMedHistResult {
-	return &DeleteMedHistResult{
-		ID:      id,
-		Success: false,
-		Message: message,
-		Error:   err,
-	}
+func errorDeleteResult(id valueobject.MedHistoryID, message string, err error) cqrs.CommandResult {
+	return *cqrs.FailureResult(message, err)
 }

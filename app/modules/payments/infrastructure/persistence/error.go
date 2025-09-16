@@ -37,7 +37,7 @@ const (
 )
 
 func (r *SQLCPaymentRepository) calculateOffset(pageInput page.PageInput) int32 {
-	return int32((pageInput.PageNumber - 1) * pageInput.PageSize)
+	return int32((pageInput.Page - 1) * pageInput.PageSize)
 }
 
 // dbError creates a standardized database operation error

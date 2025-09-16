@@ -11,113 +11,246 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-const countMedicalHistoryByPet = `-- name: CountMedicalHistoryByPet :one
+const countAllMedicalHistory = `-- name: CountAllMedicalHistory :one
 SELECT COUNT(*) FROM medical_history
-WHERE pet_id = $1 AND deleted_at IS NULL
+WHERE deleted_at IS NULL
 `
 
-func (q *Queries) CountMedicalHistoryByPet(ctx context.Context, petID int32) (int64, error) {
-	row := q.db.QueryRow(ctx, countMedicalHistoryByPet, petID)
+func (q *Queries) CountAllMedicalHistory(ctx context.Context) (int64, error) {
+	row := q.db.QueryRow(ctx, countAllMedicalHistory)
 	var count int64
 	err := row.Scan(&count)
 	return count, err
 }
 
-const countMedicalHistoryByVet = `-- name: CountMedicalHistoryByVet :one
+const countMedicalHistoryByCustomerID = `-- name: CountMedicalHistoryByCustomerID :one
+SELECT COUNT(*) FROM medical_history
+WHERE customer_id = $1 AND deleted_at IS NULL
+`
+
+func (q *Queries) CountMedicalHistoryByCustomerID(ctx context.Context, customerID int32) (int64, error) {
+	row := q.db.QueryRow(ctx, countMedicalHistoryByCustomerID, customerID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
+const countMedicalHistoryByDateRange = `-- name: CountMedicalHistoryByDateRange :one
+SELECT COUNT(*) FROM medical_history
+WHERE visit_date BETWEEN $1 AND $2
+AND deleted_at IS NULL
+`
+
+type CountMedicalHistoryByDateRangeParams struct {
+	VisitDate   pgtype.Timestamptz
+	VisitDate_2 pgtype.Timestamptz
+}
+
+func (q *Queries) CountMedicalHistoryByDateRange(ctx context.Context, arg CountMedicalHistoryByDateRangeParams) (int64, error) {
+	row := q.db.QueryRow(ctx, countMedicalHistoryByDateRange, arg.VisitDate, arg.VisitDate_2)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
+const countMedicalHistoryByDiagnosis = `-- name: CountMedicalHistoryByDiagnosis :one
+SELECT COUNT(*) FROM medical_history
+WHERE diagnosis ILIKE '%' || $1 || '%'
+AND deleted_at IS NULL
+`
+
+func (q *Queries) CountMedicalHistoryByDiagnosis(ctx context.Context, dollar_1 pgtype.Text) (int64, error) {
+	row := q.db.QueryRow(ctx, countMedicalHistoryByDiagnosis, dollar_1)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
+const countMedicalHistoryByEmployeeID = `-- name: CountMedicalHistoryByEmployeeID :one
 SELECT COUNT(*) FROM medical_history
 WHERE employee_id = $1 AND deleted_at IS NULL
 `
 
-func (q *Queries) CountMedicalHistoryByVet(ctx context.Context, employeeID int32) (int64, error) {
-	row := q.db.QueryRow(ctx, countMedicalHistoryByVet, employeeID)
+func (q *Queries) CountMedicalHistoryByEmployeeID(ctx context.Context, employeeID int32) (int64, error) {
+	row := q.db.QueryRow(ctx, countMedicalHistoryByEmployeeID, employeeID)
 	var count int64
 	err := row.Scan(&count)
 	return count, err
 }
 
-const createMedicalHistory = `-- name: CreateMedicalHistory :one
-INSERT INTO medical_history (
-    pet_id, 
-    customer_id,
-    employee_id,
-    visit_date,
-    visit_type,
-    diagnosis, 
-    treatment,
-    notes,
-    condition 
-)
-VALUES (
-    $1, $2, $3, $4, $5, $6, $7, $8, $9
-)
-RETURNING id, pet_id, customer_id, employee_id, visit_date, visit_type, diagnosis, notes, treatment, condition, created_at, updated_at, deleted_at
+const countMedicalHistoryByPetID = `-- name: CountMedicalHistoryByPetID :one
+SELECT COUNT(*) FROM medical_history
+WHERE pet_id = $1 AND deleted_at IS NULL
 `
 
-type CreateMedicalHistoryParams struct {
-	PetID      int32
-	CustomerID int32
-	EmployeeID int32
-	VisitDate  pgtype.Timestamptz
-	VisitType  string
-	Diagnosis  pgtype.Text
-	Treatment  pgtype.Text
-	Notes      pgtype.Text
-	Condition  pgtype.Text
+func (q *Queries) CountMedicalHistoryByPetID(ctx context.Context, petID int32) (int64, error) {
+	row := q.db.QueryRow(ctx, countMedicalHistoryByPetID, petID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
 }
 
-func (q *Queries) CreateMedicalHistory(ctx context.Context, arg CreateMedicalHistoryParams) (MedicalHistory, error) {
-	row := q.db.QueryRow(ctx, createMedicalHistory,
-		arg.PetID,
-		arg.CustomerID,
-		arg.EmployeeID,
-		arg.VisitDate,
-		arg.VisitType,
-		arg.Diagnosis,
-		arg.Treatment,
-		arg.Notes,
-		arg.Condition,
-	)
-	var i MedicalHistory
-	err := row.Scan(
-		&i.ID,
-		&i.PetID,
-		&i.CustomerID,
-		&i.EmployeeID,
-		&i.VisitDate,
-		&i.VisitType,
-		&i.Diagnosis,
-		&i.Notes,
-		&i.Treatment,
-		&i.Condition,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.DeletedAt,
-	)
-	return i, err
+const existsMedicalHistoryByID = `-- name: ExistsMedicalHistoryByID :one
+SELECT COUNT(*) > 0 FROM medical_history
+WHERE id = $1 AND deleted_at IS NULL
+`
+
+func (q *Queries) ExistsMedicalHistoryByID(ctx context.Context, id int32) (bool, error) {
+	row := q.db.QueryRow(ctx, existsMedicalHistoryByID, id)
+	var column_1 bool
+	err := row.Scan(&column_1)
+	return column_1, err
 }
 
-const getMedicalHistoryByCustomerID = `-- name: GetMedicalHistoryByCustomerID :many
-SELECT id, pet_id, customer_id, employee_id, visit_date, visit_type, diagnosis, notes, treatment, condition, created_at, updated_at, deleted_at
-FROM medical_history
+const existsMedicalHistoryByPetAndDate = `-- name: ExistsMedicalHistoryByPetAndDate :one
+SELECT COUNT(*) > 0 FROM medical_history
+WHERE pet_id = $1
+AND DATE(visit_date) = DATE($2)
+AND deleted_at IS NULL
+`
+
+type ExistsMedicalHistoryByPetAndDateParams struct {
+	PetID int32
+	Date  interface{}
+}
+
+func (q *Queries) ExistsMedicalHistoryByPetAndDate(ctx context.Context, arg ExistsMedicalHistoryByPetAndDateParams) (bool, error) {
+	row := q.db.QueryRow(ctx, existsMedicalHistoryByPetAndDate, arg.PetID, arg.Date)
+	var column_1 bool
+	err := row.Scan(&column_1)
+	return column_1, err
+}
+
+const findAllMedicalHistory = `-- name: FindAllMedicalHistory :many
+SELECT id, pet_id, customer_id, employee_id, visit_date, visit_type, diagnosis, notes, treatment, condition, weight, temperature, heart_rate, respiratory_rate, symptoms, medications, follow_up_date, is_emergency, created_at, updated_at, deleted_at FROM medical_history
+WHERE deleted_at IS NULL
+ORDER BY visit_date DESC
+LIMIT $1 OFFSET $2
+`
+
+type FindAllMedicalHistoryParams struct {
+	Limit  int32
+	Offset int32
+}
+
+func (q *Queries) FindAllMedicalHistory(ctx context.Context, arg FindAllMedicalHistoryParams) ([]MedicalHistory, error) {
+	rows, err := q.db.Query(ctx, findAllMedicalHistory, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []MedicalHistory
+	for rows.Next() {
+		var i MedicalHistory
+		if err := rows.Scan(
+			&i.ID,
+			&i.PetID,
+			&i.CustomerID,
+			&i.EmployeeID,
+			&i.VisitDate,
+			&i.VisitType,
+			&i.Diagnosis,
+			&i.Notes,
+			&i.Treatment,
+			&i.Condition,
+			&i.Weight,
+			&i.Temperature,
+			&i.HeartRate,
+			&i.RespiratoryRate,
+			&i.Symptoms,
+			&i.Medications,
+			&i.FollowUpDate,
+			&i.IsEmergency,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.DeletedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const findMedicalHistoryByCustomerID = `-- name: FindMedicalHistoryByCustomerID :many
+SELECT id, pet_id, customer_id, employee_id, visit_date, visit_type, diagnosis, notes, treatment, condition, weight, temperature, heart_rate, respiratory_rate, symptoms, medications, follow_up_date, is_emergency, created_at, updated_at, deleted_at FROM medical_history
 WHERE customer_id = $1 AND deleted_at IS NULL
-ORDER BY $2 DESC
-OFFSET $3
-LIMIT $4
+ORDER BY visit_date DESC
+LIMIT $2 OFFSET $3
 `
 
-type GetMedicalHistoryByCustomerIDParams struct {
+type FindMedicalHistoryByCustomerIDParams struct {
 	CustomerID int32
-	Column2    interface{}
-	Offset     int32
 	Limit      int32
+	Offset     int32
 }
 
-func (q *Queries) GetMedicalHistoryByCustomerID(ctx context.Context, arg GetMedicalHistoryByCustomerIDParams) ([]MedicalHistory, error) {
-	rows, err := q.db.Query(ctx, getMedicalHistoryByCustomerID,
-		arg.CustomerID,
-		arg.Column2,
-		arg.Offset,
+func (q *Queries) FindMedicalHistoryByCustomerID(ctx context.Context, arg FindMedicalHistoryByCustomerIDParams) ([]MedicalHistory, error) {
+	rows, err := q.db.Query(ctx, findMedicalHistoryByCustomerID, arg.CustomerID, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []MedicalHistory
+	for rows.Next() {
+		var i MedicalHistory
+		if err := rows.Scan(
+			&i.ID,
+			&i.PetID,
+			&i.CustomerID,
+			&i.EmployeeID,
+			&i.VisitDate,
+			&i.VisitType,
+			&i.Diagnosis,
+			&i.Notes,
+			&i.Treatment,
+			&i.Condition,
+			&i.Weight,
+			&i.Temperature,
+			&i.HeartRate,
+			&i.RespiratoryRate,
+			&i.Symptoms,
+			&i.Medications,
+			&i.FollowUpDate,
+			&i.IsEmergency,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.DeletedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const findMedicalHistoryByDateRange = `-- name: FindMedicalHistoryByDateRange :many
+SELECT id, pet_id, customer_id, employee_id, visit_date, visit_type, diagnosis, notes, treatment, condition, weight, temperature, heart_rate, respiratory_rate, symptoms, medications, follow_up_date, is_emergency, created_at, updated_at, deleted_at FROM medical_history
+WHERE visit_date BETWEEN $1 AND $2
+AND deleted_at IS NULL
+ORDER BY visit_date DESC
+LIMIT $3 OFFSET $4
+`
+
+type FindMedicalHistoryByDateRangeParams struct {
+	VisitDate   pgtype.Timestamptz
+	VisitDate_2 pgtype.Timestamptz
+	Limit       int32
+	Offset      int32
+}
+
+func (q *Queries) FindMedicalHistoryByDateRange(ctx context.Context, arg FindMedicalHistoryByDateRangeParams) ([]MedicalHistory, error) {
+	rows, err := q.db.Query(ctx, findMedicalHistoryByDateRange,
+		arg.VisitDate,
+		arg.VisitDate_2,
 		arg.Limit,
+		arg.Offset,
 	)
 	if err != nil {
 		return nil, err
@@ -137,6 +270,14 @@ func (q *Queries) GetMedicalHistoryByCustomerID(ctx context.Context, arg GetMedi
 			&i.Notes,
 			&i.Treatment,
 			&i.Condition,
+			&i.Weight,
+			&i.Temperature,
+			&i.HeartRate,
+			&i.RespiratoryRate,
+			&i.Symptoms,
+			&i.Medications,
+			&i.FollowUpDate,
+			&i.IsEmergency,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.DeletedAt,
@@ -151,14 +292,124 @@ func (q *Queries) GetMedicalHistoryByCustomerID(ctx context.Context, arg GetMedi
 	return items, nil
 }
 
-const getMedicalHistoryByID = `-- name: GetMedicalHistoryByID :one
-SELECT id, pet_id, customer_id, employee_id, visit_date, visit_type, diagnosis, notes, treatment, condition, created_at, updated_at, deleted_at
-FROM medical_history
+const findMedicalHistoryByDiagnosis = `-- name: FindMedicalHistoryByDiagnosis :many
+SELECT id, pet_id, customer_id, employee_id, visit_date, visit_type, diagnosis, notes, treatment, condition, weight, temperature, heart_rate, respiratory_rate, symptoms, medications, follow_up_date, is_emergency, created_at, updated_at, deleted_at FROM medical_history
+WHERE diagnosis ILIKE '%' || $1 || '%'
+AND deleted_at IS NULL
+ORDER BY visit_date DESC
+LIMIT $2 OFFSET $3
+`
+
+type FindMedicalHistoryByDiagnosisParams struct {
+	Column1 pgtype.Text
+	Limit   int32
+	Offset  int32
+}
+
+func (q *Queries) FindMedicalHistoryByDiagnosis(ctx context.Context, arg FindMedicalHistoryByDiagnosisParams) ([]MedicalHistory, error) {
+	rows, err := q.db.Query(ctx, findMedicalHistoryByDiagnosis, arg.Column1, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []MedicalHistory
+	for rows.Next() {
+		var i MedicalHistory
+		if err := rows.Scan(
+			&i.ID,
+			&i.PetID,
+			&i.CustomerID,
+			&i.EmployeeID,
+			&i.VisitDate,
+			&i.VisitType,
+			&i.Diagnosis,
+			&i.Notes,
+			&i.Treatment,
+			&i.Condition,
+			&i.Weight,
+			&i.Temperature,
+			&i.HeartRate,
+			&i.RespiratoryRate,
+			&i.Symptoms,
+			&i.Medications,
+			&i.FollowUpDate,
+			&i.IsEmergency,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.DeletedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const findMedicalHistoryByEmployeeID = `-- name: FindMedicalHistoryByEmployeeID :many
+SELECT id, pet_id, customer_id, employee_id, visit_date, visit_type, diagnosis, notes, treatment, condition, weight, temperature, heart_rate, respiratory_rate, symptoms, medications, follow_up_date, is_emergency, created_at, updated_at, deleted_at FROM medical_history
+WHERE employee_id = $1 AND deleted_at IS NULL
+ORDER BY visit_date DESC
+LIMIT $2 OFFSET $3
+`
+
+type FindMedicalHistoryByEmployeeIDParams struct {
+	EmployeeID int32
+	Limit      int32
+	Offset     int32
+}
+
+func (q *Queries) FindMedicalHistoryByEmployeeID(ctx context.Context, arg FindMedicalHistoryByEmployeeIDParams) ([]MedicalHistory, error) {
+	rows, err := q.db.Query(ctx, findMedicalHistoryByEmployeeID, arg.EmployeeID, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []MedicalHistory
+	for rows.Next() {
+		var i MedicalHistory
+		if err := rows.Scan(
+			&i.ID,
+			&i.PetID,
+			&i.CustomerID,
+			&i.EmployeeID,
+			&i.VisitDate,
+			&i.VisitType,
+			&i.Diagnosis,
+			&i.Notes,
+			&i.Treatment,
+			&i.Condition,
+			&i.Weight,
+			&i.Temperature,
+			&i.HeartRate,
+			&i.RespiratoryRate,
+			&i.Symptoms,
+			&i.Medications,
+			&i.FollowUpDate,
+			&i.IsEmergency,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.DeletedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const findMedicalHistoryByID = `-- name: FindMedicalHistoryByID :one
+SELECT id, pet_id, customer_id, employee_id, visit_date, visit_type, diagnosis, notes, treatment, condition, weight, temperature, heart_rate, respiratory_rate, symptoms, medications, follow_up_date, is_emergency, created_at, updated_at, deleted_at FROM medical_history
 WHERE id = $1 AND deleted_at IS NULL
 `
 
-func (q *Queries) GetMedicalHistoryByID(ctx context.Context, id int32) (MedicalHistory, error) {
-	row := q.db.QueryRow(ctx, getMedicalHistoryByID, id)
+func (q *Queries) FindMedicalHistoryByID(ctx context.Context, id int32) (MedicalHistory, error) {
+	row := q.db.QueryRow(ctx, findMedicalHistoryByID, id)
 	var i MedicalHistory
 	err := row.Scan(
 		&i.ID,
@@ -171,11 +422,184 @@ func (q *Queries) GetMedicalHistoryByID(ctx context.Context, id int32) (MedicalH
 		&i.Notes,
 		&i.Treatment,
 		&i.Condition,
+		&i.Weight,
+		&i.Temperature,
+		&i.HeartRate,
+		&i.RespiratoryRate,
+		&i.Symptoms,
+		&i.Medications,
+		&i.FollowUpDate,
+		&i.IsEmergency,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.DeletedAt,
 	)
 	return i, err
+}
+
+const findMedicalHistoryByPetAndDateRange = `-- name: FindMedicalHistoryByPetAndDateRange :many
+SELECT id, pet_id, customer_id, employee_id, visit_date, visit_type, diagnosis, notes, treatment, condition, weight, temperature, heart_rate, respiratory_rate, symptoms, medications, follow_up_date, is_emergency, created_at, updated_at, deleted_at FROM medical_history
+WHERE pet_id = $1
+AND visit_date BETWEEN $2 AND $3
+AND deleted_at IS NULL
+ORDER BY visit_date DESC
+`
+
+type FindMedicalHistoryByPetAndDateRangeParams struct {
+	PetID       int32
+	VisitDate   pgtype.Timestamptz
+	VisitDate_2 pgtype.Timestamptz
+}
+
+func (q *Queries) FindMedicalHistoryByPetAndDateRange(ctx context.Context, arg FindMedicalHistoryByPetAndDateRangeParams) ([]MedicalHistory, error) {
+	rows, err := q.db.Query(ctx, findMedicalHistoryByPetAndDateRange, arg.PetID, arg.VisitDate, arg.VisitDate_2)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []MedicalHistory
+	for rows.Next() {
+		var i MedicalHistory
+		if err := rows.Scan(
+			&i.ID,
+			&i.PetID,
+			&i.CustomerID,
+			&i.EmployeeID,
+			&i.VisitDate,
+			&i.VisitType,
+			&i.Diagnosis,
+			&i.Notes,
+			&i.Treatment,
+			&i.Condition,
+			&i.Weight,
+			&i.Temperature,
+			&i.HeartRate,
+			&i.RespiratoryRate,
+			&i.Symptoms,
+			&i.Medications,
+			&i.FollowUpDate,
+			&i.IsEmergency,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.DeletedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const findMedicalHistoryByPetID = `-- name: FindMedicalHistoryByPetID :many
+SELECT id, pet_id, customer_id, employee_id, visit_date, visit_type, diagnosis, notes, treatment, condition, weight, temperature, heart_rate, respiratory_rate, symptoms, medications, follow_up_date, is_emergency, created_at, updated_at, deleted_at FROM medical_history
+WHERE pet_id = $1 AND deleted_at IS NULL
+ORDER BY visit_date DESC
+LIMIT $2 OFFSET $3
+`
+
+type FindMedicalHistoryByPetIDParams struct {
+	PetID  int32
+	Limit  int32
+	Offset int32
+}
+
+func (q *Queries) FindMedicalHistoryByPetID(ctx context.Context, arg FindMedicalHistoryByPetIDParams) ([]MedicalHistory, error) {
+	rows, err := q.db.Query(ctx, findMedicalHistoryByPetID, arg.PetID, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []MedicalHistory
+	for rows.Next() {
+		var i MedicalHistory
+		if err := rows.Scan(
+			&i.ID,
+			&i.PetID,
+			&i.CustomerID,
+			&i.EmployeeID,
+			&i.VisitDate,
+			&i.VisitType,
+			&i.Diagnosis,
+			&i.Notes,
+			&i.Treatment,
+			&i.Condition,
+			&i.Weight,
+			&i.Temperature,
+			&i.HeartRate,
+			&i.RespiratoryRate,
+			&i.Symptoms,
+			&i.Medications,
+			&i.FollowUpDate,
+			&i.IsEmergency,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.DeletedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const findRecentMedicalHistoryByPetID = `-- name: FindRecentMedicalHistoryByPetID :many
+SELECT id, pet_id, customer_id, employee_id, visit_date, visit_type, diagnosis, notes, treatment, condition, weight, temperature, heart_rate, respiratory_rate, symptoms, medications, follow_up_date, is_emergency, created_at, updated_at, deleted_at FROM medical_history
+WHERE pet_id = $1 AND deleted_at IS NULL
+ORDER BY visit_date DESC
+LIMIT $2
+`
+
+type FindRecentMedicalHistoryByPetIDParams struct {
+	PetID int32
+	Limit int32
+}
+
+func (q *Queries) FindRecentMedicalHistoryByPetID(ctx context.Context, arg FindRecentMedicalHistoryByPetIDParams) ([]MedicalHistory, error) {
+	rows, err := q.db.Query(ctx, findRecentMedicalHistoryByPetID, arg.PetID, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []MedicalHistory
+	for rows.Next() {
+		var i MedicalHistory
+		if err := rows.Scan(
+			&i.ID,
+			&i.PetID,
+			&i.CustomerID,
+			&i.EmployeeID,
+			&i.VisitDate,
+			&i.VisitType,
+			&i.Diagnosis,
+			&i.Notes,
+			&i.Treatment,
+			&i.Condition,
+			&i.Weight,
+			&i.Temperature,
+			&i.HeartRate,
+			&i.RespiratoryRate,
+			&i.Symptoms,
+			&i.Medications,
+			&i.FollowUpDate,
+			&i.IsEmergency,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.DeletedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const hardDeleteMedicalHistory = `-- name: HardDeleteMedicalHistory :exec
@@ -188,145 +612,91 @@ func (q *Queries) HardDeleteMedicalHistory(ctx context.Context, id int32) error 
 	return err
 }
 
-const listMedicalHistoryByPet = `-- name: ListMedicalHistoryByPet :many
-SELECT id, pet_id, customer_id, employee_id, visit_date, visit_type, diagnosis, notes, treatment, condition, created_at, updated_at, deleted_at FROM medical_history
-WHERE pet_id = $1 AND deleted_at IS NULL
-ORDER BY visit_date DESC
+const saveMedicalHistory = `-- name: SaveMedicalHistory :one
+INSERT INTO medical_history (
+    pet_id, 
+    customer_id,
+    employee_id,
+    visit_date,
+    visit_type,
+    diagnosis, 
+    treatment,
+    notes,
+    condition,
+    weight,
+    temperature,
+    heart_rate,
+    respiratory_rate
+) VALUES (
+    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13
+)
+RETURNING id, pet_id, customer_id, employee_id, visit_date, visit_type, diagnosis, notes, treatment, condition, weight, temperature, heart_rate, respiratory_rate, symptoms, medications, follow_up_date, is_emergency, created_at, updated_at, deleted_at
 `
 
-func (q *Queries) ListMedicalHistoryByPet(ctx context.Context, petID int32) ([]MedicalHistory, error) {
-	rows, err := q.db.Query(ctx, listMedicalHistoryByPet, petID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []MedicalHistory
-	for rows.Next() {
-		var i MedicalHistory
-		if err := rows.Scan(
-			&i.ID,
-			&i.PetID,
-			&i.CustomerID,
-			&i.EmployeeID,
-			&i.VisitDate,
-			&i.VisitType,
-			&i.Diagnosis,
-			&i.Notes,
-			&i.Treatment,
-			&i.Condition,
-			&i.CreatedAt,
-			&i.UpdatedAt,
-			&i.DeletedAt,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
+type SaveMedicalHistoryParams struct {
+	PetID           int32
+	CustomerID      int32
+	EmployeeID      int32
+	VisitDate       pgtype.Timestamptz
+	VisitType       string
+	Diagnosis       pgtype.Text
+	Treatment       pgtype.Text
+	Notes           pgtype.Text
+	Condition       pgtype.Text
+	Weight          pgtype.Numeric
+	Temperature     pgtype.Numeric
+	HeartRate       pgtype.Int4
+	RespiratoryRate pgtype.Int4
 }
 
-const listMedicalHistoryByVet = `-- name: ListMedicalHistoryByVet :many
-SELECT id, pet_id, customer_id, employee_id, visit_date, visit_type, diagnosis, notes, treatment, condition, created_at, updated_at, deleted_at FROM medical_history
-WHERE employee_id = $1 AND deleted_at IS NULL
-ORDER BY created_at DESC
-LIMIT $2
-OFFSET $3
-`
-
-type ListMedicalHistoryByVetParams struct {
-	EmployeeID int32
-	Limit      int32
-	Offset     int32
-}
-
-func (q *Queries) ListMedicalHistoryByVet(ctx context.Context, arg ListMedicalHistoryByVetParams) ([]MedicalHistory, error) {
-	rows, err := q.db.Query(ctx, listMedicalHistoryByVet, arg.EmployeeID, arg.Limit, arg.Offset)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []MedicalHistory
-	for rows.Next() {
-		var i MedicalHistory
-		if err := rows.Scan(
-			&i.ID,
-			&i.PetID,
-			&i.CustomerID,
-			&i.EmployeeID,
-			&i.VisitDate,
-			&i.VisitType,
-			&i.Diagnosis,
-			&i.Notes,
-			&i.Treatment,
-			&i.Condition,
-			&i.CreatedAt,
-			&i.UpdatedAt,
-			&i.DeletedAt,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const searchMedicalHistory = `-- name: SearchMedicalHistory :many
-SELECT id, pet_id, customer_id, employee_id, visit_date, visit_type, diagnosis, notes, treatment, condition, created_at, updated_at, deleted_at FROM medical_history
-WHERE deleted_at IS NULL
-ORDER BY $3 DESC
-OFFSET $1
-LIMIT $2
-`
-
-type SearchMedicalHistoryParams struct {
-	Offset  int32
-	Limit   int32
-	Column3 interface{}
-}
-
-func (q *Queries) SearchMedicalHistory(ctx context.Context, arg SearchMedicalHistoryParams) ([]MedicalHistory, error) {
-	rows, err := q.db.Query(ctx, searchMedicalHistory, arg.Offset, arg.Limit, arg.Column3)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []MedicalHistory
-	for rows.Next() {
-		var i MedicalHistory
-		if err := rows.Scan(
-			&i.ID,
-			&i.PetID,
-			&i.CustomerID,
-			&i.EmployeeID,
-			&i.VisitDate,
-			&i.VisitType,
-			&i.Diagnosis,
-			&i.Notes,
-			&i.Treatment,
-			&i.Condition,
-			&i.CreatedAt,
-			&i.UpdatedAt,
-			&i.DeletedAt,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
+func (q *Queries) SaveMedicalHistory(ctx context.Context, arg SaveMedicalHistoryParams) (MedicalHistory, error) {
+	row := q.db.QueryRow(ctx, saveMedicalHistory,
+		arg.PetID,
+		arg.CustomerID,
+		arg.EmployeeID,
+		arg.VisitDate,
+		arg.VisitType,
+		arg.Diagnosis,
+		arg.Treatment,
+		arg.Notes,
+		arg.Condition,
+		arg.Weight,
+		arg.Temperature,
+		arg.HeartRate,
+		arg.RespiratoryRate,
+	)
+	var i MedicalHistory
+	err := row.Scan(
+		&i.ID,
+		&i.PetID,
+		&i.CustomerID,
+		&i.EmployeeID,
+		&i.VisitDate,
+		&i.VisitType,
+		&i.Diagnosis,
+		&i.Notes,
+		&i.Treatment,
+		&i.Condition,
+		&i.Weight,
+		&i.Temperature,
+		&i.HeartRate,
+		&i.RespiratoryRate,
+		&i.Symptoms,
+		&i.Medications,
+		&i.FollowUpDate,
+		&i.IsEmergency,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+	)
+	return i, err
 }
 
 const softDeleteMedicalHistory = `-- name: SoftDeleteMedicalHistory :exec
 UPDATE medical_history
-SET deleted_at = CURRENT_TIMESTAMP
+SET 
+    deleted_at = CURRENT_TIMESTAMP,
+    updated_at = CURRENT_TIMESTAMP
 WHERE id = $1
 `
 
@@ -342,27 +712,35 @@ SET
     customer_id = $3,
     employee_id = $4,
     visit_date = $5, 
-    diagnosis = $6, 
-    visit_type = $7,
-    notes = $8,
-    condition = $9, 
-    treatment = $10, 
+    visit_type = $6,
+    diagnosis = $7, 
+    treatment = $8,
+    notes = $9,
+    condition = $10,
+    weight = $11,
+    temperature = $12,
+    heart_rate = $13,
+    respiratory_rate = $14,
     updated_at = CURRENT_TIMESTAMP
-WHERE id = $1
-RETURNING id, pet_id, customer_id, employee_id, visit_date, visit_type, diagnosis, notes, treatment, condition, created_at, updated_at, deleted_at
+WHERE id = $1 AND deleted_at IS NULL
+RETURNING id, pet_id, customer_id, employee_id, visit_date, visit_type, diagnosis, notes, treatment, condition, weight, temperature, heart_rate, respiratory_rate, symptoms, medications, follow_up_date, is_emergency, created_at, updated_at, deleted_at
 `
 
 type UpdateMedicalHistoryParams struct {
-	ID         int32
-	PetID      int32
-	CustomerID int32
-	EmployeeID int32
-	VisitDate  pgtype.Timestamptz
-	Diagnosis  pgtype.Text
-	VisitType  string
-	Notes      pgtype.Text
-	Condition  pgtype.Text
-	Treatment  pgtype.Text
+	ID              int32
+	PetID           int32
+	CustomerID      int32
+	EmployeeID      int32
+	VisitDate       pgtype.Timestamptz
+	VisitType       string
+	Diagnosis       pgtype.Text
+	Treatment       pgtype.Text
+	Notes           pgtype.Text
+	Condition       pgtype.Text
+	Weight          pgtype.Numeric
+	Temperature     pgtype.Numeric
+	HeartRate       pgtype.Int4
+	RespiratoryRate pgtype.Int4
 }
 
 func (q *Queries) UpdateMedicalHistory(ctx context.Context, arg UpdateMedicalHistoryParams) (MedicalHistory, error) {
@@ -372,11 +750,15 @@ func (q *Queries) UpdateMedicalHistory(ctx context.Context, arg UpdateMedicalHis
 		arg.CustomerID,
 		arg.EmployeeID,
 		arg.VisitDate,
-		arg.Diagnosis,
 		arg.VisitType,
+		arg.Diagnosis,
+		arg.Treatment,
 		arg.Notes,
 		arg.Condition,
-		arg.Treatment,
+		arg.Weight,
+		arg.Temperature,
+		arg.HeartRate,
+		arg.RespiratoryRate,
 	)
 	var i MedicalHistory
 	err := row.Scan(
@@ -390,6 +772,14 @@ func (q *Queries) UpdateMedicalHistory(ctx context.Context, arg UpdateMedicalHis
 		&i.Notes,
 		&i.Treatment,
 		&i.Condition,
+		&i.Weight,
+		&i.Temperature,
+		&i.HeartRate,
+		&i.RespiratoryRate,
+		&i.Symptoms,
+		&i.Medications,
+		&i.FollowUpDate,
+		&i.IsEmergency,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.DeletedAt,

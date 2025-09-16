@@ -19,9 +19,9 @@ type MedicalHistoryRepository interface {
 	FindByPetID(ctx context.Context, petID valueobject.PetID, pageInput p.PageInput) (p.Page[medical.MedicalHistory], error)
 	FindByCustomerID(ctx context.Context, customerID valueobject.CustomerID, pageInput p.PageInput) (p.Page[medical.MedicalHistory], error)
 
-	FindRecentByPetID(ctx context.Context, petID valueobject.PetID, limit int) (medical.MedicalHistory, error)
+	FindRecentByPetID(ctx context.Context, petID valueobject.PetID, limit int) ([]medical.MedicalHistory, error)
 	FindByDateRange(ctx context.Context, startDate, endDate time.Time, pageInput p.PageInput) (p.Page[medical.MedicalHistory], error)
-	FindByPetAndDateRange(ctx context.Context, petID valueobject.PetID, startDate, endDate time.Time) (medical.MedicalHistory, error)
+	FindByPetAndDateRange(ctx context.Context, petID valueobject.PetID, startDate, endDate time.Time) ([]medical.MedicalHistory, error)
 	FindByDiagnosis(ctx context.Context, diagnosis string, pageInput p.PageInput) (p.Page[medical.MedicalHistory], error)
 
 	ExistsByID(ctx context.Context, medicalHistoryID valueobject.MedHistoryID) (bool, error)

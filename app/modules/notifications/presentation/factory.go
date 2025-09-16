@@ -4,12 +4,13 @@ import (
 	"os"
 
 	service "clinic-vet-api/app/modules/notifications/application"
-	"clinic-vet-api/app/modules/notifications/infrastructure/api/controller"
-	"clinic-vet-api/app/modules/notifications/infrastructure/api/routes"
 	repositoryimpl "clinic-vet-api/app/modules/notifications/infrastructure/repository"
 	"clinic-vet-api/app/modules/notifications/infrastructure/sending/email"
 	"clinic-vet-api/app/modules/notifications/infrastructure/sending/sms"
+	"clinic-vet-api/app/modules/notifications/presentation/controller"
+	"clinic-vet-api/app/modules/notifications/presentation/routes"
 	"clinic-vet-api/config"
+
 	"github.com/gin-gonic/gin"
 	"github.com/twilio/twilio-go"
 	"go.mongodb.org/mongo-driver/v2/mongo"

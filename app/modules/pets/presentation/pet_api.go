@@ -3,26 +3,27 @@ package api
 import (
 	"fmt"
 
-	repository "clinic-vet-api/app/core/repositories"
+	"clinic-vet-api/app/core/repository"
 	"clinic-vet-api/app/modules/pets/application/usecase"
-	"clinic-vet-api/app/modules/pets/infrastructure/api/controller"
-	"clinic-vet-api/app/modules/pets/infrastructure/api/routes"
-	"clinic-vet-api/app/modules/pets/infrastructure/persistence"
+	petRepo "clinic-vet-api/app/modules/pets/infrastructure/repository"
+	"clinic-vet-api/app/modules/pets/presentation/controller"
+	"clinic-vet-api/app/modules/pets/presentation/routes"
 	"clinic-vet-api/sqlc"
+
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )
 
 type PetModuleConfig struct {
-	Router    *gin.Engine
-	Queries   *sqlc.Queries
-	Validator *validator.Validate
-	OwnerRepo repository.OwnerRepository
+	Router       *gin.Engine
+	Queries      *sqlc.Queries
+	Validator    *validator.Validate
+	CustomerRepo repository.CustomerRepository
 }
 
 type PetModuleComponents struct {
 	Repository repository.PetRepository
-	UseCases   usecase.PetUseCasesFacade
+	UseCases   usecase.PetUseCases
 	Controller *controller.PetController
 }
 
@@ -67,14 +68,14 @@ func (m *PetModule) Bootstrap() error {
 }
 
 func (m *PetModule) createRepository() repository.PetRepository {
-	return persistence.NewSqlcPetRepository(m.config.Queries)
+	return petRepo.NewSqlcPetRepository(m.config.Queries)
 }
 
-func (m *PetModule) createUseCases(repository repository.PetRepository) usecase.PetUseCasesFacade {
-	return usecase.NewPetUseCasesFacade(repository, m.config.OwnerRepo)
+func (m *PetModule) createUseCases(repository repository.PetRepository) usecase.PetUseCases {
+	return usecase.NewPetUseCases(repository, m.config.CustomerRepo)
 }
 
-func (m *PetModule) createController(useCases usecase.PetUseCasesFacade) *controller.PetController {
+func (m *PetModule) createController(useCases usecase.PetUseCases) *controller.PetController {
 	return controller.NewPetController(m.config.Validator, useCases)
 }
 
@@ -95,7 +96,7 @@ func (m *PetModule) validateConfig() error {
 	if m.config.Validator == nil {
 		return fmt.Errorf("validator cannot be nil")
 	}
-	if m.config.OwnerRepo == nil {
+	if m.config.CustomerRepo == nil {
 		return fmt.Errorf("owner repository cannot be nil")
 	}
 	return nil
@@ -118,7 +119,7 @@ func (m *PetModule) GetRepository() (repository.PetRepository, error) {
 	return components.Repository, nil
 }
 
-func (m *PetModule) GetUseCases() (usecase.PetUseCasesFacade, error) {
+func (m *PetModule) GetUseCases() (usecase.PetUseCases, error) {
 	components, err := m.GetComponents()
 	if err != nil {
 		return nil, err

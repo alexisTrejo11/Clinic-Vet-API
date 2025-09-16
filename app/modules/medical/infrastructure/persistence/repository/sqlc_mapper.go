@@ -8,29 +8,15 @@ import (
 	"clinic-vet-api/app/core/domain/enum"
 	"clinic-vet-api/app/core/domain/valueobject"
 	"clinic-vet-api/sqlc"
+
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-func ToDomain(sqlRow sqlc.MedicalHistory) (medical.MedicalHistory, error) {
-	medHistID, err := valueobject.NewMedHistoryID(int(sqlRow.ID))
-	if err != nil {
-		return medical.MedicalHistory{}, fmt.Errorf("invalid medical history ID: %w", err)
-	}
-
-	petID, err := valueobject.NewPetID(int(sqlRow.PetID))
-	if err != nil {
-		return medical.MedicalHistory{}, fmt.Errorf("invalid pet ID: %w", err)
-	}
-
-	vetID, err := valueobject.NewVetID(int(sqlRow.VeterinarianID))
-	if err != nil {
-		return medical.MedicalHistory{}, fmt.Errorf("invalid vet ID: %w", err)
-	}
-
-	ownerID, err := valueobject.NewOwnerID(int(sqlRow.OwnerID))
-	if err != nil {
-		return medical.MedicalHistory{}, fmt.Errorf("invalid owner ID: %w", err)
-	}
+func ToEntity(sqlRow sqlc.MedicalHistory) (medical.MedicalHistory, error) {
+	medHistID := valueobject.NewMedHistoryID(uint(sqlRow.ID))
+	petID := valueobject.NewPetID(uint(sqlRow.PetID))
+	employeeID := valueobject.NewEmployeeID(uint(sqlRow.EmployeeID))
+	customerID := valueobject.NewCustomerID(uint(sqlRow.CustomerID))
 
 	visitType, err := enum.ParseVisitType(sqlRow.VisitType)
 	if err != nil {
@@ -63,8 +49,8 @@ func ToDomain(sqlRow sqlc.MedicalHistory) (medical.MedicalHistory, error) {
 	medicalHistory, err := medical.NewMedicalHistory(
 		medHistID,
 		petID,
-		ownerID,
-		vetID,
+		customerID,
+		employeeID,
 		medical.WithVisitReason(enum.VisitReasonEmergency),
 		medical.WithVisitType(visitType),
 		medical.WithVisitDate(visitDate),
@@ -80,11 +66,11 @@ func ToDomain(sqlRow sqlc.MedicalHistory) (medical.MedicalHistory, error) {
 	return *medicalHistory, nil
 }
 
-func ToDomainList(medHistList []sqlc.MedicalHistory) ([]medical.MedicalHistory, error) {
+func ToEntities(medHistList []sqlc.MedicalHistory) ([]medical.MedicalHistory, error) {
 	domainList := make([]medical.MedicalHistory, len(medHistList))
 
 	for i, sqlRow := range medHistList {
-		domainMedHist, err := ToDomain(sqlRow)
+		domainMedHist, err := ToEntity(sqlRow)
 		if err != nil {
 			return nil, err
 		}
@@ -94,21 +80,21 @@ func ToDomainList(medHistList []sqlc.MedicalHistory) ([]medical.MedicalHistory, 
 	return domainList, nil
 }
 
-func ToCreateParams(medHist medical.MedicalHistory) sqlc.CreateMedicalHistoryParams {
+func ToCreateParams(medHist medical.MedicalHistory) sqlc.SaveMedicalHistoryParams {
 	var notes string
 	if medHist.Notes() != nil {
 		notes = *medHist.Notes()
 	}
 
-	params := sqlc.CreateMedicalHistoryParams{
-		PetID:          int32(medHist.PetID().Value()),
-		OwnerID:        int32(medHist.OwnerID().Value()),
-		VeterinarianID: int32(medHist.VetID().Value()),
-		VisitType:      medHist.VisitType().DisplayName(),
-		VisitDate:      pgtype.Timestamptz{Time: medHist.VisitDate(), Valid: true},
-		Diagnosis:      pgtype.Text{String: medHist.Diagnosis(), Valid: true},
-		Treatment:      pgtype.Text{String: medHist.Treatment(), Valid: true},
-		Condition:      pgtype.Text{String: medHist.Condition().DisplayName(), Valid: true},
+	params := sqlc.SaveMedicalHistoryParams{
+		PetID:      int32(medHist.PetID().Value()),
+		CustomerID: int32(medHist.CustomerID().Value()),
+		EmployeeID: int32(medHist.EmployeeID().Value()),
+		VisitType:  medHist.VisitType().DisplayName(),
+		VisitDate:  pgtype.Timestamptz{Time: medHist.VisitDate(), Valid: true},
+		Diagnosis:  pgtype.Text{String: medHist.Diagnosis(), Valid: true},
+		Treatment:  pgtype.Text{String: medHist.Treatment(), Valid: true},
+		Condition:  pgtype.Text{String: medHist.Condition().DisplayName(), Valid: true},
 	}
 
 	if notes != "" {
@@ -120,17 +106,23 @@ func ToCreateParams(medHist medical.MedicalHistory) sqlc.CreateMedicalHistoryPar
 	return params
 }
 
-func entityToUpdateParam(medHistory medical.MedicalHistory, notes pgtype.Text) sqlc.UpdateMedicalHistoryParams {
+func ToUpdateParams(medHistory medical.MedicalHistory) sqlc.UpdateMedicalHistoryParams {
 	return sqlc.UpdateMedicalHistoryParams{
-		ID:             int32(medHistory.ID().Value()),
-		PetID:          int32(medHistory.PetID().Value()),
-		OwnerID:        int32(medHistory.OwnerID().Value()),
-		VeterinarianID: int32(medHistory.VetID().Value()),
-		VisitDate:      pgtype.Timestamptz{Time: medHistory.VisitDate(), Valid: true},
-		Diagnosis:      pgtype.Text{String: medHistory.Diagnosis(), Valid: true},
-		Treatment:      pgtype.Text{String: medHistory.Treatment(), Valid: true},
-		Notes:          notes,
-		VisitType:      medHistory.VisitType().DisplayName(),
-		Condition:      pgtype.Text{String: medHistory.Condition().DisplayName(), Valid: true},
+		ID:         int32(medHistory.ID().Value()),
+		PetID:      int32(medHistory.PetID().Value()),
+		CustomerID: int32(medHistory.CustomerID().Value()),
+		EmployeeID: int32(medHistory.EmployeeID().Value()),
+		VisitDate:  pgtype.Timestamptz{Time: medHistory.VisitDate(), Valid: true},
+		Diagnosis:  pgtype.Text{String: medHistory.Diagnosis(), Valid: true},
+		Treatment:  pgtype.Text{String: medHistory.Treatment(), Valid: true},
+		Notes: pgtype.Text{String: func() string {
+			if medHistory.Notes() != nil {
+				return *medHistory.Notes()
+			} else {
+				return ""
+			}
+		}(), Valid: medHistory.Notes() != nil},
+		VisitType: medHistory.VisitType().DisplayName(),
+		Condition: pgtype.Text{String: medHistory.Condition().DisplayName(), Valid: true},
 	}
 }

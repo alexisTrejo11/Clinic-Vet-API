@@ -173,14 +173,14 @@ func (q *Queries) FindActiveCustomers(ctx context.Context, arg FindActiveCustome
 	return items, nil
 }
 
-const findCustomerByID = `-- name: FindCustomerByID :one
+const getCustomerByID = `-- name: GetCustomerByID :one
 SELECT id, first_name, last_name, photo, phone_number, date_of_birth, gender, address, user_id, is_active, created_at, updated_at, deleted_at
 FROM customers
 WHERE id = $1 AND deleted_at IS NULL
 `
 
-func (q *Queries) FindCustomerByID(ctx context.Context, id int32) (Customer, error) {
-	row := q.db.QueryRow(ctx, findCustomerByID, id)
+func (q *Queries) GetCustomerByID(ctx context.Context, id int32) (Customer, error) {
+	row := q.db.QueryRow(ctx, getCustomerByID, id)
 	var i Customer
 	err := row.Scan(
 		&i.ID,
@@ -200,14 +200,41 @@ func (q *Queries) FindCustomerByID(ctx context.Context, id int32) (Customer, err
 	return i, err
 }
 
-const findCustomerByUserID = `-- name: FindCustomerByUserID :one
+const getCustomerByPhone = `-- name: GetCustomerByPhone :one
+SELECT id, first_name, last_name, photo, phone_number, date_of_birth, gender, address, user_id, is_active, created_at, updated_at, deleted_at
+FROM customers
+WHERE phone_number = $1 AND deleted_at IS NULL
+`
+
+func (q *Queries) GetCustomerByPhone(ctx context.Context, phoneNumber string) (Customer, error) {
+	row := q.db.QueryRow(ctx, getCustomerByPhone, phoneNumber)
+	var i Customer
+	err := row.Scan(
+		&i.ID,
+		&i.FirstName,
+		&i.LastName,
+		&i.Photo,
+		&i.PhoneNumber,
+		&i.DateOfBirth,
+		&i.Gender,
+		&i.Address,
+		&i.UserID,
+		&i.IsActive,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+	)
+	return i, err
+}
+
+const getCustomerByUserID = `-- name: GetCustomerByUserID :one
 SELECT id, first_name, last_name, photo, phone_number, date_of_birth, gender, address, user_id, is_active, created_at, updated_at, deleted_at
 FROM customers
 WHERE user_id = $1 AND deleted_at IS NULL
 `
 
-func (q *Queries) FindCustomerByUserID(ctx context.Context, userID pgtype.Int4) (Customer, error) {
-	row := q.db.QueryRow(ctx, findCustomerByUserID, userID)
+func (q *Queries) GetCustomerByUserID(ctx context.Context, userID pgtype.Int4) (Customer, error) {
+	row := q.db.QueryRow(ctx, getCustomerByUserID, userID)
 	var i Customer
 	err := row.Scan(
 		&i.ID,

@@ -8,6 +8,8 @@ import (
 	"clinic-vet-api/app/core/domain/enum"
 	"clinic-vet-api/app/core/domain/specification"
 	"clinic-vet-api/app/core/domain/valueobject"
+	"clinic-vet-api/app/modules/employee/application/cqrs/query"
+
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )
@@ -37,12 +39,12 @@ func NewEmployeeSearchRequestFromContext(c *gin.Context) (*EmployeeSearchRequest
 		return nil, fmt.Errorf("invalid query parameters: %w", err)
 	}
 
-	request.processBooleanParams(c)
+	request.ProcessBooleanParams(c)
 
 	return &request, nil
 }
 
-func (r *EmployeeSearchRequest) processBooleanParams(c *gin.Context) {
+func (r *EmployeeSearchRequest) ProcessBooleanParams(c *gin.Context) {
 	if isActiveStr := c.Query("is_active"); isActiveStr != "" {
 		if isActive, err := strconv.ParseBool(isActiveStr); err == nil {
 			r.IsActive = &isActive
@@ -57,7 +59,6 @@ func (r *EmployeeSearchRequest) processBooleanParams(c *gin.Context) {
 	}
 }
 
-// ToSpecification convierte el request a EmployeeSearchSpecification
 func (r *EmployeeSearchRequest) ToSpecification() (*specification.EmployeeSearchSpecification, error) {
 	spec := specification.NewEmployeeSearchSpecification()
 
@@ -138,9 +139,16 @@ func (r *EmployeeSearchRequest) ToSpecification() (*specification.EmployeeSearch
 	return spec, nil
 }
 
-// TODO: Reister this to the main validator instance
+func (r *EmployeeSearchRequest) ToQuery() (*query.SearchEmployeesQuery, error) {
+	specification, err := r.ToSpecification()
+	if err != nil {
+		return nil, err
+	}
+
+	return &query.SearchEmployeesQuery{Specification: *specification}, nil
+}
+
 func RegisterEmployeeSearchValidations(validate *validator.Validate) error {
-	// Validación personalizada para enum.EmployeeSpecialty
 	if err := validate.RegisterValidation("vet_specialty", validateEmployeeSpecialty); err != nil {
 		return fmt.Errorf("failed to register vet_specialty validation: %w", err)
 	}

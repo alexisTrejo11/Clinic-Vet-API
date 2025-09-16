@@ -1,15 +1,16 @@
 package routes
 
 import (
-	"clinic-vet-api/app/modules/veterinarians/infrastructure/api/controller"
+	"clinic-vet-api/app/modules/employee/presentation/controller"
+
 	"github.com/gin-gonic/gin"
 )
 
-func VetRoutes(router *gin.Engine, vetController *controller.VeterinarianController) {
-	v2Router := router.Group("/api/v2/veterinarians")
-	v2Router.GET("/:id", vetController.GetVeterinarianByID)
-	v2Router.GET("/", vetController.SearchVeterinarians)
-	v2Router.POST("/", vetController.CreateVeterinarian)
-	v2Router.PATCH("/:id", vetController.UpdateVeterinarian)
-	v2Router.DELETE("/:id", vetController.DeleteVeterinarian)
+func EmployeeRoutes(router *gin.Engine, employeeController *controller.EmployeeController) {
+	v2Router := router.Group("/api/v2/employees")
+	v2Router.GET("/:id", employeeController.GetEmployeeByID)
+	v2Router.GET("/", employeeController.SearchEmployees)
+	v2Router.POST("/", employeeController.CreateEmployee)
+	v2Router.PATCH("/:id", employeeController.UpdateEmployee)
+	v2Router.DELETE("/:id", employeeController.DeleteEmployee)
 }

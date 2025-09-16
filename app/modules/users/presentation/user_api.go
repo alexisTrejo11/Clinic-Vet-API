@@ -3,15 +3,16 @@ package api
 import (
 	"fmt"
 
-	repository "clinic-vet-api/app/core/repositories"
+	"clinic-vet-api/app/core/repository"
 	"clinic-vet-api/app/modules/users/application/usecase"
-	"clinic-vet-api/app/modules/users/infrastructure/api/controller"
-	"clinic-vet-api/app/modules/users/infrastructure/api/routes"
 	"clinic-vet-api/app/modules/users/infrastructure/bus"
 	persistence "clinic-vet-api/app/modules/users/infrastructure/persistence/repository"
+	"clinic-vet-api/app/modules/users/presentation/controller"
+	"clinic-vet-api/app/modules/users/presentation/routes"
 	"clinic-vet-api/app/shared/cqrs"
 
 	"clinic-vet-api/sqlc"
+
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )

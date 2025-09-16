@@ -70,18 +70,18 @@ func NewMedicalHistoryCommandBus(handlers command.MedicalHistoryCommandHandlers)
 	}
 }
 
-func (mh *MedicalHistoryCommandBus) CreateMedicalHistory(cmd command.CreateMedHistCommand) command.CreateMedHistResult {
+func (mh *MedicalHistoryCommandBus) CreateMedicalHistory(cmd command.CreateMedHistCommand) cqrs.CommandResult {
 	return mh.handlers.CreateMedicalHistory(cmd)
 }
 
-func (mh *MedicalHistoryCommandBus) UpdateMedicalHistory(cmd command.UpdateMedHistCommand) command.UpdateMedHistResult {
+func (mh *MedicalHistoryCommandBus) UpdateMedicalHistory(cmd command.UpdateMedHistCommand) cqrs.CommandResult {
 	return mh.handlers.UpdateMedicalHistory(cmd)
 }
 
-func (mh *MedicalHistoryCommandBus) SoftDeleteMedicalHistory(cmd command.SoftDeleteMedHistCommand) command.DeleteMedHistResult {
+func (mh *MedicalHistoryCommandBus) SoftDeleteMedicalHistory(cmd command.SoftDeleteMedHistCommand) cqrs.CommandResult {
 	return mh.handlers.SoftDeleteMedicalHistory(cmd)
 }
 
-func (mh *MedicalHistoryCommandBus) HardDeleteMedicalHistory(cmd command.HardDeleteMedHistCommand) command.DeleteMedHistResult {
+func (mh *MedicalHistoryCommandBus) HardDeleteMedicalHistory(cmd command.HardDeleteMedHistCommand) cqrs.CommandResult {
 	return mh.handlers.HardDeleteMedicalHistory(cmd)
 }

@@ -22,7 +22,7 @@ func NewUpdatePetUseCase(petRepository repository.PetRepository, ownerRepository
 }
 
 func (uc UpdatePetUseCase) Execute(ctx context.Context, petUpdate dto.PetUpdateData) (dto.PetResponse, error) {
-	pet, err := uc.petRepository.GetByID(ctx, petUpdate.PetID)
+	pet, err := uc.petRepository.FindByID(ctx, petUpdate.PetID)
 	if err != nil {
 		return dto.PetResponse{}, err
 	}
@@ -41,7 +41,7 @@ func (uc UpdatePetUseCase) Execute(ctx context.Context, petUpdate dto.PetUpdateD
 }
 
 func (uc UpdatePetUseCase) validate_owner(ctx context.Context, customerID valueobject.CustomerID) error {
-	_, err := uc.ownerRepository.GetByID(ctx, customerID)
+	_, err := uc.ownerRepository.FindByID(ctx, customerID)
 	if err != nil {
 		return err
 	}

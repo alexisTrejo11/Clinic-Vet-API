@@ -6,8 +6,10 @@ import (
 	autherror "clinic-vet-api/app/shared/error/auth"
 	httpError "clinic-vet-api/app/shared/error/infrastructure/http"
 	ginUtils "clinic-vet-api/app/shared/gin_utils"
+	"clinic-vet-api/app/shared/page"
 	"clinic-vet-api/app/shared/response"
 	"clinic-vet-api/middleware"
+
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )
@@ -43,7 +45,7 @@ func (ctrl *CustomerPetController) RegisterNewPet(c *gin.Context) {
 	}
 
 	petCreateData := requestData.ToCreateData(user.CustomerID)
-	err := ctrl.usecases.CreatePet(c.Request.Context(), petCreateData)
+	_, err := ctrl.usecases.CreatePet(c.Request.Context(), petCreateData)
 	if err != nil {
 		response.ApplicationError(c, err)
 		return
@@ -77,7 +79,7 @@ func (ctrl *CustomerPetController) UpdateMyPet(c *gin.Context) {
 	}
 
 	petUpdateData := requestData.ToUpdatePet(petIDUint, user.CustomerID)
-	err = ctrl.usecases.UpdatePet(c.Request.Context(), *petUpdateData)
+	_, err = ctrl.usecases.UpdatePet(c.Request.Context(), *petUpdateData)
 	if err != nil {
 		response.ApplicationError(c, err)
 		return
@@ -87,13 +89,22 @@ func (ctrl *CustomerPetController) UpdateMyPet(c *gin.Context) {
 }
 
 func (ctrl *CustomerPetController) GetMyPets(c *gin.Context) {
+	var pagination page.PageInput
+	if err := ginUtils.BindAndValidateBody(c, &pagination, ctrl.validate); err != nil {
+		response.BadRequest(c, err)
+		return
+	}
+
+	pagination.SetDefaultsFieldsIfEmpty()
+
 	user, exists := middleware.GetUserFromContext(c)
 	if !exists {
 		response.Unauthorized(c, autherror.UnauthorizedCTXError())
 		return
 	}
 
-	pets, err := ctrl.usecases.ListPetByCustomerID(c.Request.Context(), user.CustomerID)
+	pets, err := ctrl.usecases.FindsPetByCustomerID(c.Request.Context(), user.CustomerID, pagination)
+
 	if err != nil {
 		response.ApplicationError(c, err)
 		return

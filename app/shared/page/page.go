@@ -10,6 +10,7 @@
 package page
 
 import (
+	"clinic-vet-api/app/core/domain/specification"
 	"math"
 	"reflect"
 )
@@ -38,6 +39,15 @@ func (p PageInput) ToMap() map[string]any {
 		"page":           p.Page,
 		"sort_direction": p.SortDirection,
 		"order_by":       p.OrderBy,
+	}
+}
+
+func FromSpecPagination(pagi specification.Pagination) PageInput {
+	return PageInput{
+		PageSize:      pagi.PageSize,
+		Page:          pagi.Page,
+		SortDirection: SortDirection(pagi.SortDir),
+		OrderBy:       pagi.OrderBy,
 	}
 }
 

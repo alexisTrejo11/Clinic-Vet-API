@@ -83,21 +83,21 @@ func NewCreateUserHandler(repo repository.UserRepository, securityService servic
 func (uc *CreateUserHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
 	command, ok := cmd.(CreateUserCommand)
 	if !ok {
-		return cqrs.FailureResult(ErrFailedMappingUser, errors.New("invalid command type"))
+		return *cqrs.FailureResult(ErrFailedMappingUser, errors.New("invalid command type"))
 	}
 
 	user, err := fromCreateCommand(command)
 	if err != nil {
-		return cqrs.FailureResult(ErrFailedMappingUser, err)
+		return *cqrs.FailureResult(ErrFailedMappingUser, err)
 	}
 
 	err = uc.securityService.ValidateUserCredentials(command.ctx, command.email, command.phoneNumber, command.password)
 	if err != nil {
-		return cqrs.FailureResult(ErrFailedValidatingUser, err)
+		return *cqrs.FailureResult(ErrFailedValidatingUser, err)
 	}
 
 	if err := uc.securityService.ProcessUserCreation(command.ctx, user); err != nil {
-		return cqrs.FailureResult(ErrFailedProcessingUser, err)
+		return *cqrs.FailureResult(ErrFailedProcessingUser, err)
 	}
-	return cqrs.SuccessResult(user.ID().String(), ErrUserCreationSuccess)
+	return *cqrs.SuccessResult(user.ID().String(), ErrUserCreationSuccess)
 }

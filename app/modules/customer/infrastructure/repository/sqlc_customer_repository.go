@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"clinic-vet-api/app/core/domain/entity/customer"
+	c "clinic-vet-api/app/core/domain/entity/customer"
 	"clinic-vet-api/app/core/domain/entity/pet"
 	"clinic-vet-api/app/core/domain/specification"
 	"clinic-vet-api/app/core/domain/valueobject"
@@ -27,12 +27,11 @@ func NewSqlcCustomerRepository(queries *sqlc.Queries, petRepository repository.P
 	}
 }
 
-func (r *SqlcCustomerRepository) FindBySpecification(ctx context.Context, spec specification.CustomerSpecification) (page.Page[customer.Customer], error) {
-	return page.Page[customer.Customer]{}, nil
+func (r *SqlcCustomerRepository) FindBySpecification(ctx context.Context, spec specification.CustomerSpecification) (page.Page[c.Customer], error) {
+	return page.Page[c.Customer]{}, nil
 }
 
-// FindByID finds a customer by ID
-func (r *SqlcCustomerRepository) FindByID(ctx context.Context, id valueobject.CustomerID) (customer.Customer, error) {
+func (r *SqlcCustomerRepository) FindByID(ctx context.Context, id valueobject.CustomerID) (c.Customer, error) {
 	type petsResult struct {
 		pets []pet.Pet
 		err  error
@@ -44,9 +43,9 @@ func (r *SqlcCustomerRepository) FindByID(ctx context.Context, id valueobject.Cu
 	customerRow, err := r.queries.GetCustomerByID(ctx, int32(id.Value()))
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return customer.Customer{}, r.notFoundError("id", fmt.Sprintf("%d", id.Value()))
+			return c.Customer{}, r.notFoundError("id", fmt.Sprintf("%d", id.Value()))
 		}
-		return customer.Customer{}, r.dbError("select", fmt.Sprintf("failed to get customer with ID %d", id.Value()), err)
+		return c.Customer{}, r.dbError("select", fmt.Sprintf("failed to get customer with ID %d", id.Value()), err)
 	}
 
 	wg.Add(1)
@@ -62,52 +61,43 @@ func (r *SqlcCustomerRepository) FindByID(ctx context.Context, id valueobject.Cu
 	petsRes := <-petsChan
 
 	if petsRes.err != nil {
-		return customer.Customer{}, fmt.Errorf("failed to get pets for customer ID %d: %w", id.Value(), petsRes.err)
+		return c.Customer{}, fmt.Errorf("failed to get pets for customer ID %d: %w", id.Value(), petsRes.err)
 	}
 
 	customerEntity, err := sqlRowToCustomer(customerRow, petsRes.pets)
 	if err != nil {
-		return customer.Customer{}, r.wrapConversionError(err)
+		return c.Customer{}, r.wrapConversionError(err)
 	}
 
 	return customerEntity, nil
 }
 
-// FindActive finds active customers with pagination
-func (r *SqlcCustomerRepository) FindActive(ctx context.Context, pageInput page.PageInput) (page.Page[customer.Customer], error) {
-	offset := (pageInput.Page - 1) * pageInput.Size
-	limit := pageInput.Size
+func (r *SqlcCustomerRepository) FindActive(ctx context.Context, pageInput page.PageInput) (page.Page[c.Customer], error) {
+	offset := (pageInput.Page - 1) * pageInput.PageSize
+	limit := pageInput.PageSize
 
-	// Get customers
-	customerRows, err := r.queries.ListActiveCustomers(ctx, sqlc.ListActiveCustomersParams{
+	customerRows, err := r.queries.FindActiveCustomers(ctx, sqlc.FindActiveCustomersParams{
 		Limit:  int32(limit),
 		Offset: int32(offset),
 	})
 	if err != nil {
-		return page.Page[customer.Customer]{}, r.dbError("select", "failed to list active customers", err)
+		return page.Page[c.Customer]{}, r.dbError("select", "failed to list active customers", err)
 	}
 
-	// Get total count
 	total, err := r.queries.CountActiveCustomers(ctx)
 	if err != nil {
-		return page.Page[customer.Customer]{}, r.dbError("select", "failed to count active customers", err)
+		return page.Page[c.Customer]{}, r.dbError("select", "failed to count active customers", err)
 	}
 
-	// Convert rows to entities
-	var customers []customer.Customer
-	for _, row := range customerRows {
-		customerEntity, err := sqlRowToCustomer(row, nil)
-		if err != nil {
-			return page.Page[customer.Customer]{}, r.wrapConversionError(err)
-		}
-		customers = append(customers, customerEntity)
+	customers, err := sqlRowsToCustomers(customerRows)
+	if err != nil {
+		return page.Page[c.Customer]{}, r.wrapConversionError(err)
 	}
 
-	paginationMetadata := page.GetPageMetadata(total, pageInput)
+	paginationMetadata := page.GetPageMetadata(int(total), pageInput)
 	return page.NewPage(customers, *paginationMetadata), nil
 }
 
-// ExistsByID checks if a customer exists by ID
 func (r *SqlcCustomerRepository) ExistsByID(ctx context.Context, id valueobject.CustomerID) (bool, error) {
 	exists, err := r.queries.ExistsCustomerByID(ctx, int32(id.Value()))
 	if err != nil {
@@ -116,38 +106,17 @@ func (r *SqlcCustomerRepository) ExistsByID(ctx context.Context, id valueobject.
 	return exists, nil
 }
 
-// ExistsByPhone checks if a customer exists by phone number
-func (r *SqlcCustomerRepository) ExistsByPhone(ctx context.Context, phone string) (bool, error) {
-	exists, err := r.queries.ExistsCustomerByPhone(ctx, phone)
-	if err != nil {
-		return false, r.dbError("select", fmt.Sprintf("failed to check existence by phone %s", phone), err)
-	}
-	return exists, nil
-}
-
-// ExistsByEmail checks if a customer exists by email
-func (r *SqlcCustomerRepository) ExistsByEmail(ctx context.Context, email string) (bool, error) {
-	exists, err := r.queries.ExistsCustomerByEmail(ctx, email)
-	if err != nil {
-		return false, r.dbError("select", fmt.Sprintf("failed to check existence by email %s", email), err)
-	}
-	return exists, nil
-}
-
-// Save creates or updates a customer
-func (r *SqlcCustomerRepository) Save(ctx context.Context, customer *customer.Customer) error {
+func (r *SqlcCustomerRepository) Save(ctx context.Context, customer *c.Customer) error {
 	if customer.ID().IsZero() {
 		return r.create(ctx, customer)
 	}
 	return r.update(ctx, customer)
 }
 
-// Update updates an existing customer
-func (r *SqlcCustomerRepository) Update(ctx context.Context, customer *customer.Customer) error {
+func (r *SqlcCustomerRepository) Update(ctx context.Context, customer *c.Customer) error {
 	return r.update(ctx, customer)
 }
 
-// SoftDelete performs a soft delete of a customer
 func (r *SqlcCustomerRepository) SoftDelete(ctx context.Context, id valueobject.CustomerID) error {
 	if err := r.queries.SoftDeleteCustomer(ctx, int32(id.Value())); err != nil {
 		return r.dbError("delete", fmt.Sprintf("failed to soft delete customer with ID %d", id.Value()), err)
@@ -155,7 +124,6 @@ func (r *SqlcCustomerRepository) SoftDelete(ctx context.Context, id valueobject.
 	return nil
 }
 
-// HardDelete performs a hard delete of a customer
 func (r *SqlcCustomerRepository) HardDelete(ctx context.Context, id valueobject.CustomerID) error {
 	if err := r.queries.HardDeleteCustomer(ctx, int32(id.Value())); err != nil {
 		return r.dbError("delete", fmt.Sprintf("failed to hard delete customer with ID %d", id.Value()), err)
@@ -163,7 +131,6 @@ func (r *SqlcCustomerRepository) HardDelete(ctx context.Context, id valueobject.
 	return nil
 }
 
-// CountAll counts all non-deleted customers
 func (r *SqlcCustomerRepository) CountAll(ctx context.Context) (int64, error) {
 	count, err := r.queries.CountAllCustomers(ctx)
 	if err != nil {
@@ -172,7 +139,6 @@ func (r *SqlcCustomerRepository) CountAll(ctx context.Context) (int64, error) {
 	return count, nil
 }
 
-// CountActive counts all active customers
 func (r *SqlcCustomerRepository) CountActive(ctx context.Context) (int64, error) {
 	count, err := r.queries.CountActiveCustomers(ctx)
 	if err != nil {
@@ -181,8 +147,7 @@ func (r *SqlcCustomerRepository) CountActive(ctx context.Context) (int64, error)
 	return count, nil
 }
 
-// create inserts a new customer
-func (r *SqlcCustomerRepository) create(ctx context.Context, customer *customer.Customer) error {
+func (r *SqlcCustomerRepository) create(ctx context.Context, customer *c.Customer) error {
 	createParams := toCreateParams(*customer)
 
 	_, err := r.queries.CreateCustomer(ctx, *createParams)
@@ -193,8 +158,7 @@ func (r *SqlcCustomerRepository) create(ctx context.Context, customer *customer.
 	return nil
 }
 
-// update modifies an existing customer
-func (r *SqlcCustomerRepository) update(ctx context.Context, customer *customer.Customer) error {
+func (r *SqlcCustomerRepository) update(ctx context.Context, customer *c.Customer) error {
 	params := entityToUpdateParams(*customer)
 
 	if err := r.queries.UpdateCustomer(ctx, *params); err != nil {

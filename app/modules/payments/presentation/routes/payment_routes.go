@@ -1,7 +1,8 @@
 package routes
 
 import (
-	"clinic-vet-api/app/modules/payments/infrastructure/api/controller"
+	"clinic-vet-api/app/modules/payments/presentation/controller"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -21,7 +22,7 @@ func RegisterAdminPaymentRoutes(router *gin.Engine, controller *controller.Admin
 		adminGroup.POST("/:id/cancel", controller.CancelPayment)
 
 		// Batch operations
-		adminGroup.POST("/mark-overdue", controller.MarkOverduePayments)
+		//adminGroup.POST("/mark-overdue", controller.MarkOverduePayments)
 
 		// Query operations
 		adminGroup.GET("/overdue", controller.GetOverduePayments)
@@ -36,10 +37,7 @@ func RegisterClientPaymentRoutes(router *gin.Engine, controller *controller.Clie
 	{
 		// Owner payment operations
 		clientGroup.GET("/owners/:owner_id", controller.GetMyPayments)
-		clientGroup.GET("/owners/:owner_id/history", controller.GetMyPaymentHistory)
-		clientGroup.GET("/owners/:owner_id/overdue", controller.GetMyOverduePayments)
-		clientGroup.GET("/owners/:owner_id/pending", controller.GetMyPendingPayments)
-		clientGroup.GET("/:payment_id", controller.GetMyPayment)
+
 	}
 }
 
@@ -47,7 +45,6 @@ func RegisterPaymentQueryRoutes(router *gin.Engine, controller *controller.Payme
 	queryGroup := router.Group("api/v2/payments")
 	{
 		queryGroup.GET("/search", controller.SearchPayments)
-		queryGroup.GET("/user/:user_id", controller.GetPaymentsByUser)
 		queryGroup.GET("/status/:status", controller.GetPaymentsByStatus)
 		queryGroup.GET("/overdue", controller.GetOverduePayments)
 		// queryGroup.GET("/report", controller.GeneratePaymentReport)

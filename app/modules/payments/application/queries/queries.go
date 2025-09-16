@@ -63,7 +63,7 @@ type FindOverduePaymentsQuery struct {
 	ctx        context.Context
 }
 
-func NewFindOverduePaymentsQuery(pagination page.PageInput, ctx context.Context) FindOverduePaymentsQuery {
+func NewFindOverduePaymentsQuery(ctx context.Context, pagination page.PageInput) FindOverduePaymentsQuery {
 	return FindOverduePaymentsQuery{
 		pagination: pagination,
 		ctx:        ctx,

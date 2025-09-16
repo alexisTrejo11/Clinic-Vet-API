@@ -18,10 +18,10 @@ func NewSearchPetsUseCase(petRepo repository.PetRepository) *SearchPetUseCase {
 	return &SearchPetUseCase{petRepo: petRepo}
 }
 
-func (uc *SearchPetUseCase) Execute(ctx context.Context, spec specification.PetSpecification) (page.Page[[]dto.PetResponse], error) {
-	petPage, err := uc.petRepo.Search(ctx, spec)
+func (uc *SearchPetUseCase) Execute(ctx context.Context, spec specification.PetSpecification) (page.Page[dto.PetResponse], error) {
+	petPage, err := uc.petRepo.FindBySpecification(ctx, spec)
 	if err != nil {
-		return page.Page[[]dto.PetResponse]{}, err
+		return page.Page[dto.PetResponse]{}, err
 	}
 	return mapper.ToResponsesPage(petPage), nil
 }

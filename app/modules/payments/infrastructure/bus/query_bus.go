@@ -2,6 +2,7 @@
 package bus
 
 import (
+	"clinic-vet-api/app/core/repository"
 	query "clinic-vet-api/app/modules/payments/application/queries"
 	"clinic-vet-api/app/shared/page"
 )
@@ -10,7 +11,8 @@ type PaymentQueryBus struct {
 	handler query.PaymentQueryHandler
 }
 
-func NewPaymentQueryBus(handler query.PaymentQueryHandler) *PaymentQueryBus {
+func NewPaymentQueryBus(paymentRepo repository.PaymentRepository) *PaymentQueryBus {
+	handler := query.NewPaymentQueryHandler(paymentRepo)
 	return &PaymentQueryBus{handler: handler}
 }
 

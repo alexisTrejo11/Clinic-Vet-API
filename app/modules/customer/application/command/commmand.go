@@ -2,12 +2,11 @@
 package command
 
 import (
-	"context"
-	"time"
-
 	"clinic-vet-api/app/core/domain/entity/customer"
 	"clinic-vet-api/app/core/domain/enum"
 	"clinic-vet-api/app/core/domain/valueobject"
+	"context"
+	"time"
 )
 
 type CreateCustomerCommand struct {

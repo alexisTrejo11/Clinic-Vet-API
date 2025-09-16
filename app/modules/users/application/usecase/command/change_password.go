@@ -35,18 +35,18 @@ func (c *ChangePasswordHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
 
 	user, err := c.userRepository.FindByID(command.CTX, command.UserID)
 	if err != nil {
-		return cqrs.FailureResult("failed to find user", err)
+		return *cqrs.FailureResult("failed to find user", err)
 	}
 
 	if err := c.changePassword(&user, command); err != nil {
-		return cqrs.FailureResult("failed to change password", err)
+		return *cqrs.FailureResult("failed to change password", err)
 	}
 
 	if err := c.userRepository.Save(command.CTX, &user); err != nil {
-		return cqrs.FailureResult("failed to update user", err)
+		return *cqrs.FailureResult("failed to update user", err)
 	}
 
-	return cqrs.SuccessResult(user.ID().String(), "password changed successfully")
+	return *cqrs.SuccessResult(user.ID().String(), "password changed successfully")
 }
 
 func (c *ChangePasswordHandler) changePassword(user *user.User, command ChangePasswordCommand) error {

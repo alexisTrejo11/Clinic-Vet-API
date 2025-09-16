@@ -38,6 +38,12 @@ type DeleteEmployeeCommand struct {
 	EmployeeID valueobject.EmployeeID
 }
 
+func NewDeleteEmployeeCommand(id uint) *DeleteEmployeeCommand {
+	return &DeleteEmployeeCommand{
+		EmployeeID: valueobject.NewEmployeeID(id),
+	}
+}
+
 type ScheduleData struct {
 	Day           string
 	EntryTime     int

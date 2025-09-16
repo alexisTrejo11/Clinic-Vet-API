@@ -6,16 +6,16 @@ import (
 )
 
 type MedicalHistoryQueryHandlers interface {
-	GetMedHistByID(query GetMedHistByIDQuery) (*MedHistoryResult, error)
-	GetMedHistBySpec(query GetMedHistBySpecQuery) (*p.Page[MedHistoryResult], error)
-	GetAllMedHist(query GetAllMedHistQuery) (*p.Page[MedHistoryResult], error)
-	GetMedHistByEmployeeID(query GetMedHistByEmployeeIDQuery) (*p.Page[MedHistoryResult], error)
-	GetMedHistByPetID(query GetMedHistByPetIDQuery) (*p.Page[MedHistoryResult], error)
-	GetMedHistByCustomerID(query GetMedHistByCustomerIDQuery) (*p.Page[MedHistoryResult], error)
-	GetRecentMedHistByPetID(query GetRecentMedHistByPetIDQuery) (*MedHistoryResult, error)
-	GetMedHistByDateRange(query GetMedHistByDateRangeQuery) (*p.Page[MedHistoryResult], error)
-	GetMedHistByPetAndDateRange(query GetMedHistByPetAndDateRangeQuery) (*MedHistoryResult, error)
-	GetMedHistByDiagnosis(query GetMedHistByDiagnosisQuery) (*p.Page[MedHistoryResult], error)
+	FindMedHistByID(query FindMedHistByIDQuery) (*MedHistoryResult, error)
+	FindMedHistBySpec(query FindMedHistBySpecQuery) (*p.Page[MedHistoryResult], error)
+	FindAllMedHist(query FindAllMedHistQuery) (*p.Page[MedHistoryResult], error)
+	FindMedHistByEmployeeID(query FindMedHistByEmployeeIDQuery) (*p.Page[MedHistoryResult], error)
+	FindMedHistByPetID(query FindMedHistByPetIDQuery) (*p.Page[MedHistoryResult], error)
+	FindMedHistByCustomerID(query FindMedHistByCustomerIDQuery) (*p.Page[MedHistoryResult], error)
+	FindRecentMedHistByPetID(query FindRecentMedHistByPetIDQuery) ([]MedHistoryResult, error)
+	FindMedHistByDateRange(query FindMedHistByDateRangeQuery) (*p.Page[MedHistoryResult], error)
+	FindMedHistByPetAndDateRange(query FindMedHistByPetAndDateRangeQuery) ([]MedHistoryResult, error)
+	FindMedHistByDiagnosis(query FindMedHistByDiagnosisQuery) (*p.Page[MedHistoryResult], error)
 	ExistsMedHistByID(query ExistsMedHistByIDQuery) (bool, error)
 	ExistsMedHistByPetAndDate(query ExistsMedHistByPetAndDateQuery) (bool, error)
 }
@@ -28,7 +28,7 @@ func NewMedicalHistoryQueryHandlers(repo repository.MedicalHistoryRepository) Me
 	return &medHistQueryHandler{repo: repo}
 }
 
-func (h *medHistQueryHandler) GetMedHistByID(query GetMedHistByIDQuery) (*MedHistoryResult, error) {
+func (h *medHistQueryHandler) FindMedHistByID(query FindMedHistByIDQuery) (*MedHistoryResult, error) {
 	medHistory, err := h.repo.FindByID(query.CTX, query.ID)
 	if err != nil {
 		return nil, err
@@ -38,7 +38,7 @@ func (h *medHistQueryHandler) GetMedHistByID(query GetMedHistByIDQuery) (*MedHis
 	return &result, nil
 }
 
-func (h *medHistQueryHandler) GetMedHistBySpec(query GetMedHistBySpecQuery) (*p.Page[MedHistoryResult], error) {
+func (h *medHistQueryHandler) FindMedHistBySpec(query FindMedHistBySpecQuery) (*p.Page[MedHistoryResult], error) {
 	page, err := h.repo.FindBySpecification(query.CTX, query.Spec)
 	if err != nil {
 		return nil, err
@@ -48,7 +48,7 @@ func (h *medHistQueryHandler) GetMedHistBySpec(query GetMedHistBySpecQuery) (*p.
 	return &age, nil
 }
 
-func (h *medHistQueryHandler) GetAllMedHist(query GetAllMedHistQuery) (*p.Page[MedHistoryResult], error) {
+func (h *medHistQueryHandler) FindAllMedHist(query FindAllMedHistQuery) (*p.Page[MedHistoryResult], error) {
 	page, err := h.repo.FindAll(query.CTX, query.PageInput)
 	if err != nil {
 		return nil, err
@@ -58,7 +58,7 @@ func (h *medHistQueryHandler) GetAllMedHist(query GetAllMedHistQuery) (*p.Page[M
 	return &age, nil
 }
 
-func (h *medHistQueryHandler) GetMedHistByEmployeeID(query GetMedHistByEmployeeIDQuery) (*p.Page[MedHistoryResult], error) {
+func (h *medHistQueryHandler) FindMedHistByEmployeeID(query FindMedHistByEmployeeIDQuery) (*p.Page[MedHistoryResult], error) {
 	page, err := h.repo.FindByEmployeeID(query.CTX, query.EmployeeID, query.PageInput)
 	if err != nil {
 		return nil, err
@@ -68,7 +68,7 @@ func (h *medHistQueryHandler) GetMedHistByEmployeeID(query GetMedHistByEmployeeI
 	return &age, nil
 }
 
-func (h *medHistQueryHandler) GetMedHistByPetID(query GetMedHistByPetIDQuery) (*p.Page[MedHistoryResult], error) {
+func (h *medHistQueryHandler) FindMedHistByPetID(query FindMedHistByPetIDQuery) (*p.Page[MedHistoryResult], error) {
 	page, err := h.repo.FindByPetID(query.CTX, query.PetID, query.PageInput)
 	if err != nil {
 		return nil, err
@@ -78,7 +78,7 @@ func (h *medHistQueryHandler) GetMedHistByPetID(query GetMedHistByPetIDQuery) (*
 	return &age, nil
 }
 
-func (h *medHistQueryHandler) GetMedHistByCustomerID(query GetMedHistByCustomerIDQuery) (*p.Page[MedHistoryResult], error) {
+func (h *medHistQueryHandler) FindMedHistByCustomerID(query FindMedHistByCustomerIDQuery) (*p.Page[MedHistoryResult], error) {
 	page, err := h.repo.FindByCustomerID(query.CTX, query.CustomerID, query.PageInput)
 	if err != nil {
 		return nil, err
@@ -88,17 +88,16 @@ func (h *medHistQueryHandler) GetMedHistByCustomerID(query GetMedHistByCustomerI
 	return &result, nil
 }
 
-func (h *medHistQueryHandler) GetRecentMedHistByPetID(query GetRecentMedHistByPetIDQuery) (*MedHistoryResult, error) {
+func (h *medHistQueryHandler) FindRecentMedHistByPetID(query FindRecentMedHistByPetIDQuery) ([]MedHistoryResult, error) {
 	medHistory, err := h.repo.FindRecentByPetID(query.CTX, query.PetID, query.Limit)
 	if err != nil {
 		return nil, err
 	}
 
-	result := toResult(medHistory)
-	return &result, nil
+	return toResultList(medHistory), nil
 }
 
-func (h *medHistQueryHandler) GetMedHistByDateRange(query GetMedHistByDateRangeQuery) (*p.Page[MedHistoryResult], error) {
+func (h *medHistQueryHandler) FindMedHistByDateRange(query FindMedHistByDateRangeQuery) (*p.Page[MedHistoryResult], error) {
 	page, err := h.repo.FindByDateRange(query.CTX, query.StartDate, query.EndDate, query.PageInput)
 	if err != nil {
 		return nil, err
@@ -108,17 +107,16 @@ func (h *medHistQueryHandler) GetMedHistByDateRange(query GetMedHistByDateRangeQ
 	return &age, nil
 }
 
-func (h *medHistQueryHandler) GetMedHistByPetAndDateRange(query GetMedHistByPetAndDateRangeQuery) (*MedHistoryResult, error) {
+func (h *medHistQueryHandler) FindMedHistByPetAndDateRange(query FindMedHistByPetAndDateRangeQuery) ([]MedHistoryResult, error) {
 	medHistory, err := h.repo.FindByPetAndDateRange(query.CTX, query.PetID, query.StartDate, query.EndDate)
 	if err != nil {
 		return nil, err
 	}
 
-	result := toResult(medHistory)
-	return &result, nil
+	return toResultList(medHistory), nil
 }
 
-func (h *medHistQueryHandler) GetMedHistByDiagnosis(query GetMedHistByDiagnosisQuery) (*p.Page[MedHistoryResult], error) {
+func (h *medHistQueryHandler) FindMedHistByDiagnosis(query FindMedHistByDiagnosisQuery) (*p.Page[MedHistoryResult], error) {
 	page, err := h.repo.FindByDiagnosis(query.CTX, query.Diagnosis, query.PageInput)
 	if err != nil {
 		return nil, err

@@ -3,6 +3,7 @@ package query
 import (
 	"clinic-vet-api/app/core/domain/entity/employee"
 	"clinic-vet-api/app/core/domain/valueobject"
+	"time"
 )
 
 type EmployeeResult struct {
@@ -13,8 +14,11 @@ type EmployeeResult struct {
 	LicenseNumber   string
 	YearsExperience int
 	Specialty       string
+	IsActive        bool
 	ConsultationFee *valueobject.Money
 	LaboralSchedule *[]ScheduleData
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
 }
 
 type ScheduleData struct {

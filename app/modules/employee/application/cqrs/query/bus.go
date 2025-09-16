@@ -2,6 +2,7 @@
 package query
 
 import (
+	"clinic-vet-api/app/core/repository"
 	"clinic-vet-api/app/shared/page"
 	"context"
 )
@@ -18,11 +19,10 @@ type employeeQueryBus struct {
 	getActiveHandler *GetActiveEmployeesHandler
 }
 
-func NewEmployeeQueryBus(
-	getByIDHandler *GetEmployeeByIDHandler,
-	searchHandler *SearchEmployeesHandler,
-	getActiveHandler *GetActiveEmployeesHandler,
-) EmployeeQueryBus {
+func NewEmployeeQueryBus(employeeRepo repository.EmployeeRepository) EmployeeQueryBus {
+	getByIDHandler := NewGetEmployeeByIDHandler(employeeRepo)
+	searchHandler := NewSearchEmployeesHandler(employeeRepo)
+	getActiveHandler := NewGetActiveEmployeesHandler(employeeRepo)
 	return &employeeQueryBus{
 		getByIDHandler:   getByIDHandler,
 		searchHandler:    searchHandler,

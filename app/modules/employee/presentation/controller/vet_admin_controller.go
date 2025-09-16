@@ -1,203 +1,183 @@
 package controller
 
 import (
-	"clinic-vet-api/app/modules/veterinarians/application/usecase"
-	"clinic-vet-api/app/modules/veterinarians/infrastructure/api/dto"
+	"clinic-vet-api/app/modules/employee/application/cqrs/command"
+	"clinic-vet-api/app/modules/employee/application/cqrs/query"
+	"clinic-vet-api/app/modules/employee/infrastructure/bus"
+	"clinic-vet-api/app/modules/employee/presentation/dto"
 	httpError "clinic-vet-api/app/shared/error/infrastructure/http"
 	ginUtils "clinic-vet-api/app/shared/gin_utils"
 	"clinic-vet-api/app/shared/response"
+
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )
 
-type VeterinarianController struct {
-	validator   *validator.Validate
-	vetUseCases usecase.VeterinarianUseCases
+type EmployeeController struct {
+	validator *validator.Validate
+	bus       bus.EmployeeBus
 }
 
-func NewVeterinarianController(
+func NewEmployeeController(
 	validator *validator.Validate,
-	vetUseCases usecase.VeterinarianUseCases,
-) *VeterinarianController {
-	return &VeterinarianController{
-		validator:   validator,
-		vetUseCases: vetUseCases,
+	bus bus.EmployeeBus,
+) *EmployeeController {
+	return &EmployeeController{
+		validator: validator,
+		bus:       bus,
 	}
 }
 
 // This package contains wrapper functions that hold the Swagger annotations.
 // They then delegate the actual work to the controller to keep it clean.
 
-// @Summary List all veterinarians
-// @Description Retrieves a list of all veterinarians with optional filtering and pagination.
-// @Tags Veterinarians
+// @Summary List all employee
+// @Description Retrieves a list of all employee with optional filtering and pagination.
+// @Tags Employees
 // @Produce json
 // @Param page query int false "Page number for pagination"
 // @Param limit query int false "Number of items per page"
 // @Param specialty query string false "Filter by specialty"
-// @Success 200 {array} dto.VetResponse "List of veterinarians"
+// @Success 200 {array} dto.VetResponse "List of employee"
 // @Failure 500 {object} response.APIResponse "Internal server error"
-// @Router /veterinarians [get]
-func (controller *VeterinarianController) SearchVeterinarians(c *gin.Context) {
-	queryRequest, err := dto.NewVetSearchRequestFromContext(c)
-	if err != nil {
-		response.BadRequest(c, httpError.RequestBodyDataError(err))
-		return
-	}
+// @Router /employee [get]
+func (ctrl *EmployeeController) SearchEmployees(c *gin.Context) {
+	var requestParams dto.EmployeeSearchRequest
 
-	if err := controller.validator.Struct(queryRequest); err != nil {
-		validationErrors := err.(validator.ValidationErrors)
-		response.BadRequest(c, httpError.InvalidDataError(validationErrors))
-		return
-	}
-
-	if err := controller.validator.Struct(queryRequest); err != nil {
+	if err := ginUtils.BindAndValidateQuery(c, &requestParams, ctrl.validator); err != nil {
 		response.BadRequest(c, httpError.InvalidDataError(err))
 		return
 	}
 
-	searchVetSpecification, err := queryRequest.ToSpecification()
+	requestParams.ProcessBooleanParams(c)
+
+	query, err := requestParams.ToQuery()
 	if err != nil {
 		response.BadRequest(c, httpError.InvalidDataError(err))
 		return
 	}
 
-	vets, err := controller.vetUseCases.SearchVeterinan(c.Request.Context(), *searchVetSpecification)
+	employeesPage, err := ctrl.bus.QueryBus.SearchEmployees(c.Request.Context(), *query)
 	if err != nil {
 		response.ApplicationError(c, err)
 		return
 	}
 
-	response.Success(c, vets)
+	responseMetadata := gin.H{"pagination": employeesPage.Metadata, "requestParams": c.Request.URL.Query()}
+	response.SuccessWithMeta(c, employeesPage, "Employees retrieved successfully", responseMetadata)
 }
 
-// @Summary Get a veterinarian by ID
-// @Description Retrieves a single veterinarian by their unique ID.
-// @Tags Veterinarians
+// @Summary Get a employee by ID
+// @Description Retrieves a single employee by their unique ID.
+// @Tags Employees
 // @Produce json
-// @Param id path int true "Veterinarian ID"
-// @Success 200 {object} dto.VetResponse "Veterinarian details"
+// @Param id path int true "Employee ID"
+// @Success 200 {object} dto.VetResponse "Employee details"
 // @Failure 400 {object} response.APIResponse "Invalid ID supplied"
-// @Failure 404 {object} response.APIResponse "Veterinarian not found"
+// @Failure 404 {object} response.APIResponse "Employee not found"
 // @Failure 500 {object} response.APIResponse "Internal server error"
-// @Router /veterinarians/{id} [get]
-func (controller *VeterinarianController) GetVeterinarianByID(c *gin.Context) {
-	id, err := ginUtils.ParseParamToInt(c, "id")
+// @Router /employee/{id} [get]
+func (ctrl *EmployeeController) GetEmployeeByID(c *gin.Context) {
+	id, err := ginUtils.ParseParamToUInt(c, "id")
 	if err != nil {
 		response.BadRequest(c, httpError.RequestURLParamError(err, "id", c.Param("id")))
 		return
 	}
 
-	veterinarian, err := controller.vetUseCases.GetVetByIDUseCase(c.Request.Context(), id)
+	query := query.NewGetEmployeeByIDQuery(id)
+	result, err := ctrl.bus.QueryBus.GetEmployeeByID(c.Request.Context(), query)
 	if err != nil {
 		response.ApplicationError(c, err)
 		return
 	}
 
-	response.Success(c, veterinarian)
+	employeeResponse := dto.ToEmployeeResponse(result)
+	response.Found(c, employeeResponse, "Employee")
 }
 
-// @Summary Create a new veterinarian
-// @Description Creates a new veterinarian with the provided details.
-// @Tags Veterinarians
+// @Summary Create a new employee
+// @Description Creates a new employee with the provided details.
+// @Tags Employees
 // @Accept json
 // @Produce json
-// @Param vetCreate body dto.VetCreate true "Veterinarian data"
-// @Success 201 {object} dto.VetResponse "Veterinarian created"
+// @Param vetCreate body dto.VetCreate true "Employee data"
+// @Success 201 {object} dto.VetResponse "Employee created"
 // @Failure 400 {object} response.APIResponse "Invalid request body"
 // @Failure 500 {object} response.APIResponse "Internal server error"
-// @Router /veterinarians [post]
-func (controller *VeterinarianController) CreateVeterinarian(c *gin.Context) {
-	var requestData dto.CreateVetRequest
-	if err := c.ShouldBindBodyWithJSON(&requestData); err != nil {
-		response.BadRequest(c, httpError.RequestBodyDataError(err))
-		return
-	}
-
-	if err := controller.validator.Struct(&requestData); err != nil {
-		response.BadRequest(c, httpError.InvalidDataError(err))
-		return
-	}
-
-	createVetData, err := requestData.ToCreateData()
-	if err != nil {
-		response.BadRequest(c, httpError.InvalidDataError(err))
-		return
-	}
-
-	vetCreated, err := controller.vetUseCases.CreateVetUseCase(c.Request.Context(), createVetData)
-	if err != nil {
+// @Router /employee [post]
+func (ctrl *EmployeeController) CreateEmployee(c *gin.Context) {
+	var requestData *dto.CreateEmployeeRequest
+	if err := ginUtils.BindAndValidateBody(c, &requestData, ctrl.validator); err != nil {
 		response.ApplicationError(c, err)
 		return
 	}
 
-	response.Created(c, vetCreated)
+	command := requestData.ToCommand()
+	result := ctrl.bus.CommandBus.CreateEmployee(c.Request.Context(), *command)
+	if !result.IsSuccess() {
+		response.ApplicationError(c, result.Error())
+		return
+	}
+
+	response.Created(c, result.ID(), "Employee")
 }
 
-// @Summary Update an existing veterinarian
-// @Description Updates the details of an existing veterinarian by ID.
-// @Tags Veterinarians
+// @Summary Update an existing employee
+// @Description Updates the details of an existing employee by ID.
+// @Tags Employees
 // @Accept json
 // @Produce json
-// @Param id path int true "Veterinarian ID"
-// @Param requestData body dto.VetUpdate true "Updated veterinarian data"
-// @Success 200 {object} dto.VetResponse "Veterinarian updated"
+// @Param id path int true "Employee ID"
+// @Param requestData body dto.VetUpdate true "Updated employee data"
+// @Success 200 {object} dto.VetResponse "Employee updated"
 // @Failure 400 {object} response.APIResponse "Invalid request data or ID"
-// @Failure 404 {object} response.APIResponse "Veterinarian not found"
+// @Failure 404 {object} response.APIResponse "Employee not found"
 // @Failure 500 {object} response.APIResponse "Internal server error"
-// @Router /veterinarians/{id} [patch]
-func (controller *VeterinarianController) UpdateVeterinarian(c *gin.Context) {
-	id, err := ginUtils.ParseParamToInt(c, "id")
+// @Router /employee/{id} [patch]
+func (ctrl *EmployeeController) UpdateEmployee(c *gin.Context) {
+	id, err := ginUtils.ParseParamToUInt(c, "id")
 	if err != nil {
-		response.BadRequest(c, httpError.RequestURLParamError(err, "Veterinarian_id", c.Param("id")))
+		response.BadRequest(c, httpError.RequestURLParamError(err, "Employee_id", c.Param("id")))
 		return
 	}
 
-	var requestData dto.UpdateVetRequest
-	if err := c.ShouldBindBodyWithJSON(&requestData); err != nil {
-		response.BadRequest(c, httpError.RequestBodyDataError(err))
-		return
-	}
-
-	if err := controller.validator.Struct(&requestData); err != nil {
+	var requestData *dto.UpdateEmployeeRequest
+	if err := ginUtils.BindAndValidateBody(c, &requestData, ctrl.validator); err != nil {
 		response.BadRequest(c, httpError.InvalidDataError(err))
 		return
 	}
 
-	updateVetData, err := requestData.ToUpdateData(id)
-	if err != nil {
-		response.BadRequest(c, httpError.InvalidDataError(err))
+	command := requestData.ToCommand(id)
+	result := ctrl.bus.CommandBus.UpdateEmployee(c.Request.Context(), *command)
+	if !result.IsSuccess() {
+		response.ApplicationError(c, result.Error())
 		return
 	}
 
-	verUpdated, err := controller.vetUseCases.UpdateVetUseCase(c.Request.Context(), updateVetData)
-	if err != nil {
-		response.ApplicationError(c, err)
-		return
-	}
-
-	response.Success(c, verUpdated)
+	response.Success(c, nil, result.Message())
 }
 
-// @Summary Delete a veterinarian
-// @Description Deletes a veterinarian from the system by ID.
-// @Tags Veterinarians
+// @Summary Delete a employee
+// @Description Deletes a employee from the system by ID.
+// @Tags Employees
 // @Produce json
-// @Param id path int true "Veterinarian ID"
+// @Param id path int true "Employee ID"
 // @Success 204 "No Content"
 // @Failure 400 {object} response.APIResponse "Invalid ID supplied"
-// @Failure 404 {object} response.APIResponse "Veterinarian not found"
+// @Failure 404 {object} response.APIResponse "Employee not found"
 // @Failure 500 {object} response.APIResponse "Internal server error"
-// @Router /veterinarians/{id} [delete]
-func (controller *VeterinarianController) DeleteVeterinarian(c *gin.Context) {
-	id, err := ginUtils.ParseParamToInt(c, "id")
+// @Router /employee/{id} [delete]
+func (ctrl *EmployeeController) DeleteEmployee(c *gin.Context) {
+	id, err := ginUtils.ParseParamToUInt(c, "id")
 	if err != nil {
-		response.BadRequest(c, httpError.RequestURLParamError(err, "Veterinarian_id", c.Param("id")))
+		response.BadRequest(c, httpError.RequestURLParamError(err, "Employee_id", c.Param("id")))
 		return
 	}
 
-	if err := controller.vetUseCases.DeleteVet(c.Request.Context(), id); err != nil {
-		response.ApplicationError(c, err)
+	command := command.NewDeleteEmployeeCommand(id)
+	result := ctrl.bus.CommandBus.DeleteEmployee(c.Request.Context(), *command)
+	if !result.IsSuccess() {
+		response.ApplicationError(c, result.Error())
 		return
 	}
 

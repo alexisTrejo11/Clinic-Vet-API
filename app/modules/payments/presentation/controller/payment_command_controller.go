@@ -2,27 +2,28 @@ package controller
 
 import (
 	"clinic-vet-api/app/modules/payments/application/command"
+	"clinic-vet-api/app/modules/payments/infrastructure/bus"
 	dto "clinic-vet-api/app/modules/payments/presentation/dtos"
-	"clinic-vet-api/app/shared/cqrs"
 	httpError "clinic-vet-api/app/shared/error/infrastructure/http"
 	ginUtils "clinic-vet-api/app/shared/gin_utils"
 	"clinic-vet-api/app/shared/response"
+
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )
 
 type PaymentController struct {
-	validator  *validator.Validate
-	commandBus cqrs.CommandBus
+	validator *validator.Validate
+	bus       *bus.PaymentBus
 }
 
 func NewPaymentController(
 	validator *validator.Validate,
-	commandBus cqrs.CommandBus,
+	bus *bus.PaymentBus,
 ) *PaymentController {
 	return &PaymentController{
-		validator:  validator,
-		commandBus: commandBus,
+		validator: validator,
+		bus:       bus,
 	}
 }
 
@@ -45,7 +46,7 @@ func (ctrl *PaymentController) CreatePayment(c *gin.Context) {
 		return
 	}
 
-	commandResult := ctrl.commandBus.Execute(createCommand)
+	commandResult := ctrl.bus.CommandBus.CreatePayment(createCommand)
 	if !commandResult.IsSuccess() {
 		response.ApplicationError(c, commandResult.Error())
 		return
@@ -79,7 +80,7 @@ func (ctrl *PaymentController) UpdatePayment(c *gin.Context) {
 		return
 	}
 
-	commandResult := ctrl.commandBus.Execute(updatePaymentCommand)
+	commandResult := ctrl.bus.CommandBus.UpdatePayment(updatePaymentCommand)
 	if !commandResult.IsSuccess() {
 		response.ApplicationError(c, commandResult.Error())
 		return
@@ -98,7 +99,7 @@ func (ctrl *PaymentController) DeletePayment(c *gin.Context) {
 
 	deleteCommand := command.NewDeletePaymentCommand(c.Request.Context(), id)
 
-	commandResult := ctrl.commandBus.Execute(deleteCommand)
+	commandResult := ctrl.bus.CommandBus.DeletePayment(*deleteCommand)
 	if !commandResult.IsSuccess() {
 		response.ApplicationError(c, commandResult.Error())
 		return
@@ -132,7 +133,7 @@ func (ctrl *PaymentController) ProcessPayment(c *gin.Context) {
 		return
 	}
 
-	commandResult := ctrl.commandBus.Execute(proccessPaymentCommand)
+	commandResult := ctrl.bus.CommandBus.ProcessPayment(*proccessPaymentCommand)
 	if !commandResult.IsSuccess() {
 		response.ApplicationError(c, commandResult.Error())
 		return
@@ -162,7 +163,7 @@ func (ctrl *PaymentController) RefundPayment(c *gin.Context) {
 
 	refundPaymentCommand := command.NewRefundPaymentCommand(c.Request.Context(), id, req.Reason)
 
-	commandResult := ctrl.commandBus.Execute(refundPaymentCommand)
+	commandResult := ctrl.bus.CommandBus.RefundPayment(*refundPaymentCommand)
 	if !commandResult.IsSuccess() {
 		response.ApplicationError(c, commandResult.Error())
 		return
@@ -192,7 +193,7 @@ func (ctrl *PaymentController) CancelPayment(c *gin.Context) {
 
 	cancelPaymentCommand := command.NewCancelPaymentCommand(id, req.Reason)
 
-	commandResult := ctrl.commandBus.Execute(cancelPaymentCommand)
+	commandResult := ctrl.bus.CommandBus.CancelPayment(*cancelPaymentCommand)
 	if !commandResult.IsSuccess() {
 		response.ApplicationError(c, commandResult.Error())
 		return

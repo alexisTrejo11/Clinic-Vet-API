@@ -3,6 +3,7 @@ package controller
 
 import (
 	"clinic-vet-api/app/core/domain/valueobject"
+	"clinic-vet-api/app/modules/medical/application/command"
 	"clinic-vet-api/app/modules/medical/application/query"
 	"clinic-vet-api/app/modules/medical/infrastructure/bus"
 	"clinic-vet-api/app/modules/medical/presentation/dto"
@@ -32,24 +33,15 @@ func (ctlr AdminMedicalHistoryController) SearchMedicalHistories(c *gin.Context)
 }
 
 func (ctlr AdminMedicalHistoryController) GetMedicalHistoryDetails(c *gin.Context) {
-	idInterface, err := ginUtils.ParseParamToEntityID(c, "medical_history")
+	idUint, err := ginUtils.ParseParamToUInt(c, "id")
 	if err != nil {
 		response.BadRequest(c, httpError.RequestURLParamError(err, "medical-history", c.Param("id")))
 		return
 	}
 
-	mediHistID, valid := idInterface.(valueobject.MedHistoryID)
-	if !valid {
-		response.ServerError(c, httpError.InternalServerError(errors.New("invalid medical history ID type")))
-		return
-	}
+	query := query.NewFindMedHistByIDQuery(idUint, c.Request.Context())
 
-	query := query.GetMedHistByIDQuery{
-		ID:  mediHistID,
-		CTX: c.Request.Context(),
-	}
-
-	medHistory, err := ctlr.bus.QueryBus.GetMedHistByID(query)
+	medHistory, err := ctlr.bus.QueryBus.FindMedHistByID(*query)
 	if err != nil {
 		response.ApplicationError(c, err)
 		return
@@ -59,21 +51,15 @@ func (ctlr AdminMedicalHistoryController) GetMedicalHistoryDetails(c *gin.Contex
 }
 
 func (ctlr AdminMedicalHistoryController) CreateMedicalHistory(c *gin.Context) {
-	var createData dto.AdminMedHistoryRequest
-	if err := c.ShouldBindJSON(&createData); err != nil {
-		response.BadRequest(c, httpError.RequestBodyDataError(err))
+	var requestData dto.AdminCreateMedHistoryRequest
+	if err := ginUtils.BindAndValidateBody(c, &requestData, ctlr.validator); err != nil {
+		response.BadRequest(c, err)
 		return
 	}
 
-	if err := ctlr.validator.Struct(createData); err != nil {
-		response.BadRequest(c, httpError.InvalidDataError(err))
-		return
-
-	}
-
-	command := createData.ToCommand()
+	command := requestData.ToCommand()
 	result := ctlr.bus.CommandBus.CreateMedicalHistory(*command)
-	if result.Error() {
+	if !result.IsSuccess() {
 		response.ApplicationError(c, result.Error())
 		return
 	}
@@ -81,7 +67,7 @@ func (ctlr AdminMedicalHistoryController) CreateMedicalHistory(c *gin.Context) {
 	response.Created(c, result.ID, "Medical History")
 }
 
-func (ctrl AdminMedicalHistoryController) DeleteMedicalHistory(c *gin.Context) {
+func (ctrl AdminMedicalHistoryController) SoftDeleteMedicalHistory(c *gin.Context) {
 	idInterface, err := ginUtils.ParseParamToEntityID(c, "medical_history")
 	if err != nil {
 		response.BadRequest(c, httpError.RequestURLParamError(err, "medical-history", c.Param("id")))
@@ -94,17 +80,16 @@ func (ctrl AdminMedicalHistoryController) DeleteMedicalHistory(c *gin.Context) {
 		return
 	}
 
-	softDelete := c.Query("is_soft_delete")
-	if softDelete != "" && softDelete != "true" && softDelete != "false" {
-		response.BadRequest(c, httpError.RequestURLQueryError(err, c.Request.URL.RawQuery))
+	command := command.SoftDeleteMedHistCommand{
+		ID:  mediHistID,
+		CTX: c.Request.Context(),
+	}
+
+	result := ctrl.bus.CommandBus.SoftDeleteMedicalHistory(command)
+	if !result.IsSuccess() {
+		response.ApplicationError(c, result.Error())
 		return
 	}
 
-	isSoftDelete := softDelete == "true"
-
-	result := ctrl.bus.CommandBus.DeleteMedicalHistory(mediHistID, isSoftDelete)
-	if result.IsError() {
-	}
-
-	response.NoContent(c)
+	response.Success(c, nil, result.Message())
 }

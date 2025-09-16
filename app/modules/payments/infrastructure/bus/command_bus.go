@@ -1,6 +1,7 @@
 package bus
 
 import (
+	"clinic-vet-api/app/core/repository"
 	"clinic-vet-api/app/modules/payments/application/command"
 	"clinic-vet-api/app/shared/cqrs"
 )
@@ -9,7 +10,9 @@ type PaymentCommandBus struct {
 	handlers command.PaymentCommandHandler
 }
 
-func NewPaymentCommandBus(handlers command.PaymentCommandHandler) *PaymentCommandBus {
+func NewPaymentCommandBus(paymentRepo repository.PaymentRepository) *PaymentCommandBus {
+	handlers := command.NewPaymentCommandHandler(paymentRepo)
+
 	return &PaymentCommandBus{handlers: handlers}
 }
 

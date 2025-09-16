@@ -5,6 +5,7 @@ import (
 
 	dberr "clinic-vet-api/app/shared/error/infrastructure/database"
 	"clinic-vet-api/app/shared/page"
+
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -36,12 +37,10 @@ const (
 	ErrMsgCountMedicalHistory  = "failed to count medical history records"
 )
 
-// calculateOffset computes the database offset for pagination
 func (r *SQLCMedHistRepository) calculateOffset(pageData page.PageInput) int32 {
-	return int32(pageData.PageSize * (pageData.PageNumber - 1))
+	return int32(pageData.PageSize * (pageData.Page - 1))
 }
 
-// buildNotesParam creates a pgtype.Text parameter for notes field
 func (r *SQLCMedHistRepository) buildNotesParam(notes *string) pgtype.Text {
 	if notes != nil {
 		return pgtype.Text{String: *notes, Valid: true}
@@ -49,17 +48,14 @@ func (r *SQLCMedHistRepository) buildNotesParam(notes *string) pgtype.Text {
 	return pgtype.Text{Valid: false}
 }
 
-// dbError creates a standardized database operation error
 func (r *SQLCMedHistRepository) dbError(operation, message string, err error) error {
 	return dberr.DatabaseOperationError(operation, TableMedicalHistory, DriverSQL, fmt.Sprintf("%s: %v", message, err))
 }
 
-// notFoundError creates a standardized entity not found error
 func (r *SQLCMedHistRepository) notFoundError(parameterName, parameterValue string) error {
 	return dberr.EntityNotFoundError(parameterName, parameterValue, OpSelect, TableMedicalHistory, DriverSQL)
 }
 
-// wrapConversionError wraps domain conversion errors
 func (r *SQLCMedHistRepository) wrapConversionError(err error) error {
 	return fmt.Errorf("%s: %w", ErrMsgConvertToDomain, err)
 }

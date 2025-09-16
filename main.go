@@ -16,12 +16,14 @@ import (
 	"clinic-vet-api/config"
 	"clinic-vet-api/middleware"
 	"clinic-vet-api/sqlc"
+
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
 	"github.com/joho/godotenv"
 
 	_ "clinic-vet-api/docs"
+
 	swaggerfiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 )

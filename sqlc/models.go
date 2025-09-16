@@ -57,19 +57,27 @@ type Employee struct {
 }
 
 type MedicalHistory struct {
-	ID         int32
-	PetID      int32
-	CustomerID int32
-	EmployeeID int32
-	VisitDate  pgtype.Timestamptz
-	VisitType  string
-	Diagnosis  pgtype.Text
-	Notes      pgtype.Text
-	Treatment  pgtype.Text
-	Condition  pgtype.Text
-	CreatedAt  pgtype.Timestamptz
-	UpdatedAt  pgtype.Timestamptz
-	DeletedAt  pgtype.Timestamp
+	ID              int32
+	PetID           int32
+	CustomerID      int32
+	EmployeeID      int32
+	VisitDate       pgtype.Timestamptz
+	VisitType       string
+	Diagnosis       pgtype.Text
+	Notes           pgtype.Text
+	Treatment       pgtype.Text
+	Condition       pgtype.Text
+	Weight          pgtype.Numeric
+	Temperature     pgtype.Numeric
+	HeartRate       pgtype.Int4
+	RespiratoryRate pgtype.Int4
+	Symptoms        pgtype.Text
+	Medications     pgtype.Text
+	FollowUpDate    pgtype.Timestamptz
+	IsEmergency     pgtype.Bool
+	CreatedAt       pgtype.Timestamptz
+	UpdatedAt       pgtype.Timestamptz
+	DeletedAt       pgtype.Timestamptz
 }
 
 type Payment struct {
@@ -92,24 +100,44 @@ type Payment struct {
 }
 
 type Pet struct {
-	ID                 int32
-	Name               string
-	Photo              pgtype.Text
-	Species            string
-	Breed              pgtype.Text
-	Age                pgtype.Int2
-	Gender             pgtype.Text
-	Weight             pgtype.Numeric
-	Color              pgtype.Text
-	Microchip          pgtype.Text
-	IsNeutered         pgtype.Bool
-	CustomerID         int32
-	Allergies          pgtype.Text
-	CurrentMedications pgtype.Text
-	SpecialNeeds       pgtype.Text
-	IsActive           bool
-	CreatedAt          pgtype.Timestamptz
-	UpdatedAt          pgtype.Timestamptz
+	ID                    int32
+	Name                  string
+	Photo                 pgtype.Text
+	Species               string
+	Breed                 pgtype.Text
+	Age                   pgtype.Int2
+	Gender                pgtype.Text
+	Weight                pgtype.Numeric
+	Color                 pgtype.Text
+	Microchip             pgtype.Text
+	IsNeutered            pgtype.Bool
+	CustomerID            int32
+	Allergies             pgtype.Text
+	CurrentMedications    pgtype.Text
+	SpecialNeeds          pgtype.Text
+	IsActive              bool
+	DateOfBirth           pgtype.Date
+	InsuranceInfo         pgtype.Text
+	VeterinaryContact     pgtype.Text
+	FeedingInstructions   pgtype.Text
+	BehavioralNotes       pgtype.Text
+	Tattoo                pgtype.Text
+	LastVaccinationDate   pgtype.Date
+	NextVaccinationDate   pgtype.Date
+	LastDewormingDate     pgtype.Date
+	NextDewormingDate     pgtype.Date
+	LastVetVisit          pgtype.Date
+	NextVetVisit          pgtype.Date
+	BloodType             pgtype.Text
+	ChipImplantDate       pgtype.Date
+	ChipImplantLocation   pgtype.Text
+	InsurancePolicyNumber pgtype.Text
+	InsuranceCompany      pgtype.Text
+	EmergencyContactName  pgtype.Text
+	EmergencyContactPhone pgtype.Text
+	CreatedAt             pgtype.Timestamptz
+	UpdatedAt             pgtype.Timestamptz
+	DeletedAt             pgtype.Timestamptz
 }
 
 type Profile struct {

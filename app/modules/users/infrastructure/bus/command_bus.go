@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"reflect"
 
-	repository "clinic-vet-api/app/core/repositories"
+	"clinic-vet-api/app/core/repository"
 	"clinic-vet-api/app/core/service"
 	"clinic-vet-api/app/modules/users/application/usecase/command"
 	"clinic-vet-api/app/shared/cqrs"
@@ -34,7 +34,7 @@ func (d *UserCommandBus) Execute(command cqrs.Command) cqrs.CommandResult {
 	commandType := reflect.TypeOf(command)
 	handler, ok := d.handlers[commandType]
 	if !ok {
-		return cqrs.FailureResult(
+		return *cqrs.FailureResult(
 			"an occurred dispatching command", fmt.Errorf("no handler registered for command type %s", commandType),
 		)
 	}

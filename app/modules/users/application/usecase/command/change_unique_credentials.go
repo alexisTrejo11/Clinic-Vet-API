@@ -77,49 +77,49 @@ func NewChangeEmailHandler(userRepository repository.UserRepository) ChangeEmail
 func (h ChangePhoneHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
 	command, ok := cmd.(ChangePhoneCommand)
 	if !ok {
-		return cqrs.FailureResult(ErrFailedChangePhone, errors.New("invalid command type"))
+		return *cqrs.FailureResult(ErrFailedChangePhone, errors.New("invalid command type"))
 	}
 
 	user, err := h.userRepository.FindByID(command.ctx, command.userID)
 	if err != nil {
-		return cqrs.FailureResult(ErrFailedFindUser, err)
+		return *cqrs.FailureResult(ErrFailedFindUser, err)
 	}
 
 	if err := h.validate(command, user); err != nil {
-		return cqrs.FailureResult(ErrFailedChangePhone, err)
+		return *cqrs.FailureResult(ErrFailedChangePhone, err)
 	}
 
 	user.UpdatePhoneNumber(command.phone)
 
 	if err := h.userRepository.Save(command.ctx, &user); err != nil {
-		return cqrs.FailureResult(ErrFailedUpdateUser, err)
+		return *cqrs.FailureResult(ErrFailedUpdateUser, err)
 	}
 
-	return cqrs.SuccessResult(user.ID().String(), "phone changed successfully")
+	return *cqrs.SuccessResult(user.ID().String(), "phone changed successfully")
 }
 
 func (h ChangeEmailHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
 	command, ok := cmd.(ChangeEmailCommand)
 	if !ok {
-		return cqrs.FailureResult(ErrFailedChangeEmail, errors.New("invalid command type"))
+		return *cqrs.FailureResult(ErrFailedChangeEmail, errors.New("invalid command type"))
 	}
 
 	user, err := h.userRepository.FindByID(command.ctx, command.userID)
 	if err != nil {
-		return cqrs.FailureResult(ErrFailedFindUser, err)
+		return *cqrs.FailureResult(ErrFailedFindUser, err)
 	}
 
 	if err := h.validate(command, user); err != nil {
-		return cqrs.FailureResult(ErrFailedChangeEmail, err)
+		return *cqrs.FailureResult(ErrFailedChangeEmail, err)
 	}
 
 	user.UpdateEmail(command.email)
 
 	if err := h.userRepository.Save(command.ctx, &user); err != nil {
-		return cqrs.FailureResult(ErrFailedUpdateUser, err)
+		return *cqrs.FailureResult(ErrFailedUpdateUser, err)
 	}
 
-	return cqrs.SuccessResult(user.ID().String(), "email changed successfully")
+	return *cqrs.SuccessResult(user.ID().String(), "email changed successfully")
 }
 
 func (h ChangeEmailHandler) validate(command ChangeEmailCommand, user user.User) error {

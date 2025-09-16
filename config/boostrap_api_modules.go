@@ -11,6 +11,7 @@ import (
 	userAPI "clinic-vet-api/app/modules/users/infrastructure/api"
 	vetAPI "clinic-vet-api/app/modules/veterinarians/infrastructure/api"
 	"clinic-vet-api/sqlc"
+
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"github.com/jackc/pgx/v5/pgxpool"

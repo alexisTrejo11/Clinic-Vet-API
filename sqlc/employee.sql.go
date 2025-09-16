@@ -36,6 +36,18 @@ func (q *Queries) CountAllEmployees(ctx context.Context) (int64, error) {
 	return count, err
 }
 
+const countEmployeesBySpeciality = `-- name: CountEmployeesBySpeciality :one
+SELECT COUNT(*) FROM employees
+WHERE speciality = $1 AND deleted_at IS NULL
+`
+
+func (q *Queries) CountEmployeesBySpeciality(ctx context.Context, speciality models.VeterinarianSpeciality) (int64, error) {
+	row := q.db.QueryRow(ctx, countEmployeesBySpeciality, speciality)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const createEmployee = `-- name: CreateEmployee :one
 INSERT INTO employees (
     first_name, last_name, photo, license_number, speciality,
@@ -225,6 +237,53 @@ type FindEmployeesParams struct {
 
 func (q *Queries) FindEmployees(ctx context.Context, arg FindEmployeesParams) ([]Employee, error) {
 	rows, err := q.db.Query(ctx, findEmployees, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Employee
+	for rows.Next() {
+		var i Employee
+		if err := rows.Scan(
+			&i.ID,
+			&i.FirstName,
+			&i.LastName,
+			&i.Photo,
+			&i.LicenseNumber,
+			&i.Speciality,
+			&i.YearsOfExperience,
+			&i.IsActive,
+			&i.UserID,
+			&i.ScheduleJson,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.DeletedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const findEmployeesBySpeciality = `-- name: FindEmployeesBySpeciality :many
+SELECT id, first_name, last_name, photo, license_number, speciality, years_of_experience, is_active, user_id, schedule_json, created_at, updated_at, deleted_at FROM employees
+WHERE speciality = $1 AND deleted_at IS NULL
+ORDER BY created_at DESC
+LIMIT $2 OFFSET $3
+`
+
+type FindEmployeesBySpecialityParams struct {
+	Speciality models.VeterinarianSpeciality
+	Limit      int32
+	Offset     int32
+}
+
+func (q *Queries) FindEmployeesBySpeciality(ctx context.Context, arg FindEmployeesBySpecialityParams) ([]Employee, error) {
+	rows, err := q.db.Query(ctx, findEmployeesBySpeciality, arg.Speciality, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}

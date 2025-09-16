@@ -1,7 +1,8 @@
 package routes
 
 import (
-	"clinic-vet-api/app/modules/notifications/infrastructure/api/controller"
+	"clinic-vet-api/app/modules/notifications/presentation/controller"
+
 	"github.com/gin-gonic/gin"
 )
 

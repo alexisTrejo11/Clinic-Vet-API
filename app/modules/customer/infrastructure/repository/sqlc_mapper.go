@@ -83,7 +83,7 @@ func sqlRowToCustomer(row sqlc.Customer, pets []pet.Pet) (customer.Customer, err
 	return *customerEntity, nil
 }
 
-func ListRowToCustomer(rows []sqlc.Customer) ([]customer.Customer, error) {
+func sqlRowsToCustomers(rows []sqlc.Customer) ([]customer.Customer, error) {
 	if len(rows) == 0 {
 		return []customer.Customer{}, nil
 	}

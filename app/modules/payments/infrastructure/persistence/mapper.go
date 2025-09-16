@@ -9,6 +9,7 @@ import (
 	"clinic-vet-api/app/core/domain/valueobject"
 	"clinic-vet-api/db/models"
 	"clinic-vet-api/sqlc"
+
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -24,21 +25,12 @@ func sqlcToEntity(sqlcPayment sqlc.Payment) (payment.Payment, error) {
 	}
 
 	// Mapeo de value objects
-	paymentID, err := valueobject.NewPaymentID(int(sqlcPayment.ID))
-	if err != nil {
-		return payment.Payment{}, fmt.Errorf("invalid payment ID: %w", err)
-	}
+	paymentID := valueobject.NewPaymentID(uint(sqlcPayment.ID))
 
 	// TODO: Fix
-	appointmentID, err := valueobject.NewAppointmentID(1)
-	if err != nil {
-		return payment.Payment{}, fmt.Errorf("invalid appointment ID: %w", err)
-	}
+	appointmentID := valueobject.NewAppointmentID(1)
 
-	userID, err := valueobject.NewUserID(int(sqlcPayment.UserID))
-	if err != nil {
-		return payment.Payment{}, fmt.Errorf("invalid user ID: %w", err)
-	}
+	paidFromCustomer := valueobject.NewUserID(uint(sqlcPayment.PaidFromCustomer.Int32))
 
 	var amount valueobject.Money
 	if sqlcPayment.Amount.Valid {

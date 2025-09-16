@@ -1,4 +1,4 @@
-package persistence
+package repository
 
 import (
 	"fmt"
@@ -11,15 +11,15 @@ const (
 	TablePets = "pets"
 
 	// Mensajes de error específicos
-	ErrMsgGetPet             = "failed to get pet"
-	ErrMsgGetPetByOwnerID    = "failed to get pet by owner ID"
-	ErrMsgListPets           = "failed to list pets"
-	ErrMsgSearchPets         = "failed to search pets"
-	ErrMsgCreatePet          = "failed to create pet"
-	ErrMsgUpdatePet          = "failed to update pet"
-	ErrMsgDeletePet          = "failed to delete pet"
-	ErrMsgCheckPetExists     = "failed to check if pet exists"
-	ErrMsgConvertPetToDomain = "failed to convert pet to domain entity"
+	ErrMsgFindPet             = "failed to get pet"
+	ErrMsgFindPetByCustomerID = "failed to get pet by owner ID"
+	ErrMsgFindPets            = "failed to list pets"
+	ErrMsgSearchPets          = "failed to search pets"
+	ErrMsgCreatePet           = "failed to create pet"
+	ErrMsgUpdatePet           = "failed to update pet"
+	ErrMsgDeletePet           = "failed to delete pet"
+	ErrMsgCheckPetExists      = "failed to check if pet exists"
+	ErrMsgConvertPetToDomain  = "failed to convert pet to domain entity"
 
 	OpSelect = "SELECT"
 	OpInsert = "INSERT"

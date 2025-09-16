@@ -8,6 +8,7 @@ import (
 	httpError "clinic-vet-api/app/shared/error/infrastructure/http"
 	ginUtils "clinic-vet-api/app/shared/gin_utils"
 	"clinic-vet-api/app/shared/response"
+
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )
@@ -62,8 +63,8 @@ func (controller *UserAdminController) CreateUser(c *gin.Context) {
 	}
 
 	result := controller.commandBus.Execute(createUserCommand)
-	if !result.IsSuccess {
-		response.ApplicationError(c, result.Error)
+	if !result.IsSuccess() {
+		response.ApplicationError(c, result.Error())
 		return
 	}
 
@@ -97,12 +98,12 @@ func (controller *UserAdminController) BanUser(c *gin.Context) {
 	}
 
 	result := controller.commandBus.Execute(command)
-	if !result.IsSuccess {
-		response.ApplicationError(c, result.Error)
+	if !result.IsSuccess() {
+		response.ApplicationError(c, result.Error())
 		return
 	}
 
-	response.Success(c, nil, result.Message)
+	response.Success(c, nil, result.Message())
 }
 
 // UnbanUser unbans a user.
@@ -132,12 +133,12 @@ func (controller *UserAdminController) UnbanUser(c *gin.Context) {
 	}
 
 	result := controller.commandBus.Execute(command)
-	if !result.IsSuccess {
-		response.ApplicationError(c, result.Error)
+	if !result.IsSuccess() {
+		response.ApplicationError(c, result.Error())
 		return
 	}
 
-	response.Success(c, nil, result.Message)
+	response.Success(c, nil, result.Message())
 }
 
 // DeleteUser soft deletes a user.
@@ -162,10 +163,10 @@ func (controller *UserAdminController) DeleteUser(c *gin.Context) {
 
 	deleteUserCommand := command.NewDeleteUserCommand(c.Request.Context(), userID, true)
 	result := controller.commandBus.Execute(deleteUserCommand)
-	if !result.IsSuccess {
-		response.ApplicationError(c, result.Error)
+	if !result.IsSuccess() {
+		response.ApplicationError(c, result.Error())
 		return
 	}
 
-	response.Success(c, nil, result.Message)
+	response.Success(c, nil, result.Message())
 }

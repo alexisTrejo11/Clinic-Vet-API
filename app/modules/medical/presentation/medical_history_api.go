@@ -8,9 +8,10 @@ import (
 	"clinic-vet-api/app/modules/medical/application/query"
 	"clinic-vet-api/app/modules/medical/infrastructure/bus"
 	repositoryimpl "clinic-vet-api/app/modules/medical/infrastructure/persistence/repository"
-	"clinic-vet-api/app/modules/medical/infrastructure/presentation/controller"
-	"clinic-vet-api/app/modules/medical/infrastructure/presentation/routes"
+	"clinic-vet-api/app/modules/medical/presentation/controller"
+	"clinic-vet-api/app/modules/medical/presentation/routes"
 	"clinic-vet-api/sqlc"
+
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )
@@ -128,12 +129,12 @@ func (m *MedicalHistoryModule) GetRepository() (repository.MedicalHistoryReposit
 	return components.Repository, nil
 }
 
-func (m *MedicalHistoryModule) GetBus() (*usecase.MedicalHistoryUseCase, error) {
+func (m *MedicalHistoryModule) GetBus() (*bus.MedicalHistoryBus, error) {
 	components, err := m.GetComponents()
 	if err != nil {
 		return nil, err
 	}
-	return components.UseCase, nil
+	return components.Bus, nil
 }
 
 func (m *MedicalHistoryModule) GetController() (*controller.AdminMedicalHistoryController, error) {

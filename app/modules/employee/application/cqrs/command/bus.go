@@ -1,6 +1,7 @@
 package command
 
 import (
+	"clinic-vet-api/app/core/repository"
 	"clinic-vet-api/app/shared/cqrs"
 	"context"
 )
@@ -11,11 +12,11 @@ type EmployeeCommandBus struct {
 	deleteHandler *DeleteEmployeeHandler
 }
 
-func NewEmployeeCommandBus(
-	createHandler *CreateEmployeeHandler,
-	updateHandler *UpdateEmployeeHandler,
-	deleteHandler *DeleteEmployeeHandler,
-) *EmployeeCommandBus {
+func NewEmployeeCommandBus(employeeRepo repository.EmployeeRepository) *EmployeeCommandBus {
+	createHandler := NewCreateEmployeeHandler(employeeRepo)
+	updateHandler := NewUpdateEmployeeHandler(employeeRepo, nil)
+	deleteHandler := NewDeleteEmployeeHandler(employeeRepo, nil)
+
 	return &EmployeeCommandBus{
 		createHandler: createHandler,
 		updateHandler: updateHandler,

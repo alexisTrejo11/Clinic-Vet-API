@@ -18,6 +18,12 @@ WHERE is_active = TRUE AND deleted_at IS NULL
 ORDER BY created_at DESC
 LIMIT $1 OFFSET $2;
 
+-- name: FindEmployeesBySpeciality :many
+SELECT * FROM employees
+WHERE speciality = $1 AND deleted_at IS NULL
+ORDER BY created_at DESC
+LIMIT $2 OFFSET $3;
+
 -- name: CreateEmployee :one
 INSERT INTO employees (
     first_name, last_name, photo, license_number, speciality,
@@ -69,3 +75,8 @@ WHERE is_active = TRUE AND deleted_at IS NULL;
 -- name: CountAllEmployees :one
 SELECT COUNT(*) FROM employees
 WHERE deleted_at IS NULL;
+
+
+-- name: CountEmployeesBySpeciality :one
+SELECT COUNT(*) FROM employees
+WHERE speciality = $1 AND deleted_at IS NULL;

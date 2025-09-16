@@ -9,18 +9,18 @@ import (
 	"clinic-vet-api/app/modules/pets/application/mapper"
 )
 
-type GetPetByIDUseCase struct {
+type FindPetByIDUseCase struct {
 	repository repository.PetRepository
 }
 
-func NewGetPetByIDUseCase(repository repository.PetRepository) *GetPetByIDUseCase {
-	return &GetPetByIDUseCase{
+func NewFindPetByIDUseCase(repository repository.PetRepository) *FindPetByIDUseCase {
+	return &FindPetByIDUseCase{
 		repository: repository,
 	}
 }
 
-func (uc *GetPetByIDUseCase) Execute(ctx context.Context, petID valueobject.PetID) (dto.PetResponse, error) {
-	pet, err := uc.repository.GetByID(ctx, petID)
+func (uc *FindPetByIDUseCase) Execute(ctx context.Context, petID valueobject.PetID) (dto.PetResponse, error) {
+	pet, err := uc.repository.FindByID(ctx, petID)
 	if err != nil {
 		return dto.PetResponse{}, err
 	}

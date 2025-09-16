@@ -1,7 +1,8 @@
 package routes
 
 import (
-	"clinic-vet-api/app/modules/users/infrastructure/api/controller"
+	"clinic-vet-api/app/modules/users/presentation/controller"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -12,7 +13,7 @@ func UserRoutes(router *gin.Engine, controller *controller.UserAdminController) 
 	router.GET(path+"/:id", controller.GetUserByID)
 	router.POST(path, controller.CreateUser)
 	router.PATCH(path+"/:id/ban", controller.BanUser)
-	router.PATCH(path+"/:id/unban", controller.UnBanUser)
+	router.PATCH(path+"/:id/unban", controller.UnbanUser)
 }
 
 func ProfileRoutes(router *gin.Engine, profileController *controller.ProfileController) {

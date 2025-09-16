@@ -11,6 +11,64 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const countAllPets = `-- name: CountAllPets :one
+SELECT COUNT(*) FROM pets
+WHERE deleted_at IS NULL
+`
+
+func (q *Queries) CountAllPets(ctx context.Context) (int64, error) {
+	row := q.db.QueryRow(ctx, countAllPets)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
+const countPetsByCustomerID = `-- name: CountPetsByCustomerID :one
+SELECT COUNT(*) FROM pets
+WHERE customer_id = $1 AND deleted_at IS NULL
+`
+
+func (q *Queries) CountPetsByCustomerID(ctx context.Context, customerID int32) (int64, error) {
+	row := q.db.QueryRow(ctx, countPetsByCustomerID, customerID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
+const countPetsBySpecification = `-- name: CountPetsBySpecification :one
+SELECT COUNT(*) FROM pets
+WHERE deleted_at IS NULL
+AND ($1::text IS NULL OR name ILIKE '%' || $1 || '%')
+AND ($2::text IS NULL OR species = $2)
+AND ($3::text IS NULL OR breed = $3)
+AND ($4::int IS NULL OR customer_id = $4)
+AND ($5::bool IS NULL OR is_active = $5)
+AND ($6::bool IS NULL OR is_neutered = $6)
+`
+
+type CountPetsBySpecificationParams struct {
+	Column1 string
+	Column2 string
+	Column3 string
+	Column4 int32
+	Column5 bool
+	Column6 bool
+}
+
+func (q *Queries) CountPetsBySpecification(ctx context.Context, arg CountPetsBySpecificationParams) (int64, error) {
+	row := q.db.QueryRow(ctx, countPetsBySpecification,
+		arg.Column1,
+		arg.Column2,
+		arg.Column3,
+		arg.Column4,
+		arg.Column5,
+		arg.Column6,
+	)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const createPet = `-- name: CreatePet :one
 INSERT INTO pets (
     name, 
@@ -28,32 +86,39 @@ INSERT INTO pets (
     current_medications, 
     special_needs, 
     is_active,
-    created_at,
-    updated_at
-)
-VALUES (
+    date_of_birth,
+    insurance_info,
+    veterinary_contact,
+    feeding_instructions,
+    behavioral_notes
+) VALUES (
     $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15,
-    CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+    $16, $17, $18, $19, $20
 )
-RETURNING id, name, photo, species, breed, age, gender, weight, color, microchip, is_neutered, customer_id, allergies, current_medications, special_needs, is_active, created_at, updated_at
+RETURNING id, name, photo, species, breed, age, gender, weight, color, microchip, is_neutered, customer_id, allergies, current_medications, special_needs, is_active, date_of_birth, insurance_info, veterinary_contact, feeding_instructions, behavioral_notes, tattoo, last_vaccination_date, next_vaccination_date, last_deworming_date, next_deworming_date, last_vet_visit, next_vet_visit, blood_type, chip_implant_date, chip_implant_location, insurance_policy_number, insurance_company, emergency_contact_name, emergency_contact_phone, created_at, updated_at, deleted_at
 `
 
 type CreatePetParams struct {
-	Name               string
-	Photo              pgtype.Text
-	Species            string
-	Breed              pgtype.Text
-	Age                pgtype.Int2
-	Gender             pgtype.Text
-	Weight             pgtype.Numeric
-	Color              pgtype.Text
-	Microchip          pgtype.Text
-	IsNeutered         pgtype.Bool
-	CustomerID         int32
-	Allergies          pgtype.Text
-	CurrentMedications pgtype.Text
-	SpecialNeeds       pgtype.Text
-	IsActive           bool
+	Name                string
+	Photo               pgtype.Text
+	Species             string
+	Breed               pgtype.Text
+	Age                 pgtype.Int2
+	Gender              pgtype.Text
+	Weight              pgtype.Numeric
+	Color               pgtype.Text
+	Microchip           pgtype.Text
+	IsNeutered          pgtype.Bool
+	CustomerID          int32
+	Allergies           pgtype.Text
+	CurrentMedications  pgtype.Text
+	SpecialNeeds        pgtype.Text
+	IsActive            bool
+	DateOfBirth         pgtype.Date
+	InsuranceInfo       pgtype.Text
+	VeterinaryContact   pgtype.Text
+	FeedingInstructions pgtype.Text
+	BehavioralNotes     pgtype.Text
 }
 
 func (q *Queries) CreatePet(ctx context.Context, arg CreatePetParams) (Pet, error) {
@@ -73,6 +138,11 @@ func (q *Queries) CreatePet(ctx context.Context, arg CreatePetParams) (Pet, erro
 		arg.CurrentMedications,
 		arg.SpecialNeeds,
 		arg.IsActive,
+		arg.DateOfBirth,
+		arg.InsuranceInfo,
+		arg.VeterinaryContact,
+		arg.FeedingInstructions,
+		arg.BehavioralNotes,
 	)
 	var i Pet
 	err := row.Scan(
@@ -92,29 +162,134 @@ func (q *Queries) CreatePet(ctx context.Context, arg CreatePetParams) (Pet, erro
 		&i.CurrentMedications,
 		&i.SpecialNeeds,
 		&i.IsActive,
+		&i.DateOfBirth,
+		&i.InsuranceInfo,
+		&i.VeterinaryContact,
+		&i.FeedingInstructions,
+		&i.BehavioralNotes,
+		&i.Tattoo,
+		&i.LastVaccinationDate,
+		&i.NextVaccinationDate,
+		&i.LastDewormingDate,
+		&i.NextDewormingDate,
+		&i.LastVetVisit,
+		&i.NextVetVisit,
+		&i.BloodType,
+		&i.ChipImplantDate,
+		&i.ChipImplantLocation,
+		&i.InsurancePolicyNumber,
+		&i.InsuranceCompany,
+		&i.EmergencyContactName,
+		&i.EmergencyContactPhone,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.DeletedAt,
 	)
 	return i, err
 }
 
-const deletePet = `-- name: DeletePet :exec
-DELETE FROM pets
-WHERE id = $1
+const existsPetByID = `-- name: ExistsPetByID :one
+SELECT COUNT(*) > 0 FROM pets
+WHERE id = $1 AND deleted_at IS NULL
 `
 
-func (q *Queries) DeletePet(ctx context.Context, id int32) error {
-	_, err := q.db.Exec(ctx, deletePet, id)
-	return err
+func (q *Queries) ExistsPetByID(ctx context.Context, id int32) (bool, error) {
+	row := q.db.QueryRow(ctx, existsPetByID, id)
+	var column_1 bool
+	err := row.Scan(&column_1)
+	return column_1, err
 }
 
-const getPetByID = `-- name: GetPetByID :one
-SELECT id, name, photo, species, breed, age, gender, weight, color, microchip, is_neutered, customer_id, allergies, current_medications, special_needs, is_active, created_at, updated_at FROM pets
-WHERE id = $1
+const existsPetByMicrochip = `-- name: ExistsPetByMicrochip :one
+SELECT COUNT(*) > 0 FROM pets
+WHERE microchip = $1 AND deleted_at IS NULL
 `
 
-func (q *Queries) GetPetByID(ctx context.Context, id int32) (Pet, error) {
-	row := q.db.QueryRow(ctx, getPetByID, id)
+func (q *Queries) ExistsPetByMicrochip(ctx context.Context, microchip pgtype.Text) (bool, error) {
+	row := q.db.QueryRow(ctx, existsPetByMicrochip, microchip)
+	var column_1 bool
+	err := row.Scan(&column_1)
+	return column_1, err
+}
+
+const findAllPets = `-- name: FindAllPets :many
+SELECT id, name, photo, species, breed, age, gender, weight, color, microchip, is_neutered, customer_id, allergies, current_medications, special_needs, is_active, date_of_birth, insurance_info, veterinary_contact, feeding_instructions, behavioral_notes, tattoo, last_vaccination_date, next_vaccination_date, last_deworming_date, next_deworming_date, last_vet_visit, next_vet_visit, blood_type, chip_implant_date, chip_implant_location, insurance_policy_number, insurance_company, emergency_contact_name, emergency_contact_phone, created_at, updated_at, deleted_at FROM pets
+WHERE deleted_at IS NULL
+ORDER BY created_at DESC
+LIMIT $1 OFFSET $2
+`
+
+type FindAllPetsParams struct {
+	Limit  int32
+	Offset int32
+}
+
+func (q *Queries) FindAllPets(ctx context.Context, arg FindAllPetsParams) ([]Pet, error) {
+	rows, err := q.db.Query(ctx, findAllPets, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Pet
+	for rows.Next() {
+		var i Pet
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Photo,
+			&i.Species,
+			&i.Breed,
+			&i.Age,
+			&i.Gender,
+			&i.Weight,
+			&i.Color,
+			&i.Microchip,
+			&i.IsNeutered,
+			&i.CustomerID,
+			&i.Allergies,
+			&i.CurrentMedications,
+			&i.SpecialNeeds,
+			&i.IsActive,
+			&i.DateOfBirth,
+			&i.InsuranceInfo,
+			&i.VeterinaryContact,
+			&i.FeedingInstructions,
+			&i.BehavioralNotes,
+			&i.Tattoo,
+			&i.LastVaccinationDate,
+			&i.NextVaccinationDate,
+			&i.LastDewormingDate,
+			&i.NextDewormingDate,
+			&i.LastVetVisit,
+			&i.NextVetVisit,
+			&i.BloodType,
+			&i.ChipImplantDate,
+			&i.ChipImplantLocation,
+			&i.InsurancePolicyNumber,
+			&i.InsuranceCompany,
+			&i.EmergencyContactName,
+			&i.EmergencyContactPhone,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.DeletedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const findPetByID = `-- name: FindPetByID :one
+SELECT id, name, photo, species, breed, age, gender, weight, color, microchip, is_neutered, customer_id, allergies, current_medications, special_needs, is_active, date_of_birth, insurance_info, veterinary_contact, feeding_instructions, behavioral_notes, tattoo, last_vaccination_date, next_vaccination_date, last_deworming_date, next_deworming_date, last_vet_visit, next_vet_visit, blood_type, chip_implant_date, chip_implant_location, insurance_policy_number, insurance_company, emergency_contact_name, emergency_contact_phone, created_at, updated_at, deleted_at FROM pets
+WHERE id = $1 AND deleted_at IS NULL
+`
+
+func (q *Queries) FindPetByID(ctx context.Context, id int32) (Pet, error) {
+	row := q.db.QueryRow(ctx, findPetByID, id)
 	var i Pet
 	err := row.Scan(
 		&i.ID,
@@ -133,24 +308,44 @@ func (q *Queries) GetPetByID(ctx context.Context, id int32) (Pet, error) {
 		&i.CurrentMedications,
 		&i.SpecialNeeds,
 		&i.IsActive,
+		&i.DateOfBirth,
+		&i.InsuranceInfo,
+		&i.VeterinaryContact,
+		&i.FeedingInstructions,
+		&i.BehavioralNotes,
+		&i.Tattoo,
+		&i.LastVaccinationDate,
+		&i.NextVaccinationDate,
+		&i.LastDewormingDate,
+		&i.NextDewormingDate,
+		&i.LastVetVisit,
+		&i.NextVetVisit,
+		&i.BloodType,
+		&i.ChipImplantDate,
+		&i.ChipImplantLocation,
+		&i.InsurancePolicyNumber,
+		&i.InsuranceCompany,
+		&i.EmergencyContactName,
+		&i.EmergencyContactPhone,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.DeletedAt,
 	)
 	return i, err
 }
 
-const getPetByIDAndCustomerID = `-- name: GetPetByIDAndCustomerID :one
-SELECT id, name, photo, species, breed, age, gender, weight, color, microchip, is_neutered, customer_id, allergies, current_medications, special_needs, is_active, created_at, updated_at FROM pets
-WHERE id = $1 AND customer_id = $2
+const findPetByIDAndCustomerID = `-- name: FindPetByIDAndCustomerID :one
+SELECT id, name, photo, species, breed, age, gender, weight, color, microchip, is_neutered, customer_id, allergies, current_medications, special_needs, is_active, date_of_birth, insurance_info, veterinary_contact, feeding_instructions, behavioral_notes, tattoo, last_vaccination_date, next_vaccination_date, last_deworming_date, next_deworming_date, last_vet_visit, next_vet_visit, blood_type, chip_implant_date, chip_implant_location, insurance_policy_number, insurance_company, emergency_contact_name, emergency_contact_phone, created_at, updated_at, deleted_at FROM pets
+WHERE id = $1 AND customer_id = $2 AND deleted_at IS NULL
 `
 
-type GetPetByIDAndCustomerIDParams struct {
+type FindPetByIDAndCustomerIDParams struct {
 	ID         int32
 	CustomerID int32
 }
 
-func (q *Queries) GetPetByIDAndCustomerID(ctx context.Context, arg GetPetByIDAndCustomerIDParams) (Pet, error) {
-	row := q.db.QueryRow(ctx, getPetByIDAndCustomerID, arg.ID, arg.CustomerID)
+func (q *Queries) FindPetByIDAndCustomerID(ctx context.Context, arg FindPetByIDAndCustomerIDParams) (Pet, error) {
+	row := q.db.QueryRow(ctx, findPetByIDAndCustomerID, arg.ID, arg.CustomerID)
 	var i Pet
 	err := row.Scan(
 		&i.ID,
@@ -169,20 +364,47 @@ func (q *Queries) GetPetByIDAndCustomerID(ctx context.Context, arg GetPetByIDAnd
 		&i.CurrentMedications,
 		&i.SpecialNeeds,
 		&i.IsActive,
+		&i.DateOfBirth,
+		&i.InsuranceInfo,
+		&i.VeterinaryContact,
+		&i.FeedingInstructions,
+		&i.BehavioralNotes,
+		&i.Tattoo,
+		&i.LastVaccinationDate,
+		&i.NextVaccinationDate,
+		&i.LastDewormingDate,
+		&i.NextDewormingDate,
+		&i.LastVetVisit,
+		&i.NextVetVisit,
+		&i.BloodType,
+		&i.ChipImplantDate,
+		&i.ChipImplantLocation,
+		&i.InsurancePolicyNumber,
+		&i.InsuranceCompany,
+		&i.EmergencyContactName,
+		&i.EmergencyContactPhone,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.DeletedAt,
 	)
 	return i, err
 }
 
-const getPetsByCustomerID = `-- name: GetPetsByCustomerID :many
-SELECT id, name, photo, species, breed, age, gender, weight, color, microchip, is_neutered, customer_id, allergies, current_medications, special_needs, is_active, created_at, updated_at FROM pets
-WHERE customer_id = $1
-ORDER BY id
+const findPetsByCustomerID = `-- name: FindPetsByCustomerID :many
+SELECT id, name, photo, species, breed, age, gender, weight, color, microchip, is_neutered, customer_id, allergies, current_medications, special_needs, is_active, date_of_birth, insurance_info, veterinary_contact, feeding_instructions, behavioral_notes, tattoo, last_vaccination_date, next_vaccination_date, last_deworming_date, next_deworming_date, last_vet_visit, next_vet_visit, blood_type, chip_implant_date, chip_implant_location, insurance_policy_number, insurance_company, emergency_contact_name, emergency_contact_phone, created_at, updated_at, deleted_at FROM pets
+WHERE customer_id = $1 AND deleted_at IS NULL
+ORDER BY created_at DESC
+LIMIT $2 OFFSET $3
 `
 
-func (q *Queries) GetPetsByCustomerID(ctx context.Context, customerID int32) ([]Pet, error) {
-	rows, err := q.db.Query(ctx, getPetsByCustomerID, customerID)
+type FindPetsByCustomerIDParams struct {
+	CustomerID int32
+	Limit      int32
+	Offset     int32
+}
+
+func (q *Queries) FindPetsByCustomerID(ctx context.Context, arg FindPetsByCustomerIDParams) ([]Pet, error) {
+	rows, err := q.db.Query(ctx, findPetsByCustomerID, arg.CustomerID, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -207,8 +429,28 @@ func (q *Queries) GetPetsByCustomerID(ctx context.Context, customerID int32) ([]
 			&i.CurrentMedications,
 			&i.SpecialNeeds,
 			&i.IsActive,
+			&i.DateOfBirth,
+			&i.InsuranceInfo,
+			&i.VeterinaryContact,
+			&i.FeedingInstructions,
+			&i.BehavioralNotes,
+			&i.Tattoo,
+			&i.LastVaccinationDate,
+			&i.NextVaccinationDate,
+			&i.LastDewormingDate,
+			&i.NextDewormingDate,
+			&i.LastVetVisit,
+			&i.NextVetVisit,
+			&i.BloodType,
+			&i.ChipImplantDate,
+			&i.ChipImplantLocation,
+			&i.InsurancePolicyNumber,
+			&i.InsuranceCompany,
+			&i.EmergencyContactName,
+			&i.EmergencyContactPhone,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.DeletedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -220,13 +462,41 @@ func (q *Queries) GetPetsByCustomerID(ctx context.Context, customerID int32) ([]
 	return items, nil
 }
 
-const listPets = `-- name: ListPets :many
-SELECT id, name, photo, species, breed, age, gender, weight, color, microchip, is_neutered, customer_id, allergies, current_medications, special_needs, is_active, created_at, updated_at FROM pets
-ORDER BY id
+const findPetsBySpecification = `-- name: FindPetsBySpecification :many
+SELECT id, name, photo, species, breed, age, gender, weight, color, microchip, is_neutered, customer_id, allergies, current_medications, special_needs, is_active, date_of_birth, insurance_info, veterinary_contact, feeding_instructions, behavioral_notes, tattoo, last_vaccination_date, next_vaccination_date, last_deworming_date, next_deworming_date, last_vet_visit, next_vet_visit, blood_type, chip_implant_date, chip_implant_location, insurance_policy_number, insurance_company, emergency_contact_name, emergency_contact_phone, created_at, updated_at, deleted_at FROM pets
+WHERE deleted_at IS NULL
+AND ($1::text IS NULL OR name ILIKE '%' || $1 || '%')
+AND ($2::text IS NULL OR species = $2)
+AND ($3::text IS NULL OR breed = $3)
+AND ($4::int IS NULL OR customer_id = $4)
+AND ($5::bool IS NULL OR is_active = $5)
+AND ($6::bool IS NULL OR is_neutered = $6)
+ORDER BY created_at DESC
+LIMIT $7 OFFSET $8
 `
 
-func (q *Queries) ListPets(ctx context.Context) ([]Pet, error) {
-	rows, err := q.db.Query(ctx, listPets)
+type FindPetsBySpecificationParams struct {
+	Column1 string
+	Column2 string
+	Column3 string
+	Column4 int32
+	Column5 bool
+	Column6 bool
+	Limit   int32
+	Offset  int32
+}
+
+func (q *Queries) FindPetsBySpecification(ctx context.Context, arg FindPetsBySpecificationParams) ([]Pet, error) {
+	rows, err := q.db.Query(ctx, findPetsBySpecification,
+		arg.Column1,
+		arg.Column2,
+		arg.Column3,
+		arg.Column4,
+		arg.Column5,
+		arg.Column6,
+		arg.Limit,
+		arg.Offset,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -251,8 +521,28 @@ func (q *Queries) ListPets(ctx context.Context) ([]Pet, error) {
 			&i.CurrentMedications,
 			&i.SpecialNeeds,
 			&i.IsActive,
+			&i.DateOfBirth,
+			&i.InsuranceInfo,
+			&i.VeterinaryContact,
+			&i.FeedingInstructions,
+			&i.BehavioralNotes,
+			&i.Tattoo,
+			&i.LastVaccinationDate,
+			&i.NextVaccinationDate,
+			&i.LastDewormingDate,
+			&i.NextDewormingDate,
+			&i.LastVetVisit,
+			&i.NextVetVisit,
+			&i.BloodType,
+			&i.ChipImplantDate,
+			&i.ChipImplantLocation,
+			&i.InsurancePolicyNumber,
+			&i.InsuranceCompany,
+			&i.EmergencyContactName,
+			&i.EmergencyContactPhone,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.DeletedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -264,7 +554,30 @@ func (q *Queries) ListPets(ctx context.Context) ([]Pet, error) {
 	return items, nil
 }
 
-const updatePet = `-- name: UpdatePet :exec
+const hardDeletePet = `-- name: HardDeletePet :exec
+DELETE FROM pets WHERE id = $1
+`
+
+func (q *Queries) HardDeletePet(ctx context.Context, id int32) error {
+	_, err := q.db.Exec(ctx, hardDeletePet, id)
+	return err
+}
+
+const softDeletePet = `-- name: SoftDeletePet :exec
+UPDATE pets
+SET 
+    deleted_at = CURRENT_TIMESTAMP,
+    updated_at = CURRENT_TIMESTAMP,
+    is_active = FALSE
+WHERE id = $1
+`
+
+func (q *Queries) SoftDeletePet(ctx context.Context, id int32) error {
+	_, err := q.db.Exec(ctx, softDeletePet, id)
+	return err
+}
+
+const updatePet = `-- name: UpdatePet :one
 UPDATE pets
 SET 
     name = $2,
@@ -282,32 +595,42 @@ SET
     current_medications = $14,
     special_needs = $15,
     is_active = $16,
+    date_of_birth = $17,
+    insurance_info = $18,
+    veterinary_contact = $19,
+    feeding_instructions = $20,
+    behavioral_notes = $21,
     updated_at = CURRENT_TIMESTAMP
-WHERE id = $1
-RETURNING id, name, photo, species, breed, age, gender, weight, color, microchip, is_neutered, customer_id, allergies, current_medications, special_needs, is_active, created_at, updated_at
+WHERE id = $1 AND deleted_at IS NULL
+RETURNING id, name, photo, species, breed, age, gender, weight, color, microchip, is_neutered, customer_id, allergies, current_medications, special_needs, is_active, date_of_birth, insurance_info, veterinary_contact, feeding_instructions, behavioral_notes, tattoo, last_vaccination_date, next_vaccination_date, last_deworming_date, next_deworming_date, last_vet_visit, next_vet_visit, blood_type, chip_implant_date, chip_implant_location, insurance_policy_number, insurance_company, emergency_contact_name, emergency_contact_phone, created_at, updated_at, deleted_at
 `
 
 type UpdatePetParams struct {
-	ID                 int32
-	Name               string
-	Photo              pgtype.Text
-	Species            string
-	Breed              pgtype.Text
-	Age                pgtype.Int2
-	Gender             pgtype.Text
-	Weight             pgtype.Numeric
-	Color              pgtype.Text
-	Microchip          pgtype.Text
-	IsNeutered         pgtype.Bool
-	CustomerID         int32
-	Allergies          pgtype.Text
-	CurrentMedications pgtype.Text
-	SpecialNeeds       pgtype.Text
-	IsActive           bool
+	ID                  int32
+	Name                string
+	Photo               pgtype.Text
+	Species             string
+	Breed               pgtype.Text
+	Age                 pgtype.Int2
+	Gender              pgtype.Text
+	Weight              pgtype.Numeric
+	Color               pgtype.Text
+	Microchip           pgtype.Text
+	IsNeutered          pgtype.Bool
+	CustomerID          int32
+	Allergies           pgtype.Text
+	CurrentMedications  pgtype.Text
+	SpecialNeeds        pgtype.Text
+	IsActive            bool
+	DateOfBirth         pgtype.Date
+	InsuranceInfo       pgtype.Text
+	VeterinaryContact   pgtype.Text
+	FeedingInstructions pgtype.Text
+	BehavioralNotes     pgtype.Text
 }
 
-func (q *Queries) UpdatePet(ctx context.Context, arg UpdatePetParams) error {
-	_, err := q.db.Exec(ctx, updatePet,
+func (q *Queries) UpdatePet(ctx context.Context, arg UpdatePetParams) (Pet, error) {
+	row := q.db.QueryRow(ctx, updatePet,
 		arg.ID,
 		arg.Name,
 		arg.Photo,
@@ -324,6 +647,52 @@ func (q *Queries) UpdatePet(ctx context.Context, arg UpdatePetParams) error {
 		arg.CurrentMedications,
 		arg.SpecialNeeds,
 		arg.IsActive,
+		arg.DateOfBirth,
+		arg.InsuranceInfo,
+		arg.VeterinaryContact,
+		arg.FeedingInstructions,
+		arg.BehavioralNotes,
 	)
-	return err
+	var i Pet
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Photo,
+		&i.Species,
+		&i.Breed,
+		&i.Age,
+		&i.Gender,
+		&i.Weight,
+		&i.Color,
+		&i.Microchip,
+		&i.IsNeutered,
+		&i.CustomerID,
+		&i.Allergies,
+		&i.CurrentMedications,
+		&i.SpecialNeeds,
+		&i.IsActive,
+		&i.DateOfBirth,
+		&i.InsuranceInfo,
+		&i.VeterinaryContact,
+		&i.FeedingInstructions,
+		&i.BehavioralNotes,
+		&i.Tattoo,
+		&i.LastVaccinationDate,
+		&i.NextVaccinationDate,
+		&i.LastDewormingDate,
+		&i.NextDewormingDate,
+		&i.LastVetVisit,
+		&i.NextVetVisit,
+		&i.BloodType,
+		&i.ChipImplantDate,
+		&i.ChipImplantLocation,
+		&i.InsurancePolicyNumber,
+		&i.InsuranceCompany,
+		&i.EmergencyContactName,
+		&i.EmergencyContactPhone,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+	)
+	return i, err
 }

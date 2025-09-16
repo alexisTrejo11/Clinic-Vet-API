@@ -7,6 +7,7 @@ import (
 	httpError "clinic-vet-api/app/shared/error/infrastructure/http"
 	ginUtils "clinic-vet-api/app/shared/gin_utils"
 	"clinic-vet-api/app/shared/response"
+
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )
@@ -53,7 +54,7 @@ func (c *PetController) SearchPets(ctx *gin.Context) {
 		return
 	}
 
-	response.Success(ctx, pets)
+	response.Found(ctx, pets, "Pets")
 }
 
 // GetPetByID retrieves a pet by its ID.
@@ -74,13 +75,13 @@ func (c *PetController) GetPetByID(ctx *gin.Context) {
 		return
 	}
 
-	pet, err := c.petUseCases.GetPetByID(ctx, valueobject.NewPetID(id))
+	pet, err := c.petUseCases.FindPetByID(ctx, valueobject.NewPetID(id))
 	if err != nil {
 		response.ApplicationError(ctx, err)
 		return
 	}
 
-	response.Success(ctx, pet)
+	response.Found(ctx, pet, "Pet")
 }
 
 // CreatePet creates a new pet record.
@@ -95,15 +96,10 @@ func (c *PetController) GetPetByID(ctx *gin.Context) {
 // @Failure 500 {object} response.APIResponse "Internal server error"
 // @Router /pets [post]
 func (c *PetController) CreatePet(ctx *gin.Context) {
-	var requestData dto.AdminCreatePetRequest
+	var requestData *dto.AdminCreatePetRequest
 
-	if err := ctx.ShouldBindBodyWithJSON(&requestData); err != nil {
-		response.BadRequest(ctx, httpError.RequestBodyDataError(err))
-		return
-	}
-
-	if err := c.validator.Struct(&requestData); err != nil {
-		response.BadRequest(ctx, httpError.InvalidDataError(err))
+	if err := ginUtils.BindAndValidateBody(ctx, &requestData, c.validator); err != nil {
+		response.BadRequest(ctx, err)
 		return
 	}
 
@@ -114,7 +110,7 @@ func (c *PetController) CreatePet(ctx *gin.Context) {
 		return
 	}
 
-	response.Created(ctx, pet)
+	response.Created(ctx, pet.ID, "Pet")
 }
 
 // UpdatePet updates an existing pet record.
@@ -137,14 +133,9 @@ func (c *PetController) UpdatePet(ctx *gin.Context) {
 		return
 	}
 
-	var requestData dto.UpdatePetRequest
-	if err := ctx.ShouldBindBodyWithJSON(&requestData); err != nil {
-		response.BadRequest(ctx, httpError.RequestBodyDataError(err))
-		return
-	}
-
-	if err := c.validator.Struct(&requestData); err != nil {
-		response.BadRequest(ctx, httpError.InvalidDataError(err))
+	var requestData *dto.AdminUpdatePetRequest
+	if err := ginUtils.BindAndValidateBody(ctx, &requestData, c.validator); err != nil {
+		response.BadRequest(ctx, err)
 		return
 	}
 
@@ -155,7 +146,7 @@ func (c *PetController) UpdatePet(ctx *gin.Context) {
 		return
 	}
 
-	response.Success(ctx, pet)
+	response.Updated(ctx, pet, "Pet")
 }
 
 // SoftDeletePet soft deletes a pet record.

@@ -33,74 +33,74 @@ func NewPaymentCommandHandler(paymentRepository repository.PaymentRepository) Pa
 func (h *paymentCommandHandler) ProcessPayment(command ProcessPaymentCommand) cqrs.CommandResult {
 	payment, err := h.paymentRepository.FindByID(command.ctx, command.paymentID)
 	if err != nil {
-		return cqrs.FailureResult("failed to retrieve payment", err)
+		return *cqrs.FailureResult("failed to retrieve payment", err)
 	}
 
 	if err := payment.Pay(command.transactionID); err != nil {
-		return cqrs.FailureResult("failed to process payment", err)
+		return *cqrs.FailureResult("failed to process payment", err)
 	}
 
-	return cqrs.SuccessResult(payment.ID().String(), "payment processed successfully")
+	return *cqrs.SuccessResult(payment.ID().String(), "payment processed successfully")
 }
 
 func (h *paymentCommandHandler) CreatePayment(command CreatePaymentCommand) cqrs.CommandResult {
 	payment, err := command.ToDomain()
 	if err != nil {
-		return cqrs.FailureResult("failed to create payment domain", err)
+		return *cqrs.FailureResult("failed to create payment domain", err)
 	}
 
 	if err := h.paymentRepository.Save(command.ctx, payment); err != nil {
-		return cqrs.FailureResult("failed to create payment", err)
+		return *cqrs.FailureResult("failed to create payment", err)
 	}
 
-	return cqrs.SuccessResult(payment.ID().String(), "payment created successfully")
+	return *cqrs.SuccessResult(payment.ID().String(), "payment created successfully")
 }
 
 func (h *paymentCommandHandler) RefundPayment(command RefundPaymentCommand) cqrs.CommandResult {
 	payment, err := h.paymentRepository.FindByID(command.ctx, command.paymentID)
 	if err != nil {
-		return cqrs.FailureResult("failed to retrieve payment", err)
+		return *cqrs.FailureResult("failed to retrieve payment", err)
 	}
 
 	if err := payment.Refund(); err != nil {
-		return cqrs.FailureResult("failed to refund payment", err)
+		return *cqrs.FailureResult("failed to refund payment", err)
 	}
 
 	if err := h.paymentRepository.Save(command.ctx, &payment); err != nil {
-		return cqrs.FailureResult("failed to save refunded payment", err)
+		return *cqrs.FailureResult("failed to save refunded payment", err)
 	}
 
-	return cqrs.SuccessResult(payment.ID().String(), "payment refunded successfully")
+	return *cqrs.SuccessResult(payment.ID().String(), "payment refunded successfully")
 }
 
 func (h *paymentCommandHandler) CancelPayment(command CancelPaymentCommand) cqrs.CommandResult {
 	payment, err := h.paymentRepository.FindByID(command.ctx, command.paymentID)
 	if err != nil {
-		return cqrs.FailureResult("failed to retrieve payment", err)
+		return *cqrs.FailureResult("failed to retrieve payment", err)
 	}
 
 	if err := payment.Cancel(command.reason); err != nil {
-		return cqrs.FailureResult("failed to cancel payment", err)
+		return *cqrs.FailureResult("failed to cancel payment", err)
 	}
 
 	if err := h.paymentRepository.Save(command.ctx, &payment); err != nil {
-		return cqrs.FailureResult("failed to save canceled payment", err)
+		return *cqrs.FailureResult("failed to save canceled payment", err)
 	}
 
-	return cqrs.SuccessResult(payment.ID().String(), "payment canceled successfully")
+	return *cqrs.SuccessResult(payment.ID().String(), "payment canceled successfully")
 }
 
 func (h *paymentCommandHandler) DeletePayment(command DeletePaymentCommand) cqrs.CommandResult {
 	payment, err := h.paymentRepository.FindByID(command.ctx, command.paymentID)
 	if err != nil {
-		return cqrs.FailureResult("error fetching payment", err)
+		return *cqrs.FailureResult("error fetching payment", err)
 	}
 
 	if err := h.paymentRepository.SoftDelete(command.ctx, payment.ID()); err != nil {
-		return cqrs.FailureResult("error deleting payment", err)
+		return *cqrs.FailureResult("error deleting payment", err)
 	}
 
-	return cqrs.SuccessResult(
+	return *cqrs.SuccessResult(
 		command.paymentID.String(),
 		"payment deleted successfully",
 	)
@@ -109,20 +109,20 @@ func (h *paymentCommandHandler) DeletePayment(command DeletePaymentCommand) cqrs
 func (h *paymentCommandHandler) UpdatePayment(command UpdatePaymentCommand) cqrs.CommandResult {
 	payment, err := h.paymentRepository.FindByID(command.ctx, command.paymentID)
 	if err != nil {
-		return cqrs.FailureResult("error fetching payment", err)
+		return *cqrs.FailureResult("error fetching payment", err)
 	}
 
 	err = payment.Update(command.amount, command.paymentMethod, command.description, command.dueDate)
 	if err != nil {
-		return cqrs.FailureResult("error updating payment", err)
+		return *cqrs.FailureResult("error updating payment", err)
 	}
 
 	err = h.paymentRepository.Save(command.ctx, &payment)
 	if err != nil {
-		return cqrs.FailureResult("error saving payment", err)
+		return *cqrs.FailureResult("error saving payment", err)
 	}
 
-	return cqrs.SuccessResult(
+	return *cqrs.SuccessResult(
 		payment.ID().String(),
 		"payment updated successfully",
 	)
@@ -130,15 +130,15 @@ func (h *paymentCommandHandler) UpdatePayment(command UpdatePaymentCommand) cqrs
 
 func (h *paymentCommandHandler) MarkOverudePayments(command MarkOverduePaymentsCommand) cqrs.CommandResult {
 	pagination := page.PageInput{
-		PageSize:   100,
-		PageNumber: 1,
+		PageSize: 100,
+		Page:     1,
 	}
 
 	var updatedCount int
 	for {
 		paymentsPage, err := h.paymentRepository.FindByStatus(command.context, enum.PaymentStatusOverdue, pagination)
 		if err != nil {
-			return cqrs.FailureResult("failed to search payments", err)
+			return *cqrs.FailureResult("failed to search payments", err)
 		}
 
 		payments := paymentsPage.Items
@@ -154,14 +154,14 @@ func (h *paymentCommandHandler) MarkOverudePayments(command MarkOverduePaymentsC
 			updatedCount++
 		}
 
-		pagination.PageNumber++
+		pagination.Page++
 
 		if h.IsLastPage(pagination, paymentsPage.Metadata.TotalPages) {
 			break
 		}
 	}
 
-	return cqrs.SuccessResult("", fmt.Sprintf("Updated %d overdue payments", updatedCount))
+	return *cqrs.SuccessResult("", fmt.Sprintf("Updated %d overdue payments", updatedCount))
 }
 
 func (h *paymentCommandHandler) UpdatePaymentOverdued(ctx context.Context, payment *payment.Payment) error {
@@ -177,7 +177,7 @@ func (h *paymentCommandHandler) UpdatePaymentOverdued(ctx context.Context, payme
 }
 
 func (h *paymentCommandHandler) IsLastPage(pagination page.PageInput, totalPages int) bool {
-	return pagination.PageNumber >= totalPages
+	return pagination.Page >= totalPages
 }
 
 func (h *paymentCommandHandler) IsEmptyList(payments []payment.Payment) bool {

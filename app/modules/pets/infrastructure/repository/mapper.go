@@ -1,4 +1,4 @@
-package persistence
+package repository
 
 import (
 	"fmt"
@@ -7,19 +7,13 @@ import (
 	"clinic-vet-api/app/core/domain/enum"
 	"clinic-vet-api/app/core/domain/valueobject"
 	"clinic-vet-api/sqlc"
+
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
 func ToDomainPet(sqlPet sqlc.Pet) (*pet.Pet, error) {
-	petID, err := valueobject.NewPetID(int(sqlPet.ID))
-	if err != nil {
-		return nil, fmt.Errorf("invalid pet ID: %w", err)
-	}
-
-	ownerID, err := valueobject.NewOwnerID(int(sqlPet.OwnerID))
-	if err != nil {
-		return nil, fmt.Errorf("invalid owner ID: %w", err)
-	}
+	petID := valueobject.NewPetID(uint(sqlPet.ID))
+	ownerID := valueobject.NewCustomerID(uint(sqlPet.CustomerID))
 
 	opts := []pet.PetOption{
 		pet.WithName(sqlPet.Name),
@@ -27,7 +21,6 @@ func ToDomainPet(sqlPet sqlc.Pet) (*pet.Pet, error) {
 		pet.WithIsActive(sqlPet.IsActive),
 	}
 
-	// Agregar options para campos opcionales
 	if sqlPet.Photo.Valid {
 		opts = append(opts, pet.WithPhoto(&sqlPet.Photo.String))
 	}
@@ -102,7 +95,7 @@ func ToSqlCreateParam(pet *pet.Pet) *sqlc.CreatePetParams {
 		Color:              toPgTypeText(pet.Color()),
 		Microchip:          toPgTypeText(pet.Microchip()),
 		IsNeutered:         toPgTypeBool(pet.IsNeutered()),
-		OwnerID:            int32(pet.OwnerID().Value()),
+		CustomerID:         int32(pet.CustomerID().Value()),
 		Allergies:          toPgTypeText(pet.Allergies()),
 		CurrentMedications: toPgTypeText(pet.CurrentMedications()),
 		SpecialNeeds:       toPgTypeText(pet.SpecialNeeds()),
@@ -123,7 +116,7 @@ func ToSqlUpdateParam(pet *pet.Pet) *sqlc.UpdatePetParams {
 		Color:              toPgTypeText(pet.Color()),
 		Microchip:          toPgTypeText(pet.Microchip()),
 		IsNeutered:         toPgTypeBool(pet.IsNeutered()),
-		OwnerID:            int32(pet.OwnerID().Value()),
+		CustomerID:         int32(pet.CustomerID().Value()),
 		Allergies:          toPgTypeText(pet.Allergies()),
 		CurrentMedications: toPgTypeText(pet.CurrentMedications()),
 		SpecialNeeds:       toPgTypeText(pet.SpecialNeeds()),

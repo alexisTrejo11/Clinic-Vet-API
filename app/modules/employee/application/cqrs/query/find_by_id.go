@@ -10,6 +10,12 @@ type GetEmployeeByIDQuery struct {
 	EmployeeID valueobject.EmployeeID
 }
 
+func NewGetEmployeeByIDQuery(idUint uint) GetEmployeeByIDQuery {
+	return GetEmployeeByIDQuery{
+		EmployeeID: valueobject.NewEmployeeID(idUint),
+	}
+}
+
 type GetEmployeeByIDHandler struct {
 	employeeRepo repository.EmployeeRepository
 }

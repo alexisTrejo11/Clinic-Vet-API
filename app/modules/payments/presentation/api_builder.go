@@ -2,10 +2,11 @@ package paymentAPI
 
 import (
 	domainerr "clinic-vet-api/app/core/error"
-	repository "clinic-vet-api/app/core/repositories"
-	"clinic-vet-api/app/modules/payments/infrastructure/api/controller"
-	"clinic-vet-api/app/modules/payments/infrastructure/api/routes"
+	"clinic-vet-api/app/core/repository"
 	"clinic-vet-api/app/modules/payments/infrastructure/bus"
+	"clinic-vet-api/app/modules/payments/presentation/controller"
+	"clinic-vet-api/app/modules/payments/presentation/routes"
+
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )
@@ -53,9 +54,9 @@ func (f *PaymentAPIBuilder) Build() error {
 	}
 
 	commandBus := bus.NewPaymentCommandBus(f.config.PaymentRepo)
-	queryBus := bus.NewQueryBus(f.config.PaymentRepo)
-
-	controllers := f.createControllers(commandBus, queryBus)
+	queryBus := bus.NewPaymentQueryBus(f.config.PaymentRepo)
+	paymentBus := bus.NewPaymentBus(commandBus, queryBus)
+	controllers := f.createControllers(*paymentBus)
 
 	f.registerRoutes(controllers)
 
@@ -70,20 +71,19 @@ func (f *PaymentAPIBuilder) Build() error {
 	return nil
 }
 
-func (f *PaymentAPIBuilder) createControllers(commandBus *bus.PaymentCommandBus, queryBus *bus.PaymentQueryBus) *PaymentControllers {
+func (f *PaymentAPIBuilder) createControllers(paymentBus bus.PaymentBus) *PaymentControllers {
 	queryController := controller.NewPaymentQueryController(
 		f.config.Validator,
-		queryBus,
+		&paymentBus,
 	)
 
 	commandController := controller.NewPaymentController(
 		f.config.Validator,
-		commandBus,
+		&paymentBus,
 	)
 
 	clientController := controller.NewClientPaymentController(
 		f.config.Validator,
-		f.config.PaymentRepo,
 		queryController,
 	)
 

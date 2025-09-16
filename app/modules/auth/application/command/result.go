@@ -21,7 +21,7 @@ type AuthCommandResult struct {
 
 func FailureAuthResult(message string, err error) AuthCommandResult {
 	result := &AuthCommandResult{
-		CommandResult: cqrs.FailureResult(message, err),
+		CommandResult: *cqrs.FailureResult(message, err),
 		session:       SessionResponse{},
 	}
 	return *result
@@ -29,7 +29,7 @@ func FailureAuthResult(message string, err error) AuthCommandResult {
 
 func SuccessAuthResult(session *SessionResponse, userid, message string) AuthCommandResult {
 	result := &AuthCommandResult{
-		CommandResult: cqrs.SuccessResult(userid, message),
+		CommandResult: *cqrs.SuccessResult(userid, message),
 		session:       *session,
 	}
 	return *result

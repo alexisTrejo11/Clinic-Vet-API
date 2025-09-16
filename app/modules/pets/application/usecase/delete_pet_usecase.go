@@ -19,7 +19,7 @@ func NewDeletePetUseCase(repository repository.PetRepository) *DeletePetUseCase 
 }
 
 func (uc *DeletePetUseCase) Execute(cxt context.Context, petID valueobject.PetID, isSoftDelete bool) error {
-	pet, err := uc.repository.GetByID(cxt, petID)
+	pet, err := uc.repository.FindByID(cxt, petID)
 	if err != nil {
 		return err
 	}

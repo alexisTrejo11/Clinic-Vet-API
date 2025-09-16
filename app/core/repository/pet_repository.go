@@ -4,14 +4,15 @@ import (
 	"context"
 
 	"clinic-vet-api/app/core/domain/entity/pet"
+	"clinic-vet-api/app/core/domain/specification"
 	"clinic-vet-api/app/core/domain/valueobject"
 	"clinic-vet-api/app/shared/page"
 )
 
 type PetRepository interface {
-	FindByCriteria(ctx context.Context, criteria map[string]any) (page.Page[[]pet.Pet], error)
+	FindBySpecification(ctx context.Context, spec specification.PetSpecification) (page.Page[pet.Pet], error)
 	FindAllByCustomerID(ctx context.Context, customerID valueobject.CustomerID) ([]pet.Pet, error)
-	FindByCustomerID(ctx context.Context, customerID valueobject.CustomerID) (page.Page[[]pet.Pet], error)
+	FindByCustomerID(ctx context.Context, customerID valueobject.CustomerID, pageInput page.PageInput) (page.Page[pet.Pet], error)
 	FindByID(ctx context.Context, petID valueobject.PetID) (pet.Pet, error)
 	FindByIDAndCustomerID(ctx context.Context, id valueobject.PetID, customerID valueobject.CustomerID) (pet.Pet, error)
 

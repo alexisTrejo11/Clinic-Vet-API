@@ -2,6 +2,7 @@ package controller
 
 import (
 	"clinic-vet-api/app/shared/cqrs"
+
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )

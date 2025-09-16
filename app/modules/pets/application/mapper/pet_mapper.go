@@ -127,10 +127,10 @@ func ToResponses(pets []pet.Pet) []dto.PetResponse {
 	return dtos
 }
 
-func ToResponsesPage(petPage page.Page[[]pet.Pet]) page.Page[[]dto.PetResponse] {
-	items := petPage.Data
+func ToResponsesPage(petPage page.Page[pet.Pet]) page.Page[dto.PetResponse] {
+	items := petPage.Items
 	if len(items) == 0 {
-		return page.EmptyPage[[]dto.PetResponse]()
+		return page.EmptyPage[dto.PetResponse]()
 	}
 
 	dtos := ToResponses(items)

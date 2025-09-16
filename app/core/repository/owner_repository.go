@@ -1,12 +1,11 @@
 package repository
 
 import (
-	"context"
-
 	"clinic-vet-api/app/core/domain/entity/customer"
 	"clinic-vet-api/app/core/domain/specification"
 	"clinic-vet-api/app/core/domain/valueobject"
 	"clinic-vet-api/app/shared/page"
+	"context"
 )
 
 type CustomerRepository interface {
@@ -15,8 +14,6 @@ type CustomerRepository interface {
 	FindActive(ctx context.Context, pageInput page.PageInput) (page.Page[customer.Customer], error)
 
 	ExistsByID(ctx context.Context, id valueobject.CustomerID) (bool, error)
-	ExistsByPhone(ctx context.Context, phone string) (bool, error)
-	ExistsByEmail(ctx context.Context, email string) (bool, error)
 
 	Save(ctx context.Context, customer *customer.Customer) error
 	Update(ctx context.Context, customer *customer.Customer) error

@@ -10,60 +10,67 @@ import (
 	p "clinic-vet-api/app/shared/page"
 )
 
-type GetMedHistByIDQuery struct {
+type FindMedHistByIDQuery struct {
 	ID  valueobject.MedHistoryID
 	CTX context.Context
 }
 
-type GetMedHistBySpecQuery struct {
+func NewFindMedHistByIDQuery(id uint, ctx context.Context) *FindMedHistByIDQuery {
+	return &FindMedHistByIDQuery{
+		ID:  valueobject.NewMedHistoryID(id),
+		CTX: ctx,
+	}
+}
+
+type FindMedHistBySpecQuery struct {
 	Spec specification.MedicalHistorySpecification
 	CTX  context.Context
 }
 
-type GetAllMedHistQuery struct {
+type FindAllMedHistQuery struct {
 	PageInput p.PageInput
 	CTX       context.Context
 }
 
-type GetMedHistByEmployeeIDQuery struct {
+type FindMedHistByEmployeeIDQuery struct {
 	EmployeeID valueobject.EmployeeID
 	PageInput  p.PageInput
 	CTX        context.Context
 }
 
-type GetMedHistByPetIDQuery struct {
+type FindMedHistByPetIDQuery struct {
 	PetID     valueobject.PetID
 	PageInput p.PageInput
 	CTX       context.Context
 }
 
-type GetMedHistByCustomerIDQuery struct {
+type FindMedHistByCustomerIDQuery struct {
 	CustomerID valueobject.CustomerID
 	PageInput  p.PageInput
 	CTX        context.Context
 }
 
-type GetRecentMedHistByPetIDQuery struct {
+type FindRecentMedHistByPetIDQuery struct {
 	PetID valueobject.PetID
 	Limit int
 	CTX   context.Context
 }
 
-type GetMedHistByDateRangeQuery struct {
+type FindMedHistByDateRangeQuery struct {
 	StartDate time.Time
 	EndDate   time.Time
 	PageInput p.PageInput
 	CTX       context.Context
 }
 
-type GetMedHistByPetAndDateRangeQuery struct {
+type FindMedHistByPetAndDateRangeQuery struct {
 	PetID     valueobject.PetID
 	StartDate time.Time
 	EndDate   time.Time
 	CTX       context.Context
 }
 
-type GetMedHistByDiagnosisQuery struct {
+type FindMedHistByDiagnosisQuery struct {
 	Diagnosis string
 	PageInput p.PageInput
 	CTX       context.Context

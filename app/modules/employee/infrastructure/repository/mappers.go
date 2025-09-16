@@ -4,6 +4,7 @@ import (
 	"clinic-vet-api/app/core/domain/entity/employee"
 	"clinic-vet-api/app/core/domain/enum"
 	"clinic-vet-api/app/core/domain/valueobject"
+	"clinic-vet-api/db/models"
 	"clinic-vet-api/sqlc"
 	"database/sql"
 	"encoding/json"
@@ -12,10 +13,11 @@ import (
 	"log"
 	"time"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-func SqlcEmployeeToDomain(sql sqlc.Employee) (*employee.Employee, error) {
+func sqlcRowToEntity(sql sqlc.Employee) (*employee.Employee, error) {
 	if sql.FirstName == "" || sql.LastName == "" {
 		return nil, errors.New("first name and last name are required")
 	}
@@ -35,13 +37,11 @@ func SqlcEmployeeToDomain(sql sqlc.Employee) (*employee.Employee, error) {
 		return nil, fmt.Errorf("error creating person name: %w", err)
 	}
 
-	// Mapeo de la especialidad
 	specialty, err := enum.ParseVetSpecialty(string(sql.Speciality))
 	if err != nil {
 		return nil, fmt.Errorf("invalid specialty '%s': %w", sql.Speciality, err)
 	}
 
-	// Mapeo del schedule
 	var schedule *valueobject.Schedule
 	if sql.ScheduleJson != nil {
 		schedule, err = UnmarshalEmployeeSchedule(sql.ScheduleJson)
@@ -54,14 +54,12 @@ func SqlcEmployeeToDomain(sql sqlc.Employee) (*employee.Employee, error) {
 		schedule = &valueobject.Schedule{}
 	}
 
-	// Mapeo del userID
 	var userID *valueobject.UserID
 	if sql.UserID.Valid {
 		userIDVal := valueobject.NewUserID(uint(sql.UserID.Int32))
 		userID = &userIDVal
 	}
 
-	// Crear options
 	opts := []employee.EmployeeOption{
 		employee.WithName(name),
 		employee.WithPhoto(sql.Photo),
@@ -82,7 +80,18 @@ func SqlcEmployeeToDomain(sql sqlc.Employee) (*employee.Employee, error) {
 	return employee, nil
 }
 
-// Estructura temporal para parsear el JSON de PostgreSQL
+func sqlcRowsToEntities(rows []sqlc.Employee) ([]employee.Employee, error) {
+	employees := make([]employee.Employee, 0, len(rows))
+	for _, row := range rows {
+		emp, err := sqlcRowToEntity(row)
+		if err != nil {
+			return nil, fmt.Errorf("error converting row to entity: %w", err)
+		}
+		employees = append(employees, *emp)
+	}
+	return employees, nil
+}
+
 type postgresSchedule struct {
 	Monday    *postgresDaySchedule `json:"monday,omitempty"`
 	Tuesday   *postgresDaySchedule `json:"tuesday,omitempty"`
@@ -207,9 +216,7 @@ func getStringFromNullString(nullString sql.NullString, defaultValue string) str
 	return defaultValue
 }
 
-func (r *SqlcEmployeeRepository) scanEmployeeFromRow(rows *sql.Rows, employee *employee.Employee) error {
-	// Esta implementación depende de tu schema exacto
-	// Aquí un ejemplo genérico:
+func (r *SqlcEmployeeRepository) scanEmployeeFromRow(row pgx.Row, employee *employee.Employee) error {
 	var (
 		id              int32
 		firstName       string
@@ -226,7 +233,7 @@ func (r *SqlcEmployeeRepository) scanEmployeeFromRow(rows *sql.Rows, employee *e
 		updatedAt       sql.NullTime
 	)
 
-	err := rows.Scan(
+	err := row.Scan(
 		&id, &firstName, &lastName, &licenseNumber, &photo,
 		&specialty, &yearsExperience, &consultationFee, &isActive,
 		&userID, &scheduleJSON, &createdAt, &updatedAt,
@@ -242,26 +249,26 @@ func (r *SqlcEmployeeRepository) scanEmployeeFromRow(rows *sql.Rows, employee *e
 	return nil
 }
 
-func EmployeeToUpdateParams(employee *employee.Employee) *sqlc.UpdateEmployeeParams {
+func entityToUpdateParams(employee *employee.Employee) *sqlc.UpdateEmployeeParams {
 	return &sqlc.UpdateEmployeeParams{
 		ID:                int32(employee.ID().Value()),
 		FirstName:         employee.Name().FirstName,
 		LastName:          employee.Name().LastName,
 		LicenseNumber:     employee.LicenseNumber(),
 		Photo:             employee.Photo(),
-		Speciality:        enum.VetSpecialty(employee.Specialty().DisplayName()),
+		Speciality:        models.VeterinarianSpeciality(employee.Specialty().String()),
 		YearsOfExperience: int32(employee.YearsExperience()),
 		IsActive:          employee.IsActive(),
 	}
 }
 
-func EmployeeToCreateParams(employee *employee.Employee) *sqlc.CreateEmployeeParams {
+func entityToCreateParams(employee *employee.Employee) *sqlc.CreateEmployeeParams {
 	return &sqlc.CreateEmployeeParams{
 		FirstName:         employee.Name().FirstName,
 		LastName:          employee.Name().LastName,
 		LicenseNumber:     employee.LicenseNumber(),
 		Photo:             employee.Photo(),
-		Speciality:        enum.EmployeeSpecialty(employee.Specialty().String()),
+		Speciality:        models.VeterinarianSpeciality(employee.Specialty().String()),
 		YearsOfExperience: int32(employee.YearsExperience()),
 		IsActive:          employee.IsActive(),
 	}
