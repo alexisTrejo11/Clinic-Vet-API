@@ -9,37 +9,37 @@ import (
 	"clinic-vet-api/app/shared/cqrs"
 )
 
-type GetUserByPhoneQuery struct {
+type FindUserByPhoneQuery struct {
 	phone          valueobject.PhoneNumber
 	ctx            context.Context
 	includeProfile bool
 }
 
-func NewGetUserByPhoneQuery(ctx context.Context, phone string, includeProfile bool) (*GetUserByPhoneQuery, error) {
+func NewFindUserByPhoneQuery(ctx context.Context, phone string, includeProfile bool) (*FindUserByPhoneQuery, error) {
 	phoneVO, err := valueobject.NewPhoneNumber(phone)
 	if err != nil {
 		return nil, err
 	}
 
-	return &GetUserByPhoneQuery{
+	return &FindUserByPhoneQuery{
 		phone:          phoneVO,
 		ctx:            ctx,
 		includeProfile: includeProfile,
 	}, nil
 }
 
-type GetUserByPhoneHandler struct {
+type FindUserByPhoneHandler struct {
 	userRepository repository.UserRepository
 }
 
-func NewGetUserByPhoneHandler(userRepository repository.UserRepository) cqrs.QueryHandler[UserResult] {
-	return &GetUserByPhoneHandler{
+func NewFindUserByPhoneHandler(userRepository repository.UserRepository) cqrs.QueryHandler[UserResult] {
+	return &FindUserByPhoneHandler{
 		userRepository: userRepository,
 	}
 }
 
-func (h *GetUserByPhoneHandler) Handle(q cqrs.Query) (UserResult, error) {
-	query, valid := q.(GetUserByPhoneQuery)
+func (h *FindUserByPhoneHandler) Handle(q cqrs.Query) (UserResult, error) {
+	query, valid := q.(FindUserByPhoneQuery)
 	if !valid {
 		return UserResult{}, errors.New("invalid query type")
 	}

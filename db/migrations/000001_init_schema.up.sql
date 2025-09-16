@@ -212,6 +212,7 @@ CREATE TABLE IF NOT EXISTS users (
     profile_id INT,
     customer_id INT,
     employee_id INT,
+    last_login TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
     deleted_at TIMESTAMP
@@ -267,20 +268,49 @@ CREATE TABLE IF NOT EXISTS payments (
     method payment_method NOT NULL DEFAULT 'cash',
     transaction_id VARCHAR(255) UNIQUE,
     description TEXT,
-    duedate TIMESTAMP WITH TIME ZONE NOT NULL,
+    due_date TIMESTAMP WITH TIME ZONE NOT NULL,
     paid_at TIMESTAMP WITH TIME ZONE,
     refunded_at TIMESTAMP WITH TIME ZONE,
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    deleted_at TIMESTAMP NULL,
+    deleted_at TIMESTAMP WITH TIME ZONE NULL,
     paid_from_customer INT,
     paid_to_employee INT,
-    FOREIGN KEY (padid_from_customer) REFERENCES customers(id) ON DELETE CASCADE,
-    FOREIGN KEY (paid_to_employee) REFERENCES employee(id) ON DELETE CASCADE
+    appointment_id INT, 
+    invoice_id VARCHAR(100), 
+    refund_amount NUMERIC(10, 2) CHECK (refund_amount >= 0),
+    failure_reason TEXT,
+    
+    FOREIGN KEY (paid_from_customer) REFERENCES customers(id) ON DELETE SET NULL,
+    FOREIGN KEY (paid_to_employee) REFERENCES employees(id) ON DELETE SET NULL,
+    FOREIGN KEY (appointment_id) REFERENCES appointments(id) ON DELETE SET NULL,
+    
+    CONSTRAINT chk_refund_amount CHECK (refund_amount IS NULL OR refund_amount <= amount),
+    CONSTRAINT chk_paid_date CHECK (paid_at IS NULL OR status = 'paid' OR status = 'refunded'),
+    CONSTRAINT chk_refund_date CHECK (refunded_at IS NULL OR status = 'refunded')
 );
 
+-- Indexes
+CREATE INDEX IF NOT EXISTS idx_payments_status ON payments(status);
+CREATE INDEX IF NOT EXISTS idx_payments_customer_id ON payments(paid_from_customer);
+CREATE INDEX IF NOT EXISTS idx_payments_employee_id ON payments(paid_to_employee);
+CREATE INDEX IF NOT EXISTS idx_payments_method ON payments(method);
+CREATE INDEX IF NOT EXISTS idx_payments_created_at ON payments(created_at);
+CREATE INDEX IF NOT EXISTS idx_payments_due_date ON payments(due_date);
+CREATE INDEX IF NOT EXISTS idx_payments_paid_at ON payments(paid_at);
+CREATE INDEX IF NOT EXISTS idx_payments_transaction_id ON payments(transaction_id);
+CREATE INDEX IF NOT EXISTS idx_payments_appointment_id ON payments(appointment_id);
+CREATE INDEX IF NOT EXISTS idx_payments_invoice_id ON payments(invoice_id);
+CREATE INDEX IF NOT EXISTS idx_payments_is_active ON payments(is_active) WHERE is_active = TRUE;
+CREATE INDEX IF NOT EXISTS idx_payments_deleted_at ON payments(deleted_at) WHERE deleted_at IS NULL;
 
+CREATE INDEX IF NOT EXISTS idx_payments_customer_status ON payments(paid_from_customer, status);
+CREATE INDEX IF NOT EXISTS idx_payments_status_date ON payments(status, created_at);
+CREATE INDEX IF NOT EXISTS idx_payments_customer_date ON payments(paid_from_customer, created_at);
+CREATE INDEX IF NOT EXISTS idx_payments_due_status ON payments(due_date, status) WHERE status != 'paid';
+
+-- Create Appointments Table
 CREATE TABLE IF NOT EXISTS appointments(
     id SERIAL PRIMARY KEY,
     clinic_service clinic_service NOT NULL,

@@ -7,6 +7,7 @@ import (
 	httpError "clinic-vet-api/app/shared/error/infrastructure/http"
 	ginUtils "clinic-vet-api/app/shared/gin_utils"
 	"clinic-vet-api/app/shared/response"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -26,7 +27,7 @@ func (ctrl *UserAdminController) GetUserByID(c *gin.Context) {
 		return
 	}
 
-	getUserByIDQuery := query.NewGetUserByIDQuery(c.Request.Context(), userID, false)
+	getUserByIDQuery := query.NewFindUserByIDQuery(c.Request.Context(), userID, false)
 	userPage, err := ctrl.queryBus.Execute(getUserByIDQuery)
 	if err != nil {
 		response.ApplicationError(c, err)
@@ -46,7 +47,7 @@ func (ctrl *UserAdminController) GetUserByEmail(c *gin.Context) {
 		return
 	}
 
-	getUserByEmailQuery, err := query.NewGetUserByEmailQuery(c.Request.Context(), email, false)
+	getUserByEmailQuery, err := query.NewFindUserByEmailQuery(c.Request.Context(), email, false)
 	if err != nil {
 		response.ApplicationError(c, err)
 		return
@@ -67,7 +68,7 @@ func (c *UserAdminController) GetUserByPhone(ctx *gin.Context) {
 		return
 	}
 
-	getUserByPhoneQuery, err := query.NewGetUserByPhoneQuery(ctx.Request.Context(), phone, false)
+	getUserByPhoneQuery, err := query.NewFindUserByPhoneQuery(ctx.Request.Context(), phone, false)
 	if err != nil {
 		response.ApplicationError(ctx, err)
 		return

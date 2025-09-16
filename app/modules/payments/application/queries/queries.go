@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"clinic-vet-api/app/core/domain/enum"
+	"clinic-vet-api/app/core/domain/specification"
 	"clinic-vet-api/app/core/domain/valueobject"
 	apperror "clinic-vet-api/app/shared/error/application"
 	"clinic-vet-api/app/shared/page"
@@ -88,10 +89,10 @@ func NewFindPaymentsByCustomerQuery(ctx context.Context, customerIDInt uint, pag
 
 type FindPaymentsBySpecification struct {
 	ctx  context.Context
-	spec any
+	spec specification.PaymentSpecification
 }
 
-func NewFindPaymentsBySpecification(ctx context.Context, spec any) *FindPaymentsBySpecification {
+func NewFindPaymentsBySpecification(ctx context.Context, spec specification.PaymentSpecification) *FindPaymentsBySpecification {
 	return &FindPaymentsBySpecification{
 		ctx:  ctx,
 		spec: spec,

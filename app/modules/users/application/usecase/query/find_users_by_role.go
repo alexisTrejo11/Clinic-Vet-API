@@ -10,37 +10,37 @@ import (
 	p "clinic-vet-api/app/shared/page"
 )
 
-type ListUsersByRoleQuery struct {
+type FindUsersByRoleQuery struct {
 	role       enum.UserRole
 	pagination p.PageInput
 	ctx        context.Context
 }
 
-func NewListUsersByRoleQuery(ctx context.Context, role string, pagination p.PageInput) (*ListUsersByRoleQuery, error) {
+func NewFindUsersByRoleQuery(ctx context.Context, role string, pagination p.PageInput) (*FindUsersByRoleQuery, error) {
 	roleEnum, err := enum.ParseUserRole(role)
 	if err != nil {
 		return nil, err
 	}
 
-	return &ListUsersByRoleQuery{
+	return &FindUsersByRoleQuery{
 		role:       roleEnum,
 		pagination: pagination,
 		ctx:        ctx,
 	}, nil
 }
 
-type ListUsersByRoleHandler struct {
+type FindUsersByRoleHandler struct {
 	userRepository repository.UserRepository
 }
 
-func NewListUsersByRoleHandler(userRepository repository.UserRepository) cqrs.QueryHandler[p.Page[UserResult]] {
-	return &ListUsersByRoleHandler{
+func NewFindUsersByRoleHandler(userRepository repository.UserRepository) cqrs.QueryHandler[p.Page[UserResult]] {
+	return &FindUsersByRoleHandler{
 		userRepository: userRepository,
 	}
 }
 
-func (h *ListUsersByRoleHandler) Handle(q cqrs.Query) (p.Page[UserResult], error) {
-	query, valid := q.(ListUsersByRoleQuery)
+func (h *FindUsersByRoleHandler) Handle(q cqrs.Query) (p.Page[UserResult], error) {
+	query, valid := q.(FindUsersByRoleQuery)
 	if !valid {
 		return p.Page[UserResult]{}, errors.New("invalid query type")
 	}

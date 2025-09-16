@@ -15,11 +15,11 @@ type UserCommandBus struct {
 	handlers map[reflect.Type]cqrs.CommandHandler
 }
 
-func NewUserCommandBus(userRepo repository.UserRepository) *UserCommandBus {
+func NewUserCommandBus(userRepo repository.UserRepository, service *service.UserSecurityService) *UserCommandBus {
 	bus := &UserCommandBus{
 		handlers: make(map[reflect.Type]cqrs.CommandHandler),
 	}
-	bus.RegisterCommands(userRepo)
+	bus.RegisterCommands(userRepo, service)
 	return bus
 }
 
@@ -41,10 +41,10 @@ func (d *UserCommandBus) Execute(command cqrs.Command) cqrs.CommandResult {
 	return handler.Handle(command)
 }
 
-func (d *UserCommandBus) RegisterCommands(userRepo repository.UserRepository) {
+func (d *UserCommandBus) RegisterCommands(userRepo repository.UserRepository, service *service.UserSecurityService) {
 	d.Register(reflect.TypeOf(command.ChangePasswordCommand{}), command.NewChangePasswordHandler(userRepo, &password.PasswordEncoderImpl{}))
 	d.Register(reflect.TypeOf(command.ChangeEmailCommand{}), command.NewChangeEmailHandler(userRepo))
 	d.Register(reflect.TypeOf(command.ChangePasswordCommand{}), command.NewChangePasswordHandler(userRepo, &password.PasswordEncoderImpl{}))
 	d.Register(reflect.TypeOf(command.DeleteUserCommand{}), command.NewDeleteUserHandler(userRepo))
-	d.Register(reflect.TypeOf(command.CreateUserCommand{}), command.NewCreateUserHandler(userRepo, *service.NewUserSecurityService(userRepo)))
+	d.Register(reflect.TypeOf(command.CreateUserCommand{}), command.NewCreateUserHandler(userRepo, *service))
 }

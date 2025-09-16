@@ -1,15 +1,12 @@
 package controller
 
 import (
-	"clinic-vet-api/app/shared/cqrs"
-
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )
 
 type AdminPaymentController struct {
 	validator         *validator.Validate
-	commandBus        cqrs.CommandBus
 	queryController   *PaymentQueryController
 	paymentController *PaymentController
 }

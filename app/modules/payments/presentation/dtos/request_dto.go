@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"clinic-vet-api/app/core/domain/enum"
+	"clinic-vet-api/app/core/domain/specification"
 	query "clinic-vet-api/app/modules/payments/application/queries"
 	"clinic-vet-api/app/shared/page"
 )
@@ -18,10 +19,10 @@ type CreatePaymentRequest struct {
 	// Minimum: 1
 	AppointmentID int `json:"appointment_id" validate:"required,min=1" example:"123"`
 
-	// User ID (owner) making the payment
+	// Customer ID making the payment
 	// Required: true
 	// Minimum: 1
-	UserID int `json:"owner_id" validate:"required,min=1" example:"456"`
+	CustomerID int `json:"customer_id" validate:"required,min=1" example:"456"`
 
 	// Payment amount
 	// Required: true
@@ -31,11 +32,16 @@ type CreatePaymentRequest struct {
 	// Currency code (3 letters)
 	// Required: true
 	// Length: 3
-	Currency string `json:"currency" validate:"required,len=3" example:"USD"`
+	Currency string `json:"currency" validate:"required,len=3" example:"MXN"`
 
 	// Payment method used
 	// Required: true
-	PaymentMethod string `json:"payment_method" validate:"required" example:"credit_card"`
+	// Enum: cash,credit_card,debit_card,bank_transfer,digital_wallet
+	PaymentMethod string `json:"payment_method" validate:"required,oneof=cash credit_card debit_card bank_transfer digital_wallet" example:"credit_card"`
+
+	// Payment status
+	// Enum: pending,paid,failed,refunded,cancelled
+	Status string `json:"status,omitempty" validate:"omitempty,oneof=pending paid failed refunded cancelled" example:"pending"`
 
 	// Optional payment description
 	Description *string `json:"description,omitempty" example:"Veterinary consultation payment"`
@@ -45,6 +51,9 @@ type CreatePaymentRequest struct {
 
 	// Optional transaction ID from payment gateway
 	TransactionID *string `json:"transaction_id,omitempty" example:"txn_123456789"`
+
+	// Optional invoice ID
+	InvoiceID *string `json:"invoice_id,omitempty" example:"INV-001"`
 }
 
 // UpdatePaymentRequest represents the request to update a payment
@@ -158,5 +167,5 @@ type PaymentSearchRequest struct {
 
 // TODO: IMPLEMENT
 func (r *PaymentSearchRequest) ToQuery(ctx context.Context) (*query.FindPaymentsBySpecification, error) {
-	return query.NewFindPaymentsBySpecification(ctx, ""), nil
+	return query.NewFindPaymentsBySpecification(ctx, specification.PaymentSpecification{}), nil
 }

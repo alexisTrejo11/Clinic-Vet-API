@@ -292,14 +292,14 @@ func (ps *PaymentSpecification) evaluateCondition(payment *payment.Payment, cond
 		return ps.compareValues(payment.ID(), condition.Value, condition.Operator)
 	case "appointment_id":
 		return ps.compareValues(payment.AppointmentID(), condition.Value, condition.Operator)
-	case "user_id":
-		return ps.compareValues(payment.UserID(), condition.Value, condition.Operator)
+	case "customer_id":
+		return ps.compareValues(payment.PaidFromCustomer(), condition.Value, condition.Operator)
 	case "amount":
 		return ps.compareValues(payment.Amount(), condition.Value, condition.Operator)
 	case "currency":
 		return ps.compareValues(payment.Currency(), condition.Value, condition.Operator)
 	case "payment_method":
-		return ps.compareValues(payment.PaymentMethod(), condition.Value, condition.Operator)
+		return ps.compareValues(payment.Method(), condition.Value, condition.Operator)
 	case "status":
 		if condition.Operator == "IN" {
 			statuses, ok := condition.Value.([]enum.PaymentStatus)

@@ -9,37 +9,37 @@ import (
 	"clinic-vet-api/app/shared/cqrs"
 )
 
-type GetUserByEmailQuery struct {
+type FindUserByEmailQuery struct {
 	email          valueobject.Email
 	includeProfile bool
 	ctx            context.Context
 }
 
-func NewGetUserByEmailQuery(ctx context.Context, email string, includeProfile bool) (*GetUserByEmailQuery, error) {
+func NewFindUserByEmailQuery(ctx context.Context, email string, includeProfile bool) (*FindUserByEmailQuery, error) {
 	emailVO, err := valueobject.NewEmail(email)
 	if err != nil {
 		return nil, err
 	}
 
-	return &GetUserByEmailQuery{
+	return &FindUserByEmailQuery{
 		email:          emailVO,
 		includeProfile: includeProfile,
 		ctx:            ctx,
 	}, nil
 }
 
-type GetUserByEmailHandler struct {
+type FindUserByEmailHandler struct {
 	userRepository repository.UserRepository
 }
 
-func NewGetUserByEmailHandler(userRepository repository.UserRepository) cqrs.QueryHandler[UserResult] {
-	return &GetUserByEmailHandler{
+func NewFindUserByEmailHandler(userRepository repository.UserRepository) cqrs.QueryHandler[UserResult] {
+	return &FindUserByEmailHandler{
 		userRepository: userRepository,
 	}
 }
 
-func (h *GetUserByEmailHandler) Handle(q cqrs.Query) (UserResult, error) {
-	query, ok := q.(GetUserByEmailQuery)
+func (h *FindUserByEmailHandler) Handle(q cqrs.Query) (UserResult, error) {
+	query, ok := q.(FindUserByEmailQuery)
 	if !ok {
 		return UserResult{}, errors.New("invalid query type")
 	}

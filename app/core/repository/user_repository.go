@@ -34,7 +34,6 @@ type UserRepository interface {
 	ExistsByCustomerID(ctx context.Context, customerID valueobject.CustomerID) (bool, error)
 
 	Save(ctx context.Context, user *user.User) error
-	Update(ctx context.Context, user *user.User) error
 	SoftDelete(ctx context.Context, id valueobject.UserID) error
 	HardDelete(ctx context.Context, id valueobject.UserID) error
 

@@ -88,15 +88,19 @@ type Payment struct {
 	Method           models.PaymentMethod
 	TransactionID    pgtype.Text
 	Description      pgtype.Text
-	Duedate          pgtype.Timestamptz
+	DueDate          pgtype.Timestamptz
 	PaidAt           pgtype.Timestamptz
 	RefundedAt       pgtype.Timestamptz
 	IsActive         bool
 	CreatedAt        pgtype.Timestamptz
 	UpdatedAt        pgtype.Timestamptz
-	DeletedAt        pgtype.Timestamp
+	DeletedAt        pgtype.Timestamptz
 	PaidFromCustomer pgtype.Int4
 	PaidToEmployee   pgtype.Int4
+	AppointmentID    pgtype.Int4
+	InvoiceID        pgtype.Text
+	RefundAmount     pgtype.Numeric
+	FailureReason    pgtype.Text
 }
 
 type Pet struct {
@@ -159,6 +163,7 @@ type User struct {
 	ProfileID   pgtype.Int4
 	CustomerID  pgtype.Int4
 	EmployeeID  pgtype.Int4
+	LastLogin   pgtype.Timestamptz
 	CreatedAt   pgtype.Timestamptz
 	UpdatedAt   pgtype.Timestamptz
 	DeletedAt   pgtype.Timestamp

@@ -40,7 +40,7 @@ func (ctrl *PaymentController) CreatePayment(c *gin.Context) {
 		return
 	}
 
-	createCommand, err := req.ToCreatePaymentCommand()
+	createCommand, err := req.ToCreatePaymentCommand(c.Request.Context())
 	if err != nil {
 		response.ApplicationError(c, err)
 		return

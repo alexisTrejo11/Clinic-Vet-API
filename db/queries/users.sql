@@ -30,31 +30,23 @@ SET
 WHERE id = $1
 RETURNING *;
 
--- name: GetUserByID :one
+-- name: FindUserByID :one
 SELECT *
 FROM users
 WHERE id = $1 
 AND deleted_at IS NULL;
 
--- name: GetUserByEmail :one
+-- name: FindUserByEmail :one
 SELECT *
 FROM users
 WHERE email = $1
 AND deleted_at IS NULL;
 
--- name: GetUserByPhoneNumber :one
+-- name: FindUserByPhoneNumber :one
 SELECT *
 FROM users
 WHERE phone_number = $1
 AND deleted_at IS NULL;
-
--- name: ListUsers :many
-SELECT *
-FROM users
-WHERE deleted_at IS NULL
-ORDER BY created_at DESC
-LIMIT $1
-OFFSET $2;
 
 -- name: SoftDeleteUser :exec
 UPDATE users
@@ -90,7 +82,7 @@ SELECT COUNT(*) > 0
 FROM users
 WHERE id = $1;
 
--- name: ListUsersByRole :many
+-- name: FindUsersByRole :many
 SELECT *
 FROM users
 WHERE role = $1
@@ -104,3 +96,114 @@ SELECT COUNT(*)
 FROM users
 WHERE role = $1
 AND deleted_at IS NULL;
+
+-- name: CountActiveUsers :one
+SELECT COUNT(*)
+FROM users
+WHERE status = 'active' 
+AND deleted_at IS NULL;
+
+-- name: CountAllUsers :one
+SELECT COUNT(*)
+FROM users
+WHERE deleted_at IS NULL;
+
+-- name: CountUsersByStatus :one
+SELECT COUNT(*)
+FROM users
+WHERE status = $1
+AND deleted_at IS NULL;
+
+-- name: ExistsUserByCustomerID :one
+SELECT COUNT(*) > 0
+FROM users
+WHERE customer_id = $1
+AND deleted_at IS NULL;
+
+-- name: ExistsUserByEmployeeID :one
+SELECT COUNT(*) > 0
+FROM users
+WHERE employee_id = $1
+AND deleted_at IS NULL;
+
+-- name: FindActiveUsers :many
+SELECT *
+FROM users
+WHERE status = 'active'
+AND deleted_at IS NULL
+ORDER BY created_at DESC
+LIMIT $1 OFFSET $2;
+
+-- name: FindAllUsers :many
+SELECT *
+FROM users
+WHERE deleted_at IS NULL
+ORDER BY created_at DESC
+LIMIT $1 OFFSET $2;
+
+-- name: FindUserByCustomerID :one
+SELECT *
+FROM users
+WHERE customer_id = $1
+AND deleted_at IS NULL;
+
+-- name: FindUserByEmployeeID :one
+SELECT *
+FROM users
+WHERE employee_id = $1
+AND deleted_at IS NULL;
+
+-- name: FindInactiveUsers :many
+SELECT *
+FROM users
+WHERE status != 'active'
+AND deleted_at IS NULL
+ORDER BY created_at DESC
+LIMIT $1 OFFSET $2;
+
+-- name: FindRecentlyLoggedInUsers :many
+SELECT *
+FROM users
+WHERE last_login >= $1
+AND deleted_at IS NULL
+ORDER BY last_login DESC
+LIMIT $2 OFFSET $3;
+
+-- name: FindUsersBySpecification :many
+SELECT *
+FROM users
+WHERE deleted_at IS NULL
+AND ($1::text IS NULL OR email ILIKE '%' || $1 || '%')
+AND ($2::text IS NULL OR phone_number ILIKE '%' || $2 || '%')
+AND ($3::text IS NULL OR role = $3)
+AND ($4::text IS NULL OR status = $4)
+AND ($5::timestamptz IS NULL OR last_login >= $5)
+AND ($6::timestamptz IS NULL OR created_at >= $6)
+ORDER BY created_at DESC
+LIMIT $7 OFFSET $8;
+
+-- name: CountUsersBySpecification :one
+SELECT COUNT(*)
+FROM users
+WHERE deleted_at IS NULL
+AND ($1::text IS NULL OR email ILIKE '%' || $1 || '%')
+AND ($2::text IS NULL OR phone_number ILIKE '%' || $2 || '%')
+AND ($3::text IS NULL OR role = $3)
+AND ($4::text IS NULL OR status = $4)
+AND ($5::timestamptz IS NULL OR last_login >= $5)
+AND ($6::timestamptz IS NULL OR created_at >= $6);
+
+-- name: UpdateUserPassword :exec
+UPDATE users
+SET 
+    password = $2,
+    updated_at = CURRENT_TIMESTAMP,
+    password_changed_at = CURRENT_TIMESTAMP
+WHERE id = $1;
+
+-- name: UpdateUserStatus :exec
+UPDATE users
+SET 
+    status = $2,
+    updated_at = CURRENT_TIMESTAMP
+WHERE id = $1;

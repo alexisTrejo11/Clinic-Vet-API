@@ -17,12 +17,12 @@ import (
 )
 
 type MedicalHistoryModuleConfig struct {
-	Router    *gin.Engine
-	Queries   *sqlc.Queries
-	Validator *validator.Validate
-	OwnerRepo *repository.CustomerRepository
-	VetRepo   *repository.EmployeeRepository
-	PetRepo   *repository.PetRepository
+	Router       *gin.Engine
+	Queries      *sqlc.Queries
+	Validator    *validator.Validate
+	CustomerRepo *repository.CustomerRepository
+	EmployeeRepo *repository.EmployeeRepository
+	PetRepo      *repository.PetRepository
 }
 
 type MedicalHistoryModuleComponents struct {
@@ -100,11 +100,11 @@ func (m *MedicalHistoryModule) validateConfig() error {
 	if m.config.Validator == nil {
 		return fmt.Errorf("validator cannot be nil")
 	}
-	if m.config.OwnerRepo == nil {
-		return fmt.Errorf("owner repository cannot be nil")
+	if m.config.CustomerRepo == nil {
+		return fmt.Errorf("customer repository cannot be nil")
 	}
-	if m.config.VetRepo == nil {
-		return fmt.Errorf("veterinarian repository cannot be nil")
+	if m.config.EmployeeRepo == nil {
+		return fmt.Errorf("employee repository cannot be nil")
 	}
 	if m.config.PetRepo == nil {
 		return fmt.Errorf("pet repository cannot be nil")

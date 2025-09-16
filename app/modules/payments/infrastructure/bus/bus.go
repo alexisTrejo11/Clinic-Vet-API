@@ -1,15 +1,12 @@
 package bus
 
-import (
-	"clinic-vet-api/app/modules/payments/application/command"
-	query "clinic-vet-api/app/modules/payments/application/queries"
-)
+import "clinic-vet-api/app/core/repository"
 
 type PaymentBus struct {
 	CommandBus PaymentCommandBus
 	QueryBus   PaymentQueryBus
 }
 
-func NewPaymentBus(commandHandler command.PaymentCommandHandler, queryHandler query.PaymentQueryHandler) *PaymentBus {
-	return &PaymentBus{CommandBus: *NewPaymentCommandBus(commandHandler), QueryBus: *NewPaymentQueryBus(queryHandler)}
+func NewPaymentBus(paymentRepository repository.PaymentRepository) *PaymentBus {
+	return &PaymentBus{CommandBus: *NewPaymentCommandBus(paymentRepository), QueryBus: *NewPaymentQueryBus(paymentRepository)}
 }

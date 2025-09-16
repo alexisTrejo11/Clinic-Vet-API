@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"log"
 
-	medHistoryAPI "clinic-vet-api/app/modules/medical/infrastructure/api"
-	ownerAPI "clinic-vet-api/app/modules/owners/infrastructure/api"
-	petAPI "clinic-vet-api/app/modules/pets/infrastructure/api"
-	sqlcPetRepository "clinic-vet-api/app/modules/pets/infrastructure/persistence"
-	userAPI "clinic-vet-api/app/modules/users/infrastructure/api"
-	vetAPI "clinic-vet-api/app/modules/veterinarians/infrastructure/api"
+	customerAPI "clinic-vet-api/app/modules/customer/presentation"
+	vetAPI "clinic-vet-api/app/modules/employee/presentation"
+	medHistoryAPI "clinic-vet-api/app/modules/medical/presentation"
+	petRepo "clinic-vet-api/app/modules/pets/infrastructure/repository"
+	petAPI "clinic-vet-api/app/modules/pets/presentation"
+	userAPI "clinic-vet-api/app/modules/users/presentation"
 	"clinic-vet-api/sqlc"
 
 	"github.com/gin-gonic/gin"
@@ -23,10 +23,10 @@ func BootstrapAPIModules(
 	db *pgxpool.Pool,
 	validator *validator.Validate,
 ) error {
-	petRepository := sqlcPetRepository.NewSqlcPetRepository(queries)
+	petRepository := petRepo.NewSqlcPetRepository(queries)
 
-	// Bootstrap Vet Module
-	vetModule := vetAPI.NewVeterinarianModule(&vetAPI.VeterinarianAPIConfig{
+	// Bootstrap Employee Module
+	vetModule := vetAPI.NewEmployeeModule(&vetAPI.EmployeeAPIConfig{
 		Router:        router,
 		DB:            db,
 		Queries:       queries,
@@ -37,29 +37,29 @@ func BootstrapAPIModules(
 		return fmt.Errorf("failed to bootstrap vet module: %w", err)
 	}
 
-	// Bootstrap Owner Module
-	ownerModule := ownerAPI.NewOwnerAPIModule(&ownerAPI.OwnerAPIConfig{
+	// Bootstrap Customer Module
+	customerModule := customerAPI.NewCustomerAPIModule(&customerAPI.CustomerAPIConfig{
 		Router:    router,
 		Queries:   queries,
 		Validator: validator,
 		PetRepo:   petRepository,
 	})
 
-	if err := ownerModule.Bootstrap(); err != nil {
-		return fmt.Errorf("failed to bootstrap owner module: %w", err)
+	if err := customerModule.Bootstrap(); err != nil {
+		return fmt.Errorf("failed to bootstrap customer module: %w", err)
 	}
 
-	ownerRepo, err := ownerModule.GetRepository()
+	customerRepo, err := customerModule.GetRepository()
 	if err != nil {
-		return fmt.Errorf("failed to get owner repository: %w", err)
+		return fmt.Errorf("failed to get customer repository: %w", err)
 	}
 
 	// Bootstrap Pet Module
 	petModule := petAPI.NewPetModule(&petAPI.PetModuleConfig{
-		Router:    router,
-		Queries:   queries,
-		Validator: validator,
-		OwnerRepo: ownerRepo,
+		Router:       router,
+		Queries:      queries,
+		Validator:    validator,
+		CustomerRepo: customerRepo,
 	})
 
 	if err := petModule.Bootstrap(); err != nil {
@@ -73,12 +73,12 @@ func BootstrapAPIModules(
 
 	// Bootstrap Medical History Module
 	medHistoryModule := medHistoryAPI.NewMedicalHistoryModule(&medHistoryAPI.MedicalHistoryModuleConfig{
-		Router:    router,
-		Queries:   queries,
-		Validator: validator,
-		OwnerRepo: &ownerRepo,
-		VetRepo:   &vetRepo,
-		PetRepo:   &petRepository,
+		Router:       router,
+		Queries:      queries,
+		Validator:    validator,
+		CustomerRepo: &customerRepo,
+		EmployeeRepo: &vetRepo,
+		PetRepo:      &petRepository,
 	})
 
 	if err := medHistoryModule.Bootstrap(); err != nil {

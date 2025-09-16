@@ -6,19 +6,16 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
-	config "command-line-arguments/Users/alexis/Documents/Clinic-Vet-API/config/postgres_config.go"
-
-	authApi "clinic-vet-api/app/modules/auth/infrastructure/api"
-	mhDTOs "clinic-vet-api/app/modules/medical/application/dto"
-	notification_api "clinic-vet-api/app/modules/notifications/infrastructure/api"
-
+	api "clinic-vet-api/app/modules/auth/presentation"
+	"clinic-vet-api/app/modules/employee/infrastructure/repository"
+	notiAPI "clinic-vet-api/app/modules/notifications/presentation"
 	"clinic-vet-api/config"
 	"clinic-vet-api/middleware"
 	"clinic-vet-api/sqlc"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
 	"github.com/joho/godotenv"
 
@@ -61,24 +58,23 @@ func main() {
 	router := gin.Default()
 	router.Use(gin.Recovery())
 	router.Use(middleware.AuditLog())
+	router.Use(middleware.RateLimiter(middleware.RateLimiterConfig{
+		RequestsPerSecond: 10,
+		WindowDuration:    time.Minute,
+	}))
 
 	queries := sqlc.New(dbConn)
-
-	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
-		v.RegisterValidation("validVisitReason", mhDTOs.IsValidVisitReason)
-		v.RegisterValidation("validVisitType", mhDTOs.IsValidVisitType)
-		v.RegisterValidation("validPetCondition", mhDTOs.IsValidPetCondition)
-	}
 
 	jwtSecret := os.Getenv("JWT_SECRET")
 	if jwtSecret == "" {
 		log.Fatal("JWT_SECRET environment variable is not set")
 	}
 
-	authApi.SetupAuthModule(router, dataValidator, config.RedisClient, queries, jwtSecret)
-	notification_api.SetupNotificationModule(router, mongoClient, emailConfig, config.GetTwilioClient())
-
 	pxpool := config.CreatePgxPool(os.Getenv("DATABASE_URL"))
+
+	empRepo := repository.NewSqlcEmployeeRepository(queries, pxpool)
+	api.SetupAuthModule(router, dataValidator, config.RedisClient, queries, empRepo, jwtSecret)
+	notiAPI.SetupNotificationModule(router, mongoClient, emailConfig, config.GetTwilioClient())
 
 	if err := config.BootstrapAPIModules(router, queries, pxpool, dataValidator); err != nil {
 		panic(fmt.Sprintf("Failed to bootstrap modules: %v", err))

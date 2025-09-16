@@ -9,33 +9,33 @@ import (
 	"clinic-vet-api/app/shared/cqrs"
 )
 
-type GetUserByIDQuery struct {
+type FindUserByIDQuery struct {
 	id             valueobject.UserID
 	includeProfile bool
 	ctx            context.Context
 }
 
-func NewGetUserByIDQuery(ctx context.Context, id uint, includeProfile bool) *GetUserByIDQuery {
+func NewFindUserByIDQuery(ctx context.Context, id uint, includeProfile bool) *FindUserByIDQuery {
 	userID := valueobject.NewUserID(id)
-	return &GetUserByIDQuery{
+	return &FindUserByIDQuery{
 		id:             userID,
 		includeProfile: includeProfile,
 		ctx:            ctx,
 	}
 }
 
-type GetUserByIDHandler struct {
+type FindUserByIDHandler struct {
 	userRepository repository.UserRepository
 }
 
-func NewGetUserByIDHandler(userRepository repository.UserRepository) cqrs.QueryHandler[UserResult] {
-	return &GetUserByIDHandler{
+func NewFindUserByIDHandler(userRepository repository.UserRepository) cqrs.QueryHandler[UserResult] {
+	return &FindUserByIDHandler{
 		userRepository: userRepository,
 	}
 }
 
-func (h *GetUserByIDHandler) Handle(q cqrs.Query) (UserResult, error) {
-	query, valid := q.(GetUserByIDQuery)
+func (h *FindUserByIDHandler) Handle(q cqrs.Query) (UserResult, error) {
+	query, valid := q.(FindUserByIDQuery)
 	if !valid {
 		return UserResult{}, errors.New("invalid query type")
 	}

@@ -6,53 +6,97 @@ import (
 	"clinic-vet-api/app/core/domain/enum"
 )
 
-// PaymentResponse represents the payment response
+// PaymentResponse represents a payment API response
 // @Description Payment information response
 type PaymentResponse struct {
-	// Payment ID
-	ID uint `json:"id" example:"1"`
-
-	// Appointment ID
-	AppointmentID uint `json:"appointment_id" example:"123"`
-
-	// User ID (owner)
-	UserID uint `json:"owner_id" example:"456"`
+	// Unique identifier of the payment
+	// Required: true
+	// Example: "123"
+	ID uint `json:"id"`
 
 	// Payment amount
-	Amount float64 `json:"amount" example:"150.75"`
+	// Required: true
+	// Minimum: 0.01
+	// Example: 150.75
+	Amount float64 `json:"amount"`
 
-	// Currency code
-	Currency string `json:"currency" example:"USD"`
+	// Currency code (ISO 4217)
+	// Required: true
+	// Example: "MXN"
+	Currency string `json:"currency"`
+
+	// Current status of the payment
+	// Required: true
+	// Enum: pending,paid,failed,refunded,cancelled
+	// Example: "paid"
+	Status string `json:"status"`
 
 	// Payment method used
-	PaymentMethod enum.PaymentMethod `json:"payment_method" example:"credit_card"`
-
-	// Payment status
-	Status enum.PaymentStatus `json:"status" example:"paid"`
+	// Required: true
+	// Enum: cash,credit_card,debit_card,bank_transfer,digital_wallet
+	// Example: "credit_card"
+	Method string `json:"method"`
 
 	// Transaction ID from payment gateway
-	TransactionID *string `json:"transaction_id,omitempty" example:"txn_123456789"`
+	// Example: "txn_123456789"
+	TransactionID *string `json:"transaction_id,omitempty"`
 
 	// Payment description
-	Description *string `json:"description,omitempty" example:"Veterinary consultation payment"`
+	// Example: "Veterinary consultation payment"
+	Description *string `json:"description,omitempty"`
 
-	// Payment due date
-	DueDate *time.Time `json:"due_date,omitempty" example:"2024-12-31T23:59:59Z"`
+	// Due date for the payment
+	// Required: true
+	// Example: "2024-12-31T23:59:59Z"
+	DueDate *time.Time `json:"due_date"`
 
-	// Date when payment was made
-	PaidAt *time.Time `json:"paid_at,omitempty" example:"2024-01-15T14:30:00Z"`
+	// Date when payment was completed
+	// Example: "2024-01-15T10:30:00Z"
+	PaidAt *time.Time `json:"paid_at,omitempty"`
 
 	// Date when payment was refunded
-	RefundedAt *time.Time `json:"refunded_at,omitempty" example:"2024-01-16T10:15:00Z"`
+	// Example: "2024-01-16T14:20:00Z"
+	RefundedAt *time.Time `json:"refunded_at,omitempty"`
 
-	// Whether the payment is active
-	IsActive bool `json:"is_active" example:"true"`
+	// Customer ID who made the payment
+	// Required: true
+	// Example: 456
+	CustomerID uint `json:"customer_id"`
 
-	// Creation timestamp
-	CreatedAt time.Time `json:"created_at" example:"2024-01-01T12:00:00Z"`
+	// Appointment ID associated with the payment
+	// Example: 123
+	AppointmentID uint `json:"appointment_id,omitempty"`
 
-	// Last update timestamp
-	UpdatedAt time.Time `json:"updated_at" example:"2024-01-15T14:30:00Z"`
+	// Invoice number
+	// Example: "INV-001"
+	InvoiceID *string `json:"invoice_id,omitempty"`
+
+	// Refund amount if applicable
+	// Example: 150.75
+	RefundAmount *float64 `json:"refund_amount,omitempty"`
+
+	// Reason for payment failure
+	// Example: "Insufficient funds"
+	FailureReason *string `json:"failure_reason,omitempty"`
+
+	// Indicates if payment is active
+	// Required: true
+	// Example: true
+	IsActive bool `json:"is_active"`
+
+	// Date when payment was created
+	// Required: true
+	// Example: "2024-01-15T10:00:00Z"
+	CreatedAt time.Time `json:"created_at"`
+
+	// Date when payment was last updated
+	// Required: true
+	// Example: "2024-01-15T10:30:00Z"
+	UpdatedAt time.Time `json:"updated_at"`
+
+	// Date when payment was deleted (soft delete)
+	// Example: "2024-01-20T12:00:00Z"
+	DeletedAt *time.Time `json:"deleted_at,omitempty"`
 }
 
 // PaymentReportResponse represents a payment report response

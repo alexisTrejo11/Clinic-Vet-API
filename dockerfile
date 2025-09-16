@@ -27,7 +27,7 @@ WORKDIR /root/
 
 # Copy the built binary from the builder stage
 COPY --from=builder /app/main .
-COPY --from=builder /app/.env .  # Copy environment file if needed
+COPY --from=builder /app/.env .  
 
 # Create necessary directories for your application
 RUN mkdir -p logs

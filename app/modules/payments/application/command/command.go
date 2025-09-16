@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	"clinic-vet-api/app/core/domain/entity/payment"
 	"clinic-vet-api/app/core/domain/enum"
 	"clinic-vet-api/app/core/domain/valueobject"
 	apperror "clinic-vet-api/app/shared/error/application"
@@ -24,92 +23,18 @@ func NewCancelPaymentCommand(idInt uint, reason string) *CancelPaymentCommand {
 }
 
 type CreatePaymentCommand struct {
-	ctx           context.Context
-	appointmentID valueobject.AppointmentID
-	userID        valueobject.UserID
-	amount        valueobject.Money
-	paymentMethod enum.PaymentMethod
-	description   *string
-	dueDate       *time.Time
-	transactionID *string
-}
-
-func NewCreatePaymentCommand(
-	ctx context.Context,
-	appointmentIDInt uint,
-	userIDInt uint,
-	amountValue float64,
-	amountCurrency string,
-	paymentMethodStr string,
-	description *string,
-	dueDate *time.Time,
-	transactionID *string,
-) (CreatePaymentCommand, error) {
-	var errors []string
-
-	appointmentID := valueobject.NewAppointmentID(appointmentIDInt)
-	userID := valueobject.NewUserID(userIDInt)
-	amount := valueobject.NewMoney(amountValue, amountCurrency)
-	paymentMethod, err := enum.ParsePaymentMethod(paymentMethodStr)
-	if err != nil {
-		errors = append(errors, err.Error())
-	}
-
-	if description != nil {
-		if *description == "" {
-			errors = append(errors, "description cannot be empty if provided")
-		} else if len(*description) > 500 {
-			errors = append(errors, "description must be less than 500 characters")
-		}
-	}
-
-	if dueDate != nil {
-		if dueDate.Before(time.Now()) {
-			errors = append(errors, "due date must be in the future")
-		}
-	}
-
-	if transactionID != nil {
-		if *transactionID == "" {
-			errors = append(errors, "transaction ID cannot be empty if provided")
-		} else if len(*transactionID) > 100 {
-			errors = append(errors, "transaction ID must be less than 100 characters")
-		}
-	}
-
-	if len(errors) > 0 {
-		return CreatePaymentCommand{}, apperror.MappingError(errors, "constructor", "command", "payment")
-	}
-
-	return CreatePaymentCommand{
-		ctx:           ctx,
-		appointmentID: appointmentID,
-		userID:        userID,
-		amount:        amount,
-		paymentMethod: paymentMethod,
-		description:   description,
-		dueDate:       dueDate,
-		transactionID: transactionID,
-	}, nil
-}
-
-func (command *CreatePaymentCommand) ToDomain() (*payment.Payment, error) {
-	paymentEntity, err := payment.NewPayment(
-		valueobject.PaymentID{},
-		command.appointmentID,
-		command.userID,
-		payment.WithCurrency(command.amount.Currency()),
-		payment.WithAmount(command.amount),
-		payment.WithPaymentMethod(command.paymentMethod),
-		payment.WithDescription(command.description),
-		payment.WithDueDate(command.dueDate),
-		payment.WithTransactionID(command.transactionID),
-		payment.WithStatus(enum.PaymentStatusPending))
-	if err != nil {
-		return nil, apperror.MappingError([]string{err.Error()}, "constructor", "domain", "Payment")
-	}
-
-	return paymentEntity, nil
+	Ctx              context.Context
+	Amount           valueobject.Money
+	Status           enum.PaymentStatus
+	Method           enum.PaymentMethod
+	TransactionID    *string
+	Description      *string
+	DueDate          *time.Time
+	PaidAt           *time.Time
+	RefundedAt       *time.Time
+	PaidFromCustomer valueobject.CustomerID
+	AppointmentID    *valueobject.AppointmentID
+	InvoiceID        *string
 }
 
 type MarkOverduePaymentsCommand struct {

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"reflect"
 
-	repository "clinic-vet-api/app/core/repositories"
+	"clinic-vet-api/app/core/repository"
 	"clinic-vet-api/app/modules/users/application/usecase/query"
 	"clinic-vet-api/app/shared/cqrs"
 )
@@ -23,11 +23,11 @@ func NewUserQueryBus(userRepo repository.UserRepository) *UserQueryBus {
 }
 
 func (b *UserQueryBus) RegisterQueries(userRepo repository.UserRepository) error {
-	b.Register(reflect.TypeOf(query.GetByEmailQuery{}), query.NewGetByEmailHandler(userRepo))
-	b.Register(reflect.TypeOf(query.GetUserByIDQuery{}), query.NewGetUserByIDHandler(userRepo))
-	b.Register(reflect.TypeOf(query.GetUserByPhoneQuery{}), query.NewGetUserByPhoneHandler(userRepo))
-	b.Register(reflect.TypeOf(query.ListUsersByRoleQuery{}), query.NewListUsersByRoleHandler(userRepo))
-	b.Register(reflect.TypeOf(query.UserSearchQuery{}), query.NewSearchUsersHandler(userRepo))
+	b.Register(reflect.TypeOf(query.FindUserByEmailQuery{}), query.NewFindUserByEmailHandler(userRepo))
+	b.Register(reflect.TypeOf(query.FindUserByIDQuery{}), query.NewFindUserByIDHandler(userRepo))
+	b.Register(reflect.TypeOf(query.FindUserByPhoneQuery{}), query.NewFindUserByPhoneHandler(userRepo))
+	b.Register(reflect.TypeOf(query.FindUsersByRoleQuery{}), query.NewFindUsersByRoleHandler(userRepo))
+	b.Register(reflect.TypeOf(query.UserFindBySpecificationQuery{}), query.NewFindBySpecificationUsersHandler(userRepo))
 	return nil
 }
 
@@ -48,20 +48,20 @@ func (b *UserQueryBus) Execute(q cqrs.Query) (any, error) {
 	}
 
 	switch qry := q.(type) {
-	case query.GetByEmailQuery:
-		h := handler.(query.GetByEmailHandler)
+	case query.FindUserByEmailQuery:
+		h := handler.(query.FindUserByEmailHandler)
 		return h.Handle(qry)
-	case query.GetUserByPhoneQuery:
-		h := handler.(query.GetUserByPhoneHandler)
+	case query.FindUserByPhoneQuery:
+		h := handler.(query.FindUserByPhoneHandler)
 		return h.Handle(qry)
-	case query.GetUserByIDQuery:
-		h := handler.(query.GetUserByIDHandler)
+	case query.FindUserByIDQuery:
+		h := handler.(query.FindUserByIDHandler)
 		return h.Handle(qry)
-	case query.UserSearchQuery:
-		h := handler.(query.SearchUsersHandler)
+	case query.UserFindBySpecificationQuery:
+		h := handler.(query.FindBySpecificationUsersHandler)
 		return h.Handle(qry)
-	case query.ListUsersByRoleQuery:
-		h := handler.(query.ListUsersByRoleHandler)
+	case query.FindUsersByRoleQuery:
+		h := handler.(query.FindUsersByRoleHandler)
 		return h.Handle(qry)
 	default:
 		return nil, errors.New("unhandled query type")

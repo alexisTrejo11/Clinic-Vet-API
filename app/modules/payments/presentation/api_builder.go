@@ -19,8 +19,7 @@ type PaymentAPIConfig struct {
 
 type PaymentAPIComponents struct {
 	Repository  repository.PaymentRepository
-	CommandBus  *bus.PaymentCommandBus
-	QueryBus    *bus.PaymentQueryBus
+	Bus         *bus.PaymentBus
 	Controllers *PaymentControllers
 }
 
@@ -53,17 +52,14 @@ func (f *PaymentAPIBuilder) Build() error {
 		return err
 	}
 
-	commandBus := bus.NewPaymentCommandBus(f.config.PaymentRepo)
-	queryBus := bus.NewPaymentQueryBus(f.config.PaymentRepo)
-	paymentBus := bus.NewPaymentBus(commandBus, queryBus)
+	paymentBus := bus.NewPaymentBus(f.components.Repository)
 	controllers := f.createControllers(*paymentBus)
 
 	f.registerRoutes(controllers)
 
 	f.components = &PaymentAPIComponents{
 		Repository:  f.config.PaymentRepo,
-		CommandBus:  commandBus,
-		QueryBus:    queryBus,
+		Bus:         paymentBus,
 		Controllers: controllers,
 	}
 

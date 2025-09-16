@@ -8,31 +8,36 @@ import (
 )
 
 type PaymentResult struct {
-	ID            uint
-	AppointmentID uint
-	UserID        uint
-	Amount        float64
-	Currency      string
-	PaymentMethod string
-	Status        string
-	TransactionID *string
-	Description   *string
-	DueDate       *time.Time
-	PaidAt        *time.Time
-	RefundedAt    *time.Time
-	IsActive      bool
-	CreatedAt     time.Time
-	UpdatedAt     time.Time
+	ID               uint
+	Amount           float64
+	Currency         string
+	Status           string
+	Method           string
+	TransactionID    *string
+	Description      *string
+	DueDate          *time.Time
+	PaidAt           *time.Time
+	RefundedAt       *time.Time
+	IsActive         bool
+	PaidFromCustomer uint
+	PaidToEmployee   uint
+	AppointmentID    uint
+	InvoiceID        *string
+	RefundAmount     *float64
+	FailureReason    *string
+	CreatedAt        time.Time
+	UpdatedAt        time.Time
+	IsOverdue        bool
+	IsRefundable     bool
 }
 
 func entityToResult(payment *payment.Payment) PaymentResult {
 	return PaymentResult{
 		ID:            payment.ID().Value(),
 		AppointmentID: payment.AppointmentID().Value(),
-		UserID:        payment.UserID().Value(),
 		Amount:        payment.Amount().ToFloat(),
 		Currency:      payment.Currency(),
-		PaymentMethod: string(payment.PaymentMethod()),
+		Method:        payment.Method().DisplayName(),
 		Status:        string(payment.Status()),
 		TransactionID: payment.TransactionID(),
 		Description:   payment.Description(),

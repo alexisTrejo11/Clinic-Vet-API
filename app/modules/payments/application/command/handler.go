@@ -49,7 +49,7 @@ func (h *paymentCommandHandler) CreatePayment(command CreatePaymentCommand) cqrs
 		return *cqrs.FailureResult("failed to create payment domain", err)
 	}
 
-	if err := h.paymentRepository.Save(command.ctx, payment); err != nil {
+	if err := h.paymentRepository.Save(command.Ctx, payment); err != nil {
 		return *cqrs.FailureResult("failed to create payment", err)
 	}
 

@@ -4,12 +4,14 @@ import (
 	"fmt"
 
 	"clinic-vet-api/app/core/repository"
+	"clinic-vet-api/app/core/service"
 	"clinic-vet-api/app/modules/users/application/usecase"
 	"clinic-vet-api/app/modules/users/infrastructure/bus"
-	persistence "clinic-vet-api/app/modules/users/infrastructure/persistence/repository"
+	persistence "clinic-vet-api/app/modules/users/infrastructure/repository"
 	"clinic-vet-api/app/modules/users/presentation/controller"
 	"clinic-vet-api/app/modules/users/presentation/routes"
 	"clinic-vet-api/app/shared/cqrs"
+	"clinic-vet-api/app/shared/password"
 
 	"clinic-vet-api/sqlc"
 
@@ -29,13 +31,15 @@ type UserAPIConfig struct {
 	Queries       *sqlc.Queries
 	Router        *gin.Engine
 	DataValidator *validator.Validate
+	employeeRepo  repository.EmployeeRepository
 }
 
-func NewUserAPIConfig(queries *sqlc.Queries, router *gin.Engine, dataValidator *validator.Validate) *UserAPIConfig {
+func NewUserAPIConfig(queries *sqlc.Queries, router *gin.Engine, dataValidator *validator.Validate, employeeRepo repository.EmployeeRepository) *UserAPIConfig {
 	return &UserAPIConfig{
 		Queries:       queries,
 		Router:        router,
 		DataValidator: dataValidator,
+		employeeRepo:  employeeRepo,
 	}
 }
 
@@ -64,8 +68,12 @@ func (u *UserAPIModule) Bootstrap() error {
 
 	userRepo := persistence.NewSQLCUserRepository(u.config.Queries)
 	profileRepo := persistence.NewSQLCProfileRepository(u.config.Queries)
+	employeeRepo := u.config.employeeRepo
+	passwordEncoder := password.NewPasswordEncoder()
 
-	commandUserBus := bus.NewUserCommandBus(userRepo)
+	service := service.NewUserSecurityService(userRepo, employeeRepo, passwordEncoder, nil)
+
+	commandUserBus := bus.NewUserCommandBus(userRepo, service)
 	queryUserBus := bus.NewUserQueryBus(userRepo)
 
 	userControllers := controller.NewUserAdminController(u.config.DataValidator, commandUserBus, queryUserBus)

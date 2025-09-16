@@ -10,22 +10,22 @@ import (
 	"clinic-vet-api/app/shared/page"
 )
 
-type UserSearchQuery struct {
+type UserFindBySpecificationQuery struct {
 	ctx  context.Context
 	spec specification.UserSpecification
 }
-type SearchUsersHandler struct {
+type FindBySpecificationUsersHandler struct {
 	repository repository.UserRepository
 }
 
-func NewSearchUsersHandler(repository repository.UserRepository) cqrs.QueryHandler[page.Page[UserResult]] {
-	return &SearchUsersHandler{
+func NewFindBySpecificationUsersHandler(repository repository.UserRepository) cqrs.QueryHandler[page.Page[UserResult]] {
+	return &FindBySpecificationUsersHandler{
 		repository: repository,
 	}
 }
 
-func (h *SearchUsersHandler) Handle(q cqrs.Query) (page.Page[UserResult], error) {
-	query, valid := q.(UserSearchQuery)
+func (h *FindBySpecificationUsersHandler) Handle(q cqrs.Query) (page.Page[UserResult], error) {
+	query, valid := q.(UserFindBySpecificationQuery)
 	if !valid {
 		return page.Page[UserResult]{}, errors.New("invalid query type")
 	}

@@ -6,23 +6,23 @@ import (
 
 	p "clinic-vet-api/app/core/domain/entity/payment"
 	"clinic-vet-api/app/core/domain/enum"
+	"clinic-vet-api/app/core/domain/specification"
 	vo "clinic-vet-api/app/core/domain/valueobject"
 	"clinic-vet-api/app/shared/page"
 )
 
 type PaymentRepository interface {
-	FindBySpecification(ctx context.Context, spec any) (page.Page[p.Payment], error)
+	FindBySpecification(ctx context.Context, specification specification.PaymentSpecification) (page.Page[p.Payment], error)
 	FindByID(ctx context.Context, id vo.PaymentID) (p.Payment, error)
 	FindByTransactionID(ctx context.Context, transactionID string) (p.Payment, error)
 	FindByIDAndCustomerID(ctx context.Context, id vo.PaymentID, customerID vo.CustomerID) (p.Payment, error)
 
-	FindAll(ctx context.Context, pageInput page.PageInput) (page.Page[p.Payment], error)
 	FindByCustomerID(ctx context.Context, customerID vo.CustomerID, pageInput page.PageInput) (page.Page[p.Payment], error)
 	FindByStatus(ctx context.Context, status enum.PaymentStatus, pageInput page.PageInput) (page.Page[p.Payment], error)
 	FindOverdue(ctx context.Context, pageInput page.PageInput) (page.Page[p.Payment], error)
 	FindByDateRange(ctx context.Context, startDate, endDate time.Time, pageInput page.PageInput) (page.Page[p.Payment], error)
 
-	FindRecentByCustomerID(ctx context.Context, customerID vo.CustomerID, limit int) (p.Payment, error)
+	FindRecentByCustomerID(ctx context.Context, customerID vo.CustomerID, limit int) ([]p.Payment, error)
 	FindPendingPayments(ctx context.Context, pageInput page.PageInput) (page.Page[p.Payment], error)
 	FindSuccessfulPayments(ctx context.Context, pageInput page.PageInput) (page.Page[p.Payment], error)
 
@@ -31,7 +31,6 @@ type PaymentRepository interface {
 	ExistsPendingByCustomerID(ctx context.Context, customerID vo.CustomerID) (bool, error)
 
 	Save(ctx context.Context, paymentEntity *p.Payment) error
-	Update(ctx context.Context, paymentEntity *p.Payment) error
 	SoftDelete(ctx context.Context, id vo.PaymentID) error
 	HardDelete(ctx context.Context, id vo.PaymentID) error
 

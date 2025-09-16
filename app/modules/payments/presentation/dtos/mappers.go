@@ -2,26 +2,47 @@ package dto
 
 import (
 	"context"
+	"fmt"
 
 	"clinic-vet-api/app/core/domain/entity/payment"
+	"clinic-vet-api/app/core/domain/enum"
+	"clinic-vet-api/app/core/domain/valueobject"
 	cmd "clinic-vet-api/app/modules/payments/application/command"
 	query "clinic-vet-api/app/modules/payments/application/queries"
 )
 
-func (req CreatePaymentRequest) ToCreatePaymentCommand() (cmd.CreatePaymentCommand, error) {
-	c, err := cmd.NewCreatePaymentCommand(
-		context.Background(),
-		uint(req.AppointmentID),
-		uint(req.UserID),
-		req.Amount,
-		req.Currency,
-		req.PaymentMethod,
-		req.Description,
-		req.DueDate,
-		req.TransactionID,
-	)
+func (req CreatePaymentRequest) ToCreatePaymentCommand(ctx context.Context) (cmd.CreatePaymentCommand, error) {
+	paymentMethod, err := enum.ParsePaymentMethod(req.PaymentMethod)
 	if err != nil {
-		return cmd.CreatePaymentCommand{}, err
+		return cmd.CreatePaymentCommand{}, fmt.Errorf("invalid payment method: %w", err)
+	}
+
+	var paymentStatus enum.PaymentStatus
+	if req.Status != "" {
+		paymentStatus, err = enum.ParsePaymentStatus(req.Status)
+		if err != nil {
+			return cmd.CreatePaymentCommand{}, fmt.Errorf("invalid payment status: %w", err)
+		}
+	} else {
+		paymentStatus = enum.PaymentStatusPending
+	}
+
+	amount := valueobject.NewMoney(req.Amount, req.Currency)
+
+	customerID := valueobject.NewCustomerID(uint(req.CustomerID))
+	appointmentID := valueobject.NewAppointmentID(uint(req.AppointmentID))
+
+	c := cmd.CreatePaymentCommand{
+		Ctx:              ctx,
+		Amount:           amount,
+		Status:           paymentStatus,
+		Method:           paymentMethod,
+		TransactionID:    req.TransactionID,
+		Description:      req.Description,
+		DueDate:          req.DueDate,
+		PaidFromCustomer: customerID,
+		AppointmentID:    &appointmentID,
+		InvoiceID:        req.InvoiceID,
 	}
 
 	return c, nil
@@ -63,11 +84,10 @@ func ToPaymentResponse(pay any) PaymentResponse {
 	return PaymentResponse{
 		ID:            payment.ID().Value(),
 		AppointmentID: payment.AppointmentID().Value(),
-		UserID:        payment.UserID().Value(),
 		Amount:        payment.Amount().ToFloat(),
 		Currency:      payment.Currency(),
-		PaymentMethod: payment.PaymentMethod(),
-		Status:        payment.Status(),
+		Method:        payment.Method().DisplayName(),
+		Status:        payment.Status().DisplayName(),
 		TransactionID: payment.TransactionID(),
 		Description:   payment.Description(),
 		DueDate:       payment.DueDate(),
@@ -120,3 +140,30 @@ func ToPaymentReportResponse(report PaymentReport) PaymentReportResponse {
 	}
 }
 */
+
+func PaymentFromResult(result *query.PaymentResult) *PaymentResponse {
+	if result == nil {
+		return nil
+	}
+
+	return &PaymentResponse{
+		ID:            result.ID,
+		Amount:        result.Amount,
+		Currency:      result.Currency,
+		Status:        result.Status,
+		Method:        result.Method,
+		TransactionID: result.TransactionID,
+		Description:   result.Description,
+		DueDate:       result.DueDate,
+		PaidAt:        result.PaidAt,
+		RefundedAt:    result.RefundedAt,
+		CustomerID:    result.PaidFromCustomer,
+		AppointmentID: result.AppointmentID,
+		InvoiceID:     result.InvoiceID,
+		RefundAmount:  result.RefundAmount,
+		FailureReason: result.FailureReason,
+		IsActive:      result.IsActive,
+		CreatedAt:     result.CreatedAt,
+		UpdatedAt:     result.UpdatedAt,
+	}
+}

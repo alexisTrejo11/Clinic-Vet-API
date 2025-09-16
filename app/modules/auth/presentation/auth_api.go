@@ -9,7 +9,7 @@ import (
 	repositoryimpl "clinic-vet-api/app/modules/auth/infrastructure/repository"
 	"clinic-vet-api/app/modules/auth/presentation/controller"
 	"clinic-vet-api/app/modules/auth/presentation/routes"
-	userPersistence "clinic-vet-api/app/modules/users/infrastructure/persistence/repository"
+	userPersistence "clinic-vet-api/app/modules/users/infrastructure/repository"
 	"clinic-vet-api/app/shared/password"
 	"clinic-vet-api/sqlc"
 

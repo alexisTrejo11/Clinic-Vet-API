@@ -1,118 +1,149 @@
--- name: GetPaymentByID :one
-SELECT *
-FROM payments
+-- name: FindPaymentByID :one
+SELECT * FROM payments
 WHERE id = $1 AND deleted_at IS NULL;
 
--- name: GetPaymentByTransactionID :one
-SELECT *
-FROM payments
+-- name: FindPaymentByTransactionID :one
+SELECT * FROM payments
 WHERE transaction_id = $1 AND deleted_at IS NULL;
 
--- name: ListPaymentsByCustomerID :many
-SELECT *
-FROM payments
-WHERE paid_from_customer  = $1 AND deleted_at IS NULL
+-- name: FindPaymentByIDAndCustomerID :one
+SELECT * FROM payments
+WHERE id = $1 AND paid_from_customer = $2 AND deleted_at IS NULL;
+
+-- name: FindPaymentsByCustomerID :many
+SELECT * FROM payments
+WHERE paid_from_customer = $1 AND deleted_at IS NULL
 ORDER BY created_at DESC
 LIMIT $2 OFFSET $3;
 
 -- name: CountPaymentsByCustomerID :one
-SELECT COUNT(*)
-FROM payments
-WHERE paid_from_customer  = $1 AND deleted_at IS NULL;
+SELECT COUNT(*) FROM payments
+WHERE paid_from_customer = $1 AND deleted_at IS NULL;
 
--- name: ListPaymentsByStatus :many
-SELECT *
-FROM payments
+-- name: FindPaymentsByStatus :many
+SELECT * FROM payments
 WHERE status = $1 AND deleted_at IS NULL
 ORDER BY created_at DESC
 LIMIT $2 OFFSET $3;
 
 -- name: CountPaymentsByStatus :one
-SELECT COUNT(*)
-FROM payments
+SELECT COUNT(*) FROM payments
 WHERE status = $1 AND deleted_at IS NULL;
 
--- name: ListPaymentsByDateRange :many
-SELECT *
-FROM payments
+-- name: FindOverduePayments :many
+SELECT * FROM payments
+WHERE due_date < CURRENT_TIMESTAMP 
+AND status NOT IN ('paid', 'refunded', 'cancelled') 
+AND deleted_at IS NULL
+ORDER BY due_date ASC
+LIMIT $1 OFFSET $2;
+
+-- name: CountOverduePayments :one
+SELECT COUNT(*) FROM payments
+WHERE due_date < CURRENT_TIMESTAMP 
+AND status NOT IN ('paid', 'refunded', 'cancelled') 
+AND deleted_at IS NULL;
+
+-- name: FindPaymentsByDateRange :many
+SELECT * FROM payments
 WHERE created_at BETWEEN $1 AND $2 AND deleted_at IS NULL
 ORDER BY created_at DESC
 LIMIT $3 OFFSET $4;
 
 -- name: CountPaymentsByDateRange :one
-SELECT COUNT(*)
-FROM payments
+SELECT COUNT(*) FROM payments
 WHERE created_at BETWEEN $1 AND $2 AND deleted_at IS NULL;
 
--- name: ListOverduePayments :many
-SELECT *
-FROM payments
-WHERE duedate < CURRENT_TIMESTAMP AND status != 'paid' AND deleted_at IS NULL
-ORDER BY duedate ASC
+-- name: FindRecentPaymentsByCustomerID :many
+SELECT * FROM payments
+WHERE paid_from_customer = $1 AND deleted_at IS NULL
+ORDER BY created_at DESC
+LIMIT $2;
+
+-- name: FindPendingPayments :many
+SELECT * FROM payments
+WHERE status = 'pending' AND deleted_at IS NULL
+ORDER BY due_date ASC
 LIMIT $1 OFFSET $2;
 
--- name: CountOverduePayments :one
-SELECT COUNT (*)
-WHERE duedate < CURRENT_TIMESTAMP AND status != 'paid' AND deleted_at IS NULL;
+-- name: FindSuccessfulPayments :many
+SELECT * FROM payments
+WHERE status = 'paid' AND deleted_at IS NULL
+ORDER BY paid_at DESC
+LIMIT $1 OFFSET $2;
+
+-- name: ExistsPaymentByID :one
+SELECT COUNT(*) > 0 FROM payments
+WHERE id = $1 AND deleted_at IS NULL;
+
+-- name: ExistsPaymentByTransactionID :one
+SELECT COUNT(*) > 0 FROM payments
+WHERE transaction_id = $1 AND deleted_at IS NULL;
+
+-- name: ExistsPendingPaymentByCustomerID :one
+SELECT COUNT(*) > 0 FROM payments
+WHERE paid_from_customer = $1 
+AND status = 'pending' 
+AND deleted_at IS NULL;
 
 -- name: CreatePayment :one
 INSERT INTO payments (
-    amount,
-    currency,
-    status,
-    method,
-    transaction_id,
-    description,
-    duedate,
-    paid_at,
-    refunded_at,
-    paid_from_customer,
-    paid_to_employee,
-    is_active,
-    created_at,
-    updated_at,
-    deleted_at
+    amount, currency, status, method, transaction_id, description,
+    due_date, paid_at, refunded_at, paid_from_customer, paid_to_employee,
+    appointment_id, invoice_id, refund_amount, failure_reason
 ) VALUES (
-    $1,
-    $2,
-    $3,
-    $4,
-    $5,
-    $6,
-    $7,
-    $8,
-    $9,
-    $10,
-    $11,
-    TRUE,
-    CURRENT_TIMESTAMP,
-    CURRENT_TIMESTAMP,
-    NULL
+    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15
 ) RETURNING *;
 
-
 -- name: UpdatePayment :one
-UPDATE payments
-SET
-    amount = $1,
-    currency = $2,
-    status = $3,
-    method = $4,
-    transaction_id = $5,
-    description = $6,
-    duedate = $7,
-    paid_at = $8,
-    refunded_at = $9,
-    is_active = $10,
+UPDATE payments SET
+    amount = $2,
+    currency = $3,
+    status = $4,
+    method = $5,
+    transaction_id = $6,
+    description = $7,
+    due_date = $8,
+    paid_at = $9,
+    refunded_at = $10,
     paid_from_customer = $11,
     paid_to_employee = $12,
+    appointment_id = $13,
+    invoice_id = $14,
+    refund_amount = $15,
+    failure_reason = $16,
     updated_at = CURRENT_TIMESTAMP
-WHERE id = $12
+WHERE id = $1 AND deleted_at IS NULL
 RETURNING *;
 
 -- name: SoftDeletePayment :exec
-UPDATE payments
-SET
+UPDATE payments SET
     is_active = FALSE,
-    deleted_at = CURRENT_TIMESTAMP
-WHERE id = $1 AND is_active = TRUE;
+    deleted_at = CURRENT_TIMESTAMP,
+    updated_at = CURRENT_TIMESTAMP
+WHERE id = $1;
+
+-- name: HardDeletePayment :exec
+DELETE FROM payments WHERE id = $1;
+
+-- name: TotalRevenueByDateRange :one
+SELECT COALESCE(SUM(amount), 0) FROM payments
+WHERE status = 'paid'
+AND paid_at BETWEEN $1 AND $2
+AND deleted_at IS NULL;
+
+-- name: UpdatePaymentStatus :exec
+UPDATE payments SET
+    status = $2,
+    paid_at = CASE WHEN $2 = 'paid' THEN COALESCE(paid_at, CURRENT_TIMESTAMP) ELSE paid_at END,
+    refunded_at = CASE WHEN $2 = 'refunded' THEN COALESCE(refunded_at, CURRENT_TIMESTAMP) ELSE refunded_at END,
+    updated_at = CURRENT_TIMESTAMP
+WHERE id = $1 AND deleted_at IS NULL;
+
+-- name: FindPaymentsByAppointmentID :one
+SELECT * FROM payments
+WHERE appointment_id = $1 AND deleted_at IS NULL;
+
+-- name: FindPaymentsByInvoiceID :one
+SELECT * FROM payments
+WHERE invoice_id = $1 AND deleted_at IS NULL;
