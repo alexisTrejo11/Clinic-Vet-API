@@ -2,8 +2,8 @@ package domainerr
 
 import "strconv"
 
-func OwnerNotFoundError(id int) *EntityNotFoundError {
-	return NewEntityNotFoundError("Owner", strconv.Itoa(int(id)))
+func OwnerNotFoundError(id int) error {
+	return EntityNotFoundError("Owner", strconv.Itoa(int(id)))
 }
 
 func PhoneConflictError() *ConflictError {

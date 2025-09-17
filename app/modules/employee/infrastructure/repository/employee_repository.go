@@ -7,7 +7,6 @@ import (
 	"clinic-vet-api/app/core/domain/specification"
 	"clinic-vet-api/app/core/domain/valueobject"
 	"clinic-vet-api/app/core/repository"
-	"clinic-vet-api/app/shared/page"
 	p "clinic-vet-api/app/shared/page"
 	"clinic-vet-api/db/models"
 	"clinic-vet-api/sqlc"
@@ -60,9 +59,8 @@ func (r *SqlcEmployeeRepository) FindBySpecification(ctx context.Context, spec s
 		return p.Page[e.Employee]{}, err
 	}
 
-	pageInput := page.FromSpecPagination(spec.Pagination)
-	return page.NewPage(employees, *page.GetPageMetadata(totalCount, pageInput)), nil
-
+	pageInput := p.FromSpecPagination(spec.Pagination)
+	return p.NewPage(employees, *p.GetPageMetadata(totalCount, pageInput)), nil
 }
 
 func (r *SqlcEmployeeRepository) FindByID(ctx context.Context, id valueobject.EmployeeID) (e.Employee, error) {
@@ -99,7 +97,7 @@ func (r *SqlcEmployeeRepository) FindByUserID(ctx context.Context, userID valueo
 	return *employee, nil
 }
 
-func (r *SqlcEmployeeRepository) FindActive(ctx context.Context, pageInput p.PageInput) (page.Page[e.Employee], error) {
+func (r *SqlcEmployeeRepository) FindActive(ctx context.Context, pageInput p.PageInput) (p.Page[e.Employee], error) {
 	offset := (pageInput.Page - 1) * pageInput.PageSize
 	limit := pageInput.PageSize
 
@@ -118,7 +116,7 @@ func (r *SqlcEmployeeRepository) FindActive(ctx context.Context, pageInput p.Pag
 	return r.paginateSqlRow(employeeRows, int(total), pageInput)
 }
 
-func (r *SqlcEmployeeRepository) FindAll(ctx context.Context, pageInput p.PageInput) (page.Page[e.Employee], error) {
+func (r *SqlcEmployeeRepository) FindAll(ctx context.Context, pageInput p.PageInput) (p.Page[e.Employee], error) {
 	offset := (pageInput.Page - 1) * pageInput.PageSize
 	limit := pageInput.PageSize
 
@@ -138,7 +136,7 @@ func (r *SqlcEmployeeRepository) FindAll(ctx context.Context, pageInput p.PageIn
 	return r.paginateSqlRow(employeeRows, int(total), pageInput)
 }
 
-func (r *SqlcEmployeeRepository) FindBySpeciality(ctx context.Context, speciality enum.VetSpecialty, pageInput p.PageInput) (page.Page[e.Employee], error) {
+func (r *SqlcEmployeeRepository) FindBySpeciality(ctx context.Context, speciality enum.VetSpecialty, pageInput p.PageInput) (p.Page[e.Employee], error) {
 	offset := (pageInput.Page - 1) * pageInput.PageSize
 	limit := pageInput.PageSize
 
@@ -244,6 +242,6 @@ func (r *SqlcEmployeeRepository) paginateSqlRow(rows []sqlc.Employee, total int,
 		return p.Page[e.Employee]{}, r.wrapConversionError(err)
 	}
 
-	metadata := page.GetPageMetadata(total, pageInput)
+	metadata := p.GetPageMetadata(total, pageInput)
 	return p.NewPage(employees, *metadata), nil
 }

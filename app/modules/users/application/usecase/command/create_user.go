@@ -88,7 +88,7 @@ func (uc *CreateUserHandler) Handle(ctx context.Context, command CreateUserComma
 		return *cqrs.FailureResult(ErrFailedValidatingUser, err)
 	}
 
-	if err := uc.securityService.ProcessUserCreation(ctx, user); err != nil {
+	if err := uc.securityService.ProcessUserPersistence(ctx, user); err != nil {
 		return *cqrs.FailureResult(ErrFailedProcessingUser, err)
 	}
 	return *cqrs.SuccessResult(user.ID().String(), ErrUserCreationSuccess)

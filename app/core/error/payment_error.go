@@ -4,8 +4,6 @@ import (
 	"errors"
 	"strconv"
 	"time"
-
-	"clinic-vet-api/app/core/domain/enum"
 )
 
 var (
@@ -77,12 +75,12 @@ func InvalidPaymentIDErr(paymentID int) *PaymentError {
 	}
 }
 
-func InvalidPaymentStatusErr(status enum.PaymentStatus) *PaymentError {
+func InvalidPaymentStatusErr(status string) *PaymentError {
 	return &PaymentError{
 		BaseDomainError: BaseDomainError{
 			Code:    "ERR_INVALID_PAYMENT_STATUS",
 			Type:    "Domain Error",
-			Message: "Invalid payment status: " + string(status),
+			Message: "Invalid payment status: " + status,
 		},
 		Timestamp: time.Now(),
 	}

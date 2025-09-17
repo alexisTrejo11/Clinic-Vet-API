@@ -52,8 +52,6 @@ func NewBusinessRuleError(rule, entity, field string) error {
 
 type ValidationError struct {
 	BaseDomainError
-	Field string `json:"field"`
-	Value string `json:"value"`
 }
 
 func NewValidationError(field, value, message string) *ValidationError {
@@ -67,8 +65,6 @@ func NewValidationError(field, value, message string) *ValidationError {
 				"value": value,
 			},
 		},
-		Field: field,
-		Value: value,
 	}
 }
 
@@ -84,32 +80,21 @@ func RequiredField(field, message string) *ValidationError {
 	return NewValidationError(field, "", message)
 }
 
-type EntityNotFoundError struct {
-	BaseDomainError
-	EntityType string `json:"entity_type"`
-	EntityID   string `json:"entity_id"`
-}
-
-func NewEntityNotFoundError(entityType, entityID string) *EntityNotFoundError {
-	return &EntityNotFoundError{
-		EntityType: entityType,
-		EntityID:   entityID,
-		BaseDomainError: BaseDomainError{
-			Code:    "ENTITY_NOT_FOUND",
-			Type:    "application",
-			Message: fmt.Sprintf("%s with ID %s not found", entityType, entityID),
-			Details: map[string]string{
-				"entity_type": entityType,
-				"entity_id":   entityID,
-			},
-			StatusCode: 404,
+func EntityNotFoundError(entityType, entityID string) error {
+	return &BaseDomainError{
+		Code:    "ENTITY_NOT_FOUND",
+		Type:    "application",
+		Message: fmt.Sprintf("%s with ID %s not found", entityType, entityID),
+		Details: map[string]string{
+			"entity_type": entityType,
+			"entity_id":   entityID,
 		},
+		StatusCode: 404,
 	}
 }
 
 type ConflictError struct {
 	BaseDomainError
-	Resource string `json:"resource"`
 }
 
 func NewConflictError(resource, message string) *ConflictError {
@@ -123,6 +108,5 @@ func NewConflictError(resource, message string) *ConflictError {
 				"resource": resource,
 			},
 		},
-		Resource: resource,
 	}
 }

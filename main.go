@@ -6,8 +6,6 @@ import (
 	"net/http"
 	"os"
 
-	api "clinic-vet-api/app/modules/auth/presentation"
-	"clinic-vet-api/app/modules/employee/infrastructure/repository"
 	notiAPI "clinic-vet-api/app/modules/notifications/presentation"
 	"clinic-vet-api/config"
 	"clinic-vet-api/middleware"
@@ -62,11 +60,9 @@ func main() {
 	pxpool := config.CreatePgxPool(os.Getenv("DATABASE_URL"))
 
 	queries := sqlc.New(pxpool)
-	empRepo := repository.NewSqlcEmployeeRepository(queries, pxpool)
-	api.SetupAuthModule(router, dataValidator, config.RedisClient, queries, empRepo, jwtSecret)
 	notiAPI.SetupNotificationModule(router, mongoClient, emailConfig, config.GetTwilioClient())
 
-	if err := config.BootstrapAPIModules(router, queries, pxpool, dataValidator); err != nil {
+	if err := config.BootstrapAPIModules(router, queries, pxpool, dataValidator, config.RedisClient, jwtSecret); err != nil {
 		panic(fmt.Sprintf("Failed to bootstrap modules: %v", err))
 	}
 

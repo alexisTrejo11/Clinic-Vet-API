@@ -69,3 +69,13 @@ func InvalidParseFieldError(field string, value, meesage string) error {
 		StatusCode: http.StatusUnprocessableEntity,
 	}
 }
+
+func ValidationError(message string) error {
+	return BaseApplicationError{
+		Code:       "VALIDATION_ERROR",
+		Type:       "validation",
+		Message:    message,
+		Details:    map[string]string{},
+		StatusCode: http.StatusUnprocessableEntity,
+	}
+}

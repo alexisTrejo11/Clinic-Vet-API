@@ -1,6 +1,7 @@
 package api
 
 import (
+	event "clinic-vet-api/app/core/domain/event/user_event"
 	"clinic-vet-api/app/core/repository"
 	"clinic-vet-api/app/core/service"
 	"clinic-vet-api/app/modules/auth/application/command"
@@ -22,18 +23,25 @@ import (
 func SetupAuthModule(
 	r *gin.Engine,
 	validator *validator.Validate,
+	employeeRepo repository.EmployeeRepository,
+	customerRepo repository.CustomerRepository,
 	client *redis.Client,
 	queries *sqlc.Queries,
-	employeeRepo repository.EmployeeRepository,
 	secretKet string,
 ) {
 	userRepo := userPersistence.NewSQLCUserRepository(queries)
 	jwtService := jwt.NewJWTService(secretKet)
 	passwordEncoder := password.NewPasswordEncoder()
+	emailService := service.NewEmailService()
 
 	session := repositoryimpl.NewRedisSessionRepository(client)
-	service := service.NewUserSecurityService(userRepo, employeeRepo, passwordEncoder, nil)
-	commandHandler := command.NewAuthCommandHandler(userRepo, *service, session, jwtService, passwordEncoder)
+	security_service := service.NewUserSecurityService(userRepo, employeeRepo, passwordEncoder)
+	profileRepo := userPersistence.NewSQLCProfileRepository(queries)
+
+	eventService := service.NewUserAccountService(userRepo, profileRepo, customerRepo, employeeRepo, emailService)
+	userEventProducer := event.NewUserEventHandler(eventService)
+
+	commandHandler := command.NewAuthCommandHandler(userRepo, *security_service, session, jwtService, passwordEncoder, userEventProducer)
 	authCMDBus := bus.NewAuthBus(commandHandler)
 	authController := controller.NewAuthController(validator, authCMDBus)
 	routes.AuthRoutes(r, *authController)

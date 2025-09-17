@@ -44,14 +44,10 @@ func (uc CreatePetUseCase) Execute(ctx context.Context, petCreate dto.CreatePetD
 }
 
 func (uc CreatePetUseCase) validateCustomer(ctx context.Context, customerID valueobject.CustomerID) error {
-	exists, err := uc.ownerRepository.ExistsByID(ctx, customerID)
-	if err != nil {
+	if exists, err := uc.ownerRepository.ExistsByID(ctx, customerID); err != nil {
 		return err
+	} else if !exists {
+		return apperror.EntityNotFoundValidationError("customer", "id", customerID.String())
 	}
-
-	if !exists {
-		apperror.EntityValidationError("customer", "id", customerID.String())
-	}
-
 	return nil
 }

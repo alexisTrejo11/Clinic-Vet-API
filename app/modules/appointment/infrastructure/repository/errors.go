@@ -1,7 +1,6 @@
 package repository
 
 import (
-	"clinic-vet-api/app/shared/page"
 	"fmt"
 
 	dberr "clinic-vet-api/app/shared/error/infrastructure/database"
@@ -31,14 +30,9 @@ const (
 	ErrMsgNotFound        = "appointment not found"
 )
 
-// calculateOffset computes the database offset for pagination
-func (r *SqlcAppointmentRepository) calculateOffset(pageInput page.PageInput) int32 {
-	return int32(pageInput.Page-1) * int32(pageInput.PageSize)
-}
-
 // dbError creates a standardized database operation error
 func (r *SqlcAppointmentRepository) dbError(operation, message string, err error) error {
-	return dberr.DatabaseOperationError(operation, TableAppts, DriverSQL, fmt.Sprintf("%s: %v", message, err))
+	return dberr.DatabaseOperationError(operation, TableAppts, DriverSQL, fmt.Errorf("%s: %v", message, err))
 }
 
 // notFoundError creates a standardized entity not found error

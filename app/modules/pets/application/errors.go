@@ -8,9 +8,9 @@ import (
 )
 
 func OwnerNotFoundError(id int) error {
-	return apperror.EntityValidationError("Owner ", strconv.Itoa(int(id)), "Invalid owner Id provided")
+	return apperror.EntityNotFoundValidationError("Owner ", strconv.Itoa(int(id)), "Invalid owner Id provided")
 }
 
 func PetNotFoundError(id int) error {
-	return apperror.InvalidFieldFormatError("Pet", strconv.Itoa(int(id)))
+	return apperror.EntityNotFoundValidationError("Pet", strconv.Itoa(int(id)), "Invalid pet Id provided")
 }

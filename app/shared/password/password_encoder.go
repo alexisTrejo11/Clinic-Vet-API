@@ -7,7 +7,7 @@ import (
 
 type PasswordEncoder interface {
 	HashPassword(password string) (string, error)
-	CheckPassword(hashedPassword, password string) error
+	CheckPassword(hashedPassword, password string) bool
 }
 
 type PasswordEncoderImpl struct{}
@@ -24,6 +24,7 @@ func (p *PasswordEncoderImpl) HashPassword(password string) (string, error) {
 	return string(hashedPassword), nil
 }
 
-func (p *PasswordEncoderImpl) CheckPassword(hashedPassword, password string) error {
-	return bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
+func (p *PasswordEncoderImpl) CheckPassword(hashedPassword, password string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
+	return err == nil
 }

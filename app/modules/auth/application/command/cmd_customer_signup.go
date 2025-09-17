@@ -36,7 +36,7 @@ func (h *authCommandHandler) CustomerRegister(command CustomerRegisterCommand) A
 		return FailureAuthResult(ErrDataParsingFailed, err)
 	}
 
-	if err := h.userAuthService.ProcessUserCreation(command.CTX, user); err != nil {
+	if err := h.userAuthService.ProcessUserPersistence(command.CTX, user); err != nil {
 		return FailureAuthResult(ErrUserCreationFailed, err)
 	}
 

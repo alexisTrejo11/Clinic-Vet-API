@@ -10,11 +10,7 @@ import (
 
 func EntityNotFoundValidationError(entity, identifier, value string) error {
 	message := fmt.Sprintf("The %s with %s '%s' was not found.", entity, identifier, value)
-
-	// Logging con campos estructurados
-	log.Error(
-		message,
-		nil,
+	log.Error(message, nil,
 		append(
 			log.WithEntity(entity, value),
 			zap.String("identifier", identifier),

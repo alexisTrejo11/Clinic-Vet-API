@@ -69,7 +69,7 @@ func (u *UserAPIModule) Bootstrap() error {
 	employeeRepo := u.config.employeeRepo
 	passwordEncoder := password.NewPasswordEncoder()
 
-	service := service.NewUserSecurityService(userRepo, employeeRepo, passwordEncoder, nil)
+	service := service.NewUserSecurityService(userRepo, employeeRepo, passwordEncoder)
 
 	commandUserBus := bus.NewUserCommandBus(userRepo, service)
 	queryUserBus := bus.NewUserQueryBus(userRepo)

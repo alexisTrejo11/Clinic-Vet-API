@@ -25,17 +25,14 @@ const (
 	ErrMsgConvertEmployeeToDomain = "failed to convert veterinarian to domain entity"
 )
 
-// dbError crea un error estandarizado de operación de base de datos
 func (r *SqlcEmployeeRepository) dbError(operation, message string, err error) error {
-	return dberr.DatabaseOperationError(operation, TableEmployees, DriverSQL, fmt.Sprintf("%s: %v", message, err))
+	return dberr.DatabaseOperationError(operation, TableEmployees, DriverSQL, fmt.Errorf("%s: %v", message, err))
 }
 
-// notFoundError crea un error estandarizado de entidad no encontrada
 func (r *SqlcEmployeeRepository) notFoundError(parameterName, parameterValue string) error {
 	return dberr.EntityNotFoundError(parameterName, parameterValue, OpSelect, TableEmployees, DriverSQL)
 }
 
-// wrapConversionError envuelve errores de conversión de dominio
 func (r *SqlcEmployeeRepository) wrapConversionError(err error) error {
 	return fmt.Errorf("%s: %w", ErrMsgConvertEmployeeToDomain, err)
 }

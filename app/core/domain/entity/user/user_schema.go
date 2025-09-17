@@ -2,12 +2,11 @@
 package user
 
 import (
-	"time"
-
 	"clinic-vet-api/app/core/domain/entity/auth"
 	"clinic-vet-api/app/core/domain/entity/base"
 	"clinic-vet-api/app/core/domain/enum"
 	"clinic-vet-api/app/core/domain/valueobject"
+	"time"
 )
 
 type User struct {
@@ -21,13 +20,14 @@ type User struct {
 	twoFactorAuth auth.TwoFactorAuth
 	employeeID    *valueobject.EmployeeID
 	customerID    *valueobject.CustomerID
+	profileID     uint
 }
 
 func (u *User) ID() valueobject.UserID {
 	return u.Entity.ID()
 }
 
-func (u *User) Password() string {
+func (u *User) HashedPassword() string {
 	return u.password
 }
 
@@ -69,6 +69,10 @@ func (u *User) IsCustomer() bool {
 
 func (u *User) CustomerID() *valueobject.CustomerID {
 	return u.customerID
+}
+
+func (u *User) ProfileID() uint {
+	return u.profileID
 }
 
 func (u *User) TwoFactorAuth() auth.TwoFactorAuth {

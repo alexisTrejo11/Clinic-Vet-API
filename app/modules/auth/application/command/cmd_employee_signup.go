@@ -6,6 +6,7 @@ import (
 
 	u "clinic-vet-api/app/core/domain/entity/user"
 	"clinic-vet-api/app/core/domain/enum"
+	event "clinic-vet-api/app/core/domain/event/user_event"
 	"clinic-vet-api/app/core/domain/valueobject"
 )
 
@@ -48,9 +49,11 @@ func (h *authCommandHandler) EmployeeRegister(command EmployeeRegisterCommand) A
 		return FailureAuthResult(ErrUserCreationFailed, err)
 	}
 
-	if err := h.userAuthService.ProcessUserCreation(command.ctx, user); err != nil {
+	if err := h.userAuthService.ProcessUserPersistence(command.ctx, user); err != nil {
 		return FailureAuthResult(ErrUserCreationFailed, err)
 	}
+
+	go h.produceRegisterEvent(user)
 
 	return SuccessAuthResult(nil, user.ID().String(), "user successfully created")
 }
@@ -69,4 +72,13 @@ func (command *EmployeeRegisterCommand) toEntity() (*u.User, error) {
 		return nil, err
 	}
 	return user, nil
+}
+
+func (h *authCommandHandler) produceRegisterEvent(user *u.User) {
+	event := &event.UserRegisteredEvent{
+		UserID: user.ID(),
+		Email:  user.Email(),
+		Role:   user.Role(),
+	}
+	h.userEvent.Registered(*event)
 }

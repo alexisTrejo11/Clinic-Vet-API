@@ -30,7 +30,7 @@ const (
 )
 
 func (r *SQLCUserRepository) dbError(operation, message string, err error) error {
-	return dberr.DatabaseOperationError(operation, TableUsers, DriverSQL, fmt.Sprintf("%s: %v", message, err))
+	return dberr.DatabaseOperationError(operation, TableUsers, DriverSQL, fmt.Errorf("%s: %v", message, err))
 }
 
 func (r *SQLCUserRepository) notFoundError(parameterName, parameterValue string) error {

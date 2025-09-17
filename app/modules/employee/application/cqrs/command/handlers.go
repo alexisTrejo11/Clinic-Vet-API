@@ -96,7 +96,7 @@ func (h *DeleteEmployeeHandler) Handle(ctx context.Context, cmd DeleteEmployeeCo
 		return *cqrs.FailureResult("failing finding employee", err)
 	}
 	if !exists {
-		return *cqrs.FailureResult("employee not found", apperror.EntityValidationError("Employee", "id", cmd.EmployeeID.String()))
+		return *cqrs.FailureResult("employee not found", apperror.EntityNotFoundValidationError("Employee", "id", cmd.EmployeeID.String()))
 	}
 
 	if err := h.employeeRepo.SoftDelete(ctx, cmd.EmployeeID); err != nil {

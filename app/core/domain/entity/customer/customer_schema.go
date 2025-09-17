@@ -2,6 +2,7 @@
 package customer
 
 import (
+	"fmt"
 	"time"
 
 	"clinic-vet-api/app/core/domain/entity/base"
@@ -47,4 +48,12 @@ func (o *Customer) IsActive() bool {
 
 func (o *Customer) Pets() []pet.Pet {
 	return o.pets
+}
+
+func (o *Customer) AssignUser(userID valueobject.UserID) error {
+	if o.userID != nil {
+		return fmt.Errorf("customer already assigned to a user with ID %s", o.userID.String())
+	}
+	o.userID = &userID
+	return nil
 }

@@ -2,19 +2,19 @@ package command
 
 import (
 	"context"
-	"errors"
 
 	"clinic-vet-api/app/core/domain/entity/user"
 	"clinic-vet-api/app/core/domain/valueobject"
 	"clinic-vet-api/app/core/repository"
 	"clinic-vet-api/app/shared/cqrs"
+	apperror "clinic-vet-api/app/shared/error/application"
 	"clinic-vet-api/app/shared/password"
 )
 
 type ChangePasswordCommand struct {
-	UserID      valueobject.UserID
-	OldPassword string
-	NewPassword string
+	UserID          valueobject.UserID
+	CurrentPassword string
+	NewPassword     string
 }
 
 type ChangePasswordHandler struct {
@@ -47,9 +47,9 @@ func (c *ChangePasswordHandler) Handle(ctx context.Context, command ChangePasswo
 }
 
 func (c *ChangePasswordHandler) changePassword(ctx context.Context, user *user.User, command ChangePasswordCommand) error {
-	err := c.passwordEncoder.CheckPassword(user.Password(), command.OldPassword)
-	if err != nil {
-		return errors.New("invalid current password")
+	valid := c.passwordEncoder.CheckPassword(user.HashedPassword(), command.CurrentPassword)
+	if !valid {
+		return apperror.ValidationError("Current password is incorrect")
 	}
 
 	if err := user.UpdatePassword(command.NewPassword); err != nil {

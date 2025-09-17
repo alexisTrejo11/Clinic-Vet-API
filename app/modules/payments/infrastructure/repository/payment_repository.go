@@ -29,21 +29,21 @@ func NewSQLCPaymentRepository(queries *sqlc.Queries) repository.PaymentRepositor
 }
 
 func (r *SQLCPaymentRepository) FindBySpecification(ctx context.Context, specification specification.PaymentSpecification) (page.Page[payment.Payment], error) {
-	return page.Page[payment.Payment]{}, fmt.Errorf("FindBySpecification method is not implemented")
+	return page.Page[payment.Payment]{}, r.dbError(OpSelect, ErrMsgSearchPayments, fmt.Errorf("method not implemented"))
 }
 
 func (r *SQLCPaymentRepository) FindByID(ctx context.Context, id valueobject.PaymentID) (payment.Payment, error) {
 	sqlRow, err := r.queries.FindPaymentByID(ctx, int32(id.Value()))
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return payment.Payment{}, fmt.Errorf("payment with ID %d not found", id.Value())
+			return payment.Payment{}, r.notFoundError("id", fmt.Sprintf("%d", id.Value()))
 		}
-		return payment.Payment{}, fmt.Errorf("failed to find payment by ID: %w", err)
+		return payment.Payment{}, r.dbError(OpSelect, ErrMsgGetPayment, err)
 	}
 
 	paymentEntity, err := sqlcRowToEntity(&sqlRow)
 	if err != nil {
-		return payment.Payment{}, fmt.Errorf("failed to convert SQL row to payment: %w", err)
+		return payment.Payment{}, r.wrapConversionError(err)
 	}
 
 	return *paymentEntity, nil
@@ -53,14 +53,14 @@ func (r *SQLCPaymentRepository) FindByTransactionID(ctx context.Context, transac
 	sqlRow, err := r.queries.FindPaymentByTransactionID(ctx, pgtype.Text{String: transactionID, Valid: true})
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return payment.Payment{}, fmt.Errorf("payment with transaction ID %s not found", transactionID)
+			return payment.Payment{}, r.notFoundError("transaction_id", transactionID)
 		}
-		return payment.Payment{}, fmt.Errorf("failed to find payment by transaction ID: %w", err)
+		return payment.Payment{}, r.dbError(OpSelect, ErrMsgGetPaymentByTransaction, err)
 	}
 
 	paymentEntity, err := sqlcRowToEntity(&sqlRow)
 	if err != nil {
-		return payment.Payment{}, fmt.Errorf("failed to convert SQL row to payment: %w", err)
+		return payment.Payment{}, r.wrapConversionError(err)
 	}
 
 	return *paymentEntity, nil
@@ -95,12 +95,12 @@ func (r *SQLCPaymentRepository) FindByCustomerID(ctx context.Context, customerID
 		Offset:           int32(offset),
 	})
 	if err != nil {
-		return page.Page[payment.Payment]{}, fmt.Errorf("failed to find payments by customer ID: %w", err)
+		return page.Page[payment.Payment]{}, r.dbError(OpSelect, ErrMsgListPaymentsByUser, err)
 	}
 
 	total, err := r.queries.CountPaymentsByCustomerID(ctx, pgtype.Int4{Int32: int32(customerID.Value()), Valid: true})
 	if err != nil {
-		return page.Page[payment.Payment]{}, fmt.Errorf("failed to count payments by customer ID: %w", err)
+		return page.Page[payment.Payment]{}, r.dbError(OpCount, ErrMsgCountPayments, err)
 	}
 
 	payments, err := r.convertSQLRowsToPayments(sqlRows)
@@ -212,7 +212,7 @@ func (r *SQLCPaymentRepository) FindSuccessfulPayments(ctx context.Context, page
 func (r *SQLCPaymentRepository) ExistsByID(ctx context.Context, id valueobject.PaymentID) (bool, error) {
 	exists, err := r.queries.ExistsPaymentByID(ctx, int32(id.Value()))
 	if err != nil {
-		return false, fmt.Errorf("failed to check payment existence by ID: %w", err)
+		return false, r.dbError(OpSelect, ErrMsgGetPayment, err)
 	}
 	return exists, nil
 }
@@ -220,7 +220,7 @@ func (r *SQLCPaymentRepository) ExistsByID(ctx context.Context, id valueobject.P
 func (r *SQLCPaymentRepository) ExistsByTransactionID(ctx context.Context, transactionID string) (bool, error) {
 	exists, err := r.queries.ExistsPaymentByTransactionID(ctx, pgtype.Text{String: transactionID, Valid: true})
 	if err != nil {
-		return false, fmt.Errorf("failed to check payment existence by transaction ID: %w", err)
+		return false, r.dbError(OpSelect, ErrMsgGetPaymentByTransaction, err)
 	}
 	return exists, nil
 }
@@ -243,7 +243,7 @@ func (r *SQLCPaymentRepository) Save(ctx context.Context, paymentEntity *payment
 func (r *SQLCPaymentRepository) SoftDelete(ctx context.Context, id valueobject.PaymentID) error {
 	err := r.queries.SoftDeletePayment(ctx, int32(id.Value()))
 	if err != nil {
-		return fmt.Errorf("failed to soft delete payment: %w", err)
+		return r.dbError(OpDelete, ErrMsgSoftDeletePayment, err)
 	}
 	return nil
 }
@@ -251,7 +251,7 @@ func (r *SQLCPaymentRepository) SoftDelete(ctx context.Context, id valueobject.P
 func (r *SQLCPaymentRepository) HardDelete(ctx context.Context, id valueobject.PaymentID) error {
 	err := r.queries.HardDeletePayment(ctx, int32(id.Value()))
 	if err != nil {
-		return fmt.Errorf("failed to hard delete payment: %w", err)
+		return r.dbError(OpDelete, ErrMsgSoftDeletePayment, err)
 	}
 	return nil
 }
@@ -259,7 +259,7 @@ func (r *SQLCPaymentRepository) HardDelete(ctx context.Context, id valueobject.P
 func (r *SQLCPaymentRepository) CountByStatus(ctx context.Context, status enum.PaymentStatus) (int64, error) {
 	count, err := r.queries.CountPaymentsByStatus(ctx, models.PaymentStatus(status.String()))
 	if err != nil {
-		return 0, fmt.Errorf("failed to count payments by status: %w", err)
+		return 0, r.dbError(OpCount, ErrMsgListPaymentsByStatus, err)
 	}
 	return count, nil
 }
@@ -267,7 +267,7 @@ func (r *SQLCPaymentRepository) CountByStatus(ctx context.Context, status enum.P
 func (r *SQLCPaymentRepository) CountByCustomerID(ctx context.Context, customerID valueobject.CustomerID) (int64, error) {
 	count, err := r.queries.CountPaymentsByCustomerID(ctx, pgtype.Int4{Int32: int32(customerID.Value()), Valid: true})
 	if err != nil {
-		return 0, fmt.Errorf("failed to count payments by customer ID: %w", err)
+		return 0, r.dbError(OpCount, ErrMsgCountPayments, err)
 	}
 	return count, nil
 }
@@ -275,7 +275,7 @@ func (r *SQLCPaymentRepository) CountByCustomerID(ctx context.Context, customerI
 func (r *SQLCPaymentRepository) CountOverdue(ctx context.Context) (int64, error) {
 	count, err := r.queries.CountOverduePayments(ctx)
 	if err != nil {
-		return 0, fmt.Errorf("failed to count overdue payments: %w", err)
+		return 0, r.dbError(OpCount, ErrMsgListOverduePayments, err)
 	}
 	return count, nil
 }
@@ -286,12 +286,12 @@ func (r *SQLCPaymentRepository) TotalRevenueByDateRange(ctx context.Context, sta
 		PaidAt_2: pgtype.Timestamptz{Time: endDate, Valid: true},
 	})
 	if err != nil {
-		return 0, fmt.Errorf("failed to calculate total revenue: %w", err)
+		return 0, r.dbError(OpSelect, ErrMsgListPaymentsByDateRange, err)
 	}
 
 	totalFloat, ok := total.(float64)
 	if !ok {
-		return 0, fmt.Errorf("failed to convert total revenue to float64")
+		return 0, r.wrapConversionError(fmt.Errorf("failed to convert total revenue to float64"))
 	}
 	return totalFloat, nil
 }
@@ -299,12 +299,12 @@ func (r *SQLCPaymentRepository) TotalRevenueByDateRange(ctx context.Context, sta
 func (r *SQLCPaymentRepository) create(ctx context.Context, paymentEntity *payment.Payment) error {
 	params, err := entityToCreateParams(paymentEntity)
 	if err != nil {
-		return fmt.Errorf("failed to convert payment to create params: %w", err)
+		return r.wrapConversionError(err)
 	}
 
 	_, err = r.queries.CreatePayment(ctx, *params)
 	if err != nil {
-		return fmt.Errorf("failed to create payment: %w", err)
+		return r.dbError(OpInsert, ErrMsgCreatePayment, err)
 	}
 
 	return nil
@@ -313,12 +313,12 @@ func (r *SQLCPaymentRepository) create(ctx context.Context, paymentEntity *payme
 func (r *SQLCPaymentRepository) update(ctx context.Context, paymentEntity *payment.Payment) error {
 	params, err := entityToUpdateParams(paymentEntity)
 	if err != nil {
-		return fmt.Errorf("failed to convert payment to update params: %w", err)
+		return r.wrapConversionError(err)
 	}
 
 	_, err = r.queries.UpdatePayment(ctx, *params)
 	if err != nil {
-		return fmt.Errorf("failed to update payment: %w", err)
+		return r.dbError(OpUpdate, ErrMsgUpdatePayment, err)
 	}
 
 	return nil

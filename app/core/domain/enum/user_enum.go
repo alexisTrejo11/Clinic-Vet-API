@@ -1,6 +1,7 @@
 package enum
 
 import (
+	domainerr "clinic-vet-api/app/core/error"
 	"fmt"
 	"strings"
 )
@@ -49,7 +50,7 @@ func ParseUserRole(role string) (UserRole, error) {
 	if val, exists := userRoleMap[normalized]; exists {
 		return val, nil
 	}
-	return "", fmt.Errorf("invalid user role: %s", role)
+	return "", domainerr.InvalidEnumValue("user-role", role, "invalid user role")
 }
 
 func MustParseUserRole(role string) UserRole {

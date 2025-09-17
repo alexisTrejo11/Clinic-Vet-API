@@ -29,17 +29,14 @@ const (
 	DriverSQL = "sqlc"
 )
 
-// dbError crea un error estandarizado de operación de base de datos
 func (r *SqlcPetRepository) dbError(operation, message string, err error) error {
-	return dberr.DatabaseOperationError(operation, TablePets, DriverSQL, fmt.Sprintf("%s: %v", message, err))
+	return dberr.DatabaseOperationError(operation, TablePets, DriverSQL, fmt.Errorf("%s: %v", message, err))
 }
 
-// notFoundError crea un error estandarizado de entidad no encontrada
 func (r *SqlcPetRepository) notFoundError(parameterName, parameterValue string) error {
 	return dberr.EntityNotFoundError(parameterName, parameterValue, OpSelect, TablePets, DriverSQL)
 }
 
-// wrapConversionError envuelve errores de conversión de dominio
 func (r *SqlcPetRepository) wrapConversionError(err error) error {
 	return fmt.Errorf("%s: %w", ErrMsgConvertPetToDomain, err)
 }

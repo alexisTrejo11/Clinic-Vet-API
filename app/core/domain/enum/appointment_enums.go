@@ -2,6 +2,7 @@
 package enum
 
 import (
+	domainerr "clinic-vet-api/app/core/error"
 	"fmt"
 	"slices"
 	"strings"
@@ -60,7 +61,8 @@ func ParseAppointmentStatus(status string) (AppointmentStatus, error) {
 	if val, exists := appointmentStatusMap[normalized]; exists {
 		return val, nil
 	}
-	return "", fmt.Errorf("invalid appointment status: %s", status)
+
+	return "", domainerr.InvalidEnumValue("appointment-status", status, "invalid appointment status")
 }
 
 func MustParseAppointmentStatus(status string) AppointmentStatus {

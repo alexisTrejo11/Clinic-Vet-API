@@ -1,7 +1,9 @@
 package enum
 
 import (
+	domainerr "clinic-vet-api/app/core/error"
 	"fmt"
+	"slices"
 )
 
 // NotificationType represents the type of notification
@@ -145,7 +147,7 @@ func ParseNotificationType(notificationType string) (NotificationType, error) {
 	if val, exists := notificationTypeMap[normalized]; exists {
 		return val, nil
 	}
-	return NotificationTypeUnknown, fmt.Errorf("invalid notification type: %s", notificationType)
+	return NotificationTypeUnknown, domainerr.InvalidEnumValue("notification-type", notificationType, "invalid notification type")
 }
 
 func MustParseNotificationType(notificationType string) NotificationType {
@@ -336,22 +338,12 @@ func (nc NotificationChannel) IsRealTime() bool {
 
 func (nc NotificationChannel) CanDeliverUrgent() bool {
 	capabilities := nc.Capabilities()
-	for _, cap := range capabilities {
-		if cap == "urgent" {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(capabilities, "urgent")
 }
 
 func (nc NotificationChannel) IsAsync() bool {
 	capabilities := nc.Capabilities()
-	for _, cap := range capabilities {
-		if cap == "async" {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(capabilities, "async")
 }
 
 func (nc NotificationChannel) RecommendedForType(nt NotificationType) bool {

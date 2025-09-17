@@ -49,7 +49,7 @@ func (r *SQLCMedHistRepository) buildNotesParam(notes *string) pgtype.Text {
 }
 
 func (r *SQLCMedHistRepository) dbError(operation, message string, err error) error {
-	return dberr.DatabaseOperationError(operation, TableMedicalHistory, DriverSQL, fmt.Sprintf("%s: %v", message, err))
+	return dberr.DatabaseOperationError(operation, TableMedicalHistory, DriverSQL, fmt.Errorf("%s: %v", message, err))
 }
 
 func (r *SQLCMedHistRepository) notFoundError(parameterName, parameterValue string) error {

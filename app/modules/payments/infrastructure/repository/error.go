@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	dberr "clinic-vet-api/app/shared/error/infrastructure/database"
-	"clinic-vet-api/app/shared/page"
 )
 
 const (
@@ -36,13 +35,9 @@ const (
 	ErrMsgSearchPayments          = "failed to search payments"
 )
 
-func (r *SQLCPaymentRepository) calculateOffset(pageInput page.PageInput) int32 {
-	return int32((pageInput.Page - 1) * pageInput.PageSize)
-}
-
 // dbError creates a standardized database operation error
 func (r *SQLCPaymentRepository) dbError(operation, message string, err error) error {
-	return dberr.DatabaseOperationError(operation, TablePayments, DriverSQL, fmt.Sprintf("%s: %v", message, err))
+	return dberr.DatabaseOperationError(operation, TablePayments, DriverSQL, fmt.Errorf("%s: %v", message, err))
 }
 
 // notFoundError creates a standardized entity not found error

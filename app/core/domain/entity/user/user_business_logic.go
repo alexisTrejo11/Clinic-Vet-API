@@ -85,8 +85,50 @@ func (u *User) DisableTwoFactorAuth() error {
 	return nil
 }
 
-func (u *User) CanLogin() bool {
-	return u.status == enum.UserStatusActive &&
-		u.email.String() != "" &&
-		u.password != ""
+func (u *User) ValidateLogin(Is2FA bool) error {
+	if u.status != enum.UserStatusActive {
+		return errors.New("user is not activated")
+	}
+	if u.status == enum.UserStatusBanned {
+		return errors.New("user is banned")
+	}
+
+	if Is2FA && !u.twoFactorAuth.Enabled() {
+		return errors.New("two-factor authentication is required to login")
+	}
+
+	return nil
+}
+
+func (u *User) AssignProfile(profileID uint) error {
+	if profileID != 0 {
+		return errors.New("profile already assigned")
+	}
+	u.profileID = profileID
+	u.IncrementVersion()
+	return nil
+}
+
+func (u *User) AssignCustomer(customerID valueobject.CustomerID) error {
+	if u.customerID != nil {
+		return errors.New("customer already assigned")
+	}
+	if u.employeeID != nil {
+		return errors.New("user is an employee, cannot assign customer")
+	}
+	u.customerID = &customerID
+	u.IncrementVersion()
+	return nil
+}
+
+func (u *User) AssignEmployee(employeeID valueobject.EmployeeID) error {
+	if u.employeeID != nil {
+		return errors.New("employee already assigned")
+	}
+	if u.customerID != nil {
+		return errors.New("user is a customer, cannot assign employee")
+	}
+	u.employeeID = &employeeID
+	u.IncrementVersion()
+	return nil
 }

@@ -40,7 +40,7 @@ const (
 
 // dbError creates a standardized database operation error
 func (r *SqlcCustomerRepository) dbError(operation, message string, err error) error {
-	return dberr.DatabaseOperationError(operation, TableCustomers, DriverSQL, fmt.Sprintf("%s: %v", message, err))
+	return dberr.DatabaseOperationError(operation, TableCustomers, DriverSQL, fmt.Errorf("%s: %v", message, err))
 }
 
 // notFoundError creates a standardized entity not found error

@@ -40,7 +40,7 @@ func (h *authCommandHandler) validateExisitngUser(command RefreshSessionCommand)
 	}
 
 	if !exists {
-		return apperror.EntityValidationError("user", "id", command.UserID.String())
+		return apperror.EntityNotFoundValidationError("user", "id", command.UserID.String())
 	}
 
 	return nil

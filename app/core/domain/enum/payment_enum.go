@@ -2,6 +2,7 @@ package enum
 
 import (
 	"fmt"
+	"slices"
 )
 
 // PaymentStatus represents the status of a payment
@@ -123,11 +124,7 @@ func (ps PaymentStatus) Values() []PaymentStatus {
 
 func (ps PaymentStatus) CanTransitionTo(newStatus PaymentStatus) bool {
 	if allowedTransitions, exists := paymentStatusFlow[ps]; exists {
-		for _, allowedStatus := range allowedTransitions {
-			if allowedStatus == newStatus {
-				return true
-			}
-		}
+		return slices.Contains(allowedTransitions, newStatus)
 	}
 	return false
 }
@@ -138,12 +135,7 @@ func (ps PaymentStatus) IsFinal() bool {
 		PaymentStatusCancelled,
 		PaymentStatusRefunded,
 	}
-	for _, status := range finalStatuses {
-		if ps == status {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(finalStatuses, ps)
 }
 
 func (ps PaymentStatus) RequiresAction() bool {
@@ -284,12 +276,7 @@ func (pm PaymentMethod) RequiresOnlineProcessing() bool {
 		PaymentMethodBankTransfer,
 		PaymentMethodMobilePayment,
 	}
-	for _, method := range onlineMethods {
-		if pm == method {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(onlineMethods, pm)
 }
 
 func (pm PaymentMethod) IsCard() bool {

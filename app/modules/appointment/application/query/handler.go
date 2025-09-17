@@ -96,7 +96,7 @@ func (h *apptQueryHandler) validateEmployee(ctx context.Context, employeeID valu
 	}
 
 	if !exists {
-		return apperror.EntityValidationError("owner", "id", employeeID.String())
+		return apperror.EntityNotFoundValidationError("employee", "id", employeeID.String())
 	}
 
 	return nil
@@ -109,7 +109,7 @@ func (h *apptQueryHandler) validateCustomer(ctx context.Context, customerID valu
 	}
 
 	if !exists {
-		return apperror.EntityValidationError("owner", "id", customerID.String())
+		return apperror.EntityNotFoundValidationError("owner", "id", customerID.String())
 	}
 
 	return nil

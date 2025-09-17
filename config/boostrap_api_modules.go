@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 
+	api "clinic-vet-api/app/modules/auth/presentation"
 	customerAPI "clinic-vet-api/app/modules/customer/presentation"
 	vetAPI "clinic-vet-api/app/modules/employee/presentation"
 	medHistoryAPI "clinic-vet-api/app/modules/medical/presentation"
@@ -15,6 +16,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/redis/go-redis/v9"
 )
 
 func BootstrapAPIModules(
@@ -22,6 +24,8 @@ func BootstrapAPIModules(
 	queries *sqlc.Queries,
 	db *pgxpool.Pool,
 	validator *validator.Validate,
+	redis *redis.Client,
+	jwtSecret string,
 ) error {
 	petRepository := petRepo.NewSqlcPetRepository(queries)
 
@@ -92,6 +96,18 @@ func BootstrapAPIModules(
 	}).Bootstrap(); err != nil {
 		return fmt.Errorf("failed to bootstrap user API module: %w", err)
 	}
+
+	customerRepo, err = customerModule.GetRepository()
+	if err != nil {
+		return fmt.Errorf("failed to get customer repository: %w", err)
+	}
+
+	vetRepo, err = vetModule.GetRepository()
+	if err != nil {
+		return fmt.Errorf("failed to get vet repository: %w", err)
+	}
+
+	api.SetupAuthModule(router, validator, vetRepo, customerRepo, redis, queries, jwtSecret)
 
 	log.Println("modules bootstrapped successfully")
 	return nil

@@ -96,7 +96,7 @@ func entityToCreateParams(user *user.User) (*sqlc.CreateUserParams, error) {
 	return &sqlc.CreateUserParams{
 		Email:       pgtype.Text{String: user.Email().String(), Valid: true},
 		PhoneNumber: pgtype.Text{String: user.PhoneNumber().String(), Valid: true},
-		Password:    pgtype.Text{String: user.Password(), Valid: true},
+		Password:    pgtype.Text{String: user.HashedPassword(), Valid: true},
 		Role:        models.UserRole(user.Role().String()),
 		Status:      models.UserStatus(user.Status().String()),
 		EmployeeID:  employeeID,
@@ -110,7 +110,7 @@ func entityToUpdateParams(user *user.User) *sqlc.UpdateUserParams {
 		ID:          int32(user.ID().Value()),
 		Email:       pgtype.Text{String: user.Email().String(), Valid: true},
 		PhoneNumber: pgtype.Text{String: user.PhoneNumber().String(), Valid: true},
-		Password:    pgtype.Text{String: user.Password(), Valid: true},
+		Password:    pgtype.Text{String: user.HashedPassword(), Valid: true},
 		Status:      models.UserStatus(user.Status().String()),
 		Role:        models.UserRole(user.Role()),
 	}

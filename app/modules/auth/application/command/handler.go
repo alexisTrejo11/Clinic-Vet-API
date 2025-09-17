@@ -2,6 +2,7 @@
 package command
 
 import (
+	event "clinic-vet-api/app/core/domain/event/user_event"
 	"clinic-vet-api/app/core/repository"
 	"clinic-vet-api/app/core/service"
 	"clinic-vet-api/app/modules/auth/application/jwt"
@@ -23,6 +24,7 @@ type authCommandHandler struct {
 	sessionRepo     repository.SessionRepository
 	jwtService      jwt.JWTService
 	passwordEncoder password.PasswordEncoder
+	userEvent       event.UserEventProducer
 }
 
 func NewAuthCommandHandler(
@@ -31,6 +33,7 @@ func NewAuthCommandHandler(
 	sessionRepo repository.SessionRepository,
 	jwtService jwt.JWTService,
 	passwordEncoder password.PasswordEncoder,
+	userEvent event.UserEventProducer,
 ) AuthCommandHandler {
 	return &authCommandHandler{
 		userRepository:  userRepository,
@@ -38,5 +41,6 @@ func NewAuthCommandHandler(
 		sessionRepo:     sessionRepo,
 		jwtService:      jwtService,
 		passwordEncoder: passwordEncoder,
+		userEvent:       userEvent,
 	}
 }

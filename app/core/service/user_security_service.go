@@ -2,35 +2,28 @@
 package service
 
 import (
+	u "clinic-vet-api/app/core/domain/entity/user"
+	"clinic-vet-api/app/core/domain/valueobject"
+	"clinic-vet-api/app/core/repository"
+	apperror "clinic-vet-api/app/shared/error/application"
+	autherror "clinic-vet-api/app/shared/error/auth"
+	"clinic-vet-api/app/shared/password"
 	"context"
 	"errors"
 	"sync"
 	"unicode"
-
-	"clinic-vet-api/app/core/domain/entity/user"
-	"clinic-vet-api/app/core/domain/event"
-	"clinic-vet-api/app/core/domain/valueobject"
-	"clinic-vet-api/app/core/repository"
-	apperror "clinic-vet-api/app/shared/error/application"
-	"clinic-vet-api/app/shared/password"
 )
-
-type EventPublisher interface {
-	Publish(event any) error
-}
 
 type UserSecurityService struct {
 	userRepo        repository.UserRepository
 	employeeRepo    repository.EmployeeRepository
 	passwordEncoder password.PasswordEncoder
-	eventPublisher  EventPublisher
 }
 
 func NewUserSecurityService(
 	userRepo repository.UserRepository,
 	employeeRepo repository.EmployeeRepository,
 	passwordEncoder password.PasswordEncoder,
-	eventPublisher EventPublisher,
 ) *UserSecurityService {
 	return &UserSecurityService{
 		userRepo:        userRepo,
@@ -39,8 +32,9 @@ func NewUserSecurityService(
 	}
 }
 
-func (s *UserSecurityService) ProcessUserCreation(ctx context.Context, user *user.User) error {
-	hashedPassword, err := s.passwordEncoder.HashPassword(user.Password())
+// ProcessUserPersistence handles hashing the user's password and saving the user to the repository.
+func (s *UserSecurityService) ProcessUserPersistence(ctx context.Context, user *u.User) error {
+	hashedPassword, err := s.passwordEncoder.HashPassword(user.HashedPassword())
 	if err != nil {
 		return err
 	}
@@ -50,13 +44,30 @@ func (s *UserSecurityService) ProcessUserCreation(ctx context.Context, user *use
 		return err
 	}
 
-	//go s.ProduceUserCreatedEvent(*user)
-
 	return nil
 }
 
-func (s *UserSecurityService) AuthenticateUser(ctx context.Context, EmailOrPhone string) (user.User, error) {
-	return user.User{}, nil
+func (s *UserSecurityService) AuthenticateUser(ctx context.Context, emailOrPhone string, plainPassword string) (u.User, error) {
+	user, err := s.userRepo.FindByEmail(ctx, emailOrPhone)
+	if err == nil {
+		return s.authenticateWithPassword(user, plainPassword)
+	}
+
+	user, err = s.userRepo.FindByPhone(ctx, emailOrPhone)
+	if err == nil {
+		return s.authenticateWithPassword(user, plainPassword)
+	}
+
+	return u.User{}, autherror.InvalidCredentialsError(err, emailOrPhone)
+}
+
+func (s *UserSecurityService) authenticateWithPassword(user u.User, plainPassword string) (u.User, error) {
+	valid := s.passwordEncoder.CheckPassword(user.HashedPassword(), plainPassword)
+	if !valid {
+		return u.User{}, autherror.InvalidCredentialsError(errors.New("invalid password"), "")
+	}
+
+	return user, nil
 }
 
 func (s *UserSecurityService) ValidateUserCredentials(ctx context.Context, email valueobject.Email, phone *valueobject.PhoneNumber, rawPassword string) error {
@@ -229,23 +240,4 @@ func (s *UserSecurityService) ValidateRawPassword(rawPassword string) error {
 	}
 
 	return nil
-}
-
-func (s *UserSecurityService) ProduceUserCreatedEvent(user user.User) error {
-	if user.IsEmployee() {
-		event := &event.CreateUserEmployeeEvent{
-			UserID:     user.ID(),
-			Email:      user.Email(),
-			Role:       user.Role(),
-			EmployeeID: *user.EmployeeID(),
-		}
-		return s.eventPublisher.Publish(event)
-	} else {
-		event := &event.CreateUserCustomerEvent{
-			UserID: user.ID(),
-			Email:  user.Email(),
-			Role:   user.Role(),
-		}
-		return s.eventPublisher.Publish(event)
-	}
 }

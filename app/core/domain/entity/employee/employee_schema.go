@@ -5,6 +5,7 @@ import (
 	"clinic-vet-api/app/core/domain/entity/base"
 	"clinic-vet-api/app/core/domain/enum"
 	"clinic-vet-api/app/core/domain/valueobject"
+	"fmt"
 )
 
 type Employee struct {
@@ -58,4 +59,13 @@ func (v *Employee) UserID() *valueobject.UserID {
 
 func (v *Employee) Schedule() *valueobject.Schedule {
 	return v.schedule
+}
+
+func (v *Employee) AssignUser(userID valueobject.UserID) error {
+	if v.userID != nil {
+		return fmt.Errorf("employee already assigned to a user with ID %s", v.userID.String())
+	}
+	v.userID = &userID
+
+	return nil
 }

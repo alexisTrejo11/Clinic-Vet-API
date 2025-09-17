@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"clinic-vet-api/app/core/domain/entity/auth"
-	apperror "clinic-vet-api/app/shared/error/application"
 )
 
 // LoginCommand represents the login request data
@@ -20,23 +19,14 @@ type LoginCommand struct {
 }
 
 func (h *authCommandHandler) Login(command LoginCommand) AuthCommandResult {
-	user, err := h.userAuthService.AuthenticateUser(command.CTX, command.Identifier)
+	user, err := h.userAuthService.AuthenticateUser(command.CTX, command.Identifier, command.Password)
 	if err != nil {
 		return FailureAuthResult(ErrAuthenticationFailed, err)
 	}
 
-	if user.CanLogin() {
-		return FailureAuthResult(
-			ErrAuthenticationFailed,
-			apperror.ConflictError("User Status", "user is not active, please contact support"),
-		)
-	}
-
-	if user.IsTwoFactorEnabled() {
-		return FailureAuthResult(
-			ErrTwoFactorRequired,
-			apperror.ConflictError("Two Factor Authorization", ErrTwoFactorAuthConflict),
-		)
+	is2FALogin := false
+	if err := user.ValidateLogin(is2FALogin); err != nil {
+		return FailureAuthResult(ErrAuthenticationFailed, err)
 	}
 
 	session, err := h.createSession(user.ID().String(), command)

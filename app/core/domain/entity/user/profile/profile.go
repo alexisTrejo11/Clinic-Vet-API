@@ -8,6 +8,7 @@ import (
 )
 
 type Profile struct {
+	ID             uint
 	UserID         valueobject.UserID
 	OwnerID        *int
 	VeterinarianID *int

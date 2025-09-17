@@ -1,7 +1,8 @@
 package enum
 
 import (
-	"fmt"
+	domainerr "clinic-vet-api/app/core/error"
+	"slices"
 )
 
 // VetSpecialty represents the specialty of a veterinarian
@@ -191,7 +192,7 @@ func ParseVetSpecialty(specialty string) (VetSpecialty, error) {
 	if val, exists := vetSpecialtyMap[normalized]; exists {
 		return val, nil
 	}
-	return VetSpecialtyUnknown, fmt.Errorf("invalid veterinary specialty: %s", specialty)
+	return VetSpecialtyUnknown, domainerr.InvalidEnumValue("vet-specialty", "specialty", "invalid vet specialty")
 }
 
 func MustParseVetSpecialty(specialty string) VetSpecialty {
@@ -230,12 +231,7 @@ func (vs VetSpecialty) IsSurgical() bool {
 		VetSpecialtyDentistry,
 		VetSpecialtyAnesthesiology,
 	}
-	for _, specialty := range surgicalSpecialties {
-		if vs == specialty {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(surgicalSpecialties, vs)
 }
 
 func (vs VetSpecialty) IsMedical() bool {
@@ -247,12 +243,7 @@ func (vs VetSpecialty) IsMedical() bool {
 		VetSpecialtyNeurology,
 		VetSpecialtyOphthalmology,
 	}
-	for _, specialty := range medicalSpecialties {
-		if vs == specialty {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(medicalSpecialties, vs)
 }
 
 func (vs VetSpecialty) IsDiagnostic() bool {
@@ -260,12 +251,7 @@ func (vs VetSpecialty) IsDiagnostic() bool {
 		VetSpecialtyRadiology,
 		VetSpecialtyPathology,
 	}
-	for _, specialty := range diagnosticSpecialties {
-		if vs == specialty {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(diagnosticSpecialties, vs)
 }
 
 func (vs VetSpecialty) IsLargeAnimal() bool {
@@ -273,12 +259,7 @@ func (vs VetSpecialty) IsLargeAnimal() bool {
 		VetSpecialtyEquineMedicine,
 		VetSpecialtyFoodAnimalMedicine,
 	}
-	for _, specialty := range largeAnimalSpecialties {
-		if vs == specialty {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(largeAnimalSpecialties, vs)
 }
 
 func (vs VetSpecialty) IsExoticAnimal() bool {
@@ -287,12 +268,7 @@ func (vs VetSpecialty) IsExoticAnimal() bool {
 		VetSpecialtyAvianMedicine,
 		VetSpecialtyZooAnimalMedicine,
 	}
-	for _, specialty := range exoticSpecialties {
-		if vs == specialty {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(exoticSpecialties, vs)
 }
 
 func (vs VetSpecialty) RequiresSpecialEquipment() bool {

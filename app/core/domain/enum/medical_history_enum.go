@@ -1,6 +1,7 @@
 package enum
 
 import (
+	domainerr "clinic-vet-api/app/core/error"
 	"fmt"
 	"strings"
 )
@@ -77,7 +78,7 @@ func ParseVisitReason(reason string) (VisitReason, error) {
 	if val, exists := visitReasonMap[normalized]; exists {
 		return val, nil
 	}
-	return "", fmt.Errorf("invalid visit reason: %s", reason)
+	return "", domainerr.InvalidEnumValue("visit-reason", reason, "invalid visit reason")
 }
 
 func MustParseVisitReason(reason string) VisitReason {
