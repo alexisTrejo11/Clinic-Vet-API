@@ -58,10 +58,9 @@ func main() {
 	}
 
 	pxpool := config.CreatePgxPool(os.Getenv("DATABASE_URL"))
-
 	queries := sqlc.New(pxpool)
-	notiAPI.SetupNotificationModule(router, mongoClient, emailConfig, config.GetTwilioClient())
 
+	notiAPI.SetupNotificationModule(router, mongoClient, emailConfig, config.GetTwilioClient())
 	if err := config.BootstrapAPIModules(router, queries, pxpool, dataValidator, config.RedisClient, jwtSecret); err != nil {
 		panic(fmt.Sprintf("Failed to bootstrap modules: %v", err))
 	}

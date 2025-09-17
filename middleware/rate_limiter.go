@@ -12,10 +12,8 @@ import (
 
 // RateLimiterConfig holds the configuration for the rate limiter
 type RateLimiterConfig struct {
-	// Requests per second allowed
-	RequestsPerSecond int
-	// Burst size - maximum number of requests allowed in a single burst
-	BurstSize int
+	// Maximum requests allowed in the window duration
+	MaxRequests int
 	// Window duration for sliding window algorithm
 	WindowDuration time.Duration
 	// Key generator function to identify clients (IP, user ID, etc.)
@@ -113,9 +111,8 @@ func (m *MemoryStorage) cleanupRoutine() {
 // DefaultConfig returns a default rate limiter configuration
 func DefaultConfig() RateLimiterConfig {
 	return RateLimiterConfig{
-		RequestsPerSecond: 10, // CHECK
-		BurstSize:         20,
-		WindowDuration:    time.Minute,
+		MaxRequests:    15, // 15 requests per minute
+		WindowDuration: time.Minute,
 		KeyGenerator: func(c *gin.Context) string {
 			return c.ClientIP()
 		},
@@ -130,7 +127,7 @@ func DefaultConfig() RateLimiterConfig {
 
 			c.JSON(http.StatusTooManyRequests, gin.H{
 				"error":       "Rate limit exceeded",
-				"message":     fmt.Sprintf("Too many requests. Limit: %d requests per %s", info.Limit, "minute"),
+				"message":     fmt.Sprintf("Too many requests. Limit: %d requests. Retry after: %s", info.Limit, time.Until(info.ResetTime).String()),
 				"retry_after": time.Until(info.ResetTime).Seconds(),
 			})
 		},
@@ -155,6 +152,9 @@ func RateLimiter(config ...RateLimiterConfig) gin.HandlerFunc {
 		}
 		if cfg.WindowDuration == 0 {
 			cfg.WindowDuration = time.Minute
+		}
+		if cfg.MaxRequests == 0 {
+			cfg.MaxRequests = 10
 		}
 	}
 
@@ -193,7 +193,7 @@ func RateLimiter(config ...RateLimiterConfig) gin.HandlerFunc {
 
 		// Check if limit exceeded
 		requestCount := len(clientInfo.Requests)
-		limit := int(float64(cfg.RequestsPerSecond) * cfg.WindowDuration.Seconds())
+		limit := cfg.MaxRequests
 
 		if requestCount >= limit {
 			// Rate limit exceeded
@@ -231,9 +231,9 @@ func RateLimiter(config ...RateLimiterConfig) gin.HandlerFunc {
 }
 
 // PerUserRateLimiter creates a rate limiter based on user ID
-func PerUserRateLimiter(requestsPerMinute int) gin.HandlerFunc {
+func PerUserRateLimiter(maxRequestsPerMinute int) gin.HandlerFunc {
 	config := DefaultConfig()
-	config.RequestsPerSecond = requestsPerMinute
+	config.MaxRequests = maxRequestsPerMinute
 	config.WindowDuration = time.Minute
 	config.KeyGenerator = func(c *gin.Context) string {
 		// Try to get user ID from JWT token, header, or query param
@@ -272,5 +272,46 @@ func PerEndpointRateLimiter() gin.HandlerFunc {
 		})
 	}
 
+	return RateLimiter(config)
+}
+
+// Convenience functions for common configurations
+
+// PerSecondRateLimiter creates a rate limiter with per-second limits
+func PerSecondRateLimiter(requestsPerSecond int) gin.HandlerFunc {
+	config := RateLimiterConfig{
+		MaxRequests:    requestsPerSecond,
+		WindowDuration: time.Second,
+		KeyGenerator: func(c *gin.Context) string {
+			return c.ClientIP()
+		},
+		Storage: NewMemoryStorage(),
+	}
+	return RateLimiter(config)
+}
+
+// PerMinuteRateLimiter creates a rate limiter with per-minute limits
+func PerMinuteRateLimiter(requestsPerMinute int) gin.HandlerFunc {
+	config := RateLimiterConfig{
+		MaxRequests:    requestsPerMinute,
+		WindowDuration: time.Minute,
+		KeyGenerator: func(c *gin.Context) string {
+			return c.ClientIP()
+		},
+		Storage: NewMemoryStorage(),
+	}
+	return RateLimiter(config)
+}
+
+// PerHourRateLimiter creates a rate limiter with per-hour limits
+func PerHourRateLimiter(requestsPerHour int) gin.HandlerFunc {
+	config := RateLimiterConfig{
+		MaxRequests:    requestsPerHour,
+		WindowDuration: time.Hour,
+		KeyGenerator: func(c *gin.Context) string {
+			return c.ClientIP()
+		},
+		Storage: NewMemoryStorage(),
+	}
 	return RateLimiter(config)
 }
