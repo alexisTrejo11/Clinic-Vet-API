@@ -2,10 +2,12 @@ services:
   postgres12:
     container_name: postgres12
     image: postgres:12-alpine
+    env_file:
+      - .env
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: root
-      POSTGRES_DB: vet_database
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
       - "5432:5432"
     volumes:
@@ -13,7 +15,7 @@ services:
     networks:
       - vet_network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -21,47 +23,57 @@ services:
   postgres12_test:
     container_name: postgres12_test
     image: postgres:12-alpine
+    env_file:
+      - .env
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: root
-      POSTGRES_DB: vet_database_test
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${TEST_POSTGRES_DB}
     ports:
-      - "5433:5432" # Different external port
+      - "5433:5432"
     volumes:
       - pgdata_test:/var/lib/postgresql/data
     networks:
       - vet_network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
       interval: 30s
       timeout: 10s
       retries: 5
 
   # MongoDB Service
   mongodb:
-    container_name: mongodb
-    image: mongo:7.0
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: mongopassword
-      MONGO_INITDB_DATABASE: vet_mongodb
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongodb_data:/data/db
-      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
-    networks:
-      - vet_network
-    healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
+      container_name: mongodb
+      image: mongo:7.0
+      env_file:
+        - .env
+      environment:
+        MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+        MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+        MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE}
+      ports:
+        - "27017:27017"
+      volumes:
+        - mongodb_data:/data/db
+      networks:
+        - vet_network
+      healthcheck:
+        test: >
+          mongosh --username admin --password mongopassword
+          --authenticationDatabase admin
+          --eval "db.adminCommand({ ping: 1 }).ok"
+          --quiet
+        interval: 10s
+        timeout: 5s
+        start_period: 40s
+        retries: 5
 
   # Redis Service
   redis:
     container_name: redis
     image: redis:7-alpine
+    env_file:
+      - .env
     ports:
       - "6379:6379"
     volumes:
@@ -69,17 +81,19 @@ services:
     networks:
       - vet_network
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
       interval: 30s
       timeout: 10s
       retries: 5
-    command: redis-server --appendonly yes --requirepass redispassword
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
 
   api:
     container_name: clinical_vet_api
     build:
       context: .
       dockerfile: Dockerfile
+    env_file:
+      - .env
     ports:
       - "8000:8000"
     depends_on:
@@ -95,25 +109,39 @@ services:
       # PostgreSQL
       - DB_HOST=postgres12
       - DB_PORT=5432
-      - DB_NAME=vet_database
-      - DB_USER=postgres
-      - DB_PASSWORD=root
+      - DB_NAME=${POSTGRES_DB}
+      - DB_USER=${POSTGRES_USER}
+      - DB_PASSWORD=${POSTGRES_PASSWORD}
 
       # Test PostgreSQL
       - TEST_DB_HOST=postgres12_test
       - TEST_DB_PORT=5432
-      - TEST_DB_NAME=vet_database_test
-      - TEST_DB_USER=postgres
-      - TEST_DB_PASSWORD=root
+      - TEST_DB_NAME=${TEST_POSTGRES_DB}
+      - TEST_DB_USER=${POSTGRES_USER}
+      - TEST_DB_PASSWORD=${POSTGRES_PASSWORD}
 
       # MongoDB
-      - MONGODB_URI=mongodb://admin:mongopassword@mongodb:27017/vet_mongodb?authSource=admin
-      - MONGODB_DATABASE=vet_mongodb
+      - MONGODB_URI=mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongodb:27017/${MONGO_INITDB_DATABASE}?authSource=admin
+      - MONGODB_DATABASE=${MONGO_INITDB_DATABASE}
 
       # Redis
       - REDIS_HOST=redis
       - REDIS_PORT=6379
-      - REDIS_PASSWORD=redispassword
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+
+      # Application
+      - JWT_SECRET=${JWT_SECRET}
+      - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID}
+      - TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN}
+      - TWILIO_PHONE_NUMBER=${TWILIO_PHONE_NUMBER}
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_PORT=${SMTP_PORT}
+      - SMTP_USERNAME=${SMTP_USERNAME}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
+      - FROM_EMAIL=${FROM_EMAIL}
+      - FROM_NAME=${FROM_NAME}
+      - PROJECT_NAME=${PROJECT_NAME}
+      - LOGO_URL=${LOGO_URL}
     networks:
       - vet_network
     restart: unless-stopped

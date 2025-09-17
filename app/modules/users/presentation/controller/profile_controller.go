@@ -8,6 +8,7 @@ import (
 	authError "clinic-vet-api/app/shared/error/auth"
 	"clinic-vet-api/app/shared/response"
 	"clinic-vet-api/middleware"
+
 	"github.com/gin-gonic/gin"
 )
 

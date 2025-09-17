@@ -6,7 +6,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"time"
 
 	api "clinic-vet-api/app/modules/auth/presentation"
 	"clinic-vet-api/app/modules/employee/infrastructure/repository"
@@ -58,10 +57,7 @@ func main() {
 	router := gin.Default()
 	router.Use(gin.Recovery())
 	router.Use(middleware.AuditLog())
-	router.Use(middleware.RateLimiter(middleware.RateLimiterConfig{
-		RequestsPerSecond: 10,
-		WindowDuration:    time.Minute,
-	}))
+	router.Use(middleware.RateLimiter(middleware.DefaultConfig()))
 
 	queries := sqlc.New(dbConn)
 

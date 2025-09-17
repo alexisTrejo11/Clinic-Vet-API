@@ -4,8 +4,8 @@ BEGIN
         CREATE TYPE person_gender AS ENUM ('male', 'female', 'not_specified');
     END IF;
 
-    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'veterinarian_speciality') THEN
-        CREATE TYPE veterinarian_speciality AS ENUM (
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'customer_speciality') THEN
+        CREATE TYPE customer_speciality AS ENUM (
             'unknown_specialty', 'general_practice','surgery','internal_medicine','dentistry',
             'dermatology','oncology','cardiology','neurology','ophthalmology','radiology',
             'emergency_critical_care','anesthesiology','pathology','preventive_medicine',
@@ -19,7 +19,7 @@ BEGIN
     END IF;
 
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'user_role') THEN
-        CREATE TYPE user_role AS ENUM('owner', 'receptionist', 'veterinarian', 'admin');
+        CREATE TYPE user_role AS ENUM('owner', 'receptionist', 'customer', 'admin');
     END IF;
 
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'currency') THEN
@@ -40,7 +40,7 @@ BEGIN
         CREATE TYPE clinic_service AS ENUM(
             'general_consultation', 'vaccination', 'surgery', 'dental_care', 'emergency_care',
             'grooming', 'nutrition_consult', 'behavior_consult', 'wellness_exam', 'other'
-        )
+        );
     END IF;
 
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'appointment_status') THEN
@@ -145,7 +145,7 @@ CREATE TABLE IF NOT EXISTS employees (
     last_name  VARCHAR(255) NOT NULL,
     photo VARCHAR(500) NOT NULL,
     license_number VARCHAR(20) NOT NULL,
-    speciality veterinarian_speciality NOT NULL,
+    speciality customer_speciality NOT NULL,
     years_of_experience INT NOT NULL,
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     user_id int,
@@ -155,11 +155,6 @@ CREATE TABLE IF NOT EXISTS employees (
     deleted_at TIMESTAMP NULL
 );
 
-
--- Add Relations
-ALTER TABLE pets
-ADD CONSTRAINT fk_customer_id
-FOREIGN KEY (customer_id) REFERENCES owners(id) ON DELETE CASCADE;
 
 -- Create Medical History Table
 CREATE TABLE IF NOT EXISTS medical_history (
@@ -234,30 +229,46 @@ ADD CONSTRAINT fk_users_profile
 
 ALTER TABLE users
 ADD CONSTRAINT fk_users_customer
-    FOREIGN KEY (customer_id) REFERENCES owners(id) ON DELETE CASCADE;
+    FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE;
 
 ALTER TABLE users
-ADD CONSTRAINT fk_users_veterinarian
-    FOREIGN KEY (employee_id) REFERENCES veterinarians(id) ON DELETE CASCADE;
+ADD CONSTRAINT fk_users_employee
+    FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE;
 
 -- Foreign Keys for profiles table
 ALTER TABLE profiles
 ADD CONSTRAINT fk_profiles_user
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
 
-ALTER TABLE profiles
-ADD CONSTRAINT fk_profiles_owner
-    FOREIGN KEY (customer_id) REFERENCES owners(id) ON DELETE CASCADE;
-
-ALTER TABLE profiles
-ADD CONSTRAINT fk_profiles_veterinarian
-    FOREIGN KEY (employee_id) REFERENCES veterinarians(id) ON DELETE CASCADE;
-
 CREATE INDEX IF NOT EXISTS idx_profile_user_id ON profiles(user_id);
 CREATE INDEX IF NOT EXISTS idx_user_profile_id ON users(profile_id);
 CREATE INDEX IF NOT EXISTS idx_user_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_user_phone_number ON users(phone_number);
 
+
+-- Create Appointments Table
+CREATE TABLE IF NOT EXISTS appointments(
+    id SERIAL PRIMARY KEY,
+    clinic_service clinic_service NOT NULL,
+    schedule_date TIMESTAMP WITH TIME ZONE NOT NULL,
+    status appointment_status NOT NULL,
+    reason TEXT NOT NULL DEFAULT '',
+    notes TEXT DEFAULT '',
+    customer_id INT NOT NULL,
+    pet_id INT NOT NULL,
+    employee_id INT,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL,
+    FOREIGN KEY (pet_id) REFERENCES pets(id) ON DELETE CASCADE,
+    FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE,
+    FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_appointment_customer_id ON appointments(customer_id);
+CREATE INDEX IF NOT EXISTS idx_appointment_vet_id ON appointments(employee_id);
+CREATE INDEX IF NOT EXISTS idx_appointment_pet_id ON appointments(pet_id);
+CREATE INDEX IF NOT EXISTS idx_appointment_status ON appointments(status);
 
 -- Create Payment Table
 CREATE TABLE IF NOT EXISTS payments (
@@ -287,7 +298,7 @@ CREATE TABLE IF NOT EXISTS payments (
     FOREIGN KEY (appointment_id) REFERENCES appointments(id) ON DELETE SET NULL,
     
     CONSTRAINT chk_refund_amount CHECK (refund_amount IS NULL OR refund_amount <= amount),
-    CONSTRAINT chk_paid_date CHECK (paid_at IS NULL OR status = 'paid' OR status = 'refunded'),
+    CONSTRAINT chk_paid_date CHECK (paid_at IS NULL OR status = 'completed' OR status = 'refunded'),
     CONSTRAINT chk_refund_date CHECK (refunded_at IS NULL OR status = 'refunded')
 );
 
@@ -308,29 +319,6 @@ CREATE INDEX IF NOT EXISTS idx_payments_deleted_at ON payments(deleted_at) WHERE
 CREATE INDEX IF NOT EXISTS idx_payments_customer_status ON payments(paid_from_customer, status);
 CREATE INDEX IF NOT EXISTS idx_payments_status_date ON payments(status, created_at);
 CREATE INDEX IF NOT EXISTS idx_payments_customer_date ON payments(paid_from_customer, created_at);
-CREATE INDEX IF NOT EXISTS idx_payments_due_status ON payments(due_date, status) WHERE status != 'paid';
-
--- Create Appointments Table
-CREATE TABLE IF NOT EXISTS appointments(
-    id SERIAL PRIMARY KEY,
-    clinic_service clinic_service NOT NULL,
-    schedule_date TIMESTAMP WITH TIME ZONE NOT NULL,
-    status appointment_status NOT NULL,
-    reason TEXT NOT NULL DEFAULT '',
-    notes TEXT DEFAULT '',
-    customer_id INT NOT NULL,
-    pet_id INT NOT NULL,
-    employee_id INT,
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP NULL,
-    FOREIGN KEY (pet_id) REFERENCES pets(id) ON DELETE CASCADE,
-    FOREIGN KEY (customer_id) REFERENCES owners(id) ON DELETE CASCADE,
-    FOREIGN KEY (employee_id) REFERENCES veterinarians(id) ON DELETE CASCADE
-);
+CREATE INDEX IF NOT EXISTS idx_payments_due_status ON payments(due_date, status) WHERE status != 'completed';
 
 
-CREATE INDEX IF NOT EXISTS idx_appointment_customer_id ON appoinments(customer_id);
-CREATE INDEX IF NOT EXISTS idx_appointment_vet_id ON appoinments(employee_id);
-CREATE INDEX IF NOT EXISTS idx_appointment_pet_id ON appoinments(pet_id);
-CREATE INDEX IF NOT EXISTS idx_appointment_status ON appoinments(status);

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"clinic-vet-api/app/shared/log"
+
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
@@ -32,7 +33,7 @@ func AuditLog() gin.HandlerFunc {
 		if c.Request.Body != nil {
 			body, err := io.ReadAll(c.Request.Body)
 			if err != nil {
-				log.AppLogger.Error("Error reading request body", zap.Error(err))
+				log.App.Error("Error reading request body", zap.Error(err))
 				c.AbortWithStatusJSON(400, gin.H{"error": "Invalid request body"})
 				return
 			}
@@ -51,7 +52,7 @@ func AuditLog() gin.HandlerFunc {
 		c.Next()
 
 		duration := time.Since(start)
-		log.AuditLogger.Info("audit_log",
+		log.Audit.Info("audit_log",
 			zap.String("request_id", requestID),
 			zap.String("client_ip", c.ClientIP()),
 			zap.String("method", c.Request.Method),
@@ -66,7 +67,7 @@ func AuditLog() gin.HandlerFunc {
 			zap.Any("errors", c.Errors),
 		)
 
-		log.AppLogger.Info("Request",
+		log.App.Info("Request",
 			zap.String("method", c.Request.Method),
 			zap.String("path", c.Request.URL.Path),
 			zap.Int("status", c.Writer.Status()),

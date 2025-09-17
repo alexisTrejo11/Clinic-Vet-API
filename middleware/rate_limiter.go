@@ -113,7 +113,7 @@ func (m *MemoryStorage) cleanupRoutine() {
 // DefaultConfig returns a default rate limiter configuration
 func DefaultConfig() RateLimiterConfig {
 	return RateLimiterConfig{
-		RequestsPerSecond: 100,
+		RequestsPerSecond: 10, // CHECK
 		BurstSize:         20,
 		WindowDuration:    time.Minute,
 		KeyGenerator: func(c *gin.Context) string {
