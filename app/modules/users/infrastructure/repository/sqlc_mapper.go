@@ -1,49 +1,69 @@
 package repositoryimpl
 
 import (
-	"errors"
+	"fmt"
 
 	"clinic-vet-api/app/core/domain/entity/user"
+	"clinic-vet-api/app/core/domain/enum"
+	"clinic-vet-api/app/core/domain/valueobject"
+	"clinic-vet-api/db/models"
 	"clinic-vet-api/sqlc"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 func sqlcRowToEntity(sqlRow sqlc.User) (*user.User, error) {
-	return nil, errors.New("not implemented")
-}
+	userID := valueobject.NewUserID(uint(sqlRow.ID))
 
-/*
-// Helper para opciones de 2FA
-func getTwoFactorAuthOptions(sqlRow sqlc.User) ([]user.UserOption, error) {
-	var opts []user.UserOption
-
-	if sqlRow.TwoFactorEnabled.Valid && sqlRow.TwoFactorEnabled.Bool {
-		// Si 2FA está habilitado, necesitamos el método y secreto
-		if !sqlRow.TwoFactorMethod.Valid || sqlRow.TwoFactorMethod.String == "" {
-			return nil, errors.New("2FA method is required when 2FA is enabled")
-		}
-
-		if !sqlRow.TwoFactorSecret.Valid || sqlRow.TwoFactorSecret.String == "" {
-			return nil, errors.New("2FA secret is required when 2FA is enabled")
-		}
-
-		method := sqlRow.TwoFactorMethod.String
-		secret := sqlRow.TwoFactorSecret.String
-
-		// Parsear backup codes si están disponibles
-		var backupCodes []string
-		if sqlRow.TwoFactorBackupCodes.Valid && sqlRow.TwoFactorBackupCodes.String != "" {
-			if err := json.Unmarshal([]byte(sqlRow.TwoFactorBackupCodes.String), &backupCodes); err != nil {
-				return nil, fmt.Errorf("failed to parse 2FA backup codes: %w", err)
-			}
-		}
-
-		twoFA := auth.NewTwoFactorAuth(true, method, secret, backupCodes)
-		opts = append(opts, user.WithTwoFactorAuth(twoFA))
+	email, err := valueobject.NewEmail(sqlRow.Email.String)
+	if err != nil {
+		return nil, fmt.Errorf("invalid email: %w", err)
 	}
 
-	return opts, nil
+	userRole, err := enum.ParseUserRole(string(sqlRow.Role))
+	if err != nil {
+		return nil, fmt.Errorf("invalid user role: %w", err)
+	}
+
+	userStatus, err := enum.ParseUserStatus(string(sqlRow.Status))
+	if err != nil {
+		return nil, fmt.Errorf("invalid user status: %w", err)
+	}
+
+	opts := []user.UserOption{
+		user.WithEmail(email),
+	}
+
+	if sqlRow.PhoneNumber.Valid && sqlRow.PhoneNumber.String != "" {
+		phone, err := valueobject.NewPhoneNumber(sqlRow.PhoneNumber.String)
+		if err != nil {
+			return nil, fmt.Errorf("invalid phone number: %w", err)
+		}
+		opts = append(opts, user.WithPhoneNumber(&phone))
+	}
+
+	if sqlRow.Password.Valid && sqlRow.Password.String != "" {
+		opts = append(opts, user.WithPassword(sqlRow.Password.String))
+	}
+	if sqlRow.LastLogin.Valid {
+		opts = append(opts, user.WithLastLoginAt(sqlRow.LastLogin.Time))
+	}
+	if sqlRow.EmployeeID.Valid {
+		employeeID := valueobject.NewEmployeeID(uint(sqlRow.EmployeeID.Int32))
+		opts = append(opts, user.WithEmployeeID(employeeID))
+	}
+
+	if sqlRow.CreatedAt.Valid {
+		opts = append(opts, user.WithJoinedAt(sqlRow.CreatedAt.Time))
+	}
+
+	userEntity, err := user.NewUser(userID, userRole, userStatus, opts...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create user entity: %w", err)
+	}
+
+	return userEntity, nil
 }
-*/
 
 func sqlcRowsToEntities(sqlRows []sqlc.User) ([]user.User, error) {
 	users := make([]user.User, 0, len(sqlRows))
@@ -56,4 +76,42 @@ func sqlcRowsToEntities(sqlRows []sqlc.User) ([]user.User, error) {
 	}
 
 	return users, nil
+}
+
+func entityToCreateParams(user *user.User) (*sqlc.CreateUserParams, error) {
+	var employeeID pgtype.Int4
+	if user.EmployeeID() != nil {
+		employeeID = pgtype.Int4{Int32: int32(user.EmployeeID().Value()), Valid: true}
+	} else {
+		employeeID = pgtype.Int4{Valid: false}
+	}
+
+	var customerID pgtype.Int4
+	if user.CustomerID() != nil {
+		customerID = pgtype.Int4{Int32: int32(user.CustomerID().Value()), Valid: true}
+	} else {
+		customerID = pgtype.Int4{Valid: false}
+	}
+
+	return &sqlc.CreateUserParams{
+		Email:       pgtype.Text{String: user.Email().String(), Valid: true},
+		PhoneNumber: pgtype.Text{String: user.PhoneNumber().String(), Valid: true},
+		Password:    pgtype.Text{String: user.Password(), Valid: true},
+		Role:        models.UserRole(user.Role().String()),
+		Status:      models.UserStatus(user.Status().String()),
+		EmployeeID:  employeeID,
+		ProfileID:   pgtype.Int4{Valid: false},
+		CustomerID:  customerID,
+	}, nil
+}
+
+func entityToUpdateParams(user *user.User) *sqlc.UpdateUserParams {
+	return &sqlc.UpdateUserParams{
+		ID:          int32(user.ID().Value()),
+		Email:       pgtype.Text{String: user.Email().String(), Valid: true},
+		PhoneNumber: pgtype.Text{String: user.PhoneNumber().String(), Valid: true},
+		Password:    pgtype.Text{String: user.Password(), Valid: true},
+		Status:      models.UserStatus(user.Status().String()),
+		Role:        models.UserRole(user.Role()),
+	}
 }

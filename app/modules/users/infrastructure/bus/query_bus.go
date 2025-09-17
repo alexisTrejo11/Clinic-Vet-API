@@ -1,69 +1,60 @@
 package bus
 
 import (
-	"errors"
-	"reflect"
-
 	"clinic-vet-api/app/core/repository"
 	"clinic-vet-api/app/modules/users/application/usecase/query"
-	"clinic-vet-api/app/shared/cqrs"
+	"clinic-vet-api/app/shared/page"
+	"context"
 )
 
-type UserQueryBus struct {
-	handlers map[reflect.Type]any
+type UserQueryBus interface {
+	FindUserByID(ctx context.Context, q query.FindUserByIDQuery) (query.UserResult, error)
+	FindUserByEmail(ctx context.Context, q query.FindUserByEmailQuery) (query.UserResult, error)
+	FindUserByPhone(ctx context.Context, q query.FindUserByPhoneQuery) (query.UserResult, error)
+	FindUsersByRole(ctx context.Context, q query.FindUsersByRoleQuery) (page.Page[query.UserResult], error)
+	FindUsersBySpecification(ctx context.Context, q query.FindUserBySpecificationQuery) (page.Page[query.UserResult], error)
 }
 
-func NewUserQueryBus(userRepo repository.UserRepository) *UserQueryBus {
-	bus := &UserQueryBus{
-		handlers: make(map[reflect.Type]any),
-	}
-
-	bus.RegisterQueries(userRepo)
-	return bus
+type userQueryBus struct {
+	findByIDHandler            query.FindUserByIDHandler
+	findByEmailHandler         query.FindUserByEmailHandler
+	findByPhoneHandler         query.FindUserByPhoneHandler
+	findByRoleHandler          query.FindUsersByRoleHandler
+	findBySpecificationHandler query.FindUserBySpecificationHandler
 }
 
-func (b *UserQueryBus) RegisterQueries(userRepo repository.UserRepository) error {
-	b.Register(reflect.TypeOf(query.FindUserByEmailQuery{}), query.NewFindUserByEmailHandler(userRepo))
-	b.Register(reflect.TypeOf(query.FindUserByIDQuery{}), query.NewFindUserByIDHandler(userRepo))
-	b.Register(reflect.TypeOf(query.FindUserByPhoneQuery{}), query.NewFindUserByPhoneHandler(userRepo))
-	b.Register(reflect.TypeOf(query.FindUsersByRoleQuery{}), query.NewFindUsersByRoleHandler(userRepo))
-	b.Register(reflect.TypeOf(query.UserFindBySpecificationQuery{}), query.NewFindBySpecificationUsersHandler(userRepo))
-	return nil
+func NewUserQueryBus(repository repository.UserRepository) UserQueryBus {
+	findByIDHandler := query.NewFindUserByIDHandler(repository)
+	findByEmailHandler := query.NewFindUserByEmailHandler(repository)
+	findByPhoneHandler := query.NewFindUserByPhoneHandler(repository)
+	findByRoleHandler := query.NewFindUsersByRoleHandler(repository)
+	findBySpecHandler := query.NewFindUserBySpecificationHandler(repository)
+
+	return &userQueryBus{
+		findByIDHandler:            *findByIDHandler,
+		findByEmailHandler:         *findByEmailHandler,
+		findByPhoneHandler:         *findByPhoneHandler,
+		findByRoleHandler:          *findByRoleHandler,
+		findBySpecificationHandler: *findBySpecHandler,
+	}
 }
 
-func (b *UserQueryBus) Register(queryType reflect.Type, handler any) error {
-	if handler == nil {
-		return errors.New("handler cannot be nil")
-	}
-
-	b.handlers[queryType] = handler
-	return nil
+func (b *userQueryBus) FindUserByID(ctx context.Context, q query.FindUserByIDQuery) (query.UserResult, error) {
+	return b.findByIDHandler.Handle(ctx, q)
 }
 
-func (b *UserQueryBus) Execute(q cqrs.Query) (any, error) {
-	queryType := reflect.TypeOf(q)
-	handler, ok := b.handlers[queryType]
-	if !ok {
-		return nil, errors.New("no handler registered for this query")
-	}
+func (b *userQueryBus) FindUserByEmail(ctx context.Context, q query.FindUserByEmailQuery) (query.UserResult, error) {
+	return b.findByEmailHandler.Handle(ctx, q)
+}
 
-	switch qry := q.(type) {
-	case query.FindUserByEmailQuery:
-		h := handler.(query.FindUserByEmailHandler)
-		return h.Handle(qry)
-	case query.FindUserByPhoneQuery:
-		h := handler.(query.FindUserByPhoneHandler)
-		return h.Handle(qry)
-	case query.FindUserByIDQuery:
-		h := handler.(query.FindUserByIDHandler)
-		return h.Handle(qry)
-	case query.UserFindBySpecificationQuery:
-		h := handler.(query.FindBySpecificationUsersHandler)
-		return h.Handle(qry)
-	case query.FindUsersByRoleQuery:
-		h := handler.(query.FindUsersByRoleHandler)
-		return h.Handle(qry)
-	default:
-		return nil, errors.New("unhandled query type")
-	}
+func (b *userQueryBus) FindUserByPhone(ctx context.Context, q query.FindUserByPhoneQuery) (query.UserResult, error) {
+	return b.findByPhoneHandler.Handle(ctx, q)
+}
+
+func (b *userQueryBus) FindUsersByRole(ctx context.Context, q query.FindUsersByRoleQuery) (page.Page[query.UserResult], error) {
+	return b.findByRoleHandler.Handle(ctx, q)
+}
+
+func (b *userQueryBus) FindUsersBySpecification(ctx context.Context, q query.FindUserBySpecificationQuery) (page.Page[query.UserResult], error) {
+	return b.findBySpecificationHandler.Handle(ctx, q)
 }

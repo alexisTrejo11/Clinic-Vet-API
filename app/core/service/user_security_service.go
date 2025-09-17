@@ -50,7 +50,7 @@ func (s *UserSecurityService) ProcessUserCreation(ctx context.Context, user *use
 		return err
 	}
 
-	go s.ProduceUserCreatedEvent(*user)
+	//go s.ProduceUserCreatedEvent(*user)
 
 	return nil
 }

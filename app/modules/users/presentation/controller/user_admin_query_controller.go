@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"clinic-vet-api/app/modules/users/application/usecase/query"
+	"clinic-vet-api/app/modules/users/presentation/dto"
 	httpError "clinic-vet-api/app/shared/error/infrastructure/http"
 	ginUtils "clinic-vet-api/app/shared/gin_utils"
 	"clinic-vet-api/app/shared/response"
@@ -27,14 +28,15 @@ func (ctrl *UserAdminController) GetUserByID(c *gin.Context) {
 		return
 	}
 
-	getUserByIDQuery := query.NewFindUserByIDQuery(c.Request.Context(), userID, false)
-	userPage, err := ctrl.queryBus.Execute(getUserByIDQuery)
+	getUserByIDQuery := query.NewFindUserByIDQuery(userID, false)
+	userResult, err := ctrl.bus.QueryBus.FindUserByID(c.Request.Context(), *getUserByIDQuery)
 	if err != nil {
 		response.ApplicationError(c, err)
 		return
 	}
 
-	response.Found(c, userPage, "User")
+	userResponse := dto.UserResultToResponse(&userResult)
+	response.Found(c, userResponse, "User")
 }
 
 func (ctrl *UserAdminController) SearchUsers(c *gin.Context) {
@@ -47,18 +49,20 @@ func (ctrl *UserAdminController) GetUserByEmail(c *gin.Context) {
 		return
 	}
 
-	getUserByEmailQuery, err := query.NewFindUserByEmailQuery(c.Request.Context(), email, false)
-	if err != nil {
-		response.ApplicationError(c, err)
-		return
-	}
-	user, err := ctrl.queryBus.Execute(getUserByEmailQuery)
+	getUserByEmailQuery, err := query.NewFindUserByEmailQuery(email, false)
 	if err != nil {
 		response.ApplicationError(c, err)
 		return
 	}
 
-	response.Found(c, user, "User")
+	userResult, err := ctrl.bus.QueryBus.FindUserByEmail(c.Request.Context(), *getUserByEmailQuery)
+	if err != nil {
+		response.ApplicationError(c, err)
+		return
+	}
+
+	userResponse := dto.UserResultToResponse(&userResult)
+	response.Found(c, userResponse, "User")
 }
 
 func (c *UserAdminController) GetUserByPhone(ctx *gin.Context) {
@@ -68,16 +72,18 @@ func (c *UserAdminController) GetUserByPhone(ctx *gin.Context) {
 		return
 	}
 
-	getUserByPhoneQuery, err := query.NewFindUserByPhoneQuery(ctx.Request.Context(), phone, false)
-	if err != nil {
-		response.ApplicationError(ctx, err)
-		return
-	}
-	user, err := c.queryBus.Execute(getUserByPhoneQuery)
+	getUserByPhoneQuery, err := query.NewFindUserByPhoneQuery(phone, false)
 	if err != nil {
 		response.ApplicationError(ctx, err)
 		return
 	}
 
-	response.Found(ctx, user, "User")
+	userResult, err := c.bus.QueryBus.FindUserByPhone(ctx.Request.Context(), *getUserByPhoneQuery)
+	if err != nil {
+		response.ApplicationError(ctx, err)
+		return
+	}
+
+	userResponse := dto.UserResultToResponse(&userResult)
+	response.Found(ctx, userResponse, "User")
 }

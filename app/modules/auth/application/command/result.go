@@ -16,13 +16,13 @@ type SessionResponse struct {
 
 type AuthCommandResult struct {
 	cqrs.CommandResult
-	session SessionResponse
+	session *SessionResponse
 }
 
 func FailureAuthResult(message string, err error) AuthCommandResult {
 	result := &AuthCommandResult{
 		CommandResult: *cqrs.FailureResult(message, err),
-		session:       SessionResponse{},
+		session:       nil,
 	}
 	return *result
 }
@@ -30,11 +30,11 @@ func FailureAuthResult(message string, err error) AuthCommandResult {
 func SuccessAuthResult(session *SessionResponse, userid, message string) AuthCommandResult {
 	result := &AuthCommandResult{
 		CommandResult: *cqrs.SuccessResult(userid, message),
-		session:       *session,
+		session:       session,
 	}
 	return *result
 }
 
-func (r *AuthCommandResult) Session() SessionResponse {
+func (r *AuthCommandResult) Session() *SessionResponse {
 	return r.session
 }

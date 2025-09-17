@@ -2,7 +2,6 @@ package command
 
 import (
 	"context"
-	"errors"
 
 	"clinic-vet-api/app/core/domain/enum"
 	"clinic-vet-api/app/core/domain/valueobject"
@@ -19,10 +18,9 @@ type CreateUserCommand struct {
 	password    string
 	role        enum.UserRole
 	status      enum.UserStatus
-	ctx         context.Context
 }
 
-func NewCreateUserCommand(ctx context.Context, email string, phoneNumber *string, password, role string, status string) (CreateUserCommand, error) {
+func NewCreateUserCommand(email string, phoneNumber *string, password, role string, status string) (CreateUserCommand, error) {
 	var errorsMessages []string
 
 	emailVO, err := valueobject.NewEmail(email)
@@ -64,7 +62,6 @@ func NewCreateUserCommand(ctx context.Context, email string, phoneNumber *string
 		password:    password,
 		role:        userRole,
 		status:      userStatus,
-		ctx:         ctx,
 	}, nil
 }
 
@@ -80,23 +77,18 @@ func NewCreateUserHandler(repo repository.UserRepository, securityService servic
 	}
 }
 
-func (uc *CreateUserHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
-	command, ok := cmd.(CreateUserCommand)
-	if !ok {
-		return *cqrs.FailureResult(ErrFailedMappingUser, errors.New("invalid command type"))
-	}
-
+func (uc *CreateUserHandler) Handle(ctx context.Context, command CreateUserCommand) cqrs.CommandResult {
 	user, err := fromCreateCommand(command)
 	if err != nil {
 		return *cqrs.FailureResult(ErrFailedMappingUser, err)
 	}
 
-	err = uc.securityService.ValidateUserCredentials(command.ctx, command.email, command.phoneNumber, command.password)
+	err = uc.securityService.ValidateUserCredentials(ctx, command.email, command.phoneNumber, command.password)
 	if err != nil {
 		return *cqrs.FailureResult(ErrFailedValidatingUser, err)
 	}
 
-	if err := uc.securityService.ProcessUserCreation(command.ctx, user); err != nil {
+	if err := uc.securityService.ProcessUserCreation(ctx, user); err != nil {
 		return *cqrs.FailureResult(ErrFailedProcessingUser, err)
 	}
 	return *cqrs.SuccessResult(user.ID().String(), ErrUserCreationSuccess)

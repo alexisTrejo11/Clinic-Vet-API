@@ -44,7 +44,7 @@ func (h *authCommandHandler) CustomerRegister(command CustomerRegisterCommand) A
 }
 
 func (command *CustomerRegisterCommand) toDomain() (*user.User, error) {
-	userEntity, err := user.NewUser(command.Role, enum.UserStatusPending,
+	userEntity, err := user.CreateUser(command.Role, enum.UserStatusPending,
 		user.WithEmail(command.Email),
 		user.WithPhoneNumber(command.PhoneNumber),
 		user.WithPassword(command.Password),

@@ -10,7 +10,6 @@ import (
 	persistence "clinic-vet-api/app/modules/users/infrastructure/repository"
 	"clinic-vet-api/app/modules/users/presentation/controller"
 	"clinic-vet-api/app/modules/users/presentation/routes"
-	"clinic-vet-api/app/shared/cqrs"
 	"clinic-vet-api/app/shared/password"
 
 	"clinic-vet-api/sqlc"
@@ -23,8 +22,7 @@ type UserAPIComponents struct {
 	repository        repository.UserRepository
 	adminController   controller.UserAdminController
 	profileController controller.ProfileController
-	commandBus        cqrs.CommandBus
-	quertBus          cqrs.QueryBus
+	userServiceBus    bus.UserBus
 }
 
 type UserAPIConfig struct {
@@ -75,8 +73,9 @@ func (u *UserAPIModule) Bootstrap() error {
 
 	commandUserBus := bus.NewUserCommandBus(userRepo, service)
 	queryUserBus := bus.NewUserQueryBus(userRepo)
+	userServiceBus := bus.NewUserBus(queryUserBus, commandUserBus)
 
-	userControllers := controller.NewUserAdminController(u.config.DataValidator, commandUserBus, queryUserBus)
+	userControllers := controller.NewUserAdminController(u.config.DataValidator, userServiceBus)
 	profileUseCases := usecase.NewProfileUseCases(profileRepo)
 	profileController := controller.NewProfileController(profileUseCases)
 
@@ -86,8 +85,7 @@ func (u *UserAPIModule) Bootstrap() error {
 		repository:        userRepo,
 		adminController:   *userControllers,
 		profileController: *profileController,
-		commandBus:        commandUserBus,
-		quertBus:          queryUserBus,
+		userServiceBus:    *userServiceBus,
 	}
 	u.isBuilt = true
 
@@ -99,7 +97,7 @@ func (u *UserAPIModule) GetComponents() UserAPIComponents {
 		repository:        u.components.repository,
 		adminController:   u.components.adminController,
 		profileController: u.components.profileController,
-		commandBus:        u.components.commandBus,
+		userServiceBus:    u.components.userServiceBus,
 	}
 }
 

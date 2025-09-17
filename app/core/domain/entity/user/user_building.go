@@ -67,9 +67,9 @@ func WithJoinedAt(joinedAt time.Time) UserOption {
 }
 
 // NewUser creates a new User with functional options
-func NewUser(role enum.UserRole, status enum.UserStatus, opts ...UserOption) (*User, error) {
+func NewUser(id valueobject.UserID, role enum.UserRole, status enum.UserStatus, opts ...UserOption) (*User, error) {
 	user := &User{
-		Entity: base.CreateEntity(valueobject.UserID{}),
+		Entity: base.NewEntity(id, time.Time{}, time.Time{}, 1),
 		role:   role,
 		status: status,
 	}

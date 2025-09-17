@@ -89,7 +89,7 @@ func (r *EmployeeRequestRegister) ToCommand(ctx context.Context) (command.Employ
 	return *cmd, nil
 }
 
-func (r *CustomerRequestSingup) ToCommand() (command.CustomerRegisterCommand, error) {
+func (r *CustomerRequestSingup) ToCommand(ctx context.Context) (command.CustomerRegisterCommand, error) {
 	errorMessages := make([]string, 0)
 	gender, err := enum.ParseGender(r.Gender)
 	if err != nil {
@@ -122,6 +122,8 @@ func (r *CustomerRequestSingup) ToCommand() (command.CustomerRegisterCommand, er
 		LastName:    r.LastName,
 		Gender:      gender,
 		DateOfBirth: r.DateOfBirth,
+		Role:        enum.UserRoleOwner,
+		CTX:         ctx,
 	}
 	return *cmd, nil
 }

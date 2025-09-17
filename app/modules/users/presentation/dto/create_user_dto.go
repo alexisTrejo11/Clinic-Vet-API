@@ -1,7 +1,6 @@
 package dto
 
 import (
-	"context"
 	"time"
 
 	"clinic-vet-api/app/modules/users/application/usecase/command"
@@ -68,6 +67,6 @@ type AdminCreateUserRequest struct {
 	DateOfBirth *time.Time `json:"date_of_birth" validate:"required"`
 }
 
-func (c *AdminCreateUserRequest) ToCommand(ctx context.Context) (command.CreateUserCommand, error) {
-	return command.NewCreateUserCommand(ctx, c.Email, c.PhoneNumber, c.Password, c.Role, c.Status)
+func (c *AdminCreateUserRequest) ToCommand() (command.CreateUserCommand, error) {
+	return command.NewCreateUserCommand(c.Email, c.PhoneNumber, c.Password, c.Role, c.Status)
 }

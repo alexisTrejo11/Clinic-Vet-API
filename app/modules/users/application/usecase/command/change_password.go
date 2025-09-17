@@ -15,7 +15,6 @@ type ChangePasswordCommand struct {
 	UserID      valueobject.UserID
 	OldPassword string
 	NewPassword string
-	CTX         context.Context
 }
 
 type ChangePasswordHandler struct {
@@ -30,26 +29,24 @@ func NewChangePasswordHandler(userRepo repository.UserRepository, passwordEncode
 	}
 }
 
-func (c *ChangePasswordHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
-	command := cmd.(ChangePasswordCommand)
-
-	user, err := c.userRepository.FindByID(command.CTX, command.UserID)
+func (c *ChangePasswordHandler) Handle(ctx context.Context, command ChangePasswordCommand) cqrs.CommandResult {
+	user, err := c.userRepository.FindByID(ctx, command.UserID)
 	if err != nil {
 		return *cqrs.FailureResult("failed to find user", err)
 	}
 
-	if err := c.changePassword(&user, command); err != nil {
+	if err := c.changePassword(ctx, &user, command); err != nil {
 		return *cqrs.FailureResult("failed to change password", err)
 	}
 
-	if err := c.userRepository.Save(command.CTX, &user); err != nil {
+	if err := c.userRepository.Save(ctx, &user); err != nil {
 		return *cqrs.FailureResult("failed to update user", err)
 	}
 
 	return *cqrs.SuccessResult(user.ID().String(), "password changed successfully")
 }
 
-func (c *ChangePasswordHandler) changePassword(user *user.User, command ChangePasswordCommand) error {
+func (c *ChangePasswordHandler) changePassword(ctx context.Context, user *user.User, command ChangePasswordCommand) error {
 	err := c.passwordEncoder.CheckPassword(user.Password(), command.OldPassword)
 	if err != nil {
 		return errors.New("invalid current password")
@@ -66,5 +63,5 @@ func (c *ChangePasswordHandler) changePassword(user *user.User, command ChangePa
 
 	user.SetHashedPassword(hashedPassword)
 
-	return c.userRepository.Save(command.CTX, user)
+	return c.userRepository.Save(ctx, user)
 }

@@ -1,8 +1,7 @@
 package bus
 
 import (
-	"fmt"
-	"reflect"
+	"context"
 
 	"clinic-vet-api/app/core/repository"
 	"clinic-vet-api/app/core/service"
@@ -11,40 +10,58 @@ import (
 	"clinic-vet-api/app/shared/password"
 )
 
-type UserCommandBus struct {
-	handlers map[reflect.Type]cqrs.CommandHandler
+type UserCommandBus interface {
+	ChangePassword(ctx context.Context, c command.ChangePasswordCommand) cqrs.CommandResult
+	ChangeEmail(ctx context.Context, c command.ChangeEmailCommand) cqrs.CommandResult
+	ChangeUserStatus(ctx context.Context, c command.ChangeUserStatusCommand) cqrs.CommandResult
+	DeleteUser(ctx context.Context, c command.DeleteUserCommand) cqrs.CommandResult
+	CreateUser(ctx context.Context, c command.CreateUserCommand) cqrs.CommandResult
 }
 
-func NewUserCommandBus(userRepo repository.UserRepository, service *service.UserSecurityService) *UserCommandBus {
-	bus := &UserCommandBus{
-		handlers: make(map[reflect.Type]cqrs.CommandHandler),
+type userCommandBus struct {
+	changePasswordHandler   command.ChangePasswordHandler
+	changeEmailHandler      command.ChangeEmailHandler
+	changeUserStatusHandler command.ChangeUserStatusHandler
+	deleteUserHandler       command.DeleteUserHandler
+	createUserHandler       command.CreateUserHandler
+}
+
+func NewUserCommandBus(userRepo repository.UserRepository, service *service.UserSecurityService) UserCommandBus {
+	passwordEncoder := password.NewPasswordEncoder()
+
+	changeUserStatusHandler := command.NewChangeUserStatusHandler(userRepo)
+	changePasswordHandler := command.NewChangePasswordHandler(userRepo, passwordEncoder)
+	changeEmailHandler := command.NewChangeEmailHandler(userRepo)
+	deleteUserHandler := command.NewDeleteUserHandler(userRepo)
+	createUserHandler := command.NewCreateUserHandler(userRepo, *service)
+
+	bus := &userCommandBus{
+		changePasswordHandler:   *changePasswordHandler,
+		changeUserStatusHandler: *changeUserStatusHandler,
+		changeEmailHandler:      changeEmailHandler,
+		deleteUserHandler:       *deleteUserHandler,
+		createUserHandler:       *createUserHandler,
 	}
-	bus.RegisterCommands(userRepo, service)
+
 	return bus
 }
 
-func (d *UserCommandBus) Register(commandType reflect.Type, handler cqrs.CommandHandler) error {
-	cmd := reflect.TypeOf(commandType)
-	d.handlers[cmd] = handler
-
-	return nil
+func (b *userCommandBus) ChangePassword(ctx context.Context, c command.ChangePasswordCommand) cqrs.CommandResult {
+	return b.changePasswordHandler.Handle(ctx, c)
 }
 
-func (d *UserCommandBus) Execute(command cqrs.Command) cqrs.CommandResult {
-	commandType := reflect.TypeOf(command)
-	handler, ok := d.handlers[commandType]
-	if !ok {
-		return *cqrs.FailureResult(
-			"an occurred dispatching command", fmt.Errorf("no handler registered for command type %s", commandType),
-		)
-	}
-	return handler.Handle(command)
+func (b *userCommandBus) ChangeEmail(ctx context.Context, c command.ChangeEmailCommand) cqrs.CommandResult {
+	return b.changeEmailHandler.Handle(ctx, c)
 }
 
-func (d *UserCommandBus) RegisterCommands(userRepo repository.UserRepository, service *service.UserSecurityService) {
-	d.Register(reflect.TypeOf(command.ChangePasswordCommand{}), command.NewChangePasswordHandler(userRepo, &password.PasswordEncoderImpl{}))
-	d.Register(reflect.TypeOf(command.ChangeEmailCommand{}), command.NewChangeEmailHandler(userRepo))
-	d.Register(reflect.TypeOf(command.ChangePasswordCommand{}), command.NewChangePasswordHandler(userRepo, &password.PasswordEncoderImpl{}))
-	d.Register(reflect.TypeOf(command.DeleteUserCommand{}), command.NewDeleteUserHandler(userRepo))
-	d.Register(reflect.TypeOf(command.CreateUserCommand{}), command.NewCreateUserHandler(userRepo, *service))
+func (b *userCommandBus) DeleteUser(ctx context.Context, c command.DeleteUserCommand) cqrs.CommandResult {
+	return b.deleteUserHandler.Handle(ctx, c)
+}
+
+func (b *userCommandBus) CreateUser(ctx context.Context, c command.CreateUserCommand) cqrs.CommandResult {
+	return b.createUserHandler.Handle(ctx, c)
+}
+
+func (b *userCommandBus) ChangeUserStatus(ctx context.Context, c command.ChangeUserStatusCommand) cqrs.CommandResult {
+	return b.changeUserStatusHandler.Handle(ctx, c)
 }

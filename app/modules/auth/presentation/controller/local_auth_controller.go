@@ -39,7 +39,7 @@ func (controller *AuthController) CustomerSignup(c *gin.Context) {
 		return
 	}
 
-	signupCommand, err := reuqestBodyData.ToCommand()
+	signupCommand, err := reuqestBodyData.ToCommand(c.Request.Context())
 	if err != nil {
 		response.ApplicationError(c, err)
 		return
@@ -78,7 +78,7 @@ func (controller *AuthController) EmployeeSignup(c *gin.Context) {
 		return
 	}
 
-	response.Created(c, createResult, "User")
+	response.Success(c, nil, createResult.Message())
 }
 
 func (controller *AuthController) Login(c *gin.Context) {

@@ -3,8 +3,8 @@ package controller
 import (
 	"clinic-vet-api/app/core/domain/enum"
 	"clinic-vet-api/app/modules/users/application/usecase/command"
+	"clinic-vet-api/app/modules/users/infrastructure/bus"
 	"clinic-vet-api/app/modules/users/presentation/dto"
-	"clinic-vet-api/app/shared/cqrs"
 	httpError "clinic-vet-api/app/shared/error/infrastructure/http"
 	ginUtils "clinic-vet-api/app/shared/gin_utils"
 	"clinic-vet-api/app/shared/response"
@@ -14,16 +14,14 @@ import (
 )
 
 type UserAdminController struct {
-	validator  *validator.Validate
-	commandBus cqrs.CommandBus
-	queryBus   cqrs.QueryBus
+	validator *validator.Validate
+	bus       *bus.UserBus
 }
 
-func NewUserAdminController(validator *validator.Validate, commandBus cqrs.CommandBus, queryBus cqrs.QueryBus) *UserAdminController {
+func NewUserAdminController(validator *validator.Validate, bus *bus.UserBus) *UserAdminController {
 	return &UserAdminController{
-		validator:  validator,
-		commandBus: commandBus,
-		queryBus:   queryBus,
+		validator: validator,
+		bus:       bus,
 	}
 }
 
@@ -44,25 +42,20 @@ func NewUserAdminController(validator *validator.Validate, commandBus cqrs.Comma
 // @Failure 422 {object} response.APIResponse "Validation error"
 // @Failure 500 {object} response.APIResponse "Internal server error"
 // @Router /v1/admin/users [post]
-func (controller *UserAdminController) CreateUser(c *gin.Context) {
+func (ctrl *UserAdminController) CreateUser(c *gin.Context) {
 	var requestData dto.AdminCreateUserRequest
-	if err := c.ShouldBindJSON(&requestData); err != nil {
-		response.BadRequest(c, httpError.RequestBodyDataError(err))
-		return
-	}
-
-	if err := controller.validator.Struct(requestData); err != nil {
+	if err := ginUtils.BindAndValidateBody(c, &requestData, ctrl.validator); err != nil {
 		response.BadRequest(c, httpError.InvalidDataError(err))
 		return
 	}
 
-	createUserCommand, err := requestData.ToCommand(c.Request.Context())
+	createUserCommand, err := requestData.ToCommand()
 	if err != nil {
 		response.BadRequest(c, httpError.InvalidDataError(err))
 		return
 	}
 
-	result := controller.commandBus.Execute(createUserCommand)
+	result := ctrl.bus.CommandBus.CreateUser(c.Request.Context(), createUserCommand)
 	if !result.IsSuccess() {
 		response.ApplicationError(c, result.Error())
 		return
@@ -84,20 +77,20 @@ func (controller *UserAdminController) CreateUser(c *gin.Context) {
 // @Failure 404 {object} response.APIResponse "User not found"
 // @Failure 500 {object} response.APIResponse "Internal server error"
 // @Router /v1/admin/users/{id}/ban [post]
-func (controller *UserAdminController) BanUser(c *gin.Context) {
+func (ctrl *UserAdminController) BanUser(c *gin.Context) {
 	userID, err := ginUtils.ParseParamToUInt(c, "id")
 	if err != nil {
 		response.BadRequest(c, httpError.RequestURLParamError(err, "id", c.Param("id")))
 		return
 	}
 
-	command, err := command.NewChangeUserStatusCommand(c.Request.Context(), userID, enum.UserStatusBanned.DisplayName())
+	command, err := command.NewChangeUserStatusCommand(userID, enum.UserStatusBanned.DisplayName())
 	if err != nil {
 		response.BadRequest(c, httpError.InvalidDataError(err))
 		return
 	}
 
-	result := controller.commandBus.Execute(command)
+	result := ctrl.bus.CommandBus.ChangeUserStatus(c.Request.Context(), command)
 	if !result.IsSuccess() {
 		response.ApplicationError(c, result.Error())
 		return
@@ -119,20 +112,20 @@ func (controller *UserAdminController) BanUser(c *gin.Context) {
 // @Failure 404 {object} response.APIResponse "User not found"
 // @Failure 500 {object} response.APIResponse "Internal server error"
 // @Router /v1/admin/users/{id}/unban [post]
-func (controller *UserAdminController) UnbanUser(c *gin.Context) {
+func (ctrl *UserAdminController) UnbanUser(c *gin.Context) {
 	userID, err := ginUtils.ParseParamToUInt(c, "id")
 	if err != nil {
 		response.BadRequest(c, httpError.RequestURLParamError(err, "id", c.Param("id")))
 		return
 	}
 
-	command, err := command.NewChangeUserStatusCommand(c.Request.Context(), userID, enum.UserStatusActive.DisplayName())
+	command, err := command.NewChangeUserStatusCommand(userID, enum.UserStatusActive.String())
 	if err != nil {
 		response.BadRequest(c, httpError.InvalidDataError(err))
 		return
 	}
 
-	result := controller.commandBus.Execute(command)
+	result := ctrl.bus.CommandBus.ChangeUserStatus(c.Request.Context(), command)
 	if !result.IsSuccess() {
 		response.ApplicationError(c, result.Error())
 		return
@@ -154,15 +147,15 @@ func (controller *UserAdminController) UnbanUser(c *gin.Context) {
 // @Failure 404 {object} response.APIResponse "User not found"
 // @Failure 500 {object} response.APIResponse "Internal server error"
 // @Router /v1/admin/users/{id} [delete]
-func (controller *UserAdminController) DeleteUser(c *gin.Context) {
+func (ctrl *UserAdminController) DeleteUser(c *gin.Context) {
 	userID, err := ginUtils.ParseParamToUInt(c, "id")
 	if err != nil {
 		response.BadRequest(c, httpError.RequestURLParamError(err, "id", c.Param("id")))
 		return
 	}
 
-	deleteUserCommand := command.NewDeleteUserCommand(c.Request.Context(), userID, true)
-	result := controller.commandBus.Execute(deleteUserCommand)
+	deleteUserCommand := command.NewDeleteUserCommand(userID, true)
+	result := ctrl.bus.CommandBus.DeleteUser(c.Request.Context(), deleteUserCommand)
 	if !result.IsSuccess() {
 		response.ApplicationError(c, result.Error())
 		return

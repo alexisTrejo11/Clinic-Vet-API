@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"net/http"
@@ -48,18 +47,12 @@ func main() {
 	config.InitRedis(os.Getenv("REDIS_URL"))
 	mongoClient := config.InitMongoDB()
 	emailConfig := config.InitEmailConfig()
-	dbConn := config.PostgresConn(os.Getenv("DATABASE_URL"))
 	dataValidator := validator.New()
-	ctx := context.Background()
-
-	defer dbConn.Close(ctx)
 
 	router := gin.Default()
 	router.Use(gin.Recovery())
 	router.Use(middleware.AuditLog())
 	router.Use(middleware.RateLimiter(middleware.DefaultConfig()))
-
-	queries := sqlc.New(dbConn)
 
 	jwtSecret := os.Getenv("JWT_SECRET")
 	if jwtSecret == "" {
@@ -68,6 +61,7 @@ func main() {
 
 	pxpool := config.CreatePgxPool(os.Getenv("DATABASE_URL"))
 
+	queries := sqlc.New(pxpool)
 	empRepo := repository.NewSqlcEmployeeRepository(queries, pxpool)
 	api.SetupAuthModule(router, dataValidator, config.RedisClient, queries, empRepo, jwtSecret)
 	notiAPI.SetupNotificationModule(router, mongoClient, emailConfig, config.GetTwilioClient())

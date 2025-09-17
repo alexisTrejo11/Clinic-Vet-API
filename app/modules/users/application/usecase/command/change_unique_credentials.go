@@ -98,13 +98,8 @@ func (h ChangePhoneHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
 	return *cqrs.SuccessResult(user.ID().String(), "phone changed successfully")
 }
 
-func (h ChangeEmailHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
-	command, ok := cmd.(ChangeEmailCommand)
-	if !ok {
-		return *cqrs.FailureResult(ErrFailedChangeEmail, errors.New("invalid command type"))
-	}
-
-	user, err := h.userRepository.FindByID(command.ctx, command.userID)
+func (h ChangeEmailHandler) Handle(ctx context.Context, command ChangeEmailCommand) cqrs.CommandResult {
+	user, err := h.userRepository.FindByID(ctx, command.userID)
 	if err != nil {
 		return *cqrs.FailureResult(ErrFailedFindUser, err)
 	}
@@ -115,7 +110,7 @@ func (h ChangeEmailHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
 
 	user.UpdateEmail(command.email)
 
-	if err := h.userRepository.Save(command.ctx, &user); err != nil {
+	if err := h.userRepository.Save(ctx, &user); err != nil {
 		return *cqrs.FailureResult(ErrFailedUpdateUser, err)
 	}
 

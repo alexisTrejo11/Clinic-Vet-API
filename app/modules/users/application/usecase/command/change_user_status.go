@@ -2,7 +2,6 @@ package command
 
 import (
 	"context"
-	"errors"
 
 	"clinic-vet-api/app/core/domain/enum"
 	"clinic-vet-api/app/core/domain/valueobject"
@@ -13,10 +12,9 @@ import (
 type ChangeUserStatusCommand struct {
 	userID valueobject.UserID
 	status enum.UserStatus
-	ctx    context.Context
 }
 
-func NewChangeUserStatusCommand(ctx context.Context, userID uint, status string) (ChangeUserStatusCommand, error) {
+func NewChangeUserStatusCommand(userID uint, status string) (ChangeUserStatusCommand, error) {
 	uid := valueobject.NewUserID(userID)
 	userStatus, err := enum.ParseUserStatus(status)
 	if err != nil {
@@ -26,7 +24,6 @@ func NewChangeUserStatusCommand(ctx context.Context, userID uint, status string)
 	cmd := &ChangeUserStatusCommand{
 		userID: uid,
 		status: userStatus,
-		ctx:    ctx,
 	}
 	return *cmd, nil
 }
@@ -41,31 +38,33 @@ func NewChangeUserStatusHandler(userRepository repository.UserRepository) *Chang
 	}
 }
 
-func (h *ChangeUserStatusHandler) Handle(cmd cqrs.Command) error {
-	command, ok := cmd.(ChangeUserStatusCommand)
-	if !ok {
-		return errors.New("invalid command type")
-	}
-
-	if command.userID.IsZero() {
-		return errors.New("user ID is required")
-	}
-
-	if command.status == "" {
-		return errors.New("status is required")
-	}
-
-	user, err := h.userRepository.FindByID(command.ctx, command.userID)
+func (h *ChangeUserStatusHandler) Handle(ctx context.Context, command ChangeUserStatusCommand) cqrs.CommandResult {
+	user, err := h.userRepository.FindByID(ctx, command.userID)
 	if err != nil {
-		return err
+		return *cqrs.FailureResult("error finding user", err)
 	}
 
-	// TODO: Implement
+	switch command.status {
+	case enum.UserStatusActive:
+		if err := user.Activate(); err != nil {
+			return *cqrs.FailureResult("error activating user", err)
+		}
+	case enum.UserStatusInactive:
+		if err := user.Deactivate(); err != nil {
+			return *cqrs.FailureResult("error deactivating user", err)
+		}
+	case enum.UserStatusBanned:
+		if err := user.Ban(); err != nil {
+			return *cqrs.FailureResult("error banning user", err)
+		}
+	default:
+		return *cqrs.FailureResult("invalid user status", nil)
+	}
 
-	err = h.userRepository.Save(command.ctx, &user)
+	err = h.userRepository.Save(ctx, &user)
 	if err != nil {
-		return err
+		return *cqrs.FailureResult("error saving user", err)
 	}
 
-	return nil
+	return *cqrs.SuccessResult(user.ID().String(), "user status changed successfully")
 }

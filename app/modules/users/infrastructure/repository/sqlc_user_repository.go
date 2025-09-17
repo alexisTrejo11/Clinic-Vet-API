@@ -41,11 +41,7 @@ func (r *SQLCUserRepository) FindByID(ctx context.Context, id valueobject.UserID
 		return u.User{}, r.dbError(OpSelect, fmt.Sprintf("%s with ID %d", ErrMsgFindUser, id.Value()), err)
 	}
 
-	user, err := sqlcRowToEntity(sqlRow)
-	if err != nil {
-		return u.User{}, r.wrapConversionError(err)
-	}
-
+	user, _ := sqlcRowToEntity(sqlRow)
 	return *user, nil
 }
 
@@ -58,11 +54,7 @@ func (r *SQLCUserRepository) FindByEmail(ctx context.Context, email string) (u.U
 		return u.User{}, r.dbError(OpSelect, fmt.Sprintf("%s with email %s", ErrMsgFindUserByEmail, email), err)
 	}
 
-	user, err := sqlcRowToEntity(sqlRow)
-	if err != nil {
-		return u.User{}, r.wrapConversionError(err)
-	}
-
+	user, _ := sqlcRowToEntity(sqlRow)
 	return *user, nil
 }
 
@@ -75,11 +67,7 @@ func (r *SQLCUserRepository) FindByPhone(ctx context.Context, phone string) (u.U
 		return u.User{}, r.dbError(OpSelect, fmt.Sprintf("%s with phone %s", ErrMsgFindUserByPhone, phone), err)
 	}
 
-	user, err := sqlcRowToEntity(sqlRow)
-	if err != nil {
-		return u.User{}, r.wrapConversionError(err)
-	}
-
+	user, _ := sqlcRowToEntity(sqlRow)
 	return *user, nil
 }
 
@@ -266,7 +254,7 @@ func (r *SQLCUserRepository) UpdatePassword(ctx context.Context, id valueobject.
 func (r *SQLCUserRepository) UpdateStatus(ctx context.Context, id valueobject.UserID, status enum.UserStatus) error {
 	err := r.queries.UpdateUserStatus(ctx, sqlc.UpdateUserStatusParams{
 		ID:     int32(id.Value()),
-		Status: models.UserStatus(status.DisplayName()),
+		Status: models.UserStatus(status.String()),
 	})
 	if err != nil {
 		return r.dbError("update", fmt.Sprintf("failed to update status for user ID %d", id.Value()), err)
@@ -303,13 +291,12 @@ func (r *SQLCUserRepository) HardDelete(ctx context.Context, id valueobject.User
 }
 
 func (r *SQLCUserRepository) create(ctx context.Context, user *u.User) error {
-	_, err := r.queries.CreateUser(ctx, sqlc.CreateUserParams{
-		Email:       pgtype.Text{String: user.Email().String(), Valid: true},
-		PhoneNumber: pgtype.Text{String: user.PhoneNumber().String(), Valid: true},
-		Password:    pgtype.Text{String: user.Password(), Valid: true},
-		Role:        models.UserRole(user.Role()),
-		ProfileID:   pgtype.Int4{Valid: false},
-	})
+	params, err := entityToCreateParams(user)
+	if err != nil {
+		return r.wrapConversionError(err)
+	}
+
+	_, err = r.queries.CreateUser(ctx, *params)
 	if err != nil {
 		return r.dbError(OpInsert, ErrMsgCreateUser, err)
 	}
@@ -317,24 +304,12 @@ func (r *SQLCUserRepository) create(ctx context.Context, user *u.User) error {
 }
 
 func (r *SQLCUserRepository) update(ctx context.Context, user *u.User) error {
-	_, err := r.queries.UpdateUser(ctx, sqlc.UpdateUserParams{
-		ID:          int32(user.ID().Value()),
-		Email:       pgtype.Text{String: user.Email().String(), Valid: true},
-		PhoneNumber: pgtype.Text{String: user.PhoneNumber().String(), Valid: true},
-		Password:    pgtype.Text{String: user.Password(), Valid: true},
-		Role:        models.UserRole(user.Role()),
-	})
+	params := entityToUpdateParams(user)
+	_, err := r.queries.UpdateUser(ctx, *params)
 	if err != nil {
 		return r.dbError(OpUpdate, fmt.Sprintf("%s with ID %d", ErrMsgUpdateUser, user.ID().Value()), err)
 	}
 	return nil
-}
-
-func convertToNullableTimestamp(t time.Time) pgtype.Timestamptz {
-	if t.IsZero() {
-		return pgtype.Timestamptz{Valid: false}
-	}
-	return pgtype.Timestamptz{Time: t, Valid: true}
 }
 
 func (r *SQLCUserRepository) ExistsByCustomerID(ctx context.Context, customerID valueobject.CustomerID) (bool, error) {
@@ -403,7 +378,7 @@ func (r *SQLCUserRepository) CountByRole(ctx context.Context, role string) (int6
 }
 
 func (r *SQLCUserRepository) CountByStatus(ctx context.Context, status enum.UserStatus) (int64, error) {
-	count, err := r.queries.CountUsersByStatus(ctx, models.UserStatus(status.DisplayName()))
+	count, err := r.queries.CountUsersByStatus(ctx, models.UserStatus(status.String()))
 	if err != nil {
 		return 0, r.dbError("select", fmt.Sprintf("failed to count users by status %s", status), err)
 	}
