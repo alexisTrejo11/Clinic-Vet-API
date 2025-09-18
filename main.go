@@ -131,12 +131,13 @@ func initializeApplication() (*Application, error) {
 // initializeExternalServices initializes all external service connections
 func initializeExternalServices(settings *config.AppSettings) error {
 	// Initialize Twilio
-	config.InitTwilio()
+	config.InitTwilio(settings.Services.Twilio)
 
 	// Initialize Redis
-	config.InitRedis(settings.Redis.URL)
+	config.InitRedis(settings.Redis)
 
 	// MongoDB is initialized in setupModules since it's passed to specific modules
+	config.InitMongoDB(settings.Services.Mongo)
 
 	return nil
 }

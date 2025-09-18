@@ -1,8 +1,6 @@
 package config
 
 import (
-	"os"
-
 	"github.com/twilio/twilio-go"
 )
 
@@ -14,17 +12,14 @@ type TwilioConfig struct {
 
 var twilioClient *twilio.RestClient
 
-func InitTwilio() {
-	accountSid := os.Getenv("TWILIO_ACCOUNT_SID")
-	authToken := os.Getenv("TWILIO_AUTH_TOKEN")
-
-	if accountSid == "" || authToken == "" {
+func InitTwilio(config TwilioConfig) {
+	if config.AccountSID == "" || config.AuthToken == "" {
 		panic("Twilio credentials are not set in environment variables")
 	}
 
 	client := twilio.NewRestClientWithParams(twilio.ClientParams{
-		Username: accountSid,
-		Password: authToken,
+		Username: config.AccountSID,
+		Password: config.AuthToken,
 	})
 
 	twilioClient = client
@@ -32,7 +27,7 @@ func InitTwilio() {
 
 func GetTwilioClient() *twilio.RestClient {
 	if twilioClient == nil {
-		InitTwilio()
+		panic("Twilio client is not initialized. Call InitTwilio first.")
 	}
 
 	return twilioClient
