@@ -4,7 +4,7 @@ import "os"
 
 type EmailConfig struct {
 	SMTPHost     string
-	SMTPPort     string
+	SMTPPort     int
 	SMTPUsername string
 	SMTPPassword string
 	FromEmail    string
@@ -23,18 +23,8 @@ func InitEmailConfig() EmailConfig {
 	projectName := os.Getenv("PROJECT_NAME")
 	logoURL := os.Getenv("LOGO_URL")
 
-	if smtpHost == "" && smtpPort == "" && smtpUsername == "" && smtpPassword == "" && fromEmail == "" && fromName == "" && projectName == "" && logoURL == "" {
+	if smtpHost == "" && smtpPort == "0" && smtpUsername == "" && smtpPassword == "" && fromEmail == "" && fromName == "" && projectName == "" && logoURL == "" {
 		panic("One or more email configuration variables are not set")
 	}
-
-	return EmailConfig{
-		SMTPHost:     smtpHost,
-		SMTPPort:     smtpPort,
-		SMTPUsername: smtpUsername,
-		SMTPPassword: smtpPassword,
-		FromEmail:    fromEmail,
-		FromName:     fromName,
-		ProjectName:  projectName,
-		LogoURL:      logoURL,
-	}
+	return EmailConfig{}
 }

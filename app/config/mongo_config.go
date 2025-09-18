@@ -3,24 +3,25 @@ package config
 import (
 	"context"
 	"fmt"
-	"log"
-	"os"
+	"time"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
+type MongoConfig struct {
+	URI      string        `json:"uri"`
+	Database string        `json:"database"`
+	Timeout  time.Duration `json:"timeout"`
+}
+
 var mongoClient *mongo.Client
 
-func InitMongoDB() *mongo.Client {
-	var uri string
-	if uri = os.Getenv("MONGODB_URI"); uri == "" {
-		log.Fatal("'MONGODB_URI' environment variable is not set. Closing Server.")
-	}
+func InitMongoDB(config MongoConfig) *mongo.Client {
 
 	serverAPI := options.ServerAPI(options.ServerAPIVersion1)
-	opts := options.Client().ApplyURI(uri).SetServerAPIOptions(serverAPI)
+	opts := options.Client().ApplyURI(config.URI).SetServerAPIOptions(serverAPI)
 	client, err := mongo.Connect(opts)
 	if err != nil {
 		panic(err)
@@ -43,7 +44,7 @@ func InitMongoDB() *mongo.Client {
 
 func GetMongoClient() *mongo.Client {
 	if mongoClient == nil {
-		mongoClient = InitMongoDB()
+		panic("MongoDB client is not initialized. Call InitMongoDB first.")
 	}
 	return mongoClient
 }

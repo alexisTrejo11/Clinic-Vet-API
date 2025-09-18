@@ -10,6 +10,14 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+type DatabaseConfig struct {
+	URL             string        `json:"url"`
+	MaxOpenConns    int           `json:"max_open_conns"`
+	MaxIdleConns    int           `json:"max_idle_conns"`
+	ConnMaxLifetime time.Duration `json:"conn_max_lifetime"`
+	ConnMaxIdleTime time.Duration `json:"conn_max_idle_time"`
+}
+
 func PostgresConn(db_url string) *pgx.Conn {
 	conn, err := pgx.Connect(context.Background(), db_url)
 	if err != nil {

@@ -2,6 +2,12 @@ package config
 
 import "github.com/redis/go-redis/v9"
 
+type RedisConfig struct {
+	URL      string `json:"url"`
+	Password string `json:"password"`
+	DB       int    `json:"db"`
+}
+
 var RedisClient *redis.Client
 
 func InitRedis(redisUrl string) {

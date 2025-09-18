@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/smtp"
+	"strconv"
 	"strings"
 
 	"clinic-vet-api/app/core/domain/entity/notification"
@@ -106,7 +107,7 @@ func (s *emailSenderImpl) sendEmail(to, subject, htmlBody string) error {
 		ServerName:         s.config.SMTPHost,
 	}
 
-	conn, err := tls.Dial("tcp", s.config.SMTPHost+":"+s.config.SMTPPort, tlsconfig)
+	conn, err := tls.Dial("tcp", s.config.SMTPHost+":"+strconv.Itoa(s.config.SMTPPort), tlsconfig)
 	if err != nil {
 		return fmt.Errorf("error connecting to SMTP server: %w", err)
 	}
