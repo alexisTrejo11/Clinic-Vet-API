@@ -3,10 +3,16 @@ package enum
 
 import (
 	domainerr "clinic-vet-api/app/core/error"
+	"context"
 	"fmt"
 	"slices"
 	"strings"
 )
+
+func InvalidEnumParserError(enumName, enumValue string) error {
+	return domainerr.InvalidEnumValue(context.Background(), enumValue, enumValue, fmt.Sprintf("invalid %s value: %s", enumName, enumValue), "enum parse")
+
+}
 
 // AppointmentStatus represents the status of an appointment
 type AppointmentStatus string
@@ -62,7 +68,7 @@ func ParseAppointmentStatus(status string) (AppointmentStatus, error) {
 		return val, nil
 	}
 
-	return "", domainerr.InvalidEnumValue("appointment-status", status, "invalid appointment status")
+	return "", InvalidEnumParserError("AppointmentStatus", status)
 }
 
 func MustParseAppointmentStatus(status string) AppointmentStatus {

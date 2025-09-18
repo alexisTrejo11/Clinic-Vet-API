@@ -35,8 +35,8 @@ func FromEntityToResult(customer customer.Customer) *CustomerResult {
 		UpdatedAt:   customer.UpdatedAt(),
 		UserID:      customer.UserID(),
 		Photo:       customer.Photo(),
-		FirstName:   customer.FullName().FirstName,
-		LastName:    customer.FullName().LastName,
+		FirstName:   customer.Name().FirstName,
+		LastName:    customer.Name().LastName,
 		DateOfBirth: customer.DateOfBirth(),
 	}
 }

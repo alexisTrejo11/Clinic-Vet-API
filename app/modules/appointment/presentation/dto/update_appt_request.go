@@ -19,6 +19,20 @@ type UpdateApptRequest struct {
 	Service       *string
 }
 
+type RequestApptmentData struct {
+	PetID    int
+	Service  string
+	Datetime string
+	Reason   string
+	Notes    *string
+}
+
+type RescheduleApptRequest struct {
+	AppointmentID uint
+	Datetime      CustomDate
+	Reason        *string
+}
+
 func (r *UpdateApptRequest) ToCommand(ctx context.Context) (command.UpdateApptCommand, error) {
 	var clinicService *enum.ClinicService
 	if r.Service != nil {
@@ -49,8 +63,8 @@ type RescheduleAppointData struct {
 	Reason string `json:"reason,omitempty" binding:"omitempty,max=500" example:"Routine checkup"`
 }
 
-func (a *RescheduleAppointData) ToCommandWithVetID(ctx context.Context, apptID, ownernID uint) command.RescheduleApptCommand {
-	return *command.NewRescheduleApptCommand(ctx, apptID, &ownernID, a.NewDateTime, &a.Reason)
+func (a *RescheduleAppointData) ToCommandWithVetID(ctx context.Context, apptID, customernID uint) command.RescheduleApptCommand {
+	return *command.NewRescheduleApptCommand(ctx, apptID, &customernID, a.NewDateTime, &a.Reason)
 }
 
 // Clean sanitizes and validates the appointment data
@@ -62,23 +76,8 @@ func (a *RescheduleAppointData) ToCommand(ctx context.Context, appointmentID uin
 	return *command.NewRescheduleApptCommand(ctx, appointmentID, nil, a.NewDateTime, &a.Reason)
 }
 
-type RequestApptmentData struct {
-	petID    int
-	service  string
-	datetime string
-	status   string
-	reason   string
-	notes    *string
-}
-
 func (r *RequestApptmentData) ToCommand(ctx context.Context, customerID uint) (*command.RequestApptByCustomerCommand, error) {
-	return command.NewRequestApptByCustomerCommand(ctx, uint(r.petID), customerID, r.service, r.datetime, r.reason, r.notes)
-}
-
-type RescheduleApptRequest struct {
-	AppointmentID uint
-	Datetime      CustomDate
-	Reason        *string
+	return command.NewRequestApptByCustomerCommand(ctx, uint(r.PetID), customerID, r.Service, r.Datetime, r.Reason, r.Notes)
 }
 
 func (r *RescheduleApptRequest) ToCommand(ctx context.Context, employeID *uint) (command.RescheduleApptCommand, error) {

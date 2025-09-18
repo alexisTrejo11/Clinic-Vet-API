@@ -10,20 +10,20 @@ import (
 )
 
 type CreateApptCommand struct {
-	ctx      context.Context
-	ownerID  valueobject.CustomerID
-	petID    valueobject.PetID
-	vetID    *valueobject.EmployeeID
-	service  enum.ClinicService
-	datetime time.Time
-	status   *enum.AppointmentStatus
-	reason   enum.VisitReason
-	notes    *string
+	ctx        context.Context
+	customerID valueobject.CustomerID
+	petID      valueobject.PetID
+	vetID      *valueobject.EmployeeID
+	service    enum.ClinicService
+	datetime   time.Time
+	status     *enum.AppointmentStatus
+	reason     enum.VisitReason
+	notes      *string
 }
 
 func NewCreateApptCommand(
 	ctx context.Context,
-	ownerIDInt,
+	customerIDInt,
 	petIDInt uint,
 	vetIDInt *uint,
 	service enum.ClinicService,
@@ -39,14 +39,14 @@ func NewCreateApptCommand(
 	}
 
 	return &CreateApptCommand{
-		ownerID:  valueobject.NewCustomerID(ownerIDInt),
-		petID:    valueobject.NewPetID(petIDInt),
-		vetID:    vetID,
-		datetime: dateTime,
-		notes:    notes,
-		reason:   reason,
-		status:   &status,
-		service:  service,
+		customerID: valueobject.NewCustomerID(customerIDInt),
+		petID:      valueobject.NewPetID(petIDInt),
+		vetID:      vetID,
+		datetime:   dateTime,
+		notes:      notes,
+		reason:     reason,
+		status:     &status,
+		service:    service,
 	}
 }
 

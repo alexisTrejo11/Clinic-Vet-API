@@ -12,7 +12,7 @@ type AdminUpdatePetRequest struct {
 	// Required: false
 	// Minimum: 1
 	// Example: 123
-	CustomerID *uint `json:"owner_id,omitempty" validate:"omitempty,gt=0"`
+	CustomerID *uint `json:"customer_id,omitempty" validate:"omitempty,gt=0"`
 
 	UpdatePetRequest
 }

@@ -7,8 +7,8 @@ import (
 	apperror "clinic-vet-api/app/shared/error/application"
 )
 
-func OwnerNotFoundError(id int) error {
-	return apperror.EntityNotFoundValidationError("Owner ", strconv.Itoa(int(id)), "Invalid owner Id provided")
+func customerNotFoundError(id int) error {
+	return apperror.EntityNotFoundValidationError("customer ", strconv.Itoa(int(id)), "Invalid customer Id provided")
 }
 
 func PetNotFoundError(id int) error {

@@ -9,6 +9,7 @@ import (
 	reflect "reflect"
 
 	sqlc "clinic-vet-api/sqlc"
+
 	gomock "github.com/golang/mock/gomock"
 	pgx "github.com/jackc/pgx/v5"
 	pgtype "github.com/jackc/pgx/v5/pgtype"
@@ -51,19 +52,19 @@ func (mr *MockQuerierMockRecorder) ActivateUser(ctx, id interface{}) *gomock.Cal
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ActivateUser", reflect.TypeOf((*MockQuerier)(nil).ActivateUser), ctx, id)
 }
 
-// CreateOwner mocks base method.
-func (m *MockQuerier) CreateOwner(ctx context.Context, arg sqlc.CreateOwnerParams) (sqlc.CreateOwnerRow, error) {
+// Createcustomer mocks base method.
+func (m *MockQuerier) Createcustomer(ctx context.Context, arg sqlc.CreatecustomerParams) (sqlc.CreatecustomerRow, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateOwner", ctx, arg)
-	ret0, _ := ret[0].(sqlc.CreateOwnerRow)
+	ret := m.ctrl.Call(m, "Createcustomer", ctx, arg)
+	ret0, _ := ret[0].(sqlc.CreatecustomerRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// CreateOwner indicates an expected call of CreateOwner.
-func (mr *MockQuerierMockRecorder) CreateOwner(ctx, arg interface{}) *gomock.Call {
+// Createcustomer indicates an expected call of Createcustomer.
+func (mr *MockQuerierMockRecorder) Createcustomer(ctx, arg interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateOwner", reflect.TypeOf((*MockQuerier)(nil).CreateOwner), ctx, arg)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Createcustomer", reflect.TypeOf((*MockQuerier)(nil).Createcustomer), ctx, arg)
 }
 
 // CreatePet mocks base method.
@@ -110,18 +111,18 @@ func (mr *MockQuerierMockRecorder) DeactivateUser(ctx, id interface{}) *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeactivateUser", reflect.TypeOf((*MockQuerier)(nil).DeactivateUser), ctx, id)
 }
 
-// DeleteOwner mocks base method.
-func (m *MockQuerier) DeleteOwner(ctx context.Context, id int32) error {
+// Deletecustomer mocks base method.
+func (m *MockQuerier) Deletecustomer(ctx context.Context, id int32) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteOwner", ctx, id)
+	ret := m.ctrl.Call(m, "Deletecustomer", ctx, id)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// DeleteOwner indicates an expected call of DeleteOwner.
-func (mr *MockQuerierMockRecorder) DeleteOwner(ctx, id interface{}) *gomock.Call {
+// Deletecustomer indicates an expected call of Deletecustomer.
+func (mr *MockQuerierMockRecorder) Deletecustomer(ctx, id interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteOwner", reflect.TypeOf((*MockQuerier)(nil).DeleteOwner), ctx, id)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Deletecustomer", reflect.TypeOf((*MockQuerier)(nil).Deletecustomer), ctx, id)
 }
 
 // DeletePet mocks base method.
@@ -168,49 +169,49 @@ func (mr *MockQuerierMockRecorder) ExistByPhoneNumber(ctx, phoneNumber interface
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExistByPhoneNumber", reflect.TypeOf((*MockQuerier)(nil).ExistByPhoneNumber), ctx, phoneNumber)
 }
 
-// GetOwnerByID mocks base method.
-func (m *MockQuerier) GetOwnerByID(ctx context.Context, id int32) (sqlc.GetOwnerByIDRow, error) {
+// GetcustomerByID mocks base method.
+func (m *MockQuerier) GetcustomerByID(ctx context.Context, id int32) (sqlc.GetcustomerByIDRow, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetOwnerByID", ctx, id)
-	ret0, _ := ret[0].(sqlc.GetOwnerByIDRow)
+	ret := m.ctrl.Call(m, "GetcustomerByID", ctx, id)
+	ret0, _ := ret[0].(sqlc.GetcustomerByIDRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetOwnerByID indicates an expected call of GetOwnerByID.
-func (mr *MockQuerierMockRecorder) GetOwnerByID(ctx, id interface{}) *gomock.Call {
+// GetcustomerByID indicates an expected call of GetcustomerByID.
+func (mr *MockQuerierMockRecorder) GetcustomerByID(ctx, id interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOwnerByID", reflect.TypeOf((*MockQuerier)(nil).GetOwnerByID), ctx, id)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetcustomerByID", reflect.TypeOf((*MockQuerier)(nil).GetcustomerByID), ctx, id)
 }
 
-// GetOwnerByPhone mocks base method.
-func (m *MockQuerier) GetOwnerByPhone(ctx context.Context, phoneNumber string) (sqlc.GetOwnerByPhoneRow, error) {
+// GetcustomerByPhone mocks base method.
+func (m *MockQuerier) GetcustomerByPhone(ctx context.Context, phoneNumber string) (sqlc.GetcustomerByPhoneRow, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetOwnerByPhone", ctx, phoneNumber)
-	ret0, _ := ret[0].(sqlc.GetOwnerByPhoneRow)
+	ret := m.ctrl.Call(m, "GetcustomerByPhone", ctx, phoneNumber)
+	ret0, _ := ret[0].(sqlc.GetcustomerByPhoneRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetOwnerByPhone indicates an expected call of GetOwnerByPhone.
-func (mr *MockQuerierMockRecorder) GetOwnerByPhone(ctx, phoneNumber interface{}) *gomock.Call {
+// GetcustomerByPhone indicates an expected call of GetcustomerByPhone.
+func (mr *MockQuerierMockRecorder) GetcustomerByPhone(ctx, phoneNumber interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOwnerByPhone", reflect.TypeOf((*MockQuerier)(nil).GetOwnerByPhone), ctx, phoneNumber)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetcustomerByPhone", reflect.TypeOf((*MockQuerier)(nil).GetcustomerByPhone), ctx, phoneNumber)
 }
 
-// GetOwnerByUserID mocks base method.
-func (m *MockQuerier) GetOwnerByUserID(ctx context.Context, userID pgtype.Int4) (sqlc.GetOwnerByUserIDRow, error) {
+// GetcustomerByUserID mocks base method.
+func (m *MockQuerier) GetcustomerByUserID(ctx context.Context, userID pgtype.Int4) (sqlc.GetcustomerByUserIDRow, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetOwnerByUserID", ctx, userID)
-	ret0, _ := ret[0].(sqlc.GetOwnerByUserIDRow)
+	ret := m.ctrl.Call(m, "GetcustomerByUserID", ctx, userID)
+	ret0, _ := ret[0].(sqlc.GetcustomerByUserIDRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetOwnerByUserID indicates an expected call of GetOwnerByUserID.
-func (mr *MockQuerierMockRecorder) GetOwnerByUserID(ctx, userID interface{}) *gomock.Call {
+// GetcustomerByUserID indicates an expected call of GetcustomerByUserID.
+func (mr *MockQuerierMockRecorder) GetcustomerByUserID(ctx, userID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOwnerByUserID", reflect.TypeOf((*MockQuerier)(nil).GetOwnerByUserID), ctx, userID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetcustomerByUserID", reflect.TypeOf((*MockQuerier)(nil).GetcustomerByUserID), ctx, userID)
 }
 
 // GetPetByID mocks base method.
@@ -228,19 +229,19 @@ func (mr *MockQuerierMockRecorder) GetPetByID(ctx, id interface{}) *gomock.Call 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPetByID", reflect.TypeOf((*MockQuerier)(nil).GetPetByID), ctx, id)
 }
 
-// GetPetsByOwnerID mocks base method.
-func (m *MockQuerier) GetPetsByOwnerID(ctx context.Context, ownerID int32) ([]sqlc.Pet, error) {
+// GetPetsBycustomerID mocks base method.
+func (m *MockQuerier) GetPetsBycustomerID(ctx context.Context, customerID int32) ([]sqlc.Pet, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetPetsByOwnerID", ctx, ownerID)
+	ret := m.ctrl.Call(m, "GetPetsBycustomerID", ctx, customerID)
 	ret0, _ := ret[0].([]sqlc.Pet)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetPetsByOwnerID indicates an expected call of GetPetsByOwnerID.
-func (mr *MockQuerierMockRecorder) GetPetsByOwnerID(ctx, ownerID interface{}) *gomock.Call {
+// GetPetsBycustomerID indicates an expected call of GetPetsBycustomerID.
+func (mr *MockQuerierMockRecorder) GetPetsBycustomerID(ctx, customerID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPetsByOwnerID", reflect.TypeOf((*MockQuerier)(nil).GetPetsByOwnerID), ctx, ownerID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPetsBycustomerID", reflect.TypeOf((*MockQuerier)(nil).GetPetsBycustomerID), ctx, customerID)
 }
 
 // GetVeterinarianById mocks base method.
@@ -258,19 +259,19 @@ func (mr *MockQuerierMockRecorder) GetVeterinarianById(ctx, id interface{}) *gom
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetVeterinarianById", reflect.TypeOf((*MockQuerier)(nil).GetVeterinarianById), ctx, id)
 }
 
-// ListOwners mocks base method.
-func (m *MockQuerier) ListOwners(ctx context.Context, arg sqlc.ListOwnersParams) ([]sqlc.ListOwnersRow, error) {
+// Listcustomers mocks base method.
+func (m *MockQuerier) Listcustomers(ctx context.Context, arg sqlc.ListcustomersParams) ([]sqlc.ListcustomersRow, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListOwners", ctx, arg)
-	ret0, _ := ret[0].([]sqlc.ListOwnersRow)
+	ret := m.ctrl.Call(m, "Listcustomers", ctx, arg)
+	ret0, _ := ret[0].([]sqlc.ListcustomersRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// ListOwners indicates an expected call of ListOwners.
-func (mr *MockQuerierMockRecorder) ListOwners(ctx, arg interface{}) *gomock.Call {
+// Listcustomers indicates an expected call of Listcustomers.
+func (mr *MockQuerierMockRecorder) Listcustomers(ctx, arg interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListOwners", reflect.TypeOf((*MockQuerier)(nil).ListOwners), ctx, arg)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Listcustomers", reflect.TypeOf((*MockQuerier)(nil).Listcustomers), ctx, arg)
 }
 
 // ListPets mocks base method.
@@ -317,18 +318,18 @@ func (mr *MockQuerierMockRecorder) SoftDeleteVeterinarian(ctx, id interface{}) *
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SoftDeleteVeterinarian", reflect.TypeOf((*MockQuerier)(nil).SoftDeleteVeterinarian), ctx, id)
 }
 
-// UpdateOwner mocks base method.
-func (m *MockQuerier) UpdateOwner(ctx context.Context, arg sqlc.UpdateOwnerParams) error {
+// Updatecustomer mocks base method.
+func (m *MockQuerier) Updatecustomer(ctx context.Context, arg sqlc.UpdatecustomerParams) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateOwner", ctx, arg)
+	ret := m.ctrl.Call(m, "Updatecustomer", ctx, arg)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// UpdateOwner indicates an expected call of UpdateOwner.
-func (mr *MockQuerierMockRecorder) UpdateOwner(ctx, arg interface{}) *gomock.Call {
+// Updatecustomer indicates an expected call of Updatecustomer.
+func (mr *MockQuerierMockRecorder) Updatecustomer(ctx, arg interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateOwner", reflect.TypeOf((*MockQuerier)(nil).UpdateOwner), ctx, arg)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Updatecustomer", reflect.TypeOf((*MockQuerier)(nil).Updatecustomer), ctx, arg)
 }
 
 // UpdatePet mocks base method.

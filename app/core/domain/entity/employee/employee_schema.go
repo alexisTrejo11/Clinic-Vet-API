@@ -5,7 +5,10 @@ import (
 	"clinic-vet-api/app/core/domain/entity/base"
 	"clinic-vet-api/app/core/domain/enum"
 	"clinic-vet-api/app/core/domain/valueobject"
+	domainerr "clinic-vet-api/app/core/error"
+	"context"
 	"fmt"
+	"time"
 )
 
 type Employee struct {
@@ -61,11 +64,27 @@ func (v *Employee) Schedule() *valueobject.Schedule {
 	return v.schedule
 }
 
-func (v *Employee) AssignUser(userID valueobject.UserID) error {
+func (v *Employee) AssignUser(ctx context.Context, userID valueobject.UserID) error {
 	if v.userID != nil {
-		return fmt.Errorf("employee already assigned to a user with ID %s", v.userID.String())
+		return domainerr.ConflictError(ctx, "userID", fmt.Sprintf("employee %s is already assigned to a user", v.ID().String()), "assinging user to employee")
 	}
 	v.userID = &userID
 
 	return nil
+}
+
+func (v *Employee) SetID(id valueobject.EmployeeID) {
+	v.Entity.SetID(id)
+}
+
+func (v *Employee) CreatedAt() time.Time {
+	return v.Entity.CreatedAt()
+}
+
+func (v *Employee) UpdatedAt() time.Time {
+	return v.Entity.UpdatedAt()
+}
+
+func (v *Employee) SetTimeStamps(createdAt, updatedAt time.Time) {
+	v.Entity.SetTimeStamps(createdAt, updatedAt)
 }

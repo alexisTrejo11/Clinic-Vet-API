@@ -3,11 +3,11 @@ package controller
 import (
 	"context"
 
+	"clinic-vet-api/app/middleware"
 	"clinic-vet-api/app/modules/users/application/usecase"
 	"clinic-vet-api/app/modules/users/presentation/dto"
 	authError "clinic-vet-api/app/shared/error/auth"
 	"clinic-vet-api/app/shared/response"
-	"clinic-vet-api/middleware"
 
 	"github.com/gin-gonic/gin"
 )

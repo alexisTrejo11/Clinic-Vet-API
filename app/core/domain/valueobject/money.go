@@ -1,6 +1,10 @@
 package valueobject
 
-import "fmt"
+import (
+	domainerr "clinic-vet-api/app/core/error"
+	"context"
+	"fmt"
+)
 
 type Money struct {
 	amount   int64 // Amount in smallest currency unit (cents)
@@ -42,7 +46,7 @@ func (m Money) FormatWithCurrency(currency string) string {
 
 func (m Money) Add(other Money) (Money, error) {
 	if m.currency != other.currency {
-		return Money{}, fmt.Errorf("cannot add different currencies: %s and %s", m.Currency(), other.Currency())
+		return Money{}, domainerr.InvalidFieldFormat(context.Background(), "money", "currency mismatch", fmt.Sprintf("cannot add different currencies: %s and %s", m.currency, other.Currency()), "create money")
 	}
 	return Money{
 		amount:   m.amount + other.Amount(),
@@ -52,7 +56,7 @@ func (m Money) Add(other Money) (Money, error) {
 
 func (m Money) Subtract(other Money) (Money, error) {
 	if m.currency != other.Currency() {
-		return Money{}, fmt.Errorf("cannot subtract different currencies: %s and %s", m.currency, other.Currency())
+		return Money{}, domainerr.InvalidFieldFormat(context.Background(), "money", "currency mismatch", fmt.Sprintf("cannot subtract different currencies: %s and %s", m.currency, other.Currency()), "create money")
 	}
 	return Money{
 		amount:   m.amount - other.Amount(),

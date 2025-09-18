@@ -8,45 +8,26 @@ import (
 	"clinic-vet-api/sqlc"
 	"database/sql"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log"
 	"time"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 func sqlcRowToEntity(sql sqlc.Employee) (*employee.Employee, error) {
-	if sql.FirstName == "" || sql.LastName == "" {
-		return nil, errors.New("first name and last name are required")
-	}
-
-	if sql.LicenseNumber == "" {
-		return nil, errors.New("license number is required")
-	}
-
-	if sql.Speciality == "" {
-		return nil, errors.New("specialty is required")
-	}
-
 	employeeID := valueobject.NewEmployeeID(uint(sql.ID))
 
-	name, err := valueobject.NewPersonName(sql.FirstName, sql.LastName)
-	if err != nil {
-		return nil, fmt.Errorf("error creating person name: %w", err)
-	}
-
-	specialty, err := enum.ParseVetSpecialty(sql.Speciality.(string))
-	if err != nil {
-		return nil, fmt.Errorf("invalid specialty '%s': %w", sql.Speciality, err)
+	personName := valueobject.PersonName{
+		FirstName: sql.FirstName,
+		LastName:  sql.LastName,
 	}
 
 	var schedule *valueobject.Schedule
+	var err error
 	if sql.ScheduleJson != nil {
 		schedule, err = UnmarshalEmployeeSchedule(sql.ScheduleJson)
 		if err != nil {
-			// Log the error but continue with empty schedule
 			log.Printf("Warning: Failed to unmarshal schedule: %v", err)
 			schedule = &valueobject.Schedule{}
 		}
@@ -61,10 +42,10 @@ func sqlcRowToEntity(sql sqlc.Employee) (*employee.Employee, error) {
 	}
 
 	opts := []employee.EmployeeOption{
-		employee.WithName(name),
+		employee.WithName(personName),
 		employee.WithPhoto(sql.Photo),
 		employee.WithLicenseNumber(sql.LicenseNumber),
-		employee.WithSpecialty(specialty),
+		employee.WithSpecialty(enum.VetSpecialty(string(sql.Speciality))),
 		employee.WithYearsExperience(int(sql.YearsOfExperience)),
 		employee.WithSchedule(schedule),
 		employee.WithIsActive(sql.IsActive),
@@ -186,34 +167,6 @@ func UnmarshalEmployeeSchedule(sqlJSON []byte) (*valueobject.Schedule, error) {
 	}
 
 	return parseScheduleFromPostgres(sqlJSON)
-}
-
-func getBoolFromNullBool(nullBool pgtype.Bool, defaultValue bool) bool {
-	if nullBool.Valid {
-		return nullBool.Bool
-	}
-	return defaultValue
-}
-
-func getTimeFromNullTime(nullTime pgtype.Timestamp, defaultValue time.Time) time.Time {
-	if nullTime.Valid {
-		return nullTime.Time
-	}
-	return defaultValue
-}
-
-func getIntFromNullInt32(nullInt sql.NullInt32, defaultValue int) int {
-	if nullInt.Valid {
-		return int(nullInt.Int32)
-	}
-	return defaultValue
-}
-
-func getStringFromNullString(nullString sql.NullString, defaultValue string) string {
-	if nullString.Valid {
-		return nullString.String
-	}
-	return defaultValue
 }
 
 func (r *SqlcEmployeeRepository) scanEmployeeFromRow(row pgx.Row, employee *employee.Employee) error {

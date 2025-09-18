@@ -5,18 +5,24 @@ import (
 	"clinic-vet-api/app/core/domain/entity/employee"
 	"clinic-vet-api/app/core/domain/enum"
 	"clinic-vet-api/app/core/domain/valueobject"
+	"context"
 	"errors"
 	"fmt"
+	"time"
 )
 
 type CreateEmployeeCommand struct {
-	FirstName       string
-	LastName        string
+	// Personal details
+	Name        valueobject.PersonName
+	Gender      enum.PersonGender
+	DateOfBirth time.Time
+
+	// Professional details
 	Photo           string
 	LicenseNumber   string
 	YearsExperience int
 	IsActive        bool
-	Specialty       string
+	Specialty       enum.VetSpecialty
 	ConsultationFee *valueobject.Money
 	LaboralSchedule []ScheduleData
 }
@@ -52,28 +58,10 @@ type ScheduleData struct {
 	EndBreak      int
 }
 
-func (cmd *CreateEmployeeCommand) createEmployee() (*employee.Employee, error) {
-	if cmd.FirstName == "" || cmd.LastName == "" {
-		return nil, errors.New("first name and last name are required")
-	}
-	if cmd.LicenseNumber == "" {
-		return nil, errors.New("license number is required")
-	}
-
-	personName, err := valueobject.NewPersonName(cmd.FirstName, cmd.LastName)
-	if err != nil {
-		return nil, fmt.Errorf("error creating person name: %w", err)
-	}
-
-	specialty, err := enum.ParseVetSpecialty(cmd.Specialty)
-	if err != nil {
-		return nil, fmt.Errorf("invalid specialty '%s': %w", cmd.Specialty, err)
-	}
-
+func (cmd *CreateEmployeeCommand) createEmployee(ctx context.Context) (*employee.Employee, error) {
 	opts := []employee.EmployeeOption{
-		employee.WithName(personName),
 		employee.WithLicenseNumber(cmd.LicenseNumber),
-		employee.WithSpecialty(specialty),
+		employee.WithSpecialty(cmd.Specialty),
 		employee.WithYearsExperience(cmd.YearsExperience),
 		employee.WithIsActive(cmd.IsActive),
 	}
@@ -89,10 +77,10 @@ func (cmd *CreateEmployeeCommand) createEmployee() (*employee.Employee, error) {
 		opts = append(opts, employee.WithConsultationFee(cmd.ConsultationFee))
 	}
 
-	return employee.NewEmployee(valueobject.EmployeeID{}, opts...)
+	return employee.CreateEmployee(ctx, cmd.Name, cmd.Gender, cmd.DateOfBirth, opts...)
 }
 
-func (cmd *UpdateEmployeeCommand) updateEmployee(emp *employee.Employee) error {
+func (cmd *UpdateEmployeeCommand) updateEmployee(ctx context.Context, emp *employee.Employee) error {
 	if cmd.FirstName != nil || cmd.LastName != nil {
 		firstName := emp.Name().FirstName
 		lastName := emp.Name().LastName
@@ -108,7 +96,7 @@ func (cmd *UpdateEmployeeCommand) updateEmployee(emp *employee.Employee) error {
 		if err != nil {
 			return fmt.Errorf("error updating person name: %w", err)
 		}
-		emp.UpdateName(personName)
+		emp.UpdateName(ctx, personName)
 	}
 
 	if cmd.Photo != nil {

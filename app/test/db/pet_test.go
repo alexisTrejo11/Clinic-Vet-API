@@ -8,11 +8,12 @@ import (
 	"time"
 
 	"clinic-vet-api/sqlc"
+
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/require"
 )
 
-func createRandomPet(t *testing.T, ownerID int32) sqlc.Pet {
+func createRandomPet(t *testing.T, customerID int32) sqlc.Pet {
 	random_float := randomFloat(1, 50)
 	random_rounded := math.Round(random_float*100) / 100
 
@@ -27,7 +28,7 @@ func createRandomPet(t *testing.T, ownerID int32) sqlc.Pet {
 		Color:      pgtype.Text{String: "Black", Valid: true},
 		Microchip:  pgtype.Text{String: randomString(15), Valid: true},
 		IsNeutered: pgtype.Bool{Bool: true, Valid: true},
-		OwnerID:    ownerID,
+		customerID: customerID,
 		Allergies:  pgtype.Text{String: "None", Valid: true},
 		IsActive:   true,
 	}
@@ -38,7 +39,7 @@ func createRandomPet(t *testing.T, ownerID int32) sqlc.Pet {
 
 	require.Equal(t, arg.Name, pet.Name)
 	require.Equal(t, arg.Species, pet.Species)
-	require.Equal(t, arg.OwnerID, pet.OwnerID)
+	require.Equal(t, arg.customerID, pet.customerID)
 
 	require.NotZero(t, pet.GetID())
 	require.NotZero(t, pet.CreatedAt)
@@ -52,15 +53,15 @@ func deleteTestPet(t *testing.T, id int32) {
 }
 
 func TestCreatePet(t *testing.T) {
-	owner := createRandomOwner(t)
-	defer deleteTestOwner(t, owner.ID)
+	customer := createRandomcustomer(t)
+	defer deleteTestcustomer(t, customer.ID)
 
 	t.Run("CreatePetWithRequiredFields", func(t *testing.T) {
 		arg := sqlc.CreatePetParams{
-			Name:     "Required Fields Only",
-			Species:  "Cat",
-			OwnerID:  owner.ID,
-			IsActive: true,
+			Name:       "Required Fields Only",
+			Species:    "Cat",
+			customerID: customer.ID,
+			IsActive:   true,
 		}
 
 		pet, err := testQueries.CreatePet(context.Background(), arg)
@@ -69,7 +70,7 @@ func TestCreatePet(t *testing.T) {
 
 		require.Equal(t, arg.Name, pet.Name)
 		require.Equal(t, arg.Species, pet.Species)
-		require.Equal(t, arg.OwnerID, pet.OwnerID)
+		require.Equal(t, arg.customerID, pet.customerID)
 		require.Equal(t, arg.IsActive, pet.IsActive)
 
 		// Campos opcionales deben ser nulos
@@ -80,7 +81,7 @@ func TestCreatePet(t *testing.T) {
 	})
 
 	t.Run("CreatePetWithAllFields", func(t *testing.T) {
-		pet := createRandomPet(t, owner.ID)
+		pet := createRandomPet(t, customer.ID)
 		defer deleteTestPet(t, pet.GetID())
 
 		require.True(t, pet.Photo.Valid)
@@ -99,9 +100,9 @@ func TestCreatePet(t *testing.T) {
 		}{
 			// Missing FIELDS not Nil == ""
 			{
-				name: "MissingOwnerID",
+				name: "MissingcustomerID",
 				arg: sqlc.CreatePetParams{
-					Name:     "No Owner",
+					Name:     "No customer",
 					Species:  "Dog",
 					IsActive: true,
 				},
@@ -122,22 +123,22 @@ func TestCreatePet(t *testing.T) {
 		// Arrange
 		microchip := "CHIP-" + randomString(10)
 
-		pet1 := createRandomPet(t, owner.ID)
+		pet1 := createRandomPet(t, customer.ID)
 		defer deleteTestPet(t, pet1.ID)
 
 		err := testQueries.UpdatePet(context.Background(), sqlc.UpdatePetParams{
-			ID:        pet1.ID,
-			OwnerID:   owner.ID,
-			Microchip: pgtype.Text{String: microchip, Valid: true},
+			ID:         pet1.ID,
+			customerID: customer.ID,
+			Microchip:  pgtype.Text{String: microchip, Valid: true},
 		})
 		require.NoError(t, err)
 
 		arg := sqlc.CreatePetParams{
-			Name:      "Duplicate Microchip",
-			Species:   "Dog",
-			OwnerID:   owner.ID,
-			Microchip: pgtype.Text{String: microchip, Valid: true},
-			IsActive:  true,
+			Name:       "Duplicate Microchip",
+			Species:    "Dog",
+			customerID: customer.ID,
+			Microchip:  pgtype.Text{String: microchip, Valid: true},
+			IsActive:   true,
 		}
 
 		// Act
@@ -150,26 +151,26 @@ func TestCreatePet(t *testing.T) {
 }
 
 func TestUpdatePet(t *testing.T) {
-	owner := createRandomOwner(t)
-	owner2 := createRandomOwner(t)
-	defer deleteTestOwner(t, owner.ID)
+	customer := createRandomcustomer(t)
+	customer2 := createRandomcustomer(t)
+	defer deleteTestcustomer(t, customer.ID)
 
 	t.Run("UpdatePetWithRequiredFields", func(t *testing.T) {
 		// Arrange
-		created_pet := createRandomPetWithParams(t, owner.ID, sqlc.CreatePetParams{
-			Name:     "Required Fields Only",
-			Species:  "Cat",
-			OwnerID:  owner.ID,
-			IsActive: true,
+		created_pet := createRandomPetWithParams(t, customer.ID, sqlc.CreatePetParams{
+			Name:       "Required Fields Only",
+			Species:    "Cat",
+			customerID: customer.ID,
+			IsActive:   true,
 		})
 		defer deleteTestPet(t, created_pet.GetID())
 
 		update_arg := sqlc.UpdatePetParams{
-			ID:       created_pet.GetID(),
-			Name:     "Required Update Fields Only",
-			Species:  "Dog",
-			OwnerID:  owner2.ID,
-			IsActive: false,
+			ID:         created_pet.GetID(),
+			Name:       "Required Update Fields Only",
+			Species:    "Dog",
+			customerID: customer2.ID,
+			IsActive:   false,
 		}
 
 		// Act
@@ -182,19 +183,19 @@ func TestUpdatePet(t *testing.T) {
 		// Asert
 		require.Equal(t, updated_pet.Name, update_arg.Name)
 		require.Equal(t, updated_pet.Species, update_arg.Species)
-		require.Equal(t, updated_pet.OwnerID, update_arg.OwnerID)
+		require.Equal(t, updated_pet.customerID, update_arg.customerID)
 		require.Equal(t, updated_pet.IsActive, update_arg.IsActive)
 	})
 
 }
 
 func TestGetPetByID(t *testing.T) {
-	owner := createRandomOwner(t)
-	defer deleteTestOwner(t, owner.ID)
+	customer := createRandomcustomer(t)
+	defer deleteTestcustomer(t, customer.ID)
 
 	t.Run("GetExistingPet", func(t *testing.T) {
 		// Arrange
-		createdPet := createRandomPet(t, owner.ID)
+		createdPet := createRandomPet(t, customer.ID)
 		defer deleteTestPet(t, createdpet.GetID())
 
 		// Act
@@ -207,7 +208,7 @@ func TestGetPetByID(t *testing.T) {
 		require.Equal(t, createdpet.ID, retrievedpet.ID)
 		require.Equal(t, createdPet.Name, retrievedPet.Name)
 		require.Equal(t, createdPet.Species, retrievedPet.Species)
-		require.Equal(t, createdPet.OwnerID, retrievedPet.OwnerID)
+		require.Equal(t, createdPet.customerID, retrievedPet.customerID)
 		require.Equal(t, createdPet.IsActive, retrievedPet.IsActive)
 		require.WithinDuration(t, createdPet.CreatedAt.Time, retrievedPet.CreatedAt.Time, time.Second)
 		require.WithinDuration(t, createdPet.UpdatedAt.Time, retrievedPet.UpdatedAt.Time, time.Second)
@@ -246,7 +247,7 @@ func TestGetPetByID(t *testing.T) {
 			Color:              pgtype.Text{String: "Black", Valid: true},
 			Microchip:          pgtype.Text{String: randomString(9), Valid: true},
 			IsNeutered:         pgtype.Bool{Bool: true, Valid: true},
-			OwnerID:            owner.ID,
+			customerID:         customer.ID,
 			Allergies:          pgtype.Text{String: "None", Valid: true},
 			CurrentMedications: pgtype.Text{String: "None", Valid: true},
 			SpecialNeeds:       pgtype.Text{String: "None", Valid: true},
@@ -279,13 +280,13 @@ func TestGetPetByID(t *testing.T) {
 	t.Run("GetPetWithSomeOptionalFields", func(t *testing.T) {
 		// Arrange
 		arg := sqlc.CreatePetParams{
-			Name:     "Partial Optional",
-			Species:  "Cat",
-			Breed:    pgtype.Text{String: "Siamese", Valid: true},
-			Age:      pgtype.Int2{Valid: false},
-			Gender:   pgtype.Text{String: "Female", Valid: true},
-			OwnerID:  owner.ID,
-			IsActive: true,
+			Name:       "Partial Optional",
+			Species:    "Cat",
+			Breed:      pgtype.Text{String: "Siamese", Valid: true},
+			Age:        pgtype.Int2{Valid: false},
+			Gender:     pgtype.Text{String: "Female", Valid: true},
+			customerID: customer.ID,
+			IsActive:   true,
 		}
 		createdPet, err := testQueries.CreatePet(context.Background(), arg)
 		require.NoError(t, err)
@@ -307,90 +308,90 @@ func TestGetPetByID(t *testing.T) {
 	})
 }
 
-func TestGetPetsByOwnerID(t *testing.T) {
-	owner := createRandomOwner(t)
-	defer deleteTestOwner(t, owner.ID)
+func TestGetPetsBycustomerID(t *testing.T) {
+	customer := createRandomcustomer(t)
+	defer deleteTestcustomer(t, customer.ID)
 
-	otherOwner := createRandomOwner(t)
-	defer deleteTestOwner(t, otherOwner.ID)
+	othercustomer := createRandomcustomer(t)
+	defer deleteTestcustomer(t, othercustomer.ID)
 
-	t.Run("GetPetsForOwnerWithNoPets", func(t *testing.T) {
-		pets, err := testQueries.GetPetsByOwnerID(context.Background(), owner.ID)
+	t.Run("GetPetsForcustomerWithNoPets", func(t *testing.T) {
+		pets, err := testQueries.GetPetsBycustomerID(context.Background(), customer.ID)
 		require.NoError(t, err)
 		require.Empty(t, pets)
 		require.Len(t, pets, 0)
 	})
 
-	t.Run("GetPetsForOwnerWithMultiplePets", func(t *testing.T) {
-		pet1 := createRandomPet(t, owner.ID)
+	t.Run("GetPetsForcustomerWithMultiplePets", func(t *testing.T) {
+		pet1 := createRandomPet(t, customer.ID)
 		defer deleteTestPet(t, pet1.ID)
 
-		pet2 := createRandomPet(t, owner.ID)
+		pet2 := createRandomPet(t, customer.ID)
 		defer deleteTestPet(t, pet2.ID)
 
-		pet3 := createRandomPet(t, owner.ID)
+		pet3 := createRandomPet(t, customer.ID)
 		defer deleteTestPet(t, pet3.ID)
 
-		pets, err := testQueries.GetPetsByOwnerID(context.Background(), owner.ID)
+		pets, err := testQueries.GetPetsBycustomerID(context.Background(), customer.ID)
 		require.NoError(t, err)
 		require.NotEmpty(t, pets)
 		require.Len(t, pets, 3)
 
 		for _, pet := range pets {
-			require.Equal(t, owner.ID, pet.OwnerID)
+			require.Equal(t, customer.ID, pet.customerID)
 		}
 	})
 
-	t.Run("GetPetsForOwnerWithSinglePet", func(t *testing.T) {
-		pet1 := createRandomPet(t, owner.ID)
+	t.Run("GetPetsForcustomerWithSinglePet", func(t *testing.T) {
+		pet1 := createRandomPet(t, customer.ID)
 		defer deleteTestPet(t, pet1.ID)
 
-		pets, err := testQueries.GetPetsByOwnerID(context.Background(), owner.ID)
+		pets, err := testQueries.GetPetsBycustomerID(context.Background(), customer.ID)
 		require.NoError(t, err)
 		require.NotEmpty(t, pets)
 		require.Len(t, pets, 1)
 
 		require.Equal(t, pet1.ID, pets[0].ID)
 		require.Equal(t, pet1.Name, pets[0].Name)
-		require.Equal(t, pet1.OwnerID, pets[0].OwnerID)
+		require.Equal(t, pet1.customerID, pets[0].customerID)
 	})
 
-	t.Run("IsolationBetweenOwners", func(t *testing.T) {
-		ownerPet := createRandomPet(t, owner.ID)
-		defer deleteTestPet(t, ownerpet.GetID())
+	t.Run("IsolationBetweencustomers", func(t *testing.T) {
+		customerPet := createRandomPet(t, customer.ID)
+		defer deleteTestPet(t, customerpet.GetID())
 
-		otherOwnerPet := createRandomPet(t, otherOwner.ID)
-		defer deleteTestPet(t, otherOwnerpet.GetID())
+		othercustomerPet := createRandomPet(t, othercustomer.ID)
+		defer deleteTestPet(t, othercustomerpet.GetID())
 
-		pets, err := testQueries.GetPetsByOwnerID(context.Background(), owner.ID)
+		pets, err := testQueries.GetPetsBycustomerID(context.Background(), customer.ID)
 		require.NoError(t, err)
 		require.Len(t, pets, 1)
-		require.Equal(t, ownerpet.GetID(), pets[0].ID)
+		require.Equal(t, customerpet.GetID(), pets[0].ID)
 
-		otherPets, err := testQueries.GetPetsByOwnerID(context.Background(), otherOwner.ID)
+		otherPets, err := testQueries.GetPetsBycustomerID(context.Background(), othercustomer.ID)
 		require.NoError(t, err)
 		require.Len(t, otherPets, 1)
-		require.Equal(t, otherOwnerpet.GetID(), otherPets[0].ID)
+		require.Equal(t, othercustomerpet.GetID(), otherPets[0].ID)
 	})
 
 	t.Run("PetsWithDifferentOptionalFields", func(t *testing.T) {
-		pet1 := createRandomPetWithParams(t, owner.ID, sqlc.CreatePetParams{
-			Name:    "Pet with all fields",
-			Species: "Dog",
-			Photo:   pgtype.Text{String: "photo1.jpg", Valid: true},
-			Breed:   pgtype.Text{String: "Labrador", Valid: true},
-			OwnerID: owner.ID,
+		pet1 := createRandomPetWithParams(t, customer.ID, sqlc.CreatePetParams{
+			Name:       "Pet with all fields",
+			Species:    "Dog",
+			Photo:      pgtype.Text{String: "photo1.jpg", Valid: true},
+			Breed:      pgtype.Text{String: "Labrador", Valid: true},
+			customerID: customer.ID,
 		})
 		defer deleteTestPet(t, pet1.ID)
 
-		pet2 := createRandomPetWithParams(t, owner.ID, sqlc.CreatePetParams{
-			Name:    "Pet with minimal fields",
-			Species: "Cat",
-			OwnerID: owner.ID,
+		pet2 := createRandomPetWithParams(t, customer.ID, sqlc.CreatePetParams{
+			Name:       "Pet with minimal fields",
+			Species:    "Cat",
+			customerID: customer.ID,
 		})
 		defer deleteTestPet(t, pet2.ID)
 
-		pets, err := testQueries.GetPetsByOwnerID(context.Background(), owner.ID)
+		pets, err := testQueries.GetPetsBycustomerID(context.Background(), customer.ID)
 		require.NoError(t, err)
 		require.Len(t, pets, 2)
 
@@ -412,9 +413,9 @@ func TestGetPetsByOwnerID(t *testing.T) {
 
 }
 
-func createRandomPetWithParams(t *testing.T, ownerID int32, params sqlc.CreatePetParams) sqlc.Pet {
-	if params.OwnerID == 0 {
-		params.OwnerID = ownerID
+func createRandomPetWithParams(t *testing.T, customerID int32, params sqlc.CreatePetParams) sqlc.Pet {
+	if params.customerID == 0 {
+		params.customerID = customerID
 	}
 	if params.Species == "" {
 		params.Species = "Dog"
@@ -431,11 +432,11 @@ func createRandomPetWithParams(t *testing.T, ownerID int32, params sqlc.CreatePe
 
 // Check Delete When medical histories exists
 func TestDeletePet(t *testing.T) {
-	owner := createRandomOwner(t)
-	defer deleteTestOwner(t, owner.ID)
+	customer := createRandomcustomer(t)
+	defer deleteTestcustomer(t, customer.ID)
 
 	t.Run("DeleteExistingPet", func(t *testing.T) {
-		pet := createRandomPet(t, owner.ID)
+		pet := createRandomPet(t, customer.ID)
 
 		err := testQueries.DeletePet(context.Background(), pet.GetID())
 		require.NoError(t, err)
@@ -453,7 +454,7 @@ func TestDeletePet(t *testing.T) {
 	})
 
 	t.Run("DeletePetWithRelatedRecords", func(t *testing.T) {
-		pet := createRandomPet(t, owner.ID)
+		pet := createRandomPet(t, customer.ID)
 
 		err := testQueries.DeletePet(context.Background(), pet.GetID())
 
@@ -464,7 +465,7 @@ func TestDeletePet(t *testing.T) {
 	})
 
 	t.Run("ConsecutiveDeletes", func(t *testing.T) {
-		pet := createRandomPet(t, owner.ID)
+		pet := createRandomPet(t, customer.ID)
 
 		err := testQueries.DeletePet(context.Background(), pet.GetID())
 		require.NoError(t, err)

@@ -216,9 +216,9 @@
                 }
             }
         },
-        "/appointments/owner/{ownerId}": {
+        "/appointments/customer/{customerId}": {
             "get": {
-                "description": "Retrieves all appointments for a specific pet owner",
+                "description": "Retrieves all appointments for a specific pet customer",
                 "consumes": [
                     "application/json"
                 ],
@@ -228,12 +228,12 @@
                 "tags": [
                     "appointments-query"
                 ],
-                "summary": "Get appointments by owner",
+                "summary": "Get appointments by customer",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "Owner ID",
-                        "name": "ownerId",
+                        "description": "customer ID",
+                        "name": "customerId",
                         "in": "path",
                         "required": true
                     },
@@ -278,13 +278,13 @@
                         }
                     },
                     "400": {
-                        "description": "Invalid owner ID or pagination parameters",
+                        "description": "Invalid customer ID or pagination parameters",
                         "schema": {
                             "$ref": "#/definitions/apiResponse.APIResponse"
                         }
                     },
                     "404": {
-                        "description": "Owner not found",
+                        "description": "customer not found",
                         "schema": {
                             "$ref": "#/definitions/apiResponse.APIResponse"
                         }
@@ -898,14 +898,14 @@
                 }
             }
         },
-        "/owner/appointments": {
+        "/customer/appointments": {
             "get": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
                 ],
-                "description": "Retrieves a list of all appointments for the authenticated owner",
+                "description": "Retrieves a list of all appointments for the authenticated customer",
                 "consumes": [
                     "application/json"
                 ],
@@ -913,9 +913,9 @@
                     "application/json"
                 ],
                 "tags": [
-                    "owner-appointments"
+                    "customer-appointments"
                 ],
-                "summary": "Get owner's appointments",
+                "summary": "Get customer's appointments",
                 "parameters": [
                     {
                         "type": "integer",
@@ -940,7 +940,7 @@
                         "BearerAuth": []
                     }
                 ],
-                "description": "Owner creates a new appointment request for their pet",
+                "description": "customer creates a new appointment request for their pet",
                 "consumes": [
                     "application/json"
                 ],
@@ -948,7 +948,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "owner-appointments"
+                    "customer-appointments"
                 ],
                 "summary": "Request a new appointment",
                 "parameters": [
@@ -965,14 +965,14 @@
                 "responses": {}
             }
         },
-        "/owner/appointments/pet/{petId}": {
+        "/customer/appointments/pet/{petId}": {
             "get": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
                 ],
-                "description": "Retrieves all appointments for a specific pet owned by the authenticated owner",
+                "description": "Retrieves all appointments for a specific pet owned by the authenticated customer",
                 "consumes": [
                     "application/json"
                 ],
@@ -980,7 +980,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "owner-appointments"
+                    "customer-appointments"
                 ],
                 "summary": "Get appointments for a specific pet",
                 "parameters": [
@@ -1009,14 +1009,14 @@
                 "responses": {}
             }
         },
-        "/owner/appointments/upcoming": {
+        "/customer/appointments/upcoming": {
             "get": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
                 ],
-                "description": "Retrieves upcoming appointments for the authenticated owner within a date range",
+                "description": "Retrieves upcoming appointments for the authenticated customer within a date range",
                 "consumes": [
                     "application/json"
                 ],
@@ -1024,7 +1024,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "owner-appointments"
+                    "customer-appointments"
                 ],
                 "summary": "Get upcoming appointments",
                 "parameters": [
@@ -1060,14 +1060,14 @@
                 "responses": {}
             }
         },
-        "/owner/appointments/{id}": {
+        "/customer/appointments/{id}": {
             "get": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
                 ],
-                "description": "Retrieves details of a specific appointment for the authenticated owner",
+                "description": "Retrieves details of a specific appointment for the authenticated customer",
                 "consumes": [
                     "application/json"
                 ],
@@ -1075,7 +1075,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "owner-appointments"
+                    "customer-appointments"
                 ],
                 "summary": "Get specific appointment details",
                 "parameters": [
@@ -1090,14 +1090,14 @@
                 "responses": {}
             }
         },
-        "/owner/appointments/{id}/cancel": {
+        "/customer/appointments/{id}/cancel": {
             "put": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
                 ],
-                "description": "Owner cancels their existing appointment",
+                "description": "customer cancels their existing appointment",
                 "consumes": [
                     "application/json"
                 ],
@@ -1105,7 +1105,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "owner-appointments"
+                    "customer-appointments"
                 ],
                 "summary": "Cancel an appointment",
                 "parameters": [
@@ -1120,14 +1120,14 @@
                 "responses": {}
             }
         },
-        "/owner/appointments/{id}/reschedule": {
+        "/customer/appointments/{id}/reschedule": {
             "put": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
                 ],
-                "description": "Owner reschedules their existing appointment",
+                "description": "customer reschedules their existing appointment",
                 "consumes": [
                     "application/json"
                 ],
@@ -1135,7 +1135,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "owner-appointments"
+                    "customer-appointments"
                 ],
                 "summary": "Reschedule an appointment",
                 "parameters": [
@@ -2491,7 +2491,7 @@
             "type": "object",
             "required": [
                 "date_time",
-                "owner_id",
+                "customer_id",
                 "pet_id",
                 "reason",
                 "service"
@@ -2506,7 +2506,7 @@
                 "notes": {
                     "type": "string"
                 },
-                "owner_id": {
+                "customer_id": {
                     "type": "integer"
                 },
                 "pet_id": {
@@ -2617,7 +2617,7 @@
                 "notes": {
                     "type": "string"
                 },
-                "owner_id": {
+                "customer_id": {
                     "type": "integer"
                 },
                 "pet_id": {
@@ -2648,7 +2648,7 @@
             "type": "object",
             "required": [
                 "name",
-                "owner_id",
+                "customer_id",
                 "species"
             ],
             "properties": {
@@ -2705,8 +2705,8 @@
                     "maxLength": 100,
                     "minLength": 2
                 },
-                "owner_id": {
-                    "description": "The unique ID of the pet's owner. (required, greater than 0)",
+                "customer_id": {
+                    "description": "The unique ID of the pet's customer. (required, greater than 0)",
                     "type": "integer"
                 },
                 "photo": {
@@ -2783,8 +2783,8 @@
                     "description": "The name of the pet.",
                     "type": "string"
                 },
-                "owner_id": {
-                    "description": "The unique ID of the pet's owner.",
+                "customer_id": {
+                    "description": "The unique ID of the pet's customer.",
                     "type": "integer"
                 },
                 "photo": {
@@ -2821,7 +2821,7 @@
                 "email",
                 "gender",
                 "location",
-                "owner_id",
+                "customer_id",
                 "password",
                 "phone_number",
                 "role"
@@ -2850,8 +2850,8 @@
                     "description": "The user's location. (required)",
                     "type": "string"
                 },
-                "owner_id": {
-                    "description": "The unique ID of the owner. (required)",
+                "customer_id": {
+                    "description": "The unique ID of the customer. (required)",
                     "type": "integer"
                 },
                 "password": {

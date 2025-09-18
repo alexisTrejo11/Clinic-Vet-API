@@ -66,7 +66,7 @@ type MedHistoryResponse struct {
 	// Example: 3
 	EmployeeID uint `json:"employee_id"`
 
-	// The ID of the customer (pet owner)
+	// The ID of the customer (pet customer)
 	// Required: true
 	// Example: 8
 	CustomerID uint `json:"customer_id"`
@@ -96,7 +96,7 @@ type MedHistoryResponseDetail struct {
 	// Required: true
 	Pet commondto.PetDetails `json:"pet"`
 
-	// Customer details (pet owner)
+	// Customer details (pet customer)
 	// Required: true
 	Customer commondto.CustomerDetails `json:"customer"`
 

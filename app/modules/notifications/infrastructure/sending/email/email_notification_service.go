@@ -8,7 +8,7 @@ import (
 	"clinic-vet-api/app/core/domain/entity/notification"
 	service "clinic-vet-api/app/modules/notifications/application"
 
-	"clinic-vet-api/config"
+	"clinic-vet-api/app/config"
 )
 
 type EmailSender interface {

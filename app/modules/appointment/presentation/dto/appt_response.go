@@ -12,7 +12,7 @@ import (
 type AppointmentResponse struct {
 	ID            uint    `json:"id"`
 	PetID         uint    `json:"pet_id"`
-	CustomerID    uint    `json:"owner_id"`
+	CustomerID    uint    `json:"customer_id"`
 	EmployeeID    uint    `json:"vet_id,omitempty"`
 	Service       string  `json:"service"`
 	Datetime      string  `json:"date_time"`
@@ -28,7 +28,7 @@ type AppointmentResponse struct {
 type AppointmentDetail struct {
 	ID            int                    `json:"id"`
 	Pet           *PetSummary            `json:"pet,omitempty"`
-	Owner         *OwnerSummary          `json:"owner,omitempty"`
+	customer      *customerSummary       `json:"customer,omitempty"`
 	Veterinarian  *VetSummary            `json:"veterinarian,omitempty"`
 	Service       enum.ClinicService     `json:"service"`
 	ScheduledDate time.Time              `json:"scheduled_date"`
@@ -46,8 +46,8 @@ type PetSummary struct {
 	Breed   *string `json:"breed,omitempty"`
 }
 
-// OwnerSummary represents an owner summary for appointment details
-type OwnerSummary struct {
+// customerSummary represents an customer summary for appointment details
+type customerSummary struct {
 	ID          int    `json:"id"`
 	FullName    string `json:"full_name"`
 	PhoneNumber string `json:"phone_number"`

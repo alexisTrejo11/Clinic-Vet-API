@@ -1,12 +1,12 @@
+// appointment.go
 package appointment
 
 import (
 	"clinic-vet-api/app/core/domain/enum"
 	"clinic-vet-api/app/core/domain/valueobject"
+	"context"
 	"slices"
 	"time"
-
-	domainerr "clinic-vet-api/app/core/error"
 )
 
 const (
@@ -14,10 +14,12 @@ const (
 	MaxAllowedDaysToSchedule = 30
 )
 
-func (a *Appointment) Update(notes *string, employeeID *valueobject.EmployeeID, service *enum.ClinicService, reason *string) error {
+func (a *Appointment) Update(ctx context.Context, notes *string, employeeID *valueobject.EmployeeID, service *enum.ClinicService, reason *string) error {
+	operation := "UpdateAppointment"
+
 	if notes != nil {
 		if len(*notes) > 1000 {
-			return domainerr.NewValidationError("appointment", "notes", "notes too long")
+			return NotesTooLongError(ctx, operation)
 		}
 		a.notes = notes
 	}
@@ -28,7 +30,7 @@ func (a *Appointment) Update(notes *string, employeeID *valueobject.EmployeeID, 
 
 	if service != nil {
 		if !service.IsValid() {
-			return domainerr.NewValidationError("appointment", "service", "invalid clinic service")
+			return InvalidServiceError(ctx, *service, operation)
 		}
 		a.service = *service
 	}
@@ -36,7 +38,7 @@ func (a *Appointment) Update(notes *string, employeeID *valueobject.EmployeeID, 
 	if reason != nil {
 		parsedReason, err := enum.ParseVisitReason(*reason)
 		if err != nil {
-			return domainerr.NewValidationError("appointment", "reason", "invalid visit reason")
+			return InvalidReasonError(ctx, *reason, operation)
 		}
 		a.reason = parsedReason
 	}
@@ -45,13 +47,15 @@ func (a *Appointment) Update(notes *string, employeeID *valueobject.EmployeeID, 
 	return nil
 }
 
-func (a *Appointment) Reschedule(newDate time.Time) error {
-	if err := validateScheduledDate(newDate); err != nil {
+func (a *Appointment) Reschedule(ctx context.Context, newDate time.Time) error {
+	operation := "RescheduleAppointment"
+
+	if err := validateScheduledDate(ctx, newDate); err != nil {
 		return err
 	}
 
 	if !a.canBeRescheduled() {
-		return domainerr.NewBusinessRuleError("appointment", "reschedule", "appointment cannot be rescheduled in current status")
+		return CannotRescheduleError(ctx, a.status, operation)
 	}
 
 	a.scheduledDate = newDate
@@ -61,9 +65,11 @@ func (a *Appointment) Reschedule(newDate time.Time) error {
 	return nil
 }
 
-func (a *Appointment) Cancel() error {
+func (a *Appointment) Cancel(ctx context.Context) error {
+	operation := "CancelAppointment"
+
 	if !a.canTransitionTo(enum.AppointmentStatusCancelled) {
-		return domainerr.NewBusinessRuleError("appointment", "cancel", "appointment cannot be cancelled in current status")
+		return CannotCancelError(ctx, a.status, operation)
 	}
 
 	a.status = enum.AppointmentStatusCancelled
@@ -71,9 +77,11 @@ func (a *Appointment) Cancel() error {
 	return nil
 }
 
-func (a *Appointment) Complete() error {
+func (a *Appointment) Complete(ctx context.Context) error {
+	operation := "CompleteAppointment"
+
 	if !a.canTransitionTo(enum.AppointmentStatusCompleted) {
-		return domainerr.NewBusinessRuleError("appointment", "complete", "appointment cannot be completed in current status")
+		return CannotCompleteError(ctx, a.status, operation)
 	}
 
 	a.status = enum.AppointmentStatusCompleted
@@ -81,9 +89,11 @@ func (a *Appointment) Complete() error {
 	return nil
 }
 
-func (a *Appointment) MarkAsNotPresented() error {
+func (a *Appointment) MarkAsNotPresented(ctx context.Context) error {
+	operation := "MarkAppointmentNotPresented"
+
 	if !a.canTransitionTo(enum.AppointmentStatusNotPresented) {
-		return domainerr.NewBusinessRuleError("appointment", "not_presented", "appointment cannot be marked as not presented in current status")
+		return CannotMarkNotPresentedError(ctx, a.status, operation)
 	}
 
 	a.status = enum.AppointmentStatusNotPresented
@@ -91,9 +101,11 @@ func (a *Appointment) MarkAsNotPresented() error {
 	return nil
 }
 
-func (a *Appointment) Confirm(employeeID valueobject.EmployeeID) error {
+func (a *Appointment) Confirm(ctx context.Context, employeeID valueobject.EmployeeID) error {
+	operation := "ConfirmAppointment"
+
 	if !a.canTransitionTo(enum.AppointmentStatusConfirmed) {
-		return domainerr.NewBusinessRuleError("appointment", "confirm", "appointment cannot be confirmed in current status")
+		return CannotConfirmError(ctx, a.status, operation)
 	}
 
 	a.employeeID = &employeeID
@@ -102,7 +114,6 @@ func (a *Appointment) Confirm(employeeID valueobject.EmployeeID) error {
 	return nil
 }
 
-// Private helper methods for business rules
 func (a *Appointment) canBeRescheduled() bool {
 	reschedulableStatuses := []enum.AppointmentStatus{
 		enum.AppointmentStatusPending,
@@ -114,7 +125,6 @@ func (a *Appointment) canBeRescheduled() bool {
 }
 
 func (a *Appointment) canTransitionTo(newStatus enum.AppointmentStatus) bool {
-	// Define valid status transitions
 	validTransitions := map[enum.AppointmentStatus][]enum.AppointmentStatus{
 		enum.AppointmentStatusPending: {
 			enum.AppointmentStatusConfirmed,
@@ -164,9 +174,45 @@ func (a *Appointment) CanBeReviewed() bool {
 		a.scheduledDate.After(time.Now().Add(-30*24*time.Hour)) // Within 30 days
 }
 
-func (a *Appointment) CanBeDeleted() error {
+func (a *Appointment) CanBeDeleted(ctx context.Context) error {
+	operation := "DeleteAppointment"
+
 	if a.Status() == enum.AppointmentStatusCompleted {
-		return domainerr.NewBusinessRuleError("appointment", "delete", "completed appointments cannot be deleted")
+		return CannotDeleteError(ctx, a.status, operation)
 	}
+	return nil
+}
+
+func validateScheduledDate(ctx context.Context, date time.Time) error {
+	operation := "ValidateScheduledDate"
+
+	if date.IsZero() {
+		return ScheduledDateInvalidError(ctx, "scheduled date cannot be zero", operation)
+	}
+
+	now := time.Now()
+	if date.Before(now) {
+		return ScheduledDateInvalidError(ctx, "scheduled date cannot be in the past", operation)
+	}
+
+	minDate := now.AddDate(0, 0, MinAllowedDaysToSchedule)
+	if date.Before(minDate) {
+		return ScheduledDateInvalidError(ctx, "appointments must be scheduled at least 3 days in advance", operation)
+	}
+
+	maxDate := now.AddDate(0, 0, MaxAllowedDaysToSchedule)
+	if date.After(maxDate) {
+		return ScheduledDateInvalidError(ctx, "appointments cannot be scheduled more than 30 days in advance", operation)
+	}
+
+	if date.Weekday() == time.Saturday || date.Weekday() == time.Sunday {
+		return ScheduledDateInvalidError(ctx, "appointments cannot be scheduled on weekends", operation)
+	}
+
+	hour := date.Hour()
+	if hour < 9 || hour >= 18 {
+		return ScheduledDateInvalidError(ctx, "appointments can only be scheduled during business hours (9 AM to 6 PM)", operation)
+	}
+
 	return nil
 }

@@ -11,9 +11,9 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-func ToDomainPet(sqlPet sqlc.Pet) (*pet.Pet, error) {
+func sqlcRowToEntity(sqlPet sqlc.Pet) (*pet.Pet, error) {
 	petID := valueobject.NewPetID(uint(sqlPet.ID))
-	ownerID := valueobject.NewCustomerID(uint(sqlPet.CustomerID))
+	customerID := valueobject.NewCustomerID(uint(sqlPet.CustomerID))
 
 	opts := []pet.PetOption{
 		pet.WithName(sqlPet.Name),
@@ -73,7 +73,7 @@ func ToDomainPet(sqlPet sqlc.Pet) (*pet.Pet, error) {
 
 	petEntity, err := pet.NewPet(
 		petID,
-		ownerID,
+		customerID,
 		opts...,
 	)
 	if err != nil {
@@ -81,6 +81,23 @@ func ToDomainPet(sqlPet sqlc.Pet) (*pet.Pet, error) {
 	}
 
 	return petEntity, nil
+}
+
+func sqlcRowsToEntities(rows []sqlc.Pet) ([]pet.Pet, error) {
+	var pets []pet.Pet
+
+	if len(rows) == 0 {
+		return []pet.Pet{}, nil
+	}
+
+	for _, row := range rows {
+		petEntity, err := sqlcRowToEntity(row)
+		if err != nil {
+			return nil, err
+		}
+		pets = append(pets, *petEntity)
+	}
+	return pets, nil
 }
 
 func ToSqlCreateParam(pet *pet.Pet) *sqlc.CreatePetParams {

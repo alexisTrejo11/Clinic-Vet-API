@@ -1,7 +1,6 @@
 package enum
 
 import (
-	domainerr "clinic-vet-api/app/core/error"
 	"fmt"
 	"strings"
 )
@@ -12,7 +11,7 @@ type UserRole string
 const (
 	UserRoleAdmin        UserRole = "admin"
 	UserRoleVeterinarian UserRole = "veterinarian"
-	UserRoleOwner        UserRole = "owner"
+	UserRoleCustomer     UserRole = "customer"
 	UserRoleReceptionist UserRole = "receptionist"
 )
 
@@ -21,21 +20,21 @@ var (
 	ValidUserRoles = []UserRole{
 		UserRoleAdmin,
 		UserRoleVeterinarian,
-		UserRoleOwner,
+		UserRoleCustomer,
 		UserRoleReceptionist,
 	}
 
 	userRoleMap = map[string]UserRole{
 		"admin":        UserRoleAdmin,
 		"veterinarian": UserRoleVeterinarian,
-		"owner":        UserRoleOwner,
+		"customer":     UserRoleCustomer,
 		"receptionist": UserRoleReceptionist,
 	}
 
 	userRoleDisplayNames = map[UserRole]string{
 		UserRoleAdmin:        "Administrator",
 		UserRoleVeterinarian: "Veterinarian",
-		UserRoleOwner:        "Pet Owner",
+		UserRoleCustomer:     "Pet customer",
 		UserRoleReceptionist: "Receptionist",
 	}
 )
@@ -50,7 +49,7 @@ func ParseUserRole(role string) (UserRole, error) {
 	if val, exists := userRoleMap[normalized]; exists {
 		return val, nil
 	}
-	return "", domainerr.InvalidEnumValue("user-role", role, "invalid user role")
+	return "", InvalidEnumParserError("UserRole", role)
 }
 
 func MustParseUserRole(role string) UserRole {

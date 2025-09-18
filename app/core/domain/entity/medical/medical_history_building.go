@@ -1,12 +1,13 @@
 package medical
 
 import (
-	"errors"
+	"context"
 	"time"
 
 	"clinic-vet-api/app/core/domain/entity/base"
 	"clinic-vet-api/app/core/domain/enum"
 	"clinic-vet-api/app/core/domain/valueobject"
+	domainerr "clinic-vet-api/app/core/error"
 )
 
 type MedicalHistoryOptions func(*MedicalHistory) error
@@ -91,6 +92,7 @@ func NewMedicalHistory(
 }
 
 func CreateMedicalHistory(
+	ctx context.Context,
 	petID valueobject.PetID,
 	customerID valueobject.CustomerID,
 	employeeID valueobject.EmployeeID,
@@ -109,24 +111,25 @@ func CreateMedicalHistory(
 		}
 	}
 
-	if err := mh.Validate(); err != nil {
+	if err := mh.Validate(ctx); err != nil {
 		return nil, err
 	}
 
 	return mh, nil
 }
 
-func (mh *MedicalHistory) Validate() error {
+func (mh *MedicalHistory) Validate(ctx context.Context) error {
+	operation := "Medical-History Validate"
 	if mh.VisitDate().IsZero() {
-		return errors.New("invalid date")
+		return domainerr.MissingFieldError(ctx, "visitDate", "visitDate cannot be zero", operation)
 	}
 
 	if mh.VisitDate().After(time.Now().AddDate(1, 0, 0)) {
-		return errors.New("date cannot be one year in the future")
+		return domainerr.BusinessRuleError(ctx, "visitDate", "medical history", "visitDate cannot be 1 year in the future", operation)
 	}
 
 	if mh.VisitDate().Before(time.Date(2015, 1, 1, 0, 0, 0, 0, time.UTC)) {
-		return errors.New("date cannot be before the year 2015")
+		return domainerr.BusinessRuleError(ctx, "visitDate", "medical history", "visitDate cannot be before year 2015", operation)
 	}
 
 	return nil

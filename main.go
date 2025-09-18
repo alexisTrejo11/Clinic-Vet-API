@@ -5,10 +5,10 @@ import (
 	"net/http"
 	"os"
 
+	"clinic-vet-api/app/config"
+	"clinic-vet-api/app/middleware"
 	notiAPI "clinic-vet-api/app/modules/notifications/presentation"
 	"clinic-vet-api/app/shared/log"
-	"clinic-vet-api/config"
-	"clinic-vet-api/middleware"
 	"clinic-vet-api/sqlc"
 
 	"github.com/gin-gonic/gin"

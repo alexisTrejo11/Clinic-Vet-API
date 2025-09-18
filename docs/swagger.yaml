@@ -89,7 +89,7 @@ definitions:
         type: boolean
       notes:
         type: string
-      owner_id:
+      customer_id:
         type: integer
       pet_id:
         type: integer
@@ -103,7 +103,7 @@ definitions:
         type: integer
     required:
     - date_time
-    - owner_id
+    - customer_id
     - pet_id
     - reason
     - service
@@ -169,7 +169,7 @@ definitions:
         type: boolean
       notes:
         type: string
-      owner_id:
+      customer_id:
         type: integer
       pet_id:
         type: integer
@@ -232,8 +232,8 @@ definitions:
         maxLength: 100
         minLength: 2
         type: string
-      owner_id:
-        description: The unique ID of the pet's owner. (required, greater than 0)
+      customer_id:
+        description: The unique ID of the pet's customer. (required, greater than 0)
         type: integer
       photo:
         description: The URL of the pet's photo. (optional, must be a valid URL)
@@ -254,7 +254,7 @@ definitions:
         type: number
     required:
     - name
-    - owner_id
+    - customer_id
     - species
     type: object
   petController.PetResponse:
@@ -296,8 +296,8 @@ definitions:
       name:
         description: The name of the pet.
         type: string
-      owner_id:
-        description: The unique ID of the pet's owner.
+      customer_id:
+        description: The unique ID of the pet's customer.
         type: integer
       photo:
         description: The URL of the pet's photo.
@@ -337,8 +337,8 @@ definitions:
       location:
         description: The user's location. (required)
         type: string
-      owner_id:
-        description: The unique ID of the owner. (required)
+      customer_id:
+        description: The unique ID of the customer. (required)
         type: integer
       password:
         description: The user's password. (required, minimum 8 characters)
@@ -364,7 +364,7 @@ definitions:
     - email
     - gender
     - location
-    - owner_id
+    - customer_id
     - password
     - phone_number
     - role
@@ -991,15 +991,15 @@ paths:
       summary: Get appointments by date range
       tags:
       - appointments-query
-  /appointments/owner/{ownerId}:
+  /appointments/customer/{customerId}:
     get:
       consumes:
       - application/json
-      description: Retrieves all appointments for a specific pet owner
+      description: Retrieves all appointments for a specific pet customer
       parameters:
-      - description: Owner ID
+      - description: customer ID
         in: path
-        name: ownerId
+        name: customerId
         required: true
         type: integer
       - default: 1
@@ -1029,18 +1029,18 @@ paths:
                   $ref: '#/definitions/appointmentController.PaginationMetadata'
               type: object
         "400":
-          description: Invalid owner ID or pagination parameters
+          description: Invalid customer ID or pagination parameters
           schema:
             $ref: '#/definitions/apiResponse.APIResponse'
         "404":
-          description: Owner not found
+          description: customer not found
           schema:
             $ref: '#/definitions/apiResponse.APIResponse'
         "500":
           description: Internal server error
           schema:
             $ref: '#/definitions/apiResponse.APIResponse'
-      summary: Get appointments by owner
+      summary: Get appointments by customer
       tags:
       - appointments-query
   /appointments/pet/{petId}:
@@ -1166,11 +1166,11 @@ paths:
       summary: Get appointments by veterinarian
       tags:
       - appointments-query
-  /owner/appointments:
+  /customer/appointments:
     get:
       consumes:
       - application/json
-      description: Retrieves a list of all appointments for the authenticated owner
+      description: Retrieves a list of all appointments for the authenticated customer
       parameters:
       - default: 1
         description: Page number
@@ -1187,13 +1187,13 @@ paths:
       responses: {}
       security:
       - BearerAuth: []
-      summary: Get owner's appointments
+      summary: Get customer's appointments
       tags:
-      - owner-appointments
+      - customer-appointments
     post:
       consumes:
       - application/json
-      description: Owner creates a new appointment request for their pet
+      description: customer creates a new appointment request for their pet
       parameters:
       - description: Appointment details
         in: body
@@ -1208,13 +1208,13 @@ paths:
       - BearerAuth: []
       summary: Request a new appointment
       tags:
-      - owner-appointments
-  /owner/appointments/{id}:
+      - customer-appointments
+  /customer/appointments/{id}:
     get:
       consumes:
       - application/json
       description: Retrieves details of a specific appointment for the authenticated
-        owner
+        customer
       parameters:
       - description: Appointment ID
         in: path
@@ -1228,12 +1228,12 @@ paths:
       - BearerAuth: []
       summary: Get specific appointment details
       tags:
-      - owner-appointments
-  /owner/appointments/{id}/cancel:
+      - customer-appointments
+  /customer/appointments/{id}/cancel:
     put:
       consumes:
       - application/json
-      description: Owner cancels their existing appointment
+      description: customer cancels their existing appointment
       parameters:
       - description: Appointment ID
         in: path
@@ -1247,12 +1247,12 @@ paths:
       - BearerAuth: []
       summary: Cancel an appointment
       tags:
-      - owner-appointments
-  /owner/appointments/{id}/reschedule:
+      - customer-appointments
+  /customer/appointments/{id}/reschedule:
     put:
       consumes:
       - application/json
-      description: Owner reschedules their existing appointment
+      description: customer reschedules their existing appointment
       parameters:
       - description: Appointment ID
         in: path
@@ -1272,13 +1272,13 @@ paths:
       - BearerAuth: []
       summary: Reschedule an appointment
       tags:
-      - owner-appointments
-  /owner/appointments/pet/{petId}:
+      - customer-appointments
+  /customer/appointments/pet/{petId}:
     get:
       consumes:
       - application/json
       description: Retrieves all appointments for a specific pet owned by the authenticated
-        owner
+        customer
       parameters:
       - description: Pet ID
         in: path
@@ -1302,12 +1302,12 @@ paths:
       - BearerAuth: []
       summary: Get appointments for a specific pet
       tags:
-      - owner-appointments
-  /owner/appointments/upcoming:
+      - customer-appointments
+  /customer/appointments/upcoming:
     get:
       consumes:
       - application/json
-      description: Retrieves upcoming appointments for the authenticated owner within
+      description: Retrieves upcoming appointments for the authenticated customer within
         a date range
       parameters:
       - description: Start date (YYYY-MM-DD)
@@ -1337,7 +1337,7 @@ paths:
       - BearerAuth: []
       summary: Get upcoming appointments
       tags:
-      - owner-appointments
+      - customer-appointments
   /pets:
     get:
       description: Retrieves a list of all pet records.

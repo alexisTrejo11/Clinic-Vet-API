@@ -41,8 +41,11 @@ func (r *SQLCUserRepository) FindByID(ctx context.Context, id valueobject.UserID
 		return u.User{}, r.dbError(OpSelect, fmt.Sprintf("%s with ID %d", ErrMsgFindUser, id.Value()), err)
 	}
 
-	user, _ := sqlcRowToEntity(sqlRow)
-	return *user, nil
+	user, err := sqlcRowToEntity(sqlRow)
+	if err != nil {
+		return u.User{}, r.wrapConversionError(err)
+	}
+	return user, nil
 }
 
 func (r *SQLCUserRepository) FindByEmail(ctx context.Context, email string) (u.User, error) {
@@ -54,8 +57,11 @@ func (r *SQLCUserRepository) FindByEmail(ctx context.Context, email string) (u.U
 		return u.User{}, r.dbError(OpSelect, fmt.Sprintf("%s with email %s", ErrMsgFindUserByEmail, email), err)
 	}
 
-	user, _ := sqlcRowToEntity(sqlRow)
-	return *user, nil
+	user, err := sqlcRowToEntity(sqlRow)
+	if err != nil {
+		return u.User{}, r.wrapConversionError(err)
+	}
+	return user, nil
 }
 
 func (r *SQLCUserRepository) FindByPhone(ctx context.Context, phone string) (u.User, error) {
@@ -68,7 +74,7 @@ func (r *SQLCUserRepository) FindByPhone(ctx context.Context, phone string) (u.U
 	}
 
 	user, _ := sqlcRowToEntity(sqlRow)
-	return *user, nil
+	return user, nil
 }
 
 func (r *SQLCUserRepository) FindByRole(ctx context.Context, role string, pageInput page.PageInput) (page.Page[u.User], error) {
@@ -160,7 +166,7 @@ func (r *SQLCUserRepository) FindByCustomerID(ctx context.Context, customerID va
 		return u.User{}, r.wrapConversionError(err)
 	}
 
-	return *user, nil
+	return user, nil
 }
 
 func (r *SQLCUserRepository) FindByEmployeeID(ctx context.Context, employeeID valueobject.EmployeeID) (u.User, error) {
@@ -177,7 +183,7 @@ func (r *SQLCUserRepository) FindByEmployeeID(ctx context.Context, employeeID va
 		return u.User{}, r.wrapConversionError(err)
 	}
 
-	return *user, nil
+	return user, nil
 }
 
 func (r *SQLCUserRepository) FindInactive(ctx context.Context, pageInput page.PageInput) (page.Page[u.User], error) {

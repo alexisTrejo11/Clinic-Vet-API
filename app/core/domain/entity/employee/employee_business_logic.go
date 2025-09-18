@@ -1,11 +1,13 @@
 package employee
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
 	"clinic-vet-api/app/core/domain/enum"
 	"clinic-vet-api/app/core/domain/valueobject"
+	domainerr "clinic-vet-api/app/core/error"
 )
 
 const (
@@ -24,8 +26,8 @@ func (v *Employee) UpdatePhoto(newPhoto string) error {
 	return nil
 }
 
-func (v *Employee) UpdateName(newName valueobject.PersonName) error {
-	if err := v.Person.UpdateName(newName); err != nil {
+func (v *Employee) UpdateName(ctx context.Context, newName valueobject.PersonName) error {
+	if err := v.Person.UpdateName(ctx, newName); err != nil {
 		return err
 	}
 	v.IncrementVersion()
@@ -86,9 +88,9 @@ func (v *Employee) Deactivate() error {
 	return nil
 }
 
-func (v *Employee) UpdateSchedule(newSchedule *valueobject.Schedule) error {
+func (v *Employee) UpdateSchedule(ctx context.Context, newSchedule *valueobject.Schedule) error {
 	if newSchedule != nil {
-		if err := newSchedule.ValidateBuissnessLogic(); err != nil {
+		if err := newSchedule.ValidateBuissnessLogic(ctx); err != nil {
 			return fmt.Errorf("invalid schedule: %w", err)
 		}
 	}
@@ -135,7 +137,11 @@ func validateYearsExperience(years int) error {
 	return nil
 }
 
-func (v *Employee) validate() error {
+func (v *Employee) validate(ctx context.Context) error {
+	if err := v.Person.Validate(ctx, "employee create valdiation"); err != nil {
+		return fmt.Errorf("invalid person data: %w", err)
+	}
+
 	if err := validateLicenseNumber(v.licenseNumber); err != nil {
 		return err
 	}
@@ -144,13 +150,13 @@ func (v *Employee) validate() error {
 	}
 
 	if v.schedule != nil {
-		if err := v.schedule.ValidateBuissnessLogic(); err != nil {
-			return fmt.Errorf("invalid schedule: %w", err)
+		if err := v.schedule.ValidateBuissnessLogic(ctx); err != nil {
+			return err
 		}
 	}
 
 	if !v.specialty.IsValid() {
-		return errors.New("specialty is required")
+		return domainerr.InvalidFieldValue(ctx, "specialty", string(v.specialty), "invalid specialty", "validate employee")
 	}
 	return nil
 }

@@ -14,7 +14,7 @@ type AdminCreatePetRequest struct {
 	// Required: true
 	// Minimum: 1
 	// Example: 123
-	CustomerID uint `json:"owner_id" validate:"required,gt=0"`
+	CustomerID uint `json:"customer_id" validate:"required,gt=0"`
 
 	// Indicates if the pet record is active in the system
 	// Required: true

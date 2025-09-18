@@ -17,10 +17,7 @@ type PetController struct {
 	petUseCases usecase.PetUseCases
 }
 
-func NewPetController(
-	validator *validator.Validate,
-	petUseCases usecase.PetUseCases,
-) *PetController {
+func NewPetController(validator *validator.Validate, petUseCases usecase.PetUseCases) *PetController {
 	return &PetController{
 		validator:   validator,
 		petUseCases: petUseCases,
@@ -36,14 +33,9 @@ func NewPetController(
 // @Failure 500 {object} response.APIResponse "Internal server error"
 // @Router /pets [get]
 func (c *PetController) SearchPets(ctx *gin.Context) {
-	var searchParams *dto.PetSearchRequest
-	if err := ctx.ShouldBindQuery(&searchParams); err != nil {
-		response.BadRequest(ctx, httpError.RequestURLQueryError(err, ctx.Request.URL.RawQuery))
-		return
-	}
-
-	if err := c.validator.Struct(searchParams); err != nil {
-		response.BadRequest(ctx, httpError.InvalidDataError(err))
+	var searchParams dto.PetSearchRequest
+	if err := ginUtils.BindAndValidateQuery(ctx, &searchParams, c.validator); err != nil {
+		response.BadRequest(ctx, err)
 		return
 	}
 
@@ -96,8 +88,7 @@ func (c *PetController) GetPetByID(ctx *gin.Context) {
 // @Failure 500 {object} response.APIResponse "Internal server error"
 // @Router /pets [post]
 func (c *PetController) CreatePet(ctx *gin.Context) {
-	var requestData *dto.AdminCreatePetRequest
-
+	var requestData dto.AdminCreatePetRequest
 	if err := ginUtils.BindAndValidateBody(ctx, &requestData, c.validator); err != nil {
 		response.BadRequest(ctx, err)
 		return
@@ -133,20 +124,20 @@ func (c *PetController) UpdatePet(ctx *gin.Context) {
 		return
 	}
 
-	var requestData *dto.AdminUpdatePetRequest
+	var requestData dto.AdminUpdatePetRequest
 	if err := ginUtils.BindAndValidateBody(ctx, &requestData, c.validator); err != nil {
 		response.BadRequest(ctx, err)
 		return
 	}
 
 	updatePetData := requestData.ToUpdatePet(id)
-	pet, err := c.petUseCases.UpdatePet(ctx, *updatePetData)
+	_, err = c.petUseCases.UpdatePet(ctx, *updatePetData)
 	if err != nil {
 		response.ApplicationError(ctx, err)
 		return
 	}
 
-	response.Updated(ctx, pet, "Pet")
+	response.Updated(ctx, nil, "Pet")
 }
 
 // SoftDeletePet soft deletes a pet record.

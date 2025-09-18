@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"clinic-vet-api/app/middleware"
 	"clinic-vet-api/app/modules/pets/application/usecase"
 	"clinic-vet-api/app/modules/pets/presentation/dto"
 	autherror "clinic-vet-api/app/shared/error/auth"
@@ -8,7 +9,6 @@ import (
 	ginUtils "clinic-vet-api/app/shared/gin_utils"
 	"clinic-vet-api/app/shared/page"
 	"clinic-vet-api/app/shared/response"
-	"clinic-vet-api/middleware"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"

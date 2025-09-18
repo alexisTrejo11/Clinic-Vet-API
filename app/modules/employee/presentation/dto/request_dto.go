@@ -6,18 +6,31 @@ import (
 	"clinic-vet-api/app/core/domain/valueobject"
 	"clinic-vet-api/app/modules/employee/application/cqrs/command"
 	"clinic-vet-api/app/shared/page"
+	"time"
 )
 
+// TODO: CREATE PERSONAL DATA DTO
 // CreateEmployeeRequest represents the request to create a new employee
 // @Description Request body for creating a new employee
 type CreateEmployeeRequest struct {
-	// First name of the employee
+	// Customer's first name
 	// Required: true
-	FirstName string `json:"first_name" validate:"required" example:"John"`
+	// Minimum length: 2, Maximum length: 50
+	FirstName string `json:"first_name" binding:"required,min=2,max=50" example:"John"`
 
-	// Last name of the employee
+	// Customer's last name
 	// Required: true
-	LastName string `json:"last_name" validate:"required" example:"Doe"`
+	// Minimum length: 2, Maximum length: 50
+	LastName string `json:"last_name" binding:"required,min=2,max=50" example:"Doe"`
+
+	// Customer's gender
+	// Required: true
+	// Enum: male, female, not_specified
+	Gender string `json:"gender" binding:"required" example:"male"`
+
+	// Customer's date of birth
+	// Required: true
+	DateOfBirth time.Time `json:"date_of_birth" binding:"required" example:"1990-01-15T00:00:00Z"`
 
 	// URL or path to employee's photo
 	// Required: false
@@ -37,7 +50,7 @@ type CreateEmployeeRequest struct {
 
 	// Veterinary specialty
 	// Required: false
-	Specialty enum.VetSpecialty `json:"specialty" example:"CARDIOLOGY"`
+	Specialty string `json:"specialty" example:"CARDIOLOGY"`
 
 	// Consultation fee information
 	// Required: false
@@ -101,7 +114,7 @@ type UpdateEmployeeRequest struct {
 
 	// Consultation fee information
 	// Required: false
-	ConsultationFee *valueobject.Money `json:"consultation_fee"`
+	ConsultationFee map[string]string `json:"consultation_fee"`
 
 	// Years of professional experience
 	// Required: false
@@ -133,7 +146,7 @@ type EmployeeFilters struct {
 
 	// Filter by veterinary specialty
 	// Required: false
-	Specialty *enum.VetSpecialty `json:"specialty" example:"SURGERY"`
+	Specialty string `json:"specialty" example:"SURGERY"`
 
 	// Filter by years of experience range
 	// Required: false
@@ -169,17 +182,52 @@ const (
 	OrderByCreatedAt EmployeeOrderBy = "created_at"
 )
 
-func (r *CreateEmployeeRequest) ToCommand() *command.CreateEmployeeCommand {
-	return &command.CreateEmployeeCommand{
-		FirstName:       r.FirstName,
-		LastName:        r.LastName,
+func (r *CreateEmployeeRequest) ToCommand() (command.CreateEmployeeCommand, error) {
+	cmd := &command.CreateEmployeeCommand{
 		Photo:           r.Photo,
 		LicenseNumber:   r.LicenseNumber,
 		YearsExperience: r.YearsExperience,
 		IsActive:        r.IsActive,
-		Specialty:       string(r.Specialty),
 		ConsultationFee: r.ConsultationFee,
+		DateOfBirth:     r.DateOfBirth,
 	}
+
+	personName, err := valueobject.NewPersonName(r.FirstName, r.LastName)
+	if err != nil {
+		return command.CreateEmployeeCommand{}, err
+	}
+	cmd.Name = personName
+
+	gender, err := enum.ParseGender(r.Gender)
+	if err != nil {
+		return command.CreateEmployeeCommand{}, err
+	}
+	cmd.Gender = gender
+
+	if r.Specialty != "" {
+		specialty, err := enum.ParseVetSpecialty(string(r.Specialty))
+		if err != nil {
+			return command.CreateEmployeeCommand{}, err
+		}
+		cmd.Specialty = specialty
+	}
+
+	if len(r.LaboralSchedule) > 0 {
+		var scheduleData []command.ScheduleData
+		for _, s := range r.LaboralSchedule {
+			scheduleData = append(scheduleData, command.ScheduleData{
+				Day:           s.Day,
+				EntryTime:     s.EntryTime,
+				DepartureTime: s.DepartureTime,
+				StartBreak:    s.StartBreak,
+				EndBreak:      s.EndBreak,
+			})
+		}
+
+		cmd.LaboralSchedule = scheduleData
+	}
+
+	return *cmd, nil
 }
 
 func (r *UpdateEmployeeRequest) ToCommand(employeeIDUint uint) *command.UpdateEmployeeCommand {
@@ -197,7 +245,7 @@ func (r *UpdateEmployeeRequest) ToCommand(employeeIDUint uint) *command.UpdateEm
 			}
 			return nil
 		}(),
-		IsActive:        r.IsActive,
-		ConsultationFee: r.ConsultationFee,
+		IsActive: r.IsActive,
+		//ConsultationFee: r.ConsultationFee,
 	}
 }

@@ -73,7 +73,7 @@ func (h *FindApptStatsHandler) Handle(q cqrs.Query) (ApptStatsResult, error) {
 			}
 		}
 
-		// Filter by owner ID
+		// Filter by customer ID
 		if query.customerID != nil && appointment.CustomerID().Equals(*query.customerID) {
 			includeAppointment = false
 		}

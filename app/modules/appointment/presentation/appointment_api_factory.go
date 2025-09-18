@@ -134,7 +134,7 @@ func (f *AppointmentAPIBuilder) validateConfig() error {
 		return fmt.Errorf("validator cannot be nil")
 	}
 	if f.config.CustomerRepo == nil {
-		return fmt.Errorf("owner repository cannot be nil")
+		return fmt.Errorf("customer repository cannot be nil")
 	}
 	return nil
 }

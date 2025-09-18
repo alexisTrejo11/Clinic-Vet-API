@@ -1,9 +1,10 @@
 package controller
 
 import (
+	"clinic-vet-api/app/middleware"
 	autherror "clinic-vet-api/app/shared/error/auth"
 	"clinic-vet-api/app/shared/response"
-	"clinic-vet-api/middleware"
+
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )
@@ -23,7 +24,7 @@ func NewClientPaymentController(
 	}
 }
 
-// GetMyPayments retrieves payments for the authenticated owner
+// GetMyPayments retrieves payments for the authenticated customer
 func (ctrl *ClientPaymentController) GetMyPayments(c *gin.Context) {
 	userCTX, ok := middleware.GetUserFromContext(c)
 	if !ok {

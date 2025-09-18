@@ -4,8 +4,8 @@ BEGIN
         CREATE TYPE person_gender AS ENUM ('male', 'female', 'not_specified');
     END IF;
 
-    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'customer_speciality') THEN
-        CREATE TYPE customer_speciality AS ENUM (
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'employee_speciality') THEN
+        CREATE TYPE veterinarian_speciality AS ENUM (
             'unknown_specialty', 'general_practice','surgery','internal_medicine','dentistry',
             'dermatology','oncology','cardiology','neurology','ophthalmology','radiology',
             'emergency_critical_care','anesthesiology','pathology','preventive_medicine',
@@ -19,7 +19,7 @@ BEGIN
     END IF;
 
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'user_role') THEN
-        CREATE TYPE user_role AS ENUM('owner', 'receptionist', 'customer', 'admin');
+        CREATE TYPE user_role AS ENUM('customer', 'receptionist', 'customer', 'admin');
     END IF;
 
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'currency') THEN
@@ -143,7 +143,7 @@ CREATE TABLE IF NOT EXISTS employees (
     last_name  VARCHAR(255) NOT NULL,
     photo VARCHAR(500) NOT NULL,
     license_number VARCHAR(20) NOT NULL,
-    speciality customer_speciality NOT NULL,
+    speciality veterinarian_speciality NOT NULL,
     years_of_experience INT NOT NULL,
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     user_id int,

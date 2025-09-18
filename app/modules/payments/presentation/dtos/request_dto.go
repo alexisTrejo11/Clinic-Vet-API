@@ -47,7 +47,7 @@ type CreatePaymentRequest struct {
 	Description *string `json:"description,omitempty" example:"Veterinary consultation payment"`
 
 	// Optional due date for payment
-	DueDate *time.Time `json:"due_date,omitempty" example:"2024-12-31T23:59:59Z"`
+	DueDate time.Time `json:"due_date,omitempty" example:"2024-12-31T23:59:59Z"`
 
 	// Optional transaction ID from payment gateway
 	TransactionID *string `json:"transaction_id,omitempty" example:"txn_123456789"`
@@ -134,8 +134,8 @@ func (r *PaymentsByDateRangeRequest) ToQuery(ctx context.Context) *query.FindPay
 // PaymentSearchRequest represents the request to search payments
 // @Description Request body for searching and filtering payments
 type PaymentSearchRequest struct {
-	// Filter by user ID (owner)
-	UserID *int `json:"owner_id,omitempty" example:"456"`
+	// Filter by user ID (customer)
+	UserID *int `json:"customer_id,omitempty" example:"456"`
 
 	// Filter by appointment ID
 	AppointmentID *int `json:"appointment_id,omitempty" example:"123"`

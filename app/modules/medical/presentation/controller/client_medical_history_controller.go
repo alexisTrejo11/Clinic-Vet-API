@@ -12,15 +12,15 @@ import (
 type ClientMedicalHistory struct {
 	petServices           services.PetService
 	medicalHistoryService services.MedicalHistoryService
-	ownerService          services.OwnerService
+	customerService          services.customerService
 	validator             *validator.Validate
 }
 
-func NewClientMedicalHistory(petServices services.PetService, ownerServices services.OwnerService, medicalHistoryService services.MedicalHistoryService) *ClientMedicalHistory {
+func NewClientMedicalHistory(petServices services.PetService, customerServices services.customerService, medicalHistoryService services.MedicalHistoryService) *ClientMedicalHistory {
 	return &ClientMedicalHistory{
 		petServices:           petServices,
 		medicalHistoryService: medicalHistoryService,
-		ownerService:          ownerServices,
+		customerService:          customerServices,
 		validator:             validator.New(),
 	}
 }
@@ -35,14 +35,14 @@ func (cmh ClientMedicalHistory) GetMyPetsMedicalHistories() fiber.Handler {
 			})
 		}
 
-		ownerDTO, err := cmh.ownerService.GetOwnerByUserID(int32(userID))
+		customerDTO, err := cmh.customerService.GetcustomerByUserID(int32(userID))
 		if err != nil {
 			return c.Status(fiber.StatusNotFound).JSON(responses.ErrorResponse{
-				Message: "Owner Not Found",
+				Message: "customer Not Found",
 			})
 		}
 
-		medicalHistoriesDTOs, err := cmh.medicalHistoryService.GetMedicalRepositoryByOwner(*ownerDTO)
+		medicalHistoriesDTOs, err := cmh.medicalHistoryService.GetMedicalRepositoryBycustomer(*customerDTO)
 		if err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(responses.ErrorResponse{
 				Message: err.Error(),
@@ -72,10 +72,10 @@ func (cmh ClientMedicalHistory) GetMyPetsMedicalHistoryByPetID() fiber.Handler {
 			})
 		}
 
-		ownerDTO, err := cmh.ownerService.GetOwnerByUserID(int32(userID))
+		customerDTO, err := cmh.customerService.GetcustomerByUserID(int32(userID))
 		if err != nil {
 			return c.Status(fiber.StatusNotFound).JSON(responses.ErrorResponse{
-				Message: "Owner Not Found",
+				Message: "customer Not Found",
 			})
 		}
 
@@ -86,8 +86,8 @@ func (cmh ClientMedicalHistory) GetMyPetsMedicalHistoryByPetID() fiber.Handler {
 			})
 		}
 
-		// Check If Medical Histories Belongs to Given Owner ID
-		isMedicalHistoriesValidated := cmh.petServices.ValidPetOwner(petID, ownerDTO.Id)
+		// Check If Medical Histories Belongs to Given customer ID
+		isMedicalHistoriesValidated := cmh.petServices.ValidPetcustomer(petID, customerDTO.Id)
 		if !isMedicalHistoriesValidated {
 			return c.Status(fiber.StatusUnauthorized).JSON(responses.ErrorResponse{
 				Message: "Unauthorized",

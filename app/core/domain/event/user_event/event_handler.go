@@ -70,7 +70,7 @@ func (h *userEventHandler) processUserRegistration(event UserRegisteredEvent) {
 		zap.String("sub_operation", "attach_profile"))
 
 	switch event.Role {
-	case enum.UserRoleOwner:
+	case enum.UserRoleCustomer:
 		h.handleCustomerRegistration(ctx, event, profileIDStr)
 	case enum.UserRoleVeterinarian, enum.UserRoleReceptionist:
 		h.handleEmployeeRegistration(ctx, event, profileIDStr)

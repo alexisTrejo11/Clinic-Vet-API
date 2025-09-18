@@ -2,7 +2,8 @@
 package valueobject
 
 import (
-	"errors"
+	domainerr "clinic-vet-api/app/core/error"
+	"context"
 )
 
 type Age struct {
@@ -12,7 +13,7 @@ type Age struct {
 
 func NewAge(years, months int) (Age, error) {
 	if years < 0 || months < 0 {
-		return Age{}, errors.New("age cannot be negative")
+		return Age{}, domainerr.InvalidFieldFormat(context.Background(), "age", "negative int", "years and months must be non-negative", "created age: "+string(years)+" years, "+string(months)+" months")
 	}
 
 	if months >= 12 {
@@ -21,7 +22,7 @@ func NewAge(years, months int) (Age, error) {
 	}
 
 	if years > 50 {
-		return Age{}, errors.New("age seems unrealistic")
+		return Age{}, domainerr.InvalidFieldFormat(context.Background(), "age", "unrealistic age", "years must be less than or equal to 50", "created age: "+string(years)+" years, "+string(months)+" months")
 	}
 
 	return Age{Years: years, Months: months}, nil

@@ -18,8 +18,8 @@ func toCreateParams(customer customer.Customer) *sqlc.CreateCustomerParams {
 		Photo:       customer.Photo(),
 		DateOfBirth: pgtype.Date{Time: customer.DateOfBirth(), Valid: true},
 		Gender:      models.PersonGender(customer.Gender().String()),
-		FirstName:   customer.FullName().FirstName,
-		LastName:    customer.FullName().LastName,
+		FirstName:   customer.Name().FirstName,
+		LastName:    customer.Name().LastName,
 		IsActive:    customer.IsActive(),
 	}
 
@@ -36,8 +36,8 @@ func entityToUpdateParams(customer customer.Customer) *sqlc.UpdateCustomerParams
 		Photo:       customer.Photo(),
 		Gender:      models.PersonGender(customer.Gender()),
 		DateOfBirth: pgtype.Date{Time: customer.DateOfBirth(), Valid: true},
-		FirstName:   customer.FullName().FirstName,
-		LastName:    customer.FullName().LastName,
+		FirstName:   customer.Name().FirstName,
+		LastName:    customer.Name().LastName,
 		IsActive:    customer.IsActive(),
 	}
 

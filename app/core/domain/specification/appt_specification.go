@@ -225,7 +225,7 @@ func (a *ApptSearchSpecification) ToSQL() (string, []any) {
 
 	query := fmt.Sprintf(`
 		SELECT id, service, scheduled_date, status, reason, notes, 
-			   owner_id, vet_id, pet_id, created_at, updated_at
+			   customer_id, vet_id, pet_id, created_at, updated_at
 		FROM appointments 
 		%s 
 		%s 

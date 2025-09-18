@@ -1,7 +1,6 @@
 package enum
 
 import (
-	domainerr "clinic-vet-api/app/core/error"
 	"slices"
 )
 
@@ -192,7 +191,7 @@ func ParseVetSpecialty(specialty string) (VetSpecialty, error) {
 	if val, exists := vetSpecialtyMap[normalized]; exists {
 		return val, nil
 	}
-	return VetSpecialtyUnknown, domainerr.InvalidEnumValue("vet-specialty", "specialty", "invalid vet specialty")
+	return VetSpecialtyUnknown, InvalidEnumParserError("VetSpecialty", specialty)
 }
 
 func MustParseVetSpecialty(specialty string) VetSpecialty {

@@ -1,7 +1,6 @@
 package enum
 
 import (
-	domainerr "clinic-vet-api/app/core/error"
 	"fmt"
 	"slices"
 )
@@ -147,7 +146,7 @@ func ParseNotificationType(notificationType string) (NotificationType, error) {
 	if val, exists := notificationTypeMap[normalized]; exists {
 		return val, nil
 	}
-	return NotificationTypeUnknown, domainerr.InvalidEnumValue("notification-type", notificationType, "invalid notification type")
+	return "", InvalidEnumParserError("NotificationType", notificationType)
 }
 
 func MustParseNotificationType(notificationType string) NotificationType {

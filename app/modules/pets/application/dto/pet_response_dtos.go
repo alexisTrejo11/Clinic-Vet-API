@@ -24,7 +24,7 @@ type PetResponse struct {
 	Microchip *string `json:"microchip,omitempty"`
 	// Indicates if the pet is neutered.
 	IsNeutered *bool `json:"is_neutered,omitempty"`
-	// The unique ID of the pet's owner.
+	// The unique ID of the pet's customer.
 	CustomerID uint `json:"customer_id"`
 	// A list of the pet's known allergies.
 	Allergies *string `json:"allergies,omitempty"`

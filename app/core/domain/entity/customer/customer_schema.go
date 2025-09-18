@@ -7,19 +7,16 @@ import (
 
 	"clinic-vet-api/app/core/domain/entity/base"
 	"clinic-vet-api/app/core/domain/entity/pet"
-	"clinic-vet-api/app/core/domain/enum"
 	"clinic-vet-api/app/core/domain/valueobject"
 )
 
 type Customer struct {
 	base.Entity[valueobject.CustomerID]
 	base.Person
-	photo     string
-	gender    enum.PersonGender
-	birthDate time.Time
-	userID    *valueobject.UserID
-	isActive  bool
-	pets      []pet.Pet
+	photo    string
+	userID   *valueobject.UserID
+	isActive bool
+	pets     []pet.Pet
 }
 
 func (o *Customer) ID() valueobject.CustomerID {
@@ -28,14 +25,6 @@ func (o *Customer) ID() valueobject.CustomerID {
 
 func (o *Customer) Photo() string {
 	return o.photo
-}
-
-func (o *Customer) FullName() valueobject.PersonName {
-	return o.Name()
-}
-
-func (o *Customer) DateOfBirth() time.Time {
-	return o.Person.DateOfBirth()
 }
 
 func (o *Customer) UserID() *valueobject.UserID {
@@ -56,4 +45,16 @@ func (o *Customer) AssignUser(userID valueobject.UserID) error {
 	}
 	o.userID = &userID
 	return nil
+}
+
+func (o *Customer) SetID(id valueobject.CustomerID) {
+	o.Entity.SetID(id)
+}
+
+func (o *Customer) CreatedAt() time.Time {
+	return o.Entity.CreatedAt()
+}
+
+func (o *Customer) UpdatedAt() time.Time {
+	return o.Entity.UpdatedAt()
 }

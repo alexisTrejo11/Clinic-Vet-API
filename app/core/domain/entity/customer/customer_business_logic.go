@@ -1,6 +1,7 @@
 package customer
 
 import (
+	"context"
 	"time"
 
 	"clinic-vet-api/app/core/domain/entity/pet"
@@ -9,100 +10,123 @@ import (
 	domainerr "clinic-vet-api/app/core/error"
 )
 
-func validateDateOfBirth(dob time.Time) error {
+func validateDateOfBirth(ctx context.Context, dob time.Time, operation string) error {
 	if dob.IsZero() {
-		return domainerr.NewValidationError("customer", "date-of-birth", "date of birth is required")
+		return DateOfBirthRequiredError(ctx, operation)
 	}
 	if dob.After(time.Now()) {
-		return domainerr.NewValidationError("customer", "date-of-birth", "date of birth cannot be in the future")
+		return DateOfBirthFutureError(ctx, dob, operation)
 	}
-	// Check if customer is at least 18 years old
+
 	minAgeDate := time.Now().AddDate(-18, 0, 0)
 	if dob.After(minAgeDate) {
-		return domainerr.NewValidationError("customer", "date-of-birth", "owner must be at least 18 years old")
+		return UnderageCustomerError(ctx, dob, operation)
 	}
 	return nil
 }
 
-func (o *Customer) validate() error {
-	if err := validateDateOfBirth(o.Person.DateOfBirth()); err != nil {
-		return err
-	}
-	if !o.Person.Gender().IsValid() {
-		return domainerr.NewValidationError("customer", "gender", "gender is required")
-	}
-	return nil
-}
+func (o *Customer) UpdatePhoto(ctx context.Context, newPhoto string) error {
+	const operation = "update_photo"
 
-func (o *Customer) UpdatePhoto(newPhoto string) error {
 	if newPhoto != "" && len(newPhoto) > 500 {
-		return domainerr.NewValidationError("customer", "photo", "photo URL too long")
+		return PhotoURLLongError(ctx, len(newPhoto), operation)
 	}
+
 	o.photo = newPhoto
 	o.IncrementVersion()
 	return nil
 }
 
-func (o *Customer) UpdateFullName(newName valueobject.PersonName) error {
-	if err := o.UpdateName(newName); err != nil {
-		return err
+func (o *Customer) UpdateFullName(ctx context.Context, newName valueobject.PersonName) error {
+	const operation = "update_full_name"
+
+	if err := o.UpdateName(ctx, newName); err != nil {
+		return domainerr.WrapError(ctx, err, "Failed to update name", "customer", "name", operation)
 	}
+
 	o.IncrementVersion()
 	return nil
 }
 
-func (o *Customer) UpdateGender(newGender enum.PersonGender) error {
-	if err := o.Person.UpdateGender(newGender); err != nil {
-		return err
+func (o *Customer) UpdateGender(ctx context.Context, newGender enum.PersonGender) error {
+	const operation = "update_gender"
+
+	if err := o.Person.UpdateGender(ctx, newGender); err != nil {
+		return domainerr.WrapError(ctx, err, "Failed to update gender", "customer", "gender", operation)
 	}
+
 	o.IncrementVersion()
 	return nil
 }
 
-func (o *Customer) AssociateWithUser(userID valueobject.UserID) error {
+func (o *Customer) AssociateWithUser(ctx context.Context, userID valueobject.UserID) error {
+	const operation = "associate_user"
+
 	if o.userID != nil && o.userID.Value() == userID.Value() {
-		return nil // Already associated
+		return UserAlreadyAssociatedError(ctx, userID, operation)
 	}
+
 	o.userID = &userID
 	o.IncrementVersion()
 	return nil
 }
 
-func (o *Customer) RemoveUserAssociation() error {
+func (o *Customer) RemoveUserAssociation(ctx context.Context) error {
+	const operation = "remove_user_association"
+
 	if o.userID == nil {
-		return nil // Already not associated
+		return UserNotAssociatedError(ctx, operation)
 	}
+
 	o.userID = nil
 	o.IncrementVersion()
 	return nil
 }
 
-func (o *Customer) Activate() error {
+func (o *Customer) Activate(ctx context.Context) error {
+	const operation = "activate_customer"
+
 	if o.isActive {
 		return nil // Already active
 	}
+
 	o.isActive = true
 	o.IncrementVersion()
 	return nil
 }
 
-func (o *Customer) Deactivate() error {
+func (o *Customer) Deactivate(ctx context.Context) error {
+	const operation = "deactivate_customer"
+
 	if !o.isActive {
 		return nil // Already inactive
 	}
+
+	if !o.CanBeDeactivated() {
+		activePets := 0
+		for _, pet := range o.pets {
+			if pet.IsActive() {
+				activePets++
+			}
+		}
+		return CannotDeactivateWithPetsError(ctx, activePets, operation)
+	}
+
 	o.isActive = false
 	o.IncrementVersion()
 	return nil
 }
 
-func (o *Customer) AddPet(newPet *pet.Pet) error {
+func (o *Customer) AddPet(ctx context.Context, newPet *pet.Pet) error {
+	const operation = "add_pet"
+
 	if newPet == nil {
-		return domainerr.NewValidationError("customer", "pet", "pet cannot be nil")
+		return domainerr.MissingEntity(ctx, "pet", "Pet cannot be nil", operation)
 	}
 
 	for _, existingPet := range o.pets {
 		if existingPet.ID().Value() == newPet.ID().Value() {
-			return domainerr.NewBusinessRuleError("customer", "add pet", "pet already exists")
+			return PetAlreadyExistsError(ctx, newPet.ID(), operation)
 		}
 	}
 
@@ -111,7 +135,9 @@ func (o *Customer) AddPet(newPet *pet.Pet) error {
 	return nil
 }
 
-func (o *Customer) RemovePet(petID valueobject.PetID) error {
+func (o *Customer) RemovePet(ctx context.Context, petID valueobject.PetID) error {
+	const operation = "remove_pet"
+
 	for i, existingPet := range o.pets {
 		if existingPet.ID().Value() == petID.Value() {
 			// Remove the pet
@@ -120,7 +146,8 @@ func (o *Customer) RemovePet(petID valueobject.PetID) error {
 			return nil
 		}
 	}
-	return domainerr.NewBusinessRuleError("customer", "remove Pet", "pet not found")
+
+	return PetNotFoundError(ctx, petID, operation)
 }
 
 func (o *Customer) HasActivePets() bool {
@@ -133,6 +160,5 @@ func (o *Customer) HasActivePets() bool {
 }
 
 func (o *Customer) CanBeDeactivated() bool {
-	// Cannot  customer with active pets
 	return !o.HasActivePets()
 }

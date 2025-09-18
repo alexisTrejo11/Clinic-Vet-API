@@ -47,7 +47,7 @@ func NewDeleteEmployeeHandler(employeeRepo repository.EmployeeRepository, eventB
 }
 
 func (h *CreateEmployeeHandler) Handle(ctx context.Context, cmd CreateEmployeeCommand) cqrs.CommandResult {
-	employee, err := cmd.createEmployee()
+	employee, err := cmd.createEmployee(ctx)
 	if err != nil {
 		return *cqrs.FailureResult("an error occurred creating employee", err)
 	}
@@ -72,7 +72,7 @@ func (h *UpdateEmployeeHandler) Handle(ctx context.Context, cmd UpdateEmployeeCo
 		return *cqrs.FailureResult("an error occurred finding employee", err)
 	}
 
-	if err := cmd.updateEmployee(&employee); err != nil {
+	if err := cmd.updateEmployee(ctx, &employee); err != nil {
 		return *cqrs.FailureResult("an error occurred updating employee", err)
 	}
 

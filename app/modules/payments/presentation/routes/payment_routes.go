@@ -35,8 +35,8 @@ func RegisterAdminPaymentRoutes(router *gin.Engine, controller *controller.Admin
 func RegisterClientPaymentRoutes(router *gin.Engine, controller *controller.ClientPaymentController) {
 	clientGroup := router.Group("api/v2/client/payments")
 	{
-		// Owner payment operations
-		clientGroup.GET("/owners/:owner_id", controller.GetMyPayments)
+		// customer payment operations
+		clientGroup.GET("/customers/:customer_id", controller.GetMyPayments)
 
 	}
 }

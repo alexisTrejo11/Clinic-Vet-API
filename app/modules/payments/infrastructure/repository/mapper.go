@@ -117,7 +117,6 @@ func entityToUpdateParams(p *payment.Payment) (*sqlc.UpdatePaymentParams, error)
 	return params, nil
 }
 
-// TODO: USE NEW CONSTRUCTOR PATTERN
 func sqlcRowToEntity(row *sqlc.Payment) (*payment.Payment, error) {
 	if row == nil {
 		return nil, fmt.Errorf("row cannot be nil")
@@ -142,16 +141,18 @@ func sqlcRowToEntity(row *sqlc.Payment) (*payment.Payment, error) {
 
 	customerID := pgInt4ToCustomerID(row.PaidFromCustomer)
 
-	p, err := payment.CreatePayment(
-		customerID,
+	p, err := payment.NewPayment(
+		valueobject.NewPaymentID(uint(row.ID)),
+		row.CreatedAt.Time,
+		row.UpdatedAt.Time,
+		payment.WithInvoiceID(row.InvoiceID.String),
+		payment.WithPaidFromCustomer(customerID),
+		payment.WithPaidToEmployee(valueobject.NewEmployeeID(uint(row.PaidToEmployee.Int32))),
 		payment.WithAmount(amount),
 		payment.WithAppointmentID(pgInt4ToAppointmentID(row.AppointmentID)),
 		payment.WithPaymentMethod(method),
 		payment.WithStatus(status),
-		payment.WithDueDate(func() *time.Time {
-			t := pgTimestamptzToTime(row.DueDate)
-			return &t
-		}()),
+		payment.WithDueDate(pgTimestamptzToTime(row.DueDate)),
 		payment.WithIsActive(row.IsActive),
 	)
 	if err != nil {

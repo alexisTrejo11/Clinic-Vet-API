@@ -222,9 +222,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/appointments/owner/{ownerId}": {
+        "/appointments/customer/{customerId}": {
             "get": {
-                "description": "Retrieves all appointments for a specific pet owner",
+                "description": "Retrieves all appointments for a specific pet customer",
                 "consumes": [
                     "application/json"
                 ],
@@ -234,12 +234,12 @@ const docTemplate = `{
                 "tags": [
                     "appointments-query"
                 ],
-                "summary": "Get appointments by owner",
+                "summary": "Get appointments by customer",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "Owner ID",
-                        "name": "ownerId",
+                        "description": "customer ID",
+                        "name": "customerId",
                         "in": "path",
                         "required": true
                     },
@@ -284,13 +284,13 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "Invalid owner ID or pagination parameters",
+                        "description": "Invalid customer ID or pagination parameters",
                         "schema": {
                             "$ref": "#/definitions/apiResponse.APIResponse"
                         }
                     },
                     "404": {
-                        "description": "Owner not found",
+                        "description": "customer not found",
                         "schema": {
                             "$ref": "#/definitions/apiResponse.APIResponse"
                         }
@@ -904,14 +904,14 @@ const docTemplate = `{
                 }
             }
         },
-        "/owner/appointments": {
+        "/customer/appointments": {
             "get": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
                 ],
-                "description": "Retrieves a list of all appointments for the authenticated owner",
+                "description": "Retrieves a list of all appointments for the authenticated customer",
                 "consumes": [
                     "application/json"
                 ],
@@ -919,9 +919,9 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "owner-appointments"
+                    "customer-appointments"
                 ],
-                "summary": "Get owner's appointments",
+                "summary": "Get customer's appointments",
                 "parameters": [
                     {
                         "type": "integer",
@@ -946,7 +946,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Owner creates a new appointment request for their pet",
+                "description": "customer creates a new appointment request for their pet",
                 "consumes": [
                     "application/json"
                 ],
@@ -954,7 +954,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "owner-appointments"
+                    "customer-appointments"
                 ],
                 "summary": "Request a new appointment",
                 "parameters": [
@@ -971,14 +971,14 @@ const docTemplate = `{
                 "responses": {}
             }
         },
-        "/owner/appointments/pet/{petId}": {
+        "/customer/appointments/pet/{petId}": {
             "get": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
                 ],
-                "description": "Retrieves all appointments for a specific pet owned by the authenticated owner",
+                "description": "Retrieves all appointments for a specific pet owned by the authenticated customer",
                 "consumes": [
                     "application/json"
                 ],
@@ -986,7 +986,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "owner-appointments"
+                    "customer-appointments"
                 ],
                 "summary": "Get appointments for a specific pet",
                 "parameters": [
@@ -1015,14 +1015,14 @@ const docTemplate = `{
                 "responses": {}
             }
         },
-        "/owner/appointments/upcoming": {
+        "/customer/appointments/upcoming": {
             "get": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
                 ],
-                "description": "Retrieves upcoming appointments for the authenticated owner within a date range",
+                "description": "Retrieves upcoming appointments for the authenticated customer within a date range",
                 "consumes": [
                     "application/json"
                 ],
@@ -1030,7 +1030,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "owner-appointments"
+                    "customer-appointments"
                 ],
                 "summary": "Get upcoming appointments",
                 "parameters": [
@@ -1066,14 +1066,14 @@ const docTemplate = `{
                 "responses": {}
             }
         },
-        "/owner/appointments/{id}": {
+        "/customer/appointments/{id}": {
             "get": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
                 ],
-                "description": "Retrieves details of a specific appointment for the authenticated owner",
+                "description": "Retrieves details of a specific appointment for the authenticated customer",
                 "consumes": [
                     "application/json"
                 ],
@@ -1081,7 +1081,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "owner-appointments"
+                    "customer-appointments"
                 ],
                 "summary": "Get specific appointment details",
                 "parameters": [
@@ -1096,14 +1096,14 @@ const docTemplate = `{
                 "responses": {}
             }
         },
-        "/owner/appointments/{id}/cancel": {
+        "/customer/appointments/{id}/cancel": {
             "put": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
                 ],
-                "description": "Owner cancels their existing appointment",
+                "description": "customer cancels their existing appointment",
                 "consumes": [
                     "application/json"
                 ],
@@ -1111,7 +1111,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "owner-appointments"
+                    "customer-appointments"
                 ],
                 "summary": "Cancel an appointment",
                 "parameters": [
@@ -1126,14 +1126,14 @@ const docTemplate = `{
                 "responses": {}
             }
         },
-        "/owner/appointments/{id}/reschedule": {
+        "/customer/appointments/{id}/reschedule": {
             "put": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
                 ],
-                "description": "Owner reschedules their existing appointment",
+                "description": "customer reschedules their existing appointment",
                 "consumes": [
                     "application/json"
                 ],
@@ -1141,7 +1141,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "owner-appointments"
+                    "customer-appointments"
                 ],
                 "summary": "Reschedule an appointment",
                 "parameters": [
@@ -2497,7 +2497,7 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "date_time",
-                "owner_id",
+                "customer_id",
                 "pet_id",
                 "reason",
                 "service"
@@ -2512,7 +2512,7 @@ const docTemplate = `{
                 "notes": {
                     "type": "string"
                 },
-                "owner_id": {
+                "customer_id": {
                     "type": "integer"
                 },
                 "pet_id": {
@@ -2623,7 +2623,7 @@ const docTemplate = `{
                 "notes": {
                     "type": "string"
                 },
-                "owner_id": {
+                "customer_id": {
                     "type": "integer"
                 },
                 "pet_id": {
@@ -2654,7 +2654,7 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "name",
-                "owner_id",
+                "customer_id",
                 "species"
             ],
             "properties": {
@@ -2711,8 +2711,8 @@ const docTemplate = `{
                     "maxLength": 100,
                     "minLength": 2
                 },
-                "owner_id": {
-                    "description": "The unique ID of the pet's owner. (required, greater than 0)",
+                "customer_id": {
+                    "description": "The unique ID of the pet's customer. (required, greater than 0)",
                     "type": "integer"
                 },
                 "photo": {
@@ -2789,8 +2789,8 @@ const docTemplate = `{
                     "description": "The name of the pet.",
                     "type": "string"
                 },
-                "owner_id": {
-                    "description": "The unique ID of the pet's owner.",
+                "customer_id": {
+                    "description": "The unique ID of the pet's customer.",
                     "type": "integer"
                 },
                 "photo": {
@@ -2827,7 +2827,7 @@ const docTemplate = `{
                 "email",
                 "gender",
                 "location",
-                "owner_id",
+                "customer_id",
                 "password",
                 "phone_number",
                 "role"
@@ -2856,8 +2856,8 @@ const docTemplate = `{
                     "description": "The user's location. (required)",
                     "type": "string"
                 },
-                "owner_id": {
-                    "description": "The unique ID of the owner. (required)",
+                "customer_id": {
+                    "description": "The unique ID of the customer. (required)",
                     "type": "integer"
                 },
                 "password": {

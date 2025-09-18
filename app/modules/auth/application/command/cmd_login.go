@@ -59,7 +59,7 @@ func (h *authCommandHandler) createSession(userID string, command LoginCommand) 
 		sessionDuration = 30 * 24 * time.Hour // 30 days
 	}
 
-	newSession := auth.Session{
+	newSession := &auth.Session{
 		UserID:       userID,
 		IPAddress:    command.IP,
 		RefreshToken: refreshToken,
@@ -69,9 +69,9 @@ func (h *authCommandHandler) createSession(userID string, command LoginCommand) 
 		UserAgent:    command.UserAgent,
 	}
 
-	if err := h.sessionRepo.Create(command.CTX, &newSession); err != nil {
+	if err := h.sessionRepo.Create(command.CTX, newSession); err != nil {
 		return auth.Session{}, err
 	}
 
-	return newSession, nil
+	return *newSession, nil
 }

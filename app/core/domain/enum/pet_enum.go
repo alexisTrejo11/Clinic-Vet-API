@@ -1,7 +1,6 @@
 package enum
 
 import (
-	domainerr "clinic-vet-api/app/core/error"
 	"strings"
 )
 
@@ -104,7 +103,8 @@ func ParsePetGender(gender string) (PetGender, error) {
 	if val, exists := petGenderMap[normalized]; exists {
 		return val, nil
 	}
-	return "", domainerr.InvalidEnumValue("pet-gender", "gender", "invalid pet gender")
+
+	return "", InvalidEnumParserError("PetGender", gender)
 }
 
 func MustParsePetGender(gender string) PetGender {

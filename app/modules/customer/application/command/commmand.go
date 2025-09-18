@@ -25,6 +25,7 @@ func (c *CreateCustomerCommand) ToEntity() (*customer.Customer, error) {
 	}
 
 	return customer.CreateCustomer(
+		c.CTX,
 		customer.WithFullName(fullName),
 		customer.WithPhoto(c.Photo),
 		customer.WithGender(c.Gender),

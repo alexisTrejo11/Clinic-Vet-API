@@ -1,57 +1,97 @@
+// payment.go (métodos actualizados)
 package payment
 
 import (
-	"fmt"
+	"context"
 	"slices"
 	"time"
 
 	"clinic-vet-api/app/core/domain/enum"
 	"clinic-vet-api/app/core/domain/valueobject"
-	domainerr "clinic-vet-api/app/core/error"
+	"clinic-vet-api/app/shared/log"
+
+	"go.uber.org/zap"
 )
 
-func (p *Payment) MarkAsPaid(transactionID string, paidAt time.Time) error {
+func (p *Payment) MarkAsPaid(ctx context.Context, transactionID string, paidAt time.Time) error {
+	operation := "MarkAsPaid"
+
 	if p.status != enum.PaymentStatusPending {
-		return fmt.Errorf("payment is not in pending status")
+		return CannotMarkAsPaidError(ctx, p.status, operation)
+	}
+
+	if transactionID == "" {
+		return TransactionIDRequiredError(ctx, operation)
+	}
+
+	if paidAt.After(time.Now()) {
+		return PaidDateFutureError(ctx, operation)
 	}
 
 	p.status = enum.PaymentStatusPaid
 	p.transactionID = &transactionID
 	p.paidAt = &paidAt
 	p.updatedAt = time.Now()
+	p.IncrementVersion()
 
 	return nil
 }
 
-func (p *Payment) RequestRefund(refundAmount valueobject.Money, reason string) error {
+func (p *Payment) RequestRefund(ctx context.Context, refundAmount valueobject.Money, reason string) error {
+	operation := "RequestRefund"
+
 	if !p.IsRefundable() {
-		return fmt.Errorf("payment is not refundable")
+		return CannotRequestRefundError(ctx, p.status, operation)
+	}
+
+	if p.isRefundPeriodExpired() {
+		return RefundPeriodExpiredError(ctx, *p.paidAt, operation)
 	}
 
 	if refundAmount.Amount() > p.amount.Amount() {
-		return fmt.Errorf("refund amount cannot exceed original payment amount")
+		return RefundAmountExceededError(ctx, refundAmount, p.amount, operation)
+	}
+
+	if reason == "" {
+		return FailureReasonEmptyError(ctx, operation)
 	}
 
 	p.status = enum.PaymentStatusRefunded
 	p.refundAmount = &refundAmount
 	now := time.Now()
 	p.refundedAt = &now
+	p.failureReason = &reason
 	p.updatedAt = now
+	p.IncrementVersion()
 
 	return nil
 }
 
-func (p *Payment) SoftDelete() {
+func (p *Payment) SoftDelete(ctx context.Context) {
+	operation := "SoftDelete"
+
+	log.App.Info("Soft deleting payment",
+		zap.String("payment_id", p.ID().String()),
+		zap.String("operation", operation))
+
 	p.isActive = false
 	deletedAt := time.Now()
 	p.deletedAt = &deletedAt
 	p.updatedAt = time.Now()
+	p.IncrementVersion()
 }
 
-func (p *Payment) Restore() {
+func (p *Payment) Restore(ctx context.Context) {
+	operation := "Restore"
+
+	log.App.Info("Restoring payment",
+		zap.String("payment_id", p.ID().String()),
+		zap.String("operation", operation))
+
 	p.isActive = true
 	p.deletedAt = nil
 	p.updatedAt = time.Now()
+	p.IncrementVersion()
 }
 
 func (p *Payment) isRefundPeriodExpired() bool {
@@ -64,7 +104,9 @@ func (p *Payment) isRefundPeriodExpired() bool {
 	return time.Now().After(refundDeadline)
 }
 
-func (p *Payment) Cancel(reason string) error {
+func (p *Payment) Cancel(ctx context.Context, reason string) error {
+	operation := "CancelPayment"
+
 	allowedStatuses := []enum.PaymentStatus{
 		enum.PaymentStatusPending,
 		enum.PaymentStatusPaid,
@@ -72,30 +114,35 @@ func (p *Payment) Cancel(reason string) error {
 	}
 
 	if !p.canTransitionStatus(allowedStatuses) {
-		return domainerr.NewBusinessRuleError("payment", "cancel", "payment cannot be cancelled in current status")
+		return CannotCancelError(ctx, p.status, operation)
 	}
 
 	if reason == "" {
-		return domainerr.NewValidationError("payment", "reason", "cancellation reason is required")
+		return CancellationReasonRequiredError(ctx, operation)
 	}
 
 	p.status = enum.PaymentStatusCancelled
+	p.failureReason = &reason
 	p.IncrementVersion()
+	p.updatedAt = time.Now()
+
 	return nil
 }
 
-func (p *Payment) Pay(transactionID string) error {
+func (p *Payment) Pay(ctx context.Context, transactionID string) error {
+	operation := "PayPayment"
+
 	allowedStatuses := []enum.PaymentStatus{
 		enum.PaymentStatusFailed,
 		enum.PaymentStatusPending,
 	}
 
 	if !p.canTransitionStatus(allowedStatuses) {
-		return domainerr.NewBusinessRuleError("payment", "pay", "payment cannot be paid in current status")
+		return CannotProcessError(ctx, p.status, operation)
 	}
 
 	if transactionID == "" {
-		return domainerr.NewValidationError("payment", "transaction ID", "transaction ID is required")
+		return TransactionIDRequiredError(ctx, operation)
 	}
 
 	now := time.Now()
@@ -103,56 +150,110 @@ func (p *Payment) Pay(transactionID string) error {
 	p.transactionID = &transactionID
 	p.paidAt = &now
 	p.IncrementVersion()
+	p.updatedAt = now
 
 	return nil
 }
 
-func (p *Payment) Refund() error {
+func (p *Payment) Refund(ctx context.Context) error {
+	operation := "RefundPayment"
+
 	allowedStatuses := []enum.PaymentStatus{enum.PaymentStatusPaid}
 
 	if !p.canTransitionStatus(allowedStatuses) {
-		return domainerr.NewBusinessRuleError("payment", "refund", "payment cannot be refunded in current status")
+		return CannotRefundError(ctx, p.status, operation)
+	}
+
+	if p.isRefundPeriodExpired() {
+		return RefundPeriodExpiredError(ctx, *p.paidAt, operation)
 	}
 
 	now := time.Now()
 	p.status = enum.PaymentStatusRefunded
 	p.refundedAt = &now
 	p.IncrementVersion()
+	p.updatedAt = now
 
 	return nil
 }
 
-func (p *Payment) MarkAsOverdue() error {
+func (p *Payment) MarkAsOverdue(ctx context.Context) error {
+	operation := "MarkAsOverdue"
+
 	allowedStatuses := []enum.PaymentStatus{
 		enum.PaymentStatusFailed,
 		enum.PaymentStatusPending,
 	}
 
 	if !p.canTransitionStatus(allowedStatuses) {
-		return domainerr.NewBusinessRuleError("payment", "overdue", "payment cannot be marked as overdue in current status")
+		return CannotMarkOverdueError(ctx, p.status, operation)
 	}
 
 	if p.dueDate != nil && time.Now().Before(*p.dueDate) {
-		return domainerr.NewBusinessRuleError("payment", "overdue", "cannot mark as overdue before due date")
+		return DueDateNotReachedError(ctx, *p.dueDate, operation)
 	}
 
 	p.status = enum.PaymentStatusOverdue
 	p.IncrementVersion()
+	p.updatedAt = time.Now()
+
 	return nil
 }
 
-func (p *Payment) MarkAsFailed() error {
+func (p *Payment) MarkAsFailed(ctx context.Context) error {
+	operation := "MarkAsFailed"
+
 	allowedStatuses := []enum.PaymentStatus{enum.PaymentStatusPending}
 
 	if !p.canTransitionStatus(allowedStatuses) {
-		return domainerr.NewBusinessRuleError("payment", "failed", "payment cannot be marked as failed in current status")
+		return CannotMarkFailedError(ctx, p.status, operation)
 	}
 
 	p.status = enum.PaymentStatusFailed
 	p.IncrementVersion()
+	p.updatedAt = time.Now()
+
 	return nil
 }
 
+func (p *Payment) Update(ctx context.Context, amount *valueobject.Money, paymentMethod *enum.PaymentMethod, description *string, dueDate *time.Time) error {
+	operation := "UpdatePayment"
+
+	if amount != nil {
+		if amount.Amount() <= 0 {
+			return AmountInvalidError(ctx, *amount, operation)
+		}
+		p.amount = *amount
+	}
+
+	if paymentMethod != nil {
+		if !paymentMethod.IsValid() {
+			return MethodInvalidError(ctx, *paymentMethod, operation)
+		}
+		p.method = *paymentMethod
+	}
+
+	if description != nil {
+		if len(*description) > 500 {
+			return DescriptionTooLongError(ctx, len(*description), operation)
+		}
+		p.description = description
+	}
+
+	if dueDate != nil {
+		if dueDate.Before(time.Now()) {
+			return DueDatePastError(ctx, operation)
+		}
+		p.dueDate = dueDate
+	}
+
+	p.IncrementVersion()
+	p.updatedAt = time.Now()
+
+	return nil
+}
+
+// Métodos auxiliares (se mantienen igual pero con mejor documentación)
 func (p *Payment) CanRetry() bool {
 	return p.status == enum.PaymentStatusFailed || p.status == enum.PaymentStatusPending
 }
@@ -164,7 +265,6 @@ func (p *Payment) AmountDue() valueobject.Money {
 	return p.amount
 }
 
-// canTransitionStatus checks if the current status allows transition checking if it is in the allowedStatuses slice
 func (p *Payment) canTransitionStatus(allowedStatuses []enum.PaymentStatus) bool {
 	return slices.Contains(allowedStatuses, p.status)
 }
@@ -177,7 +277,7 @@ func (p *Payment) RequiresPaymentProcessing() bool {
 func (p *Payment) CanBeRefunded() bool {
 	return p.status == enum.PaymentStatusPaid &&
 		p.paidAt != nil &&
-		p.paidAt.After(time.Now().AddDate(0, -6, 0)) // Within 6 months
+		!p.isRefundPeriodExpired()
 }
 
 func (p *Payment) DaysOverdue() int {
@@ -185,37 +285,4 @@ func (p *Payment) DaysOverdue() int {
 		return 0
 	}
 	return int(time.Since(*p.dueDate).Hours() / 24)
-}
-
-func (p *Payment) Update(amount *valueobject.Money, paymentMethod *enum.PaymentMethod, description *string, dueDate *time.Time) error {
-	if amount != nil {
-		if amount.Amount() <= 0 {
-			return domainerr.NewValidationError("payment", "amount", "amount must be positive")
-		}
-		p.amount = *amount
-	}
-
-	if paymentMethod != nil {
-		if !paymentMethod.IsValid() {
-			return domainerr.NewValidationError("payment", "payment method", "invalid payment method")
-		}
-		p.method = *paymentMethod
-	}
-
-	if description != nil {
-		if len(*description) > 500 {
-			return domainerr.NewValidationError("payment", "description", "description too long")
-		}
-		p.description = description
-	}
-
-	if dueDate != nil {
-		if dueDate.Before(time.Now()) {
-			return domainerr.NewValidationError("payment", "due date", "due date cannot be in the past")
-		}
-		p.dueDate = dueDate
-	}
-
-	p.IncrementVersion()
-	return nil
 }

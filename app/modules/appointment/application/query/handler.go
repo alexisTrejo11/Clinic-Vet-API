@@ -109,18 +109,18 @@ func (h *apptQueryHandler) validateCustomer(ctx context.Context, customerID valu
 	}
 
 	if !exists {
-		return apperror.EntityNotFoundValidationError("owner", "id", customerID.String())
+		return apperror.EntityNotFoundValidationError("customer", "id", customerID.String())
 	}
 
 	return nil
 }
 
 func (h *apptQueryHandler) FindByCustomerID(query FindApptsByCustomerIDQuery) (p.Page[ApptResult], error) {
-	if err := h.validateCustomer(query.ctx, query.ownerID); err != nil {
+	if err := h.validateCustomer(query.ctx, query.customerID); err != nil {
 		return p.Page[ApptResult]{}, err
 	}
 
-	appointmentsp, err := h.apptRepository.FindByCustomerID(query.ctx, query.ownerID, query.pageInput)
+	appointmentsp, err := h.apptRepository.FindByCustomerID(query.ctx, query.customerID, query.pageInput)
 	if err != nil {
 		return p.Page[ApptResult]{}, err
 	}

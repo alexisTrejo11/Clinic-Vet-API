@@ -1,6 +1,7 @@
 package employee
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"time"
@@ -8,21 +9,19 @@ import (
 	"clinic-vet-api/app/core/domain/entity/base"
 	"clinic-vet-api/app/core/domain/enum"
 	"clinic-vet-api/app/core/domain/valueobject"
+	domainerr "clinic-vet-api/app/core/error"
 )
 
 type EmployeeOption func(*Employee) error
 
 func WithName(name valueobject.PersonName) EmployeeOption {
 	return func(v *Employee) error {
-		return v.Person.UpdateName(name)
+		return v.Person.UpdateName(context.Background(), name)
 	}
 }
 
 func WithPhoto(photo string) EmployeeOption {
 	return func(v *Employee) error {
-		if photo != "" && len(photo) > 500 {
-			return errors.New("photo URL too long")
-		}
 		v.photo = photo
 		return nil
 	}
@@ -30,9 +29,6 @@ func WithPhoto(photo string) EmployeeOption {
 
 func WithLicenseNumber(licenseNumber string) EmployeeOption {
 	return func(v *Employee) error {
-		if err := validateLicenseNumber(licenseNumber); err != nil {
-			return err
-		}
 		v.licenseNumber = licenseNumber
 		return nil
 	}
@@ -40,9 +36,6 @@ func WithLicenseNumber(licenseNumber string) EmployeeOption {
 
 func WithSpecialty(specialty enum.VetSpecialty) EmployeeOption {
 	return func(v *Employee) error {
-		if !specialty.IsValid() {
-			return errors.New("invalid specialty")
-		}
 		v.specialty = specialty
 		return nil
 	}
@@ -115,24 +108,29 @@ func NewEmployee(
 			return nil, fmt.Errorf("invalid veterinarian option: %w", err)
 		}
 	}
+
 	return vet, nil
 }
 
-func CreateEmployee(
-	opts ...EmployeeOption,
-) (*Employee, error) {
+func CreateEmployee(ctx context.Context, name valueobject.PersonName, gender enum.PersonGender, dateOfBirth time.Time, opts ...EmployeeOption) (*Employee, error) {
+	person, err := base.CreatePerson(ctx, name, dateOfBirth, gender)
+	if err != nil {
+		return nil, fmt.Errorf("invalid person data: %w", err)
+	}
+
 	vet := &Employee{
 		Entity:   base.NewEntity(valueobject.EmployeeID{}, time.Now(), time.Now(), 1),
 		isActive: true, // Default to active
+		Person:   *person,
 	}
 
 	for _, opt := range opts {
 		if err := opt(vet); err != nil {
-			return nil, fmt.Errorf("invalid veterinarian option: %w", err)
+			return nil, domainerr.WrapError(ctx, err, "invalid veterinarian option", "employee", "createEmployee", "create employee")
 		}
 	}
 
-	if err := vet.validate(); err != nil {
+	if err := vet.validate(ctx); err != nil {
 		return nil, err
 	}
 

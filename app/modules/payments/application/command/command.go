@@ -29,7 +29,7 @@ type CreatePaymentCommand struct {
 	Method           enum.PaymentMethod
 	TransactionID    *string
 	Description      *string
-	DueDate          *time.Time
+	DueDate          time.Time
 	PaidAt           *time.Time
 	RefundedAt       *time.Time
 	PaidFromCustomer valueobject.CustomerID

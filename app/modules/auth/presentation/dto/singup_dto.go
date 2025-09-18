@@ -122,7 +122,7 @@ func (r *CustomerRequestSingup) ToCommand(ctx context.Context) (command.Customer
 		LastName:    r.LastName,
 		Gender:      gender,
 		DateOfBirth: r.DateOfBirth,
-		Role:        enum.UserRoleOwner,
+		Role:        enum.UserRoleCustomer,
 		CTX:         ctx,
 	}
 	return *cmd, nil

@@ -13,8 +13,9 @@ func createCommandToDomain(command CreateApptCommand) (*appt.Appointment, error)
 	}
 
 	appointmentEntity, err := appt.CreateAppointment(
+		command.ctx,
 		command.petID,
-		command.ownerID,
+		command.customerID,
 		appt.WithEmployeeID(command.vetID),
 		appt.WithService(command.service),
 		appt.WithScheduledDate(command.datetime),
@@ -30,6 +31,7 @@ func createCommandToDomain(command CreateApptCommand) (*appt.Appointment, error)
 
 func requestByCustomerCommandToDomain(command RequestApptByCustomerCommand) (*appt.Appointment, error) {
 	appointmentEntity, err := appt.CreateAppointment(
+		command.ctx,
 		command.petID,
 		command.customerID,
 		appt.WithService(command.service),

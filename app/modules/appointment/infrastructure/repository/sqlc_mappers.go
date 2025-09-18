@@ -21,7 +21,7 @@ func sqlRowToAppointment(row sqlc.Appointment) (*appointment.Appointment, error)
 		errorMessage = append(errorMessage, err.Error())
 	}
 
-	ownerID := valueobject.NewCustomerID(uint(row.CustomerID))
+	customerID := valueobject.NewCustomerID(uint(row.CustomerID))
 	reason, err := enum.ParseVisitReason(row.Reason)
 	if err != nil {
 		errorMessage = append(errorMessage, err.Error())
@@ -37,7 +37,7 @@ func sqlRowToAppointment(row sqlc.Appointment) (*appointment.Appointment, error)
 	}
 
 	return appointment.NewAppointment(
-		id, petID, ownerID,
+		id, petID, customerID,
 		appointment.WithEmployeeID(&vetID),
 		appointment.WithStatus(statusEnum),
 		appointment.WithScheduledDate(row.ScheduleDate.Time),

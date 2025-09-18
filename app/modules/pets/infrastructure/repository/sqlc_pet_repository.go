@@ -43,7 +43,7 @@ func (r *SqlcPetRepository) FindAllByCustomerID(ctx context.Context, customerID 
 	// Convert rows to entities
 	var pets []pet.Pet
 	for _, row := range petRows {
-		petEntity, err := ToDomainPet(row)
+		petEntity, err := sqlcRowToEntity(row)
 		if err != nil {
 			return nil, r.wrapConversionError(err)
 		}
@@ -55,8 +55,6 @@ func (r *SqlcPetRepository) FindAllByCustomerID(ctx context.Context, customerID 
 
 func (r *SqlcPetRepository) FindByCustomerID(ctx context.Context, customerID valueobject.CustomerID, pageInput page.PageInput) (page.Page[pet.Pet], error) {
 	offset := (pageInput.Page - 1) * pageInput.PageSize
-
-	// Get pets
 	petRows, err := r.queries.FindPetsByCustomerID(ctx, sqlc.FindPetsByCustomerIDParams{
 		CustomerID: int32(customerID.Value()),
 		Limit:      int32(pageInput.PageSize),
@@ -66,21 +64,12 @@ func (r *SqlcPetRepository) FindByCustomerID(ctx context.Context, customerID val
 		return page.Page[pet.Pet]{}, r.dbError("select", fmt.Sprintf("failed to find pets for customer ID %d", customerID.Value()), err)
 	}
 
-	// Get total count
 	total, err := r.queries.CountPetsByCustomerID(ctx, int32(customerID.Value()))
 	if err != nil {
 		return page.Page[pet.Pet]{}, r.dbError("select", fmt.Sprintf("failed to count pets for customer ID %d", customerID.Value()), err)
 	}
 
-	// Convert rows to entities
-	var pets []pet.Pet
-	for _, row := range petRows {
-		petEntity, err := ToDomainPet(row)
-		if err != nil {
-			return page.Page[pet.Pet]{}, r.wrapConversionError(err)
-		}
-		pets = append(pets, *petEntity)
-	}
+	pets, _ := sqlcRowsToEntities(petRows)
 
 	return page.NewPage(pets, *page.GetPageMetadata(int(total), pageInput)), nil
 }
@@ -94,7 +83,7 @@ func (r *SqlcPetRepository) FindByID(ctx context.Context, petID valueobject.PetI
 		return pet.Pet{}, r.dbError("select", fmt.Sprintf("failed to find pet with ID %d", petID.Value()), err)
 	}
 
-	domainPet, err := ToDomainPet(sqlPet)
+	domainPet, err := sqlcRowToEntity(sqlPet)
 	if err != nil {
 		return pet.Pet{}, r.wrapConversionError(err)
 	}
@@ -114,7 +103,7 @@ func (r *SqlcPetRepository) FindByIDAndCustomerID(ctx context.Context, id valueo
 		return pet.Pet{}, r.dbError("select", fmt.Sprintf("failed to find pet with ID %d and customer ID %d", id.Value(), customerID.Value()), err)
 	}
 
-	domainPet, err := ToDomainPet(sqlPet)
+	domainPet, err := sqlcRowToEntity(sqlPet)
 	if err != nil {
 		return pet.Pet{}, r.wrapConversionError(err)
 	}
@@ -185,7 +174,6 @@ func (r *SqlcPetRepository) update(ctx context.Context, pet *pet.Pet) error {
 	return nil
 }
 
-// softDelete performs a soft delete of a pet
 func (r *SqlcPetRepository) softDelete(ctx context.Context, petID valueobject.PetID) error {
 	if err := r.queries.SoftDeletePet(ctx, int32(petID.Value())); err != nil {
 		return r.dbError("delete", fmt.Sprintf("failed to soft delete pet with ID %d", petID.Value()), err)
@@ -193,7 +181,6 @@ func (r *SqlcPetRepository) softDelete(ctx context.Context, petID valueobject.Pe
 	return nil
 }
 
-// hardDelete performs a hard delete of a pet (if needed)
 func (r *SqlcPetRepository) hardDelete(ctx context.Context, petID valueobject.PetID) error {
 	if err := r.queries.HardDeletePet(ctx, int32(petID.Value())); err != nil {
 		return r.dbError("delete", fmt.Sprintf("failed to hard delete pet with ID %d", petID.Value()), err)

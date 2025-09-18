@@ -21,7 +21,7 @@ func (command *CreatePaymentCommand) ToDomain() (*payment.Payment, error) {
 		opts = append(opts, payment.WithDescription(*command.Description))
 	}
 
-	if command.DueDate != nil {
+	if !command.DueDate.IsZero() {
 		opts = append(opts, payment.WithDueDate(command.DueDate))
 	}
 
@@ -42,6 +42,7 @@ func (command *CreatePaymentCommand) ToDomain() (*payment.Payment, error) {
 	}
 
 	paymentEntity, err := payment.CreatePayment(
+		command.Ctx,
 		command.PaidFromCustomer,
 		opts...,
 	)

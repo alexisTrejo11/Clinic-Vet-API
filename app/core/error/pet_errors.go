@@ -1,7 +1,7 @@
 package domainerr
 
-import "clinic-vet-api/app/core/domain/valueobject"
+import "context"
 
-func PetNotFoundErr(petID valueobject.PetID) error {
-	return EntityNotFoundError("pet", petID.String())
+func PetNotFoundErr(ctx context.Context, petID string) error {
+	return EntityNotFoundError(ctx, "pet", petID, "Pet finding")
 }

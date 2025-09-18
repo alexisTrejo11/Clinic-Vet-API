@@ -1,4 +1,4 @@
-// Package repository contains the implementation of the owner repository using SQLC.
+// Package repository contains the implementation of the customer repository using SQLC.
 package repository
 
 import (
@@ -8,20 +8,20 @@ import (
 )
 
 const (
-	ErrMsgGetCustomer         = "failed to get owner"
-	ErrMsgGetCustomerByPhone  = "failed to get owner by phone"
-	ErrMsgListCustomers       = "failed to list owners"
-	ErrMsgCreateCustomer      = "failed to create owner"
-	ErrMsgUpdateCustomer      = "failed to update owner"
-	ErrMsgDeleteCustomer      = "failed to delete owner"
-	ErrMsgActivateCustomer    = "failed to activate owner"
-	ErrMsgDeactivateCustomer  = "failed to deactivate owner"
-	ErrMsgCheckExistsByPhone  = "failed to check if owner exists by phone"
-	ErrMsgCheckExistsByID     = "failed to check if owner exists by ID"
-	ErrMsgListPetsForCustomer = "failed to list pets for owner"
+	ErrMsgGetCustomer         = "failed to get customer"
+	ErrMsgGetCustomerByPhone  = "failed to get customer by phone"
+	ErrMsgListCustomers       = "failed to list customers"
+	ErrMsgCreateCustomer      = "failed to create customer"
+	ErrMsgUpdateCustomer      = "failed to update customer"
+	ErrMsgDeleteCustomer      = "failed to delete customer"
+	ErrMsgActivateCustomer    = "failed to activate customer"
+	ErrMsgDeactivateCustomer  = "failed to deactivate customer"
+	ErrMsgCheckExistsByPhone  = "failed to check if customer exists by phone"
+	ErrMsgCheckExistsByID     = "failed to check if customer exists by ID"
+	ErrMsgListPetsForCustomer = "failed to list pets for customer"
 	ErrMsgConvertToDomain     = "failed to convert to domain entity"
-	ErrMsgCountCustomers      = "failed to count owners"
-	ErrMsgCreateCustomerID    = "failed to create owner ID from result"
+	ErrMsgCountCustomers      = "failed to count customers"
+	ErrMsgCreateCustomerID    = "failed to create customer ID from result"
 )
 
 const (

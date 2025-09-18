@@ -51,7 +51,7 @@ func (h *apptCommandHandler) CancelAppointment(command CancelApptCommand) cqrs.C
 		return *cqrs.FailureResult(ErrApptNotFound, err)
 	}
 
-	if err := appointment.Cancel(); err != nil {
+	if err := appointment.Cancel(command.ctx); err != nil {
 		return *cqrs.FailureResult(ErrFailedToCancel, err)
 	}
 
@@ -68,7 +68,7 @@ func (h *apptCommandHandler) ConfirmAppointment(command ConfirmApptCommand) cqrs
 		return *cqrs.FailureResult("appointment not found", err)
 	}
 
-	if err := appointment.Confirm(command.employeeID); err != nil {
+	if err := appointment.Confirm(command.ctx, command.employeeID); err != nil {
 		return *cqrs.FailureResult("failed to confirm appointment", err)
 	}
 
@@ -105,7 +105,7 @@ func (h *apptCommandHandler) RescheduleAppointment(command RescheduleApptCommand
 		return *cqrs.FailureResult("appointment not found", err)
 	}
 
-	if err := appointment.Reschedule(command.datetime); err != nil {
+	if err := appointment.Reschedule(command.ctx, command.datetime); err != nil {
 		return *cqrs.FailureResult("failed to reschedule appointment", err)
 	}
 
@@ -122,7 +122,7 @@ func (h *apptCommandHandler) MarkAppointmentAsNotAttend(command NotAttendApptCom
 		return *cqrs.FailureResult(ErrApptNotFound, err)
 	}
 
-	if err := appointment.MarkAsNotPresented(); err != nil {
+	if err := appointment.MarkAsNotPresented(command.ctx); err != nil {
 		return *cqrs.FailureResult(ErrMarkAsNotPresentedFailed, err)
 	}
 
@@ -139,7 +139,7 @@ func (h *apptCommandHandler) CompleteAppointment(command CompleteApptCommand) cq
 		return *cqrs.FailureResult(ErrApptNotFound, err)
 	}
 
-	if err := appointment.Complete(); err != nil {
+	if err := appointment.Complete(command.ctx); err != nil {
 		return *cqrs.FailureResult("failed to complete appointment", err)
 	}
 
@@ -156,7 +156,7 @@ func (h *apptCommandHandler) UpdateAppointment(command UpdateApptCommand) cqrs.C
 		return *cqrs.FailureResult(ErrApptNotFound, err)
 	}
 
-	if err := appointment.Update(command.notes, command.vetID, command.service, command.reason); err != nil {
+	if err := appointment.Update(command.ctx, command.notes, command.vetID, command.service, command.reason); err != nil {
 		return *cqrs.FailureResult(ErrUpdateApptFailed, err)
 	}
 

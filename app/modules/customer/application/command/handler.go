@@ -60,7 +60,7 @@ func (h *customerCommandHandler) Deactivate(command DeactivateCustomerCommand) c
 		return *cqrs.FailureResult("an error ocurred finding customer", err)
 	}
 
-	err = customer.Deactivate()
+	err = customer.Deactivate(command.CTX)
 	if err != nil {
 		return *cqrs.FailureResult("an error ocurred deactivating customer", err)
 	}

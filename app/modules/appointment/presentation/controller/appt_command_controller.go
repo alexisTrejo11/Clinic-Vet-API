@@ -10,6 +10,7 @@ import (
 	httpError "clinic-vet-api/app/shared/error/infrastructure/http"
 	ginUtils "clinic-vet-api/app/shared/gin_utils"
 	"clinic-vet-api/app/shared/response"
+
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )
@@ -27,14 +28,9 @@ func NewApptCommandController(bus bus.AppointmentBus, validate *validator.Valida
 }
 
 func (ctrl *AppointmentCommandController) CreateAppointment(c *gin.Context, employeeID *uint) {
-	var requestCreateData *dto.CreateApptRequest
-	if err := c.ShouldBindJSON(&requestCreateData); err != nil {
-		response.BadRequest(c, httpError.RequestBodyDataError(err))
-		return
-	}
-
-	if err := ctrl.validate.Struct(&requestCreateData); err != nil {
-		response.BadRequest(c, httpError.InvalidDataError(err))
+	var requestCreateData dto.CreateApptRequest
+	if err := ginUtils.BindAndValidateBody(c, &requestCreateData, ctrl.validate); err != nil {
+		response.BadRequest(c, err)
 		return
 	}
 
@@ -50,18 +46,13 @@ func (ctrl *AppointmentCommandController) CreateAppointment(c *gin.Context, empl
 		return
 	}
 
-	response.Created(c, result.ToMap(), "Appointment")
+	response.Created(c, result.ID(), "Appointment")
 }
 
 func (ctrl *AppointmentCommandController) UpdateAppointment(c *gin.Context) {
-	var updateAppointData *dto.UpdateApptRequest
-	if err := c.ShouldBindJSON(&updateAppointData); err != nil {
-		response.BadRequest(c, httpError.RequestBodyDataError(err))
-		return
-	}
-
-	if err := ctrl.validate.Struct(&updateAppointData); err != nil {
-		response.BadRequest(c, httpError.InvalidDataError(err))
+	var updateAppointData dto.UpdateApptRequest
+	if err := ginUtils.BindAndValidateBody(c, &updateAppointData, ctrl.validate); err != nil {
+		response.BadRequest(c, err)
 		return
 	}
 
@@ -131,7 +122,7 @@ func (ctrl *AppointmentCommandController) NotAttend(c *gin.Context, employeeID *
 		return
 	}
 
-	response.Success(c, result.ToMap(), "Appointment marked as not attended")
+	response.Success(c, nil, result.Message())
 }
 
 func (ctrl *AppointmentCommandController) ConfirmAppointment(c *gin.Context, employeeID uint) {
@@ -140,13 +131,16 @@ func (ctrl *AppointmentCommandController) ConfirmAppointment(c *gin.Context, emp
 		response.BadRequest(c, httpError.RequestURLParamError(err, "id", c.Param("id")))
 		return
 	}
+
 	confirmApptCommand := command.NewConfirmAppointmentCommand(c.Request.Context(), appointmentID, employeeID)
+
 	result := ctrl.bus.CommandBus.ConfirmAppointment(*confirmApptCommand)
 	if !result.IsSuccess() {
 		response.ApplicationError(c, result.Error())
 		return
 	}
-	response.Success(c, result.ToMap(), "Appointment confirmed successfully")
+
+	response.Success(c, nil, result.Message())
 }
 
 func (ctrl *AppointmentCommandController) CompleteAppointment(c *gin.Context, employeeID *uint) {

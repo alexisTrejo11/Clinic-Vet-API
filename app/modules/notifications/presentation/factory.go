@@ -3,13 +3,13 @@ package api
 import (
 	"os"
 
+	"clinic-vet-api/app/config"
 	service "clinic-vet-api/app/modules/notifications/application"
 	repositoryimpl "clinic-vet-api/app/modules/notifications/infrastructure/repository"
 	"clinic-vet-api/app/modules/notifications/infrastructure/sending/email"
 	"clinic-vet-api/app/modules/notifications/infrastructure/sending/sms"
 	"clinic-vet-api/app/modules/notifications/presentation/controller"
 	"clinic-vet-api/app/modules/notifications/presentation/routes"
-	"clinic-vet-api/config"
 
 	"github.com/gin-gonic/gin"
 	"github.com/twilio/twilio-go"

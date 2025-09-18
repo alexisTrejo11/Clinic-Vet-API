@@ -22,14 +22,14 @@ type PetUseCases interface {
 }
 
 type petUseCase struct {
-	petRepository   repository.PetRepository
-	ownerRepository repository.CustomerRepository
+	petRepository      repository.PetRepository
+	customerRepository repository.CustomerRepository
 }
 
-func NewPetUseCases(petRepo repository.PetRepository, ownerRepo repository.CustomerRepository) PetUseCases {
+func NewPetUseCases(petRepo repository.PetRepository, customerRepo repository.CustomerRepository) PetUseCases {
 	return &petUseCase{
-		petRepository:   petRepo,
-		ownerRepository: ownerRepo,
+		petRepository:      petRepo,
+		customerRepository: customerRepo,
 	}
 }
 
@@ -54,12 +54,12 @@ func (f *petUseCase) FindPetByIDAndCustomerID(ctx context.Context, petID valueob
 }
 
 func (f *petUseCase) CreatePet(ctx context.Context, petCreate dto.CreatePetData) (dto.PetResponse, error) {
-	useCase := NewCreatePetUseCase(f.petRepository, f.ownerRepository)
+	useCase := NewCreatePetUseCase(f.petRepository, f.customerRepository)
 	return useCase.Execute(ctx, petCreate)
 }
 
 func (f *petUseCase) UpdatePet(ctx context.Context, petUpdate dto.PetUpdateData) (dto.PetResponse, error) {
-	useCase := NewUpdatePetUseCase(f.petRepository, f.ownerRepository)
+	useCase := NewUpdatePetUseCase(f.petRepository, f.customerRepository)
 	return useCase.Execute(ctx, petUpdate)
 }
 

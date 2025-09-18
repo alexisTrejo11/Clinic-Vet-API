@@ -22,6 +22,7 @@ func ToEntityFromCreate(command *CreateMedHistCommand) (*medical.MedicalHistory,
 	}
 
 	entity, err := medical.CreateMedicalHistory(
+		command.CTX,
 		command.PetID,
 		command.CustomerID,
 		command.EmployeeID,
@@ -31,7 +32,7 @@ func ToEntityFromCreate(command *CreateMedHistCommand) (*medical.MedicalHistory,
 		medical.WithVisitReason(visitReason),
 		medical.WithCondition(condition),
 		medical.WithTreatment(command.Treatment),
-		medical.WithNotes(*command.Notes), // command.Notes es *string
+		medical.WithNotes(*command.Notes),
 	)
 	if err != nil {
 		return nil, err

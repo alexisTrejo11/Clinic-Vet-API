@@ -12,17 +12,17 @@ import (
 )
 
 type CreatePetUseCase struct {
-	petRepository   repository.PetRepository
-	ownerRepository repository.CustomerRepository
+	petRepository      repository.PetRepository
+	customerRepository repository.CustomerRepository
 }
 
 func NewCreatePetUseCase(
 	petRepository repository.PetRepository,
-	ownerRepository repository.CustomerRepository,
+	customerRepository repository.CustomerRepository,
 ) *CreatePetUseCase {
 	return &CreatePetUseCase{
-		petRepository:   petRepository,
-		ownerRepository: ownerRepository,
+		petRepository:      petRepository,
+		customerRepository: customerRepository,
 	}
 }
 
@@ -44,7 +44,7 @@ func (uc CreatePetUseCase) Execute(ctx context.Context, petCreate dto.CreatePetD
 }
 
 func (uc CreatePetUseCase) validateCustomer(ctx context.Context, customerID valueobject.CustomerID) error {
-	if exists, err := uc.ownerRepository.ExistsByID(ctx, customerID); err != nil {
+	if exists, err := uc.customerRepository.ExistsByID(ctx, customerID); err != nil {
 		return err
 	} else if !exists {
 		return apperror.EntityNotFoundValidationError("customer", "id", customerID.String())

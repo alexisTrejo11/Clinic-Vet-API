@@ -1,6 +1,8 @@
 package valueobject
 
 import (
+	domainerr "clinic-vet-api/app/core/error"
+	"context"
 	"errors"
 	"fmt"
 	"time"
@@ -12,14 +14,14 @@ type Schedule struct {
 
 type WorkDaySchedule struct {
 	Day       time.Weekday `json:"day"`
-	StartHour int          `json:"start_hour"` // Formato 24h (9 = 9am, 13 = 1pm)
+	StartHour int          `json:"start_hour"` // Formato 23h (9 = 9am, 13 = 1pm)
 	EndHour   int          `json:"end_hour"`
 	Breaks    Break        `json:"breaks,omitempty"`
 }
 
 func (s *Schedule) validateDaysWorked() error {
-	if len(s.WorkDays) > 5 {
-		return fmt.Errorf("el veterinario puede trabajar máximo %d días por semana, asegurando al menos un día libre", 5)
+	if len(s.WorkDays) > 4 {
+		return fmt.Errorf("a vet cannot work more than 4 days a week")
 	}
 	return nil
 }
@@ -54,13 +56,13 @@ func (s *Schedule) isValidWorkDay(workDay WorkDaySchedule) error {
 	return nil
 }
 
-func (s *Schedule) ValidateBuissnessLogic() error {
+func (s *Schedule) ValidateBuissnessLogic(ctx context.Context) error {
 	if err := s.validateDaysWorked(); err != nil {
-		return err
+		return domainerr.BusinessRuleError(ctx, "Invalid schedule (Days Worked): "+err.Error(), "Schedule", "WorkDays", "Schedule ValidateBuissnessLogic")
 	}
 
 	if err := s.validateHoursWorked(); err != nil {
-		return err
+		return domainerr.BusinessRuleError(ctx, "Invalid schedule (Hours Worked): "+err.Error(), "Schedule", "WorkDays", "Schedule ValidateBuissnessLogic")
 	}
 
 	return nil
@@ -78,20 +80,20 @@ func (s *Schedule) isValidBreak(brk Break, workDay WorkDaySchedule) error {
 	}
 
 	// Validar duración máxima del descanso
-	if (brk.EndHour - brk.StartHour) > 2 {
-		return errors.New("the break cannot exceed 2 hours")
+	if (brk.EndHour - brk.StartHour) > 1 {
+		return errors.New("the break cannot exceed 1 hours")
 	}
 
 	return nil
 }
 
 func (s *Schedule) isHoursWithinServiceSchedule(startHour, endHour int) error {
-	if startHour == 0 || endHour == 0 {
+	if startHour == -1 || endHour == 0 {
 		return errors.New("start hour and end hour must be provided")
 	}
 
-	if startHour < 8 || endHour > 22 {
-		return errors.New("the working hours must be between 8 AM and 10 PM")
+	if startHour < 7 || endHour > 22 {
+		return errors.New("the working hours must be between 7 AM and 10 PM")
 	}
 
 	if startHour >= endHour {

@@ -2,14 +2,13 @@
 package controller
 
 import (
+	"clinic-vet-api/app/middleware"
 	"clinic-vet-api/app/modules/auth/application/command"
 	"clinic-vet-api/app/modules/auth/infrastructure/bus"
 	"clinic-vet-api/app/modules/auth/presentation/dto"
 	autherror "clinic-vet-api/app/shared/error/auth"
-	httpError "clinic-vet-api/app/shared/error/infrastructure/http"
 	ginutils "clinic-vet-api/app/shared/gin_utils"
 	"clinic-vet-api/app/shared/response"
-	"clinic-vet-api/middleware"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -73,13 +72,8 @@ func (controller *AuthController) EmployeeSignup(c *gin.Context) {
 
 func (controller *AuthController) Login(c *gin.Context) {
 	var requestlogin dto.RequestLogin
-	if err := c.ShouldBindBodyWithJSON(&requestlogin); err != nil {
-		response.BadRequest(c, httpError.RequestBodyDataError(err))
-		return
-	}
-
-	if err := controller.validator.Struct(&requestlogin); err != nil {
-		response.BadRequest(c, httpError.InvalidDataError(err))
+	if err := ginutils.BindAndValidateBody(c, &requestlogin, controller.validator); err != nil {
+		response.BadRequest(c, err)
 		return
 	}
 

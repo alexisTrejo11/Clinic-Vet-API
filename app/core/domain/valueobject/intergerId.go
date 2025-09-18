@@ -80,7 +80,7 @@ func NewIDFactory(value uint, entity string) (IntegerID, error) {
 		return NewEmployeeID(value), nil
 	case "user":
 		return NewUserID(value), nil
-	case "customer", "owner":
+	case "owner", "customer":
 		return NewCustomerID(value), nil
 	case "medical_history", "medicalhistory":
 		return NewMedHistoryID(value), nil

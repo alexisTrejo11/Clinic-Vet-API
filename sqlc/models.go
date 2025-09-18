@@ -44,7 +44,7 @@ type Employee struct {
 	LastName          string
 	Photo             string
 	LicenseNumber     string
-	Speciality        interface{}
+	Speciality        models.VeterinarianSpeciality
 	YearsOfExperience int32
 	IsActive          bool
 	UserID            pgtype.Int4

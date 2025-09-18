@@ -104,7 +104,7 @@ func (e UserStatus) Value() (driver.Value, error) {
 type UserRole string
 
 const (
-	UserRoleOwner        UserRole = "owner"
+	UserRoleCustomer     UserRole = "customer"
 	UserRoleReceptionist UserRole = "receptionist"
 	UserRoleVeterinarian UserRole = "veterinarian"
 	UserRoleAdmin        UserRole = "admin"

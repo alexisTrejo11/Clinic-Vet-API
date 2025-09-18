@@ -35,7 +35,7 @@ type PetUpdateData struct {
 	Color              *string                 `json:"color,omitempty" validate:"omitempty,min=2,max=50"`
 	Microchip          *string                 `json:"microchip,omitempty" validate:"omitempty,len=15,numeric"`
 	IsNeutered         *bool                   `json:"is_neutered,omitempty"`
-	CustomerID         *valueobject.CustomerID `json:"owner_id,omitempty" validate:"omitempty,gt=0"`
+	CustomerID         *valueobject.CustomerID `json:"customer_id,omitempty" validate:"omitempty,gt=0"`
 	Allergies          *string                 `json:"allergies,omitempty" validate:"omitempty,max=500"`
 	CurrentMedications *string                 `json:"current_medications,omitempty" validate:"omitempty,max=500"`
 	SpecialNeeds       *string                 `json:"special_needs,omitempty" validate:"omitempty,max=500"`

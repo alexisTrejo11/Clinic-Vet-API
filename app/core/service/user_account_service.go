@@ -62,6 +62,7 @@ func (s *userAccountService) CreateProfile(ctx context.Context, userID valueobje
 
 func (s *userAccountService) CreateCustomer(ctx context.Context, userID valueobject.UserID, personalData commondto.PersonalData) (valueobject.CustomerID, error) {
 	cust, err := customer.CreateCustomer(
+		ctx,
 		customer.WithIsActive(true),
 		customer.WithUserID(&userID),
 		customer.WithDateOfBirth(personalData.DateOfBirth),
@@ -145,7 +146,7 @@ func (s *userAccountService) AttachEmployeeToUser(ctx context.Context, userID va
 		return err
 	}
 
-	if err := employee.AssignUser(user.ID()); err != nil {
+	if err := employee.AssignUser(ctx, user.ID()); err != nil {
 		return err
 	}
 

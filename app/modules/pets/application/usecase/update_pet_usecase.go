@@ -10,14 +10,14 @@ import (
 )
 
 type UpdatePetUseCase struct {
-	petRepository   repository.PetRepository
-	ownerRepository repository.CustomerRepository
+	petRepository      repository.PetRepository
+	customerRepository repository.CustomerRepository
 }
 
-func NewUpdatePetUseCase(petRepository repository.PetRepository, ownerRepository repository.CustomerRepository) *UpdatePetUseCase {
+func NewUpdatePetUseCase(petRepository repository.PetRepository, customerRepository repository.CustomerRepository) *UpdatePetUseCase {
 	return &UpdatePetUseCase{
-		petRepository:   petRepository,
-		ownerRepository: ownerRepository,
+		petRepository:      petRepository,
+		customerRepository: customerRepository,
 	}
 }
 
@@ -28,20 +28,20 @@ func (uc UpdatePetUseCase) Execute(ctx context.Context, petUpdate dto.PetUpdateD
 	}
 
 	if petUpdate.CustomerID != nil {
-		if err := uc.validate_owner(ctx, *petUpdate.CustomerID); err != nil {
+		if err := uc.validate_customer(ctx, *petUpdate.CustomerID); err != nil {
 			return dto.PetResponse{}, err
 		}
 	}
 
-	mapper.ToDomainFromUpdate(&pet, petUpdate)
+	mapper.ToDomainFromUpdate(ctx, &pet, petUpdate)
 	if err := uc.petRepository.Save(ctx, &pet); err != nil {
 		return dto.PetResponse{}, err
 	}
 	return mapper.ToResponse(&pet), nil
 }
 
-func (uc UpdatePetUseCase) validate_owner(ctx context.Context, customerID valueobject.CustomerID) error {
-	_, err := uc.ownerRepository.FindByID(ctx, customerID)
+func (uc UpdatePetUseCase) validate_customer(ctx context.Context, customerID valueobject.CustomerID) error {
+	_, err := uc.customerRepository.FindByID(ctx, customerID)
 	if err != nil {
 		return err
 	}

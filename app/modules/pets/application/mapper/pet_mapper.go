@@ -2,7 +2,9 @@
 package mapper
 
 import (
+	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"clinic-vet-api/app/core/domain/entity/pet"
@@ -82,8 +84,88 @@ func ToDomainFromCreate(dto dto.CreatePetData) (*pet.Pet, error) {
 	return petEntity, nil
 }
 
-// TODO: implement ToDomainFromUpdate
-func ToDomainFromUpdate(pet *pet.Pet, dto dto.PetUpdateData) {
+func ToDomainFromUpdate(ctx context.Context, p *pet.Pet, dto dto.PetUpdateData) error {
+	var options []pet.PetUpdateOption
+	var errors []error
+
+	if dto.Name != nil {
+		options = append(options, pet.UpdateName(*dto.Name))
+	}
+
+	if dto.Photo != nil {
+		options = append(options, pet.UpdatePhoto(dto.Photo))
+	}
+
+	if dto.Species != nil {
+		options = append(options, pet.UpdateSpecies(*dto.Species))
+	}
+
+	if dto.Breed != nil {
+		options = append(options, pet.UpdateBreed(dto.Breed))
+	}
+
+	if dto.Age != nil {
+		options = append(options, pet.UpdateAge(dto.Age))
+	}
+
+	if dto.Gender != nil {
+		petGender, err := enum.ParsePetGender(*dto.Gender)
+		if err != nil {
+			errors = append(errors, fmt.Errorf("gender: %w", err))
+		} else {
+			options = append(options, pet.UpdateGender(&petGender))
+		}
+	}
+
+	if dto.Weight != nil {
+		options = append(options, pet.UpdateWeight(dto.Weight))
+	}
+
+	if dto.Color != nil {
+		options = append(options, pet.UpdateColor(dto.Color))
+	}
+
+	if dto.Microchip != nil {
+		options = append(options, pet.UpdateMicrochip(dto.Microchip))
+	}
+
+	if dto.IsNeutered != nil {
+		options = append(options, pet.UpdateIsNeutered(dto.IsNeutered))
+	}
+
+	if dto.CustomerID != nil {
+		options = append(options, pet.UpdateCustomerID(*dto.CustomerID))
+	}
+
+	if dto.Allergies != nil {
+		options = append(options, pet.UpdateAllergies(dto.Allergies))
+	}
+
+	if dto.CurrentMedications != nil {
+		options = append(options, pet.UpdateMedications(dto.CurrentMedications))
+	}
+
+	if dto.SpecialNeeds != nil {
+		options = append(options, pet.UpdateSpecialNeeds(dto.SpecialNeeds))
+	}
+
+	if dto.IsActive != nil {
+		options = append(options, pet.UpdateIsActive(*dto.IsActive))
+	}
+
+	if len(errors) > 0 {
+		var errorMsgs []string
+		for _, err := range errors {
+			errorMsgs = append(errorMsgs, err.Error())
+		}
+		return fmt.Errorf("parsing errors: %v", strings.Join(errorMsgs, "; "))
+	}
+
+	if err := p.Update(ctx, options...); err != nil {
+		return fmt.Errorf("update failed: %w", err)
+	}
+
+	return nil
 }
 
 func ToResponse(pet *pet.Pet) dto.PetResponse {

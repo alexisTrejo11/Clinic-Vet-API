@@ -1,6 +1,8 @@
 package valueobject
 
 import (
+	domainerr "clinic-vet-api/app/core/error"
+	"context"
 	"errors"
 	"fmt"
 	"regexp"
@@ -76,13 +78,13 @@ type PhoneNumber struct {
 
 func NewPhoneNumber(phone string) (PhoneNumber, error) {
 	if phone == "" {
-		return PhoneNumber{}, errors.New("phone number cannot be empty")
+		return PhoneNumber{}, domainerr.InvalidFieldFormat(context.Background(), "phone", "", "phone number cannot be empty", "create phone number")
 	}
 
 	cleaned := regexp.MustCompile(`[^\d+]`).ReplaceAllString(phone, "")
 
 	if len(cleaned) < 10 {
-		return PhoneNumber{}, errors.New("phone number too short")
+		return PhoneNumber{}, domainerr.InvalidFieldFormat(context.Background(), "phone", "too short", "phone number must have at least 10 digits", "create phone number")
 	}
 
 	return PhoneNumber{value: cleaned}, nil
@@ -106,11 +108,11 @@ func NewPersonName(firstName, lastName string) (PersonName, error) {
 	lastName = strings.TrimSpace(lastName)
 
 	if firstName == "" {
-		return PersonName{}, errors.New("first name cannot be empty")
+		return PersonName{}, domainerr.InvalidFieldValue(context.Background(), "first_name", "empty", "first name cannot be empty", "create name")
 	}
 
 	if lastName == "" {
-		return PersonName{}, errors.New("last name cannot be empty")
+		return PersonName{}, domainerr.InvalidFieldValue(context.Background(), "last_name", "empty", "last name cannot be empty", "create name")
 	}
 
 	return PersonName{

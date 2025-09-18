@@ -1,12 +1,12 @@
 package pet
 
 import (
+	"context"
 	"time"
 
 	"clinic-vet-api/app/core/domain/entity/base"
 	"clinic-vet-api/app/core/domain/enum"
 	"clinic-vet-api/app/core/domain/valueobject"
-	domainerr "clinic-vet-api/app/core/error"
 )
 
 // PetOption defines the functional option type
@@ -117,27 +117,91 @@ func WithIsActive(isActive bool) PetOption {
 	}
 }
 
-// NewPet creates a new Pet with functional options
-func NewPet(id valueobject.PetID, customerID valueobject.CustomerID, opts ...PetOption) (*Pet, error) {
+func (p *Pet) validate(ctx context.Context) error {
+	operation := "ValidatePet"
+
+	if p.customerID.IsZero() {
+		return CustomerIDRequiredError(ctx, operation)
+	}
+
+	if p.name == "" {
+		return NameRequiredError(ctx, operation)
+	}
+	if len(p.name) > 100 {
+		return NameTooLongError(ctx, len(p.name), operation)
+	}
+
+	if p.species == "" {
+		return SpeciesRequiredError(ctx, operation)
+	}
+	if len(p.species) > 50 {
+		return SpeciesTooLongError(ctx, len(p.species), operation)
+	}
+
+	if p.age != nil {
+		if *p.age < 0 {
+			return AgeInvalidError(ctx, *p.age, operation)
+		}
+		if *p.age > 50 {
+			return AgeUnrealisticError(ctx, *p.age, operation)
+		}
+	}
+
+	if p.weight != nil {
+		if *p.weight <= 0 {
+			return WeightInvalidError(ctx, *p.weight, operation)
+		}
+		if *p.weight > 1000 {
+			return WeightUnrealisticError(ctx, *p.weight, operation)
+		}
+	}
+
+	if p.gender != nil && !p.gender.IsValid() {
+		return GenderInvalidError(ctx, *p.gender, operation)
+	}
+
+	if p.breed != nil && len(*p.breed) > 50 {
+		return BreedTooLongError(ctx, len(*p.breed), operation)
+	}
+
+	if p.microchip != nil && len(*p.microchip) > 50 {
+		return MicrochipTooLongError(ctx, len(*p.microchip), operation)
+	}
+
+	if p.color != nil && len(*p.color) > 30 {
+		return ColorTooLongError(ctx, len(*p.color), operation)
+	}
+
+	if p.photo != nil && len(*p.photo) > 500 {
+		return PhotoURLTooLongError(ctx, len(*p.photo), operation)
+	}
+
+	if p.currentMedications != nil && len(*p.currentMedications) > 500 {
+		return MedicationsTooLongError(ctx, len(*p.currentMedications), operation)
+	}
+
+	if p.allergies != nil && len(*p.allergies) > 500 {
+		return AllergiesTooLongError(ctx, len(*p.allergies), operation)
+	}
+
+	if p.specialNeeds != nil && len(*p.specialNeeds) > 500 {
+		return SpecialNeedsTooLongError(ctx, len(*p.specialNeeds), operation)
+	}
+
+	return nil
+}
+
+func NewPetWithContext(
+	ctx context.Context,
+	id valueobject.PetID,
+	customerID valueobject.CustomerID,
+	opts ...PetOption,
+) (*Pet, error) {
+
 	pet := &Pet{
 		Entity:     base.NewEntity(id, time.Now(), time.Now(), 1),
 		customerID: customerID,
-		isActive:   true, // Default to active
-	}
-
-	for _, opt := range opts {
-		if err := opt(pet); err != nil {
-			return nil, err
-		}
-	}
-	return pet, nil
-}
-
-func CreatePet(customerID valueobject.CustomerID, opts ...PetOption) (*Pet, error) {
-	pet := &Pet{
-		Entity:     base.NewEntity(valueobject.PetID{}, time.Now(), time.Now(), 1),
-		customerID: customerID,
-		isActive:   true, // Default to active
+		isActive:   true,
 	}
 
 	for _, opt := range opts {
@@ -146,81 +210,47 @@ func CreatePet(customerID valueobject.CustomerID, opts ...PetOption) (*Pet, erro
 		}
 	}
 
-	if err := pet.validate(); err != nil {
+	if err := pet.validate(ctx); err != nil {
 		return nil, err
 	}
 	return pet, nil
 }
 
-// Validation
-func (p *Pet) validate() error {
-	if p.currentMedications != nil && len(*p.currentMedications) > 500 {
-		return domainerr.NewValidationError("pet", "medications", "medications too long")
+func CreatePetWithContext(
+	ctx context.Context,
+	customerID valueobject.CustomerID,
+	opts ...PetOption,
+) (*Pet, error) {
+	operation := "CreatePetWithContext"
+
+	if customerID.IsZero() {
+		return nil, CustomerIDRequiredError(ctx, operation)
 	}
 
-	if p.age != nil && *p.age < 0 {
-		return domainerr.NewValidationError("pet", "age", "age cannot be negative")
-	}
-	if p.age != nil && *p.age > 50 {
-		return domainerr.NewValidationError("pet", "age", "age seems unrealistic")
-	}
-
-	if p.breed != nil && len(*p.breed) > 50 {
-		return domainerr.NewValidationError("pet", "breed", "breed too long")
+	pet := &Pet{
+		Entity:     base.NewEntity(valueobject.PetID{}, time.Now(), time.Now(), 1),
+		customerID: customerID,
+		isActive:   true,
 	}
 
-	if p.microchip != nil && len(*p.microchip) > 50 {
-		return domainerr.NewValidationError("pet", "microchip", "microchip too long")
+	for _, opt := range opts {
+		if err := opt(pet); err != nil {
+			return nil, err
+		}
 	}
 
-	if p.specialNeeds != nil && len(*p.specialNeeds) > 500 {
-		return domainerr.NewValidationError("pet", "specialNeeds", "special needs too long")
+	if err := pet.validate(ctx); err != nil {
+		return nil, err
 	}
+	return pet, nil
+}
 
-	if p.allergies != nil && len(*p.allergies) > 500 {
-		return domainerr.NewValidationError("pet", "allergies", "allergies too long")
-	}
+func NewPet(id valueobject.PetID, customerID valueobject.CustomerID, opts ...PetOption) (*Pet, error) {
+	ctx := context.Background()
+	return NewPetWithContext(ctx, id, customerID, opts...)
+}
 
-	if p.color != nil && len(*p.color) > 30 {
-		return domainerr.NewValidationError("pet", "color", "color too long")
-	}
-
-	if p.name == "" {
-		return domainerr.NewValidationError("pet", "name", "name is required")
-	}
-
-	if p.weight != nil && *p.weight <= 0 {
-		return domainerr.NewValidationError("pet", "weight", "weight must be positive")
-	}
-	if p.weight != nil && *p.weight > 1000 {
-		return domainerr.NewValidationError("pet", "weight", "weight seems unrealistic")
-	}
-
-	if p.gender != nil && !p.gender.IsValid() {
-		return domainerr.NewValidationError("pet", "gender", "invalid gender")
-	}
-
-	if p.species == "" {
-		return domainerr.NewValidationError("pet", "species", "species is required")
-	}
-
-	if p.species == "" {
-		return domainerr.NewValidationError("pet", "species", "species is required")
-	}
-	if len(p.species) > 50 {
-		return domainerr.NewValidationError("pet", "species", "species too long")
-	}
-
-	if p.photo != nil && len(*p.photo) > 500 {
-		return domainerr.NewValidationError("pet", "photo", "photo URL too long")
-	}
-
-	if p.name == "" {
-		return domainerr.NewValidationError("pet", "name", "name is required")
-	}
-	if len(p.name) > 100 {
-		return domainerr.NewValidationError("pet", "name", "name too long")
-	}
-
-	return nil
+func CreatePet(customerID valueobject.CustomerID, opts ...PetOption) (*Pet, error) {
+	ctx := context.Background()
+	return CreatePetWithContext(ctx, customerID, opts...)
 }

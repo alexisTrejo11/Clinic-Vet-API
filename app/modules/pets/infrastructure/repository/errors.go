@@ -12,7 +12,7 @@ const (
 
 	// Mensajes de error específicos
 	ErrMsgFindPet             = "failed to get pet"
-	ErrMsgFindPetByCustomerID = "failed to get pet by owner ID"
+	ErrMsgFindPetByCustomerID = "failed to get pet by customer ID"
 	ErrMsgFindPets            = "failed to list pets"
 	ErrMsgSearchPets          = "failed to search pets"
 	ErrMsgCreatePet           = "failed to create pet"

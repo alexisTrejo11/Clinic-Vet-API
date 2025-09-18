@@ -2,10 +2,10 @@
 package controller
 
 import (
+	"clinic-vet-api/app/middleware"
 	"clinic-vet-api/app/modules/appointment/infrastructure/bus"
 	"clinic-vet-api/app/modules/appointment/presentation/dto"
 	"clinic-vet-api/app/shared/response"
-	"clinic-vet-api/middleware"
 	"errors"
 
 	authError "clinic-vet-api/app/shared/error/auth"
@@ -16,15 +16,15 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-type OwnerQueryExtraArgs struct {
+type customerQueryExtraArgs struct {
 	PetID  *uint
 	Status *string
 }
 
-// CustomerAppointmetController handles owner-specific appointment operations
-// @title Veterinary Clinic API - Owner Appt Management
+// CustomerAppointmetController handles customer-specific appointment operations
+// @title Veterinary Clinic API - customer Appt Management
 // @version 1.0
-// @description This controller manages appointment operations specific to pet owners including scheduling, rescheduling, and viewing appointments
+// @description This controller manages appointment operations specific to pet customers including scheduling, rescheduling, and viewing appointments
 // @securityDefinitions.apikey BearerAuth
 // @in header
 // @name Authorization
@@ -44,13 +44,13 @@ func NewCustomerApptControleer(bus *bus.AppointmentBus, validator *validator.Val
 
 // RequestAppt godoc
 // @Summary Request a new appointment
-// @Description Owner creates a new appointment request for their pet
-// @Tags owner-appointments
+// @Description customer creates a new appointment request for their pet
+// @Tags customer-appointments
 // @Accept json
 // @Produce json
 // @Param appointment body command.CreateApptCommand true "Appointment details"
 // @Security BearerAuth
-// @Router /owner/appointments [post]
+// @Router /customer/appointments [post]
 func (ctrl *CustomerAppointmetController) RequestAppointment(c *gin.Context) {
 	userCtx, exists := middleware.GetUserFromContext(c)
 	if !exists {
@@ -84,15 +84,15 @@ func (ctrl *CustomerAppointmetController) RequestAppointment(c *gin.Context) {
 }
 
 // GetMyAppts godoc
-// @Summary Get owner's appointments
-// @Description Retrieves a list of all appointments for the authenticated owner
-// @Tags owner-appointments
+// @Summary Get customer's appointments
+// @Description Retrieves a list of all appointments for the authenticated customer
+// @Tags customer-appointments
 // @Accept json
 // @Produce json
 // @Param page query int false "Page number" default(1)
 // @Param limit query int false "Items per page" default(10)
 // @Security BearerAuth
-// @Router /owner/appointments [get]
+// @Router /customer/appointments [get]
 func (ctrl *CustomerAppointmetController) GetMyAppointments(c *gin.Context) {
 	userCtx, exists := middleware.GetUserFromContext(c)
 	if !exists {
@@ -100,7 +100,7 @@ func (ctrl *CustomerAppointmetController) GetMyAppointments(c *gin.Context) {
 		return
 	}
 
-	noArgs := OwnerQueryExtraArgs{}
+	noArgs := customerQueryExtraArgs{}
 	ctrl.queryController.FindAppointmentsByCustomer(c, userCtx.CustomerID, noArgs)
 }
 
@@ -117,15 +117,15 @@ func (ctrl *CustomerAppointmetController) GetMyAppointmentByID(c *gin.Context) {
 
 // GetApptsByPet godoc
 // @Summary Get appointments for a specific pet
-// @Description Retrieves all appointments for a specific pet owned by the authenticated owner
-// @Tags owner-appointments
+// @Description Retrieves all appointments for a specific pet owned by the authenticated customer
+// @Tags customer-appointments
 // @Accept json
 // @Produce json
 // @Param petID path int true "Pet ID"
 // @Param page query int false "Page number" default(1)
 // @Param limit query int false "Items per page" default(10)
 // @Security BearerAuth
-// @Router /owner/appointments/pet/{petID} [get]
+// @Router /customer/appointments/pet/{petID} [get]
 func (ctrl *CustomerAppointmetController) GetAppointmentsByPet(c *gin.Context) {
 	userCTX, exists := middleware.GetUserFromContext(c)
 	if !exists {
@@ -139,20 +139,20 @@ func (ctrl *CustomerAppointmetController) GetAppointmentsByPet(c *gin.Context) {
 		return
 	}
 
-	extraArgs := &OwnerQueryExtraArgs{PetID: &petID}
+	extraArgs := &customerQueryExtraArgs{PetID: &petID}
 	ctrl.queryController.FindAppointmentsByCustomer(c, userCTX.CustomerID, *extraArgs)
 }
 
 // GetUpcomingAppts godoc
 // @Summary Get upcoming appointments
-// @Description Retrieves upcoming appointments for the authenticated owner within a date range
-// @Tags owner-appointments
+// @Description Retrieves upcoming appointments for the authenticated customer within a date range
+// @Tags customer-appointments
 // @Accept json
 // @Produce json
 // @Param page query int false "Page number" default(1)
 // @Param limit query int false "Items per page" default(10)
 // @Security BearerAuth
-// @Router /owner/appointments/upcoming [get]
+// @Router /customer/appointments/upcoming [get]
 func (ctrl *CustomerAppointmetController) GetUpcomingAppointments(c *gin.Context) {
 	userCTX, exists := middleware.GetUserFromContext(c)
 	if !exists {
@@ -161,6 +161,6 @@ func (ctrl *CustomerAppointmetController) GetUpcomingAppointments(c *gin.Context
 	}
 
 	upcomingStatus := "upcoming"
-	extraArgs := &OwnerQueryExtraArgs{Status: &upcomingStatus}
+	extraArgs := &customerQueryExtraArgs{Status: &upcomingStatus}
 	ctrl.queryController.FindAppointmentsByCustomer(c, userCTX.CustomerID, *extraArgs)
 }

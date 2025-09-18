@@ -106,14 +106,19 @@ func (ctrl *EmployeeController) GetEmployeeByID(c *gin.Context) {
 // @Failure 500 {object} response.APIResponse "Internal server error"
 // @Router /employee [post]
 func (ctrl *EmployeeController) CreateEmployee(c *gin.Context) {
-	var requestData *dto.CreateEmployeeRequest
+	var requestData dto.CreateEmployeeRequest
 	if err := ginUtils.BindAndValidateBody(c, &requestData, ctrl.validator); err != nil {
+		response.BadRequest(c, err)
+		return
+	}
+
+	command, err := requestData.ToCommand()
+	if err != nil {
 		response.ApplicationError(c, err)
 		return
 	}
 
-	command := requestData.ToCommand()
-	result := ctrl.bus.CommandBus.CreateEmployee(c.Request.Context(), *command)
+	result := ctrl.bus.CommandBus.CreateEmployee(c.Request.Context(), command)
 	if !result.IsSuccess() {
 		response.ApplicationError(c, result.Error())
 		return

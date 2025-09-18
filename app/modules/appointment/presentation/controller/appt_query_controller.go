@@ -115,7 +115,7 @@ func (ctrl *AppointmentQueryController) FindAppointmentsByDateRange(c *gin.Conte
 	ctrl.HandlePaginatedResult(c, appointmentPage, dateRangeQueryData.PageInput.ToMap())
 }
 
-func (ctrl *AppointmentQueryController) FindAppointmentsByCustomer(c *gin.Context, customerID uint, extraArgs OwnerQueryExtraArgs) {
+func (ctrl *AppointmentQueryController) FindAppointmentsByCustomer(c *gin.Context, customerID uint, extraArgs customerQueryExtraArgs) {
 	var pageParams page.PageInput
 	if err := c.ShouldBindQuery(&pageParams); err != nil {
 		response.BadRequest(c, httpError.RequestURLQueryError(err, c.Request.URL.RawQuery))

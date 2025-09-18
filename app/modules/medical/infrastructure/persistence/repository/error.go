@@ -28,7 +28,7 @@ const (
 	ErrMsgSearchMedicalHistory = "failed to search medical history"
 	ErrMsgListByVet            = "failed to list medical history by veterinarian"
 	ErrMsgListByPet            = "failed to list medical history by pet"
-	ErrMsgListByOwner          = "failed to list medical history by owner"
+	ErrMsgListBycustomer       = "failed to list medical history by customer"
 	ErrMsgCreateMedicalHistory = "failed to create medical history"
 	ErrMsgUpdateMedicalHistory = "failed to update medical history"
 	ErrMsgDeleteMedicalHistory = "failed to delete medical history"

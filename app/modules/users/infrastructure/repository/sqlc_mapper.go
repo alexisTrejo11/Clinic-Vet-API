@@ -12,22 +12,22 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-func sqlcRowToEntity(sqlRow sqlc.User) (*user.User, error) {
+func sqlcRowToEntity(sqlRow sqlc.User) (user.User, error) {
 	userID := valueobject.NewUserID(uint(sqlRow.ID))
 
 	email, err := valueobject.NewEmail(sqlRow.Email.String)
 	if err != nil {
-		return nil, fmt.Errorf("invalid email: %w", err)
+		return user.User{}, fmt.Errorf("invalid email: %w", err)
 	}
 
 	userRole, err := enum.ParseUserRole(string(sqlRow.Role))
 	if err != nil {
-		return nil, fmt.Errorf("invalid user role: %w", err)
+		return user.User{}, fmt.Errorf("invalid user role: %w", err)
 	}
 
 	userStatus, err := enum.ParseUserStatus(string(sqlRow.Status))
 	if err != nil {
-		return nil, fmt.Errorf("invalid user status: %w", err)
+		return user.User{}, fmt.Errorf("invalid user status: %w", err)
 	}
 
 	opts := []user.UserOption{
@@ -37,7 +37,7 @@ func sqlcRowToEntity(sqlRow sqlc.User) (*user.User, error) {
 	if sqlRow.PhoneNumber.Valid && sqlRow.PhoneNumber.String != "" {
 		phone, err := valueobject.NewPhoneNumber(sqlRow.PhoneNumber.String)
 		if err != nil {
-			return nil, fmt.Errorf("invalid phone number: %w", err)
+			return user.User{}, fmt.Errorf("invalid phone number: %w", err)
 		}
 		opts = append(opts, user.WithPhoneNumber(&phone))
 	}
@@ -59,7 +59,7 @@ func sqlcRowToEntity(sqlRow sqlc.User) (*user.User, error) {
 
 	userEntity, err := user.NewUser(userID, userRole, userStatus, opts...)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create user entity: %w", err)
+		return user.User{}, fmt.Errorf("failed to create user entity: %w", err)
 	}
 
 	return userEntity, nil
@@ -72,7 +72,7 @@ func sqlcRowsToEntities(sqlRows []sqlc.User) ([]user.User, error) {
 		if err != nil {
 			return nil, err
 		}
-		users[i] = *user
+		users[i] = user
 	}
 
 	return users, nil

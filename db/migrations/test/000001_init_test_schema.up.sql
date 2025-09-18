@@ -1,7 +1,7 @@
 CREATE TYPE person_gender AS ENUM ('male', 'female', 'not_specified');
 CREATE TYPE veterinarian_speciality AS ENUM ('unknown_specialty', 'general_practice', 'surgery', 'internal_medicine', 'dentistry', 'dermatology', 'oncology', 'cardiology', 'neurology', 'ophthalmology', 'radiology', 'emergency_critical_care', 'anesthesiology', 'pathology', 'preventive_medicine', 'exotic_animal_medicine', 'equine_medicine', 'avian_medicine', 'zoo_animal_medicine', 'food_animal_medicine', 'public_health');
 
-CREATE TABLE IF NOT EXISTS owners (
+CREATE TABLE IF NOT EXISTS customers (
     id SERIAL PRIMARY KEY,
     first_name VARCHAR(255) NOT NULL,
     last_name VARCHAR(255) NOT NULL,
@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS pets (
     color VARCHAR(50),
     microchip VARCHAR(50) UNIQUE,
     is_neutered BOOLEAN,
-    owner_id INTEGER NOT NULL,
+    customer_id INTEGER NOT NULL,
     allergies TEXT,
     current_medications TEXT,
     special_needs TEXT,
@@ -56,6 +56,6 @@ CREATE TABLE IF NOT EXISTS veterinarians(
 
 -- Add Relations
 ALTER TABLE pets
-ADD CONSTRAINT fk_owner
-FOREIGN KEY (owner_id) REFERENCES owners(id) ON DELETE CASCADE;
+ADD CONSTRAINT fk_customer
+FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE;
 

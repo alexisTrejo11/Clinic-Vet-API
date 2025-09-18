@@ -36,7 +36,7 @@ func (h *paymentCommandHandler) ProcessPayment(command ProcessPaymentCommand) cq
 		return *cqrs.FailureResult("failed to retrieve payment", err)
 	}
 
-	if err := payment.Pay(command.transactionID); err != nil {
+	if err := payment.Pay(command.ctx, command.transactionID); err != nil {
 		return *cqrs.FailureResult("failed to process payment", err)
 	}
 
@@ -62,7 +62,7 @@ func (h *paymentCommandHandler) RefundPayment(command RefundPaymentCommand) cqrs
 		return *cqrs.FailureResult("failed to retrieve payment", err)
 	}
 
-	if err := payment.Refund(); err != nil {
+	if err := payment.Refund(command.ctx); err != nil {
 		return *cqrs.FailureResult("failed to refund payment", err)
 	}
 
@@ -79,7 +79,7 @@ func (h *paymentCommandHandler) CancelPayment(command CancelPaymentCommand) cqrs
 		return *cqrs.FailureResult("failed to retrieve payment", err)
 	}
 
-	if err := payment.Cancel(command.reason); err != nil {
+	if err := payment.Cancel(command.ctx, command.reason); err != nil {
 		return *cqrs.FailureResult("failed to cancel payment", err)
 	}
 
@@ -112,7 +112,7 @@ func (h *paymentCommandHandler) UpdatePayment(command UpdatePaymentCommand) cqrs
 		return *cqrs.FailureResult("error fetching payment", err)
 	}
 
-	err = payment.Update(command.amount, command.paymentMethod, command.description, command.dueDate)
+	err = payment.Update(command.ctx, command.amount, command.paymentMethod, command.description, command.dueDate)
 	if err != nil {
 		return *cqrs.FailureResult("error updating payment", err)
 	}
@@ -165,7 +165,7 @@ func (h *paymentCommandHandler) MarkOverudePayments(command MarkOverduePaymentsC
 }
 
 func (h *paymentCommandHandler) UpdatePaymentOverdued(ctx context.Context, payment *payment.Payment) error {
-	if err := payment.MarkAsOverdue(); err != nil {
+	if err := payment.MarkAsOverdue(ctx); err != nil {
 		return err
 	}
 

@@ -10,7 +10,7 @@ import (
 type Profile struct {
 	ID             uint
 	UserID         valueobject.UserID
-	OwnerID        *int
+	customerID     *int
 	VeterinarianID *int
 	PhotoURL       string
 	Bio            string
@@ -22,8 +22,8 @@ func (p *Profile) SetID(id uint) {
 	p.ID = id
 }
 
-func (p *Profile) SetOwnerID(ownerID int) {
-	p.OwnerID = &ownerID
+func (p *Profile) SetcustomerID(customerID int) {
+	p.customerID = &customerID
 }
 
 func (p *Profile) SetVeterinarianID(vetID int) {

@@ -88,13 +88,13 @@ func NewFindApptsByDateRangeQuery(ctx context.Context, startDate, endDate time.T
 }
 
 type FindApptsByCustomerIDQuery struct {
-	ownerID   valueobject.CustomerID
-	ctx       context.Context
-	pageInput page.PageInput
+	customerID valueobject.CustomerID
+	ctx        context.Context
+	pageInput  page.PageInput
 }
 
 func NewFindApptsByCustomerIDQuery(ctx context.Context, pageInput page.PageInput, customerId uint, petID *uint, status *string) *FindApptsByCustomerIDQuery {
-	return &FindApptsByCustomerIDQuery{ownerID: valueobject.NewCustomerID(customerId), pageInput: pageInput, ctx: ctx}
+	return &FindApptsByCustomerIDQuery{customerID: valueobject.NewCustomerID(customerId), pageInput: pageInput, ctx: ctx}
 }
 
 type FindApptsByPetQuery struct {

@@ -28,7 +28,7 @@ type MedicalHistorySpecification struct {
 func (s *MedicalHistorySpecification) IsSatisfiedBy(entity any) bool {
 	history, ok := entity.(interface {
 		PetID() valueobject.PetID
-		OwnerID() valueobject.CustomerID
+		customerID() valueobject.CustomerID
 		EmployeeID() valueobject.EmployeeID
 		VisitReason() enum.VisitReason
 		VisitType() enum.VisitType
@@ -58,8 +58,8 @@ func (s *MedicalHistorySpecification) IsSatisfiedBy(entity any) bool {
 
 	if len(s.CustomerID) > 0 {
 		found := false
-		for _, ownerID := range s.CustomerID {
-			if ownerID.Value() == history.OwnerID().Value() {
+		for _, customerID := range s.CustomerID {
+			if customerID.Value() == history.customerID().Value() {
 				found = true
 				break
 			}
@@ -178,12 +178,12 @@ func (s *MedicalHistorySpecification) ToSQL() (string, []any) {
 	}
 
 	if len(s.CustomerID) > 0 {
-		ownerIDs := make([]any, len(s.CustomerID))
-		for i, ownerID := range s.CustomerID {
-			ownerIDs[i] = ownerID.Value()
+		customerIDs := make([]any, len(s.CustomerID))
+		for i, customerID := range s.CustomerID {
+			customerIDs[i] = customerID.Value()
 		}
 		conditions = append(conditions, "customer_id IN (?)")
-		args = append(args, ownerIDs)
+		args = append(args, customerIDs)
 	}
 
 	if len(s.EmployeeIDs) > 0 {
@@ -276,8 +276,8 @@ func (s *MedicalHistorySpecification) WithPetIDs(petIDs ...valueobject.PetID) *M
 	return s
 }
 
-func (s *MedicalHistorySpecification) WithOwnerIDs(ownerIDs ...valueobject.CustomerID) *MedicalHistorySpecification {
-	s.CustomerID = ownerIDs
+func (s *MedicalHistorySpecification) WithcustomerIDs(customerIDs ...valueobject.CustomerID) *MedicalHistorySpecification {
+	s.CustomerID = customerIDs
 	return s
 }
 

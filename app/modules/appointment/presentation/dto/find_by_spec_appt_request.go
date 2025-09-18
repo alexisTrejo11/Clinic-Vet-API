@@ -17,7 +17,7 @@ import (
 )
 
 type AppointmentSearchRequest struct {
-	CustomerID uint   `form:"owner_id" validate:"omitempty,min=1"`
+	CustomerID uint   `form:"customer_id" validate:"omitempty,min=1"`
 	EmployeeID uint   `form:"vet_id" validate:"omitempty,min=1"`
 	PetID      uint   `form:"pet_id" validate:"omitempty,min=1"`
 	Service    string `form:"service" validate:"omitempty,clinic_service"`
@@ -77,8 +77,8 @@ func (r *AppointmentSearchRequest) ToSpecification() (*specification.ApptSearchS
 	spec := specification.NewAppointmentSearchSpecification()
 
 	if r.CustomerID > 0 {
-		ownerID := valueobject.NewCustomerID(r.CustomerID)
-		spec = spec.WithCustomerID(ownerID)
+		customerID := valueobject.NewCustomerID(r.CustomerID)
+		spec = spec.WithCustomerID(customerID)
 	}
 
 	// Vet ID
