@@ -37,7 +37,7 @@ func sqlcRowToEntity(sql sqlc.Employee) (*employee.Employee, error) {
 		return nil, fmt.Errorf("error creating person name: %w", err)
 	}
 
-	specialty, err := enum.ParseVetSpecialty(string(sql.Speciality))
+	specialty, err := enum.ParseVetSpecialty(sql.Speciality.(string))
 	if err != nil {
 		return nil, fmt.Errorf("invalid specialty '%s': %w", sql.Speciality, err)
 	}

@@ -12,11 +12,6 @@ SELECT *
 FROM customers
 WHERE id = $1 AND deleted_at IS NULL;
 
--- name: GetCustomerByPhone :one
-SELECT *
-FROM customers
-WHERE phone_number = $1 AND deleted_at IS NULL;
-
 -- name: GetCustomerByUserID :one
 SELECT *
 FROM customers

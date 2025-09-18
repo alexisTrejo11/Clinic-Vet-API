@@ -2,11 +2,11 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 
 	notiAPI "clinic-vet-api/app/modules/notifications/presentation"
+	"clinic-vet-api/app/shared/log"
 	"clinic-vet-api/config"
 	"clinic-vet-api/middleware"
 	"clinic-vet-api/sqlc"
@@ -38,7 +38,7 @@ func main() {
 
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatalf("Error while loading .env: %v", err)
+		log.App.DPanic(fmt.Sprintf("Error while loading .env: %v", err))
 	}
 
 	config.InitTwilio()
@@ -54,7 +54,7 @@ func main() {
 
 	jwtSecret := os.Getenv("JWT_SECRET")
 	if jwtSecret == "" {
-		log.Fatal("JWT_SECRET environment variable is not set")
+		log.App.Fatal("JWT_SECRET environment variable is not set")
 	}
 
 	pxpool := config.CreatePgxPool(os.Getenv("DATABASE_URL"))
@@ -85,5 +85,6 @@ func main() {
 // @Success 200 {string} Ping
 // @Router /ping [get]
 func Ping(g *gin.Context) {
-	g.JSON(http.StatusOK, "Ping")
+	log.App.Info("pong")
+	g.JSON(http.StatusOK, "pong")
 }

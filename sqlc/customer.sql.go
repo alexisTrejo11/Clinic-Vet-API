@@ -58,7 +58,7 @@ INSERT INTO customers (
 ) VALUES (
     $1, $2, $3, $4, $5, $6, $7
 )
-RETURNING id, first_name, last_name, photo, phone_number, date_of_birth, gender, address, user_id, is_active, created_at, updated_at, deleted_at
+RETURNING id, first_name, last_name, photo, date_of_birth, gender, user_id, is_active, created_at, updated_at, deleted_at
 `
 
 type CreateCustomerParams struct {
@@ -87,10 +87,8 @@ func (q *Queries) CreateCustomer(ctx context.Context, arg CreateCustomerParams) 
 		&i.FirstName,
 		&i.LastName,
 		&i.Photo,
-		&i.PhoneNumber,
 		&i.DateOfBirth,
 		&i.Gender,
-		&i.Address,
 		&i.UserID,
 		&i.IsActive,
 		&i.CreatedAt,
@@ -127,7 +125,7 @@ func (q *Queries) ExistsCustomerByID(ctx context.Context, id int32) (bool, error
 }
 
 const findActiveCustomers = `-- name: FindActiveCustomers :many
-SELECT id, first_name, last_name, photo, phone_number, date_of_birth, gender, address, user_id, is_active, created_at, updated_at, deleted_at
+SELECT id, first_name, last_name, photo, date_of_birth, gender, user_id, is_active, created_at, updated_at, deleted_at
 FROM customers
 WHERE is_active = TRUE AND deleted_at IS NULL
 ORDER BY created_at DESC
@@ -153,10 +151,8 @@ func (q *Queries) FindActiveCustomers(ctx context.Context, arg FindActiveCustome
 			&i.FirstName,
 			&i.LastName,
 			&i.Photo,
-			&i.PhoneNumber,
 			&i.DateOfBirth,
 			&i.Gender,
-			&i.Address,
 			&i.UserID,
 			&i.IsActive,
 			&i.CreatedAt,
@@ -174,7 +170,7 @@ func (q *Queries) FindActiveCustomers(ctx context.Context, arg FindActiveCustome
 }
 
 const getCustomerByID = `-- name: GetCustomerByID :one
-SELECT id, first_name, last_name, photo, phone_number, date_of_birth, gender, address, user_id, is_active, created_at, updated_at, deleted_at
+SELECT id, first_name, last_name, photo, date_of_birth, gender, user_id, is_active, created_at, updated_at, deleted_at
 FROM customers
 WHERE id = $1 AND deleted_at IS NULL
 `
@@ -187,37 +183,8 @@ func (q *Queries) GetCustomerByID(ctx context.Context, id int32) (Customer, erro
 		&i.FirstName,
 		&i.LastName,
 		&i.Photo,
-		&i.PhoneNumber,
 		&i.DateOfBirth,
 		&i.Gender,
-		&i.Address,
-		&i.UserID,
-		&i.IsActive,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.DeletedAt,
-	)
-	return i, err
-}
-
-const getCustomerByPhone = `-- name: GetCustomerByPhone :one
-SELECT id, first_name, last_name, photo, phone_number, date_of_birth, gender, address, user_id, is_active, created_at, updated_at, deleted_at
-FROM customers
-WHERE phone_number = $1 AND deleted_at IS NULL
-`
-
-func (q *Queries) GetCustomerByPhone(ctx context.Context, phoneNumber string) (Customer, error) {
-	row := q.db.QueryRow(ctx, getCustomerByPhone, phoneNumber)
-	var i Customer
-	err := row.Scan(
-		&i.ID,
-		&i.FirstName,
-		&i.LastName,
-		&i.Photo,
-		&i.PhoneNumber,
-		&i.DateOfBirth,
-		&i.Gender,
-		&i.Address,
 		&i.UserID,
 		&i.IsActive,
 		&i.CreatedAt,
@@ -228,7 +195,7 @@ func (q *Queries) GetCustomerByPhone(ctx context.Context, phoneNumber string) (C
 }
 
 const getCustomerByUserID = `-- name: GetCustomerByUserID :one
-SELECT id, first_name, last_name, photo, phone_number, date_of_birth, gender, address, user_id, is_active, created_at, updated_at, deleted_at
+SELECT id, first_name, last_name, photo, date_of_birth, gender, user_id, is_active, created_at, updated_at, deleted_at
 FROM customers
 WHERE user_id = $1 AND deleted_at IS NULL
 `
@@ -241,10 +208,8 @@ func (q *Queries) GetCustomerByUserID(ctx context.Context, userID pgtype.Int4) (
 		&i.FirstName,
 		&i.LastName,
 		&i.Photo,
-		&i.PhoneNumber,
 		&i.DateOfBirth,
 		&i.Gender,
-		&i.Address,
 		&i.UserID,
 		&i.IsActive,
 		&i.CreatedAt,

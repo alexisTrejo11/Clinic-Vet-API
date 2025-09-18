@@ -29,10 +29,8 @@ type Customer struct {
 	FirstName   string
 	LastName    string
 	Photo       string
-	PhoneNumber string
 	DateOfBirth pgtype.Date
 	Gender      models.PersonGender
-	Address     pgtype.Text
 	UserID      pgtype.Int4
 	IsActive    bool
 	CreatedAt   pgtype.Timestamp
@@ -46,7 +44,7 @@ type Employee struct {
 	LastName          string
 	Photo             string
 	LicenseNumber     string
-	Speciality        models.VeterinarianSpeciality
+	Speciality        interface{}
 	YearsOfExperience int32
 	IsActive          bool
 	UserID            pgtype.Int4

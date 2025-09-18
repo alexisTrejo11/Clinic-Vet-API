@@ -17,3 +17,15 @@ type Profile struct {
 	DateOfBirth    *time.Time
 	JoinedAt       time.Time
 }
+
+func (p *Profile) SetID(id uint) {
+	p.ID = id
+}
+
+func (p *Profile) SetOwnerID(ownerID int) {
+	p.OwnerID = &ownerID
+}
+
+func (p *Profile) SetVeterinarianID(vetID int) {
+	p.VeterinarianID = &vetID
+}

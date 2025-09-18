@@ -8,7 +8,6 @@ package sqlc
 import (
 	"context"
 
-	"clinic-vet-api/db/models"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -41,7 +40,7 @@ SELECT COUNT(*) FROM employees
 WHERE speciality = $1 AND deleted_at IS NULL
 `
 
-func (q *Queries) CountEmployeesBySpeciality(ctx context.Context, speciality models.VeterinarianSpeciality) (int64, error) {
+func (q *Queries) CountEmployeesBySpeciality(ctx context.Context, speciality interface{}) (int64, error) {
 	row := q.db.QueryRow(ctx, countEmployeesBySpeciality, speciality)
 	var count int64
 	err := row.Scan(&count)
@@ -63,7 +62,7 @@ type CreateEmployeeParams struct {
 	LastName          string
 	Photo             string
 	LicenseNumber     string
-	Speciality        models.VeterinarianSpeciality
+	Speciality        interface{}
 	YearsOfExperience int32
 	IsActive          bool
 	UserID            pgtype.Int4
@@ -277,7 +276,7 @@ LIMIT $2 OFFSET $3
 `
 
 type FindEmployeesBySpecialityParams struct {
-	Speciality models.VeterinarianSpeciality
+	Speciality interface{}
 	Limit      int32
 	Offset     int32
 }
@@ -362,7 +361,7 @@ type UpdateEmployeeParams struct {
 	LastName          string
 	Photo             string
 	LicenseNumber     string
-	Speciality        models.VeterinarianSpeciality
+	Speciality        interface{}
 	YearsOfExperience int32
 	IsActive          bool
 	UserID            pgtype.Int4

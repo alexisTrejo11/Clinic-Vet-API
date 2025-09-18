@@ -7,7 +7,9 @@ import (
 
 	"clinic-vet-api/app/core/domain/entity/user"
 	"clinic-vet-api/app/core/domain/enum"
+	event "clinic-vet-api/app/core/domain/event/user_event"
 	"clinic-vet-api/app/core/domain/valueobject"
+	commondto "clinic-vet-api/app/shared/dto"
 )
 
 type CustomerRegisterCommand struct {
@@ -40,6 +42,8 @@ func (h *authCommandHandler) CustomerRegister(command CustomerRegisterCommand) A
 		return FailureAuthResult(ErrUserCreationFailed, err)
 	}
 
+	go h.ProduceEvent(user, command)
+
 	return SuccessAuthResult(nil, user.ID().String(), MsgUserCreatedSuccess)
 }
 
@@ -54,4 +58,21 @@ func (command *CustomerRegisterCommand) toDomain() (*user.User, error) {
 	}
 
 	return userEntity, nil
+}
+
+func (h *authCommandHandler) ProduceEvent(user *user.User, cmd CustomerRegisterCommand) {
+	name, _ := valueobject.NewPersonName(cmd.FirstName, cmd.LastName)
+	event := event.UserRegisteredEvent{
+		UserID: user.ID(),
+		Role:   user.Role(),
+		Email:  user.Email(),
+		Name:   name,
+		PersonalData: &commondto.PersonalData{
+			Name:        name,
+			Gender:      cmd.Gender,
+			DateOfBirth: cmd.DateOfBirth, Location: cmd.Location,
+		},
+	}
+
+	h.userEvent.Registered(event)
 }

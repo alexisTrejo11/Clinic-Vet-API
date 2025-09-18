@@ -57,3 +57,7 @@ func (e *Entity[T]) SetTimeStamps(createAt, updateAt time.Time) {
 	e.createdAt = createAt
 	e.updatedAt = updateAt
 }
+
+func (e *Entity[T]) SetID(id T) {
+	e.id = id
+}

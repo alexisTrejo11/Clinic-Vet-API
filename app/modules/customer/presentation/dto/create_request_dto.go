@@ -24,7 +24,7 @@ type CreateCustomerRequest struct {
 	// Customer's gender
 	// Required: true
 	// Enum: male, female, not_specified
-	Gender enum.PersonGender `json:"gender" binding:"required,oneof=male female not_specified" example:"male"`
+	Gender string `json:"gender" binding:"required" example:"male"`
 
 	// Customer's date of birth
 	// Required: true
@@ -33,19 +33,20 @@ type CreateCustomerRequest struct {
 	// URL to customer's photo
 	// Required: false
 	Photo string `json:"photo,omitempty" example:"https://example.com/photo.jpg"`
-
-	// Customer's phone number in E.164 format
-	// Required: false
-	PhoneNumber string `json:"phone_number,omitempty" binding:"omitempty,e164" example:"+1234567890"`
 }
 
 // ToCommand converts CreateCustomerRequest to CreateCustomerCommand
 func (r *CreateCustomerRequest) ToCommand(ctx context.Context) (*command.CreateCustomerCommand, error) {
+	gender, err := enum.ParseGender(r.Gender)
+	if err != nil {
+		return nil, err
+	}
+
 	return &command.CreateCustomerCommand{
 		Photo:       r.Photo,
 		FirstName:   r.FirstName,
 		LastName:    r.LastName,
-		Gender:      r.Gender,
+		Gender:      gender,
 		DateOfBirth: r.DateOfBirth,
 		CTX:         ctx,
 	}, nil

@@ -150,10 +150,12 @@ func (r *SqlcCustomerRepository) CountActive(ctx context.Context) (int64, error)
 func (r *SqlcCustomerRepository) create(ctx context.Context, customer *c.Customer) error {
 	createParams := toCreateParams(*customer)
 
-	_, err := r.queries.CreateCustomer(ctx, *createParams)
+	customerCreated, err := r.queries.CreateCustomer(ctx, *createParams)
 	if err != nil {
 		return r.dbError("insert", "failed to create customer", err)
 	}
+
+	customer.SetID(valueobject.NewCustomerID(uint(customerCreated.ID)))
 
 	return nil
 }

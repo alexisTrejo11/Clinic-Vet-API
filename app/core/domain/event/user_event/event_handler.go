@@ -1,6 +1,7 @@
 package event
 
 import (
+	"clinic-vet-api/app/core/domain/enum"
 	"clinic-vet-api/app/core/service"
 	"context"
 	"strconv"
@@ -69,9 +70,9 @@ func (h *userEventHandler) processUserRegistration(event UserRegisteredEvent) {
 		zap.String("sub_operation", "attach_profile"))
 
 	switch event.Role {
-	case "customer":
+	case enum.UserRoleOwner:
 		h.handleCustomerRegistration(ctx, event, profileIDStr)
-	case "employee":
+	case enum.UserRoleVeterinarian, enum.UserRoleReceptionist:
 		h.handleEmployeeRegistration(ctx, event, profileIDStr)
 	default:
 		h.eventLog.LogOperationError(ctx, nil, "Unknown user role",

@@ -6,9 +6,11 @@ import (
 	"clinic-vet-api/app/core/domain/entity/user/profile"
 	"clinic-vet-api/app/core/domain/valueobject"
 	"clinic-vet-api/app/core/repository"
+	"clinic-vet-api/app/shared/log"
 	"clinic-vet-api/sqlc"
 
 	"github.com/jackc/pgx/v5/pgtype"
+	"go.uber.org/zap"
 )
 
 type SQLCProfileRepository struct {
@@ -36,7 +38,9 @@ func (r *SQLCProfileRepository) GetByUserID(ctx context.Context, userID valueobj
 }
 
 func (r *SQLCProfileRepository) Create(ctx context.Context, profile *profile.Profile) error {
-	_, err := r.queries.CreateProfile(ctx, sqlc.CreateProfileParams{
+	log.App.Debug("Creating profile in repository", zap.Int("userID", int(profile.UserID.Value())))
+
+	profileCreated, err := r.queries.CreateProfile(ctx, sqlc.CreateProfileParams{
 		UserID:     pgtype.Int4{Int32: int32(profile.UserID.Value()), Valid: true},
 		Bio:        pgtype.Text{String: profile.Bio, Valid: true},
 		ProfilePic: pgtype.Text{String: profile.PhotoURL, Valid: profile.PhotoURL != ""},
@@ -44,6 +48,8 @@ func (r *SQLCProfileRepository) Create(ctx context.Context, profile *profile.Pro
 	if err != nil {
 		return err
 	}
+
+	profile.SetID(uint(profileCreated.ID))
 
 	return nil
 }

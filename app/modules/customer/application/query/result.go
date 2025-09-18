@@ -31,6 +31,7 @@ func FromEntityToResult(customer customer.Customer) *CustomerResult {
 		PetsCount:   len(customer.Pets()),
 		IsActive:    customer.IsActive(),
 		CreatedAt:   customer.CreatedAt(),
+		Gender:      customer.Gender(),
 		UpdatedAt:   customer.UpdatedAt(),
 		UserID:      customer.UserID(),
 		Photo:       customer.Photo(),

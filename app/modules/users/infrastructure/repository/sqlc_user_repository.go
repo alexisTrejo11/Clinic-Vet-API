@@ -296,10 +296,13 @@ func (r *SQLCUserRepository) create(ctx context.Context, user *u.User) error {
 		return r.wrapConversionError(err)
 	}
 
-	_, err = r.queries.CreateUser(ctx, *params)
+	userCreated, err := r.queries.CreateUser(ctx, *params)
 	if err != nil {
 		return r.dbError(OpInsert, ErrMsgCreateUser, err)
 	}
+
+	user.SetID(valueobject.NewUserID(uint(userCreated.ID)))
+
 	return nil
 }
 

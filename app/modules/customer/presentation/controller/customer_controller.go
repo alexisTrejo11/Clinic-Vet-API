@@ -10,6 +10,7 @@ import (
 	httpError "clinic-vet-api/app/shared/error/infrastructure/http"
 	ginUtils "clinic-vet-api/app/shared/gin_utils"
 	"clinic-vet-api/app/shared/response"
+
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )
@@ -56,24 +57,20 @@ func (controller *CustomerController) GetCustomerByID(c *gin.Context) {
 
 	query := query.NewFindCustomerByIDQuery(c.Request.Context(), id)
 
-	customer, err := controller.bus.QueryBus.GetCustomerByID(*query)
+	result, err := controller.bus.QueryBus.GetCustomerByID(*query)
 	if err != nil {
 		response.ApplicationError(c, err)
 		return
 	}
 
-	response.Found(c, customer, "Customer")
+	customerResponse := dto.FromResult(result)
+	response.Found(c, customerResponse, "Customer")
 }
 
 func (controller *CustomerController) CreateCustomer(c *gin.Context) {
-	var customerCreate *dto.CreateCustomerRequest
-	if err := c.ShouldBindBodyWithJSON(&customerCreate); err != nil {
-		response.BadRequest(c, httpError.RequestBodyDataError(err))
-		return
-	}
-
-	if err := controller.validator.Struct(&customerCreate); err != nil {
-		response.BadRequest(c, httpError.RequestBodyDataError(err))
+	var customerCreate dto.CreateCustomerRequest
+	if err := ginUtils.BindAndValidateBody(c, &customerCreate, controller.validator); err != nil {
+		response.BadRequest(c, err)
 		return
 	}
 

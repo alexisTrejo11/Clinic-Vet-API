@@ -46,14 +46,14 @@ func NewUserAccountService(
 }
 
 func (s *userAccountService) CreateProfile(ctx context.Context, userID valueobject.UserID) (uint, error) {
-	profile := profile.Profile{
+	profile := &profile.Profile{
 		UserID:   userID,
 		PhotoURL: "",
 		Bio:      "",
 		JoinedAt: time.Now(),
 	}
 
-	err := s.profileRepository.Create(ctx, &profile)
+	err := s.profileRepository.Create(ctx, profile)
 	if err != nil {
 		return 0, err
 	}

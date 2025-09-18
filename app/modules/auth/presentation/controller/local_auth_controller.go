@@ -7,6 +7,7 @@ import (
 	"clinic-vet-api/app/modules/auth/presentation/dto"
 	autherror "clinic-vet-api/app/shared/error/auth"
 	httpError "clinic-vet-api/app/shared/error/infrastructure/http"
+	ginutils "clinic-vet-api/app/shared/gin_utils"
 	"clinic-vet-api/app/shared/response"
 	"clinic-vet-api/middleware"
 
@@ -28,14 +29,8 @@ func NewAuthController(validator *validator.Validate, bus *bus.AuthBus) *AuthCon
 
 func (controller *AuthController) CustomerSignup(c *gin.Context) {
 	var reuqestBodyData dto.CustomerRequestSingup
-
-	if err := c.ShouldBindBodyWithJSON(&reuqestBodyData); err != nil {
-		response.BadRequest(c, httpError.RequestBodyDataError(err))
-		return
-	}
-
-	if err := controller.validator.Struct(&reuqestBodyData); err != nil {
-		response.BadRequest(c, httpError.InvalidDataError(err))
+	if err := ginutils.BindAndValidateBody(c, &reuqestBodyData, controller.validator); err != nil {
+		response.BadRequest(c, err)
 		return
 	}
 
@@ -56,13 +51,8 @@ func (controller *AuthController) CustomerSignup(c *gin.Context) {
 
 func (controller *AuthController) EmployeeSignup(c *gin.Context) {
 	var requestBodyData dto.EmployeeRequestRegister
-
-	if err := c.ShouldBindBodyWithJSON(&requestBodyData); err != nil {
-		response.BadRequest(c, httpError.RequestBodyDataError(err))
-	}
-
-	if err := controller.validator.Struct(&requestBodyData); err != nil {
-		response.BadRequest(c, httpError.InvalidDataError(err))
+	if err := ginutils.BindAndValidateBody(c, &requestBodyData, controller.validator); err != nil {
+		response.BadRequest(c, err)
 		return
 	}
 
@@ -82,7 +72,7 @@ func (controller *AuthController) EmployeeSignup(c *gin.Context) {
 }
 
 func (controller *AuthController) Login(c *gin.Context) {
-	var requestlogin *dto.RequestLogin
+	var requestlogin dto.RequestLogin
 	if err := c.ShouldBindBodyWithJSON(&requestlogin); err != nil {
 		response.BadRequest(c, httpError.RequestBodyDataError(err))
 		return
@@ -93,7 +83,7 @@ func (controller *AuthController) Login(c *gin.Context) {
 		return
 	}
 
-	loginCommand := requestlogin.ToCommand()
+	loginCommand := requestlogin.ToCommand(c.Request.Context())
 	result := controller.bus.Login(*loginCommand)
 	if !result.IsSuccess() {
 		response.ApplicationError(c, result.Error())
@@ -111,13 +101,8 @@ func (controller *AuthController) Logout(c *gin.Context) {
 	}
 
 	var requestLogout dto.RequestLogout
-	if err := c.ShouldBindBodyWithJSON(&requestLogout); err != nil {
-		response.BadRequest(c, httpError.RequestBodyDataError(err))
-		return
-	}
-
-	if err := controller.validator.Struct(&requestLogout); err != nil {
-		response.BadRequest(c, httpError.InvalidDataError(err))
+	if err := ginutils.BindAndValidateBody(c, &requestLogout, controller.validator); err != nil {
+		response.BadRequest(c, err)
 		return
 	}
 

@@ -51,7 +51,7 @@ func (o *Customer) Pets() []pet.Pet {
 }
 
 func (o *Customer) AssignUser(userID valueobject.UserID) error {
-	if o.userID != nil {
+	if o.userID != nil && !o.userID.IsZero() {
 		return fmt.Errorf("customer already assigned to a user with ID %s", o.userID.String())
 	}
 	o.userID = &userID

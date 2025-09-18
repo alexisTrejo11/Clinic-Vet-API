@@ -217,10 +217,12 @@ func (r *SqlcEmployeeRepository) CountActive(ctx context.Context) (int64, error)
 func (r *SqlcEmployeeRepository) create(ctx context.Context, employee *e.Employee) error {
 	params := entityToCreateParams(employee)
 
-	_, err := r.queries.CreateEmployee(ctx, *params)
+	employeeCreated, err := r.queries.CreateEmployee(ctx, *params)
 	if err != nil {
 		return r.dbError("insert", "failed to create employee", err)
 	}
+
+	employee.SetID(valueobject.NewEmployeeID(uint(employeeCreated.ID)))
 
 	return nil
 }

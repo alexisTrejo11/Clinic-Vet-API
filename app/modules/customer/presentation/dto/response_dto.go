@@ -3,7 +3,7 @@ package dto
 import (
 	"time"
 
-	"clinic-vet-api/app/core/domain/enum"
+	"clinic-vet-api/app/modules/customer/application/query"
 )
 
 // CustomerResponse represents the customer response
@@ -19,29 +19,45 @@ type CustomerResponse struct {
 	LastName string `json:"last_name" example:"Doe"`
 
 	// Customer's gender
-	Gender enum.PersonGender `json:"gender" example:"male"`
+	Gender string `json:"gender" example:"male"`
 
 	// Customer's date of birth
-	DateOfBirth time.Time `json:"date_of_birth" example:"1990-01-15T00:00:00Z"`
+	DateOfBirth string `json:"date_of_birth" example:"1990-01-15T00:00:00Z"`
 
-	// URL to customer's photo
-	PhotoURL *string `json:"photo_url,omitempty" example:"https://example.com/photo.jpg"`
-
-	// Customer's phone number
-	PhoneNumber *string `json:"phone_number,omitempty" example:"+1234567890"`
-
-	// Customer's address
-	Address *string `json:"address,omitempty" example:"123 Main St, City, State"`
-
-	// Additional notes
-	Notes *string `json:"notes,omitempty" example:"Allergic to penicillin"`
+	PetCount int `json:"pet_count" example:"3"`
 
 	// Whether the customer is active
 	IsActive bool `json:"is_active" example:"true"`
 
 	// Creation timestamp
-	CreatedAt time.Time `json:"created_at" example:"2024-01-01T12:00:00Z"`
+	CreatedAt string `json:"created_at" example:"2024-01-01T12:00:00Z"`
 
 	// Last update timestamp
-	UpdatedAt time.Time `json:"updated_at" example:"2024-01-15T14:30:00Z"`
+	UpdatedAt string `json:"updated_at" example:"2024-01-15T14:30:00Z"`
+}
+
+func FromResult(result query.CustomerResult) *CustomerResponse {
+	return &CustomerResponse{
+		ID:          result.ID.Value(),
+		FirstName:   result.FirstName,
+		LastName:    result.LastName,
+		Gender:      result.Gender.DisplayName(),
+		DateOfBirth: result.DateOfBirth.Format(time.DateOnly),
+		PetCount:    result.PetsCount,
+		IsActive:    result.IsActive,
+		CreatedAt:   result.CreatedAt.Format(time.RFC3339),
+		UpdatedAt:   result.UpdatedAt.Format(time.RFC3339),
+	}
+}
+
+func FromResultList(results []query.CustomerResult) []CustomerResponse {
+	if len(results) == 0 {
+		return []CustomerResponse{}
+	}
+
+	response := make([]CustomerResponse, len(results))
+	for i, res := range results {
+		response[i] = *FromResult(res)
+	}
+	return response
 }

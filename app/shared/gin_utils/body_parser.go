@@ -14,7 +14,11 @@ func BindAndValidateBody(c *gin.Context, obj any, validate *validator.Validate) 
 	}
 
 	if err := validate.Struct(obj); err != nil {
-		validationErrors := err.(validator.ValidationErrors)
+		validationErrors, ok := err.(validator.ValidationErrors)
+		if !ok {
+			return httpError.InvalidDataError(err)
+		}
+
 		return httpError.InvalidDataError(validationErrors)
 	}
 
