@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"clinic-vet-api/app/core/repository"
-	"clinic-vet-api/app/modules/pets/application/usecase"
 	petRepo "clinic-vet-api/app/modules/pets/infrastructure/repository"
 	"clinic-vet-api/app/modules/pets/presentation/controller"
 	"clinic-vet-api/app/modules/pets/presentation/routes"

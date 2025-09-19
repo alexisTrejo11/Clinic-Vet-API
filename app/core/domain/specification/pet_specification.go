@@ -51,7 +51,7 @@ func (s *PetSpecification) applyFilter(pet *pet.Pet, filter Filter) bool {
 	case "name":
 		return strings.Contains(strings.ToLower(pet.Name()), strings.ToLower(filter.Value.(string)))
 	case "species":
-		return pet.Species() == filter.Value.(string)
+		return pet.Species().String() == filter.Value.(string)
 	case "breed":
 		if pet.Breed() == nil {
 			return false

@@ -13,7 +13,7 @@ import (
 type NotificationService interface {
 	SendNotification(ctx context.Context, notification *notification.Notification) error
 	ListNotificationByUserID(ctx context.Context, userID valueobject.UserID, pagination page.PageInput) (page.Page[NotificationResponse], error)
-	ListNotificationByType(ctx context.Context, notificationType string, pagination page.PageInput) (page.Page[NotificationResponse], error)
+	ListNotificationBySpecies(ctx context.Context, notificationType string, pagination page.PageInput) (page.Page[NotificationResponse], error)
 	ListNotificationByChannel(ctx context.Context, channel string, pagination page.PageInput) (page.Page[NotificationResponse], error)
 	GenerateSummary(ctx context.Context, senderID string) ([]notification.Notification, error)
 	GetNotificationByID(ctx context.Context, id string) (notification.Notification, error)
@@ -53,8 +53,8 @@ func (s *notificationServiceImpl) GetNotificationByID(ctx context.Context, id st
 	return s.notificationRepo.GetByID(ctx, id)
 }
 
-func (s *notificationServiceImpl) ListNotificationByType(ctx context.Context, notificationType string, pagination page.PageInput) (page.Page[NotificationResponse], error) {
-	notificationPage, err := s.notificationRepo.ListByType(ctx, notificationType, pagination)
+func (s *notificationServiceImpl) ListNotificationBySpecies(ctx context.Context, notificationType string, pagination page.PageInput) (page.Page[NotificationResponse], error) {
+	notificationPage, err := s.notificationRepo.ListBySpecies(ctx, notificationType, pagination)
 	if err != nil {
 		return page.Page[NotificationResponse]{}, err
 	}

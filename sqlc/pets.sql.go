@@ -35,6 +35,18 @@ func (q *Queries) CountPetsByCustomerID(ctx context.Context, customerID int32) (
 	return count, err
 }
 
+const countPetsBySpecies = `-- name: CountPetsBySpecies :one
+SELECT COUNT(*) FROM pets
+WHERE species = $1 AND deleted_at IS NULL
+`
+
+func (q *Queries) CountPetsBySpecies(ctx context.Context, species string) (int64, error) {
+	row := q.db.QueryRow(ctx, countPetsBySpecies, species)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const countPetsBySpecification = `-- name: CountPetsBySpecification :one
 SELECT COUNT(*) FROM pets
 WHERE deleted_at IS NULL
@@ -405,6 +417,78 @@ type FindPetsByCustomerIDParams struct {
 
 func (q *Queries) FindPetsByCustomerID(ctx context.Context, arg FindPetsByCustomerIDParams) ([]Pet, error) {
 	rows, err := q.db.Query(ctx, findPetsByCustomerID, arg.CustomerID, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Pet
+	for rows.Next() {
+		var i Pet
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Photo,
+			&i.Species,
+			&i.Breed,
+			&i.Age,
+			&i.Gender,
+			&i.Weight,
+			&i.Color,
+			&i.Microchip,
+			&i.IsNeutered,
+			&i.CustomerID,
+			&i.Allergies,
+			&i.CurrentMedications,
+			&i.SpecialNeeds,
+			&i.IsActive,
+			&i.DateOfBirth,
+			&i.InsuranceInfo,
+			&i.VeterinaryContact,
+			&i.FeedingInstructions,
+			&i.BehavioralNotes,
+			&i.Tattoo,
+			&i.LastVaccinationDate,
+			&i.NextVaccinationDate,
+			&i.LastDewormingDate,
+			&i.NextDewormingDate,
+			&i.LastVetVisit,
+			&i.NextVetVisit,
+			&i.BloodType,
+			&i.ChipImplantDate,
+			&i.ChipImplantLocation,
+			&i.InsurancePolicyNumber,
+			&i.InsuranceCompany,
+			&i.EmergencyContactName,
+			&i.EmergencyContactPhone,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.DeletedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const findPetsBySpecies = `-- name: FindPetsBySpecies :many
+SELECT id, name, photo, species, breed, age, gender, weight, color, microchip, is_neutered, customer_id, allergies, current_medications, special_needs, is_active, date_of_birth, insurance_info, veterinary_contact, feeding_instructions, behavioral_notes, tattoo, last_vaccination_date, next_vaccination_date, last_deworming_date, next_deworming_date, last_vet_visit, next_vet_visit, blood_type, chip_implant_date, chip_implant_location, insurance_policy_number, insurance_company, emergency_contact_name, emergency_contact_phone, created_at, updated_at, deleted_at FROM pets
+WHERE species = $1 AND deleted_at IS NULL
+ORDER BY created_at DESC
+LIMIT $2 OFFSET $3
+`
+
+type FindPetsBySpeciesParams struct {
+	Species string
+	Limit   int32
+	Offset  int32
+}
+
+func (q *Queries) FindPetsBySpecies(ctx context.Context, arg FindPetsBySpeciesParams) ([]Pet, error) {
+	rows, err := q.db.Query(ctx, findPetsBySpecies, arg.Species, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}

@@ -3,6 +3,7 @@ package repository
 
 import (
 	"clinic-vet-api/app/core/domain/entity/pet"
+	"clinic-vet-api/app/core/domain/enum"
 	"clinic-vet-api/app/core/domain/specification"
 	"clinic-vet-api/app/core/domain/valueobject"
 	"clinic-vet-api/app/core/repository"
@@ -28,6 +29,31 @@ func NewSqlcPetRepository(queries *sqlc.Queries) repository.PetRepository {
 
 func (r *SqlcPetRepository) FindBySpecification(ctx context.Context, spec specification.PetSpecification) (page.Page[pet.Pet], error) {
 	return page.Page[pet.Pet]{}, errors.New("FindBySpecification not implemented")
+}
+
+func (r *SqlcPetRepository) FindBySpecies(ctx context.Context, petSpecies enum.PetSpecies, pageInput page.PageInput) (page.Page[pet.Pet], error) {
+	offset := (pageInput.Page - 1) * pageInput.PageSize
+	petRows, err := r.queries.FindPetsBySpecies(ctx, sqlc.FindPetsBySpeciesParams{
+		Species: petSpecies.String(),
+		Limit:   int32(pageInput.PageSize),
+		Offset:  int32(offset),
+	})
+
+	if err != nil {
+		return page.Page[pet.Pet]{}, r.dbError("select", fmt.Sprintf("failed to find pets for species %s", petSpecies.String()), err)
+	}
+
+	total, err := r.queries.CountPetsBySpecies(ctx, petSpecies.String())
+	if err != nil {
+		return page.Page[pet.Pet]{}, r.dbError("select", fmt.Sprintf("failed to count pets for species %s", petSpecies.String()), err)
+	}
+
+	pets, err := sqlcRowsToEntities(petRows)
+	if err != nil {
+		return page.Page[pet.Pet]{}, r.wrapConversionError(err)
+	}
+
+	return page.NewPage(pets, *page.GetPageMetadata(int(total), pageInput)), nil
 }
 
 func (r *SqlcPetRepository) FindAllByCustomerID(ctx context.Context, customerID valueobject.CustomerID) ([]pet.Pet, error) {
@@ -127,14 +153,10 @@ func (r *SqlcPetRepository) ExistsByMicrochip(ctx context.Context, microchip str
 	return exists, nil
 }
 
-func (r *SqlcPetRepository) Save(ctx context.Context, pet *pet.Pet) error {
+func (r *SqlcPetRepository) Save(ctx context.Context, pet pet.Pet) (pet.Pet, error) {
 	if pet.ID().IsZero() {
 		return r.create(ctx, pet)
 	}
-	return r.update(ctx, pet)
-}
-
-func (r *SqlcPetRepository) Update(ctx context.Context, pet *pet.Pet) error {
 	return r.update(ctx, pet)
 }
 
@@ -151,27 +173,37 @@ func (r *SqlcPetRepository) CountByCustomerID(ctx context.Context, customerID va
 }
 
 // create inserts a new pet
-func (r *SqlcPetRepository) create(ctx context.Context, pet *pet.Pet) error {
-	params := ToSqlCreateParam(pet)
+func (r *SqlcPetRepository) create(ctx context.Context, entity pet.Pet) (pet.Pet, error) {
+	params := ToSqlCreateParam(entity)
 
-	_, err := r.queries.CreatePet(ctx, *params)
+	petCreated, err := r.queries.CreatePet(ctx, *params)
 	if err != nil {
-		return r.dbError("insert", "failed to create pet", err)
+		return pet.Pet{}, r.dbError("insert", "failed to create pet", err)
 	}
 
-	return nil
+	petEntity, err := sqlcRowToEntity(petCreated)
+	if err != nil {
+		return pet.Pet{}, r.wrapConversionError(err)
+	}
+
+	return *petEntity, nil
 }
 
 // update modifies an existing pet
-func (r *SqlcPetRepository) update(ctx context.Context, pet *pet.Pet) error {
-	params := ToSqlUpdateParam(pet)
+func (r *SqlcPetRepository) update(ctx context.Context, entity pet.Pet) (pet.Pet, error) {
+	params := ToSqlUpdateParam(&entity)
 
-	_, err := r.queries.UpdatePet(ctx, *params)
+	petUpdated, err := r.queries.UpdatePet(ctx, *params)
 	if err != nil {
-		return r.dbError("update", fmt.Sprintf("failed to update pet with ID %d", pet.ID().Value()), err)
+		return pet.Pet{}, r.dbError("update", fmt.Sprintf("failed to update pet with ID %d", entity.ID().Value()), err)
 	}
 
-	return nil
+	petEntity, err := sqlcRowToEntity(petUpdated)
+	if err != nil {
+		return pet.Pet{}, r.wrapConversionError(err)
+	}
+
+	return *petEntity, nil
 }
 
 func (r *SqlcPetRepository) softDelete(ctx context.Context, petID valueobject.PetID) error {

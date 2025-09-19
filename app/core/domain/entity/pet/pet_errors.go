@@ -52,9 +52,10 @@ func SpeciesRequiredError(ctx context.Context, operation string) error {
 		"species is required", operation)
 }
 
-func SpeciesTooLongError(ctx context.Context, length int, operation string) error {
+func InvalidSpeciesError(ctx context.Context, enumvalue string) error {
+	allowedValues := enum.ValidPetSpeciess
 	return petValidationError(ctx, PetSpeciesTooLong, "species",
-		fmt.Sprintf("species too long (%d characters, max 50)", length), operation)
+		fmt.Sprintf("invalid species: %s. Allowed values are: %v", enumvalue, allowedValues), "Creating/Updating Pet")
 }
 
 func AgeInvalidError(ctx context.Context, age int, operation string) error {

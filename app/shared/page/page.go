@@ -42,6 +42,9 @@ func (p PageInput) ToMap() map[string]any {
 	}
 }
 
+func (p PageInput) Validate() error {
+	return nil
+}
 func FromSpecPagination(pagi specification.Pagination) PageInput {
 	return PageInput{
 		PageSize:      pagi.PageSize,

@@ -6,6 +6,7 @@ import (
 	domainerr "clinic-vet-api/app/core/error"
 	apperror "clinic-vet-api/app/shared/error/application"
 	infraerr "clinic-vet-api/app/shared/error/infrastructure"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -23,6 +24,21 @@ func SuccessWithMeta(ctx *gin.Context, data any, message string, meta any) {
 	ctx.JSON(200, response)
 }
 
+func SuccessCreated(ctx *gin.Context, data any, message string) {
+	response := APIResponse{}
+	response.SuccessRequest(data, message)
+
+	ctx.JSON(201, response)
+}
+
+func SuccessWithPagination(ctx *gin.Context, data any, message string, pagination any) {
+	response := APIResponse{}
+	paginationMetadata := gin.H{"pagination": pagination}
+	response.SuccessWithMeta(data, paginationMetadata, message)
+
+	ctx.JSON(200, response)
+}
+
 func Found(ctx *gin.Context, data any, entityName string) {
 	if entityName == "" {
 		entityName = "Resource"
@@ -35,10 +51,10 @@ func Found(ctx *gin.Context, data any, entityName string) {
 	ctx.JSON(200, response)
 }
 
-func Created(ctx *gin.Context, data any, entityName string) {
+func Created(ctx *gin.Context, entityID any, entityName string) {
 	messsage := entityName + " has been created successfully"
 	response := APIResponse{}
-	response.SuccessRequest(data, messsage)
+	response.SuccessRequest(gin.H{"id": entityID}, messsage)
 
 	ctx.JSON(201, response)
 }

@@ -1,5 +1,7 @@
 package dto
 
+import "clinic-vet-api/app/modules/pets/application/cqrs/query"
+
 // @Description Represents the response structure for a pet.
 type PetResponse struct {
 	// The unique ID of the pet.
@@ -24,8 +26,6 @@ type PetResponse struct {
 	Microchip *string `json:"microchip,omitempty"`
 	// Indicates if the pet is neutered.
 	IsNeutered *bool `json:"is_neutered,omitempty"`
-	// The unique ID of the pet's customer.
-	CustomerID uint `json:"customer_id"`
 	// A list of the pet's known allergies.
 	Allergies *string `json:"allergies,omitempty"`
 	// The pet's current medications.
@@ -38,4 +38,33 @@ type PetResponse struct {
 	CreatedAt string `json:"created_at"`
 	// The date and time when the pet's record was last updated.
 	UpdatedAt string `json:"updated_at"`
+}
+
+func ToResponse(result query.PetResult) *PetResponse {
+	return &PetResponse{
+		ID:                 result.ID,
+		Name:               result.Name,
+		Photo:              result.Photo,
+		Species:            result.Species,
+		Breed:              result.Breed,
+		Age:                result.Age,
+		Allergies:          result.Allergies,
+		CurrentMedications: result.CurrentMedications,
+		SpecialNeeds:       result.SpecialNeeds,
+		Color:              result.Color,
+		Microchip:          result.Microchip,
+		IsNeutered:         result.IsNeutered,
+		IsActive:           result.IsActive,
+		CreatedAt:          result.CreatedAt.Format("2006-01-02 15:04:05"),
+		UpdatedAt:          result.UpdatedAt.Format("2006-01-02 15:04:05"),
+	}
+}
+
+func ToResponseList(results []query.PetResult) []*PetResponse {
+	var pets []*PetResponse
+	for _, result := range results {
+		pet := ToResponse(result)
+		pets = append(pets, pet)
+	}
+	return pets
 }

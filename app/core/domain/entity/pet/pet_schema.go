@@ -13,7 +13,7 @@ type Pet struct {
 	base.Entity[valueobject.PetID]
 	name               string
 	photo              *string
-	species            string
+	species            enum.PetSpecies
 	breed              *string
 	age                *int
 	gender             *enum.PetGender
@@ -41,7 +41,7 @@ func (p *Pet) Photo() *string {
 	return p.photo
 }
 
-func (p *Pet) Species() string {
+func (p *Pet) Species() enum.PetSpecies {
 	return p.species
 }
 

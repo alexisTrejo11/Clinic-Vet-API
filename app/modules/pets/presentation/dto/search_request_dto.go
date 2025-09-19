@@ -4,6 +4,7 @@ import (
 	"clinic-vet-api/app/core/domain/enum"
 	"clinic-vet-api/app/core/domain/specification"
 	"clinic-vet-api/app/core/domain/valueobject"
+	"clinic-vet-api/app/modules/pets/application/cqrs/query"
 )
 
 type PetSearchRequest struct {
@@ -81,4 +82,10 @@ func (params *PetSearchRequest) ToSpecification() *specification.PetSpecificatio
 	builder.Pagination(pagination)
 
 	return builder.Build()
+}
+
+func (params *PetSearchRequest) ToQuery() query.FindPetBySpecificationQuery {
+	spec := params.ToSpecification()
+	qry := query.NewFindPetBySpecificationQuery(*spec)
+	return *qry
 }

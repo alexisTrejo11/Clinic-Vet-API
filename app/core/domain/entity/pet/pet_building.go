@@ -28,7 +28,7 @@ func WithPhoto(photo *string) PetOption {
 
 func WithSpecies(species string) PetOption {
 	return func(p *Pet) error {
-		p.species = species
+		p.species = enum.PetSpecies(species)
 		return nil
 	}
 }
@@ -134,8 +134,9 @@ func (p *Pet) validate(ctx context.Context) error {
 	if p.species == "" {
 		return SpeciesRequiredError(ctx, operation)
 	}
-	if len(p.species) > 50 {
-		return SpeciesTooLongError(ctx, len(p.species), operation)
+
+	if !p.species.IsValid() {
+		return InvalidSpeciesError(ctx, p.species.String())
 	}
 
 	if p.age != nil {

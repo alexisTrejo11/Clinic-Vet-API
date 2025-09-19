@@ -2,7 +2,7 @@ package dto
 
 import (
 	"clinic-vet-api/app/core/domain/valueobject"
-	"clinic-vet-api/app/modules/pets/application/dto"
+	"clinic-vet-api/app/modules/pets/application/cqrs/command"
 )
 
 // AdminUpdatePetRequest represents the payload for updating an existing pet's information by an admin
@@ -107,17 +107,19 @@ type UpdatePetRequest struct {
 	// Maximum length: 500
 	// Example: Requires daily medication, Blind in left eye
 	SpecialNeeds *string `json:"special_needs,omitempty" validate:"omitempty,max=500"`
-
-	// Indicates if the pet is currently active in the system
-	// Required: false
-	// Example: true
-	IsActive *bool `json:"is_active,omitempty"`
 }
 
-func (r AdminUpdatePetRequest) ToUpdatePet(petIDInt uint) *dto.PetUpdateData {
-	petUpdate := &dto.PetUpdateData{
+func (r *UpdatePetRequest) ToCommand(petIDInt uint, customerIDUInt *uint, isActive *bool) command.UpdatePetCommand {
+	var customerID *valueobject.CustomerID
+	if customerIDUInt != nil {
+		cid := valueobject.NewCustomerID(*customerIDUInt)
+		customerID = &cid
+	}
+
+	cmd := &command.UpdatePetCommand{
 		PetID:              valueobject.NewPetID(petIDInt),
 		Photo:              r.Photo,
+		CustomerID:         customerID,
 		Breed:              r.Breed,
 		Age:                r.Age,
 		Gender:             r.Gender,
@@ -130,51 +132,15 @@ func (r AdminUpdatePetRequest) ToUpdatePet(petIDInt uint) *dto.PetUpdateData {
 		SpecialNeeds:       r.SpecialNeeds,
 	}
 
-	if r.CustomerID != nil {
-		customerID := valueobject.NewCustomerID(*r.CustomerID)
-		petUpdate.CustomerID = &customerID
-	}
-
 	if r.Name != nil {
-		petUpdate.Name = r.Name
+		cmd.Name = r.Name
 	}
 
 	if r.Species != nil {
-		petUpdate.Species = r.Species
+		cmd.Species = r.Species
 	}
 
-	petUpdate.IsActive = r.IsActive
+	cmd.IsActive = isActive
 
-	return petUpdate
-}
-
-func (r CustomerUpdatePetRequest) ToUpdatePet(petIDInt uint, customerIDUInt uint) *dto.PetUpdateData {
-	petUpdate := &dto.PetUpdateData{
-		PetID:              valueobject.NewPetID(petIDInt),
-		Photo:              r.Photo,
-		Breed:              r.Breed,
-		Age:                r.Age,
-		Gender:             r.Gender,
-		Weight:             r.Weight,
-		Color:              r.Color,
-		Microchip:          r.Microchip,
-		IsNeutered:         r.IsNeutered,
-		Allergies:          r.Allergies,
-		CurrentMedications: r.CurrentMedications,
-		SpecialNeeds:       r.SpecialNeeds,
-	}
-	customerID := valueobject.NewCustomerID(customerIDUInt)
-	petUpdate.CustomerID = &customerID
-
-	if r.Name != nil {
-		petUpdate.Name = r.Name
-	}
-
-	if r.Species != nil {
-		petUpdate.Species = r.Species
-	}
-
-	petUpdate.IsActive = r.IsActive
-
-	return petUpdate
+	return *cmd
 }

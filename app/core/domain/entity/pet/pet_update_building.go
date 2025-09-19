@@ -156,10 +156,11 @@ func (p *Pet) Update(ctx context.Context, options ...PetUpdateOption) error {
 		if *opts.Species == "" {
 			return domainerr.ValidationError(ctx, "species", "", "species cannot be empty", operation)
 		}
-		if len(*opts.Species) > 50 {
-			return domainerr.ValidationError(ctx, "species", *opts.Species, "species too long", operation)
+		petSpecies, err := enum.ParsePetSpecies(*opts.Species)
+		if err != nil {
+			return domainerr.ValidationError(ctx, "species", *opts.Species, "invalid species", operation)
 		}
-		p.species = *opts.Species
+		p.species = petSpecies
 	}
 
 	if opts.Breed != nil {

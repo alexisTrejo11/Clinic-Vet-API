@@ -100,11 +100,11 @@ func sqlcRowsToEntities(rows []sqlc.Pet) ([]pet.Pet, error) {
 	return pets, nil
 }
 
-func ToSqlCreateParam(pet *pet.Pet) *sqlc.CreatePetParams {
+func ToSqlCreateParam(pet pet.Pet) *sqlc.CreatePetParams {
 	return &sqlc.CreatePetParams{
 		Name:               pet.Name(),
 		Photo:              toPgTypeText(pet.Photo()),
-		Species:            pet.Species(),
+		Species:            pet.Species().String(),
 		Breed:              toPgTypeText(pet.Breed()),
 		Age:                toPgTypeInt2(pet.Age()),
 		Gender:             toPgTypeText((*string)(pet.Gender())),
@@ -125,7 +125,7 @@ func ToSqlUpdateParam(pet *pet.Pet) *sqlc.UpdatePetParams {
 		ID:                 int32(pet.ID().Value()),
 		Name:               pet.Name(),
 		Photo:              toPgTypeText(pet.Photo()),
-		Species:            pet.Species(),
+		Species:            pet.Species().String(),
 		Breed:              toPgTypeText(pet.Breed()),
 		Age:                toPgTypeInt2(pet.Age()),
 		Gender:             toPgTypeText((*string)(pet.Gender())),

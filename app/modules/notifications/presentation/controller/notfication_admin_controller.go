@@ -2,6 +2,7 @@ package controller
 
 import (
 	service "clinic-vet-api/app/modules/notifications/application"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -25,7 +26,7 @@ func (c *NotificationAdminController) GetNotificationByUserId(ctx *gin.Context) 
 func (c *NotificationAdminController) GetNotificationById(ctx *gin.Context) {
 }
 
-func (c *NotificationAdminController) GetNotificationByType(ctx *gin.Context) {
+func (c *NotificationAdminController) GetNotificationBySpecies(ctx *gin.Context) {
 }
 
 func (c *NotificationAdminController) GetNotificationByStatus(ctx *gin.Context) {

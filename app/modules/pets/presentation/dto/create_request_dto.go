@@ -3,7 +3,7 @@ package dto
 
 import (
 	"clinic-vet-api/app/core/domain/valueobject"
-	"clinic-vet-api/app/modules/pets/application/dto"
+	"clinic-vet-api/app/modules/pets/application/cqrs/command"
 )
 
 // AdminCreatePetRequest represents the request payload for creating a new pet by an admin user
@@ -113,38 +113,22 @@ type PetRequestData struct {
 	SpecialNeeds *string `json:"special_needs,omitempty" validate:"omitempty,max=500"`
 }
 
-func (r *AdminCreatePetRequest) ToCreateData() dto.CreatePetData {
-	return dto.CreatePetData{
-		Name:               r.Name,
-		Photo:              r.Photo,
-		CustomerID:         valueobject.NewCustomerID(r.CustomerID),
-		Species:            r.Species,
-		Breed:              r.Breed,
-		Age:                r.Age,
-		Gender:             r.Gender,
-		Weight:             r.Weight,
-		Color:              r.Color,
-		Microchip:          r.Microchip,
-		IsNeutered:         r.IsNeutered,
-		Allergies:          r.Allergies,
-		CurrentMedications: r.CurrentMedications,
-	}
-}
-
-func (r *CustomerCreatePetRequest) ToCreateData(customerID uint) dto.CreatePetData {
-	return dto.CreatePetData{
+func (r *PetRequestData) ToCommand(customerID uint, isActive bool) command.CreatePetCommand {
+	cmd := &command.CreatePetCommand{
 		Name:               r.Name,
 		Photo:              r.Photo,
 		CustomerID:         valueobject.NewCustomerID(customerID),
 		Species:            r.Species,
 		Breed:              r.Breed,
 		Age:                r.Age,
-		Gender:             r.Gender,
+		IsNeutered:         r.IsNeutered,
 		Weight:             r.Weight,
 		Color:              r.Color,
 		Microchip:          r.Microchip,
-		IsNeutered:         r.IsNeutered,
 		Allergies:          r.Allergies,
 		CurrentMedications: r.CurrentMedications,
+		SpecialNeeds:       r.SpecialNeeds,
+		IsActive:           isActive,
 	}
+	return *cmd
 }

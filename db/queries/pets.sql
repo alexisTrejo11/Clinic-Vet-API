@@ -12,6 +12,16 @@ WHERE customer_id = $1 AND deleted_at IS NULL
 ORDER BY created_at DESC
 LIMIT $2 OFFSET $3;
 
+-- name: FindPetsBySpecies :many
+SELECT * FROM pets
+WHERE species = $1 AND deleted_at IS NULL
+ORDER BY created_at DESC
+LIMIT $2 OFFSET $3;
+
+-- name: CountPetsBySpecies :one
+SELECT COUNT(*) FROM pets
+WHERE species = $1 AND deleted_at IS NULL;
+
 -- name: CountPetsByCustomerID :one
 SELECT COUNT(*) FROM pets
 WHERE customer_id = $1 AND deleted_at IS NULL;

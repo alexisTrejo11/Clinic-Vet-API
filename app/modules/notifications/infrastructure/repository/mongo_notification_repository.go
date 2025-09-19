@@ -81,7 +81,7 @@ func (r *MongoNotificationRepository) ListByUser(ctx context.Context, userID val
 	return page.NewPage(notifications, pageMetadata), nil
 }
 
-func (r *MongoNotificationRepository) ListByType(ctx context.Context, notificationType string, pagination page.PageInput) (page.Page[notification.Notification], error) {
+func (r *MongoNotificationRepository) ListBySpecies(ctx context.Context, notificationType string, pagination page.PageInput) (page.Page[notification.Notification], error) {
 	findOptions := r.paginateSearch(pagination)
 	queryFilter := bson.M{"type": notificationType}
 
