@@ -7,25 +7,24 @@ import (
 	"clinic-vet-api/app/modules/pets/presentation/dto"
 	httpError "clinic-vet-api/app/shared/error/infrastructure/http"
 	ginUtils "clinic-vet-api/app/shared/gin_utils"
-	ginutils "clinic-vet-api/app/shared/gin_utils"
 	"clinic-vet-api/app/shared/response"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )
 
-type PetCommandService struct {
+type PetControllerOperations struct {
 	bus       cqrs.PetServiceBus
 	validator *validator.Validate
 }
 
-func NewPetCommandService(bus cqrs.PetServiceBus, validator *validator.Validate) *PetCommandService {
-	return &PetCommandService{bus: bus, validator: validator}
+func NewPetControllerOperations(bus cqrs.PetServiceBus, validator *validator.Validate) *PetControllerOperations {
+	return &PetControllerOperations{bus: bus, validator: validator}
 }
 
-func (s *PetCommandService) CreatePet(c *gin.Context, customerID *uint, isActive bool) {
+func (s *PetControllerOperations) CreatePet(c *gin.Context, customerID *uint, isActive bool) {
 	var requestBodyData dto.PetRequestData
-	if err := ginutils.BindAndValidateBody(c, &requestBodyData, s.validator); err != nil {
+	if err := ginUtils.BindAndValidateBody(c, &requestBodyData, s.validator); err != nil {
 		response.BadRequest(c, err)
 		return
 	}
@@ -40,7 +39,7 @@ func (s *PetCommandService) CreatePet(c *gin.Context, customerID *uint, isActive
 	response.Created(c, result.ID(), "Pet")
 }
 
-func (s *PetCommandService) UpdatePet(c *gin.Context, customerID *uint, isActive *bool) {
+func (s *PetControllerOperations) UpdatePet(c *gin.Context, customerID *uint, isActive *bool) {
 	petID, err := ginUtils.ParseParamToUInt(c, "id")
 	if err != nil {
 		response.BadRequest(c, httpError.RequestURLParamError(err, "id", c.Param("id")))
@@ -63,7 +62,7 @@ func (s *PetCommandService) UpdatePet(c *gin.Context, customerID *uint, isActive
 	response.Updated(c, nil, "Pet")
 }
 
-func (s *PetCommandService) RestorePet(c *gin.Context) {
+func (s *PetControllerOperations) RestorePet(c *gin.Context) {
 	petID, err := ginUtils.ParseParamToUInt(c, "id")
 	if err != nil {
 		response.BadRequest(c, httpError.RequestURLParamError(err, "id", c.Param("id")))
@@ -80,7 +79,7 @@ func (s *PetCommandService) RestorePet(c *gin.Context) {
 	response.Updated(c, nil, "Pet")
 }
 
-func (s *PetCommandService) DeactivatePet(c *gin.Context, customerID *uint) {
+func (s *PetControllerOperations) DeactivatePet(c *gin.Context, customerID *uint) {
 	petID, err := ginUtils.ParseParamToUInt(c, "id")
 	if err != nil {
 		response.BadRequest(c, httpError.RequestURLParamError(err, "id", c.Param("id")))
@@ -97,7 +96,7 @@ func (s *PetCommandService) DeactivatePet(c *gin.Context, customerID *uint) {
 	response.Updated(c, nil, "Pet")
 }
 
-func (s *PetCommandService) DeletePet(c *gin.Context, customerID *uint) {
+func (s *PetControllerOperations) DeletePet(c *gin.Context, customerID *uint, hardDelete bool) {
 	petID, err := ginUtils.ParseParamToUInt(c, "id")
 	if err != nil {
 		response.BadRequest(c, httpError.RequestURLParamError(err, "id", c.Param("id")))

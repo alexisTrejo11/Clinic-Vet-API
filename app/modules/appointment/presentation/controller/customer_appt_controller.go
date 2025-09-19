@@ -29,16 +29,20 @@ type customerQueryExtraArgs struct {
 // @in header
 // @name Authorization
 type CustomerAppointmetController struct {
-	bus             *bus.AppointmentBus
-	validator       *validator.Validate
-	queryController *AppointmentQueryController
+	bus        *bus.AppointmentBus
+	validator  *validator.Validate
+	operations *ApptControllerOperations
 }
 
-func NewCustomerApptControleer(bus *bus.AppointmentBus, validator *validator.Validate, queryController *AppointmentQueryController) *CustomerAppointmetController {
+func NewCustomerApptControleer(
+	bus *bus.AppointmentBus,
+	validator *validator.Validate,
+	operations *ApptControllerOperations,
+) *CustomerAppointmetController {
 	return &CustomerAppointmetController{
-		bus:             bus,
-		validator:       validator,
-		queryController: queryController,
+		bus:        bus,
+		validator:  validator,
+		operations: operations,
 	}
 }
 
@@ -101,7 +105,7 @@ func (ctrl *CustomerAppointmetController) GetMyAppointments(c *gin.Context) {
 	}
 
 	noArgs := customerQueryExtraArgs{}
-	ctrl.queryController.FindAppointmentsByCustomer(c, userCtx.CustomerID, noArgs)
+	ctrl.operations.FindAppointmentsByCustomer(c, userCtx.CustomerID, noArgs)
 }
 
 func (ctrl *CustomerAppointmetController) GetMyAppointmentByID(c *gin.Context) {
@@ -112,7 +116,7 @@ func (ctrl *CustomerAppointmetController) GetMyAppointmentByID(c *gin.Context) {
 	}
 
 	args := GetByIDExtraArgs{employeeID: nil, customerID: &userCtx.CustomerID}
-	ctrl.queryController.GetAppointmentDetailByID(c, args)
+	ctrl.operations.GetAppointmentDetailByID(c, args)
 }
 
 // GetApptsByPet godoc
@@ -140,7 +144,7 @@ func (ctrl *CustomerAppointmetController) GetAppointmentsByPet(c *gin.Context) {
 	}
 
 	extraArgs := &customerQueryExtraArgs{PetID: &petID}
-	ctrl.queryController.FindAppointmentsByCustomer(c, userCTX.CustomerID, *extraArgs)
+	ctrl.operations.FindAppointmentsByCustomer(c, userCTX.CustomerID, *extraArgs)
 }
 
 // GetUpcomingAppts godoc
@@ -162,5 +166,5 @@ func (ctrl *CustomerAppointmetController) GetUpcomingAppointments(c *gin.Context
 
 	upcomingStatus := "upcoming"
 	extraArgs := &customerQueryExtraArgs{Status: &upcomingStatus}
-	ctrl.queryController.FindAppointmentsByCustomer(c, userCTX.CustomerID, *extraArgs)
+	ctrl.operations.FindAppointmentsByCustomer(c, userCTX.CustomerID, *extraArgs)
 }

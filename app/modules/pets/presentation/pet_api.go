@@ -4,9 +4,12 @@ import (
 	"fmt"
 
 	"clinic-vet-api/app/core/repository"
+	"clinic-vet-api/app/middleware"
+	"clinic-vet-api/app/modules/pets/application/cqrs"
 	petRepo "clinic-vet-api/app/modules/pets/infrastructure/repository"
 	"clinic-vet-api/app/modules/pets/presentation/controller"
 	"clinic-vet-api/app/modules/pets/presentation/routes"
+	"clinic-vet-api/app/modules/pets/presentation/service"
 	"clinic-vet-api/sqlc"
 
 	"github.com/gin-gonic/gin"
@@ -14,16 +17,19 @@ import (
 )
 
 type PetModuleConfig struct {
-	Router       *gin.Engine
-	Queries      *sqlc.Queries
-	Validator    *validator.Validate
-	CustomerRepo repository.CustomerRepository
+	Router         *gin.Engine
+	Queries        *sqlc.Queries
+	Validator      *validator.Validate
+	CustomerRepo   repository.CustomerRepository
+	AuthMiddleware *middleware.AuthMiddleware
 }
 
 type PetModuleComponents struct {
-	Repository repository.PetRepository
-	UseCases   usecase.PetUseCases
-	Controller *controller.PetController
+	Repository            repository.PetRepository
+	PetServiceBus         cqrs.PetServiceBus
+	PetCtrlOperations     service.PetControllerOperations
+	PetController         controller.PetController
+	CustomerPetController controller.CustomerPetController
 }
 
 type PetModule struct {
@@ -50,16 +56,20 @@ func (m *PetModule) Bootstrap() error {
 
 	repository := m.createRepository()
 
-	useCases := m.createUseCases(repository)
+	serviceBus := m.createServiceBus(repository)
 
-	controller := m.createController(useCases)
+	controllerOperations := m.createControllerOperations(serviceBus, m.config.Validator)
+	petController := m.createPetController(controllerOperations)
+	customerPetController := m.createCustomerPetController(controllerOperations)
 
-	m.registerRoutes(controller)
+	m.registerRoutes(petController, customerPetController, m.config.AuthMiddleware)
 
 	m.components = &PetModuleComponents{
-		Repository: repository,
-		UseCases:   useCases,
-		Controller: controller,
+		Repository:            repository,
+		PetServiceBus:         m.components.PetServiceBus,
+		PetCtrlOperations:     m.components.PetCtrlOperations,
+		PetController:         m.components.PetController,
+		CustomerPetController: m.components.CustomerPetController,
 	}
 
 	m.isBuilt = true
@@ -70,16 +80,29 @@ func (m *PetModule) createRepository() repository.PetRepository {
 	return petRepo.NewSqlcPetRepository(m.config.Queries)
 }
 
-func (m *PetModule) createUseCases(repository repository.PetRepository) usecase.PetUseCases {
-	return usecase.NewPetUseCases(repository, m.config.CustomerRepo)
+func (m *PetModule) createServiceBus(repository repository.PetRepository) cqrs.PetServiceBus {
+	return cqrs.NewPetServiceBus(repository, m.config.CustomerRepo)
 }
 
-func (m *PetModule) createController(useCases usecase.PetUseCases) *controller.PetController {
-	return controller.NewPetController(m.config.Validator, useCases)
+func (m *PetModule) createControllerOperations(serviceBus cqrs.PetServiceBus, validator *validator.Validate) *service.PetControllerOperations {
+	return service.NewPetControllerOperations(serviceBus, validator)
 }
 
-func (m *PetModule) registerRoutes(controller *controller.PetController) {
-	routes.PetsRoutes(m.config.Router, controller)
+func (m *PetModule) createPetController(controllerOperations *service.PetControllerOperations) *controller.PetController {
+	return controller.NewPetController(m.config.Validator, controllerOperations)
+}
+
+func (m *PetModule) createCustomerPetController(controllerOperations *service.PetControllerOperations) *controller.CustomerPetController {
+	return controller.NewCustomerPetController(m.config.Validator, controllerOperations)
+}
+
+func (m *PetModule) registerRoutes(
+	adminCtrl *controller.PetController,
+	customerCtrl *controller.CustomerPetController,
+	authMiddle *middleware.AuthMiddleware,
+) {
+	routes.PetsRoutes(m.config.Router, adminCtrl, authMiddle)
+	routes.CustomerPetsRoutes(m.config.Router, customerCtrl, authMiddle)
 }
 
 func (m *PetModule) validateConfig() error {
@@ -98,6 +121,10 @@ func (m *PetModule) validateConfig() error {
 	if m.config.CustomerRepo == nil {
 		return fmt.Errorf("customer repository cannot be nil")
 	}
+	if m.config.AuthMiddleware == nil {
+		return fmt.Errorf("auth middleware cannot be nil")
+	}
+
 	return nil
 }
 
@@ -118,18 +145,26 @@ func (m *PetModule) GetRepository() (repository.PetRepository, error) {
 	return components.Repository, nil
 }
 
-func (m *PetModule) GetUseCases() (usecase.PetUseCases, error) {
+func (m *PetModule) GetServiceBus() (cqrs.PetServiceBus, error) {
 	components, err := m.GetComponents()
 	if err != nil {
 		return nil, err
 	}
-	return components.UseCases, nil
+	return components.PetServiceBus, nil
 }
 
-func (m *PetModule) GetController() (*controller.PetController, error) {
+func (m *PetModule) GetPetControllerOperations() (*service.PetControllerOperations, error) {
 	components, err := m.GetComponents()
 	if err != nil {
 		return nil, err
 	}
-	return components.Controller, nil
+	return &components.PetCtrlOperations, nil
+}
+
+func (m *PetModule) GetPetController() (*controller.PetController, error) {
+	components, err := m.GetComponents()
+	if err != nil {
+		return nil, err
+	}
+	return &components.PetController, nil
 }

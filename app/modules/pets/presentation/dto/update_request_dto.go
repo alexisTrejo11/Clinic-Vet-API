@@ -7,14 +7,17 @@ import (
 
 // AdminUpdatePetRequest represents the payload for updating an existing pet's information by an admin
 // swagger:model AdminUpdatePetRequest
-type AdminUpdatePetRequest struct {
+type AdminUpdatePetExtraFields struct {
 	// ID of the customer who owns the pet
 	// Required: false
 	// Minimum: 1
 	// Example: 123
 	CustomerID *uint `json:"customer_id,omitempty" validate:"omitempty,gt=0"`
 
-	UpdatePetRequest
+	// IsActive indicates if the pet record is active in the system
+	// Required: false
+	// Example: true
+	IsActive *bool `json:"is_active,omitempty"`
 }
 
 // CustomerUpdatePetRequest represents the payload for updating an existing pet's information by a customer

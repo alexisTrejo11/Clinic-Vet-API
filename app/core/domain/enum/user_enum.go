@@ -253,3 +253,7 @@ func (s UserStatus) CanLogin() bool {
 func (r UserRole) IsAdministrative() bool {
 	return r == UserRoleAdmin
 }
+
+func (r UserRole) IsStaff() bool {
+	return r == UserRoleAdmin || r == UserRoleVeterinarian || r == UserRoleReceptionist
+}

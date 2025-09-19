@@ -8,26 +8,22 @@ import (
 
 // AdminCreatePetRequest represents the request payload for creating a new pet by an admin user
 // swagger:model AdminCreatePetRequest
-type AdminCreatePetRequest struct {
+type AdminPetCreateExtraFields struct {
 	PetRequestData
 	// ID of the customer who owns the pet
-	// Required: true
+	// Required: false
 	// Minimum: 1
 	// Example: 123
-	CustomerID uint `json:"customer_id" validate:"required,gt=0"`
+	CustomerID *uint `json:"customer_id" validate:"required,gt=0"`
 
 	// Indicates if the pet record is active in the system
 	// Required: true
 	// Example: true
-	IsActive bool `json:"is_active"`
+	IsActive bool `json:"is_active" validate:"required"`
 }
 
-// CustomerCreatePetRequest represents the request payload for creating a new pet by a customer user
-// swagger:model CustomerCreatePetRequest
-type CustomerCreatePetRequest struct {
-	PetRequestData
-}
-
+// PetRequestData encapsulates the common fields for creating or updating a pet
+// swagger:model PetRequestData
 type PetRequestData struct {
 	// Name of the pet
 	// Required: true

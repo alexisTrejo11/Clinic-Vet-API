@@ -59,12 +59,8 @@ func (u *User) EmployeeID() *valueobject.EmployeeID {
 	return u.employeeID
 }
 
-func (u *User) IsEmployee() bool {
-	return u.employeeID != nil
-}
-
 func (u *User) IsCustomer() bool {
-	return u.customerID != nil
+	return u.customerID != nil && u.role == enum.UserRoleCustomer
 }
 
 func (u *User) CustomerID() *valueobject.CustomerID {
@@ -85,4 +81,8 @@ func (u *User) IsTwoFactorEnabled() bool {
 
 func (u *User) SetHashedPassword(hashedPassword string) {
 	u.password = hashedPassword
+}
+
+func (u *User) IsEmployee() bool {
+	return u.employeeID != nil && u.role.IsStaff()
 }

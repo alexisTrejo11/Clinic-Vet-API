@@ -11,6 +11,7 @@ import (
 	"clinic-vet-api/app/modules/auth/application/jwt"
 	autherror "clinic-vet-api/app/shared/error/auth"
 	"clinic-vet-api/app/shared/response"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -24,7 +25,7 @@ type UserContext struct {
 }
 
 func UserToUserContext(user user.User) *UserContext {
-	return &UserContext{
+	userCTX := &UserContext{
 		UserID:      user.ID().Value(),
 		Email:       user.Email().String(),
 		PhoneNumber: user.PhoneNumber().String(),
@@ -32,6 +33,14 @@ func UserToUserContext(user user.User) *UserContext {
 		CustomerID:  0,
 		EmployeeID:  0,
 	}
+
+	if user.IsEmployee() {
+		userCTX.EmployeeID = user.EmployeeID().Value()
+	} else if user.IsCustomer() {
+		userCTX.CustomerID = user.CustomerID().Value()
+	}
+
+	return userCTX
 }
 
 type AuthMiddleware struct {
@@ -172,4 +181,25 @@ func HasRole(c *gin.Context, role string) bool {
 	}
 
 	return false
+}
+
+func (am *AuthMiddleware) RequireAnyRole(roles ...string) gin.HandlerFunc {
+	return gin.HandlerFunc(func(c *gin.Context) {
+		userRole, exists := GetUserRolesFromContext(c)
+		if !exists {
+			response.Unauthorized(c, autherror.UnauthorizedError("user role not found in context"))
+			c.Abort()
+			return
+		}
+
+		for _, role := range roles {
+			if userRole == role {
+				c.Next()
+				return
+			}
+		}
+
+		response.Forbidden(c, autherror.ForbiddenError("insufficient permissions", userRole))
+		c.Abort()
+	})
 }

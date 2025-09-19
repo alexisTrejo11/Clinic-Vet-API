@@ -18,16 +18,14 @@ import (
 // @in header
 // @name Authorization
 type EmployeeAppointmentController struct {
-	validator         *validator.Validate
-	commandController *AppointmentCommandController
-	queryContoller    *AppointmentQueryController
+	validator  *validator.Validate
+	operations *ApptControllerOperations
 }
 
-func NewEmployeeController(commandController *AppointmentCommandController, validator *validator.Validate, queryContoller *AppointmentQueryController) *EmployeeAppointmentController {
+func NewEmployeeController(operations *ApptControllerOperations, validator *validator.Validate) *EmployeeAppointmentController {
 	return &EmployeeAppointmentController{
-		validator:         validator,
-		commandController: commandController,
-		queryContoller:    queryContoller,
+		validator:  validator,
+		operations: operations,
 	}
 }
 
@@ -52,7 +50,7 @@ func (ctrl *EmployeeAppointmentController) GetMyAppointments(c *gin.Context) {
 		return
 	}
 
-	ctrl.queryContoller.GetAppointmentsByEmployee(c, userCTX.EmployeeID)
+	ctrl.operations.GetAppointmentsByEmployee(c, userCTX.EmployeeID)
 }
 
 // CompleteAppointment godoc
@@ -71,7 +69,7 @@ func (ctrl *EmployeeAppointmentController) CompleteAppointment(c *gin.Context) {
 		return
 	}
 
-	ctrl.commandController.CompleteAppointment(c, &userCTX.EmployeeID)
+	ctrl.operations.CompleteAppointment(c, &userCTX.EmployeeID)
 }
 
 // CancelAppointment godoc
@@ -90,7 +88,7 @@ func (ctrl *EmployeeAppointmentController) CancelAppointment(c *gin.Context) {
 		return
 	}
 
-	ctrl.commandController.CancelAppointment(c, &userCTX.EmployeeID)
+	ctrl.operations.CancelAppointment(c, &userCTX.EmployeeID)
 }
 
 // ConfirmAppointment godoc
@@ -115,7 +113,7 @@ func (ctrl *EmployeeAppointmentController) ConfirmAppointment(c *gin.Context) {
 		return
 	}
 
-	ctrl.commandController.ConfirmAppointment(c, userCTX.EmployeeID)
+	ctrl.operations.ConfirmAppointment(c, userCTX.EmployeeID)
 }
 
 // @Description Marks an appointment as no-show when the client doesn't attend
@@ -138,7 +136,7 @@ func (ctrl *EmployeeAppointmentController) MarkAsNoShow(c *gin.Context) {
 		return
 	}
 
-	ctrl.commandController.NotAttend(c, &userCTX.EmployeeID)
+	ctrl.operations.NotAttend(c, &userCTX.EmployeeID)
 }
 
 // GetAppointmentStats godoc
@@ -217,5 +215,5 @@ func (ctrl *EmployeeAppointmentController) RescheduleAppointment(c *gin.Context)
 		return
 	}
 
-	ctrl.commandController.RescheduleAppointment(c, &userCTX.EmployeeID)
+	ctrl.operations.RescheduleAppointment(c, &userCTX.EmployeeID)
 }

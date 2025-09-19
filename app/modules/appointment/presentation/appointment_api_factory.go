@@ -2,11 +2,11 @@ package api
 
 import (
 	"clinic-vet-api/app/core/repository"
+	"clinic-vet-api/app/middleware"
 	"clinic-vet-api/app/modules/appointment/application/command"
 	"clinic-vet-api/app/modules/appointment/application/query"
 	"clinic-vet-api/app/modules/appointment/infrastructure/bus"
 	"clinic-vet-api/app/modules/appointment/presentation/controller"
-	"clinic-vet-api/app/modules/appointment/presentation/dto"
 	"clinic-vet-api/app/modules/appointment/presentation/routes"
 	"clinic-vet-api/sqlc"
 	"fmt"
@@ -19,10 +19,11 @@ import (
 
 // AppointmentAPIConfig holds configuration dependencies
 type AppointmentAPIConfig struct {
-	Router       *gin.Engine
-	Queries      *sqlc.Queries
-	Validator    *validator.Validate
-	CustomerRepo repository.CustomerRepository
+	Router         *gin.Engine
+	Queries        *sqlc.Queries
+	Validator      *validator.Validate
+	CustomerRepo   repository.CustomerRepository
+	AuthMiddleware *middleware.AuthMiddleware
 }
 
 // AppointmentAPIComponents holds all created components
@@ -35,10 +36,9 @@ type AppointmentAPIComponents struct {
 
 // AppointmentControllers holds all appointment controllers
 type AppointmentControllers struct {
-	Command  *controller.AppointmentCommandController
-	Query    *controller.AppointmentQueryController
-	Customer *controller.CustomerAppointmetController
-	Employee *controller.EmployeeAppointmentController
+	Customer   *controller.CustomerAppointmetController
+	Employee   *controller.EmployeeAppointmentController
+	Operations *controller.ApptControllerOperations
 }
 
 // AppointmentAPIBuilder creates and manages appointment API components
@@ -96,26 +96,21 @@ func (f *AppointmentAPIBuilder) Build() error {
 }
 
 // createControllers creates all appointment controllers
-func (f *AppointmentAPIBuilder) createControllers(
-	apptBus bus.AppointmentBus,
-) *AppointmentControllers {
+func (f *AppointmentAPIBuilder) createControllers(apptBus bus.AppointmentBus) *AppointmentControllers {
+	ctrlOperations := controller.NewApptControllerOperations(apptBus, f.config.Validator)
+
 	return &AppointmentControllers{
-		Command:  controller.NewApptCommandController(apptBus, f.config.Validator),
-		Query:    controller.NewApptQueryController(apptBus, f.config.Validator, &dto.ResponseMapper{}),
-		Customer: controller.NewCustomerApptControleer(&apptBus, f.config.Validator, f.components.Controllers.Query),
-		Employee: controller.NewEmployeeController(f.components.Controllers.Command, f.config.Validator, f.components.Controllers.Query),
+		Customer: controller.NewCustomerApptControleer(&apptBus, f.config.Validator, ctrlOperations),
+		Employee: controller.NewEmployeeController(ctrlOperations, f.config.Validator),
 	}
 }
 
 // createRoutes creates routes and registers them
 func (f *AppointmentAPIBuilder) createRoutes(controllers *AppointmentControllers) *routes.AppointmentRoutes {
-	routes := routes.NewAppointmentRoutes(
-		controllers.Command,
-		controllers.Query,
-		controllers.Employee,
-		controllers.Customer,
-	)
+	routes := routes.NewAppointmentRoutes(controllers.Customer, controllers.Employee)
 	routes.RegisterAdminRoutes(f.config.Router)
+	routes.RegisterCustomerRoutes(f.config.Router, f.config.AuthMiddleware)
+	routes.RegisterEmployeeRoutes(f.config.Router, f.config.AuthMiddleware)
 	return routes
 }
 
@@ -136,6 +131,11 @@ func (f *AppointmentAPIBuilder) validateConfig() error {
 	if f.config.CustomerRepo == nil {
 		return fmt.Errorf("customer repository cannot be nil")
 	}
+
+	if f.config.AuthMiddleware == nil {
+		return fmt.Errorf("auth middleware cannot be nil")
+	}
+
 	return nil
 }
 

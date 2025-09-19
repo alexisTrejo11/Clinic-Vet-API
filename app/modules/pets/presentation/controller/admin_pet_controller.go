@@ -1,26 +1,27 @@
 package controller
 
 import (
-	"clinic-vet-api/app/core/domain/valueobject"
-	"clinic-vet-api/app/modules/pets/application/usecase"
 	"clinic-vet-api/app/modules/pets/presentation/dto"
+	"clinic-vet-api/app/modules/pets/presentation/service"
 	httpError "clinic-vet-api/app/shared/error/infrastructure/http"
 	ginUtils "clinic-vet-api/app/shared/gin_utils"
 	"clinic-vet-api/app/shared/response"
+	"fmt"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )
 
 type PetController struct {
-	validator   *validator.Validate
-	petUseCases usecase.PetUseCases
+	validator  *validator.Validate
+	operations *service.PetControllerOperations
 }
 
-func NewPetController(validator *validator.Validate, petUseCases usecase.PetUseCases) *PetController {
+func NewPetController(validator *validator.Validate, operations *service.PetControllerOperations) *PetController {
 	return &PetController{
-		validator:   validator,
-		petUseCases: petUseCases,
+		validator:  validator,
+		operations: operations,
 	}
 }
 
@@ -32,21 +33,8 @@ func NewPetController(validator *validator.Validate, petUseCases usecase.PetUseC
 // @Success 200 {array} PetResponse "List of pets"
 // @Failure 500 {object} response.APIResponse "Internal server error"
 // @Router /pets [get]
-func (c *PetController) SearchPets(ctx *gin.Context) {
-	var searchParams dto.PetSearchRequest
-	if err := ginUtils.BindAndValidateQuery(ctx, &searchParams, c.validator); err != nil {
-		response.BadRequest(ctx, err)
-		return
-	}
-
-	searchSpecification := searchParams.ToSpecification()
-	pets, err := c.petUseCases.SearchPets(ctx, *searchSpecification)
-	if err != nil {
-		response.ApplicationError(ctx, err)
-		return
-	}
-
-	response.Found(ctx, pets, "Pets")
+func (ctrl *PetController) SearchPets(c *gin.Context) {
+	ctrl.operations.FindPetsBySpecification(c)
 }
 
 // GetPetByID retrieves a pet by its ID.
@@ -60,20 +48,8 @@ func (c *PetController) SearchPets(ctx *gin.Context) {
 // @Failure 404 {object} response.APIResponse "Pet not found"
 // @Failure 500 {object} response.APIResponse "Internal server error"
 // @Router /pets/{id} [get]
-func (c *PetController) GetPetByID(ctx *gin.Context) {
-	id, err := ginUtils.ParseParamToUInt(ctx, "id")
-	if err != nil {
-		response.BadRequest(ctx, httpError.RequestURLParamError(err, "pet_id", ctx.Param("id")))
-		return
-	}
-
-	pet, err := c.petUseCases.FindPetByID(ctx, valueobject.NewPetID(id))
-	if err != nil {
-		response.ApplicationError(ctx, err)
-		return
-	}
-
-	response.Found(ctx, pet, "Pet")
+func (ctrl *PetController) FindPetByID(c *gin.Context) {
+	ctrl.operations.FindPetByID(c, nil)
 }
 
 // CreatePet creates a new pet record.
@@ -87,21 +63,13 @@ func (c *PetController) GetPetByID(ctx *gin.Context) {
 // @Failure 400 {object} response.APIResponse "Invalid request body or validation error"
 // @Failure 500 {object} response.APIResponse "Internal server error"
 // @Router /pets [post]
-func (c *PetController) CreatePet(ctx *gin.Context) {
-	var requestData dto.AdminCreatePetRequest
-	if err := ginUtils.BindAndValidateBody(ctx, &requestData, c.validator); err != nil {
-		response.BadRequest(ctx, err)
+func (ctrl *PetController) CreatePet(c *gin.Context) {
+	var requestData dto.AdminPetCreateExtraFields
+	if err := ginUtils.BindAndValidateBody(c, &requestData, ctrl.validator); err != nil {
+		response.BadRequest(c, err)
 		return
 	}
-
-	createPetData := requestData.ToCreateData()
-	pet, err := c.petUseCases.CreatePet(ctx.Request.Context(), createPetData)
-	if err != nil {
-		response.ApplicationError(ctx, err)
-		return
-	}
-
-	response.Created(ctx, pet.ID, "Pet")
+	ctrl.operations.CreatePet(c, requestData.CustomerID, requestData.IsActive)
 }
 
 // UpdatePet updates an existing pet record.
@@ -117,27 +85,14 @@ func (c *PetController) CreatePet(ctx *gin.Context) {
 // @Failure 404 {object} response.APIResponse "Pet not found"
 // @Failure 500 {object} response.APIResponse "Internal server error"
 // @Router /pets/{id} [put]
-func (c *PetController) UpdatePet(ctx *gin.Context) {
-	id, err := ginUtils.ParseParamToUInt(ctx, "id")
-	if err != nil {
-		response.BadRequest(ctx, httpError.RequestURLParamError(err, "pet_id", ctx.Param("id")))
+func (ctrl *PetController) UpdatePet(c *gin.Context) {
+	var extraFields dto.AdminUpdatePetExtraFields
+	if err := ginUtils.BindAndValidateBody(c, &extraFields, ctrl.validator); err != nil {
+		response.BadRequest(c, err)
 		return
 	}
 
-	var requestData dto.AdminUpdatePetRequest
-	if err := ginUtils.BindAndValidateBody(ctx, &requestData, c.validator); err != nil {
-		response.BadRequest(ctx, err)
-		return
-	}
-
-	updatePetData := requestData.ToUpdatePet(id)
-	_, err = c.petUseCases.UpdatePet(ctx, *updatePetData)
-	if err != nil {
-		response.ApplicationError(ctx, err)
-		return
-	}
-
-	response.Updated(ctx, nil, "Pet")
+	ctrl.operations.UpdatePet(c, extraFields.CustomerID, extraFields.IsActive)
 }
 
 // SoftDeletePet soft deletes a pet record.
@@ -150,18 +105,16 @@ func (c *PetController) UpdatePet(ctx *gin.Context) {
 // @Failure 404 {object} response.APIResponse "Pet not found"
 // @Failure 500 {object} response.APIResponse "Internal server error"
 // @Router /pets/{id} [delete]
-func (c *PetController) SoftDeletePet(ctx *gin.Context) {
-	id, err := ginUtils.ParseParamToUInt(ctx, "id")
-	if err != nil {
-		response.BadRequest(ctx, httpError.RequestURLParamError(err, "pet_id", ctx.Param("id")))
+func (ctrl *PetController) DeletePet(c *gin.Context) {
+	hardDelete := c.Query("hard")
+	hardDelete = strings.ToLower(hardDelete)
+	hardDelete = strings.TrimSpace(hardDelete)
+
+	if hardDelete != "true" && hardDelete != "false" {
+		err := httpError.RequestURLQueryError(fmt.Errorf("invalid value for 'hard' query parameter: %s. must be 'true' or 'false'", hardDelete), c.Request.URL.String())
+		response.BadRequest(c, err)
 		return
 	}
 
-	petID := valueobject.NewPetID(id)
-	if err := c.petUseCases.DeletePet(ctx, petID, true); err != nil {
-		response.ApplicationError(ctx, err)
-		return
-	}
-
-	response.NoContent(ctx)
+	ctrl.operations.DeletePet(c, nil, hardDelete == "true")
 }
