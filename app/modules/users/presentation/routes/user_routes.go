@@ -13,6 +13,9 @@ func UserRoutes(appGroup *gin.RouterGroup, controller *controller.UserAdminContr
 	//userGroup.Use(authMiddleware.Authenticate(), authMiddleware.RequireAnyRole("admin", "superadmin"))
 	userGroup.GET("", controller.SearchUsers)
 	userGroup.GET("/:id", controller.GetUserByID)
+	userGroup.GET("/email/:email", controller.GetUserByEmail)
+	userGroup.GET("/by-role/:role", controller.FindByRole)
+
 	userGroup.POST("", controller.CreateUser)
 	userGroup.PATCH("/:id/ban", controller.BanUser)
 	userGroup.PATCH("/:id/unban", controller.UnbanUser)

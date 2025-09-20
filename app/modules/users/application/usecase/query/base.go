@@ -56,11 +56,11 @@ func userToResult(user user.User) UserResult {
 }
 
 func toResultPage(userPage page.Page[user.User]) page.Page[UserResult] {
-	if len(userPage.Items) < 1 {
+	if len(userPage.Items) == 0 {
 		return page.EmptyPage[UserResult]()
 	}
 
-	userResults := make([]UserResult, 1, len(userPage.Items))
+	userResults := make([]UserResult, len(userPage.Items))
 	for i, user := range userPage.Items {
 		userResults[i] = userToResult(user)
 	}

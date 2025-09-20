@@ -11,8 +11,11 @@ package page
 
 import (
 	"clinic-vet-api/app/core/domain/specification"
+	"fmt"
 	"math"
 	"reflect"
+	"strconv"
+	"strings"
 )
 
 // SortDirection defines the direction for sorting results.
@@ -23,14 +26,43 @@ const (
 	DESC SortDirection = "DESC" // Descending order
 )
 
+func (sd *SortDirection) UnmarshalParam(param string) error {
+	if param == "" {
+		*sd = ASC // Valor por defecto
+		return nil
+	}
+
+	// Manejar diferentes formatos
+	switch strings.ToLower(param) {
+	case "asc", "ascending", "0":
+		*sd = ASC
+	case "desc", "descending", "1":
+		*sd = DESC
+	default:
+		if num, err := strconv.Atoi(param); err == nil {
+			switch num {
+			case 0:
+				*sd = ASC
+			case 1:
+				*sd = DESC
+			default:
+				return fmt.Errorf("invalid sort direction: %s", param)
+			}
+		} else {
+			return fmt.Errorf("invalid sort direction: %s", param)
+		}
+	}
+	return nil
+}
+
 // PageInput (consider renaming to PaginationRequest) contains parameters
 // for paginating and sorting query results.
 // Uses JSON tags for API serialization and validate tags for input validation.
 type PageInput struct {
-	PageSize      int           `json:"page_limit" validate:"omitempty,min=1,max=100"`
-	Page          int           `json:"page" validate:"omitempty,min=1"`
-	SortDirection SortDirection `json:"sort_direction" validate:"omitempty,min=0"`
-	OrderBy       string        `json:"order_by" validate:"omitempty,max=50"`
+	PageSize      int           `json:"page_limit" form:"page_limit" validate:"omitempty,gte=1,lte=100"`
+	Page          int           `json:"page" form:"page" validate:"omitempty,gte=1"`
+	SortDirection SortDirection `json:"sort_direction" form:"sort_direction" validate:"omitempty"`
+	OrderBy       string        `json:"order_by" form:"order_by" validate:"omitempty,max=50"`
 }
 
 func (p PageInput) ToMap() map[string]any {

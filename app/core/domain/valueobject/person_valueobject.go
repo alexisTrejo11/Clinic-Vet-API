@@ -58,8 +58,8 @@ func NewEmail(emailStr string) (Email, error) {
 }
 
 func NewEmailNoErr(emailStr string) Email {
-	e, _ := NewEmail(emailStr)
-	return e
+	e := &Email{value: strings.ToLower(emailStr)}
+	return *e
 }
 
 func (e Email) isValid() bool {

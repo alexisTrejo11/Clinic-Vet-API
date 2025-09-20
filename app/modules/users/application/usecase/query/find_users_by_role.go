@@ -5,6 +5,7 @@ import (
 
 	"clinic-vet-api/app/core/domain/enum"
 	"clinic-vet-api/app/core/repository"
+	apperror "clinic-vet-api/app/shared/error/application"
 	p "clinic-vet-api/app/shared/page"
 )
 
@@ -13,16 +14,13 @@ type FindUsersByRoleQuery struct {
 	pagination p.PageInput
 }
 
-func NewFindUsersByRoleQuery(role string, pagination p.PageInput) (*FindUsersByRoleQuery, error) {
-	roleEnum, err := enum.ParseUserRole(role)
-	if err != nil {
-		return nil, err
-	}
+func NewFindUsersByRoleQuery(role string, pagination p.PageInput) *FindUsersByRoleQuery {
+	roleEnum := enum.UserRole(role)
 
 	return &FindUsersByRoleQuery{
 		role:       roleEnum,
 		pagination: pagination,
-	}, nil
+	}
 }
 
 type FindUsersByRoleHandler struct {
@@ -36,6 +34,10 @@ func NewFindUsersByRoleHandler(userRepository repository.UserRepository) *FindUs
 }
 
 func (h *FindUsersByRoleHandler) Handle(ctx context.Context, query FindUsersByRoleQuery) (p.Page[UserResult], error) {
+	if !query.role.IsValid() {
+		return p.Page[UserResult]{}, apperror.FieldValidationError("role", query.role.String(), "invalid role")
+	}
+
 	users, err := h.userRepository.FindByRole(ctx, query.role.String(), query.pagination)
 	if err != nil {
 		return p.Page[UserResult]{}, err

@@ -12,16 +12,12 @@ type FindUserByEmailQuery struct {
 	includeProfile bool
 }
 
-func NewFindUserByEmailQuery(email string, includeProfile bool) (*FindUserByEmailQuery, error) {
-	emailVO, err := valueobject.NewEmail(email)
-	if err != nil {
-		return nil, err
-	}
-
+func NewFindUserByEmailQuery(email string, includeProfile bool) *FindUserByEmailQuery {
+	emailVO := valueobject.NewEmailNoErr(email)
 	return &FindUserByEmailQuery{
 		email:          emailVO,
 		includeProfile: includeProfile,
-	}, nil
+	}
 }
 
 type FindUserByEmailHandler struct {

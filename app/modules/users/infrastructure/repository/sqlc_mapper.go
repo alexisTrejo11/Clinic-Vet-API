@@ -57,7 +57,7 @@ func sqlcRowToEntity(sqlRow sqlc.User) (user.User, error) {
 }
 
 func sqlcRowsToEntities(sqlRows []sqlc.User) ([]user.User, error) {
-	users := make([]user.User, 0, len(sqlRows))
+	users := make([]user.User, len(sqlRows))
 	for i, sqlRow := range sqlRows {
 		user, err := sqlcRowToEntity(sqlRow)
 		if err != nil {

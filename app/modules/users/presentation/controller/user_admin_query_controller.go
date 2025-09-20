@@ -7,6 +7,7 @@ import (
 	"clinic-vet-api/app/modules/users/presentation/dto"
 	httpError "clinic-vet-api/app/shared/error/infrastructure/http"
 	ginUtils "clinic-vet-api/app/shared/gin_utils"
+	"clinic-vet-api/app/shared/page"
 	"clinic-vet-api/app/shared/response"
 
 	"github.com/gin-gonic/gin"
@@ -49,12 +50,7 @@ func (ctrl *UserAdminController) GetUserByEmail(c *gin.Context) {
 		return
 	}
 
-	getUserByEmailQuery, err := query.NewFindUserByEmailQuery(email, false)
-	if err != nil {
-		response.ApplicationError(c, err)
-		return
-	}
-
+	getUserByEmailQuery := query.NewFindUserByEmailQuery(email, false)
 	userResult, err := ctrl.bus.QueryBus.FindUserByEmail(c.Request.Context(), *getUserByEmailQuery)
 	if err != nil {
 		response.ApplicationError(c, err)
@@ -86,4 +82,28 @@ func (c *UserAdminController) GetUserByPhone(ctx *gin.Context) {
 
 	userResponse := dto.UserResultToResponse(&userResult)
 	response.Found(ctx, userResponse, "User")
+}
+
+func (ctrl *UserAdminController) FindByRole(ctx *gin.Context) {
+	role := ctx.Param("role")
+	if role == "" {
+		response.BadRequest(ctx, httpError.RequestURLParamError(errors.New("role is required"), "role", ""))
+		return
+	}
+
+	var pagination page.PageInput
+	if err := ginUtils.ShouldBindPageParams(&pagination, ctx, ctrl.validator); err != nil {
+		response.BadRequest(ctx, httpError.RequestURLQueryError(err, ctx.Request.URL.RawQuery))
+		return
+	}
+
+	findUsersByRoleQuery := query.NewFindUsersByRoleQuery(role, pagination)
+	userResults, err := ctrl.bus.QueryBus.FindUsersByRole(ctx.Request.Context(), *findUsersByRoleQuery)
+	if err != nil {
+		response.ApplicationError(ctx, err)
+		return
+	}
+
+	userResponses := dto.UserResultsToResponses(userResults.Items)
+	response.SuccessWithPagination(ctx, userResponses, "Users retrieved successfully", userResults.Metadata)
 }
