@@ -1,3 +1,4 @@
+// Package controller contains the controllers for handling payment-related requests.
 package controller
 
 import (
@@ -6,79 +7,73 @@ import (
 )
 
 type AdminPaymentController struct {
-	validator         *validator.Validate
-	queryController   *PaymentQueryController
-	paymentController *PaymentController
+	validator  *validator.Validate
+	operations *PaymentControllerOperations
 }
 
-func NewAdminPaymentController(
-	validator *validator.Validate,
-	queryController *PaymentQueryController,
-	paymentController *PaymentController,
-) *AdminPaymentController {
+func NewAdminPaymentController(validator *validator.Validate, operations *PaymentControllerOperations) *AdminPaymentController {
 	return &AdminPaymentController{
-		validator:         validator,
-		queryController:   queryController,
-		paymentController: paymentController,
+		validator:  validator,
+		operations: operations,
 	}
 }
 
 // SearchPayments delegates to query controller
 func (ctrl *AdminPaymentController) SearchPayments(c *gin.Context) {
-	ctrl.queryController.SearchPayments(c)
+	ctrl.operations.SearchPayments(c)
 }
 
 // CreatePayment delegates to payment controller
 func (ctrl *AdminPaymentController) CreatePayment(c *gin.Context) {
-	ctrl.paymentController.CreatePayment(c)
+	ctrl.operations.CreatePayment(c)
 }
 
 // GetPayment delegates to payment controller
 func (ctrl *AdminPaymentController) GetPayment(c *gin.Context) {
-	ctrl.queryController.GetPayment(c)
+	ctrl.operations.GetPayment(c)
 }
 
 // UpdatePayment delegates to payment controller
 func (ctrl *AdminPaymentController) UpdatePayment(c *gin.Context) {
-	ctrl.paymentController.UpdatePayment(c)
+	ctrl.operations.UpdatePayment(c)
 }
 
 // DeletePayment delegates to payment controller
 func (ctrl *AdminPaymentController) DeletePayment(c *gin.Context) {
-	ctrl.paymentController.DeletePayment(c)
+	ctrl.operations.DeletePayment(c)
 }
 
 // ProcessPayment delegates to payment controller
 func (ctrl *AdminPaymentController) ProcessPayment(c *gin.Context) {
-	ctrl.paymentController.ProcessPayment(c)
+	ctrl.operations.ProcessPayment(c)
 }
 
 // RefundPayment delegates to payment controller
 func (ctrl *AdminPaymentController) RefundPayment(c *gin.Context) {
-	ctrl.paymentController.RefundPayment(c)
+	ctrl.operations.RefundPayment(c)
 }
 
 // CancelPayment delegates to payment controller
 func (ctrl *AdminPaymentController) CancelPayment(c *gin.Context) {
-	ctrl.paymentController.CancelPayment(c)
+	ctrl.operations.CancelPayment(c)
 }
 
 // GetOverduePayments delegates to query controller
 func (ctrl *AdminPaymentController) GetOverduePayments(c *gin.Context) {
-	ctrl.queryController.GetOverduePayments(c)
+	ctrl.operations.GetOverduePayments(c)
 }
 
 // GeneratePaymentReport delegates to query controller
 /* func (c *AdminPaymentController) GeneratePaymentReport(c *gin.Context) {
-	c.queryController.GeneratePaymentReport(c)
+	c.operations.GeneratePaymentReport(c)
 } */
 
 // GetPaymentsByDateRange delegates to query controller
 func (ctrl *AdminPaymentController) GetPaymentsByDateRange(c *gin.Context) {
-	ctrl.queryController.GetPaymentsByDateRange(c)
+	ctrl.operations.GetPaymentsByDateRange(c)
 }
 
 // GetPaymentsByStatus delegates to query controller
 func (ctrl *AdminPaymentController) GetPaymentsByStatus(c *gin.Context) {
-	ctrl.queryController.GetPaymentsByStatus(c)
+	ctrl.operations.GetPaymentsByStatus(c)
 }

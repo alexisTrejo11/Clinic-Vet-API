@@ -1,25 +1,28 @@
 package routes
 
 import (
+	"clinic-vet-api/app/middleware"
 	"clinic-vet-api/app/modules/users/presentation/controller"
 
 	"github.com/gin-gonic/gin"
 )
 
-func UserRoutes(router *gin.Engine, controller *controller.UserAdminController) {
+func UserRoutes(appGroup *gin.RouterGroup, controller *controller.UserAdminController, authMiddleware *middleware.AuthMiddleware) {
 	// User Query Routes
-	path := "api/v2/admin/users"
-	router.GET(path, controller.SearchUsers)
-	router.GET(path+"/:id", controller.GetUserByID)
-	router.POST(path, controller.CreateUser)
-	router.PATCH(path+"/:id/ban", controller.BanUser)
-	router.PATCH(path+"/:id/unban", controller.UnbanUser)
+	userGroup := appGroup.Group("/users")
+	userGroup.Use(authMiddleware.Authenticate(), authMiddleware.RequireAnyRole("admin", "superadmin"))
+	userGroup.GET("", controller.SearchUsers)
+	userGroup.GET("/:id", controller.GetUserByID)
+	userGroup.POST("", controller.CreateUser)
+	userGroup.PATCH("/:id/ban", controller.BanUser)
+	userGroup.PATCH("/:id/unban", controller.UnbanUser)
 }
 
-func ProfileRoutes(router *gin.Engine, profileController *controller.ProfileController) {
+func ProfileRoutes(appGroup *gin.RouterGroup, profileController *controller.ProfileController, authMiddleware *middleware.AuthMiddleware) {
 	// Profile Routes
-	path := "api/v2/users/profiles"
+	profileGroup := appGroup.Group("/users/profile")
+	profileGroup.Use(authMiddleware.Authenticate())
 
-	router.GET(path, profileController.GetUserProfile)
-	router.PATCH(path, profileController.UpdateUserProfile)
+	profileGroup.GET("", profileController.GetUserProfile)
+	profileGroup.PATCH("", profileController.UpdateUserProfile)
 }

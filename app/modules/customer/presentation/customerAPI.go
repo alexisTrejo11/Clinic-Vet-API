@@ -2,24 +2,27 @@ package customerAPI
 
 import (
 	"clinic-vet-api/app/core/repository"
+	"clinic-vet-api/app/middleware"
 	"clinic-vet-api/app/modules/customer/application/command"
 	"clinic-vet-api/app/modules/customer/application/query"
 	"clinic-vet-api/app/modules/customer/infrastructure/bus"
 	customerRepo "clinic-vet-api/app/modules/customer/infrastructure/repository"
 	"clinic-vet-api/app/modules/customer/presentation/controller"
 	"clinic-vet-api/app/modules/customer/presentation/routes"
-	appError "clinic-vet-api/app/shared/error/application"
 	"clinic-vet-api/sqlc"
+
+	petRepo "clinic-vet-api/app/modules/pets/infrastructure/repository"
+	appError "clinic-vet-api/app/shared/error/application"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )
 
 type CustomerAPIConfig struct {
-	Router    *gin.Engine
-	Validator *validator.Validate
-	Queries   *sqlc.Queries
-	PetRepo   repository.PetRepository
+	Router         *gin.RouterGroup
+	Validator      *validator.Validate
+	Queries        *sqlc.Queries
+	AuthMiddleware *middleware.AuthMiddleware
 }
 
 type CustomerAPIComponents struct {
@@ -51,7 +54,8 @@ func (f *CustomerAPIModule) Bootstrap() error {
 	}
 
 	// Create repository
-	customerRepo := customerRepo.NewSqlcCustomerRepository(f.config.Queries, f.config.PetRepo)
+	petRepo := petRepo.NewSqlcPetRepository(f.config.Queries)
+	customerRepo := customerRepo.NewSqlcCustomerRepository(f.config.Queries, petRepo)
 
 	// Create use cases
 	customerBus := f.createBus(customerRepo)
@@ -60,7 +64,7 @@ func (f *CustomerAPIModule) Bootstrap() error {
 	controller := controller.NewCustomerController(f.config.Validator, &customerBus)
 
 	// Register routes
-	routes.CustomerRoutes(f.config.Router, controller)
+	routes.CustomerRoutes(f.config.Router, controller, f.config.AuthMiddleware)
 
 	// Store components
 	f.components = &CustomerAPIComponents{
@@ -98,9 +102,10 @@ func (f *CustomerAPIModule) validateConfig() error {
 	if f.config.Queries == nil {
 		return appError.ConflictError("INVALID_CONFIG", "queries cannot be nil")
 	}
-	if f.config.PetRepo == nil {
-		return appError.ConflictError("INVALID_CONFIG", "pet repository cannot be nil")
+	if f.config.AuthMiddleware == nil {
+		return appError.ConflictError("INVALID_CONFIG", "auth middleware cannot be nil")
 	}
+
 	return nil
 }
 

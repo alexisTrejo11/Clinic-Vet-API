@@ -18,8 +18,8 @@ type DatabaseConfig struct {
 	ConnMaxIdleTime time.Duration `json:"conn_max_idle_time"`
 }
 
-func PostgresConn(db_url string) *pgx.Conn {
-	conn, err := pgx.Connect(context.Background(), db_url)
+func PostgresConn(dbURL string) *pgx.Conn {
+	conn, err := pgx.Connect(context.Background(), dbURL)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
 		os.Exit(1)

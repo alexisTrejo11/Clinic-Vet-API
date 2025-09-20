@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"clinic-vet-api/app/core/repository"
+	"clinic-vet-api/app/middleware"
 	medHistCommand "clinic-vet-api/app/modules/medical/application/command"
 	"clinic-vet-api/app/modules/medical/application/query"
 	"clinic-vet-api/app/modules/medical/infrastructure/bus"
@@ -17,12 +18,13 @@ import (
 )
 
 type MedicalHistoryModuleConfig struct {
-	Router       *gin.Engine
-	Queries      *sqlc.Queries
-	Validator    *validator.Validate
-	CustomerRepo *repository.CustomerRepository
-	EmployeeRepo *repository.EmployeeRepository
-	PetRepo      *repository.PetRepository
+	Router         *gin.RouterGroup
+	Queries        *sqlc.Queries
+	Validator      *validator.Validate
+	CustomerRepo   *repository.CustomerRepository
+	EmployeeRepo   *repository.EmployeeRepository
+	PetRepo        *repository.PetRepository
+	AuthMiddleware *middleware.AuthMiddleware
 }
 
 type MedicalHistoryModuleComponents struct {
@@ -84,7 +86,7 @@ func (m *MedicalHistoryModule) createController(medHistBus *bus.MedicalHistoryBu
 }
 
 func (m *MedicalHistoryModule) registerRoutes(controller *controller.AdminMedicalHistoryController) {
-	routes.MedicalHistoryRoutes(m.config.Router, *controller)
+	routes.MedicalHistoryRoutes(m.config.Router, *controller, m.config.AuthMiddleware)
 }
 
 func (m *MedicalHistoryModule) validateConfig() error {
@@ -108,6 +110,10 @@ func (m *MedicalHistoryModule) validateConfig() error {
 	}
 	if m.config.PetRepo == nil {
 		return fmt.Errorf("pet repository cannot be nil")
+	}
+
+	if m.config.AuthMiddleware == nil {
+		return fmt.Errorf("auth middleware cannot be nil")
 	}
 	return nil
 }

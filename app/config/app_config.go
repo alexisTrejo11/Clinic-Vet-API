@@ -1,4 +1,4 @@
-// File: app/config/settings.go
+// Package config handles application configuration loading and validation
 package config
 
 import (
@@ -168,7 +168,6 @@ func loadAppConfig(config *AppConfig) {
 	config.EnableSwagger = parseBoolWithDefault("ENABLE_SWAGGER", true)
 }
 
-// Validation methods
 func (s *AppSettings) Validate() error {
 	var errors []string
 

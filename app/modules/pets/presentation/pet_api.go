@@ -1,23 +1,23 @@
 package api
 
 import (
-	"fmt"
-
 	"clinic-vet-api/app/core/repository"
 	"clinic-vet-api/app/middleware"
 	"clinic-vet-api/app/modules/pets/application/cqrs"
-	petRepo "clinic-vet-api/app/modules/pets/infrastructure/repository"
 	"clinic-vet-api/app/modules/pets/presentation/controller"
 	"clinic-vet-api/app/modules/pets/presentation/routes"
 	"clinic-vet-api/app/modules/pets/presentation/service"
 	"clinic-vet-api/sqlc"
+	"fmt"
+
+	petRepo "clinic-vet-api/app/modules/pets/infrastructure/repository"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )
 
 type PetModuleConfig struct {
-	Router         *gin.Engine
+	Router         *gin.RouterGroup
 	Queries        *sqlc.Queries
 	Validator      *validator.Validate
 	CustomerRepo   repository.CustomerRepository
@@ -56,9 +56,9 @@ func (m *PetModule) Bootstrap() error {
 
 	repository := m.createRepository()
 
-	serviceBus := m.createServiceBus(repository)
+	bus := m.createServiceBus(repository, m.config.CustomerRepo)
 
-	controllerOperations := m.createControllerOperations(serviceBus, m.config.Validator)
+	controllerOperations := m.createControllerOperations(bus, m.config.Validator)
 	petController := m.createPetController(controllerOperations)
 	customerPetController := m.createCustomerPetController(controllerOperations)
 
@@ -66,10 +66,10 @@ func (m *PetModule) Bootstrap() error {
 
 	m.components = &PetModuleComponents{
 		Repository:            repository,
-		PetServiceBus:         m.components.PetServiceBus,
-		PetCtrlOperations:     m.components.PetCtrlOperations,
-		PetController:         m.components.PetController,
-		CustomerPetController: m.components.CustomerPetController,
+		PetServiceBus:         bus,
+		PetCtrlOperations:     *controllerOperations,
+		PetController:         *petController,
+		CustomerPetController: *customerPetController,
 	}
 
 	m.isBuilt = true
@@ -80,8 +80,9 @@ func (m *PetModule) createRepository() repository.PetRepository {
 	return petRepo.NewSqlcPetRepository(m.config.Queries)
 }
 
-func (m *PetModule) createServiceBus(repository repository.PetRepository) cqrs.PetServiceBus {
-	return cqrs.NewPetServiceBus(repository, m.config.CustomerRepo)
+func (m *PetModule) createServiceBus(petRepo repository.PetRepository, customerRepo repository.CustomerRepository) cqrs.PetServiceBus {
+	bus := cqrs.NewPetServiceBus(petRepo, customerRepo)
+	return bus
 }
 
 func (m *PetModule) createControllerOperations(serviceBus cqrs.PetServiceBus, validator *validator.Validate) *service.PetControllerOperations {

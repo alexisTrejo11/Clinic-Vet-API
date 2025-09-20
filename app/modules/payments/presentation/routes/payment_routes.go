@@ -1,65 +1,61 @@
+// Package routes contains the route definitions for payment-related endpoints.+
 package routes
 
 import (
+	"clinic-vet-api/app/middleware"
 	"clinic-vet-api/app/modules/payments/presentation/controller"
 
 	"github.com/gin-gonic/gin"
 )
 
-func RegisterAdminPaymentRoutes(router *gin.Engine, controller *controller.AdminPaymentController) {
-	adminGroup := router.Group("api/v2/admin/payments")
+type PaymentRoutes struct {
+	adminController    *controller.AdminPaymentController
+	customerController *controller.ClientPaymentController
+}
+
+func NewPaymentRoutes(
+	adminController *controller.AdminPaymentController,
+	customerController *controller.ClientPaymentController,
+) *PaymentRoutes {
+	return &PaymentRoutes{
+		adminController:    adminController,
+		customerController: customerController,
+	}
+}
+
+func (r *PaymentRoutes) RegisterAdminPaymentRoutes(router *gin.RouterGroup, authMiddleware *middleware.AuthMiddleware) {
+	adminGroup := router.Group("/payments")
+	adminGroup.Use(authMiddleware.Authenticate())
+	adminGroup.Use(authMiddleware.RequireAnyRole("recepetionist", "admin"))
 	{
 		// Basic CRUD operations
-		adminGroup.GET("/", controller.SearchPayments)
-		adminGroup.POST("/", controller.CreatePayment)
-		adminGroup.GET("/:id", controller.GetPayment)
-		adminGroup.PUT("/:id", controller.UpdatePayment)
-		adminGroup.DELETE("/:id", controller.DeletePayment)
+		adminGroup.GET("/", r.adminController.SearchPayments)
+		adminGroup.POST("/", r.adminController.CreatePayment)
+		adminGroup.GET("/:id", r.adminController.GetPayment)
+		adminGroup.PUT("/:id", r.adminController.UpdatePayment)
+		adminGroup.DELETE("/:id", r.adminController.DeletePayment)
 
 		// Payment operations
-		adminGroup.POST("/:id/process", controller.ProcessPayment)
-		adminGroup.POST("/:id/refund", controller.RefundPayment)
-		adminGroup.POST("/:id/cancel", controller.CancelPayment)
+		adminGroup.POST("/:id/process", r.adminController.ProcessPayment)
+		adminGroup.POST("/:id/refund", r.adminController.RefundPayment)
+		adminGroup.POST("/:id/cancel", r.adminController.CancelPayment)
 
 		// Batch operations
-		//adminGroup.POST("/mark-overdue", controller.MarkOverduePayments)
+		// adminGroup.POST("/mark-overdue", r.adminController.MarkOverduePayments)
 
 		// Query operations
-		adminGroup.GET("/overdue", controller.GetOverduePayments)
-		adminGroup.GET("/status/:status", controller.GetPaymentsByStatus)
-		adminGroup.GET("/date-range", controller.GetPaymentsByDateRange)
-		// adminGroup.GET("/report", controller.GeneratePaymentReport)
+		adminGroup.GET("/overdue", r.adminController.GetOverduePayments)
+		adminGroup.GET("/status/:status", r.adminController.GetPaymentsByStatus)
+		adminGroup.GET("/date-range", r.adminController.GetPaymentsByDateRange)
+		// adminGroup.GET("/report", r.adminController.GeneratePaymentReport)
 	}
 }
 
-func RegisterClientPaymentRoutes(router *gin.Engine, controller *controller.ClientPaymentController) {
-	clientGroup := router.Group("api/v2/client/payments")
+func (r *PaymentRoutes) RegisterClientRoutes(router *gin.RouterGroup, authnMiddleware *middleware.AuthMiddleware) {
+	clientGroup := router.Group("customers/payments")
+	clientGroup.Use(authnMiddleware.Authenticate())
+	clientGroup.Use(authnMiddleware.RequireAnyRole("customer"))
 	{
-		// customer payment operations
-		clientGroup.GET("/customers/:customer_id", controller.GetMyPayments)
-
-	}
-}
-
-func RegisterPaymentQueryRoutes(router *gin.Engine, controller *controller.PaymentQueryController) {
-	queryGroup := router.Group("api/v2/payments")
-	{
-		queryGroup.GET("/search", controller.SearchPayments)
-		queryGroup.GET("/status/:status", controller.GetPaymentsByStatus)
-		queryGroup.GET("/overdue", controller.GetOverduePayments)
-		// queryGroup.GET("/report", controller.GeneratePaymentReport)
-		queryGroup.GET("/date-range", controller.GetPaymentsByDateRange)
-	}
-}
-
-func RegisterPaymentCommandRoutes(router *gin.Engine, controller *controller.PaymentController) {
-	commandGroup := router.Group("api/v2/payments")
-	{
-		commandGroup.POST("/", controller.CreatePayment)
-		commandGroup.PUT("/:id", controller.UpdatePayment)
-		commandGroup.DELETE("/:id", controller.DeletePayment)
-		commandGroup.POST("/:id/process", controller.ProcessPayment)
-		commandGroup.POST("/:id/refund", controller.RefundPayment)
-		commandGroup.POST("/:id/cancel", controller.CancelPayment)
+		clientGroup.GET("/customers/:customer_id", r.customerController.GetMyPayments)
 	}
 }

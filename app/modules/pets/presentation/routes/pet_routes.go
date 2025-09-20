@@ -7,19 +7,19 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func PetsRoutes(r *gin.Engine, controller *controller.PetController, authMiddleware *middleware.AuthMiddleware) {
-	pet := r.Group("/pets")
-	pet.Use(authMiddleware.Authenticate())
-	pet.Use(authMiddleware.RequireAnyRole("admin"))
+func PetsRoutes(appGroup *gin.RouterGroup, controller *controller.PetController, authMiddleware *middleware.AuthMiddleware) {
+	petGroup := appGroup.Group("/pets")
+	petGroup.Use(authMiddleware.Authenticate())
+	petGroup.Use(authMiddleware.RequireAnyRole("admin"))
 
-	pet.GET("/", controller.SearchPets)
-	pet.GET("/:id", controller.FindPetByID)
-	pet.POST("/", controller.CreatePet)
-	pet.PATCH("/:id", controller.UpdatePet)
-	pet.DELETE("/:id", controller.DeletePet)
+	petGroup.GET("/", controller.SearchPets)
+	petGroup.GET("/:id", controller.FindPetByID)
+	petGroup.POST("/", controller.CreatePet)
+	petGroup.PATCH("/:id", controller.UpdatePet)
+	petGroup.DELETE("/:id", controller.DeletePet)
 }
 
-func CustomerPetsRoutes(r *gin.Engine, controller *controller.CustomerPetController, authMiddleware *middleware.AuthMiddleware) {
+func CustomerPetsRoutes(r *gin.RouterGroup, controller *controller.CustomerPetController, authMiddleware *middleware.AuthMiddleware) {
 	customer := r.Group("/customers/pets")
 	customer.Use(authMiddleware.Authenticate())
 	customer.Use(authMiddleware.RequireAnyRole("customer"))

@@ -1,20 +1,25 @@
-package paymentAPI
+// Package api provides the API builder for the payments module.
+package api
 
 import (
 	domainerr "clinic-vet-api/app/core/error"
 	"clinic-vet-api/app/core/repository"
+	"clinic-vet-api/app/middleware"
 	"clinic-vet-api/app/modules/payments/infrastructure/bus"
+	repositoryimpl "clinic-vet-api/app/modules/payments/infrastructure/repository"
 	"clinic-vet-api/app/modules/payments/presentation/controller"
 	"clinic-vet-api/app/modules/payments/presentation/routes"
+	"clinic-vet-api/sqlc"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )
 
 type PaymentAPIConfig struct {
-	Router      *gin.Engine
-	Validator   *validator.Validate
-	PaymentRepo repository.PaymentRepository
+	Router         *gin.RouterGroup
+	Validator      *validator.Validate
+	AuthMiddleware *middleware.AuthMiddleware
+	Queries        *sqlc.Queries
 }
 
 type PaymentAPIComponents struct {
@@ -24,10 +29,8 @@ type PaymentAPIComponents struct {
 }
 
 type PaymentControllers struct {
-	Admin   *controller.AdminPaymentController
-	Client  *controller.ClientPaymentController
-	Query   *controller.PaymentQueryController
-	Command *controller.PaymentController
+	Admin  *controller.AdminPaymentController
+	Client *controller.ClientPaymentController
 }
 
 type PaymentAPIBuilder struct {
@@ -52,13 +55,15 @@ func (f *PaymentAPIBuilder) Build() error {
 		return err
 	}
 
-	paymentBus := bus.NewPaymentBus(f.components.Repository)
+	repository := repositoryimpl.NewSqlcPaymentRepository(f.config.Queries)
+
+	paymentBus := bus.NewPaymentBus(repository)
 	controllers := f.createControllers(*paymentBus)
 
 	f.registerRoutes(controllers)
 
 	f.components = &PaymentAPIComponents{
-		Repository:  f.config.PaymentRepo,
+		Repository:  repository,
 		Bus:         paymentBus,
 		Controllers: controllers,
 	}
@@ -68,38 +73,31 @@ func (f *PaymentAPIBuilder) Build() error {
 }
 
 func (f *PaymentAPIBuilder) createControllers(paymentBus bus.PaymentBus) *PaymentControllers {
-	queryController := controller.NewPaymentQueryController(
-		f.config.Validator,
-		&paymentBus,
-	)
-
-	commandController := controller.NewPaymentController(
+	controllerOperations := controller.NewPaymentControllerOperations(
 		f.config.Validator,
 		&paymentBus,
 	)
 
 	clientController := controller.NewClientPaymentController(
 		f.config.Validator,
-		queryController,
+		controllerOperations,
 	)
 
 	adminController := controller.NewAdminPaymentController(
 		f.config.Validator,
-		queryController,
-		commandController,
+		controllerOperations,
 	)
 
 	return &PaymentControllers{
-		Admin:   adminController,
-		Client:  clientController,
-		Query:   queryController,
-		Command: commandController,
+		Admin:  adminController,
+		Client: clientController,
 	}
 }
 
 func (f *PaymentAPIBuilder) registerRoutes(controllers *PaymentControllers) {
-	routes.RegisterAdminPaymentRoutes(f.config.Router, controllers.Admin)
-	routes.RegisterClientPaymentRoutes(f.config.Router, controllers.Client)
+	paymentRoutes := routes.NewPaymentRoutes(controllers.Admin, controllers.Client)
+	paymentRoutes.RegisterAdminPaymentRoutes(f.config.Router, f.config.AuthMiddleware)
+	paymentRoutes.RegisterClientRoutes(f.config.Router, f.config.AuthMiddleware)
 }
 
 func (f *PaymentAPIBuilder) validateConfig() error {
@@ -112,9 +110,10 @@ func (f *PaymentAPIBuilder) validateConfig() error {
 	if f.config.Validator == nil {
 		return domainerr.NewPaymentError("INVALID_API_CONFIG", "validator cannot be nil", 0, "")
 	}
-	if f.config.PaymentRepo == nil {
-		return domainerr.NewPaymentError("INVALID_API_CONFIG", "payment repository cannot be nil", 0, "")
+	if f.config.AuthMiddleware == nil {
+		return domainerr.NewPaymentError("INVALID_API_CONFIG", "auth middleware cannot be nil", 0, "")
 	}
+
 	return nil
 }
 

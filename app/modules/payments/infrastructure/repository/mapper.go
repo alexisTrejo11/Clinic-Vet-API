@@ -1,15 +1,14 @@
-package repository
+package repositoryimpl
 
 import (
-	"fmt"
-	"time"
-
 	"clinic-vet-api/app/core/domain/entity/base"
 	"clinic-vet-api/app/core/domain/entity/payment"
 	"clinic-vet-api/app/core/domain/enum"
 	"clinic-vet-api/app/core/domain/valueobject"
 	"clinic-vet-api/db/models"
 	"clinic-vet-api/sqlc"
+	"fmt"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgtype"
 )
@@ -208,7 +207,7 @@ func sqlcRowToEntity(row *sqlc.Payment) (*payment.Payment, error) {
 	return p, nil
 }
 
-func (r *SQLCPaymentRepository) convertSQLRowsToPayments(sqlRows []sqlc.Payment) ([]payment.Payment, error) {
+func (r *SqlcPaymentRepository) sqlRowsToEntities(sqlRows []sqlc.Payment) ([]payment.Payment, error) {
 	payments := make([]payment.Payment, len(sqlRows))
 	for i, row := range sqlRows {
 		paymentEntity, err := sqlcRowToEntity(&row)

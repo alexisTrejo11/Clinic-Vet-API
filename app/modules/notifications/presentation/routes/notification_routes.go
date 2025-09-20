@@ -6,8 +6,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func SetupNotificationRoutes(app *gin.Engine, adminController *controller.NotificationAdminController) {
-	notificationGroup := app.Group("api/v2/admin/notifications")
+func SetupNotificationRoutes(app *gin.RouterGroup, adminController *controller.NotificationAdminController) {
+	notificationGroup := app.Group("/notifications")
 	{
 		notificationGroup.POST("/send", adminController.SendNotification)
 		notificationGroup.GET("/:id", adminController.GetNotificationById)

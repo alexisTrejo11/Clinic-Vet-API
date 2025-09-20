@@ -2,15 +2,19 @@
 package routes
 
 import (
+	"clinic-vet-api/app/middleware"
 	"clinic-vet-api/app/modules/medical/presentation/controller"
 
 	"github.com/gin-gonic/gin"
 )
 
-func MedicalHistoryRoutes(router *gin.Engine, controller controller.AdminMedicalHistoryController) {
-	path := "/api/v2/admin/medical-history"
-	router.GET(path, controller.SearchMedicalHistories)
-	router.GET(path+"/:id", controller.GetMedicalHistoryDetails)
-	router.POST(path, controller.CreateMedicalHistory)
-	router.DELETE(path+"/:id", controller.SoftDeleteMedicalHistory)
+func MedicalHistoryRoutes(appGroup *gin.RouterGroup, controller controller.AdminMedicalHistoryController, authMiddleware *middleware.AuthMiddleware) {
+	medGroup := appGroup.Group("/medical-histories")
+	medGroup.Use(authMiddleware.Authenticate())
+	medGroup.Use(authMiddleware.RequireAnyRole("admin", "employee", "receptionist"))
+
+	medGroup.GET("", controller.SearchMedicalHistories)
+	medGroup.GET("/:id", controller.GetMedicalHistoryDetails)
+	medGroup.POST("", controller.CreateMedicalHistory)
+	medGroup.DELETE("/:id", controller.SoftDeleteMedicalHistory)
 }

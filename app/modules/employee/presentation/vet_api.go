@@ -2,6 +2,7 @@ package api
 
 import (
 	"clinic-vet-api/app/core/repository"
+	"clinic-vet-api/app/middleware"
 	"clinic-vet-api/app/modules/employee/application/cqrs/command"
 	"clinic-vet-api/app/modules/employee/application/cqrs/query"
 	"clinic-vet-api/app/modules/employee/infrastructure/bus"
@@ -18,10 +19,11 @@ import (
 )
 
 type EmployeeAPIConfig struct {
-	Queries       *sqlc.Queries
-	DB            *pgxpool.Pool
-	Router        *gin.Engine
-	DataValidator *validator.Validate
+	Queries        *sqlc.Queries
+	DB             *pgxpool.Pool
+	Router         *gin.RouterGroup
+	DataValidator  *validator.Validate
+	AuthMiddleware *middleware.AuthMiddleware
 }
 
 type EmployeeAPIComponents struct {
@@ -60,7 +62,7 @@ func (f *EmployeeModule) Bootstrap() error {
 	vetServiceBus := bus.NewEmployeeBus(*employeeCommandBus, employeeQueryBus)
 	vetControllers := controller.NewEmployeeController(f.config.DataValidator, vetServiceBus)
 
-	routes.EmployeeRoutes(f.config.Router, vetControllers)
+	routes.EmployeeRoutes(f.config.Router, vetControllers, f.config.AuthMiddleware)
 
 	f.components.controller = vetControllers
 	f.components.bus = &vetServiceBus
@@ -85,6 +87,10 @@ func (f *EmployeeModule) validateConfig() error {
 
 	if f.config.DataValidator == nil {
 		return fmt.Errorf("validator cannot be nil")
+	}
+
+	if f.config.AuthMiddleware == nil {
+		return fmt.Errorf("auth middleware cannot be nil")
 	}
 
 	return nil

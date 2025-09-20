@@ -203,10 +203,11 @@ func setupModules(router *gin.Engine, settings *config.AppSettings, queries *sql
 	mongoClient := config.InitMongoDB(settings.Services.Mongo)
 
 	// Setup notification module
-	notiAPI.SetupNotificationModule(router, mongoClient, settings.Services.Email, config.GetTwilioClient())
+	routerGroup := router.Group("/api/v2")
+	notiAPI.SetupNotificationModule(routerGroup, mongoClient, settings.Services.Email, config.GetTwilioClient())
 
 	// Bootstrap other API modules
-	if err := config.BootstrapAPIModules(router, queries, pxpool, validator, config.RedisClient, settings.Auth.JWTSecret); err != nil {
+	if err := config.BootstrapAPIModules(routerGroup, queries, pxpool, validator, config.RedisClient, settings.Auth.JWTSecret); err != nil {
 		return fmt.Errorf("failed to bootstrap API modules: %w", err)
 	}
 

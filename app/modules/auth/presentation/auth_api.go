@@ -4,6 +4,7 @@ import (
 	event "clinic-vet-api/app/core/domain/event/user_event"
 	"clinic-vet-api/app/core/repository"
 	"clinic-vet-api/app/core/service"
+	"clinic-vet-api/app/middleware"
 	"clinic-vet-api/app/modules/auth/application/command"
 	"clinic-vet-api/app/modules/auth/infrastructure/bus"
 	"clinic-vet-api/app/modules/auth/infrastructure/jwt"
@@ -21,13 +22,14 @@ import (
 
 // TODO: EVENT
 func SetupAuthModule(
-	r *gin.Engine,
+	r *gin.RouterGroup,
 	validator *validator.Validate,
 	employeeRepo repository.EmployeeRepository,
 	customerRepo repository.CustomerRepository,
 	client *redis.Client,
 	queries *sqlc.Queries,
 	secretKet string,
+	authMiddle *middleware.AuthMiddleware,
 ) {
 	userRepo := userPersistence.NewSQLCUserRepository(queries)
 	jwtService := jwt.NewJWTService(secretKet)
@@ -44,5 +46,5 @@ func SetupAuthModule(
 	commandHandler := command.NewAuthCommandHandler(userRepo, *security_service, session, jwtService, passwordEncoder, userEventProducer)
 	authCMDBus := bus.NewAuthBus(commandHandler)
 	authController := controller.NewAuthController(validator, authCMDBus)
-	routes.AuthRoutes(r, *authController)
+	routes.AuthRoutes(r, *authController, authMiddle)
 }

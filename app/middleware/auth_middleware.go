@@ -2,15 +2,18 @@
 package middleware
 
 import (
-	"context"
-	"strconv"
-
 	"clinic-vet-api/app/core/domain/entity/user"
 	"clinic-vet-api/app/core/domain/valueobject"
 	"clinic-vet-api/app/core/repository"
 	"clinic-vet-api/app/modules/auth/application/jwt"
-	autherror "clinic-vet-api/app/shared/error/auth"
+	jwtImpl "clinic-vet-api/app/modules/auth/infrastructure/jwt"
+	repositoryimpl "clinic-vet-api/app/modules/users/infrastructure/repository"
 	"clinic-vet-api/app/shared/response"
+	"clinic-vet-api/sqlc"
+	"context"
+	"strconv"
+
+	autherror "clinic-vet-api/app/shared/error/auth"
 
 	"github.com/gin-gonic/gin"
 )
@@ -48,7 +51,9 @@ type AuthMiddleware struct {
 	userRepo   repository.UserRepository
 }
 
-func NewAuthMiddleware(jwtService jwt.JWTService, userRepo repository.UserRepository) *AuthMiddleware {
+func NewAuthMiddleware(jwtSecret string, queries *sqlc.Queries) *AuthMiddleware {
+	jwtService := jwtImpl.NewJWTService(jwtSecret)
+	userRepo := repositoryimpl.NewSQLCUserRepository(queries)
 	return &AuthMiddleware{
 		jwtService: jwtService,
 		userRepo:   userRepo,

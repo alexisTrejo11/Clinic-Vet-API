@@ -1,4 +1,4 @@
-package repository
+package repositoryimpl
 
 import (
 	"fmt"
@@ -36,16 +36,16 @@ const (
 )
 
 // dbError creates a standardized database operation error
-func (r *SQLCPaymentRepository) dbError(operation, message string, err error) error {
+func (r *SqlcPaymentRepository) dbError(operation, message string, err error) error {
 	return dberr.DatabaseOperationError(operation, TablePayments, DriverSQL, fmt.Errorf("%s: %v", message, err))
 }
 
 // notFoundError creates a standardized entity not found error
-func (r *SQLCPaymentRepository) notFoundError(parameterName, parameterValue string) error {
+func (r *SqlcPaymentRepository) notFoundError(parameterName, parameterValue string) error {
 	return dberr.EntityNotFoundError(parameterName, parameterValue, OpSelect, TablePayments, DriverSQL)
 }
 
 // wrapConversionError wraps domain conversion errors
-func (r *SQLCPaymentRepository) wrapConversionError(err error) error {
+func (r *SqlcPaymentRepository) wrapConversionError(err error) error {
 	return fmt.Errorf("%s: %w", ErrMsgConvertToDomain, err)
 }

@@ -10,17 +10,14 @@ import (
 )
 
 type ClientPaymentController struct {
-	validator       *validator.Validate
-	queryController *PaymentQueryController
+	validator  *validator.Validate
+	operations *PaymentControllerOperations
 }
 
-func NewClientPaymentController(
-	validator *validator.Validate,
-	queryController *PaymentQueryController,
-) *ClientPaymentController {
+func NewClientPaymentController(validator *validator.Validate, operations *PaymentControllerOperations) *ClientPaymentController {
 	return &ClientPaymentController{
-		validator:       validator,
-		queryController: queryController,
+		validator:  validator,
+		operations: operations,
 	}
 }
 
@@ -32,5 +29,5 @@ func (ctrl *ClientPaymentController) GetMyPayments(c *gin.Context) {
 		return
 	}
 
-	ctrl.queryController.GetPaymentsByCustomer(c, userCTX.CustomerID)
+	ctrl.operations.GetPaymentsByCustomer(c, userCTX.CustomerID)
 }

@@ -1,21 +1,24 @@
+// Package api contains the API builder for the users module.
 package api
 
 import (
-	"fmt"
-
 	"clinic-vet-api/app/core/repository"
 	"clinic-vet-api/app/core/service"
+	"clinic-vet-api/app/middleware"
+	employeeRepo "clinic-vet-api/app/modules/employee/infrastructure/repository"
 	"clinic-vet-api/app/modules/users/application/usecase"
 	"clinic-vet-api/app/modules/users/infrastructure/bus"
-	persistence "clinic-vet-api/app/modules/users/infrastructure/repository"
 	"clinic-vet-api/app/modules/users/presentation/controller"
 	"clinic-vet-api/app/modules/users/presentation/routes"
 	"clinic-vet-api/app/shared/password"
-
 	"clinic-vet-api/sqlc"
+	"fmt"
+
+	persistence "clinic-vet-api/app/modules/users/infrastructure/repository"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type UserAPIComponents struct {
@@ -26,19 +29,11 @@ type UserAPIComponents struct {
 }
 
 type UserAPIConfig struct {
-	Queries       *sqlc.Queries
-	Router        *gin.Engine
-	DataValidator *validator.Validate
-	employeeRepo  repository.EmployeeRepository
-}
-
-func NewUserAPIConfig(queries *sqlc.Queries, router *gin.Engine, dataValidator *validator.Validate, employeeRepo repository.EmployeeRepository) *UserAPIConfig {
-	return &UserAPIConfig{
-		Queries:       queries,
-		Router:        router,
-		DataValidator: dataValidator,
-		employeeRepo:  employeeRepo,
-	}
+	Queries        *sqlc.Queries
+	Router         *gin.RouterGroup
+	DataValidator  *validator.Validate
+	DB             *pgxpool.Pool
+	AuthMiddleware *middleware.AuthMiddleware
 }
 
 type UserAPIModule struct {
@@ -66,7 +61,7 @@ func (u *UserAPIModule) Bootstrap() error {
 
 	userRepo := persistence.NewSQLCUserRepository(u.config.Queries)
 	profileRepo := persistence.NewSQLCProfileRepository(u.config.Queries)
-	employeeRepo := u.config.employeeRepo
+	employeeRepo := employeeRepo.NewSqlcEmployeeRepository(u.config.Queries, u.config.DB)
 	passwordEncoder := password.NewPasswordEncoder()
 
 	service := service.NewUserSecurityService(userRepo, employeeRepo, passwordEncoder)
@@ -79,7 +74,8 @@ func (u *UserAPIModule) Bootstrap() error {
 	profileUseCases := usecase.NewProfileUseCases(profileRepo)
 	profileController := controller.NewProfileController(profileUseCases)
 
-	routes.UserRoutes(u.config.Router, userControllers)
+	routes.UserRoutes(u.config.Router, userControllers, u.config.AuthMiddleware)
+	routes.ProfileRoutes(u.config.Router, profileController, u.config.AuthMiddleware)
 
 	u.components = &UserAPIComponents{
 		repository:        userRepo,
@@ -114,6 +110,24 @@ func (u *UserAPIModule) validateConfig() error {
 	if u.config.DataValidator == nil {
 		return fmt.Errorf("data validator cannot be nil")
 	}
+	if u.config.DB == nil {
+		return fmt.Errorf("database connection cannot be nil")
+	}
+
+	if u.config.AuthMiddleware == nil {
+		return fmt.Errorf("auth middleware cannot be nil")
+	}
 
 	return nil
+}
+
+func (u *UserAPIModule) GetRepository() repository.UserRepository {
+	if u.components.repository == nil {
+		panic("repository not initialized, ensure Bootstrap() is called first")
+	}
+	return u.components.repository
+}
+
+func (u *UserAPIModule) SetAuthMiddleware(middleware *middleware.AuthMiddleware) {
+	u.config.AuthMiddleware = middleware
 }

@@ -1,17 +1,19 @@
 package config
 
 import (
+	"clinic-vet-api/app/middleware"
+	"clinic-vet-api/sqlc"
 	"fmt"
 	"log"
 
-	api "clinic-vet-api/app/modules/auth/presentation"
+	api "clinic-vet-api/app/modules/appointment/presentation"
+	authAPI "clinic-vet-api/app/modules/auth/presentation"
 	customerAPI "clinic-vet-api/app/modules/customer/presentation"
 	vetAPI "clinic-vet-api/app/modules/employee/presentation"
 	medHistoryAPI "clinic-vet-api/app/modules/medical/presentation"
-	petRepo "clinic-vet-api/app/modules/pets/infrastructure/repository"
+	paymentAPI "clinic-vet-api/app/modules/payments/presentation"
 	petAPI "clinic-vet-api/app/modules/pets/presentation"
 	userAPI "clinic-vet-api/app/modules/users/presentation"
-	"clinic-vet-api/sqlc"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -20,21 +22,34 @@ import (
 )
 
 func BootstrapAPIModules(
-	router *gin.Engine,
+	routerGroup *gin.RouterGroup,
 	queries *sqlc.Queries,
 	db *pgxpool.Pool,
 	validator *validator.Validate,
 	redis *redis.Client,
 	jwtSecret string,
 ) error {
-	petRepository := petRepo.NewSqlcPetRepository(queries)
+	userModule := userAPI.NewUserAPIModule(userAPI.UserAPIConfig{
+		Router:        routerGroup,
+		Queries:       queries,
+		DataValidator: validator,
+		DB:            db,
+	})
+
+	authMiddleware := middleware.NewAuthMiddleware(jwtSecret, queries)
+	userModule.SetAuthMiddleware(authMiddleware)
+
+	if err := userModule.Bootstrap(); err != nil {
+		return fmt.Errorf("failed to bootstrap user API module: %w", err)
+	}
 
 	// Bootstrap Employee Module
 	vetModule := vetAPI.NewEmployeeModule(&vetAPI.EmployeeAPIConfig{
-		Router:        router,
-		DB:            db,
-		Queries:       queries,
-		DataValidator: validator,
+		Router:         routerGroup,
+		DB:             db,
+		Queries:        queries,
+		DataValidator:  validator,
+		AuthMiddleware: authMiddleware,
 	})
 
 	if err := vetModule.Bootstrap(); err != nil {
@@ -43,10 +58,10 @@ func BootstrapAPIModules(
 
 	// Bootstrap Customer Module
 	customerModule := customerAPI.NewCustomerAPIModule(&customerAPI.CustomerAPIConfig{
-		Router:    router,
-		Queries:   queries,
-		Validator: validator,
-		PetRepo:   petRepository,
+		Router:         routerGroup,
+		Queries:        queries,
+		Validator:      validator,
+		AuthMiddleware: authMiddleware,
 	})
 
 	if err := customerModule.Bootstrap(); err != nil {
@@ -60,10 +75,11 @@ func BootstrapAPIModules(
 
 	// Bootstrap Pet Module
 	petModule := petAPI.NewPetModule(&petAPI.PetModuleConfig{
-		Router:       router,
-		Queries:      queries,
-		Validator:    validator,
-		CustomerRepo: customerRepo,
+		Router:         routerGroup,
+		Queries:        queries,
+		Validator:      validator,
+		CustomerRepo:   customerRepo,
+		AuthMiddleware: authMiddleware,
 	})
 
 	if err := petModule.Bootstrap(); err != nil {
@@ -75,26 +91,24 @@ func BootstrapAPIModules(
 		return fmt.Errorf("failed to get vet repository: %w", err)
 	}
 
+	petRepository, err := petModule.GetRepository()
+	if err != nil {
+		return fmt.Errorf("failed to get pet repository: %w", err)
+	}
+
 	// Bootstrap Medical History Module
 	medHistoryModule := medHistoryAPI.NewMedicalHistoryModule(&medHistoryAPI.MedicalHistoryModuleConfig{
-		Router:       router,
-		Queries:      queries,
-		Validator:    validator,
-		CustomerRepo: &customerRepo,
-		EmployeeRepo: &vetRepo,
-		PetRepo:      &petRepository,
+		Router:         routerGroup,
+		Queries:        queries,
+		Validator:      validator,
+		CustomerRepo:   &customerRepo,
+		EmployeeRepo:   &vetRepo,
+		PetRepo:        &petRepository,
+		AuthMiddleware: authMiddleware,
 	})
 
 	if err := medHistoryModule.Bootstrap(); err != nil {
 		return fmt.Errorf("failed to bootstrap medical history module: %w", err)
-	}
-
-	if err := userAPI.NewUserAPIModule(userAPI.UserAPIConfig{
-		Router:        router,
-		Queries:       queries,
-		DataValidator: validator,
-	}).Bootstrap(); err != nil {
-		return fmt.Errorf("failed to bootstrap user API module: %w", err)
 	}
 
 	customerRepo, err = customerModule.GetRepository()
@@ -107,7 +121,32 @@ func BootstrapAPIModules(
 		return fmt.Errorf("failed to get vet repository: %w", err)
 	}
 
-	api.SetupAuthModule(router, validator, vetRepo, customerRepo, redis, queries, jwtSecret)
+	// Bootstrap Auth Module
+	authAPI.SetupAuthModule(routerGroup, validator, vetRepo, customerRepo, redis, queries, jwtSecret, authMiddleware)
+
+	// Bootstrap Payment Module
+	paymentModule := paymentAPI.NewPaymentAPIBuilder(&paymentAPI.PaymentAPIConfig{
+		Router:         routerGroup,
+		Validator:      validator,
+		Queries:        queries,
+		AuthMiddleware: authMiddleware,
+	})
+
+	if err := paymentModule.Build(); err != nil {
+		return fmt.Errorf("failed to bootstrap payment API module: %w", err)
+	}
+
+	apptModule := api.NewAppointmentAPIBuilder(&api.AppointmentAPIConfig{
+		Router:         routerGroup,
+		Validator:      validator,
+		Queries:        queries,
+		AuthMiddleware: authMiddleware,
+		CustomerRepo:   customerRepo,
+	})
+
+	if err := apptModule.Build(); err != nil {
+		return fmt.Errorf("failed to bootstrap appointment API module: %w", err)
+	}
 
 	log.Println("modules bootstrapped successfully")
 	return nil

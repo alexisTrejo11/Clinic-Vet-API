@@ -23,7 +23,7 @@ func NewAppointmentRoutes(
 	}
 }
 
-func (r *AppointmentRoutes) RegisterAdminRoutes(router *gin.Engine) {
+func (r *AppointmentRoutes) RegisterAdminRoutes(Router *gin.RouterGroup) {
 	// Admin/General appointment routes
 	// appointmentGroup := router.Group("/api/v2/appointments")
 	{
@@ -33,7 +33,7 @@ func (r *AppointmentRoutes) RegisterAdminRoutes(router *gin.Engine) {
 	}
 }
 
-func (r *AppointmentRoutes) RegisterCustomerRoutes(router *gin.Engine, authMiddleware *middleware.AuthMiddleware) {
+func (r *AppointmentRoutes) RegisterCustomerRoutes(router *gin.RouterGroup, authMiddleware *middleware.AuthMiddleware) {
 	customerGroup := router.Group("/customers/appointments")
 	customerGroup.Use(authMiddleware.Authenticate())
 	customerGroup.Use(authMiddleware.RequireAnyRole("customer"))
@@ -47,7 +47,7 @@ func (r *AppointmentRoutes) RegisterCustomerRoutes(router *gin.Engine, authMiddl
 
 }
 
-func (r *AppointmentRoutes) RegisterEmployeeRoutes(router *gin.Engine, authMiddleware *middleware.AuthMiddleware) {
+func (r *AppointmentRoutes) RegisterEmployeeRoutes(router *gin.RouterGroup, authMiddleware *middleware.AuthMiddleware) {
 	employeeRoutes := router.Group("employees/appointments")
 	employeeRoutes.Use(authMiddleware.Authenticate())
 	employeeRoutes.Use(authMiddleware.RequireAnyRole("veterinarian", "receptionist"))

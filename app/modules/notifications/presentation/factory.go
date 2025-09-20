@@ -16,7 +16,7 @@ import (
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
-func SetupNotificationModule(app *gin.Engine, mongoClient *mongo.Client, emailConfig config.EmailConfig, twilioClient *twilio.RestClient) {
+func SetupNotificationModule(app *gin.RouterGroup, mongoClient *mongo.Client, emailConfig config.EmailConfig, twilioClient *twilio.RestClient) {
 	notificationRepo := repositoryimpl.NewMongoNotificationRepository(mongoClient)
 	emailSender := email.NewEmailSender(emailConfig)
 	smsSender := sms.NewTwilioPhoneSender(twilioClient, os.Getenv("TWILIO_PHONE_NUMBER"))

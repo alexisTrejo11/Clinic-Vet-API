@@ -1,12 +1,13 @@
+// Package jwt contains the implementation of JWTService using the github.com/golang-jwt/jwt/v5 library
 package jwt
 
 import (
+	"clinic-vet-api/app/modules/auth/application/jwt"
 	"errors"
 	"fmt"
 	"strings"
 	"time"
 
-	"clinic-vet-api/app/modules/auth/application/jwt"
 	jwtLib "github.com/golang-jwt/jwt/v5"
 )
 

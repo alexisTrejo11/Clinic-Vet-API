@@ -19,7 +19,7 @@ import (
 
 // AppointmentAPIConfig holds configuration dependencies
 type AppointmentAPIConfig struct {
-	Router         *gin.Engine
+	Router         *gin.RouterGroup
 	Queries        *sqlc.Queries
 	Validator      *validator.Validate
 	CustomerRepo   repository.CustomerRepository
