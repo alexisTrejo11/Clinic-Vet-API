@@ -9,13 +9,15 @@ import (
 )
 
 type UserResult struct {
-	ID          string
+	ID          uint
 	PhoneNumber string
 	Email       string
 	Role        string
 	Status      string
 	JoinedAt    time.Time
 	LastLoginAt *time.Time
+	CustomerID  *uint
+	EmployeeID  *uint
 }
 
 type ProfileResult struct {
@@ -31,13 +33,23 @@ type ProfileResult struct {
 
 func userToResult(user user.User) UserResult {
 	userResult := &UserResult{
-		ID:          user.ID().String(),
+		ID:          user.ID().Value(),
 		Email:       user.Email().String(),
 		PhoneNumber: user.PhoneNumber().String(),
 		Role:        user.Role().String(),
 		Status:      string(user.Status()),
 		JoinedAt:    user.CreatedAt(),
 		LastLoginAt: user.LastLoginAt(),
+	}
+
+	if user.CustomerID() != nil {
+		val := user.CustomerID().Value()
+		userResult.CustomerID = &val
+	}
+
+	if user.EmployeeID() != nil {
+		val := user.EmployeeID().Value()
+		userResult.EmployeeID = &val
 	}
 
 	return *userResult

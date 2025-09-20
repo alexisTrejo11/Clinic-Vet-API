@@ -19,7 +19,7 @@ type jwtService struct {
 }
 
 const (
-	DefaultAccessTokenDuration  = time.Hour
+	DefaultAccessTokenDuration  = time.Hour * 12 // 12 hours develop
 	DefaultRefreshTokenDuration = 7 * 24 * time.Hour
 	DefaultIssuer               = "clinic-vet-api"
 )

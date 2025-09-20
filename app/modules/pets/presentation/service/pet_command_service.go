@@ -31,7 +31,7 @@ func (s *PetControllerOperations) CreatePet(c *gin.Context, customerID *uint, is
 
 	command := requestBodyData.ToCommand(*customerID, isActive)
 	result := s.bus.CreatePet(c.Request.Context(), command)
-	if result.IsSuccess() {
+	if !result.IsSuccess() {
 		response.ApplicationError(c, result.Error())
 		return
 	}

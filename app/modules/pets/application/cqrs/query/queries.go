@@ -24,9 +24,10 @@ func (q *FindPetsByCustomerIDQuery) Validate() error {
 	return nil
 }
 
-func NewFindPetsByCustomerIDQuery(customerID uint) *FindPetsByCustomerIDQuery {
+func NewFindPetsByCustomerIDQuery(customerID uint, pagination page.PageInput) *FindPetsByCustomerIDQuery {
 	return &FindPetsByCustomerIDQuery{
 		customerID: valueobject.NewCustomerID(customerID),
+		pagination: pagination,
 	}
 }
 

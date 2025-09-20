@@ -51,18 +51,6 @@ func WithYearsExperience(years int) EmployeeOption {
 	}
 }
 
-func WithConsultationFee(fee *valueobject.Money) EmployeeOption {
-	return func(v *Employee) error {
-		if fee != nil {
-			if fee.Amount() < 0 {
-				return errors.New("consultation fee cannot be negative")
-			}
-		}
-		v.consultationFee = fee
-		return nil
-	}
-}
-
 func WithIsActive(isActive bool) EmployeeOption {
 	return func(v *Employee) error {
 		v.isActive = isActive

@@ -33,8 +33,6 @@ func UserToUserContext(user user.User) *UserContext {
 		Email:       user.Email().String(),
 		PhoneNumber: user.PhoneNumber().String(),
 		Role:        string(user.Role()),
-		CustomerID:  0,
-		EmployeeID:  0,
 	}
 
 	if user.IsEmployee() {
@@ -69,11 +67,19 @@ func (am *AuthMiddleware) Authenticate() gin.HandlerFunc {
 			return
 		}
 
-		idSTR, err := am.jwtService.ExtractToken(authHeader)
+		token, err := am.jwtService.ExtractToken(authHeader)
 		if err != nil {
 			response.Unauthorized(c, autherror.UnauthorizedError(err.Error()))
 		}
 
+		claim, err := am.jwtService.ValidateToken(token)
+		if err != nil {
+			response.Unauthorized(c, autherror.UnauthorizedError(err.Error()))
+			c.Abort()
+			return
+		}
+
+		idSTR := claim.UserID
 		idUInt, err := strconv.ParseUint(idSTR, 10, 0)
 		if err != nil {
 			response.ServerError(c, err)
@@ -87,9 +93,9 @@ func (am *AuthMiddleware) Authenticate() gin.HandlerFunc {
 		}
 
 		c.Set("user", UserToUserContext(user))
-		c.Set("userID", user.ID)
-		c.Set("userEmail", user.Email)
-		c.Set("userRoles", user.Role())
+		c.Set("userID", user.ID().Value())
+		c.Set("userEmail", user.Email().String())
+		c.Set("userRole", user.Role().String())
 
 		c.Next()
 	})
@@ -128,9 +134,9 @@ func (am *AuthMiddleware) OptionalAuth() gin.HandlerFunc {
 		}
 
 		c.Set("user", UserToUserContext(user))
-		c.Set("userID", user.ID)
-		c.Set("userEmail", user.Email)
-		c.Set("userRoles", user.Role())
+		c.Set("userID", user.ID().Value())
+		c.Set("userEmail", user.Email().String())
+		c.Set("userRole", user.Role().String())
 
 		c.Next()
 	})
@@ -167,7 +173,7 @@ func GetUserEmailFromContext(c *gin.Context) (string, bool) {
 
 // GetUserRolesFromContext obtiene solo los roles del usuario
 func GetUserRolesFromContext(c *gin.Context) (string, bool) {
-	roles, exists := c.Get("userRoles")
+	roles, exists := c.Get("userRole")
 	if !exists {
 		return "", false
 	}

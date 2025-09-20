@@ -22,7 +22,7 @@ type UpdateProfileData struct {
 }
 
 type ProfileUseCases interface {
-	GetUserProfile(ctx context.Context, userID valueobject.UserID) (p.Profile, error)
+	GetUserProfile(ctx context.Context, userID uint) (map[string]any, error)
 	CreateProfile(ctx context.Context, request CreateProfileData) error
 	UpdateProfile(ctx context.Context, request UpdateProfileData) error
 }
@@ -44,12 +44,28 @@ func (uc *profileUseCasesImpl) CreateProfile(ctx context.Context, request Create
 	return uc.profileRepo.Create(ctx, profile)
 }
 
-func (uc *profileUseCasesImpl) GetUserProfile(ctx context.Context, userID valueobject.UserID) (p.Profile, error) {
-	profile, err := uc.profileRepo.GetByUserID(ctx, userID)
-	if err != nil {
-		return p.Profile{}, err
+// Implement GetUserProfile to fetch user profile details by user ID.
+func (uc *profileUseCasesImpl) GetUserProfile(ctx context.Context, userID uint) (map[string]any, error) {
+	/*
+		profile, err := uc.profileRepo.GetMapByUserID(ctx, valueobject.NewUserID(userID))
+		if err != nil {
+			return nil, err
+		}
+	*/
+
+	dummyData := map[string]any{
+		"user_id":     "123",
+		"profile_pic": "https://example.com/profile.jpg",
+		"bio":         "This is a sample bio.",
+		"name":        "John Doe", // Placeholder for actual user name
+		"gender":      "male",
+		"birth_date":  "1990-01-01", // Placeholder for actual birth date
+		"email":       "email@email",
+		"phone":       "1234567890",
+		"location":    "City, Country",
+		"joined_at":   "2020-01-01", // Placeholder for actual join date
 	}
-	return profile, nil
+	return dummyData, nil
 }
 
 func (uc *profileUseCasesImpl) UpdateProfile(ctx context.Context, request UpdateProfileData) error {

@@ -2,7 +2,6 @@ package query
 
 import (
 	"clinic-vet-api/app/core/domain/entity/employee"
-	"clinic-vet-api/app/core/domain/valueobject"
 	"time"
 )
 
@@ -15,7 +14,6 @@ type EmployeeResult struct {
 	YearsExperience int
 	Specialty       string
 	IsActive        bool
-	ConsultationFee *valueobject.Money
 	LaboralSchedule *[]ScheduleData
 	CreatedAt       time.Time
 	UpdatedAt       time.Time
@@ -55,7 +53,9 @@ func ToResult(employee *employee.Employee) EmployeeResult {
 		LicenseNumber:   employee.LicenseNumber(),
 		Specialty:       employee.Specialty().String(),
 		YearsExperience: employee.YearsExperience(),
-		ConsultationFee: employee.ConsultationFee(),
 		LaboralSchedule: scheduleResults,
+		IsActive:        employee.IsActive(),
+		CreatedAt:       employee.CreatedAt(),
+		UpdatedAt:       employee.UpdatedAt(),
 	}
 }

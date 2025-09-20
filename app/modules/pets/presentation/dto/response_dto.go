@@ -40,8 +40,8 @@ type PetResponse struct {
 	UpdatedAt string `json:"updated_at"`
 }
 
-func ToResponse(result query.PetResult) *PetResponse {
-	return &PetResponse{
+func ToResponse(result query.PetResult) PetResponse {
+	response := &PetResponse{
 		ID:                 result.ID,
 		Name:               result.Name,
 		Photo:              result.Photo,
@@ -58,13 +58,19 @@ func ToResponse(result query.PetResult) *PetResponse {
 		CreatedAt:          result.CreatedAt.Format("2006-01-02 15:04:05"),
 		UpdatedAt:          result.UpdatedAt.Format("2006-01-02 15:04:05"),
 	}
+
+	return *response
 }
 
-func ToResponseList(results []query.PetResult) []*PetResponse {
-	var pets []*PetResponse
-	for _, result := range results {
-		pet := ToResponse(result)
-		pets = append(pets, pet)
+func ToResponseList(results []query.PetResult) []PetResponse {
+	if len(results) == 0 {
+		return []PetResponse{}
 	}
-	return pets
+
+	petResponses := make([]PetResponse, len(results))
+	for i, result := range results {
+		petResponses[i] = ToResponse(result)
+	}
+
+	return petResponses
 }

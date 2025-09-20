@@ -13,51 +13,42 @@ import (
 )
 
 func sqlcRowToEntity(sqlRow sqlc.User) (user.User, error) {
-	userID := valueobject.NewUserID(uint(sqlRow.ID))
-
-	email, err := valueobject.NewEmail(sqlRow.Email.String)
-	if err != nil {
-		return user.User{}, fmt.Errorf("invalid email: %w", err)
-	}
-
-	userRole, err := enum.ParseUserRole(string(sqlRow.Role))
-	if err != nil {
-		return user.User{}, fmt.Errorf("invalid user role: %w", err)
-	}
-
-	userStatus, err := enum.ParseUserStatus(string(sqlRow.Status))
-	if err != nil {
-		return user.User{}, fmt.Errorf("invalid user status: %w", err)
-	}
-
+	email := (valueobject.NewEmailNoErr(sqlRow.Email.String))
 	opts := []user.UserOption{
 		user.WithEmail(email),
 	}
 
 	if sqlRow.PhoneNumber.Valid && sqlRow.PhoneNumber.String != "" {
-		phone, err := valueobject.NewPhoneNumber(sqlRow.PhoneNumber.String)
-		if err != nil {
-			return user.User{}, fmt.Errorf("invalid phone number: %w", err)
-		}
-		opts = append(opts, user.WithPhoneNumber(&phone))
+		phoneNumber := valueobject.NewPhoneNumberNoErr(sqlRow.PhoneNumber.String)
+		opts = append(opts, user.WithPhoneNumber(&phoneNumber))
 	}
 
 	if sqlRow.Password.Valid && sqlRow.Password.String != "" {
 		opts = append(opts, user.WithPassword(sqlRow.Password.String))
 	}
+
 	if sqlRow.LastLogin.Valid {
 		opts = append(opts, user.WithLastLoginAt(sqlRow.LastLogin.Time))
 	}
+
 	if sqlRow.EmployeeID.Valid {
 		employeeID := valueobject.NewEmployeeID(uint(sqlRow.EmployeeID.Int32))
 		opts = append(opts, user.WithEmployeeID(employeeID))
+	}
+
+	if sqlRow.CustomerID.Valid {
+		customerID := valueobject.NewCustomerID(uint(sqlRow.CustomerID.Int32))
+		opts = append(opts, user.WithCustomerID(&customerID))
 	}
 
 	if sqlRow.CreatedAt.Valid {
 		opts = append(opts, user.WithJoinedAt(sqlRow.CreatedAt.Time))
 	}
 
-	userEntity, err := user.NewUser(userID, userRole, userStatus, opts...)
+	userID := valueobject.NewUserID(uint(sqlRow.ID))
+	role := enum.UserRole(string(sqlRow.Role))
+	status := enum.UserStatus(string(sqlRow.Status))
+	userEntity, err := user.NewUser(userID, role, status, opts...)
 	if err != nil {
 		return user.User{}, fmt.Errorf("failed to create user entity: %w", err)
 	}

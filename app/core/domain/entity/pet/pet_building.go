@@ -210,10 +210,6 @@ func NewPetWithContext(
 			return nil, err
 		}
 	}
-
-	if err := pet.validate(ctx); err != nil {
-		return nil, err
-	}
 	return pet, nil
 }
 

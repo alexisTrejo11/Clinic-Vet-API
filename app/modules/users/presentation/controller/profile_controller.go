@@ -29,7 +29,7 @@ func (controller *ProfileController) GetUserProfile(c *gin.Context) {
 		return
 	}
 
-	profile, err := controller.useCases.GetUserProfile(context.Background(), userID)
+	profile, err := controller.useCases.GetUserProfile(context.Background(), userID.Value())
 	if err != nil {
 		response.ApplicationError(c, err)
 		return

@@ -23,11 +23,8 @@ func WithEmail(email valueobject.Email) UserOption {
 
 func WithPhoneNumber(phone *valueobject.PhoneNumber) UserOption {
 	return func(u *User) error {
-		if phone != nil {
-			u.phoneNumber = *phone
-			return nil
-		}
-		return errors.New("phone number is nil")
+		u.phoneNumber = *phone
+		return nil
 	}
 }
 
@@ -50,6 +47,14 @@ func WithTwoFactorAuth(twoFA auth.TwoFactorAuth) UserOption {
 		u.twoFactorAuth = twoFA
 		return nil
 	}
+}
+
+func WithCustomerID(customerID *valueobject.CustomerID) UserOption {
+	return func(u *User) error {
+		u.customerID = customerID
+		return nil
+	}
+
 }
 
 func WithEmployeeID(employeeID valueobject.EmployeeID) UserOption {

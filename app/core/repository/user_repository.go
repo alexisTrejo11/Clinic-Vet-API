@@ -49,6 +49,7 @@ type UserRepository interface {
 
 type ProfileRepository interface {
 	GetByUserID(ctx context.Context, userID valueobject.UserID) (profile.Profile, error)
+	GetMapByUserID(ctx context.Context, userID valueobject.UserID) (map[string]any, error)
 	Create(ctx context.Context, profile *profile.Profile) error
 	Update(ctx context.Context, profile *profile.Profile) error
 	DeleteByUserID(ctx context.Context, userID valueobject.UserID) error

@@ -6,7 +6,6 @@ import (
 	"clinic-vet-api/app/core/domain/enum"
 	"clinic-vet-api/app/core/domain/valueobject"
 	"context"
-	"errors"
 	"fmt"
 	"time"
 )
@@ -68,13 +67,6 @@ func (cmd *CreateEmployeeCommand) createEmployee(ctx context.Context) (*employee
 
 	if cmd.Photo != "" {
 		opts = append(opts, employee.WithPhoto(cmd.Photo))
-	}
-
-	if cmd.ConsultationFee != nil {
-		if cmd.ConsultationFee.Amount() < 0 {
-			return nil, errors.New("consultation fee cannot be negative")
-		}
-		opts = append(opts, employee.WithConsultationFee(cmd.ConsultationFee))
 	}
 
 	return employee.CreateEmployee(ctx, cmd.Name, cmd.Gender, cmd.DateOfBirth, opts...)

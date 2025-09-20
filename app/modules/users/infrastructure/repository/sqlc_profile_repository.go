@@ -17,6 +17,11 @@ type SQLCProfileRepository struct {
 	queries *sqlc.Queries
 }
 
+// GetMapByUserID implements repository.ProfileRepository.
+func (r *SQLCProfileRepository) GetMapByUserID(ctx context.Context, userID valueobject.UserID) (map[string]any, error) {
+	panic("unimplemented")
+}
+
 func NewSQLCProfileRepository(queries *sqlc.Queries) repository.ProfileRepository {
 	return &SQLCProfileRepository{
 		queries: queries,

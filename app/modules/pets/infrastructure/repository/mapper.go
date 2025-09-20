@@ -35,11 +35,8 @@ func sqlcRowToEntity(sqlPet sqlc.Pet) (*pet.Pet, error) {
 	}
 
 	if sqlPet.Gender.Valid && sqlPet.Gender.String != "" {
-		gender, err := enum.ParsePetGender(sqlPet.Gender.String)
-		if err != nil {
-			return nil, fmt.Errorf("invalid gender '%s': %w", sqlPet.Gender.String, err)
-		}
-		opts = append(opts, pet.WithGender(&gender))
+		petGender := enum.PetGender(sqlPet.Gender.String)
+		opts = append(opts, pet.WithGender(&petGender))
 	}
 
 	if sqlPet.Weight.Valid {

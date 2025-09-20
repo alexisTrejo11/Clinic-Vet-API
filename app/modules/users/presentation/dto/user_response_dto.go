@@ -10,8 +10,8 @@ import (
 type UserResponse struct {
 	// Unique identifier for the user
 	// Required: true
-	// Example: "550e8400-e29b-41d4-a716-446655440000"
-	ID string `json:"id"`
+	// Example: "123456"
+	ID uint `json:"id"`
 
 	// User's phone number in E.164 format
 	// Required: false
@@ -47,6 +47,9 @@ type UserResponse struct {
 	// Format: date-time
 	// Example: "2023-12-01T15:45:00Z"
 	LastLoginAt *time.Time `json:"last_login_at,omitempty"`
+
+	CustomerID *uint `json:"customer_id,omitempty"`
+	EmployeeID *uint `json:"employee_id,omitempty"`
 }
 
 func UserResultToResponse(userResult *query.UserResult) *UserResponse {
@@ -62,6 +65,8 @@ func UserResultToResponse(userResult *query.UserResult) *UserResponse {
 		Status:      userResult.Status,
 		JoinedAt:    userResult.JoinedAt,
 		LastLoginAt: userResult.LastLoginAt,
+		CustomerID:  userResult.CustomerID,
+		EmployeeID:  userResult.EmployeeID,
 	}
 }
 

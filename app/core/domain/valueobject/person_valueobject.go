@@ -57,6 +57,11 @@ func NewEmail(emailStr string) (Email, error) {
 	return email, nil
 }
 
+func NewEmailNoErr(emailStr string) Email {
+	e, _ := NewEmail(emailStr)
+	return e
+}
+
 func (e Email) isValid() bool {
 	// Simple regex for email validation
 	const emailRegex = `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`
@@ -88,6 +93,11 @@ func NewPhoneNumber(phone string) (PhoneNumber, error) {
 	}
 
 	return PhoneNumber{value: cleaned}, nil
+}
+
+func NewPhoneNumberNoErr(phone string) PhoneNumber {
+	p, _ := NewPhoneNumber(phone)
+	return p
 }
 
 func (p PhoneNumber) Value() string {
