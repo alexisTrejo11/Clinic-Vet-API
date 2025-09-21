@@ -14,7 +14,7 @@ type PaymentOption func(context.Context, *Payment) error
 
 func WithAmount(amount valueobject.Money) PaymentOption {
 	return func(ctx context.Context, p *Payment) error {
-		if amount.Amount() <= 0 {
+		if amount.Amount().IsZero() || amount.Amount().IsNegative() {
 			return AmountInvalidError(ctx, amount, "WithAmount")
 		}
 		p.amount = amount
@@ -131,7 +131,7 @@ func WithInvoiceID(invoiceID string) PaymentOption {
 
 func WithRefundAmount(refundAmount valueobject.Money) PaymentOption {
 	return func(ctx context.Context, p *Payment) error {
-		if refundAmount.Amount() < 0 {
+		if refundAmount.Amount().IsNegative() {
 			return RefundAmountNegativeError(ctx, refundAmount, "WithRefundAmount")
 		}
 		p.refundAmount = &refundAmount
@@ -226,7 +226,7 @@ func CreatePayment(
 }
 
 func (p *Payment) validate(ctx context.Context, operation string) error {
-	if p.amount.Amount() <= 0 {
+	if p.amount.Amount().IsZero() || p.amount.Amount().IsNegative() {
 		return AmountInvalidError(ctx, p.amount, operation)
 	}
 	if !p.method.IsValid() {

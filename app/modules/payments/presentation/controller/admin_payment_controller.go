@@ -28,7 +28,21 @@ func (ctrl *AdminPaymentController) CreatePayment(c *gin.Context) {
 	ctrl.operations.CreatePayment(c)
 }
 
-// GetPayment delegates to payment controller
+// GetPayment godoc
+// @Summary Get payment by ID
+// @Description Retrieves a specific payment by its ID
+// @Tags admin-payments
+// @Accept json
+// @Produce json
+// @Param payment_id path int true "Payment ID"
+// @Success 200 {object} response.SuccessResponse{data=dto.PaymentResponse} "Payment retrieved successfully"
+// @Failure 400 {object} response.ErrorResponse "Bad request - Invalid payment ID"
+// @Failure 401 {object} response.ErrorResponse "Unauthorized"
+// @Failure 403 {object} response.ErrorResponse "Forbidden"
+// @Failure 404 {object} response.ErrorResponse "Payment not found"
+// @Failure 500 {object} response.ErrorResponse "Internal server error"
+// @Security BearerAuth
+// @Router /admin/payments/{payment_id} [get]
 func (ctrl *AdminPaymentController) GetPayment(c *gin.Context) {
 	ctrl.operations.GetPayment(c)
 }

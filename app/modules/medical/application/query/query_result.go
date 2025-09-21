@@ -6,24 +6,32 @@ import (
 	"clinic-vet-api/app/core/domain/valueobject"
 )
 
-type MedHistoryResult struct {
-	ID          valueobject.MedHistoryID
-	PetID       valueobject.PetID
-	CustomerID  valueobject.CustomerID
-	EmployeeID  valueobject.EmployeeID
-	Date        time.Time
-	Diagnosis   string
-	VisitType   string
-	VisitReason string
-	Notes       *string
-	Condition   string
-	Treatment   string
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+type MedSessionResult struct {
+	ID              valueobject.MedSessionID
+	PetID           valueobject.PetID
+	CustomerID      valueobject.CustomerID
+	EmployeeID      valueobject.EmployeeID
+	Date            time.Time
+	Diagnosis       string
+	VisitType       string
+	VisitReason     string
+	Notes           *string
+	Condition       string
+	Treatment       string
+	Weight          *valueobject.Decimal
+	Temperature     *valueobject.Decimal
+	HeartRate       *int
+	RespiratoryRate *int
+	Symptoms        []string
+	Medications     []string
+	FollowUpDate    *time.Time
+	IsEmergency     bool
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
 }
 
-type MedHistoryDetailResult struct {
-	ID        valueobject.MedHistoryID
+type MedSessionDetailResult struct {
+	ID        valueobject.MedSessionID
 	Date      time.Time
 	Diagnosis string
 	Notes     string

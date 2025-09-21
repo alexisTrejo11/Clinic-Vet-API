@@ -3,23 +3,34 @@ package dto
 import (
 	"time"
 
+	"clinic-vet-api/app/modules/medical/application/query"
 	commondto "clinic-vet-api/app/shared/dto"
 )
 
-// MedHistResponse represents a medical history record summary
-// swagger:model MedHistResponse
-type MedHistoryResponse struct {
-	// The unique identifier of the medical history record
+// MedSessionResponse represents a complete medical session record
+// swagger:model MedSessionResponse
+type MedSessionResponse struct {
+	// The unique identifier of the medical session
 	// Required: true
 	// Example: 1
 	ID uint `json:"id"`
 
-	// The ID of the pet associated with this record
+	// The ID of the pet associated with this session
 	// Required: true
 	// Example: 5
 	PetID uint `json:"pet_id"`
 
-	// The date of the medical visit
+	// The ID of the customer (pet owner)
+	// Required: true
+	// Example: 8
+	CustomerID uint `json:"customer_id"`
+
+	// The ID of the veterinarian who attended the session
+	// Required: true
+	// Example: 3
+	EmployeeID uint `json:"employee_id"`
+
+	// The date and time of the medical visit
 	// Required: true
 	// Format: date-time
 	// Example: 2023-10-15T14:30:00Z
@@ -27,49 +38,88 @@ type MedHistoryResponse struct {
 
 	// The diagnosis made during the visit
 	// Required: true
-	// Max length: 500
+	// Max length: 1000
 	// Example: Otitis externa
 	Diagnosis string `json:"diagnosis"`
 
 	// The type of medical visit
 	// Required: true
-	// Enum: consultation, emergency, vaccination, surgery, checkup
+	// Enum: consultation, emergency, vaccination, surgery, checkup, follow-up
 	// Example: consultation
 	VisitType string `json:"visit_type"`
 
 	// The reason for the visit
 	// Required: true
-	// Max length: 200
+	// Max length: 500
 	// Example: Routine checkup and vaccination
 	VisitReason string `json:"visit_reason"`
 
 	// Additional notes about the visit
 	// Required: false
-	// Max length: 1000
+	// Max length: 2000
 	// Example: Patient responded well to treatment
 	Notes *string `json:"notes,omitempty"`
 
 	// The medical condition observed
 	// Required: true
 	// Max length: 200
-	// Example: Acute infection
+	// Example: Stable
 	Condition string `json:"condition"`
 
 	// The treatment prescribed
 	// Required: true
-	// Max length: 500
+	// Max length: 1000
 	// Example: Antibiotics for 7 days
 	Treatment string `json:"treatment"`
 
-	// The ID of the veterinarian who attended the visit
-	// Required: true
-	// Example: 3
-	EmployeeID uint `json:"employee_id"`
+	// The weight of the pet in kilograms
+	// Required: false
+	// Minimum: 0
+	// Maximum: 200
+	// Example: 12.5
+	Weight *float64 `json:"weight,omitempty"`
 
-	// The ID of the customer (pet customer)
+	// The temperature of the pet in Celsius
+	// Required: false
+	// Minimum: 30
+	// Maximum: 45
+	// Example: 38.2
+	Temperature *float64 `json:"temperature,omitempty"`
+
+	// The heart rate of the pet in beats per minute
+	// Required: false
+	// Minimum: 20
+	// Maximum: 300
+	// Example: 120
+	HeartRate *int `json:"heart_rate,omitempty"`
+
+	// The respiratory rate of the pet in breaths per minute
+	// Required: false
+	// Minimum: 10
+	// Maximum: 200
+	// Example: 30
+	RespiratoryRate *int `json:"respiratory_rate,omitempty"`
+
+	// List of symptoms observed
+	// Required: false
+	// Example: ["fever", "coughing", "lethargy"]
+	Symptoms []string `json:"symptoms,omitempty"`
+
+	// List of medications prescribed
+	// Required: false
+	// Example: ["Amoxicillin 250mg", "Pain reliever"]
+	Medications []string `json:"medications,omitempty"`
+
+	// The scheduled follow-up date
+	// Required: false
+	// Format: date-time
+	// Example: 2023-10-22T14:30:00Z
+	FollowUpDate *time.Time `json:"follow_up_date,omitempty"`
+
+	// Indicates if this was an emergency visit
 	// Required: true
-	// Example: 8
-	CustomerID uint `json:"customer_id"`
+	// Example: false
+	IsEmergency bool `json:"is_emergency"`
 
 	// The creation timestamp of the record
 	// Required: true
@@ -84,9 +134,53 @@ type MedHistoryResponse struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
-// MedHistResponseDetail represents detailed medical history information
-// swagger:model MedHistResponseDetail
-type MedHistoryResponseDetail struct {
+func FromResult(res *query.MedSessionResult) *MedSessionResponse {
+	response := &MedSessionResponse{
+		ID:              res.ID.Value(),
+		PetID:           res.PetID.Value(),
+		CustomerID:      res.CustomerID.Value(),
+		EmployeeID:      res.EmployeeID.Value(),
+		Date:            res.Date,
+		Diagnosis:       res.Diagnosis,
+		VisitType:       res.VisitType,
+		VisitReason:     res.VisitReason,
+		Notes:           res.Notes,
+		Condition:       res.Condition,
+		Treatment:       res.Treatment,
+		HeartRate:       res.HeartRate,
+		RespiratoryRate: res.RespiratoryRate,
+		Symptoms:        res.Symptoms,
+		Medications:     res.Medications,
+		FollowUpDate:    res.FollowUpDate,
+		IsEmergency:     res.IsEmergency,
+		CreatedAt:       res.CreatedAt,
+		UpdatedAt:       res.UpdatedAt,
+	}
+
+	if res.Weight != nil {
+		weightFloat := res.Weight.Float64()
+		response.Weight = &weightFloat
+	}
+
+	if res.Temperature != nil {
+		tempFloat := res.Temperature.Float64()
+		response.Temperature = &tempFloat
+	}
+
+	return response
+}
+
+func FromResultList(results []query.MedSessionResult) []MedSessionResponse {
+	dtos := make([]MedSessionResponse, len(results))
+	for i, res := range results {
+		dtos[i] = *FromResult(&res)
+	}
+	return dtos
+}
+
+// MedSessionResponseDetail represents detailed medical history information
+// swagger:model MedSessionResponseDetail
+type MedSessionResponseDetail struct {
 	// The unique identifier of the medical history record
 	// Required: true
 	// Example: 1

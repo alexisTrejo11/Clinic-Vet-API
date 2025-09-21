@@ -62,7 +62,7 @@ func (v *Employee) UpdateYearsExperience(newYears int) error {
 }
 
 func (v *Employee) UpdateConsultationFee(newFee *valueobject.Money) error {
-	if newFee != nil && newFee.Amount() < 0 {
+	if newFee != nil && newFee.Amount().IsNegative() {
 		return errors.New("consultation fee cannot be negative")
 	}
 	v.consultationFee = newFee

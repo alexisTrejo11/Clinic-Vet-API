@@ -8,7 +8,7 @@ import (
 	"clinic-vet-api/app/core/domain/valueobject"
 )
 
-type MedicalHistorySpecification struct {
+type MedicalSessionSpecification struct {
 	PetIDs          []valueobject.PetID
 	CustomerID      []valueobject.CustomerID
 	EmployeeIDs     []valueobject.EmployeeID
@@ -25,7 +25,7 @@ type MedicalHistorySpecification struct {
 	Pagination
 }
 
-func (s *MedicalHistorySpecification) IsSatisfiedBy(entity any) bool {
+func (s *MedicalSessionSpecification) IsSatisfiedBy(entity any) bool {
 	history, ok := entity.(interface {
 		PetID() valueobject.PetID
 		customerID() valueobject.CustomerID
@@ -164,7 +164,7 @@ func (s *MedicalHistorySpecification) IsSatisfiedBy(entity any) bool {
 	return true
 }
 
-func (s *MedicalHistorySpecification) ToSQL() (string, []any) {
+func (s *MedicalSessionSpecification) ToSQL() (string, []any) {
 	var conditions []string
 	var args []any
 
@@ -271,64 +271,64 @@ func (s *MedicalHistorySpecification) ToSQL() (string, []any) {
 	return where, args
 }
 
-func (s *MedicalHistorySpecification) WithPetIDs(petIDs ...valueobject.PetID) *MedicalHistorySpecification {
+func (s *MedicalSessionSpecification) WithPetIDs(petIDs ...valueobject.PetID) *MedicalSessionSpecification {
 	s.PetIDs = petIDs
 	return s
 }
 
-func (s *MedicalHistorySpecification) WithcustomerIDs(customerIDs ...valueobject.CustomerID) *MedicalHistorySpecification {
+func (s *MedicalSessionSpecification) WithcustomerIDs(customerIDs ...valueobject.CustomerID) *MedicalSessionSpecification {
 	s.CustomerID = customerIDs
 	return s
 }
 
-func (s *MedicalHistorySpecification) WithEmployeeIDs(vetIDs ...valueobject.EmployeeID) *MedicalHistorySpecification {
+func (s *MedicalSessionSpecification) WithEmployeeIDs(vetIDs ...valueobject.EmployeeID) *MedicalSessionSpecification {
 	s.EmployeeIDs = vetIDs
 	return s
 }
 
-func (s *MedicalHistorySpecification) WithVisitReasons(reasons ...enum.VisitReason) *MedicalHistorySpecification {
+func (s *MedicalSessionSpecification) WithVisitReasons(reasons ...enum.VisitReason) *MedicalSessionSpecification {
 	s.VisitReasons = reasons
 	return s
 }
 
-func (s *MedicalHistorySpecification) WithVisitTypes(visitTypes ...enum.VisitType) *MedicalHistorySpecification {
+func (s *MedicalSessionSpecification) WithVisitTypes(visitTypes ...enum.VisitType) *MedicalSessionSpecification {
 	s.VisitTypes = visitTypes
 	return s
 }
 
-func (s *MedicalHistorySpecification) WithConditions(conditions ...enum.PetCondition) *MedicalHistorySpecification {
+func (s *MedicalSessionSpecification) WithConditions(conditions ...enum.PetCondition) *MedicalSessionSpecification {
 	s.Conditions = conditions
 	return s
 }
 
-func (s *MedicalHistorySpecification) WithDiagnosis(diagnosis string) *MedicalHistorySpecification {
+func (s *MedicalSessionSpecification) WithDiagnosis(diagnosis string) *MedicalSessionSpecification {
 	s.Diagnosis = &diagnosis
 	return s
 }
 
-func (s *MedicalHistorySpecification) WithTreatment(treatment string) *MedicalHistorySpecification {
+func (s *MedicalSessionSpecification) WithTreatment(treatment string) *MedicalSessionSpecification {
 	s.Treatment = &treatment
 	return s
 }
 
-func (s *MedicalHistorySpecification) WithVisitDateRange(from, to *time.Time) *MedicalHistorySpecification {
+func (s *MedicalSessionSpecification) WithVisitDateRange(from, to *time.Time) *MedicalSessionSpecification {
 	s.VisitDateFrom = from
 	s.VisitDateTo = to
 	return s
 }
 
-func (s *MedicalHistorySpecification) WithCreatedDateRange(from, to *time.Time) *MedicalHistorySpecification {
+func (s *MedicalSessionSpecification) WithCreatedDateRange(from, to *time.Time) *MedicalSessionSpecification {
 	s.CreatedDateFrom = from
 	s.CreatedDateTo = to
 	return s
 }
 
-func (s *MedicalHistorySpecification) WithSearchTerm(term string) *MedicalHistorySpecification {
+func (s *MedicalSessionSpecification) WithSearchTerm(term string) *MedicalSessionSpecification {
 	s.SearchTerm = &term
 	return s
 }
 
-func (s *MedicalHistorySpecification) WithPagination(page, pageSize int, orderBy, sortDir string) *MedicalHistorySpecification {
+func (s *MedicalSessionSpecification) WithPagination(page, pageSize int, orderBy, sortDir string) *MedicalSessionSpecification {
 	s.Pagination = Pagination{
 		Page:     page,
 		PageSize: pageSize,

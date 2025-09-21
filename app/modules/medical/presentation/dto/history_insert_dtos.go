@@ -5,16 +5,16 @@ import (
 	"time"
 )
 
-type AdminCreateMedHistoryRequest struct {
+type AdminCreateMedSessionRequest struct {
 	PetID      uint `json:"pet_id" validate:"required"`
 	CustomerID uint `json:"customer_id" validate:"required"`
 	EmployeeID uint `json:"employee_id"`
-	CreateMedHistoryRequest
+	CreateMedSessionRequest
 }
 
-// CreateMedHistoryRequest  represents the request to create a new medical history entry
-// swagger:model CreateMedHistoryRequest
-type CreateMedHistoryRequest struct {
+// CreateMedSessionRequest  represents the request to create a new medical history entry
+// swagger:model CreateMedSessionRequest
+type CreateMedSessionRequest struct {
 	// The date of the medical visit
 	// Required: true
 	// Example: 2023-10-15T14:30:00Z
@@ -28,7 +28,7 @@ type CreateMedHistoryRequest struct {
 	// The type of medical visit
 	// Required: true
 	// Example: consultation
-	VisitType string `json:"visit_type" validate:"required,oneof=consultation emergency vaccination surgery checkup"`
+	VisitType string `json:"visit_type" validate:"required,min=3,max=50"`
 
 	// The reason for the visit
 	// Required: true
@@ -51,9 +51,9 @@ type CreateMedHistoryRequest struct {
 	Treatment string `json:"treatment" validate:"required,max=500"`
 }
 
-// UpdateMedHistoryRequest represents the request to update a medical history entry
-// swagger:model UpdateMedHistoryRequest
-type UpdateMedHistoryRequest struct {
+// UpdateMedSessionRequest represents the request to update a medical history entry
+// swagger:model UpdateMedSessionRequest
+type UpdateMedSessionRequest struct {
 	// The date of the medical visit
 	// Required: false
 	// Example: 2023-10-15T14:30:00Z

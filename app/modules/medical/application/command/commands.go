@@ -9,7 +9,7 @@ import (
 	"clinic-vet-api/app/core/domain/valueobject"
 )
 
-type CreateMedHistCommand struct {
+type CreateMedSessionCommand struct {
 	PetID       valueobject.PetID
 	CustomerID  valueobject.CustomerID
 	EmployeeID  valueobject.EmployeeID
@@ -23,8 +23,8 @@ type CreateMedHistCommand struct {
 	CTX         context.Context
 }
 
-type UpdateMedHistCommand struct {
-	ID          valueobject.MedHistoryID
+type UpdateMedSessionCommand struct {
+	ID          valueobject.MedSessionID
 	Diagnosis   *string
 	VisitType   *string
 	VisitReason *string
@@ -35,40 +35,18 @@ type UpdateMedHistCommand struct {
 	CTX         context.Context
 }
 
-type SoftDeleteMedHistCommand struct {
-	ID  valueobject.MedHistoryID
+type SoftDeleteMedSessionCommand struct {
+	ID  valueobject.MedSessionID
 	CTX context.Context
 }
 
-type HardDeleteMedHistCommand struct {
-	ID  valueobject.MedHistoryID
+type HardDeleteMedSessionCommand struct {
+	ID  valueobject.MedSessionID
 	CTX context.Context
-}
-
-func ValidateCreateCommand(command CreateMedHistCommand) error {
-	if command.PetID.IsZero() {
-		return errors.New("el ID de la mascota es requerido")
-	}
-	if command.CustomerID.IsZero() {
-		return errors.New("el ID del cliente es requerido")
-	}
-	if command.EmployeeID.IsZero() {
-		return errors.New("el ID del empleado es requerido")
-	}
-	if command.Date.IsZero() {
-		return errors.New("la fecha de visita es requerida")
-	}
-	if command.Diagnosis == "" {
-		return errors.New("el diagnóstico es requerido")
-	}
-	if command.Treatment == "" {
-		return errors.New("el tratamiento es requerido")
-	}
-	return nil
 }
 
 // ValidateUpdateCommand valida los datos del comando de actualización
-func ValidateUpdateCommand(command UpdateMedHistCommand) error {
+func ValidateUpdateCommand(command UpdateMedSessionCommand) error {
 	if command.ID.IsZero() {
 		return errors.New("el ID del historial médico es requerido")
 	}

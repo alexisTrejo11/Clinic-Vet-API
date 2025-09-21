@@ -5,10 +5,11 @@ import (
 	"clinic-vet-api/app/modules/medical/application/command"
 	"clinic-vet-api/app/modules/medical/application/query"
 	commondto "clinic-vet-api/app/shared/dto"
+	"context"
 )
 
-func (req *AdminCreateMedHistoryRequest) ToCommand() *command.CreateMedHistCommand {
-	return &command.CreateMedHistCommand{
+func (req *AdminCreateMedSessionRequest) ToCommand(ctx context.Context) *command.CreateMedSessionCommand {
+	return &command.CreateMedSessionCommand{
 		PetID:       valueobject.NewPetID(req.PetID),
 		CustomerID:  valueobject.NewCustomerID(req.CustomerID),
 		EmployeeID:  valueobject.NewEmployeeID(req.EmployeeID),
@@ -19,12 +20,13 @@ func (req *AdminCreateMedHistoryRequest) ToCommand() *command.CreateMedHistComma
 		Notes:       req.Notes,
 		Condition:   req.Condition,
 		Treatment:   req.Treatment,
+		CTX:         ctx,
 	}
 }
 
-func (req *UpdateMedHistoryRequest) ToUpdateCommand(medHistoryID uint) *command.UpdateMedHistCommand {
-	return &command.UpdateMedHistCommand{
-		ID:          valueobject.NewMedHistoryID(medHistoryID),
+func (req *UpdateMedSessionRequest) ToUpdateCommand(medSessionID uint) *command.UpdateMedSessionCommand {
+	return &command.UpdateMedSessionCommand{
+		ID:          valueobject.NewMedSessionID(medSessionID),
 		Diagnosis:   req.Diagnosis,
 		VisitType:   req.VisitType,
 		VisitReason: req.VisitReason,
@@ -35,8 +37,8 @@ func (req *UpdateMedHistoryRequest) ToUpdateCommand(medHistoryID uint) *command.
 	}
 }
 
-func ToResponse(result *query.MedHistoryResult) *MedHistoryResponse {
-	return &MedHistoryResponse{
+func ToResponse(result *query.MedSessionResult) *MedSessionResponse {
+	return &MedSessionResponse{
 		ID:          result.ID.Value(),
 		PetID:       result.PetID.Value(),
 		CustomerID:  result.CustomerID.Value(),
@@ -53,8 +55,8 @@ func ToResponse(result *query.MedHistoryResult) *MedHistoryResponse {
 	}
 }
 
-func ToDetailResponse(result *query.MedHistoryDetailResult) *MedHistoryResponseDetail {
-	return &MedHistoryResponseDetail{
+func ToDetailResponse(result *query.MedSessionDetailResult) *MedSessionResponseDetail {
+	return &MedSessionResponseDetail{
 		ID:        result.ID.Value(),
 		Date:      result.Date,
 		Diagnosis: result.Diagnosis,
@@ -84,16 +86,16 @@ func ToDetailResponse(result *query.MedHistoryDetailResult) *MedHistoryResponseD
 	}
 }
 
-func ToResponseList(results []*query.MedHistoryResult) []*MedHistoryResponse {
-	responses := make([]*MedHistoryResponse, len(results))
+func ToResponseList(results []*query.MedSessionResult) []*MedSessionResponse {
+	responses := make([]*MedSessionResponse, len(results))
 	for i, result := range results {
 		responses[i] = ToResponse(result)
 	}
 	return responses
 }
 
-func ToDetailResponseList(results []*query.MedHistoryDetailResult) []*MedHistoryResponseDetail {
-	responses := make([]*MedHistoryResponseDetail, len(results))
+func ToDetailResponseList(results []*query.MedSessionDetailResult) []*MedSessionResponseDetail {
+	responses := make([]*MedSessionResponseDetail, len(results))
 	for i, result := range results {
 		responses[i] = ToDetailResponse(result)
 	}

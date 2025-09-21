@@ -2,87 +2,116 @@
 package query
 
 import (
-	"context"
-	"time"
-
 	"clinic-vet-api/app/core/domain/specification"
 	"clinic-vet-api/app/core/domain/valueobject"
+	"time"
+
 	p "clinic-vet-api/app/shared/page"
 )
 
-type FindMedHistByIDQuery struct {
-	ID  valueobject.MedHistoryID
-	CTX context.Context
+// FindMedSessionByIDQuery represents a query to find a medical history by its ID, with optional Filter only one opt parameters will be considered
+type FindMedSessionByIDQuery struct {
+	ID            valueobject.MedSessionID
+	optCustomerID *valueobject.CustomerID
+	optPetID      *valueobject.PetID
+	optEmployeeID *valueobject.EmployeeID
 }
 
-func NewFindMedHistByIDQuery(id uint, ctx context.Context) *FindMedHistByIDQuery {
-	return &FindMedHistByIDQuery{
-		ID:  valueobject.NewMedHistoryID(id),
-		CTX: ctx,
+func NewFindMedSessionByIDQuery(id uint) *FindMedSessionByIDQuery {
+	return &FindMedSessionByIDQuery{
+		ID: valueobject.NewMedSessionID(id),
 	}
 }
 
-type FindMedHistBySpecQuery struct {
-	Spec specification.MedicalHistorySpecification
-	CTX  context.Context
+func FindMedSessionByIDQueryWithCustomerID(id uint, customerID uint) *FindMedSessionByIDQuery {
+	custID := valueobject.NewCustomerID(customerID)
+
+	return &FindMedSessionByIDQuery{
+		ID: valueobject.NewMedSessionID(id), optCustomerID: &custID,
+	}
 }
 
-type FindAllMedHistQuery struct {
+func FindMedSessionByIDQueryWithPetID(id uint, petID uint) *FindMedSessionByIDQuery {
+	pID := valueobject.NewPetID(petID)
+	return &FindMedSessionByIDQuery{
+		ID:       valueobject.NewMedSessionID(id),
+		optPetID: &pID,
+	}
+}
+
+func FindMedSessionByIDQueryWithEmployeeID(id uint, employeeID uint) *FindMedSessionByIDQuery {
+	empID := valueobject.NewEmployeeID(employeeID)
+	return &FindMedSessionByIDQuery{
+		ID:            valueobject.NewMedSessionID(id),
+		optEmployeeID: &empID,
+	}
+}
+
+type FindMedSessionBySpecQuery struct {
+	Spec specification.MedicalSessionSpecification
+}
+
+type FindAllMedSessionQuery struct {
 	PageInput p.PageInput
-	CTX       context.Context
 }
 
-type FindMedHistByEmployeeIDQuery struct {
+type FindMedSessionByEmployeeIDQuery struct {
 	EmployeeID valueobject.EmployeeID
 	PageInput  p.PageInput
-	CTX        context.Context
 }
 
-type FindMedHistByPetIDQuery struct {
-	PetID     valueobject.PetID
-	PageInput p.PageInput
-	CTX       context.Context
+type FindMedSessionByPetIDQuery struct {
+	petID         valueobject.PetID
+	optCustomerID *valueobject.CustomerID
+	pageInput     p.PageInput
 }
 
-type FindMedHistByCustomerIDQuery struct {
+func NewFindMedSessionByPetIDQuery(petID uint, optCustomerID *uint, pageInput p.PageInput) *FindMedSessionByPetIDQuery {
+	var optCustID *valueobject.CustomerID
+	if optCustomerID != nil {
+		val := valueobject.NewCustomerID(*optCustomerID)
+		optCustID = &val
+	}
+
+	return &FindMedSessionByPetIDQuery{
+		petID:         valueobject.NewPetID(petID),
+		optCustomerID: optCustID,
+		pageInput:     pageInput,
+	}
+}
+
+type FindMedSessionByCustomerIDQuery struct {
 	CustomerID valueobject.CustomerID
 	PageInput  p.PageInput
-	CTX        context.Context
 }
 
-type FindRecentMedHistByPetIDQuery struct {
+type FindRecentMedSessionByPetIDQuery struct {
 	PetID valueobject.PetID
 	Limit int
-	CTX   context.Context
 }
 
-type FindMedHistByDateRangeQuery struct {
+type FindMedSessionByDateRangeQuery struct {
 	StartDate time.Time
 	EndDate   time.Time
 	PageInput p.PageInput
-	CTX       context.Context
 }
 
-type FindMedHistByPetAndDateRangeQuery struct {
+type FindMedSessionByPetAndDateRangeQuery struct {
 	PetID     valueobject.PetID
 	StartDate time.Time
 	EndDate   time.Time
-	CTX       context.Context
 }
 
-type FindMedHistByDiagnosisQuery struct {
+type FindMedSessionByDiagnosisQuery struct {
 	Diagnosis string
 	PageInput p.PageInput
-	CTX       context.Context
 }
 
-type ExistsMedHistByIDQuery struct {
-	ID  valueobject.MedHistoryID
-	CTX context.Context
+type ExistsMedSessionByIDQuery struct {
+	ID valueobject.MedSessionID
 }
 
-type ExistsMedHistByPetAndDateQuery struct {
+type ExistsMedSessionByPetAndDateQuery struct {
 	PetID valueobject.PetID
 	Date  time.Time
-	CTX   context.Context
 }

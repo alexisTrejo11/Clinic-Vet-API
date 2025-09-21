@@ -1,36 +1,32 @@
 package command
 
 import (
+	"clinic-vet-api/app/core/domain/valueobject"
 	"clinic-vet-api/app/core/repository"
 	"clinic-vet-api/app/shared/cqrs"
+	"context"
 )
 
-type MedicalHistoryCommandHandlers interface {
-	CreateMedicalHistory(command CreateMedHistCommand) cqrs.CommandResult
-	UpdateMedicalHistory(command UpdateMedHistCommand) cqrs.CommandResult
-	SoftDeleteMedicalHistory(command SoftDeleteMedHistCommand) cqrs.CommandResult
-	HardDeleteMedicalHistory(command HardDeleteMedHistCommand) cqrs.CommandResult
+type MedicalSessionCommandHandlers interface {
+	CreateMedicalSession(command CreateMedSessionCommand) cqrs.CommandResult
+	UpdateMedicalSession(command UpdateMedSessionCommand) cqrs.CommandResult
+	SoftDeleteMedicalSession(command SoftDeleteMedSessionCommand) cqrs.CommandResult
+	HardDeleteMedicalSession(command HardDeleteMedSessionCommand) cqrs.CommandResult
 }
 
-type medicalHistoryCommandHandlers struct {
-	repo repository.MedicalHistoryRepository
+type medicalSessionCommandHandlers struct {
+	repo repository.MedicalSessionRepository
 }
 
-func NewMedicalHistoryCommandHandlers(repo repository.MedicalHistoryRepository) MedicalHistoryCommandHandlers {
-	return &medicalHistoryCommandHandlers{
+func NewMedicalSessionCommandHandlers(repo repository.MedicalSessionRepository) MedicalSessionCommandHandlers {
+	return &medicalSessionCommandHandlers{
 		repo: repo,
 	}
 }
 
-func (h *medicalHistoryCommandHandlers) CreateMedicalHistory(command CreateMedHistCommand) cqrs.CommandResult {
-	exists, err := h.repo.ExistsByPetAndDate(command.CTX, command.PetID, command.Date)
-	if err != nil {
-		return errorCreateResult(msgErrorProcessingData, err)
-	}
-	if exists {
-		return errorCreateResult(msgMedicalHistoryDateConflict, nil)
-	}
+// Validate Schedule??
 
+func (h *medicalSessionCommandHandlers) CreateMedicalSession(command CreateMedSessionCommand) cqrs.CommandResult {
 	entity, err := ToEntityFromCreate(&command)
 	if err != nil {
 		return errorCreateResult(msgErrorProcessingData, err)
@@ -43,70 +39,55 @@ func (h *medicalHistoryCommandHandlers) CreateMedicalHistory(command CreateMedHi
 	return successCreateResult(*entity)
 }
 
-func (h *medicalHistoryCommandHandlers) UpdateMedicalHistory(command UpdateMedHistCommand) cqrs.CommandResult {
-	exists, err := h.repo.ExistsByID(command.CTX, command.ID)
-	if err != nil {
-		return errorUpdateResult(msgErrorProcessingData, err)
-	}
-	if !exists {
-		return errorUpdateResult(msgMedicalHistoryNotFound, nil)
-	}
-
+func (h *medicalSessionCommandHandlers) UpdateMedicalSession(command UpdateMedSessionCommand) cqrs.CommandResult {
 	existingEntity, err := h.repo.FindByID(command.CTX, command.ID)
 	if err != nil {
 		return errorUpdateResult(msgErrorProcessingData, err)
 	}
 
-	if command.Date != nil && !command.Date.Equal(existingEntity.VisitDate()) {
-		exists, err := h.repo.ExistsByPetAndDate(command.CTX, existingEntity.PetID(), *command.Date)
-		if err != nil {
-			return errorUpdateResult(msgErrorProcessingData, err)
-		}
-		if exists {
-			return errorUpdateResult(msgMedicalHistoryNewDateConflict, nil)
-		}
-	}
-
-	updatedEntity, err := ToEntityFromUpdate(&command, &existingEntity)
+	updatedEntity, err := ToEntityFromUpdate(&command, existingEntity)
 	if err != nil {
 		return errorUpdateResult(msgErrorProcessingData, err)
 	}
 
-	if err := h.repo.Update(command.CTX, updatedEntity); err != nil {
+	if err := h.repo.Save(command.CTX, updatedEntity); err != nil {
 		return errorUpdateResult(msgErrorProcessingData, err)
 	}
 
 	return successUpdateResult(*updatedEntity)
 }
 
-func (h *medicalHistoryCommandHandlers) SoftDeleteMedicalHistory(command SoftDeleteMedHistCommand) cqrs.CommandResult {
-	exists, err := h.repo.ExistsByID(command.CTX, command.ID)
-	if err != nil {
-		return errorDeleteResult(command.ID, msgErrorProcessingData, err)
-	}
-	if !exists {
-		return errorDeleteResult(command.ID, msgMedicalHistoryNotFound, err)
+func (h *medicalSessionCommandHandlers) SoftDeleteMedicalSession(command SoftDeleteMedSessionCommand) cqrs.CommandResult {
+	if err := h.valdiateExistingMedSession(command.CTX, command.ID); err != nil {
+		return errorDeleteResult(command.ID, msgMedicalSessionNotFound, err)
 	}
 
 	if err := h.repo.SoftDelete(command.CTX, command.ID); err != nil {
 		return errorDeleteResult(command.ID, msgErrorProcessingData, err)
 	}
 
-	return successDeleteResult(command.ID, msgMedicalHistorySoftDeleted)
+	return successDeleteResult(command.ID, msgMedicalSessionSoftDeleted)
 }
 
-func (h *medicalHistoryCommandHandlers) HardDeleteMedicalHistory(command HardDeleteMedHistCommand) cqrs.CommandResult {
-	exists, err := h.repo.ExistsByID(command.CTX, command.ID)
-	if err != nil {
-		return errorDeleteResult(command.ID, msgErrorProcessingData, err)
-	}
-	if !exists {
-		return errorDeleteResult(command.ID, msgMedicalHistoryNotFound, nil)
+func (h *medicalSessionCommandHandlers) HardDeleteMedicalSession(command HardDeleteMedSessionCommand) cqrs.CommandResult {
+	if err := h.valdiateExistingMedSession(command.CTX, command.ID); err != nil {
+		return errorDeleteResult(command.ID, msgMedicalSessionNotFound, err)
 	}
 
 	if err := h.repo.HardDelete(command.CTX, command.ID); err != nil {
 		return errorDeleteResult(command.ID, msgErrorProcessingData, err)
 	}
 
-	return successDeleteResult(command.ID, msgMedicalHistoryHardDeleted)
+	return successDeleteResult(command.ID, msgMedicalSessionHardDeleted)
+}
+
+func (h *medicalSessionCommandHandlers) valdiateExistingMedSession(ctx context.Context, medHistID valueobject.MedSessionID) error {
+	exists, err := h.repo.ExistsByID(ctx, medHistID)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		return MedicalNotFoundErr(medHistID)
+	}
+	return nil
 }

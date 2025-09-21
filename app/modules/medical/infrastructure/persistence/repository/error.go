@@ -18,44 +18,44 @@ const (
 	OpCount  = "count"
 	OpSearch = "search"
 
-	TableMedicalHistory = "medical_history"
+	TableMedicalSession = "medical_sessions"
 	DriverSQL           = "sql"
 )
 
 // Error messages
 const (
-	ErrMsgGetMedicalHistory    = "failed to get medical history"
-	ErrMsgSearchMedicalHistory = "failed to search medical history"
+	ErrMsgGetMedicalSession    = "failed to get medical history"
+	ErrMsgSearchMedicalSession = "failed to search medical history"
 	ErrMsgListByVet            = "failed to list medical history by veterinarian"
 	ErrMsgListByPet            = "failed to list medical history by pet"
 	ErrMsgListBycustomer       = "failed to list medical history by customer"
-	ErrMsgCreateMedicalHistory = "failed to create medical history"
-	ErrMsgUpdateMedicalHistory = "failed to update medical history"
-	ErrMsgDeleteMedicalHistory = "failed to delete medical history"
+	ErrMsgCreateMedicalSession = "failed to create medical history"
+	ErrMsgUpdateMedicalSession = "failed to update medical history"
+	ErrMsgDeleteMedicalSession = "failed to delete medical history"
 	ErrMsgConvertToDomain      = "failed to convert to domain entity"
 	ErrMsgInvalidSearchParams  = "invalid search parameters type"
-	ErrMsgCountMedicalHistory  = "failed to count medical history records"
+	ErrMsgCountMedicalSession  = "failed to count medical history records"
 )
 
-func (r *SQLCMedHistRepository) calculateOffset(pageData page.PageInput) int32 {
+func (r *SQLCMedSessionRepository) calculateOffset(pageData page.PageInput) int32 {
 	return int32(pageData.PageSize * (pageData.Page - 1))
 }
 
-func (r *SQLCMedHistRepository) buildNotesParam(notes *string) pgtype.Text {
+func (r *SQLCMedSessionRepository) buildNotesParam(notes *string) pgtype.Text {
 	if notes != nil {
 		return pgtype.Text{String: *notes, Valid: true}
 	}
 	return pgtype.Text{Valid: false}
 }
 
-func (r *SQLCMedHistRepository) dbError(operation, message string, err error) error {
-	return dberr.DatabaseOperationError(operation, TableMedicalHistory, DriverSQL, fmt.Errorf("%s: %v", message, err))
+func (r *SQLCMedSessionRepository) dbError(operation, message string, err error) error {
+	return dberr.DatabaseOperationError(operation, TableMedicalSession, DriverSQL, fmt.Errorf("%s: %v", message, err))
 }
 
-func (r *SQLCMedHistRepository) notFoundError(parameterName, parameterValue string) error {
-	return dberr.EntityNotFoundError(parameterName, parameterValue, OpSelect, TableMedicalHistory, DriverSQL)
+func (r *SQLCMedSessionRepository) notFoundError(parameterName, parameterValue string) error {
+	return dberr.EntityNotFoundError(parameterName, parameterValue, OpSelect, TableMedicalSession, DriverSQL)
 }
 
-func (r *SQLCMedHistRepository) wrapConversionError(err error) error {
+func (r *SQLCMedSessionRepository) wrapConversionError(err error) error {
 	return fmt.Errorf("%s: %w", ErrMsgConvertToDomain, err)
 }

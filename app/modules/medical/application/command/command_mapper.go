@@ -5,7 +5,7 @@ import (
 	"clinic-vet-api/app/core/domain/enum"
 )
 
-func ToEntityFromCreate(command *CreateMedHistCommand) (*medical.MedicalHistory, error) {
+func ToEntityFromCreate(command *CreateMedSessionCommand) (*medical.MedicalSession, error) {
 	visitType, err := enum.ParseVisitType(command.VisitType)
 	if err != nil {
 		return nil, err
@@ -21,7 +21,7 @@ func ToEntityFromCreate(command *CreateMedHistCommand) (*medical.MedicalHistory,
 		return nil, err
 	}
 
-	entity, err := medical.CreateMedicalHistory(
+	entity, err := medical.CreateMedicalSession(
 		command.CTX,
 		command.PetID,
 		command.CustomerID,
@@ -41,8 +41,8 @@ func ToEntityFromCreate(command *CreateMedHistCommand) (*medical.MedicalHistory,
 	return entity, nil
 }
 
-func ToEntityFromUpdate(command *UpdateMedHistCommand, existingEntity *medical.MedicalHistory) (*medical.MedicalHistory, error) {
-	var opts []medical.MedicalHistoryOptions
+func ToEntityFromUpdate(command *UpdateMedSessionCommand, existingEntity *medical.MedicalSession) (*medical.MedicalSession, error) {
+	var opts []medical.MedicalSessionOptions
 
 	if command.Date != nil {
 		opts = append(opts, medical.WithVisitDate(*command.Date))

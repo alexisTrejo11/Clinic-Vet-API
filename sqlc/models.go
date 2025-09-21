@@ -21,7 +21,7 @@ type Appointment struct {
 	EmployeeID    pgtype.Int4
 	CreatedAt     pgtype.Timestamptz
 	UpdatedAt     pgtype.Timestamptz
-	DeletedAt     pgtype.Timestamp
+	DeletedAt     pgtype.Timestamptz
 }
 
 type Customer struct {
@@ -54,7 +54,7 @@ type Employee struct {
 	DeletedAt         pgtype.Timestamp
 }
 
-type MedicalHistory struct {
+type MedicalSession struct {
 	ID              int32
 	PetID           int32
 	CustomerID      int32

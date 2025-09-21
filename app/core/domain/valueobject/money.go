@@ -7,11 +7,11 @@ import (
 )
 
 type Money struct {
-	amount   int64 // Amount in smallest currency unit (cents)
+	amount   Decimal
 	currency string
 }
 
-func (m Money) Amount() int64 {
+func (m Money) Amount() Decimal {
 	return m.amount
 }
 
@@ -19,28 +19,23 @@ func (m Money) Currency() string {
 	return m.currency
 }
 
-func NewMoney(amount float64, currency string) Money {
+func NewMoney(amount Decimal, currency string) Money {
 	return Money{
-		amount:   int64(amount * 100), // Convert to cents
+		amount:   amount,
 		currency: currency,
 	}
 }
 
-func (m Money) ToFloat() float64 {
-	return float64(m.amount) / 100.0
-}
-
 func (m Money) FormatWithCurrency(currency string) string {
-	amount := m.ToFloat()
 	switch currency {
 	case "USD":
-		return fmt.Sprintf("$%.2f", amount)
+		return fmt.Sprintf("$%s", m.amount.String())
 	case "EUR":
-		return fmt.Sprintf("€%.2f", amount)
+		return fmt.Sprintf("€%s", m.amount.String())
 	case "MXN":
-		return fmt.Sprintf("$%.2f MXN", amount)
+		return fmt.Sprintf("$%s MXN", m.Amount().String())
 	default:
-		return fmt.Sprintf("%.2f %s", amount, currency)
+		return fmt.Sprintf("%s %s", m.amount.String(), currency)
 	}
 }
 
@@ -49,7 +44,7 @@ func (m Money) Add(other Money) (Money, error) {
 		return Money{}, domainerr.InvalidFieldFormat(context.Background(), "money", "currency mismatch", fmt.Sprintf("cannot add different currencies: %s and %s", m.currency, other.Currency()), "create money")
 	}
 	return Money{
-		amount:   m.amount + other.Amount(),
+		amount:   m.amount.Add(other.amount),
 		currency: m.currency,
 	}, nil
 }
@@ -59,19 +54,19 @@ func (m Money) Subtract(other Money) (Money, error) {
 		return Money{}, domainerr.InvalidFieldFormat(context.Background(), "money", "currency mismatch", fmt.Sprintf("cannot subtract different currencies: %s and %s", m.currency, other.Currency()), "create money")
 	}
 	return Money{
-		amount:   m.amount - other.Amount(),
+		amount:   m.amount.Sub(other.amount),
 		currency: m.currency,
 	}, nil
 }
 
 func (m Money) IsZero() bool {
-	return m.amount == 0
+	return m.amount.value == 0
 }
 
 func (m Money) IsPositive() bool {
-	return m.amount > 0
+	return m.amount.value > 0
 }
 
 func (m Money) IsNegative() bool {
-	return m.amount < 0
+	return m.amount.value < 0
 }

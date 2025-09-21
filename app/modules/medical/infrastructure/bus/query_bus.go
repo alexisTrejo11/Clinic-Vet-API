@@ -1,11 +1,12 @@
 package bus
 
 import (
+	"clinic-vet-api/app/modules/medical/application/query"
+	"clinic-vet-api/app/shared/cqrs"
+	"context"
 	"fmt"
 	"reflect"
 
-	"clinic-vet-api/app/modules/medical/application/query"
-	"clinic-vet-api/app/shared/cqrs"
 	p "clinic-vet-api/app/shared/page"
 )
 
@@ -53,63 +54,51 @@ func (qb *QueryBus) Execute(query cqrs.Query) (any, error) {
 	return results[0].Interface(), nil
 }
 
-type MedicalHistoryQueryBus struct {
+type MedicalSessionQueryBus struct {
 	*QueryBus
-	handlers query.MedicalHistoryQueryHandlers
+	handlers query.MedicalSessionQueryHandlers
 }
 
-func NewMedicalHistoryQueryBus(handlers query.MedicalHistoryQueryHandlers) *MedicalHistoryQueryBus {
+func NewMedicalSessionQueryBus(handlers query.MedicalSessionQueryHandlers) *MedicalSessionQueryBus {
 	bus := NewQueryBus()
-	return &MedicalHistoryQueryBus{
+	return &MedicalSessionQueryBus{
 		QueryBus: bus,
 		handlers: handlers,
 	}
 }
 
-func (mq *MedicalHistoryQueryBus) FindMedHistByID(q query.FindMedHistByIDQuery) (*query.MedHistoryResult, error) {
-	return mq.handlers.FindMedHistByID(q)
+func (mq *MedicalSessionQueryBus) FindMedSessionByID(ctx context.Context, q query.FindMedSessionByIDQuery) (*query.MedSessionResult, error) {
+	return mq.handlers.FindMedSessionByID(ctx, q)
 }
 
-func (mq *MedicalHistoryQueryBus) FindMedHistBySpec(q query.FindMedHistBySpecQuery) (*p.Page[query.MedHistoryResult], error) {
-	return mq.handlers.FindMedHistBySpec(q)
+func (mq *MedicalSessionQueryBus) FindMedSessionBySpec(ctx context.Context, q query.FindMedSessionBySpecQuery) (*p.Page[query.MedSessionResult], error) {
+	return mq.handlers.FindMedSessionBySpec(ctx, q)
 }
 
-func (mq *MedicalHistoryQueryBus) FindAllMedHist(q query.FindAllMedHistQuery) (*p.Page[query.MedHistoryResult], error) {
-	return mq.handlers.FindAllMedHist(q)
+func (mq *MedicalSessionQueryBus) FindMedSessionByEmployeeID(ctx context.Context, q query.FindMedSessionByEmployeeIDQuery) (*p.Page[query.MedSessionResult], error) {
+	return mq.handlers.FindMedSessionByEmployeeID(ctx, q)
 }
 
-func (mq *MedicalHistoryQueryBus) FindMedHistByEmployeeID(q query.FindMedHistByEmployeeIDQuery) (*p.Page[query.MedHistoryResult], error) {
-	return mq.handlers.FindMedHistByEmployeeID(q)
+func (mq *MedicalSessionQueryBus) FindMedSessionByPetID(ctx context.Context, q query.FindMedSessionByPetIDQuery) (*p.Page[query.MedSessionResult], error) {
+	return mq.handlers.FindMedSessionByPetID(ctx, q)
 }
 
-func (mq *MedicalHistoryQueryBus) FindMedHistByPetID(q query.FindMedHistByPetIDQuery) (*p.Page[query.MedHistoryResult], error) {
-	return mq.handlers.FindMedHistByPetID(q)
+func (mq *MedicalSessionQueryBus) FindMedSessionByCustomerID(ctx context.Context, q query.FindMedSessionByCustomerIDQuery) (*p.Page[query.MedSessionResult], error) {
+	return mq.handlers.FindMedSessionByCustomerID(ctx, q)
 }
 
-func (mq *MedicalHistoryQueryBus) FindMedHistByCustomerID(q query.FindMedHistByCustomerIDQuery) (*p.Page[query.MedHistoryResult], error) {
-	return mq.handlers.FindMedHistByCustomerID(q)
+func (mq *MedicalSessionQueryBus) FindRecentMedSessionByPetID(ctx context.Context, q query.FindRecentMedSessionByPetIDQuery) ([]query.MedSessionResult, error) {
+	return mq.handlers.FindRecentMedSessionByPetID(ctx, q)
 }
 
-func (mq *MedicalHistoryQueryBus) FindRecentMedHistByPetID(q query.FindRecentMedHistByPetIDQuery) ([]query.MedHistoryResult, error) {
-	return mq.handlers.FindRecentMedHistByPetID(q)
+func (mq *MedicalSessionQueryBus) FindMedSessionByDateRange(ctx context.Context, q query.FindMedSessionByDateRangeQuery) (*p.Page[query.MedSessionResult], error) {
+	return mq.handlers.FindMedSessionByDateRange(ctx, q)
 }
 
-func (mq *MedicalHistoryQueryBus) FindMedHistByDateRange(q query.FindMedHistByDateRangeQuery) (*p.Page[query.MedHistoryResult], error) {
-	return mq.handlers.FindMedHistByDateRange(q)
+func (mq *MedicalSessionQueryBus) FindMedSessionByPetAndDateRange(ctx context.Context, q query.FindMedSessionByPetAndDateRangeQuery) ([]query.MedSessionResult, error) {
+	return mq.handlers.FindMedSessionByPetAndDateRange(ctx, q)
 }
 
-func (mq *MedicalHistoryQueryBus) FindMedHistByPetAndDateRange(q query.FindMedHistByPetAndDateRangeQuery) ([]query.MedHistoryResult, error) {
-	return mq.handlers.FindMedHistByPetAndDateRange(q)
-}
-
-func (mq *MedicalHistoryQueryBus) FindMedHistByDiagnosis(q query.FindMedHistByDiagnosisQuery) (*p.Page[query.MedHistoryResult], error) {
-	return mq.handlers.FindMedHistByDiagnosis(q)
-}
-
-func (mq *MedicalHistoryQueryBus) ExistsMedHistByID(q query.ExistsMedHistByIDQuery) (bool, error) {
-	return mq.handlers.ExistsMedHistByID(q)
-}
-
-func (mq *MedicalHistoryQueryBus) ExistsMedHistByPetAndDate(q query.ExistsMedHistByPetAndDateQuery) (bool, error) {
-	return mq.handlers.ExistsMedHistByPetAndDate(q)
+func (mq *MedicalSessionQueryBus) FindMedSessionByDiagnosis(ctx context.Context, q query.FindMedSessionByDiagnosisQuery) (*p.Page[query.MedSessionResult], error) {
+	return mq.handlers.FindMedSessionByDiagnosis(ctx, q)
 }

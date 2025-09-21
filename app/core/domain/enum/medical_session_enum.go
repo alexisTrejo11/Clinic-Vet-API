@@ -1,7 +1,6 @@
 package enum
 
 import (
-	"fmt"
 	"strings"
 )
 
@@ -198,7 +197,7 @@ func ParseVisitType(visitType string) (VisitType, error) {
 	if val, exists := visitTypeMap[normalized]; exists {
 		return val, nil
 	}
-	return "", fmt.Errorf("invalid visit type: %s", visitType)
+	return "", InvalidEnumParserError("VisitType", visitType)
 }
 
 func MustParseVisitType(visitType string) VisitType {
@@ -300,7 +299,7 @@ func ParsePetCondition(condition string) (PetCondition, error) {
 	if val, exists := petConditionMap[normalized]; exists {
 		return val, nil
 	}
-	return "", fmt.Errorf("invalid pet condition: %s", condition)
+	return "", InvalidEnumParserError("PetCondition", condition)
 }
 
 func MustParsePetCondition(condition string) PetCondition {

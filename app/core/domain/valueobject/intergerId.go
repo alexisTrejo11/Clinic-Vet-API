@@ -41,7 +41,7 @@ type (
 	AppointmentID struct{ baseID }
 	UserID        struct{ baseID }
 	CustomerID    struct{ baseID }
-	MedHistoryID  struct{ baseID }
+	MedSessionID  struct{ baseID }
 )
 
 func NewPetID(value uint) PetID {
@@ -64,8 +64,8 @@ func NewCustomerID(value uint) CustomerID {
 	return CustomerID{baseID{value}}
 }
 
-func NewMedHistoryID(value uint) MedHistoryID {
-	return MedHistoryID{baseID{value}}
+func NewMedSessionID(value uint) MedSessionID {
+	return MedSessionID{baseID{value}}
 }
 
 func NewAppointmentID(value uint) AppointmentID {
@@ -82,8 +82,8 @@ func NewIDFactory(value uint, entity string) (IntegerID, error) {
 		return NewUserID(value), nil
 	case "owner", "customer":
 		return NewCustomerID(value), nil
-	case "medical_history", "medicalhistory":
-		return NewMedHistoryID(value), nil
+	case "medical_sessions", "medicalhistory":
+		return NewMedSessionID(value), nil
 	case "appointment":
 		return NewAppointmentID(value), nil
 	case "pet":

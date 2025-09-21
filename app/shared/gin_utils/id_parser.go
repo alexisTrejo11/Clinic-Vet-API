@@ -5,7 +5,6 @@ import (
 	"errors"
 	"strconv"
 
-	"clinic-vet-api/app/core/domain/valueobject"
 	"github.com/gin-gonic/gin"
 )
 
@@ -25,18 +24,4 @@ func ParseParamToUInt(c *gin.Context, paramName string) (uint, error) {
 	}
 
 	return uint(intValue), nil
-}
-
-func ParseParamToEntityID(c *gin.Context, entity string) (valueobject.IntegerID, error) {
-	intValue, err := ParseParamToUInt(c, c.Param("id"))
-	if err != nil {
-		return nil, err
-	}
-
-	entityID, err := valueobject.NewIDFactory(intValue, entity)
-	if err != nil {
-		return nil, err
-	}
-
-	return entityID, nil
 }

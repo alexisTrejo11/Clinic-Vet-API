@@ -10,7 +10,7 @@ import (
 	authAPI "clinic-vet-api/app/modules/auth/presentation"
 	customerAPI "clinic-vet-api/app/modules/customer/presentation"
 	vetAPI "clinic-vet-api/app/modules/employee/presentation"
-	medHistoryAPI "clinic-vet-api/app/modules/medical/presentation"
+	medSessionAPI "clinic-vet-api/app/modules/medical/presentation"
 	paymentAPI "clinic-vet-api/app/modules/payments/presentation"
 	petAPI "clinic-vet-api/app/modules/pets/presentation"
 	userAPI "clinic-vet-api/app/modules/users/presentation"
@@ -96,8 +96,8 @@ func BootstrapAPIModules(
 		return fmt.Errorf("failed to get pet repository: %w", err)
 	}
 
-	// Bootstrap Medical History Module
-	medHistoryModule := medHistoryAPI.NewMedicalHistoryModule(&medHistoryAPI.MedicalHistoryModuleConfig{
+	// Bootstrap Medical Session Module
+	medSessionModule := medSessionAPI.NewMedicalSessionModule(&medSessionAPI.MedicalSessionModuleConfig{
 		Router:         routerGroup,
 		Queries:        queries,
 		Validator:      validator,
@@ -107,7 +107,7 @@ func BootstrapAPIModules(
 		AuthMiddleware: authMiddleware,
 	})
 
-	if err := medHistoryModule.Bootstrap(); err != nil {
+	if err := medSessionModule.Bootstrap(); err != nil {
 		return fmt.Errorf("failed to bootstrap medical history module: %w", err)
 	}
 

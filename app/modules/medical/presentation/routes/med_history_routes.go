@@ -8,13 +8,50 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func MedicalHistoryRoutes(appGroup *gin.RouterGroup, controller controller.AdminMedicalHistoryController, authMiddleware *middleware.AuthMiddleware) {
-	medGroup := appGroup.Group("/medical-histories")
-	medGroup.Use(authMiddleware.Authenticate())
-	medGroup.Use(authMiddleware.RequireAnyRole("admin", "employee", "receptionist"))
+type MedicalSessionRoutes struct {
+	AdminController    *controller.AdminMedicalSessionController
+	CustomerController *controller.CustomerMedicalSessionController
+	EmployeeController *controller.EmployeeMedicalSessionController
+}
 
-	medGroup.GET("", controller.SearchMedicalHistories)
-	medGroup.GET("/:id", controller.GetMedicalHistoryDetails)
-	medGroup.POST("", controller.CreateMedicalHistory)
-	medGroup.DELETE("/:id", controller.SoftDeleteMedicalHistory)
+func NewMedicalSessionRoutes(adminController *controller.AdminMedicalSessionController,
+	customerController *controller.CustomerMedicalSessionController,
+	employeeController *controller.EmployeeMedicalSessionController,
+) *MedicalSessionRoutes {
+	return &MedicalSessionRoutes{
+		AdminController:    adminController,
+		CustomerController: customerController,
+		EmployeeController: employeeController,
+	}
+}
+
+func (r *MedicalSessionRoutes) RegisterAdminRoutes(routerGroup *gin.RouterGroup, authMiddleware *middleware.AuthMiddleware) {
+	routes := routerGroup.Group("/admin/medical-sessions")
+	//routes.Use(authMiddleware.Authenticate())
+	//routes.Use(authMiddleware.RequireAnyRole("admin", "superadmin"))
+
+	routes.GET("/", r.AdminController.SearchMedSessions)
+	routes.GET("/:id", r.AdminController.GetMedicalSessionByID)
+	routes.GET("/today", r.AdminController.GetTodayMedSessions)
+	routes.POST("/", r.AdminController.CreateMedicalSession)
+	routes.DELETE("/:id", r.AdminController.SoftDeleteMedicalSession)
+}
+
+func (r *MedicalSessionRoutes) RegisterCustomerRoutes(routerGroup *gin.RouterGroup, authMiddleware *middleware.AuthMiddleware) {
+	routes := routerGroup.Group("/customer/medical-sessions")
+	routes.Use(authMiddleware.Authenticate())
+	routes.Use(authMiddleware.RequireAnyRole("customer"))
+
+	routes.GET("/", r.CustomerController.GetMyPetSessions)
+	routes.GET("/:id", r.CustomerController.GetMyPetSessionsByPetID)
+}
+
+func (r *MedicalSessionRoutes) RegisterEmployeeRoutes(routerGroup *gin.RouterGroup, authMiddleware *middleware.AuthMiddleware) {
+	routes := routerGroup.Group("/employee/medical-sessions")
+	routes.Use(authMiddleware.Authenticate())
+	routes.Use(authMiddleware.RequireAnyRole("employee", "admin", "superadmin"))
+
+	routes.GET("/", r.EmployeeController.GetMyMedicalSessions)
+	routes.GET("/:id", r.EmployeeController.GetMyMedicalSessionByID)
+	routes.POST("/", r.EmployeeController.RegisterMedicalSession)
 }

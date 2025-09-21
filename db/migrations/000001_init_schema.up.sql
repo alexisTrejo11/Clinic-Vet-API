@@ -19,7 +19,7 @@ BEGIN
     END IF;
 
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'user_role') THEN
-        CREATE TYPE user_role AS ENUM('customer', 'receptionist', 'customer', 'admin');
+        CREATE TYPE user_role AS ENUM('veterinarian', 'receptionist', 'manager' ,'customer', 'admin', 'superadmin');
     END IF;
 
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'currency') THEN
@@ -153,47 +153,6 @@ CREATE TABLE IF NOT EXISTS employees (
     deleted_at TIMESTAMP NULL
 );
 
-
--- Create Medical History Table
-CREATE TABLE IF NOT EXISTS medical_history (
-    id SERIAL PRIMARY KEY,
-    pet_id INT NOT NULL,
-    customer_id INT NOT NULL,
-    employee_id INT NOT NULL,
-    visit_date TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    visit_type VARCHAR(50) NOT NULL,
-    diagnosis TEXT,
-    notes TEXT,
-    treatment TEXT,
-    condition VARCHAR(255),
-    weight DECIMAL(5,2),               -- (ej: 25.5 kg)
-    temperature DECIMAL(4,1),          --  (ej: 38.5 °C)
-    heart_rate INT,                    --  (latidos por minuto)
-    respiratory_rate INT,              -- (respiraciones por minuto)
-    symptoms TEXT,                   
-    medications TEXT,                 
-    follow_up_date TIMESTAMP WITH TIME ZONE,
-    is_emergency BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP WITH TIME ZONE NULL,
-    FOREIGN KEY (pet_id) REFERENCES pets(id) ON DELETE CASCADE,
-    FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE,
-    FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE
-);
-
--- Indexes
-CREATE INDEX IF NOT EXISTS idx_med_hist_pet_id ON medical_history(pet_id);
-CREATE INDEX IF NOT EXISTS idx_med_hist_customer_id ON medical_history(customer_id);
-CREATE INDEX IF NOT EXISTS idx_med_hist_employee_id ON medical_history(employee_id);
-CREATE INDEX IF NOT EXISTS idx_med_hist_visit_date ON medical_history(visit_date);
-CREATE INDEX IF NOT EXISTS idx_med_hist_visit_type ON medical_history(visit_type);
-CREATE INDEX IF NOT EXISTS idx_med_hist_condition ON medical_history(condition);
-CREATE INDEX IF NOT EXISTS idx_med_hist_is_emergency ON medical_history(is_emergency);
-CREATE INDEX IF NOT EXISTS idx_med_hist_follow_up_date ON medical_history(follow_up_date);
-
-
-
 -- Create User Table
 CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
@@ -243,22 +202,20 @@ CREATE INDEX IF NOT EXISTS idx_user_profile_id ON users(profile_id);
 CREATE INDEX IF NOT EXISTS idx_user_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_user_phone_number ON users(phone_number);
 
-
 -- Create Appointments Table
 CREATE TABLE IF NOT EXISTS appointments(
     id SERIAL PRIMARY KEY,
     clinic_service clinic_service NOT NULL,
     schedule_date TIMESTAMP WITH TIME ZONE NOT NULL,
     status appointment_status NOT NULL,
-    reason TEXT NOT NULL DEFAULT '',
+    reason VARCHAR(50) NOT NULL DEFAULT '',
     notes TEXT DEFAULT '',
     customer_id INT NOT NULL,
     pet_id INT NOT NULL,
     employee_id INT,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP NULL,
-    FOREIGN KEY (pet_id) REFERENCES pets(id) ON DELETE CASCADE,
+    deleted_at TIMESTAMP WITH TIME ZONE NULL, FOREIGN KEY (pet_id) REFERENCES pets(id) ON DELETE CASCADE,
     FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE,
     FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE
 );
@@ -267,6 +224,49 @@ CREATE INDEX IF NOT EXISTS idx_appointment_customer_id ON appointments(customer_
 CREATE INDEX IF NOT EXISTS idx_appointment_vet_id ON appointments(employee_id);
 CREATE INDEX IF NOT EXISTS idx_appointment_pet_id ON appointments(pet_id);
 CREATE INDEX IF NOT EXISTS idx_appointment_status ON appointments(status);
+
+-- Create Medical Session Table
+CREATE TABLE IF NOT EXISTS medical_sessions (
+    id SERIAL PRIMARY KEY,
+    pet_id INT NOT NULL,
+    customer_id INT NOT NULL,
+    employee_id INT NOT NULL,
+    appointment_id INT,
+    visit_date TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    visit_type VARCHAR(50) NOT NULL DEFAULT '',
+    diagnosis TEXT,
+    notes TEXT,
+    treatment TEXT,
+    condition VARCHAR(254),
+    weight DECIMAL(4,2),               -- (ej: 25.5 kg)
+    temperature DECIMAL(3,1),          --  (ej: 38.5 °C)
+    heart_rate INT,                    --  (latidos por minuto)
+    respiratory_rate INT,              -- (respiraciones por minuto)
+    symptoms TEXT,                   
+    medications TEXT,                 
+    follow_up_date TIMESTAMP WITH TIME ZONE,
+    is_emergency BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP WITH TIME ZONE NULL,
+    FOREIGN KEY (pet_id) REFERENCES pets(id) ON DELETE CASCADE,
+    FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE,
+    FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE
+    FOREIGN KEY (appointment_id) REFERENCES appointments(id) ON DELETE SET NULL,
+);
+
+
+-- Indexes
+CREATE INDEX IF NOT EXISTS idx_med_hist_pet_id ON medical_sessions(pet_id);
+CREATE INDEX IF NOT EXISTS idx_med_hist_customer_id ON medical_sessions(customer_id);
+CREATE INDEX IF NOT EXISTS idx_med_hist_employee_id ON medical_sessions(employee_id);
+CREATE INDEX IF NOT EXISTS idx_med_hist_visit_date ON medical_sessions(visit_date);
+CREATE INDEX IF NOT EXISTS idx_med_hist_visit_type ON medical_sessions(visit_type);
+CREATE INDEX IF NOT EXISTS idx_med_hist_condition ON medical_sessions(condition);
+CREATE INDEX IF NOT EXISTS idx_med_hist_is_emergency ON medical_sessions(is_emergency);
+CREATE INDEX IF NOT EXISTS idx_med_hist_follow_up_date ON medical_sessions(follow_up_date);
+
+
 
 -- Create Payment Table
 CREATE TABLE IF NOT EXISTS payments (
@@ -318,5 +318,3 @@ CREATE INDEX IF NOT EXISTS idx_payments_customer_status ON payments(paid_from_cu
 CREATE INDEX IF NOT EXISTS idx_payments_status_date ON payments(status, created_at);
 CREATE INDEX IF NOT EXISTS idx_payments_customer_date ON payments(paid_from_customer, created_at);
 CREATE INDEX IF NOT EXISTS idx_payments_due_status ON payments(due_date, status) WHERE status != 'completed';
-
-

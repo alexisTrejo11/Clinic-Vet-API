@@ -1,7 +1,11 @@
-// Package repositoryimpl implements the MedicalHistoryRepository using SQLC for database operations.
+// Package repositoryimpl implements the MedicalSessionRepository using SQLC for database operations.
 package repositoryimpl
 
 import (
+	"clinic-vet-api/app/core/domain/specification"
+	"clinic-vet-api/app/core/domain/valueobject"
+	"clinic-vet-api/app/core/repository"
+	"clinic-vet-api/sqlc"
 	"context"
 	"database/sql"
 	"errors"
@@ -9,160 +13,185 @@ import (
 	"time"
 
 	med "clinic-vet-api/app/core/domain/entity/medical"
-	"clinic-vet-api/app/core/domain/specification"
-	"clinic-vet-api/app/core/domain/valueobject"
-	"clinic-vet-api/app/core/repository"
+
 	p "clinic-vet-api/app/shared/page"
-	"clinic-vet-api/sqlc"
 
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-type SQLCMedHistRepository struct {
+type SQLCMedSessionRepository struct {
 	queries *sqlc.Queries
 }
 
-func NewSQLCMedHistRepository(queries *sqlc.Queries) repository.MedicalHistoryRepository {
-	return &SQLCMedHistRepository{
+func NewSQLCMedSessionRepository(queries *sqlc.Queries) repository.MedicalSessionRepository {
+	return &SQLCMedSessionRepository{
 		queries: queries,
 	}
 }
 
-func (r *SQLCMedHistRepository) FindBySpecification(ctx context.Context, spec specification.MedicalHistorySpecification) (p.Page[med.MedicalHistory], error) {
-	return p.Page[med.MedicalHistory]{}, errors.New("FindBySpecification not implemented")
+func (r *SQLCMedSessionRepository) FindBySpecification(ctx context.Context, spec specification.MedicalSessionSpecification) (p.Page[med.MedicalSession], error) {
+	return p.Page[med.MedicalSession]{}, errors.New("FindBySpecification not implemented")
 }
 
-func (r *SQLCMedHistRepository) FindByID(ctx context.Context, medHistID valueobject.MedHistoryID) (med.MedicalHistory, error) {
-	sqlcMedHist, err := r.queries.FindMedicalHistoryByID(ctx, int32(medHistID.Value()))
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return med.MedicalHistory{}, r.notFoundError("id", fmt.Sprintf("%d", medHistID.Value()))
-		}
-		return med.MedicalHistory{}, r.dbError("select", fmt.Sprintf("failed to find medical history with ID %d", medHistID.Value()), err)
-	}
-
-	medHist, err := ToEntity(sqlcMedHist)
-	if err != nil {
-		return med.MedicalHistory{}, r.wrapConversionError(err)
-	}
-
-	return medHist, nil
-}
-
-func (r *SQLCMedHistRepository) FindAll(ctx context.Context, pageInput p.PageInput) (p.Page[med.MedicalHistory], error) {
-	offset := (pageInput.Page - 1) * pageInput.PageSize
-
-	// Get medical histories
-	medHistRows, err := r.queries.FindAllMedicalHistory(ctx, sqlc.FindAllMedicalHistoryParams{
-		Limit:  int32(pageInput.PageSize),
-		Offset: int32(offset),
+func (r *SQLCMedSessionRepository) FindByIDAndCustomerID(ctx context.Context, medicalSessionID valueobject.MedSessionID, customerID valueobject.CustomerID) (*med.MedicalSession, error) {
+	sqlcRow, err := r.queries.FindMedicalSessionByIDAndCustomerID(ctx, sqlc.FindMedicalSessionByIDAndCustomerIDParams{
+		ID:         int32(medicalSessionID.Value()),
+		CustomerID: int32(customerID.Value()),
 	})
 	if err != nil {
-		return p.Page[med.MedicalHistory]{}, r.dbError("select", "failed to find all medical history", err)
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, r.notFoundError("id", fmt.Sprintf("%d", medicalSessionID.Value()))
+		}
+		return nil, r.dbError("select", fmt.Sprintf("failed to find medical history with ID %d for customer ID %d", medicalSessionID.Value(), customerID.Value()), err)
 	}
 
-	// Get total count
-	total, err := r.queries.CountAllMedicalHistory(ctx)
+	medSession, err := ToEntity(sqlcRow)
 	if err != nil {
-		return p.Page[med.MedicalHistory]{}, r.dbError("select", "failed to count all medical history", err)
+		return nil, r.wrapConversionError(err)
 	}
 
-	medicalHistories, err := ToEntities(medHistRows)
-	if err != nil {
-		return p.Page[med.MedicalHistory]{}, r.wrapConversionError(err)
-	}
-
-	paginationMetadata := p.GetPageMetadata(int(total), pageInput)
-	return p.NewPage(medicalHistories, *paginationMetadata), nil
+	return &medSession, nil
 }
 
-func (r *SQLCMedHistRepository) FindByEmployeeID(ctx context.Context, employeeID valueobject.EmployeeID, pageInput p.PageInput) (p.Page[med.MedicalHistory], error) {
+// FindByIDAndEmployeeID implements repository.MedicalSessionRepository.
+func (r *SQLCMedSessionRepository) FindByIDAndEmployeeID(ctx context.Context, medicalSessionID valueobject.MedSessionID, employeeID valueobject.EmployeeID) (*med.MedicalSession, error) {
+	sqlcRow, err := r.queries.FindMedicalSessionByIDAndEmployeeID(ctx, sqlc.FindMedicalSessionByIDAndEmployeeIDParams{
+		ID:         int32(medicalSessionID.Value()),
+		EmployeeID: int32(employeeID.Value()),
+	})
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, r.notFoundError("id", fmt.Sprintf("%d", medicalSessionID.Value()))
+		}
+		return nil, r.dbError("select", fmt.Sprintf("failed to find medical history with ID %d for employee ID %d", medicalSessionID.Value(), employeeID.Value()), err)
+	}
+
+	medSession, err := ToEntity(sqlcRow)
+	if err != nil {
+		return nil, r.wrapConversionError(err)
+	}
+
+	return &medSession, nil
+}
+
+// FindByIDAndPetID implements repository.MedicalSessionRepository.
+func (r *SQLCMedSessionRepository) FindByIDAndPetID(ctx context.Context, medicalSessionID valueobject.MedSessionID, petID valueobject.PetID) (*med.MedicalSession, error) {
+	sqlcRow, err := r.queries.FindMedicalSessionByIDAndPetID(ctx, sqlc.FindMedicalSessionByIDAndPetIDParams{
+		ID:    int32(medicalSessionID.Value()),
+		PetID: int32(petID.Value()),
+	})
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, r.notFoundError("id", fmt.Sprintf("%d", medicalSessionID.Value()))
+		}
+		return nil, r.dbError("select", fmt.Sprintf("failed to find medical history with ID %d for pet ID %d", medicalSessionID.Value(), petID.Value()), err)
+	}
+
+	medSession, err := ToEntity(sqlcRow)
+	if err != nil {
+		return nil, r.wrapConversionError(err)
+	}
+
+	return &medSession, nil
+}
+
+func (r *SQLCMedSessionRepository) FindByID(ctx context.Context, medSessionID valueobject.MedSessionID) (*med.MedicalSession, error) {
+	sqlcMedSession, err := r.queries.FindMedicalSessionByID(ctx, int32(medSessionID.Value()))
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, r.notFoundError("id", fmt.Sprintf("%d", medSessionID.Value()))
+		}
+		return nil, r.dbError("select", fmt.Sprintf("failed to find medical history with ID %d", medSessionID.Value()), err)
+	}
+
+	medSession, err := ToEntity(sqlcMedSession)
+	if err != nil {
+		return nil, r.wrapConversionError(err)
+	}
+
+	return &medSession, nil
+}
+
+func (r *SQLCMedSessionRepository) FindByEmployeeID(ctx context.Context, employeeID valueobject.EmployeeID, pageInput p.PageInput) (p.Page[med.MedicalSession], error) {
 	offset := (pageInput.Page - 1) * pageInput.PageSize
 
-	// Get medical histories
-	medHistRows, err := r.queries.FindMedicalHistoryByEmployeeID(ctx, sqlc.FindMedicalHistoryByEmployeeIDParams{
+	medSessionRows, err := r.queries.FindMedicalSessionByEmployeeID(ctx, sqlc.FindMedicalSessionByEmployeeIDParams{
 		EmployeeID: int32(employeeID.Value()),
 		Limit:      int32(pageInput.PageSize),
 		Offset:     int32(offset),
 	})
 	if err != nil {
-		return p.Page[med.MedicalHistory]{}, r.dbError("select", fmt.Sprintf("failed to find medical history for employee ID %d", employeeID.Value()), err)
+		return p.Page[med.MedicalSession]{}, r.dbError("select", fmt.Sprintf("failed to find medical history for employee ID %d", employeeID.Value()), err)
 	}
 
-	// Get total count
-	total, err := r.queries.CountMedicalHistoryByEmployeeID(ctx, int32(employeeID.Value()))
+	total, err := r.queries.CountMedicalSessionByEmployeeID(ctx, int32(employeeID.Value()))
 	if err != nil {
-		return p.Page[med.MedicalHistory]{}, r.dbError("select", fmt.Sprintf("failed to count medical history for employee ID %d", employeeID.Value()), err)
+		return p.Page[med.MedicalSession]{}, r.dbError("select", fmt.Sprintf("failed to count medical history for employee ID %d", employeeID.Value()), err)
 	}
 
-	medicalHistories, err := ToEntities(medHistRows)
+	medicalSessions, err := ToEntities(medSessionRows)
 	if err != nil {
-		return p.Page[med.MedicalHistory]{}, r.wrapConversionError(err)
+		return p.Page[med.MedicalSession]{}, r.wrapConversionError(err)
 	}
 
 	paginationMetadata := p.GetPageMetadata(int(total), pageInput)
-	return p.NewPage(medicalHistories, *paginationMetadata), nil
+	return p.NewPage(medicalSessions, *paginationMetadata), nil
 }
 
-func (r *SQLCMedHistRepository) FindByPetID(ctx context.Context, petID valueobject.PetID, pageInput p.PageInput) (p.Page[med.MedicalHistory], error) {
+func (r *SQLCMedSessionRepository) FindByPetID(ctx context.Context, petID valueobject.PetID, pageInput p.PageInput) (p.Page[med.MedicalSession], error) {
 	offset := (pageInput.Page - 1) * pageInput.PageSize
 
-	// Get medical histories
-	medHistRows, err := r.queries.FindMedicalHistoryByPetID(ctx, sqlc.FindMedicalHistoryByPetIDParams{
+	medSessionRows, err := r.queries.FindMedicalSessionByPetID(ctx, sqlc.FindMedicalSessionByPetIDParams{
 		PetID:  int32(petID.Value()),
 		Limit:  int32(pageInput.PageSize),
 		Offset: int32(offset),
 	})
 	if err != nil {
-		return p.Page[med.MedicalHistory]{}, r.dbError("select", fmt.Sprintf("failed to find medical history for pet ID %d", petID.Value()), err)
+		return p.Page[med.MedicalSession]{}, r.dbError("select", fmt.Sprintf("failed to find medical history for pet ID %d", petID.Value()), err)
 	}
 
-	// Get total count
-	total, err := r.queries.CountMedicalHistoryByPetID(ctx, int32(petID.Value()))
+	total, err := r.queries.CountMedicalSessionByPetID(ctx, int32(petID.Value()))
 	if err != nil {
-		return p.Page[med.MedicalHistory]{}, r.dbError("select", fmt.Sprintf("failed to count medical history for pet ID %d", petID.Value()), err)
+		return p.Page[med.MedicalSession]{}, r.dbError("select", fmt.Sprintf("failed to count medical history for pet ID %d", petID.Value()), err)
 	}
 
-	medicalHistories, err := ToEntities(medHistRows)
+	medicalSessions, err := ToEntities(medSessionRows)
 	if err != nil {
-		return p.Page[med.MedicalHistory]{}, r.wrapConversionError(err)
+		return p.Page[med.MedicalSession]{}, r.wrapConversionError(err)
 	}
 
 	paginationMetadata := p.GetPageMetadata(int(total), pageInput)
-	return p.NewPage(medicalHistories, *paginationMetadata), nil
+	return p.NewPage(medicalSessions, *paginationMetadata), nil
 }
 
-func (r *SQLCMedHistRepository) FindByCustomerID(ctx context.Context, customerID valueobject.CustomerID, pageInput p.PageInput) (p.Page[med.MedicalHistory], error) {
+func (r *SQLCMedSessionRepository) FindByCustomerID(ctx context.Context, customerID valueobject.CustomerID, pageInput p.PageInput) (p.Page[med.MedicalSession], error) {
 	offset := (pageInput.Page - 1) * pageInput.PageSize
 
-	// Get medical histories
-	medHistRows, err := r.queries.FindMedicalHistoryByCustomerID(ctx, sqlc.FindMedicalHistoryByCustomerIDParams{
+	medSessionRows, err := r.queries.FindMedicalSessionByCustomerID(ctx, sqlc.FindMedicalSessionByCustomerIDParams{
 		CustomerID: int32(customerID.Value()),
 		Limit:      int32(pageInput.PageSize),
 		Offset:     int32(offset),
 	})
 	if err != nil {
-		return p.Page[med.MedicalHistory]{}, r.dbError("select", fmt.Sprintf("failed to find medical history for customer ID %d", customerID.Value()), err)
+		return p.Page[med.MedicalSession]{}, r.dbError("select", fmt.Sprintf("failed to find medical history for customer ID %d", customerID.Value()), err)
 	}
 
-	// Get total count
-	total, err := r.queries.CountMedicalHistoryByCustomerID(ctx, int32(customerID.Value()))
+	total, err := r.queries.CountMedicalSessionByCustomerID(ctx, int32(customerID.Value()))
 	if err != nil {
-		return p.Page[med.MedicalHistory]{}, r.dbError("select", fmt.Sprintf("failed to count medical history for customer ID %d", customerID.Value()), err)
+		return p.Page[med.MedicalSession]{}, r.dbError("select", fmt.Sprintf("failed to count medical history for customer ID %d", customerID.Value()), err)
 	}
 
-	medicalHistories, err := ToEntities(medHistRows)
+	medicalSessions, err := ToEntities(medSessionRows)
 	if err != nil {
-		return p.Page[med.MedicalHistory]{}, r.wrapConversionError(err)
+		return p.Page[med.MedicalSession]{}, r.wrapConversionError(err)
 	}
 
 	paginationMetadata := p.GetPageMetadata(int(total), pageInput)
-	return p.NewPage(medicalHistories, *paginationMetadata), nil
+	return p.NewPage(medicalSessions, *paginationMetadata), nil
 }
 
-func (r *SQLCMedHistRepository) FindRecentByPetID(ctx context.Context, petID valueobject.PetID, limit int) ([]med.MedicalHistory, error) {
-	// Get recent medical histories
-	medHistRows, err := r.queries.FindRecentMedicalHistoryByPetID(ctx, sqlc.FindRecentMedicalHistoryByPetIDParams{
+func (r *SQLCMedSessionRepository) FindRecentByPetID(ctx context.Context, petID valueobject.PetID, limit int) ([]med.MedicalSession, error) {
+	medSessionRows, err := r.queries.FindRecentMedicalSessionByPetID(ctx, sqlc.FindRecentMedicalSessionByPetIDParams{
 		PetID: int32(petID.Value()),
 		Limit: int32(limit),
 	})
@@ -170,54 +199,46 @@ func (r *SQLCMedHistRepository) FindRecentByPetID(ctx context.Context, petID val
 		return nil, r.dbError("select", fmt.Sprintf("failed to find recent medical history for pet ID %d", petID.Value()), err)
 	}
 
-	// Convert rows to entities
-	var medicalHistories []med.MedicalHistory
-	for _, row := range medHistRows {
-		medHistEntity, err := ToEntity(row)
-		if err != nil {
-			return nil, r.wrapConversionError(err)
-		}
-		medicalHistories = append(medicalHistories, medHistEntity)
+	medicalSessions, err := ToEntities(medSessionRows)
+	if err != nil {
+		return nil, r.wrapConversionError(err)
 	}
 
-	return medicalHistories, nil
+	return medicalSessions, nil
 }
 
-func (r *SQLCMedHistRepository) FindByDateRange(ctx context.Context, startDate, endDate time.Time, pageInput p.PageInput) (p.Page[med.MedicalHistory], error) {
+func (r *SQLCMedSessionRepository) FindByDateRange(ctx context.Context, startDate, endDate time.Time, pageInput p.PageInput) (p.Page[med.MedicalSession], error) {
 	offset := (pageInput.Page - 1) * pageInput.PageSize
 
-	// Get medical histories
-	medHistRows, err := r.queries.FindMedicalHistoryByDateRange(ctx, sqlc.FindMedicalHistoryByDateRangeParams{
+	medSessionRows, err := r.queries.FindMedicalSessionByDateRange(ctx, sqlc.FindMedicalSessionByDateRangeParams{
 		VisitDate:   pgtype.Timestamptz{Time: startDate, Valid: true},
 		VisitDate_2: pgtype.Timestamptz{Time: endDate, Valid: true},
 		Limit:       int32(pageInput.PageSize),
 		Offset:      int32(offset),
 	})
 	if err != nil {
-		return p.Page[med.MedicalHistory]{}, r.dbError("select", "failed to find medical history by date range", err)
+		return p.Page[med.MedicalSession]{}, r.dbError("select", "failed to find medical history by date range", err)
 	}
 
-	// Get total count
-	total, err := r.queries.CountMedicalHistoryByDateRange(ctx, sqlc.CountMedicalHistoryByDateRangeParams{
+	total, err := r.queries.CountMedicalSessionByDateRange(ctx, sqlc.CountMedicalSessionByDateRangeParams{
 		VisitDate:   pgtype.Timestamptz{Time: startDate, Valid: true},
 		VisitDate_2: pgtype.Timestamptz{Time: endDate, Valid: true},
 	})
 	if err != nil {
-		return p.Page[med.MedicalHistory]{}, r.dbError("select", "failed to count medical history by date range", err)
+		return p.Page[med.MedicalSession]{}, r.dbError("select", "failed to count medical history by date range", err)
 	}
 
-	medicalHistories, err := ToEntities(medHistRows)
+	medicalSessions, err := ToEntities(medSessionRows)
 	if err != nil {
-		return p.Page[med.MedicalHistory]{}, r.wrapConversionError(err)
+		return p.Page[med.MedicalSession]{}, r.wrapConversionError(err)
 	}
 
 	paginationMetadata := p.GetPageMetadata(int(total), pageInput)
-	return p.NewPage(medicalHistories, *paginationMetadata), nil
+	return p.NewPage(medicalSessions, *paginationMetadata), nil
 }
 
-func (r *SQLCMedHistRepository) FindByPetAndDateRange(ctx context.Context, petID valueobject.PetID, startDate, endDate time.Time) ([]med.MedicalHistory, error) {
-	// Get medical histories
-	medHistRows, err := r.queries.FindMedicalHistoryByPetAndDateRange(ctx, sqlc.FindMedicalHistoryByPetAndDateRangeParams{
+func (r *SQLCMedSessionRepository) FindByPetAndDateRange(ctx context.Context, petID valueobject.PetID, startDate, endDate time.Time) ([]med.MedicalSession, error) {
+	medSessionRows, err := r.queries.FindMedicalSessionByPetAndDateRange(ctx, sqlc.FindMedicalSessionByPetAndDateRangeParams{
 		PetID:       int32(petID.Value()),
 		VisitDate:   pgtype.Timestamptz{Time: startDate, Valid: true},
 		VisitDate_2: pgtype.Timestamptz{Time: endDate, Valid: true},
@@ -226,57 +247,51 @@ func (r *SQLCMedHistRepository) FindByPetAndDateRange(ctx context.Context, petID
 		return nil, r.dbError("select", fmt.Sprintf("failed to find medical history for pet ID %d and date range", petID.Value()), err)
 	}
 
-	// Convert rows to entities
-	var medicalHistories []med.MedicalHistory
-	for _, row := range medHistRows {
-		medHistEntity, err := ToEntity(row)
-		if err != nil {
-			return nil, r.wrapConversionError(err)
-		}
-		medicalHistories = append(medicalHistories, medHistEntity)
+	medicalSessions, err := ToEntities(medSessionRows)
+	if err != nil {
+		return nil, r.wrapConversionError(err)
 	}
 
-	return medicalHistories, nil
+	return medicalSessions, nil
 }
 
-func (r *SQLCMedHistRepository) FindByDiagnosis(ctx context.Context, diagnosis string, pageInput p.PageInput) (p.Page[med.MedicalHistory], error) {
+func (r *SQLCMedSessionRepository) FindByDiagnosis(ctx context.Context, diagnosis string, pageInput p.PageInput) (p.Page[med.MedicalSession], error) {
 	offset := (pageInput.Page - 1) * pageInput.PageSize
 
-	// Get medical histories
-	medHistRows, err := r.queries.FindMedicalHistoryByDiagnosis(ctx, sqlc.FindMedicalHistoryByDiagnosisParams{
+	medSessionRows, err := r.queries.FindMedicalSessionByDiagnosis(ctx, sqlc.FindMedicalSessionByDiagnosisParams{
 		Column1: pgtype.Text{String: diagnosis, Valid: true},
 		Limit:   int32(pageInput.PageSize),
 		Offset:  int32(offset),
 	})
 	if err != nil {
-		return p.Page[med.MedicalHistory]{}, r.dbError("select", "failed to find medical history by diagnosis", err)
+		return p.Page[med.MedicalSession]{}, r.dbError("select", "failed to find medical history by diagnosis", err)
 	}
 
 	// Get total count
-	total, err := r.queries.CountMedicalHistoryByDiagnosis(ctx, pgtype.Text{String: diagnosis, Valid: true})
+	total, err := r.queries.CountMedicalSessionByDiagnosis(ctx, pgtype.Text{String: diagnosis, Valid: true})
 	if err != nil {
-		return p.Page[med.MedicalHistory]{}, r.dbError("select", "failed to count medical history by diagnosis", err)
+		return p.Page[med.MedicalSession]{}, r.dbError("select", "failed to count medical history by diagnosis", err)
 	}
 
-	medicalHistories, err := ToEntities(medHistRows)
+	medicalSessions, err := ToEntities(medSessionRows)
 	if err != nil {
-		return p.Page[med.MedicalHistory]{}, r.wrapConversionError(err)
+		return p.Page[med.MedicalSession]{}, r.wrapConversionError(err)
 	}
 
 	paginationMetadata := p.GetPageMetadata(int(total), pageInput)
-	return p.NewPage(medicalHistories, *paginationMetadata), nil
+	return p.NewPage(medicalSessions, *paginationMetadata), nil
 }
 
-func (r *SQLCMedHistRepository) ExistsByID(ctx context.Context, medicalHistoryID valueobject.MedHistoryID) (bool, error) {
-	exists, err := r.queries.ExistsMedicalHistoryByID(ctx, int32(medicalHistoryID.Value()))
+func (r *SQLCMedSessionRepository) ExistsByID(ctx context.Context, medicalSessionID valueobject.MedSessionID) (bool, error) {
+	exists, err := r.queries.ExistsMedicalSessionByID(ctx, int32(medicalSessionID.Value()))
 	if err != nil {
 		return false, r.dbError("select", "failed to check medical history existence by ID", err)
 	}
 	return exists, nil
 }
 
-func (r *SQLCMedHistRepository) ExistsByPetAndDate(ctx context.Context, petID valueobject.PetID, date time.Time) (bool, error) {
-	exists, err := r.queries.ExistsMedicalHistoryByPetAndDate(ctx, sqlc.ExistsMedicalHistoryByPetAndDateParams{
+func (r *SQLCMedSessionRepository) ExistsByPetAndDate(ctx context.Context, petID valueobject.PetID, date time.Time) (bool, error) {
+	exists, err := r.queries.ExistsMedicalSessionByPetAndDate(ctx, sqlc.ExistsMedicalSessionByPetAndDateParams{
 		PetID: int32(petID.Value()),
 		Date:  pgtype.Timestamptz{Time: date, Valid: true},
 	})
@@ -286,57 +301,53 @@ func (r *SQLCMedHistRepository) ExistsByPetAndDate(ctx context.Context, petID va
 	return exists, nil
 }
 
-func (r *SQLCMedHistRepository) Save(ctx context.Context, medHistory *med.MedicalHistory) error {
-	if medHistory.ID().IsZero() {
-		return r.create(ctx, medHistory)
+func (r *SQLCMedSessionRepository) Save(ctx context.Context, medSession *med.MedicalSession) error {
+	if medSession.ID().IsZero() {
+		return r.create(ctx, medSession)
 	}
-	return r.update(ctx, medHistory)
+	return r.update(ctx, medSession)
 }
 
-func (r *SQLCMedHistRepository) Update(ctx context.Context, medHistory *med.MedicalHistory) error {
-	return r.update(ctx, medHistory)
-}
-
-func (r *SQLCMedHistRepository) SoftDelete(ctx context.Context, medicalHistoryID valueobject.MedHistoryID) error {
-	if err := r.queries.SoftDeleteMedicalHistory(ctx, int32(medicalHistoryID.Value())); err != nil {
+func (r *SQLCMedSessionRepository) SoftDelete(ctx context.Context, medicalSessionID valueobject.MedSessionID) error {
+	if err := r.queries.SoftDeleteMedicalSession(ctx, int32(medicalSessionID.Value())); err != nil {
 		return r.dbError("delete", "failed to soft delete medical history", err)
 	}
 	return nil
 }
 
-func (r *SQLCMedHistRepository) HardDelete(ctx context.Context, medicalHistoryID valueobject.MedHistoryID) error {
-	if err := r.queries.HardDeleteMedicalHistory(ctx, int32(medicalHistoryID.Value())); err != nil {
+func (r *SQLCMedSessionRepository) HardDelete(ctx context.Context, medicalSessionID valueobject.MedSessionID) error {
+	if err := r.queries.HardDeleteMedicalSession(ctx, int32(medicalSessionID.Value())); err != nil {
 		return r.dbError("delete", "failed to hard delete medical history", err)
 	}
 	return nil
 }
 
-func (r *SQLCMedHistRepository) CountByPetID(ctx context.Context, petID valueobject.PetID) (int64, error) {
-	count, err := r.queries.CountMedicalHistoryByPetID(ctx, int32(petID.Value()))
+func (r *SQLCMedSessionRepository) CountByPetID(ctx context.Context, petID valueobject.PetID) (int64, error) {
+	count, err := r.queries.CountMedicalSessionByPetID(ctx, int32(petID.Value()))
 	if err != nil {
 		return 0, r.dbError("select", "failed to count medical history by pet ID", err)
 	}
 	return count, nil
 }
 
-func (r *SQLCMedHistRepository) CountByEmployeeID(ctx context.Context, employeeID valueobject.EmployeeID) (int64, error) {
-	count, err := r.queries.CountMedicalHistoryByEmployeeID(ctx, int32(employeeID.Value()))
+func (r *SQLCMedSessionRepository) CountByEmployeeID(ctx context.Context, employeeID valueobject.EmployeeID) (int64, error) {
+	count, err := r.queries.CountMedicalSessionByEmployeeID(ctx, int32(employeeID.Value()))
 	if err != nil {
 		return 0, r.dbError("select", "failed to count medical history by employee ID", err)
 	}
 	return count, nil
 }
 
-func (r *SQLCMedHistRepository) CountByCustomerID(ctx context.Context, customerID valueobject.CustomerID) (int64, error) {
-	count, err := r.queries.CountMedicalHistoryByCustomerID(ctx, int32(customerID.Value()))
+func (r *SQLCMedSessionRepository) CountByCustomerID(ctx context.Context, customerID valueobject.CustomerID) (int64, error) {
+	count, err := r.queries.CountMedicalSessionByCustomerID(ctx, int32(customerID.Value()))
 	if err != nil {
 		return 0, r.dbError("select", "failed to count medical history by customer ID", err)
 	}
 	return count, nil
 }
 
-func (r *SQLCMedHistRepository) CountByDateRange(ctx context.Context, startDate, endDate time.Time) (int64, error) {
-	count, err := r.queries.CountMedicalHistoryByDateRange(ctx, sqlc.CountMedicalHistoryByDateRangeParams{
+func (r *SQLCMedSessionRepository) CountByDateRange(ctx context.Context, startDate, endDate time.Time) (int64, error) {
+	count, err := r.queries.CountMedicalSessionByDateRange(ctx, sqlc.CountMedicalSessionByDateRangeParams{
 		VisitDate:   pgtype.Timestamptz{Time: startDate, Valid: true},
 		VisitDate_2: pgtype.Timestamptz{Time: endDate, Valid: true},
 	})
@@ -346,9 +357,9 @@ func (r *SQLCMedHistRepository) CountByDateRange(ctx context.Context, startDate,
 	return count, nil
 }
 
-func (r *SQLCMedHistRepository) create(ctx context.Context, medHistory *med.MedicalHistory) error {
-	params := ToCreateParams(*medHistory)
-	_, err := r.queries.SaveMedicalHistory(ctx, params)
+func (r *SQLCMedSessionRepository) create(ctx context.Context, medSession *med.MedicalSession) error {
+	params := ToCreateParams(*medSession)
+	_, err := r.queries.SaveMedicalSession(ctx, params)
 	if err != nil {
 		return r.dbError("insert", "failed to create medical history", err)
 	}
@@ -356,12 +367,12 @@ func (r *SQLCMedHistRepository) create(ctx context.Context, medHistory *med.Medi
 	return nil
 }
 
-func (r *SQLCMedHistRepository) update(ctx context.Context, medHistory *med.MedicalHistory) error {
-	params := ToUpdateParams(*medHistory)
+func (r *SQLCMedSessionRepository) update(ctx context.Context, medSession *med.MedicalSession) error {
+	params := ToUpdateParams(*medSession)
 
-	_, err := r.queries.UpdateMedicalHistory(ctx, params)
+	_, err := r.queries.UpdateMedicalSession(ctx, params)
 	if err != nil {
-		return r.dbError("update", fmt.Sprintf("failed to update medical history with ID %d", medHistory.ID().Value()), err)
+		return r.dbError("update", fmt.Sprintf("failed to update medical history with ID %d", medSession.ID().Value()), err)
 	}
 
 	return nil

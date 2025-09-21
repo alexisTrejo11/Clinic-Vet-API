@@ -160,7 +160,7 @@ func (v *EmployeeSearchSpecification) IsSatisfiedBy(candidate any) bool {
 		if employee.ConsultationFee() == nil {
 			return false
 		}
-		if employee.ConsultationFee().Amount() < v.MinFee.Amount() {
+		if employee.ConsultationFee() < v.MinFee.Amount() {
 			return false
 		}
 	}

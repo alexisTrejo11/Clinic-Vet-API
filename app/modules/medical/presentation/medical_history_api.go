@@ -1,11 +1,11 @@
-package medHistoryAPI
+package medSessionAPI
 
 import (
 	"fmt"
 
 	"clinic-vet-api/app/core/repository"
 	"clinic-vet-api/app/middleware"
-	medHistCommand "clinic-vet-api/app/modules/medical/application/command"
+	medSessionCommand "clinic-vet-api/app/modules/medical/application/command"
 	"clinic-vet-api/app/modules/medical/application/query"
 	"clinic-vet-api/app/modules/medical/infrastructure/bus"
 	repositoryimpl "clinic-vet-api/app/modules/medical/infrastructure/persistence/repository"
@@ -17,7 +17,7 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-type MedicalHistoryModuleConfig struct {
+type MedicalSessionModuleConfig struct {
 	Router         *gin.RouterGroup
 	Queries        *sqlc.Queries
 	Validator      *validator.Validate
@@ -27,26 +27,32 @@ type MedicalHistoryModuleConfig struct {
 	AuthMiddleware *middleware.AuthMiddleware
 }
 
-type MedicalHistoryModuleComponents struct {
-	Repository repository.MedicalHistoryRepository
-	Bus        *bus.MedicalHistoryBus
-	Controller *controller.AdminMedicalHistoryController
+type MedicalSessionControllers struct {
+	AdminController    *controller.AdminMedicalSessionController
+	CustomerController *controller.CustomerMedicalSessionController
+	EmployeeController *controller.EmployeeMedicalSessionController
 }
 
-type MedicalHistoryModule struct {
-	config     *MedicalHistoryModuleConfig
-	components *MedicalHistoryModuleComponents
+type MedicalSessionModuleComponents struct {
+	Repository repository.MedicalSessionRepository
+	Bus        *bus.MedicalSessionBus
+	Controller *MedicalSessionControllers
+}
+
+type MedicalSessionModule struct {
+	config     *MedicalSessionModuleConfig
+	components *MedicalSessionModuleComponents
 	isBuilt    bool
 }
 
-func NewMedicalHistoryModule(config *MedicalHistoryModuleConfig) *MedicalHistoryModule {
-	return &MedicalHistoryModule{
+func NewMedicalSessionModule(config *MedicalSessionModuleConfig) *MedicalSessionModule {
+	return &MedicalSessionModule{
 		config:  config,
 		isBuilt: false,
 	}
 }
 
-func (m *MedicalHistoryModule) Bootstrap() error {
+func (m *MedicalSessionModule) Bootstrap() error {
 	if m.isBuilt {
 		return nil
 	}
@@ -56,13 +62,13 @@ func (m *MedicalHistoryModule) Bootstrap() error {
 	}
 
 	repository := m.createRepository()
-	medHistbus := m.createBus(repository)
-	controller := m.createController(medHistbus)
+	medSessionbus := m.createBus(repository)
+	controller := m.createController(medSessionbus)
 	m.registerRoutes(controller)
 
-	m.components = &MedicalHistoryModuleComponents{
+	m.components = &MedicalSessionModuleComponents{
 		Repository: repository,
-		Bus:        medHistbus,
+		Bus:        medSessionbus,
 		Controller: controller,
 	}
 
@@ -70,26 +76,38 @@ func (m *MedicalHistoryModule) Bootstrap() error {
 	return nil
 }
 
-func (m *MedicalHistoryModule) createRepository() repository.MedicalHistoryRepository {
-	return repositoryimpl.NewSQLCMedHistRepository(m.config.Queries)
+func (m *MedicalSessionModule) createRepository() repository.MedicalSessionRepository {
+	return repositoryimpl.NewSQLCMedSessionRepository(m.config.Queries)
 }
 
-func (m *MedicalHistoryModule) createBus(repository repository.MedicalHistoryRepository) *bus.MedicalHistoryBus {
-	return bus.NewMedicalHistoryBus(
-		medHistCommand.NewMedicalHistoryCommandHandlers(repository),
-		query.NewMedicalHistoryQueryHandlers(repository),
+func (m *MedicalSessionModule) createBus(repository repository.MedicalSessionRepository) *bus.MedicalSessionBus {
+	return bus.NewMedicalSessionBus(
+		medSessionCommand.NewMedicalSessionCommandHandlers(repository),
+		query.NewMedicalSessionQueryHandlers(repository),
 	)
 }
 
-func (m *MedicalHistoryModule) createController(medHistBus *bus.MedicalHistoryBus) *controller.AdminMedicalHistoryController {
-	return controller.NewAdminMedicalHistoryController(medHistBus)
+func (m *MedicalSessionModule) createController(medSessionBus *bus.MedicalSessionBus) *MedicalSessionControllers {
+	controllerOperations := controller.NewMedSessionControllerOperations(medSessionBus, m.config.Validator)
+	adminController := controller.NewAdminMedicalSessionController(controllerOperations)
+	customerController := controller.NewCustomerMedicalSessionController(controllerOperations)
+	employeeController := controller.NewEmployeeMedicalSessionController(controllerOperations)
+
+	return &MedicalSessionControllers{
+		AdminController:    adminController,
+		CustomerController: customerController,
+		EmployeeController: employeeController,
+	}
 }
 
-func (m *MedicalHistoryModule) registerRoutes(controller *controller.AdminMedicalHistoryController) {
-	routes.MedicalHistoryRoutes(m.config.Router, *controller, m.config.AuthMiddleware)
+func (m *MedicalSessionModule) registerRoutes(ctrl *MedicalSessionControllers) {
+	medSessionRoutes := routes.NewMedicalSessionRoutes(ctrl.AdminController, ctrl.CustomerController, ctrl.EmployeeController)
+	medSessionRoutes.RegisterAdminRoutes(m.config.Router, m.config.AuthMiddleware)
+	medSessionRoutes.RegisterCustomerRoutes(m.config.Router, m.config.AuthMiddleware)
+	medSessionRoutes.RegisterEmployeeRoutes(m.config.Router, m.config.AuthMiddleware)
 }
 
-func (m *MedicalHistoryModule) validateConfig() error {
+func (m *MedicalSessionModule) validateConfig() error {
 	if m.config == nil {
 		return fmt.Errorf("medical history module configuration cannot be nil")
 	}
@@ -118,7 +136,7 @@ func (m *MedicalHistoryModule) validateConfig() error {
 	return nil
 }
 
-func (m *MedicalHistoryModule) GetComponents() (*MedicalHistoryModuleComponents, error) {
+func (m *MedicalSessionModule) GetComponents() (*MedicalSessionModuleComponents, error) {
 	if !m.isBuilt {
 		if err := m.Bootstrap(); err != nil {
 			return nil, err
@@ -127,7 +145,7 @@ func (m *MedicalHistoryModule) GetComponents() (*MedicalHistoryModuleComponents,
 	return m.components, nil
 }
 
-func (m *MedicalHistoryModule) GetRepository() (repository.MedicalHistoryRepository, error) {
+func (m *MedicalSessionModule) GetRepository() (repository.MedicalSessionRepository, error) {
 	components, err := m.GetComponents()
 	if err != nil {
 		return nil, err
@@ -135,7 +153,7 @@ func (m *MedicalHistoryModule) GetRepository() (repository.MedicalHistoryReposit
 	return components.Repository, nil
 }
 
-func (m *MedicalHistoryModule) GetBus() (*bus.MedicalHistoryBus, error) {
+func (m *MedicalSessionModule) GetBus() (*bus.MedicalSessionBus, error) {
 	components, err := m.GetComponents()
 	if err != nil {
 		return nil, err
@@ -143,7 +161,7 @@ func (m *MedicalHistoryModule) GetBus() (*bus.MedicalHistoryBus, error) {
 	return components.Bus, nil
 }
 
-func (m *MedicalHistoryModule) GetController() (*controller.AdminMedicalHistoryController, error) {
+func (m *MedicalSessionModule) GetController() (*MedicalSessionControllers, error) {
 	components, err := m.GetComponents()
 	if err != nil {
 		return nil, err

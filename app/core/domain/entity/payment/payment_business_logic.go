@@ -48,7 +48,11 @@ func (p *Payment) RequestRefund(ctx context.Context, refundAmount valueobject.Mo
 		return RefundPeriodExpiredError(ctx, *p.paidAt, operation)
 	}
 
-	if refundAmount.Amount() > p.amount.Amount() {
+	diff, err := refundAmount.Subtract(p.amount)
+	if err != nil {
+		return err
+	}
+	if diff.IsPositive() {
 		return RefundAmountExceededError(ctx, refundAmount, p.amount, operation)
 	}
 
@@ -220,7 +224,7 @@ func (p *Payment) Update(ctx context.Context, amount *valueobject.Money, payment
 	operation := "UpdatePayment"
 
 	if amount != nil {
-		if amount.Amount() <= 0 {
+		if amount.Amount().IsZero() || amount.Amount().IsNegative() {
 			return AmountInvalidError(ctx, *amount, operation)
 		}
 		p.amount = *amount
@@ -260,7 +264,7 @@ func (p *Payment) CanRetry() bool {
 
 func (p *Payment) AmountDue() valueobject.Money {
 	if p.IsPaid() || p.IsRefunded() || p.IsCancelled() {
-		return valueobject.NewMoney(0, p.amount.Currency())
+		return valueobject.NewMoney(p.Amount().Amount(), p.amount.Currency())
 	}
 	return p.amount
 }

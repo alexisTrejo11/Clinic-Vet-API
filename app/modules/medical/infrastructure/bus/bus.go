@@ -5,14 +5,14 @@ import (
 	"clinic-vet-api/app/modules/medical/application/query"
 )
 
-type MedicalHistoryBus struct {
-	CommandBus *MedicalHistoryCommandBus
-	QueryBus   *MedicalHistoryQueryBus
+type MedicalSessionBus struct {
+	CommandBus *MedicalSessionCommandBus
+	QueryBus   *MedicalSessionQueryBus
 }
 
-func NewMedicalHistoryBus(commandHandlers command.MedicalHistoryCommandHandlers, queryHandlers query.MedicalHistoryQueryHandlers) *MedicalHistoryBus {
-	return &MedicalHistoryBus{
-		CommandBus: NewMedicalHistoryCommandBus(commandHandlers),
-		QueryBus:   NewMedicalHistoryQueryBus(queryHandlers),
+func NewMedicalSessionBus(commandHandlers command.MedicalSessionCommandHandlers, queryHandlers query.MedicalSessionQueryHandlers) *MedicalSessionBus {
+	return &MedicalSessionBus{
+		CommandBus: NewMedicalSessionCommandBus(commandHandlers),
+		QueryBus:   NewMedicalSessionQueryBus(queryHandlers),
 	}
 }

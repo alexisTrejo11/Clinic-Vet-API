@@ -57,31 +57,31 @@ func (cb *CommandBus) Execute(cmd cqrs.Command) (any, error) {
 	return results[0].Interface(), nil
 }
 
-type MedicalHistoryCommandBus struct {
+type MedicalSessionCommandBus struct {
 	*CommandBus
-	handlers command.MedicalHistoryCommandHandlers
+	handlers command.MedicalSessionCommandHandlers
 }
 
-func NewMedicalHistoryCommandBus(handlers command.MedicalHistoryCommandHandlers) *MedicalHistoryCommandBus {
+func NewMedicalSessionCommandBus(handlers command.MedicalSessionCommandHandlers) *MedicalSessionCommandBus {
 	bus := NewCommandBus()
-	return &MedicalHistoryCommandBus{
+	return &MedicalSessionCommandBus{
 		CommandBus: bus,
 		handlers:   handlers,
 	}
 }
 
-func (mh *MedicalHistoryCommandBus) CreateMedicalHistory(cmd command.CreateMedHistCommand) cqrs.CommandResult {
-	return mh.handlers.CreateMedicalHistory(cmd)
+func (mh *MedicalSessionCommandBus) CreateMedicalSession(cmd command.CreateMedSessionCommand) cqrs.CommandResult {
+	return mh.handlers.CreateMedicalSession(cmd)
 }
 
-func (mh *MedicalHistoryCommandBus) UpdateMedicalHistory(cmd command.UpdateMedHistCommand) cqrs.CommandResult {
-	return mh.handlers.UpdateMedicalHistory(cmd)
+func (mh *MedicalSessionCommandBus) UpdateMedicalSession(cmd command.UpdateMedSessionCommand) cqrs.CommandResult {
+	return mh.handlers.UpdateMedicalSession(cmd)
 }
 
-func (mh *MedicalHistoryCommandBus) SoftDeleteMedicalHistory(cmd command.SoftDeleteMedHistCommand) cqrs.CommandResult {
-	return mh.handlers.SoftDeleteMedicalHistory(cmd)
+func (mh *MedicalSessionCommandBus) SoftDeleteMedicalSession(cmd command.SoftDeleteMedSessionCommand) cqrs.CommandResult {
+	return mh.handlers.SoftDeleteMedicalSession(cmd)
 }
 
-func (mh *MedicalHistoryCommandBus) HardDeleteMedicalHistory(cmd command.HardDeleteMedHistCommand) cqrs.CommandResult {
-	return mh.handlers.HardDeleteMedicalHistory(cmd)
+func (mh *MedicalSessionCommandBus) HardDeleteMedicalSession(cmd command.HardDeleteMedSessionCommand) cqrs.CommandResult {
+	return mh.handlers.HardDeleteMedicalSession(cmd)
 }
