@@ -9,8 +9,8 @@ import (
 
 type SessionRepository interface {
 	Create(ctx context.Context, session *auth.Session) error
-	GetByID(ctx context.Context, sessionID string) (auth.Session, error)
-	GetByUserAndID(ctx context.Context, userID valueobject.UserID, token string) (auth.Session, error)
+	GetByRefreshToken(ctx context.Context, refreshToken string) (auth.Session, error)
+	GetByUserAndRefreshToken(ctx context.Context, userID valueobject.UserID, token string) (auth.Session, error)
 	GetByUserID(ctx context.Context, userID valueobject.UserID) ([]auth.Session, error)
 	DeleteUserSession(ctx context.Context, userID valueobject.UserID, sessionID string) error
 	DeleteAllUserSessions(ctx context.Context, userID valueobject.UserID) error

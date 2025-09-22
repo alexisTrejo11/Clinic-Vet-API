@@ -38,12 +38,12 @@ func (r *AppointmentRoutes) RegisterCustomerRoutes(router *gin.RouterGroup, auth
 	customerGroup.Use(authMiddleware.Authenticate())
 	customerGroup.Use(authMiddleware.RequireAnyRole("customer"))
 
-	customerGroup.GET("/appointments", r.customerController.GetMyAppointments)
-	customerGroup.GET("/appointments/:id", r.customerController.GetMyAppointmentByID)
-	customerGroup.GET("/pets/:petID/appointments", r.customerController.GetAppointmentsByPet)
-	customerGroup.POST("/appointments", r.customerController.RequestAppointment)
-	//customerGroup.PUT("/appointments/:id/reschedule", controller.RescheduleAppointment)
-	//customerGroup.DELETE("/appointments/:id", controller.CancelAppointment)
+	customerGroup.GET("/", r.customerController.GetMyAppointments)
+	customerGroup.GET("/:id", r.customerController.GetMyAppointmentByID)
+	customerGroup.GET("/pets/:petID/", r.customerController.GetAppointmentsByPet)
+	customerGroup.POST("/", r.customerController.RequestAppointment)
+	//customerGroup.PUT("//:id/reschedule", controller.RescheduleAppointment)
+	//customerGroup.DELETE("/:id", controller.CancelAppointment)
 
 }
 

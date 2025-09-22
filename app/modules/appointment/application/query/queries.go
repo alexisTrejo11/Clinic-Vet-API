@@ -89,12 +89,19 @@ func NewFindApptsByDateRangeQuery(ctx context.Context, startDate, endDate time.T
 
 type FindApptsByCustomerIDQuery struct {
 	customerID valueobject.CustomerID
+	petID      *valueobject.PetID
 	ctx        context.Context
 	pageInput  page.PageInput
 }
 
 func NewFindApptsByCustomerIDQuery(ctx context.Context, pageInput page.PageInput, customerId uint, petID *uint, status *string) *FindApptsByCustomerIDQuery {
-	return &FindApptsByCustomerIDQuery{customerID: valueobject.NewCustomerID(customerId), pageInput: pageInput, ctx: ctx}
+	var petIDvo *valueobject.PetID
+	if petID != nil {
+		val := valueobject.NewPetID(*petID)
+		petIDvo = &val
+	}
+
+	return &FindApptsByCustomerIDQuery{customerID: valueobject.NewCustomerID(customerId), pageInput: pageInput, ctx: ctx, petID: petIDvo}
 }
 
 type FindApptsByPetQuery struct {

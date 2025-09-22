@@ -21,6 +21,7 @@ func toCreateParams(customer customer.Customer) *sqlc.CreateCustomerParams {
 		FirstName:   customer.Name().FirstName,
 		LastName:    customer.Name().LastName,
 		IsActive:    customer.IsActive(),
+		UserID:      pgtype.Int4{Int32: int32(customer.ID().Value())},
 	}
 
 	if customer.UserID() != nil {

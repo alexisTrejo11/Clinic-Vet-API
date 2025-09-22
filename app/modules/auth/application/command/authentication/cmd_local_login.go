@@ -42,7 +42,7 @@ func (h *authCommandHandler) Login(ctx context.Context, command LoginCommand) re
 
 	return result.AuthSuccess(
 		result.GetSessionResponse(session, accessToken),
-		session.ID,
+		session.RefreshToken[:3],
 		result.MsgLoginSuccess,
 	)
 }

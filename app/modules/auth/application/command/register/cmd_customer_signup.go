@@ -64,8 +64,7 @@ func (h *registerCommandHandler) ProduceEvent(user *user.User, cmd CustomerRegis
 		UserID: user.ID(),
 		Role:   user.Role(),
 		Email:  user.Email(),
-		Name:   name,
-		PersonalData: &commondto.PersonalData{
+		PersonalData: commondto.PersonalData{
 			Name:        name,
 			Gender:      cmd.Gender,
 			DateOfBirth: cmd.DateOfBirth, Location: cmd.Location,

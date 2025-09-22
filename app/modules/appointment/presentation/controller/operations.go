@@ -116,13 +116,8 @@ func (ctrl *ApptControllerOperations) FindAppointmentsByDateRange(c *gin.Context
 
 func (ctrl *ApptControllerOperations) FindAppointmentsByCustomer(c *gin.Context, customerID uint, extraArgs customerQueryExtraArgs) {
 	var pageParams page.PageInput
-	if err := c.ShouldBindQuery(&pageParams); err != nil {
+	if err := ginUtils.ShouldBindPageParams(&pageParams, c, ctrl.validate); err != nil {
 		response.BadRequest(c, httpError.RequestURLQueryError(err, c.Request.URL.RawQuery))
-		return
-	}
-
-	if err := ctrl.validate.Struct(&pageParams); err != nil {
-		response.BadRequest(c, httpError.InvalidDataError(err))
 		return
 	}
 
@@ -171,6 +166,7 @@ func (ctrl *ApptControllerOperations) GetAppointmentsByPet(c *gin.Context, petID
 }
 
 func (ctrl *ApptControllerOperations) GetAppointmentStats(c *gin.Context) {
+	// TODO: Implement appointment stats logic or remove this function if not needed
 }
 
 func (ctrl *ApptControllerOperations) HandlePaginatedResult(c *gin.Context, pageResponse page.Page[query.ApptResult], queryParams map[string]any) {

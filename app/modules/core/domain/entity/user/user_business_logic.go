@@ -109,18 +109,6 @@ func (u *User) AssignProfile(profileID uint) error {
 	return nil
 }
 
-func (u *User) AssignCustomer(customerID valueobject.CustomerID) error {
-	if u.customerID != nil {
-		return errors.New("customer already assigned")
-	}
-	if u.employeeID != nil {
-		return errors.New("user is an employee, cannot assign customer")
-	}
-	u.customerID = &customerID
-	u.IncrementVersion()
-	return nil
-}
-
 func (u *User) AssignEmployee(employeeID valueobject.EmployeeID) error {
 	if u.employeeID != nil {
 		return errors.New("employee already assigned")

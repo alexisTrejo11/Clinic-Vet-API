@@ -49,6 +49,21 @@ BEGIN
 END
 $$;
 
+-- Create User Table
+CREATE TABLE IF NOT EXISTS users (
+    id SERIAL PRIMARY KEY,
+    email VARCHAR(255) UNIQUE,
+    phone_number VARCHAR(255) UNIQUE,
+    password VARCHAR(255),
+    status user_status NOT NULL,
+    role user_role NOT NULL,
+    last_login TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    deleted_at TIMESTAMP
+);
+
+
 CREATE TABLE IF NOT EXISTS customers (
     id SERIAL PRIMARY KEY,
     first_name VARCHAR(255) NOT NULL,
@@ -63,16 +78,30 @@ CREATE TABLE IF NOT EXISTS customers (
     deleted_at TIMESTAMP NULL
 );
 
+-- Create User Table
+CREATE TABLE IF NOT EXISTS employees (
+    id SERIAL PRIMARY KEY,
+    first_name VARCHAR(255) NOT NULL, 
+    last_name  VARCHAR(255) NOT NULL,
+    photo VARCHAR(500) NOT NULL,
+    license_number VARCHAR(20) NOT NULL,
+    speciality veterinarian_speciality NOT NULL,
+    years_of_experience INT NOT NULL,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    user_id int,
+    schedule_json JSONB,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL
+);
+
 CREATE TABLE IF NOT EXISTS pets (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     photo TEXT,
     species VARCHAR(100) NOT NULL,
     breed VARCHAR(100),
-    date_of_birth DATE,
-    age SMALLINT GENERATED ALWAYS AS (
-        DATE_PART('year', AGE(CURRENT_DATE, date_of_birth))
-    ) STORED,
+    age SMALLINT,
     gender VARCHAR(20) CHECK (gender IN ('male', 'female', 'unknown', 'other')),
     color VARCHAR(50),
     microchip VARCHAR(50) UNIQUE,
@@ -173,9 +202,6 @@ CREATE TABLE IF NOT EXISTS pet_deworming (
     FOREIGN KEY (administered_by) REFERENCES employees(id) ON DELETE SET NULL
 );
 
-
-
-
 -- Tabla para implante de chip
 CREATE TABLE IF NOT EXISTS pet_chip_implants (
     id SERIAL PRIMARY KEY,
@@ -189,52 +215,6 @@ CREATE TABLE IF NOT EXISTS pet_chip_implants (
     FOREIGN KEY (pet_id) REFERENCES pets(id) ON DELETE CASCADE,
     FOREIGN KEY (implanted_by) REFERENCES employees(id) ON DELETE SET NULL
 );
-
-
--- Create User Table
-CREATE TABLE IF NOT EXISTS employees (
-    id SERIAL PRIMARY KEY,
-    first_name VARCHAR(255) NOT NULL, 
-    last_name  VARCHAR(255) NOT NULL,
-    photo VARCHAR(500) NOT NULL,
-    license_number VARCHAR(20) NOT NULL,
-    speciality veterinarian_speciality NOT NULL,
-    years_of_experience INT NOT NULL,
-    is_active BOOLEAN NOT NULL DEFAULT TRUE,
-    user_id int,
-    schedule_json JSONB,
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP NULL
-);
-
--- Create User Table
-CREATE TABLE IF NOT EXISTS users (
-    id SERIAL PRIMARY KEY,
-    email VARCHAR(255) UNIQUE,
-    phone_number VARCHAR(255) UNIQUE,
-    password VARCHAR(255),
-    status user_status NOT NULL,
-    role user_role NOT NULL,
-    last_login TIMESTAMP WITH TIME ZONE,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    deleted_at TIMESTAMP
-);
-
--- Foreign Keys for users table
-ALTER TABLE users 
-ADD CONSTRAINT fk_users_profile
-    FOREIGN KEY (profile_id) REFERENCES profiles(id) ON DELETE CASCADE;
-
-ALTER TABLE users
-ADD CONSTRAINT fk_users_customer
-    FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE;
-
-ALTER TABLE users
-ADD CONSTRAINT fk_users_employee
-    FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE;
-
 
 -- Create Appointments Table
 CREATE TABLE IF NOT EXISTS appointments(
@@ -355,36 +335,12 @@ CREATE INDEX IF NOT EXISTS idx_appointment_vet_id ON appointments(employee_id);
 CREATE INDEX IF NOT EXISTS idx_appointment_pet_id ON appointments(pet_id);
 CREATE INDEX IF NOT EXISTS idx_appointment_status ON appointments(status);
 
--- Indexes for Users and Profiles
+
 CREATE INDEX IF NOT EXISTS idx_user_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_user_phone_number ON users(phone_number);
 
 
 -- Indexes
-CREATE INDEX IF NOT EXISTS idx_pets_customer_id ON pets(customer_id);
-CREATE INDEX IF NOT EXISTS idx_pets_species ON pets(species);
-CREATE INDEX IF NOT EXISTS idx_pets_breed ON pets(breed);
-CREATE INDEX IF NOT EXISTS idx_pets_is_active ON pets(is_active);
-CREATE INDEX IF NOT EXISTS idx_pets_is_neutered ON pets(is_neutered);
-CREATE INDEX IF NOT EXISTS idx_pets_gender ON pets(gender);
-CREATE INDEX IF NOT EXISTS idx_pets_name ON pets(name);
-CREATE INDEX IF NOT EXISTS idx_pets_microchip ON pets(microchip);
-CREATE INDEX IF NOT EXISTS idx_pets_date_of_birth ON pets(date_of_birth);
-CREATE INDEX IF NOT EXISTS idx_pets_last_vet_visit ON pets(last_vet_visit);
-CREATE INDEX IF NOT EXISTS idx_pets_next_vet_visit ON pets(next_vet_visit);
-CREATE INDEX IF NOT EXISTS idx_pets_created_at ON pets(created_at);
-CREATE INDEX IF NOT EXISTS idx_pets_deleted_at ON pets(deleted_at) WHERE deleted_at IS NULL;
-
-CREATE INDEX IF NOT EXISTS idx_pets_species_breed ON pets(species, breed);
-CREATE INDEX IF NOT EXISTS idx_pets_customer_active ON pets(customer_id, is_active);
-CREATE INDEX IF NOT EXISTS idx_pets_vaccination_dates ON pets(last_vaccination_date, next_vaccination_date);
-CREATE INDEX IF NOT EXISTS idx_pets_deworming_dates ON pets(last_deworming_date, next_deworming_date);
-
-CREATE UNIQUE INDEX IF NOT EXISTS uq_pets_microchip ON pets(microchip) WHERE microchip IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_pets_active_filter ON pets(id) WHERE is_active = TRUE AND deleted_at IS NULL;
-CREATE INDEX IF NOT EXISTS idx_pets_vet_visit_dates ON pets(last_vet_visit, next_vet_visit) WHERE last_vet_visit IS NOT NULL OR next_vet_visit IS NOT NULL;
-
--- Para la tabla pets (solo los realmente necesarios)
 CREATE INDEX IF NOT EXISTS idx_pets_customer_id ON pets(customer_id);
 CREATE INDEX IF NOT EXISTS idx_pets_is_active ON pets(is_active) WHERE is_active = TRUE;
 CREATE INDEX IF NOT EXISTS idx_pets_microchip ON pets(microchip) WHERE microchip IS NOT NULL;

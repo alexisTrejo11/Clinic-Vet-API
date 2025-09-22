@@ -68,6 +68,18 @@ func (r *SQLCProfileRepository) GetMapByUserID(ctx context.Context, userID value
 		profileMap["photo"] = sqlcRow.Photo
 		profileMap["is_active"] = sqlcRow.IsActive
 		profileMap["user_id"] = sqlcRow.UserID.Int32
+
+		if sqlcRow.LastLogin.Valid {
+			profileMap["last_login"] = sqlcRow.LastLogin.Time
+		} else {
+			profileMap["last_login"] = nil
+		}
+		profileMap["created_at"] = sqlcRow.CreatedAt.Time
+		if sqlcRow.UpdatedAt.Valid {
+			profileMap["updated_at"] = sqlcRow.UpdatedAt.Time
+		}
+
+		return profileMap, nil
 	}
 	return nil, errors.New("unsupported role for profile retrieval")
 }

@@ -12,10 +12,10 @@ type EmployeeResponse struct {
 	LastName        string `json:"last_name" example:"Doe"`
 	Photo           string `json:"photo" example:"https://example.com/photo.jpg"`
 	LicenseNumber   string `json:"license_number" example:"VET123456"`
+	UserID          *uint  `json:"user_id,omitempty" example:"42"`
 	YearsExperience int    `json:"years_experience" example:"5"`
 	IsActive        bool   `json:"is_active" example:"true"`
 	Specialty       string `json:"specialty" example:"CARDIOLOGY"`
-	ConsultationFee string `json:"consultation_fee" example:"50.00 USD"`
 	// LaboralSchedule []ScheduleResponse `json:"laboral_schedule"`
 	CreatedAt string `json:"created_at" example:"2023-10-01T12:00:00Z"`
 	UpdatedAt string `json:"updated_at" example:"2023-10-10T15:30:00Z"`
@@ -30,6 +30,7 @@ func (r *EmployeeResponse) FromResult(result query.EmployeeResult) {
 	r.YearsExperience = result.YearsExperience
 	r.IsActive = result.IsActive
 	r.Specialty = result.Specialty
+	r.UserID = result.UserID
 	// if result.LaboralSchedule != nil {
 	// 	schedules := make([]ScheduleResponse, len(*result.LaboralSchedule))
 	// 	for i, sched := range *result.LaboralSchedule {

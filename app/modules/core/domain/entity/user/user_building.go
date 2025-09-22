@@ -23,6 +23,9 @@ func WithEmail(email valueobject.Email) UserOption {
 
 func WithPhoneNumber(phone *valueobject.PhoneNumber) UserOption {
 	return func(u *User) error {
+		if phone == nil {
+			return nil
+		}
 		u.phoneNumber = *phone
 		return nil
 	}

@@ -51,5 +51,9 @@ func SetupAuthModule(
 
 	cmdBus := command.NewAuthCommandBus(loginHandler, registerHandler, sessionHandler)
 	authController := controller.NewAuthController(validator, cmdBus)
-	routes.AuthRoutes(r, *authController, authMiddle)
+	tokenController := controller.NewTokenController(validator, cmdBus)
+
+	authRoutes := routes.NewAuthRoutes(authController, tokenController)
+	authRoutes.RegisterRegistAndLoginRoutes(r, authMiddle)
+	authRoutes.RegisterSessionRoutes(r, authMiddle)
 }

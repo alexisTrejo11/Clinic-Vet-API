@@ -40,7 +40,7 @@ func (h *authCommandHandler) TwoFactorLogin(ctx context.Context, command TwoFact
 
 	return result.AuthSuccess(
 		result.GetSessionResponse(session, accessToken),
-		session.ID,
+		session.RefreshToken[:3],
 		result.MsgLoginSuccess,
 	)
 }

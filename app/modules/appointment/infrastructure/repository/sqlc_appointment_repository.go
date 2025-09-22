@@ -179,9 +179,39 @@ func (r *SqlcAppointmentRepository) FindByPetID(ctx context.Context, petID value
 }
 
 // FindByCustomerID finds appointments by customer ID with pagination
-func (r *SqlcAppointmentRepository) FindByCustomerID(ctx context.Context, customerID valueobject.CustomerID, pageInput p.PageInput) (page.Page[appt.Appointment], error) {
+func (r *SqlcAppointmentRepository) FindByCustomerID(ctx context.Context, customerID valueobject.CustomerID, petID *valueobject.PetID, pageInput p.PageInput) (page.Page[appt.Appointment], error) {
 	offset := (pageInput.Page - 1) * pageInput.PageSize
 	limit := pageInput.PageSize
+
+	if petID != nil {
+		sqlcRows, err := r.queries.FindAppointmentsByCustomerIDAndPetID(ctx, sqlc.FindAppointmentsByCustomerIDAndPetIDParams{
+			CustomerID: int32(customerID.Value()),
+			PetID:      int32(petID.Value()),
+			Limit:      int32(limit),
+			Offset:     int32(offset),
+		})
+
+		if err != nil {
+			return p.Page[appt.Appointment]{}, r.dbError("select", "failed to list appointments by employee ID and pet ID", err)
+		}
+
+		// Find total count
+		total, err := r.queries.CountAppointmentsByCustomerIDAndPetID(ctx, sqlc.CountAppointmentsByCustomerIDAndPetIDParams{
+			CustomerID: int32(customerID.Value()),
+			PetID:      int32(petID.Value()),
+		})
+
+		if err != nil {
+			return p.Page[appt.Appointment]{}, r.dbError("select", "failed to count appointments by employee ID and pet ID", err)
+		}
+
+		appointments, err := sqlRowsToAppointments(sqlcRows)
+		if err != nil {
+			return p.Page[appt.Appointment]{}, r.wrapConversionError(err)
+		}
+
+		return page.NewPage(appointments, *page.GetPageMetadata(int(total), pageInput)), nil
+	}
 
 	// find appointments
 	appointmentrows, err := r.queries.FindAppointmentsByCustomerID(ctx, sqlc.FindAppointmentsByCustomerIDParams{

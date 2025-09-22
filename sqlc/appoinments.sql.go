@@ -37,6 +37,25 @@ func (q *Queries) CountAppointmentsByCustomerID(ctx context.Context, customerID 
 	return count, err
 }
 
+const countAppointmentsByCustomerIDAndPetID = `-- name: CountAppointmentsByCustomerIDAndPetID :one
+SELECT COUNT(*) FROM appointments
+WHERE customer_id = $1
+AND pet_id = $2
+AND deleted_at IS NULL
+`
+
+type CountAppointmentsByCustomerIDAndPetIDParams struct {
+	CustomerID int32
+	PetID      int32
+}
+
+func (q *Queries) CountAppointmentsByCustomerIDAndPetID(ctx context.Context, arg CountAppointmentsByCustomerIDAndPetIDParams) (int64, error) {
+	row := q.db.QueryRow(ctx, countAppointmentsByCustomerIDAndPetID, arg.CustomerID, arg.PetID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const countAppointmentsByDateRange = `-- name: CountAppointmentsByDateRange :one
 SELECT COUNT(*) FROM appointments
 WHERE schedule_date BETWEEN $1 AND $2
@@ -342,6 +361,59 @@ type FindAppointmentsByCustomerIDParams struct {
 
 func (q *Queries) FindAppointmentsByCustomerID(ctx context.Context, arg FindAppointmentsByCustomerIDParams) ([]Appointment, error) {
 	rows, err := q.db.Query(ctx, findAppointmentsByCustomerID, arg.CustomerID, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Appointment
+	for rows.Next() {
+		var i Appointment
+		if err := rows.Scan(
+			&i.ID,
+			&i.ClinicService,
+			&i.ScheduleDate,
+			&i.Status,
+			&i.Reason,
+			&i.Notes,
+			&i.CustomerID,
+			&i.PetID,
+			&i.EmployeeID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.DeletedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const findAppointmentsByCustomerIDAndPetID = `-- name: FindAppointmentsByCustomerIDAndPetID :many
+SELECT id, clinic_service, schedule_date, status, reason, notes, customer_id, pet_id, employee_id, created_at, updated_at, deleted_at FROM appointments 
+WHERE customer_id = $1
+AND pet_id = $2
+AND deleted_at IS NULL
+ORDER BY created_at DESC LIMIT $3 OFFSET $4
+`
+
+type FindAppointmentsByCustomerIDAndPetIDParams struct {
+	CustomerID int32
+	PetID      int32
+	Limit      int32
+	Offset     int32
+}
+
+func (q *Queries) FindAppointmentsByCustomerIDAndPetID(ctx context.Context, arg FindAppointmentsByCustomerIDAndPetIDParams) ([]Appointment, error) {
+	rows, err := q.db.Query(ctx, findAppointmentsByCustomerIDAndPetID,
+		arg.CustomerID,
+		arg.PetID,
+		arg.Limit,
+		arg.Offset,
+	)
 	if err != nil {
 		return nil, err
 	}

@@ -27,9 +27,11 @@ type apptQueryHandler struct {
 	employeeRepository repository.EmployeeRepository
 }
 
-func NewAppointmentQueryHandler(apptRepository repository.AppointmentRepository) AppointmentQueryHandler {
+func NewAppointmentQueryHandler(apptRepository repository.AppointmentRepository, customerRepository repository.CustomerRepository, employeeRepository repository.EmployeeRepository) AppointmentQueryHandler {
 	return &apptQueryHandler{
-		apptRepository: apptRepository,
+		apptRepository:     apptRepository,
+		customerRepository: customerRepository,
+		employeeRepository: employeeRepository,
 	}
 }
 
@@ -120,7 +122,7 @@ func (h *apptQueryHandler) FindByCustomerID(query FindApptsByCustomerIDQuery) (p
 		return p.Page[ApptResult]{}, err
 	}
 
-	appointmentsp, err := h.apptRepository.FindByCustomerID(query.ctx, query.customerID, query.pageInput)
+	appointmentsp, err := h.apptRepository.FindByCustomerID(query.ctx, query.customerID, query.petID, query.pageInput)
 	if err != nil {
 		return p.Page[ApptResult]{}, err
 	}

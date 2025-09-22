@@ -8,20 +8,39 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func AuthRoutes(app *gin.RouterGroup, authController controller.AuthController, authMiddleware *middleware.AuthMiddleware) {
+type AuthRoutes struct {
+	AuthController  *controller.AuthController
+	TokenController *controller.TokenController
+}
+
+func NewAuthRoutes(authController *controller.AuthController, tokenController *controller.TokenController) *AuthRoutes {
+	return &AuthRoutes{
+		AuthController:  authController,
+		TokenController: tokenController,
+	}
+}
+
+func (r *AuthRoutes) RegisterRegistAndLoginRoutes(app *gin.RouterGroup, authMiddleware *middleware.AuthMiddleware) {
 	authGroup := app.Group("/auth")
-	authGroup.POST("/register/customer", authController.CustomerSignup)
-	authGroup.POST("/register/employee", authController.EmployeeSignup)
-	authGroup.POST("/login", authController.Login)
+	authGroup.POST("/register/customer", r.AuthController.CustomerSignup)
+	authGroup.POST("/register/employee", r.AuthController.EmployeeSignup)
+	authGroup.POST("/login", r.AuthController.Login)
 
-	logoutGroup := app.Group("/logout")
+}
+
+func (r *AuthRoutes) RegisterSessionRoutes(app *gin.RouterGroup, authMiddleware *middleware.AuthMiddleware) {
+	authGroup := app.Group("/auth")
+
+	refresh := authGroup.Use(authMiddleware.OptionalAuth())
+	refresh.POST("/refresh-token", r.TokenController.RefreshSession)
+
+	logoutGroup := app.Group("/auth")
 	logoutGroup.Use(authMiddleware.Authenticate())
-	logoutGroup.DELETE("/logout", authController.Logout)
-	logoutGroup.DELETE("/loug-all", authController.LogoutAll)
+	logoutGroup.DELETE("/logout", r.AuthController.Logout)
+	logoutGroup.DELETE("/logout-all", r.AuthController.LogoutAll)
 
-	//authGroup.POST("/refresh-token", authController.RefreshToken)
-	//authGroup.POST("/forgot-password", authController.ForgotPassword)
-	//authGroup.POST("/reset-password", authController.ResetPassword)
-	//authGroup.POST("/verify-email", authController.VerifyEmail)
-	//authGroup.POST("/resend-verification", authController.ResendVerification)
+	//authGroup.POST("/forgot-password", r.AuthControler.ForgotPassword)
+	//authGroup.POST("/reset-password", r.AuthControler.ResetPassword)
+	//authGroup.POST("/verify-email", r.AuthControler.VerifyEmail)
+	//authGroup.POST("/resend-verification", r.AuthControler.ResendVerification)
 }

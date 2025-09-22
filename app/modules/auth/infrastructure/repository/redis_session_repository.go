@@ -27,8 +27,8 @@ func NewRedisSessionRepository(redisClient *redis.Client) repository.SessionRepo
 
 // sessionKey returns the Redis key for a single session.
 // Example: "session:jdn23n-k4n2k4-n2k34n-k3m4n2"
-func (r *RedisSessionRepository) sessionKey(id string) string {
-	return fmt.Sprintf("session:%s", id)
+func (r *RedisSessionRepository) sessionKey(refresh string) string {
+	return fmt.Sprintf("session:%s", refresh)
 }
 
 // userSessionsKey returns the Redis key for a set of sessions for a specific userDomain.
@@ -45,10 +45,10 @@ func (r *RedisSessionRepository) Create(ctx context.Context, sess *auth.Session)
 
 	_, err = r.redisClient.TxPipelined(ctx, func(pipe redis.Pipeliner) error {
 		// Store the session data with an expiration time
-		pipe.Set(ctx, r.sessionKey(sess.ID), sessionJSON, sessionDuration)
+		pipe.Set(ctx, r.sessionKey(sess.RefreshToken), sessionJSON, sessionDuration)
 
 		// Add the session ID to the set of user sessions
-		pipe.SAdd(ctx, r.userSessionsKey(sess.UserID), sess.ID)
+		pipe.SAdd(ctx, r.userSessionsKey(sess.UserID), sess.RefreshToken)
 		return nil
 	})
 	if err != nil {
@@ -58,11 +58,11 @@ func (r *RedisSessionRepository) Create(ctx context.Context, sess *auth.Session)
 	return nil
 }
 
-func (r *RedisSessionRepository) GetByID(ctx context.Context, sessionID string) (auth.Session, error) {
-	sessionJSON, err := r.redisClient.Get(ctx, r.sessionKey(sessionID)).Bytes()
+func (r *RedisSessionRepository) GetByRefreshToken(ctx context.Context, refreshToken string) (auth.Session, error) {
+	sessionJSON, err := r.redisClient.Get(ctx, r.sessionKey(refreshToken)).Bytes()
 	if err != nil {
 		if err == redis.Nil {
-			return auth.Session{}, fmt.Errorf("session not found for ID: %s", sessionID)
+			return auth.Session{}, fmt.Errorf("session not found for Refresh Token: %s", refreshToken[:3])
 		}
 		return auth.Session{}, fmt.Errorf("failed to get session from Redis: %w", err)
 	}
@@ -75,7 +75,7 @@ func (r *RedisSessionRepository) GetByID(ctx context.Context, sessionID string) 
 	return sess, nil
 }
 
-func (r *RedisSessionRepository) GetByUserAndID(ctx context.Context, userID valueobject.UserID, token string) (auth.Session, error) {
+func (r *RedisSessionRepository) GetByUserAndRefreshToken(ctx context.Context, userID valueobject.UserID, token string) (auth.Session, error) {
 	isMember, err := r.redisClient.SIsMember(ctx, r.userSessionsKey(userID.String()), token).Result()
 	if err != nil {
 		return auth.Session{}, fmt.Errorf("failed to check session membership: %w", err)
@@ -85,7 +85,7 @@ func (r *RedisSessionRepository) GetByUserAndID(ctx context.Context, userID valu
 	}
 
 	// Then, retrieve the session data itself
-	return r.GetByID(ctx, token)
+	return r.GetByRefreshToken(ctx, token)
 }
 
 func (r *RedisSessionRepository) GetByUserID(ctx context.Context, userID valueobject.UserID) ([]auth.Session, error) {

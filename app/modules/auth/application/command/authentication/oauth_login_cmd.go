@@ -34,7 +34,7 @@ func (h *authCommandHandler) OAuthLogin(ctx context.Context, command OAuthLoginC
 
 	return result.AuthSuccess(
 		result.GetSessionResponse(session, accessToken),
-		session.ID,
+		session.RefreshToken[:3],
 		result.MsgLoginSuccess,
 	)
 }

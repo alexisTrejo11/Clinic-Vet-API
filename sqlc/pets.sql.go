@@ -55,7 +55,7 @@ INSERT INTO pets (
 ) VALUES (
     $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 )
-RETURNING id, name, photo, species, breed, date_of_birth, age, gender, color, microchip, tattoo, blood_type, is_neutered, customer_id, is_active, allergies, current_medications, special_needs, feeding_instructions, behavioral_notes, veterinary_contact, emergency_contact_name, emergency_contact_phone, created_at, updated_at, deleted_at
+RETURNING id, name, photo, species, breed, age, gender, color, microchip, tattoo, blood_type, is_neutered, customer_id, is_active, allergies, current_medications, special_needs, feeding_instructions, behavioral_notes, veterinary_contact, emergency_contact_name, emergency_contact_phone, created_at, updated_at, deleted_at
 `
 
 type CreatePetParams struct {
@@ -97,7 +97,6 @@ func (q *Queries) CreatePet(ctx context.Context, arg CreatePetParams) (Pet, erro
 		&i.Photo,
 		&i.Species,
 		&i.Breed,
-		&i.DateOfBirth,
 		&i.Age,
 		&i.Gender,
 		&i.Color,
@@ -147,7 +146,7 @@ func (q *Queries) ExistsPetByMicrochip(ctx context.Context, microchip pgtype.Tex
 }
 
 const findPetByID = `-- name: FindPetByID :one
-SELECT id, name, photo, species, breed, date_of_birth, age, gender, color, microchip, tattoo, blood_type, is_neutered, customer_id, is_active, allergies, current_medications, special_needs, feeding_instructions, behavioral_notes, veterinary_contact, emergency_contact_name, emergency_contact_phone, created_at, updated_at, deleted_at FROM pets
+SELECT id, name, photo, species, breed, age, gender, color, microchip, tattoo, blood_type, is_neutered, customer_id, is_active, allergies, current_medications, special_needs, feeding_instructions, behavioral_notes, veterinary_contact, emergency_contact_name, emergency_contact_phone, created_at, updated_at, deleted_at FROM pets
 WHERE id = $1 AND deleted_at IS NULL
 `
 
@@ -160,7 +159,6 @@ func (q *Queries) FindPetByID(ctx context.Context, id int32) (Pet, error) {
 		&i.Photo,
 		&i.Species,
 		&i.Breed,
-		&i.DateOfBirth,
 		&i.Age,
 		&i.Gender,
 		&i.Color,
@@ -186,7 +184,7 @@ func (q *Queries) FindPetByID(ctx context.Context, id int32) (Pet, error) {
 }
 
 const findPetByIDAndCustomerID = `-- name: FindPetByIDAndCustomerID :one
-SELECT id, name, photo, species, breed, date_of_birth, age, gender, color, microchip, tattoo, blood_type, is_neutered, customer_id, is_active, allergies, current_medications, special_needs, feeding_instructions, behavioral_notes, veterinary_contact, emergency_contact_name, emergency_contact_phone, created_at, updated_at, deleted_at FROM pets
+SELECT id, name, photo, species, breed, age, gender, color, microchip, tattoo, blood_type, is_neutered, customer_id, is_active, allergies, current_medications, special_needs, feeding_instructions, behavioral_notes, veterinary_contact, emergency_contact_name, emergency_contact_phone, created_at, updated_at, deleted_at FROM pets
 WHERE id = $1 AND customer_id = $2 AND deleted_at IS NULL
 `
 
@@ -204,7 +202,6 @@ func (q *Queries) FindPetByIDAndCustomerID(ctx context.Context, arg FindPetByIDA
 		&i.Photo,
 		&i.Species,
 		&i.Breed,
-		&i.DateOfBirth,
 		&i.Age,
 		&i.Gender,
 		&i.Color,
@@ -230,7 +227,7 @@ func (q *Queries) FindPetByIDAndCustomerID(ctx context.Context, arg FindPetByIDA
 }
 
 const findPetsByCustomerID = `-- name: FindPetsByCustomerID :many
-SELECT id, name, photo, species, breed, date_of_birth, age, gender, color, microchip, tattoo, blood_type, is_neutered, customer_id, is_active, allergies, current_medications, special_needs, feeding_instructions, behavioral_notes, veterinary_contact, emergency_contact_name, emergency_contact_phone, created_at, updated_at, deleted_at FROM pets
+SELECT id, name, photo, species, breed, age, gender, color, microchip, tattoo, blood_type, is_neutered, customer_id, is_active, allergies, current_medications, special_needs, feeding_instructions, behavioral_notes, veterinary_contact, emergency_contact_name, emergency_contact_phone, created_at, updated_at, deleted_at FROM pets
 WHERE customer_id = $1 AND deleted_at IS NULL
 ORDER BY created_at DESC
 LIMIT $2 OFFSET $3
@@ -257,7 +254,6 @@ func (q *Queries) FindPetsByCustomerID(ctx context.Context, arg FindPetsByCustom
 			&i.Photo,
 			&i.Species,
 			&i.Breed,
-			&i.DateOfBirth,
 			&i.Age,
 			&i.Gender,
 			&i.Color,
@@ -290,7 +286,7 @@ func (q *Queries) FindPetsByCustomerID(ctx context.Context, arg FindPetsByCustom
 }
 
 const findPetsBySpecies = `-- name: FindPetsBySpecies :many
-SELECT id, name, photo, species, breed, date_of_birth, age, gender, color, microchip, tattoo, blood_type, is_neutered, customer_id, is_active, allergies, current_medications, special_needs, feeding_instructions, behavioral_notes, veterinary_contact, emergency_contact_name, emergency_contact_phone, created_at, updated_at, deleted_at FROM pets
+SELECT id, name, photo, species, breed, age, gender, color, microchip, tattoo, blood_type, is_neutered, customer_id, is_active, allergies, current_medications, special_needs, feeding_instructions, behavioral_notes, veterinary_contact, emergency_contact_name, emergency_contact_phone, created_at, updated_at, deleted_at FROM pets
 WHERE species = $1 AND deleted_at IS NULL
 ORDER BY created_at DESC
 LIMIT $2 OFFSET $3
@@ -317,7 +313,6 @@ func (q *Queries) FindPetsBySpecies(ctx context.Context, arg FindPetsBySpeciesPa
 			&i.Photo,
 			&i.Species,
 			&i.Breed,
-			&i.DateOfBirth,
 			&i.Age,
 			&i.Gender,
 			&i.Color,
@@ -404,7 +399,7 @@ SET
     is_active = $14,
     updated_at = CURRENT_TIMESTAMP
 WHERE id = $1 AND deleted_at IS NULL
-RETURNING id, name, photo, species, breed, date_of_birth, age, gender, color, microchip, tattoo, blood_type, is_neutered, customer_id, is_active, allergies, current_medications, special_needs, feeding_instructions, behavioral_notes, veterinary_contact, emergency_contact_name, emergency_contact_phone, created_at, updated_at, deleted_at
+RETURNING id, name, photo, species, breed, age, gender, color, microchip, tattoo, blood_type, is_neutered, customer_id, is_active, allergies, current_medications, special_needs, feeding_instructions, behavioral_notes, veterinary_contact, emergency_contact_name, emergency_contact_phone, created_at, updated_at, deleted_at
 `
 
 type UpdatePetParams struct {
@@ -448,7 +443,6 @@ func (q *Queries) UpdatePet(ctx context.Context, arg UpdatePetParams) (Pet, erro
 		&i.Photo,
 		&i.Species,
 		&i.Breed,
-		&i.DateOfBirth,
 		&i.Age,
 		&i.Gender,
 		&i.Color,

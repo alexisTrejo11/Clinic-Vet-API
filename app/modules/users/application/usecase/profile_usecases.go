@@ -3,6 +3,7 @@ package usecase
 
 import (
 	"context"
+	"fmt"
 
 	"clinic-vet-api/app/modules/core/domain/enum"
 	"clinic-vet-api/app/modules/core/domain/valueobject"
@@ -23,6 +24,7 @@ func NewProfileUseCases(repo repository.ProfileRepository) ProfileUseCases {
 
 // Implement GetUserProfile to fetch user profile details by user ID.
 func (uc *profileUseCasesImpl) GetUserProfile(ctx context.Context, userID uint, customerID uint, employeID uint) (map[string]any, error) {
+	fmt.Println("GetUserProfile called with userID:", userID, "customerID:", customerID, "employeID:", employeID)
 	var role enum.UserRole
 	if customerID != 0 {
 		role = enum.UserRoleCustomer

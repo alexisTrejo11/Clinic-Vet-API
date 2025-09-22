@@ -108,7 +108,6 @@ type Pet struct {
 	Photo                 pgtype.Text
 	Species               string
 	Breed                 pgtype.Text
-	DateOfBirth           pgtype.Date
 	Age                   pgtype.Int2
 	Gender                pgtype.Text
 	Color                 pgtype.Text

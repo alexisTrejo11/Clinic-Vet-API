@@ -2,6 +2,7 @@ package service
 
 import (
 	"clinic-vet-api/app/modules/core/domain/entity/customer"
+	"clinic-vet-api/app/modules/core/domain/entity/employee"
 	"clinic-vet-api/app/modules/core/domain/valueobject"
 	"clinic-vet-api/app/modules/core/repository"
 	commondto "clinic-vet-api/app/shared/dto"
@@ -11,8 +12,7 @@ import (
 
 type UserAccountService interface {
 	CreateCustomer(ctx context.Context, userID valueobject.UserID, personalData commondto.PersonalData) (valueobject.CustomerID, error)
-	AttachCustomerToUser(ctx context.Context, userID valueobject.UserID, customerID valueobject.CustomerID) error
-	AttachEmployeeToUser(ctx context.Context, userID valueobject.UserID, employeeID valueobject.EmployeeID) error
+	AttachEmployeeToUser(ctx context.Context, userID valueobject.UserID, employee employee.Employee) error
 	SendActivationEmail(ctx context.Context, email valueobject.Email, name string) error
 	SendWelcomeEmail(ctx context.Context, email valueobject.Email, name string) error
 }
@@ -61,55 +61,8 @@ func (s *userAccountService) CreateCustomer(ctx context.Context, userID valueobj
 	return cust.ID(), nil
 }
 
-func (s *userAccountService) AttachCustomerToUser(ctx context.Context, userID valueobject.UserID, customerID valueobject.CustomerID) error {
-	user, err := s.userRepository.FindByID(ctx, userID)
-	if err != nil {
-		return err
-	}
-
-	customer, err := s.customerRepository.FindByID(ctx, customerID)
-	if err != nil {
-		return err
-	}
-
-	if err := user.AssignCustomer(customer.ID()); err != nil {
-		return err
-	}
-
-	if err := customer.AssignUser(user.ID()); err != nil {
-		return err
-	}
-
-	if err := s.userRepository.Save(ctx, &user); err != nil {
-		return err
-	}
-
-	if err := s.customerRepository.Save(ctx, &customer); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (s *userAccountService) AttachEmployeeToUser(ctx context.Context, userID valueobject.UserID, employeeID valueobject.EmployeeID) error {
-	user, err := s.userRepository.FindByID(ctx, userID)
-	if err != nil {
-		return err
-	}
-	employee, err := s.employeeRepository.FindByID(ctx, employeeID)
-	if err != nil {
-		return err
-	}
-
-	if err := user.AssignEmployee(employee.ID()); err != nil {
-		return err
-	}
-
-	if err := employee.AssignUser(ctx, user.ID()); err != nil {
-		return err
-	}
-
-	if err := s.userRepository.Save(ctx, &user); err != nil {
+func (s *userAccountService) AttachEmployeeToUser(ctx context.Context, userID valueobject.UserID, employee employee.Employee) error {
+	if err := employee.AssignUser(ctx, userID); err != nil {
 		return err
 	}
 

@@ -1,6 +1,7 @@
 package event
 
 import (
+	"clinic-vet-api/app/modules/core/domain/entity/employee"
 	"clinic-vet-api/app/modules/core/domain/enum"
 	"clinic-vet-api/app/modules/core/domain/valueobject"
 	commondto "clinic-vet-api/app/shared/dto"
@@ -43,9 +44,9 @@ type PasswordChangedEvent struct {
 }
 
 type UserRegisteredEvent struct {
-	UserID       valueobject.UserID      `json:"user_id"`
-	Email        valueobject.Email       `json:"email"`
-	Name         valueobject.PersonName  `json:"name"`
-	Role         enum.UserRole           `json:"role"` // "customer" or "employee"
-	PersonalData *commondto.PersonalData `json:"personal_data"`
+	UserID       valueobject.UserID     `json:"user_id"`
+	Email        valueobject.Email      `json:"email"`
+	Role         enum.UserRole          `json:"role"` // "customer" or "employee"
+	Employee     *employee.Employee     `json:"employee,omitempty"`
+	PersonalData commondto.PersonalData `json:"personal_data"`
 }

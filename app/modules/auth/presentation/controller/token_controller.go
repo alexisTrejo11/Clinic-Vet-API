@@ -23,13 +23,13 @@ func NewTokenController(validator *validator.Validate, bus cmdBus.AuthCommandBus
 }
 
 func (ctrl *TokenController) RefreshSession(c *gin.Context) {
-	refreshToken := c.GetHeader("jwtToken")
-	if refreshToken == "" {
+	refreshToken, exists := c.Get("jwtToken")
+	if !exists || refreshToken == "" {
 		response.BadRequest(c, autherror.MissingRefreshTokenError())
 		return
 	}
 
-	command := sessionCmd.NewRefreshUserSessionCommand(refreshToken)
+	command := sessionCmd.NewRefreshUserSessionCommand(refreshToken.(string))
 	result := ctrl.bus.RefreshUserSession(c.Request.Context(), command)
 	if !result.IsSuccess() {
 		response.ApplicationError(c, result.Error())

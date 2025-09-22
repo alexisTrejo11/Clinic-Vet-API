@@ -210,6 +210,9 @@ func (r *SqlcPetRepository) update(ctx context.Context, entity pet.Pet) (pet.Pet
 }
 
 func (r *SqlcPetRepository) Restore(ctx context.Context, petID valueobject.PetID) error {
+	if err := r.queries.RestorePet(ctx, int32(petID.Value())); err != nil {
+		return r.dbError("update", fmt.Sprintf("failed to restore pet with ID %d", petID.Value()), err)
+	}
 	return nil
 }
 

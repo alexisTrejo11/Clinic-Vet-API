@@ -21,7 +21,7 @@ type AppointmentRepository interface {
 	FindAll(ctx context.Context, pageInput p.PageInput) (p.Page[appoint.Appointment], error)
 	FindByEmployeeID(ctx context.Context, employeeID vo.EmployeeID, pageInput p.PageInput) (p.Page[appoint.Appointment], error)
 	FindByPetID(ctx context.Context, petID vo.PetID, pageInput p.PageInput) (p.Page[appoint.Appointment], error)
-	FindByCustomerID(ctx context.Context, customerID vo.CustomerID, pageInput p.PageInput) (p.Page[appoint.Appointment], error)
+	FindByCustomerID(ctx context.Context, customerID vo.CustomerID, petID *vo.PetID, pageInput p.PageInput) (p.Page[appoint.Appointment], error)
 	FindByDateRange(ctx context.Context, startDate, endDate time.Time, pageInput p.PageInput) (p.Page[appoint.Appointment], error)
 
 	ExistsByID(ctx context.Context, id vo.AppointmentID) (bool, error)

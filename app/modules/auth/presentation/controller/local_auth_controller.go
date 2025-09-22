@@ -45,7 +45,7 @@ func (ctrl *AuthController) CustomerSignup(c *gin.Context) {
 		return
 	}
 
-	response.Created(c, result, "User")
+	response.Created(c, result.ID(), "User")
 }
 
 func (ctrl *AuthController) EmployeeSignup(c *gin.Context) {

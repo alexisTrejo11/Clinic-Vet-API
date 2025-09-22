@@ -2,6 +2,7 @@
 package service
 
 import (
+	"clinic-vet-api/app/modules/core/domain/entity/employee"
 	u "clinic-vet-api/app/modules/core/domain/entity/user"
 	"clinic-vet-api/app/modules/core/domain/valueobject"
 	"clinic-vet-api/app/modules/core/repository"
@@ -40,6 +41,7 @@ func (s *UserSecurityService) ProcessUserPersistence(ctx context.Context, user *
 	}
 	user.SetHashedPassword(hashedPassword)
 
+	user.AssingStatus()
 	if err := s.userRepo.Save(ctx, user); err != nil {
 		return err
 	}
@@ -117,52 +119,18 @@ func (s *UserSecurityService) ValidateUserCredentials(ctx context.Context, email
 	return nil
 }
 
-func (s *UserSecurityService) ValidateEmployeeAccount(ctx context.Context, employeeID valueobject.EmployeeID) error {
-	var wg sync.WaitGroup
-	errorChannel := make(chan error, 3)
-	var validationErrors []error
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		exists, err := s.employeeRepo.ExistsByID(ctx, employeeID)
-		if err != nil {
-			errorChannel <- err
-			return
-		}
-		if !exists {
-			errorChannel <- errors.New("a valid employee is required to create an employee account")
-		}
-	}()
-
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		exists, err := s.userRepo.ExistsByEmployeeID(ctx, employeeID)
-		if err != nil {
-			errorChannel <- err
-			return
-		}
-		if exists {
-			errorChannel <- errors.New("employee already has an account")
-		}
-	}()
-
-	go func() {
-		wg.Wait()
-		close(errorChannel)
-	}()
-
-	for err := range errorChannel {
-		if err != nil {
-			validationErrors = append(validationErrors, err)
-		}
+func (s *UserSecurityService) ValidateEmployeeAccount(ctx context.Context, employeeID valueobject.EmployeeID) (*employee.Employee, error) {
+	employee, err := s.employeeRepo.FindByID(ctx, employeeID)
+	if err != nil {
+		return nil, err
 	}
 
-	if len(validationErrors) > 0 {
-		return validationErrors[0]
+	if employee.UserID() != nil {
+		return nil, apperror.ConflictError("employee", "employee already has an associated user account")
 	}
 
-	return nil
+	return &employee, nil
+
 }
 
 func (s *UserSecurityService) ValidateEmail(ctx context.Context, email valueobject.Email) error {

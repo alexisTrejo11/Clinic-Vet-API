@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"clinic-vet-api/app/modules/auth/application/command/result"
+	"clinic-vet-api/app/modules/core/domain/entity/employee"
 	u "clinic-vet-api/app/modules/core/domain/entity/user"
 	"clinic-vet-api/app/modules/core/domain/enum"
 	event "clinic-vet-api/app/modules/core/domain/event/user_event"
@@ -38,7 +39,8 @@ func (h *registerCommandHandler) StaffRegister(ctx context.Context, command Staf
 		return result.AuthFailure(ErrValidationFailed, err)
 	}
 
-	if err := h.userAuthService.ValidateEmployeeAccount(ctx, command.employeeID); err != nil {
+	employee, err := h.userAuthService.ValidateEmployeeAccount(ctx, command.employeeID)
+	if err != nil {
 		return result.AuthFailure(ErrValidationFailed, err)
 	}
 
@@ -51,7 +53,7 @@ func (h *registerCommandHandler) StaffRegister(ctx context.Context, command Staf
 		return result.AuthFailure(ErrUserCreationFailed, err)
 	}
 
-	go h.produceRegisterEvent(user)
+	go h.produceRegisterEvent(user, employee)
 
 	return result.AuthSuccess(nil, user.ID().String(), "user successfully created")
 }
@@ -72,11 +74,12 @@ func (command *StaffRegisterCommand) toEntity() (*u.User, error) {
 	return user, nil
 }
 
-func (h *registerCommandHandler) produceRegisterEvent(user *u.User) {
+func (h *registerCommandHandler) produceRegisterEvent(user *u.User, employee *employee.Employee) {
 	event := &event.UserRegisteredEvent{
-		UserID: user.ID(),
-		Email:  user.Email(),
-		Role:   user.Role(),
+		UserID:   user.ID(),
+		Email:    user.Email(),
+		Role:     user.Role(),
+		Employee: employee,
 	}
 	h.userEvent.Registered(*event)
 }

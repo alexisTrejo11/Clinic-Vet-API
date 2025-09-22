@@ -75,16 +75,24 @@ func (r *EmployeeRequestRegister) ToCommand() (registerCmd.StaffRegisterCommand,
 		errorMessages = append(errorMessages, "email: "+err.Error())
 	}
 
-	phoneVo, err := valueobject.NewPhoneNumber(r.PhoneNumber)
-	if err != nil {
-		errorMessages = append(errorMessages, "phone: "+err.Error())
+	if r.EmployeeID == 0 {
+		errorMessages = append(errorMessages, "employee_id must be a positive integer")
+	}
+
+	var phone *valueobject.PhoneNumber
+	if r.PhoneNumber != "" {
+		phoneVo, err := valueobject.NewPhoneNumber(r.PhoneNumber)
+		if err != nil {
+			errorMessages = append(errorMessages, "phone: "+err.Error())
+		}
+		phone = &phoneVo
 	}
 
 	if len(errorMessages) > 0 {
 		return registerCmd.StaffRegisterCommand{}, apperror.MappingError(errorMessages, "request", "SignupRequest", "userSingup")
 	}
 
-	cmd := registerCmd.NewStaffRegisterCommand(emailVo, r.Password, &phoneVo, valueobject.NewEmployeeID(r.EmployeeID))
+	cmd := registerCmd.NewStaffRegisterCommand(emailVo, r.Password, phone, valueobject.NewEmployeeID(r.EmployeeID))
 	return *cmd, nil
 }
 

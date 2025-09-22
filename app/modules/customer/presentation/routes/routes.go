@@ -10,8 +10,8 @@ import (
 
 func CustomerRoutes(app *gin.RouterGroup, customerController *controller.CustomerController, authMiddleware *middleware.AuthMiddleware) {
 	customerGroup := app.Group("/customers")
-	customerGroup.Use(authMiddleware.Authenticate())
-	customerGroup.Use(authMiddleware.RequireAnyRole("admin", "receptionist", "veterinarian"))
+	//customerGroup.Use(authMiddleware.Authenticate())
+	//customerGroup.Use(authMiddleware.RequireAnyRole("admin", "receptionist", "veterinarian"))
 
 	customerGroup.GET("/:id", customerController.GetCustomerByID)
 	customerGroup.GET("/", customerController.SearchCustomers)

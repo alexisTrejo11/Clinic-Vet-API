@@ -17,6 +17,7 @@ type EmployeeResult struct {
 	LaboralSchedule *[]ScheduleData
 	CreatedAt       time.Time
 	UpdatedAt       time.Time
+	UserID          *uint
 }
 
 type ScheduleData struct {
@@ -44,6 +45,11 @@ func ToResult(employee *employee.Employee) EmployeeResult {
 		}
 		scheduleResults = &scheduleResultsSlice
 	}
+	var userID *uint
+	if employee.UserID() != nil {
+		userIDobj := employee.UserID().Value()
+		userID = &userIDobj
+	}
 
 	return EmployeeResult{
 		ID:              employee.ID().Value(),
@@ -57,5 +63,6 @@ func ToResult(employee *employee.Employee) EmployeeResult {
 		IsActive:        employee.IsActive(),
 		CreatedAt:       employee.CreatedAt(),
 		UpdatedAt:       employee.UpdatedAt(),
+		UserID:          userID,
 	}
 }

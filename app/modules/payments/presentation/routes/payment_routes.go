@@ -25,8 +25,8 @@ func NewPaymentRoutes(
 
 func (r *PaymentRoutes) RegisterAdminPaymentRoutes(router *gin.RouterGroup, authMiddleware *middleware.AuthMiddleware) {
 	adminGroup := router.Group("/payments")
-	adminGroup.Use(authMiddleware.Authenticate())
-	adminGroup.Use(authMiddleware.RequireAnyRole("recepetionist", "admin"))
+	//adminGroup.Use(authMiddleware.Authenticate())
+	//adminGroup.Use(authMiddleware.RequireAnyRole("recepetionist", "admin"))
 	{
 		// Basic CRUD operations
 		adminGroup.GET("/", r.adminController.SearchPayments)

@@ -21,6 +21,19 @@ WHERE customer_id = $1
 AND deleted_at IS NULL
 ORDER BY created_at DESC LIMIT $2 OFFSET $3;
 
+-- name: FindAppointmentsByCustomerIDAndPetID :many
+SELECT * FROM appointments 
+WHERE customer_id = $1
+AND pet_id = $2
+AND deleted_at IS NULL
+ORDER BY created_at DESC LIMIT $3 OFFSET $4;
+
+-- name: CountAppointmentsByCustomerIDAndPetID :one
+SELECT COUNT(*) FROM appointments
+WHERE customer_id = $1
+AND pet_id = $2
+AND deleted_at IS NULL;
+
 -- name: CountAppointmentsByCustomerID :one
 SELECT COUNT(*) FROM appointments
 WHERE customer_id = $1

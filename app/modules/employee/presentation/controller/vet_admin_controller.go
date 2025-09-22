@@ -63,8 +63,9 @@ func (ctrl *EmployeeController) SearchEmployees(c *gin.Context) {
 		return
 	}
 
+	employeeResponse := dto.ToEmployeeResponseList(employeesPage.Items)
 	responseMetadata := gin.H{"pagination": employeesPage.Metadata, "requestParams": c.Request.URL.Query()}
-	response.SuccessWithMeta(c, employeesPage, "Employees retrieved successfully", responseMetadata)
+	response.SuccessWithMeta(c, employeeResponse, "Employees retrieved successfully", responseMetadata)
 }
 
 // @Summary Get a employee by ID
@@ -146,7 +147,7 @@ func (ctrl *EmployeeController) UpdateEmployee(c *gin.Context) {
 		return
 	}
 
-	var requestData *dto.UpdateEmployeeRequest
+	var requestData dto.UpdateEmployeeRequest
 	if err := ginUtils.BindAndValidateBody(c, &requestData, ctrl.validator); err != nil {
 		response.BadRequest(c, httpError.InvalidDataError(err))
 		return

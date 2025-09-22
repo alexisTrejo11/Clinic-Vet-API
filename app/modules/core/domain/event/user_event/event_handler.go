@@ -64,28 +64,16 @@ func (h *userEventHandler) handleCustomerRegistration(ctx context.Context, event
 
 	defer h.logProcessingTime(ctx, time.Now())
 
-	if event.PersonalData != nil {
-		customerID, err := h.service.CreateCustomer(ctx, event.UserID, *event.PersonalData)
-		if err != nil {
-			h.eventLog.LogOperationError(ctx, err, "Create customer failed")
-			return
-		}
-
-		h.eventLog.LogOperationSuccess(ctx, "Customer created",
-			zap.String("customer_id", customerID.String()))
-
-		if err := h.service.AttachCustomerToUser(ctx, event.UserID, customerID); err != nil {
-			h.eventLog.LogOperationError(ctx, err, "Attach customer failed",
-				zap.String("customer_id", customerID.String()))
-			return
-		}
-		h.eventLog.LogOperationSuccess(ctx, "Customer attached",
-			zap.String("customer_id", customerID.String()))
-	} else {
-		h.eventLog.LogOperationWarning(ctx, "No personal data provided for customer creation")
+	customerID, err := h.service.CreateCustomer(ctx, event.UserID, event.PersonalData)
+	if err != nil {
+		h.eventLog.LogOperationError(ctx, err, "Create customer failed")
+		return
 	}
 
-	if err := h.service.SendActivationEmail(ctx, event.Email, event.Name.FirstName); err != nil {
+	h.eventLog.LogOperationSuccess(ctx, "Customer profile created",
+		zap.String("customer_id", customerID.String()))
+
+	if err := h.service.SendActivationEmail(ctx, event.Email, event.PersonalData.Name.FirstName); err != nil {
 		h.eventLog.LogOperationWarning(ctx, "Send activation email failed",
 			zap.String("email", event.Email.String()),
 			zap.Error(err))
@@ -102,9 +90,18 @@ func (h *userEventHandler) handleEmployeeRegistration(ctx context.Context, event
 		zap.String("parent_event_id", getContextString(ctx, "event_id")),
 	)
 
+	if event.Employee == nil {
+		h.eventLog.LogOperationError(ctx, nil, "No employee  provided for employee user",
+			zap.String("user_id", event.UserID.String()),
+			zap.String("sub_operation", "employee_id_validation"))
+		return
+	}
+
+	h.service.AttachEmployeeToUser(ctx, event.UserID, *event.Employee)
+
 	defer h.logProcessingTime(ctx, time.Now())
 
-	if err := h.service.SendWelcomeEmail(ctx, event.Email, event.Name.FirstName); err != nil {
+	if err := h.service.SendWelcomeEmail(ctx, event.Email, event.PersonalData.Name.FirstName); err != nil {
 		h.eventLog.LogOperationWarning(ctx, "Send welcome email failed",
 			zap.String("email", event.Email.String()),
 			zap.Error(err))

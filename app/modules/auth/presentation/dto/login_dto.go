@@ -16,7 +16,3 @@ func (r *RequestLogin) ToCommand() *authCmd.LoginCommand {
 		Password:   r.Password,
 	}
 }
-
-type RefreshSessionRequest struct {
-	RefreshToken string `json:"refresh_token" binding:"required"`
-}

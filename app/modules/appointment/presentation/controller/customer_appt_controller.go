@@ -137,9 +137,9 @@ func (ctrl *CustomerAppointmetController) GetAppointmentsByPet(c *gin.Context) {
 		return
 	}
 
-	petID, err := ginUtils.ParseParamToUInt(c, "id")
+	petID, err := ginUtils.ParseParamToUInt(c, "petID")
 	if err != nil {
-		response.BadRequest(c, httpError.RequestURLParamError(err, "id", c.Param("id")))
+		response.BadRequest(c, httpError.RequestURLParamError(err, "petID", c.Param("petID")))
 		return
 	}
 

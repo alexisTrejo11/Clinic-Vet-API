@@ -38,6 +38,9 @@ func (r *SQLCUserRepository) FindByOAuthProvider(ctx context.Context, provider s
 
 func (r *SQLCUserRepository) FindByID(ctx context.Context, id valueobject.UserID) (u.User, error) {
 	sqlRow, err := r.queries.FindUserByID(ctx, int32(id.Value()))
+
+	fmt.Println("SQLRow:", sqlRow) // Debugging line to print the retrieved SQL row
+
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return u.User{}, r.notFoundError("id", id.String())

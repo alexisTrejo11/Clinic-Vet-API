@@ -60,7 +60,7 @@ func NewAuthMiddleware(jwtSecret string, queries *sqlc.Queries) *AuthMiddleware 
 
 func (am *AuthMiddleware) Authenticate() gin.HandlerFunc {
 	return gin.HandlerFunc(func(c *gin.Context) {
-		authHeader := c.GetHeader("Auhtorization")
+		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
 			response.Unauthorized(c, autherror.UnauthorizedError("auth token required"))
 			c.Abort()
@@ -70,7 +70,10 @@ func (am *AuthMiddleware) Authenticate() gin.HandlerFunc {
 		token, err := am.jwtService.ExtractToken(authHeader)
 		if err != nil {
 			response.Unauthorized(c, autherror.UnauthorizedError(err.Error()))
+			return
 		}
+
+		c.Set("jwtToken", token)
 
 		claim, err := am.jwtService.ValidateToken(token)
 		if err != nil {
@@ -90,6 +93,7 @@ func (am *AuthMiddleware) Authenticate() gin.HandlerFunc {
 		user, err := am.userRepo.FindByID(c.Request.Context(), valueobject.NewUserID(uint(idUInt)))
 		if err != nil {
 			response.ApplicationError(c, err)
+			return
 		}
 
 		c.Set("user", UserToUserContext(user))
@@ -123,7 +127,7 @@ func (am *AuthMiddleware) OptionalAuth() gin.HandlerFunc {
 			return
 		}
 
-		idUInt, err := strconv.ParseUint(claims.ID, 10, 0)
+		idUInt, err := strconv.ParseUint(claims.UserID, 10, 0)
 		if err != nil {
 			response.ServerError(c, err)
 			c.Abort()

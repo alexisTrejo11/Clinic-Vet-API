@@ -23,6 +23,7 @@ type AppointmentAPIConfig struct {
 	Queries        *sqlc.Queries
 	Validator      *validator.Validate
 	CustomerRepo   repository.CustomerRepository
+	EmployeeRepo   repository.EmployeeRepository
 	AuthMiddleware *middleware.AuthMiddleware
 }
 
@@ -71,7 +72,7 @@ func (f *AppointmentAPIBuilder) Build() error {
 
 	// Create buses
 	commandHandler := command.NewAppointmentCommandHandler(repository)
-	queryHandler := query.NewAppointmentQueryHandler(repository)
+	queryHandler := query.NewAppointmentQueryHandler(repository, f.config.CustomerRepo, f.config.EmployeeRepo)
 
 	commandBus := bus.NewAppointmentCommandBus(commandHandler)
 	queryBus := bus.NewAppointmentQueryBus(queryHandler)
@@ -128,6 +129,14 @@ func (f *AppointmentAPIBuilder) validateConfig() error {
 	if f.config.Validator == nil {
 		return fmt.Errorf("validator cannot be nil")
 	}
+	if f.config.CustomerRepo == nil {
+		return fmt.Errorf("customer repository cannot be nil")
+	}
+
+	if f.config.EmployeeRepo == nil {
+		return fmt.Errorf("employee repository cannot be nil")
+	}
+
 	if f.config.CustomerRepo == nil {
 		return fmt.Errorf("customer repository cannot be nil")
 	}

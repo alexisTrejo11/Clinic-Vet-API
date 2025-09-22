@@ -136,12 +136,18 @@ func BootstrapAPIModules(
 		return fmt.Errorf("failed to bootstrap payment API module: %w", err)
 	}
 
+	employeeRepo, err := vetModule.GetRepository()
+	if err != nil {
+		return fmt.Errorf("failed to get employee repository: %w", err)
+	}
+
 	apptModule := api.NewAppointmentAPIBuilder(&api.AppointmentAPIConfig{
 		Router:         routerGroup,
 		Validator:      validator,
 		Queries:        queries,
 		AuthMiddleware: authMiddleware,
 		CustomerRepo:   customerRepo,
+		EmployeeRepo:   employeeRepo,
 	})
 
 	if err := apptModule.Build(); err != nil {

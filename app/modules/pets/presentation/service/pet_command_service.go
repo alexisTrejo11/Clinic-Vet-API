@@ -54,7 +54,7 @@ func (s *PetControllerOperations) UpdatePet(c *gin.Context, customerID *uint, is
 
 	command := requestBodyData.ToCommand(petID, customerID, isActive)
 	result := s.bus.UpdatePet(c.Request.Context(), command)
-	if result.IsSuccess() {
+	if !result.IsSuccess() {
 		response.ApplicationError(c, result.Error())
 		return
 	}
@@ -71,7 +71,7 @@ func (s *PetControllerOperations) RestorePet(c *gin.Context) {
 
 	command := command.NewRestorePetCommand(petID)
 	result := s.bus.RestorePet(c.Request.Context(), *command)
-	if result.IsSuccess() {
+	if !result.IsSuccess() {
 		response.ApplicationError(c, result.Error())
 		return
 	}
@@ -88,7 +88,7 @@ func (s *PetControllerOperations) DeactivatePet(c *gin.Context, customerID *uint
 
 	command := command.NewDeactivatePetCommand(petID, customerID)
 	result := s.bus.DeactivatePet(c.Request.Context(), *command)
-	if result.IsSuccess() {
+	if !result.IsSuccess() {
 		response.ApplicationError(c, result.Error())
 		return
 	}
@@ -107,7 +107,7 @@ func (s *PetControllerOperations) DeletePet(c *gin.Context, customerID *uint, ha
 	// it's a customer request, so perform a soft delete
 	command := command.NewDeletePetCommand(petID, customerID, customerID != nil)
 	result := s.bus.DeletePet(c.Request.Context(), *command)
-	if result.IsSuccess() {
+	if !result.IsSuccess() {
 		response.ApplicationError(c, result.Error())
 		return
 	}

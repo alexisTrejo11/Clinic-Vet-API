@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 func sqlcRowToEntity(sql sqlc.Employee) (*employee.Employee, error) {
@@ -212,6 +213,10 @@ func entityToUpdateParams(employee *employee.Employee) *sqlc.UpdateEmployeeParam
 		Speciality:        models.VeterinarianSpeciality(employee.Specialty().String()),
 		YearsOfExperience: int32(employee.YearsExperience()),
 		IsActive:          employee.IsActive(),
+		UserID: pgtype.Int4{
+			Int32: int32(employee.UserID().Value()),
+			Valid: employee.UserID() != nil,
+		},
 	}
 }
 
@@ -224,5 +229,9 @@ func entityToCreateParams(employee *employee.Employee) *sqlc.CreateEmployeeParam
 		Speciality:        models.VeterinarianSpeciality(employee.Specialty().String()),
 		YearsOfExperience: int32(employee.YearsExperience()),
 		IsActive:          employee.IsActive(),
+		UserID: pgtype.Int4{
+			Int32: int32(employee.UserID().Value()),
+			Valid: employee.UserID() != nil,
+		},
 	}
 }

@@ -86,3 +86,11 @@ func (u *User) SetHashedPassword(hashedPassword string) {
 func (u *User) IsEmployee() bool {
 	return u.employeeID != nil && u.role.IsStaff()
 }
+
+func (u *User) AssingStatus() {
+	if u.role.IsStaff() {
+		u.status = enum.UserStatusActive
+	} else {
+		u.status = enum.UserStatusPending
+	}
+}

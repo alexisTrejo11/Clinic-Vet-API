@@ -17,7 +17,7 @@ func NewRefreshUserSessionCommand(refreshToken string) RefreshUserSessionCommand
 }
 
 func (h *authCommandHandler) RefreshUserSession(ctx context.Context, cmd RefreshUserSessionCommand) result.AuthCommandResult {
-	session, err := h.sessionRepo.GetByID(ctx, cmd.RefreshToken)
+	session, err := h.sessionRepo.GetByRefreshToken(ctx, cmd.RefreshToken)
 	if err != nil {
 		return result.AuthFailure("Session not found", err)
 	}
@@ -28,5 +28,5 @@ func (h *authCommandHandler) RefreshUserSession(ctx context.Context, cmd Refresh
 	}
 
 	response := result.GetSessionResponse(session, access)
-	return result.AuthSuccess(response, session.ID, "session successfully refreshed")
+	return result.AuthSuccess(response, session.RefreshToken[:3], "session successfully refreshed")
 }
