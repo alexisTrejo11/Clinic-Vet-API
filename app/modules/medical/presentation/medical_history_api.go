@@ -3,8 +3,8 @@ package medSessionAPI
 import (
 	"fmt"
 
-	"clinic-vet-api/app/core/repository"
 	"clinic-vet-api/app/middleware"
+	"clinic-vet-api/app/modules/core/repository"
 	medSessionCommand "clinic-vet-api/app/modules/medical/application/command"
 	"clinic-vet-api/app/modules/medical/application/query"
 	"clinic-vet-api/app/modules/medical/infrastructure/bus"

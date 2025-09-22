@@ -6,9 +6,9 @@ import (
 	"errors"
 	"fmt"
 
-	"clinic-vet-api/app/core/domain/entity/notification"
-	"clinic-vet-api/app/core/domain/valueobject"
-	"clinic-vet-api/app/core/repository"
+	"clinic-vet-api/app/modules/core/domain/entity/notification"
+	"clinic-vet-api/app/modules/core/domain/valueobject"
+	"clinic-vet-api/app/modules/core/repository"
 	"clinic-vet-api/app/shared/page"
 
 	"go.mongodb.org/mongo-driver/v2/bson"

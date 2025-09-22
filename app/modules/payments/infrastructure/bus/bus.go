@@ -1,6 +1,6 @@
 package bus
 
-import "clinic-vet-api/app/core/repository"
+import "clinic-vet-api/app/modules/core/repository"
 
 type PaymentBus struct {
 	CommandBus PaymentCommandBus

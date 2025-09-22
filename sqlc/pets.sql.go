@@ -11,18 +11,6 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-const countAllPets = `-- name: CountAllPets :one
-SELECT COUNT(*) FROM pets
-WHERE deleted_at IS NULL
-`
-
-func (q *Queries) CountAllPets(ctx context.Context) (int64, error) {
-	row := q.db.QueryRow(ctx, countAllPets)
-	var count int64
-	err := row.Scan(&count)
-	return count, err
-}
-
 const countPetsByCustomerID = `-- name: CountPetsByCustomerID :one
 SELECT COUNT(*) FROM pets
 WHERE customer_id = $1 AND deleted_at IS NULL
@@ -47,40 +35,6 @@ func (q *Queries) CountPetsBySpecies(ctx context.Context, species string) (int64
 	return count, err
 }
 
-const countPetsBySpecification = `-- name: CountPetsBySpecification :one
-SELECT COUNT(*) FROM pets
-WHERE deleted_at IS NULL
-AND ($1::text IS NULL OR name ILIKE '%' || $1 || '%')
-AND ($2::text IS NULL OR species = $2)
-AND ($3::text IS NULL OR breed = $3)
-AND ($4::int IS NULL OR customer_id = $4)
-AND ($5::bool IS NULL OR is_active = $5)
-AND ($6::bool IS NULL OR is_neutered = $6)
-`
-
-type CountPetsBySpecificationParams struct {
-	Column1 string
-	Column2 string
-	Column3 string
-	Column4 int32
-	Column5 bool
-	Column6 bool
-}
-
-func (q *Queries) CountPetsBySpecification(ctx context.Context, arg CountPetsBySpecificationParams) (int64, error) {
-	row := q.db.QueryRow(ctx, countPetsBySpecification,
-		arg.Column1,
-		arg.Column2,
-		arg.Column3,
-		arg.Column4,
-		arg.Column5,
-		arg.Column6,
-	)
-	var count int64
-	err := row.Scan(&count)
-	return count, err
-}
-
 const createPet = `-- name: CreatePet :one
 INSERT INTO pets (
     name, 
@@ -88,49 +42,36 @@ INSERT INTO pets (
     species, 
     breed, 
     age, 
-    gender, 
-    weight, 
+    gender,
     color, 
     microchip, 
+    tattoo,
+    blood_type,
     is_neutered, 
-    customer_id, 
-    allergies, 
-    current_medications, 
-    special_needs, 
+    customer_id,  
     is_active,
-    date_of_birth,
-    insurance_info,
-    veterinary_contact,
-    feeding_instructions,
-    behavioral_notes
+    created_at, 
+    updated_at
 ) VALUES (
-    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15,
-    $16, $17, $18, $19, $20
+    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 )
-RETURNING id, name, photo, species, breed, age, gender, weight, color, microchip, is_neutered, customer_id, allergies, current_medications, special_needs, is_active, date_of_birth, insurance_info, veterinary_contact, feeding_instructions, behavioral_notes, tattoo, last_vaccination_date, next_vaccination_date, last_deworming_date, next_deworming_date, last_vet_visit, next_vet_visit, blood_type, chip_implant_date, chip_implant_location, insurance_policy_number, insurance_company, emergency_contact_name, emergency_contact_phone, created_at, updated_at, deleted_at
+RETURNING id, name, photo, species, breed, date_of_birth, age, gender, color, microchip, tattoo, blood_type, is_neutered, customer_id, is_active, allergies, current_medications, special_needs, feeding_instructions, behavioral_notes, veterinary_contact, emergency_contact_name, emergency_contact_phone, created_at, updated_at, deleted_at
 `
 
 type CreatePetParams struct {
-	Name                string
-	Photo               pgtype.Text
-	Species             string
-	Breed               pgtype.Text
-	Age                 pgtype.Int2
-	Gender              pgtype.Text
-	Weight              pgtype.Numeric
-	Color               pgtype.Text
-	Microchip           pgtype.Text
-	IsNeutered          pgtype.Bool
-	CustomerID          int32
-	Allergies           pgtype.Text
-	CurrentMedications  pgtype.Text
-	SpecialNeeds        pgtype.Text
-	IsActive            bool
-	DateOfBirth         pgtype.Date
-	InsuranceInfo       pgtype.Text
-	VeterinaryContact   pgtype.Text
-	FeedingInstructions pgtype.Text
-	BehavioralNotes     pgtype.Text
+	Name       string
+	Photo      pgtype.Text
+	Species    string
+	Breed      pgtype.Text
+	Age        pgtype.Int2
+	Gender     pgtype.Text
+	Color      pgtype.Text
+	Microchip  pgtype.Text
+	Tattoo     pgtype.Text
+	BloodType  pgtype.Text
+	IsNeutered pgtype.Bool
+	CustomerID int32
+	IsActive   bool
 }
 
 func (q *Queries) CreatePet(ctx context.Context, arg CreatePetParams) (Pet, error) {
@@ -141,20 +82,13 @@ func (q *Queries) CreatePet(ctx context.Context, arg CreatePetParams) (Pet, erro
 		arg.Breed,
 		arg.Age,
 		arg.Gender,
-		arg.Weight,
 		arg.Color,
 		arg.Microchip,
+		arg.Tattoo,
+		arg.BloodType,
 		arg.IsNeutered,
 		arg.CustomerID,
-		arg.Allergies,
-		arg.CurrentMedications,
-		arg.SpecialNeeds,
 		arg.IsActive,
-		arg.DateOfBirth,
-		arg.InsuranceInfo,
-		arg.VeterinaryContact,
-		arg.FeedingInstructions,
-		arg.BehavioralNotes,
 	)
 	var i Pet
 	err := row.Scan(
@@ -163,34 +97,22 @@ func (q *Queries) CreatePet(ctx context.Context, arg CreatePetParams) (Pet, erro
 		&i.Photo,
 		&i.Species,
 		&i.Breed,
+		&i.DateOfBirth,
 		&i.Age,
 		&i.Gender,
-		&i.Weight,
 		&i.Color,
 		&i.Microchip,
+		&i.Tattoo,
+		&i.BloodType,
 		&i.IsNeutered,
 		&i.CustomerID,
+		&i.IsActive,
 		&i.Allergies,
 		&i.CurrentMedications,
 		&i.SpecialNeeds,
-		&i.IsActive,
-		&i.DateOfBirth,
-		&i.InsuranceInfo,
-		&i.VeterinaryContact,
 		&i.FeedingInstructions,
 		&i.BehavioralNotes,
-		&i.Tattoo,
-		&i.LastVaccinationDate,
-		&i.NextVaccinationDate,
-		&i.LastDewormingDate,
-		&i.NextDewormingDate,
-		&i.LastVetVisit,
-		&i.NextVetVisit,
-		&i.BloodType,
-		&i.ChipImplantDate,
-		&i.ChipImplantLocation,
-		&i.InsurancePolicyNumber,
-		&i.InsuranceCompany,
+		&i.VeterinaryContact,
 		&i.EmergencyContactName,
 		&i.EmergencyContactPhone,
 		&i.CreatedAt,
@@ -224,79 +146,8 @@ func (q *Queries) ExistsPetByMicrochip(ctx context.Context, microchip pgtype.Tex
 	return column_1, err
 }
 
-const findAllPets = `-- name: FindAllPets :many
-SELECT id, name, photo, species, breed, age, gender, weight, color, microchip, is_neutered, customer_id, allergies, current_medications, special_needs, is_active, date_of_birth, insurance_info, veterinary_contact, feeding_instructions, behavioral_notes, tattoo, last_vaccination_date, next_vaccination_date, last_deworming_date, next_deworming_date, last_vet_visit, next_vet_visit, blood_type, chip_implant_date, chip_implant_location, insurance_policy_number, insurance_company, emergency_contact_name, emergency_contact_phone, created_at, updated_at, deleted_at FROM pets
-WHERE deleted_at IS NULL
-ORDER BY created_at DESC
-LIMIT $1 OFFSET $2
-`
-
-type FindAllPetsParams struct {
-	Limit  int32
-	Offset int32
-}
-
-func (q *Queries) FindAllPets(ctx context.Context, arg FindAllPetsParams) ([]Pet, error) {
-	rows, err := q.db.Query(ctx, findAllPets, arg.Limit, arg.Offset)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []Pet
-	for rows.Next() {
-		var i Pet
-		if err := rows.Scan(
-			&i.ID,
-			&i.Name,
-			&i.Photo,
-			&i.Species,
-			&i.Breed,
-			&i.Age,
-			&i.Gender,
-			&i.Weight,
-			&i.Color,
-			&i.Microchip,
-			&i.IsNeutered,
-			&i.CustomerID,
-			&i.Allergies,
-			&i.CurrentMedications,
-			&i.SpecialNeeds,
-			&i.IsActive,
-			&i.DateOfBirth,
-			&i.InsuranceInfo,
-			&i.VeterinaryContact,
-			&i.FeedingInstructions,
-			&i.BehavioralNotes,
-			&i.Tattoo,
-			&i.LastVaccinationDate,
-			&i.NextVaccinationDate,
-			&i.LastDewormingDate,
-			&i.NextDewormingDate,
-			&i.LastVetVisit,
-			&i.NextVetVisit,
-			&i.BloodType,
-			&i.ChipImplantDate,
-			&i.ChipImplantLocation,
-			&i.InsurancePolicyNumber,
-			&i.InsuranceCompany,
-			&i.EmergencyContactName,
-			&i.EmergencyContactPhone,
-			&i.CreatedAt,
-			&i.UpdatedAt,
-			&i.DeletedAt,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
 const findPetByID = `-- name: FindPetByID :one
-SELECT id, name, photo, species, breed, age, gender, weight, color, microchip, is_neutered, customer_id, allergies, current_medications, special_needs, is_active, date_of_birth, insurance_info, veterinary_contact, feeding_instructions, behavioral_notes, tattoo, last_vaccination_date, next_vaccination_date, last_deworming_date, next_deworming_date, last_vet_visit, next_vet_visit, blood_type, chip_implant_date, chip_implant_location, insurance_policy_number, insurance_company, emergency_contact_name, emergency_contact_phone, created_at, updated_at, deleted_at FROM pets
+SELECT id, name, photo, species, breed, date_of_birth, age, gender, color, microchip, tattoo, blood_type, is_neutered, customer_id, is_active, allergies, current_medications, special_needs, feeding_instructions, behavioral_notes, veterinary_contact, emergency_contact_name, emergency_contact_phone, created_at, updated_at, deleted_at FROM pets
 WHERE id = $1 AND deleted_at IS NULL
 `
 
@@ -309,34 +160,22 @@ func (q *Queries) FindPetByID(ctx context.Context, id int32) (Pet, error) {
 		&i.Photo,
 		&i.Species,
 		&i.Breed,
+		&i.DateOfBirth,
 		&i.Age,
 		&i.Gender,
-		&i.Weight,
 		&i.Color,
 		&i.Microchip,
+		&i.Tattoo,
+		&i.BloodType,
 		&i.IsNeutered,
 		&i.CustomerID,
+		&i.IsActive,
 		&i.Allergies,
 		&i.CurrentMedications,
 		&i.SpecialNeeds,
-		&i.IsActive,
-		&i.DateOfBirth,
-		&i.InsuranceInfo,
-		&i.VeterinaryContact,
 		&i.FeedingInstructions,
 		&i.BehavioralNotes,
-		&i.Tattoo,
-		&i.LastVaccinationDate,
-		&i.NextVaccinationDate,
-		&i.LastDewormingDate,
-		&i.NextDewormingDate,
-		&i.LastVetVisit,
-		&i.NextVetVisit,
-		&i.BloodType,
-		&i.ChipImplantDate,
-		&i.ChipImplantLocation,
-		&i.InsurancePolicyNumber,
-		&i.InsuranceCompany,
+		&i.VeterinaryContact,
 		&i.EmergencyContactName,
 		&i.EmergencyContactPhone,
 		&i.CreatedAt,
@@ -347,7 +186,7 @@ func (q *Queries) FindPetByID(ctx context.Context, id int32) (Pet, error) {
 }
 
 const findPetByIDAndCustomerID = `-- name: FindPetByIDAndCustomerID :one
-SELECT id, name, photo, species, breed, age, gender, weight, color, microchip, is_neutered, customer_id, allergies, current_medications, special_needs, is_active, date_of_birth, insurance_info, veterinary_contact, feeding_instructions, behavioral_notes, tattoo, last_vaccination_date, next_vaccination_date, last_deworming_date, next_deworming_date, last_vet_visit, next_vet_visit, blood_type, chip_implant_date, chip_implant_location, insurance_policy_number, insurance_company, emergency_contact_name, emergency_contact_phone, created_at, updated_at, deleted_at FROM pets
+SELECT id, name, photo, species, breed, date_of_birth, age, gender, color, microchip, tattoo, blood_type, is_neutered, customer_id, is_active, allergies, current_medications, special_needs, feeding_instructions, behavioral_notes, veterinary_contact, emergency_contact_name, emergency_contact_phone, created_at, updated_at, deleted_at FROM pets
 WHERE id = $1 AND customer_id = $2 AND deleted_at IS NULL
 `
 
@@ -365,34 +204,22 @@ func (q *Queries) FindPetByIDAndCustomerID(ctx context.Context, arg FindPetByIDA
 		&i.Photo,
 		&i.Species,
 		&i.Breed,
+		&i.DateOfBirth,
 		&i.Age,
 		&i.Gender,
-		&i.Weight,
 		&i.Color,
 		&i.Microchip,
+		&i.Tattoo,
+		&i.BloodType,
 		&i.IsNeutered,
 		&i.CustomerID,
+		&i.IsActive,
 		&i.Allergies,
 		&i.CurrentMedications,
 		&i.SpecialNeeds,
-		&i.IsActive,
-		&i.DateOfBirth,
-		&i.InsuranceInfo,
-		&i.VeterinaryContact,
 		&i.FeedingInstructions,
 		&i.BehavioralNotes,
-		&i.Tattoo,
-		&i.LastVaccinationDate,
-		&i.NextVaccinationDate,
-		&i.LastDewormingDate,
-		&i.NextDewormingDate,
-		&i.LastVetVisit,
-		&i.NextVetVisit,
-		&i.BloodType,
-		&i.ChipImplantDate,
-		&i.ChipImplantLocation,
-		&i.InsurancePolicyNumber,
-		&i.InsuranceCompany,
+		&i.VeterinaryContact,
 		&i.EmergencyContactName,
 		&i.EmergencyContactPhone,
 		&i.CreatedAt,
@@ -403,7 +230,7 @@ func (q *Queries) FindPetByIDAndCustomerID(ctx context.Context, arg FindPetByIDA
 }
 
 const findPetsByCustomerID = `-- name: FindPetsByCustomerID :many
-SELECT id, name, photo, species, breed, age, gender, weight, color, microchip, is_neutered, customer_id, allergies, current_medications, special_needs, is_active, date_of_birth, insurance_info, veterinary_contact, feeding_instructions, behavioral_notes, tattoo, last_vaccination_date, next_vaccination_date, last_deworming_date, next_deworming_date, last_vet_visit, next_vet_visit, blood_type, chip_implant_date, chip_implant_location, insurance_policy_number, insurance_company, emergency_contact_name, emergency_contact_phone, created_at, updated_at, deleted_at FROM pets
+SELECT id, name, photo, species, breed, date_of_birth, age, gender, color, microchip, tattoo, blood_type, is_neutered, customer_id, is_active, allergies, current_medications, special_needs, feeding_instructions, behavioral_notes, veterinary_contact, emergency_contact_name, emergency_contact_phone, created_at, updated_at, deleted_at FROM pets
 WHERE customer_id = $1 AND deleted_at IS NULL
 ORDER BY created_at DESC
 LIMIT $2 OFFSET $3
@@ -430,34 +257,22 @@ func (q *Queries) FindPetsByCustomerID(ctx context.Context, arg FindPetsByCustom
 			&i.Photo,
 			&i.Species,
 			&i.Breed,
+			&i.DateOfBirth,
 			&i.Age,
 			&i.Gender,
-			&i.Weight,
 			&i.Color,
 			&i.Microchip,
+			&i.Tattoo,
+			&i.BloodType,
 			&i.IsNeutered,
 			&i.CustomerID,
+			&i.IsActive,
 			&i.Allergies,
 			&i.CurrentMedications,
 			&i.SpecialNeeds,
-			&i.IsActive,
-			&i.DateOfBirth,
-			&i.InsuranceInfo,
-			&i.VeterinaryContact,
 			&i.FeedingInstructions,
 			&i.BehavioralNotes,
-			&i.Tattoo,
-			&i.LastVaccinationDate,
-			&i.NextVaccinationDate,
-			&i.LastDewormingDate,
-			&i.NextDewormingDate,
-			&i.LastVetVisit,
-			&i.NextVetVisit,
-			&i.BloodType,
-			&i.ChipImplantDate,
-			&i.ChipImplantLocation,
-			&i.InsurancePolicyNumber,
-			&i.InsuranceCompany,
+			&i.VeterinaryContact,
 			&i.EmergencyContactName,
 			&i.EmergencyContactPhone,
 			&i.CreatedAt,
@@ -475,7 +290,7 @@ func (q *Queries) FindPetsByCustomerID(ctx context.Context, arg FindPetsByCustom
 }
 
 const findPetsBySpecies = `-- name: FindPetsBySpecies :many
-SELECT id, name, photo, species, breed, age, gender, weight, color, microchip, is_neutered, customer_id, allergies, current_medications, special_needs, is_active, date_of_birth, insurance_info, veterinary_contact, feeding_instructions, behavioral_notes, tattoo, last_vaccination_date, next_vaccination_date, last_deworming_date, next_deworming_date, last_vet_visit, next_vet_visit, blood_type, chip_implant_date, chip_implant_location, insurance_policy_number, insurance_company, emergency_contact_name, emergency_contact_phone, created_at, updated_at, deleted_at FROM pets
+SELECT id, name, photo, species, breed, date_of_birth, age, gender, color, microchip, tattoo, blood_type, is_neutered, customer_id, is_active, allergies, current_medications, special_needs, feeding_instructions, behavioral_notes, veterinary_contact, emergency_contact_name, emergency_contact_phone, created_at, updated_at, deleted_at FROM pets
 WHERE species = $1 AND deleted_at IS NULL
 ORDER BY created_at DESC
 LIMIT $2 OFFSET $3
@@ -502,126 +317,22 @@ func (q *Queries) FindPetsBySpecies(ctx context.Context, arg FindPetsBySpeciesPa
 			&i.Photo,
 			&i.Species,
 			&i.Breed,
+			&i.DateOfBirth,
 			&i.Age,
 			&i.Gender,
-			&i.Weight,
 			&i.Color,
 			&i.Microchip,
+			&i.Tattoo,
+			&i.BloodType,
 			&i.IsNeutered,
 			&i.CustomerID,
+			&i.IsActive,
 			&i.Allergies,
 			&i.CurrentMedications,
 			&i.SpecialNeeds,
-			&i.IsActive,
-			&i.DateOfBirth,
-			&i.InsuranceInfo,
-			&i.VeterinaryContact,
 			&i.FeedingInstructions,
 			&i.BehavioralNotes,
-			&i.Tattoo,
-			&i.LastVaccinationDate,
-			&i.NextVaccinationDate,
-			&i.LastDewormingDate,
-			&i.NextDewormingDate,
-			&i.LastVetVisit,
-			&i.NextVetVisit,
-			&i.BloodType,
-			&i.ChipImplantDate,
-			&i.ChipImplantLocation,
-			&i.InsurancePolicyNumber,
-			&i.InsuranceCompany,
-			&i.EmergencyContactName,
-			&i.EmergencyContactPhone,
-			&i.CreatedAt,
-			&i.UpdatedAt,
-			&i.DeletedAt,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const findPetsBySpecification = `-- name: FindPetsBySpecification :many
-SELECT id, name, photo, species, breed, age, gender, weight, color, microchip, is_neutered, customer_id, allergies, current_medications, special_needs, is_active, date_of_birth, insurance_info, veterinary_contact, feeding_instructions, behavioral_notes, tattoo, last_vaccination_date, next_vaccination_date, last_deworming_date, next_deworming_date, last_vet_visit, next_vet_visit, blood_type, chip_implant_date, chip_implant_location, insurance_policy_number, insurance_company, emergency_contact_name, emergency_contact_phone, created_at, updated_at, deleted_at FROM pets
-WHERE deleted_at IS NULL
-AND ($1::text IS NULL OR name ILIKE '%' || $1 || '%')
-AND ($2::text IS NULL OR species = $2)
-AND ($3::text IS NULL OR breed = $3)
-AND ($4::int IS NULL OR customer_id = $4)
-AND ($5::bool IS NULL OR is_active = $5)
-AND ($6::bool IS NULL OR is_neutered = $6)
-ORDER BY created_at DESC
-LIMIT $7 OFFSET $8
-`
-
-type FindPetsBySpecificationParams struct {
-	Column1 string
-	Column2 string
-	Column3 string
-	Column4 int32
-	Column5 bool
-	Column6 bool
-	Limit   int32
-	Offset  int32
-}
-
-func (q *Queries) FindPetsBySpecification(ctx context.Context, arg FindPetsBySpecificationParams) ([]Pet, error) {
-	rows, err := q.db.Query(ctx, findPetsBySpecification,
-		arg.Column1,
-		arg.Column2,
-		arg.Column3,
-		arg.Column4,
-		arg.Column5,
-		arg.Column6,
-		arg.Limit,
-		arg.Offset,
-	)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []Pet
-	for rows.Next() {
-		var i Pet
-		if err := rows.Scan(
-			&i.ID,
-			&i.Name,
-			&i.Photo,
-			&i.Species,
-			&i.Breed,
-			&i.Age,
-			&i.Gender,
-			&i.Weight,
-			&i.Color,
-			&i.Microchip,
-			&i.IsNeutered,
-			&i.CustomerID,
-			&i.Allergies,
-			&i.CurrentMedications,
-			&i.SpecialNeeds,
-			&i.IsActive,
-			&i.DateOfBirth,
-			&i.InsuranceInfo,
 			&i.VeterinaryContact,
-			&i.FeedingInstructions,
-			&i.BehavioralNotes,
-			&i.Tattoo,
-			&i.LastVaccinationDate,
-			&i.NextVaccinationDate,
-			&i.LastDewormingDate,
-			&i.NextDewormingDate,
-			&i.LastVetVisit,
-			&i.NextVetVisit,
-			&i.BloodType,
-			&i.ChipImplantDate,
-			&i.ChipImplantLocation,
-			&i.InsurancePolicyNumber,
-			&i.InsuranceCompany,
 			&i.EmergencyContactName,
 			&i.EmergencyContactPhone,
 			&i.CreatedAt,
@@ -644,6 +355,20 @@ DELETE FROM pets WHERE id = $1
 
 func (q *Queries) HardDeletePet(ctx context.Context, id int32) error {
 	_, err := q.db.Exec(ctx, hardDeletePet, id)
+	return err
+}
+
+const restorePet = `-- name: RestorePet :exec
+UPDATE pets
+SET 
+    deleted_at = NULL,
+    updated_at = CURRENT_TIMESTAMP,
+    is_active = TRUE
+WHERE id = $1
+`
+
+func (q *Queries) RestorePet(ctx context.Context, id int32) error {
+	_, err := q.db.Exec(ctx, restorePet, id)
 	return err
 }
 
@@ -670,47 +395,33 @@ SET
     breed = $5,
     age = $6,
     gender = $7,
-    weight = $8,
-    color = $9,
-    microchip = $10,
-    is_neutered = $11,
-    customer_id = $12,
-    allergies = $13,
-    current_medications = $14,
-    special_needs = $15,
-    is_active = $16,
-    date_of_birth = $17,
-    insurance_info = $18,
-    veterinary_contact = $19,
-    feeding_instructions = $20,
-    behavioral_notes = $21,
+    color = $8,
+    microchip = $9,
+    is_neutered = $10,
+    customer_id = $11,
+    tattoo = $12,
+    blood_type = $13,
+    is_active = $14,
     updated_at = CURRENT_TIMESTAMP
 WHERE id = $1 AND deleted_at IS NULL
-RETURNING id, name, photo, species, breed, age, gender, weight, color, microchip, is_neutered, customer_id, allergies, current_medications, special_needs, is_active, date_of_birth, insurance_info, veterinary_contact, feeding_instructions, behavioral_notes, tattoo, last_vaccination_date, next_vaccination_date, last_deworming_date, next_deworming_date, last_vet_visit, next_vet_visit, blood_type, chip_implant_date, chip_implant_location, insurance_policy_number, insurance_company, emergency_contact_name, emergency_contact_phone, created_at, updated_at, deleted_at
+RETURNING id, name, photo, species, breed, date_of_birth, age, gender, color, microchip, tattoo, blood_type, is_neutered, customer_id, is_active, allergies, current_medications, special_needs, feeding_instructions, behavioral_notes, veterinary_contact, emergency_contact_name, emergency_contact_phone, created_at, updated_at, deleted_at
 `
 
 type UpdatePetParams struct {
-	ID                  int32
-	Name                string
-	Photo               pgtype.Text
-	Species             string
-	Breed               pgtype.Text
-	Age                 pgtype.Int2
-	Gender              pgtype.Text
-	Weight              pgtype.Numeric
-	Color               pgtype.Text
-	Microchip           pgtype.Text
-	IsNeutered          pgtype.Bool
-	CustomerID          int32
-	Allergies           pgtype.Text
-	CurrentMedications  pgtype.Text
-	SpecialNeeds        pgtype.Text
-	IsActive            bool
-	DateOfBirth         pgtype.Date
-	InsuranceInfo       pgtype.Text
-	VeterinaryContact   pgtype.Text
-	FeedingInstructions pgtype.Text
-	BehavioralNotes     pgtype.Text
+	ID         int32
+	Name       string
+	Photo      pgtype.Text
+	Species    string
+	Breed      pgtype.Text
+	Age        pgtype.Int2
+	Gender     pgtype.Text
+	Color      pgtype.Text
+	Microchip  pgtype.Text
+	IsNeutered pgtype.Bool
+	CustomerID int32
+	Tattoo     pgtype.Text
+	BloodType  pgtype.Text
+	IsActive   bool
 }
 
 func (q *Queries) UpdatePet(ctx context.Context, arg UpdatePetParams) (Pet, error) {
@@ -722,20 +433,13 @@ func (q *Queries) UpdatePet(ctx context.Context, arg UpdatePetParams) (Pet, erro
 		arg.Breed,
 		arg.Age,
 		arg.Gender,
-		arg.Weight,
 		arg.Color,
 		arg.Microchip,
 		arg.IsNeutered,
 		arg.CustomerID,
-		arg.Allergies,
-		arg.CurrentMedications,
-		arg.SpecialNeeds,
+		arg.Tattoo,
+		arg.BloodType,
 		arg.IsActive,
-		arg.DateOfBirth,
-		arg.InsuranceInfo,
-		arg.VeterinaryContact,
-		arg.FeedingInstructions,
-		arg.BehavioralNotes,
 	)
 	var i Pet
 	err := row.Scan(
@@ -744,34 +448,22 @@ func (q *Queries) UpdatePet(ctx context.Context, arg UpdatePetParams) (Pet, erro
 		&i.Photo,
 		&i.Species,
 		&i.Breed,
+		&i.DateOfBirth,
 		&i.Age,
 		&i.Gender,
-		&i.Weight,
 		&i.Color,
 		&i.Microchip,
+		&i.Tattoo,
+		&i.BloodType,
 		&i.IsNeutered,
 		&i.CustomerID,
+		&i.IsActive,
 		&i.Allergies,
 		&i.CurrentMedications,
 		&i.SpecialNeeds,
-		&i.IsActive,
-		&i.DateOfBirth,
-		&i.InsuranceInfo,
-		&i.VeterinaryContact,
 		&i.FeedingInstructions,
 		&i.BehavioralNotes,
-		&i.Tattoo,
-		&i.LastVaccinationDate,
-		&i.NextVaccinationDate,
-		&i.LastDewormingDate,
-		&i.NextDewormingDate,
-		&i.LastVetVisit,
-		&i.NextVetVisit,
-		&i.BloodType,
-		&i.ChipImplantDate,
-		&i.ChipImplantLocation,
-		&i.InsurancePolicyNumber,
-		&i.InsuranceCompany,
+		&i.VeterinaryContact,
 		&i.EmergencyContactName,
 		&i.EmergencyContactPhone,
 		&i.CreatedAt,

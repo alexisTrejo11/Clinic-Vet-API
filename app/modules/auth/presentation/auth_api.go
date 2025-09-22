@@ -1,16 +1,18 @@
 package api
 
 import (
-	event "clinic-vet-api/app/core/domain/event/user_event"
-	"clinic-vet-api/app/core/repository"
-	"clinic-vet-api/app/core/service"
 	"clinic-vet-api/app/middleware"
 	"clinic-vet-api/app/modules/auth/application/command"
-	"clinic-vet-api/app/modules/auth/infrastructure/bus"
+	"clinic-vet-api/app/modules/auth/application/command/authentication"
+	"clinic-vet-api/app/modules/auth/application/command/register"
+	sesionCmd "clinic-vet-api/app/modules/auth/application/command/session"
 	"clinic-vet-api/app/modules/auth/infrastructure/jwt"
 	repositoryimpl "clinic-vet-api/app/modules/auth/infrastructure/repository"
 	"clinic-vet-api/app/modules/auth/presentation/controller"
 	"clinic-vet-api/app/modules/auth/presentation/routes"
+	event "clinic-vet-api/app/modules/core/domain/event/user_event"
+	"clinic-vet-api/app/modules/core/repository"
+	"clinic-vet-api/app/modules/core/service"
 	userPersistence "clinic-vet-api/app/modules/users/infrastructure/repository"
 	"clinic-vet-api/app/shared/password"
 	"clinic-vet-api/sqlc"
@@ -43,8 +45,11 @@ func SetupAuthModule(
 	eventService := service.NewUserAccountService(userRepo, profileRepo, customerRepo, employeeRepo, emailService)
 	userEventProducer := event.NewUserEventHandler(eventService)
 
-	commandHandler := command.NewAuthCommandHandler(userRepo, *security_service, session, jwtService, passwordEncoder, userEventProducer)
-	authCMDBus := bus.NewAuthBus(commandHandler)
-	authController := controller.NewAuthController(validator, authCMDBus)
+	registerHandler := register.NewRegisterCommandHandler(userRepo, passwordEncoder, userEventProducer, *security_service)
+	loginHandler := authentication.NewLoginCommandHandler(userRepo, *security_service, session, jwtService)
+	sessionHandler := sesionCmd.NewSessionCommandHandler(userRepo, session, jwtService)
+
+	cmdBus := command.NewAuthCommandBus(loginHandler, registerHandler, sessionHandler)
+	authController := controller.NewAuthController(validator, cmdBus)
 	routes.AuthRoutes(r, *authController, authMiddle)
 }

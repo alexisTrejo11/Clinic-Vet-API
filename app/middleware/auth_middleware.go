@@ -2,11 +2,11 @@
 package middleware
 
 import (
-	"clinic-vet-api/app/core/domain/entity/user"
-	"clinic-vet-api/app/core/domain/valueobject"
-	"clinic-vet-api/app/core/repository"
 	"clinic-vet-api/app/modules/auth/application/jwt"
 	jwtImpl "clinic-vet-api/app/modules/auth/infrastructure/jwt"
+	"clinic-vet-api/app/modules/core/domain/entity/user"
+	"clinic-vet-api/app/modules/core/domain/valueobject"
+	"clinic-vet-api/app/modules/core/repository"
 	repositoryimpl "clinic-vet-api/app/modules/users/infrastructure/repository"
 	"clinic-vet-api/app/shared/response"
 	"clinic-vet-api/sqlc"
@@ -115,6 +115,8 @@ func (am *AuthMiddleware) OptionalAuth() gin.HandlerFunc {
 			return
 		}
 
+		c.Set("jwtToken", token)
+
 		claims, err := am.jwtService.ValidateToken(token)
 		if err != nil {
 			c.Next()
@@ -131,6 +133,7 @@ func (am *AuthMiddleware) OptionalAuth() gin.HandlerFunc {
 		user, err := am.userRepo.FindByID(context.Background(), valueobject.NewUserID(uint(idUInt)))
 		if err != nil {
 			response.ApplicationError(c, err)
+			return
 		}
 
 		c.Set("user", UserToUserContext(user))

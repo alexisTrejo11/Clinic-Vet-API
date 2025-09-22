@@ -2,11 +2,11 @@
 package repository
 
 import (
-	"clinic-vet-api/app/core/domain/entity/pet"
-	"clinic-vet-api/app/core/domain/enum"
-	"clinic-vet-api/app/core/domain/specification"
-	"clinic-vet-api/app/core/domain/valueobject"
-	"clinic-vet-api/app/core/repository"
+	"clinic-vet-api/app/modules/core/domain/entity/pet"
+	"clinic-vet-api/app/modules/core/domain/enum"
+	"clinic-vet-api/app/modules/core/domain/specification"
+	"clinic-vet-api/app/modules/core/domain/valueobject"
+	"clinic-vet-api/app/modules/core/repository"
 	"clinic-vet-api/app/shared/page"
 	"clinic-vet-api/sqlc"
 	"context"
@@ -160,7 +160,10 @@ func (r *SqlcPetRepository) Save(ctx context.Context, pet pet.Pet) (pet.Pet, err
 	return r.update(ctx, pet)
 }
 
-func (r *SqlcPetRepository) Delete(ctx context.Context, petID valueobject.PetID) error {
+func (r *SqlcPetRepository) Delete(ctx context.Context, petID valueobject.PetID, isHard bool) error {
+	if isHard {
+		return r.hardDelete(ctx, petID)
+	}
 	return r.softDelete(ctx, petID)
 }
 
@@ -204,6 +207,10 @@ func (r *SqlcPetRepository) update(ctx context.Context, entity pet.Pet) (pet.Pet
 	}
 
 	return *petEntity, nil
+}
+
+func (r *SqlcPetRepository) Restore(ctx context.Context, petID valueobject.PetID) error {
+	return nil
 }
 
 func (r *SqlcPetRepository) softDelete(ctx context.Context, petID valueobject.PetID) error {

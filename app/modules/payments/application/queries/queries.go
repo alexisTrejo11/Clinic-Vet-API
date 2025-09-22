@@ -4,9 +4,9 @@ import (
 	"context"
 	"time"
 
-	"clinic-vet-api/app/core/domain/enum"
-	"clinic-vet-api/app/core/domain/specification"
-	"clinic-vet-api/app/core/domain/valueobject"
+	"clinic-vet-api/app/modules/core/domain/enum"
+	"clinic-vet-api/app/modules/core/domain/specification"
+	"clinic-vet-api/app/modules/core/domain/valueobject"
 	apperror "clinic-vet-api/app/shared/error/application"
 	"clinic-vet-api/app/shared/page"
 )

@@ -70,6 +70,25 @@ func UnauthorizedCTXError() error {
 	return UnauthorizedError("user not present in context")
 }
 
+func MissingRefreshTokenError() error {
+	log.Warn(
+		"Missing refresh token in request headers",
+		[]zap.Field{
+			zap.String("error_code", "MISSING_REFRESH_TOKEN"),
+			zap.String("error_type", "authentication"),
+			zap.String("component", "auth"),
+			zap.String("severity", "low"),
+		}...,
+	)
+
+	return &apperror.BaseApplicationError{
+		Code:       "MISSING_REFRESH_TOKEN",
+		Type:       "authentication",
+		Message:    "missing refresh token in request headers",
+		StatusCode: http.StatusBadRequest,
+	}
+}
+
 func InvalidCredentialsError(err error, identifier string) error {
 	log.Warn(
 		"Invalid credentials provided during authentication",

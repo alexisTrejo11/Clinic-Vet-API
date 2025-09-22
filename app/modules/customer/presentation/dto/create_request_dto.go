@@ -2,7 +2,7 @@
 package dto
 
 import (
-	"clinic-vet-api/app/core/domain/enum"
+	"clinic-vet-api/app/modules/core/domain/enum"
 	"clinic-vet-api/app/modules/customer/application/command"
 	"context"
 	"time"

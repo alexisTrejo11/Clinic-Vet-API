@@ -1,7 +1,7 @@
 package query
 
 import (
-	"clinic-vet-api/app/core/domain/entity/pet"
+	"clinic-vet-api/app/modules/core/domain/entity/pet"
 	"time"
 )
 
@@ -28,24 +28,20 @@ type PetResult struct {
 
 func entityToResult(p pet.Pet) PetResult {
 	return PetResult{
-		ID:                 p.ID().Value(),
-		Name:               p.Name(),
-		Photo:              p.Photo(),
-		Species:            p.Species().DisplayName(),
-		Breed:              p.Breed(),
-		Age:                p.Age(),
-		Weight:             p.Weight(),
-		Color:              p.Color(),
-		Microchip:          p.Microchip(),
-		IsNeutered:         p.IsNeutered(),
-		PetSpecies:         p.Species().String(),
-		CustomerID:         p.CustomerID().Value(),
-		Allergies:          p.Allergies(),
-		CurrentMedications: p.CurrentMedications(),
-		SpecialNeeds:       p.SpecialNeeds(),
-		IsActive:           p.IsActive(),
-		CreatedAt:          p.CreatedAt(),
-		UpdatedAt:          p.UpdatedAt(),
+		ID:         p.ID().Value(),
+		Name:       p.Name(),
+		Photo:      p.Photo(),
+		Species:    p.Species().DisplayName(),
+		Breed:      p.Breed(),
+		Age:        p.Age(),
+		Color:      p.Color(),
+		Microchip:  p.Microchip(),
+		IsNeutered: p.IsNeutered(),
+		PetSpecies: p.Species().String(),
+		CustomerID: p.CustomerID().Value(),
+		IsActive:   p.IsActive(),
+		CreatedAt:  p.CreatedAt(),
+		UpdatedAt:  p.UpdatedAt(),
 	}
 }
 

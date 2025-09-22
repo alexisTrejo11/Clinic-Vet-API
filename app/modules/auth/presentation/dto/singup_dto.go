@@ -1,10 +1,9 @@
 package dto
 
 import (
-	"clinic-vet-api/app/core/domain/enum"
-	"clinic-vet-api/app/core/domain/valueobject"
-	"clinic-vet-api/app/modules/auth/application/command"
-	"context"
+	registerCmd "clinic-vet-api/app/modules/auth/application/command/register"
+	"clinic-vet-api/app/modules/core/domain/enum"
+	"clinic-vet-api/app/modules/core/domain/valueobject"
 	"time"
 
 	apperror "clinic-vet-api/app/shared/error/application"
@@ -69,7 +68,7 @@ type CustomerRequestSingup struct {
 	Location string `json:"location" example:"123 Main St, City, State"`
 }
 
-func (r *EmployeeRequestRegister) ToCommand(ctx context.Context) (command.EmployeeRegisterCommand, error) {
+func (r *EmployeeRequestRegister) ToCommand() (registerCmd.StaffRegisterCommand, error) {
 	errorMessages := make([]string, 0)
 	emailVo, err := valueobject.NewEmail(r.Email)
 	if err != nil {
@@ -82,14 +81,14 @@ func (r *EmployeeRequestRegister) ToCommand(ctx context.Context) (command.Employ
 	}
 
 	if len(errorMessages) > 0 {
-		return command.EmployeeRegisterCommand{}, apperror.MappingError(errorMessages, "request", "SignupRequest", "userSingup")
+		return registerCmd.StaffRegisterCommand{}, apperror.MappingError(errorMessages, "request", "SignupRequest", "userSingup")
 	}
 
-	cmd := command.NewEmployeeRegisterCommand(ctx, emailVo, r.Password, &phoneVo, valueobject.NewEmployeeID(r.EmployeeID))
+	cmd := registerCmd.NewStaffRegisterCommand(emailVo, r.Password, &phoneVo, valueobject.NewEmployeeID(r.EmployeeID))
 	return *cmd, nil
 }
 
-func (r *CustomerRequestSingup) ToCommand(ctx context.Context) (command.CustomerRegisterCommand, error) {
+func (r *CustomerRequestSingup) ToCommand() (registerCmd.CustomerRegisterCommand, error) {
 	errorMessages := make([]string, 0)
 	gender, err := enum.ParseGender(r.Gender)
 	if err != nil {
@@ -111,10 +110,10 @@ func (r *CustomerRequestSingup) ToCommand(ctx context.Context) (command.Customer
 	}
 
 	if len(errorMessages) > 0 {
-		return command.CustomerRegisterCommand{}, apperror.MappingError(errorMessages, "request", "SignupRequest", "userSingup")
+		return registerCmd.CustomerRegisterCommand{}, apperror.MappingError(errorMessages, "request", "SignupRequest", "userSingup")
 	}
 
-	cmd := &command.CustomerRegisterCommand{
+	cmd := &registerCmd.CustomerRegisterCommand{
 		Email:       emailVo,
 		Password:    r.Password,
 		PhoneNumber: &phoneVo,
@@ -123,7 +122,6 @@ func (r *CustomerRequestSingup) ToCommand(ctx context.Context) (command.Customer
 		Gender:      gender,
 		DateOfBirth: r.DateOfBirth,
 		Role:        enum.UserRoleCustomer,
-		CTX:         ctx,
 	}
 	return *cmd, nil
 }

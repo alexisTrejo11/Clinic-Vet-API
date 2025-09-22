@@ -1,9 +1,9 @@
 package command
 
 import (
-	"clinic-vet-api/app/core/domain/entity/pet"
-	"clinic-vet-api/app/core/domain/enum"
-	"clinic-vet-api/app/core/domain/valueobject"
+	"clinic-vet-api/app/modules/core/domain/entity/pet"
+	"clinic-vet-api/app/modules/core/domain/enum"
+	"clinic-vet-api/app/modules/core/domain/valueobject"
 	"clinic-vet-api/app/shared/cqrs"
 	apperror "clinic-vet-api/app/shared/error/application"
 	"context"
@@ -11,21 +11,19 @@ import (
 )
 
 type CreatePetCommand struct {
-	Name               string
-	Photo              *string
-	Species            string
-	Breed              *string
-	Age                *int
-	Gender             *string
-	Weight             *float64
-	Color              *string
-	Microchip          *string
-	IsNeutered         *bool
-	CustomerID         valueobject.CustomerID
-	Allergies          *string
-	CurrentMedications *string
-	SpecialNeeds       *string
-	IsActive           bool
+	Name       string
+	Photo      *string
+	Species    string
+	Breed      *string
+	Age        *int
+	Gender     *string
+	Color      *string
+	Microchip  *string
+	Tattoo     *string
+	BloodType  *string
+	IsNeutered *bool
+	CustomerID valueobject.CustomerID
+	IsActive   bool
 }
 
 func CustomerNotFoundError(customerID valueobject.CustomerID) error {
@@ -94,8 +92,12 @@ func (cmd *CreatePetCommand) ToEntity() (pet.Pet, error) {
 		opts = append(opts, pet.WithGender(&gender))
 	}
 
-	if cmd.Weight != nil {
-		opts = append(opts, pet.WithWeight(cmd.Weight))
+	if cmd.Tattoo != nil {
+		opts = append(opts, pet.WithTattoo(cmd.Tattoo))
+	}
+
+	if cmd.BloodType != nil {
+		opts = append(opts, pet.WithBloodType(cmd.BloodType))
 	}
 
 	if cmd.Color != nil {
@@ -108,18 +110,6 @@ func (cmd *CreatePetCommand) ToEntity() (pet.Pet, error) {
 
 	if cmd.IsNeutered != nil {
 		opts = append(opts, pet.WithIsNeutered(cmd.IsNeutered))
-	}
-
-	if cmd.Allergies != nil {
-		opts = append(opts, pet.WithAllergies(cmd.Allergies))
-	}
-
-	if cmd.CurrentMedications != nil {
-		opts = append(opts, pet.WithCurrentMedications(cmd.CurrentMedications))
-	}
-
-	if cmd.SpecialNeeds != nil {
-		opts = append(opts, pet.WithSpecialNeeds(cmd.SpecialNeeds))
 	}
 
 	petEntity, err := pet.CreatePet(cmd.CustomerID, opts...)

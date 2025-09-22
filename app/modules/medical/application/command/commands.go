@@ -2,11 +2,10 @@
 package command
 
 import (
+	"clinic-vet-api/app/modules/core/domain/valueobject"
 	"context"
 	"errors"
 	"time"
-
-	"clinic-vet-api/app/core/domain/valueobject"
 )
 
 type CreateMedSessionCommand struct {

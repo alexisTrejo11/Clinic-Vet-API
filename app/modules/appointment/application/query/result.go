@@ -4,9 +4,9 @@ package query
 import (
 	"time"
 
-	"clinic-vet-api/app/core/domain/entity/appointment"
-	"clinic-vet-api/app/core/domain/enum"
-	"clinic-vet-api/app/core/domain/valueobject"
+	"clinic-vet-api/app/modules/core/domain/entity/appointment"
+	"clinic-vet-api/app/modules/core/domain/enum"
+	"clinic-vet-api/app/modules/core/domain/valueobject"
 )
 
 type ApptResult struct {

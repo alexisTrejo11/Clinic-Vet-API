@@ -1,7 +1,7 @@
 package command
 
 import (
-	"clinic-vet-api/app/core/domain/entity/payment"
+	"clinic-vet-api/app/modules/core/domain/entity/payment"
 	apperror "clinic-vet-api/app/shared/error/application"
 )
 

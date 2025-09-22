@@ -69,74 +69,129 @@ CREATE TABLE IF NOT EXISTS pets (
     photo TEXT,
     species VARCHAR(100) NOT NULL,
     breed VARCHAR(100),
-    age SMALLINT,
-    gender VARCHAR(20) CHECK (gender IN ('male', 'female', 'unknown')),
-    weight NUMERIC(5, 2),
+    date_of_birth DATE,
+    age SMALLINT GENERATED ALWAYS AS (
+        DATE_PART('year', AGE(CURRENT_DATE, date_of_birth))
+    ) STORED,
+    gender VARCHAR(20) CHECK (gender IN ('male', 'female', 'unknown', 'other')),
     color VARCHAR(50),
     microchip VARCHAR(50) UNIQUE,
+    tattoo VARCHAR(50),
+    blood_type VARCHAR(10),
     is_neutered BOOLEAN DEFAULT FALSE,
     customer_id INTEGER NOT NULL,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    
+    -- Campos de información general
     allergies TEXT,
     current_medications TEXT,
     special_needs TEXT,
-    is_active BOOLEAN NOT NULL DEFAULT TRUE,
-    
-    date_of_birth DATE,
-    insurance_info TEXT,
-    veterinary_contact TEXT,
     feeding_instructions TEXT,
     behavioral_notes TEXT,
-    tattoo VARCHAR(50),
-    last_vaccination_date DATE,
-    next_vaccination_date DATE,
-    last_deworming_date DATE,
-    next_deworming_date DATE,
-    last_vet_visit DATE,
-    next_vet_visit DATE,
-    blood_type VARCHAR(10),
-    chip_implant_date DATE,
-    chip_implant_location VARCHAR(100),
-    insurance_policy_number VARCHAR(100),
-    insurance_company VARCHAR(100),
+    veterinary_contact TEXT,
     emergency_contact_name VARCHAR(255),
     emergency_contact_phone VARCHAR(20),
     
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP WITH TIME ZONE NULL,
+    -- Auditoría
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMPTZ NULL,
     
     FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE,
     
-    CONSTRAINT chk_weight_positive CHECK (weight IS NULL OR weight > 0),
-    CONSTRAINT chk_age_positive CHECK (age IS NULL OR age >= 0),
     CONSTRAINT chk_gender_valid CHECK (gender IN ('male', 'female', 'unknown', 'other'))
 );
 
--- Indexes
-CREATE INDEX IF NOT EXISTS idx_pets_customer_id ON pets(customer_id);
-CREATE INDEX IF NOT EXISTS idx_pets_species ON pets(species);
-CREATE INDEX IF NOT EXISTS idx_pets_breed ON pets(breed);
-CREATE INDEX IF NOT EXISTS idx_pets_is_active ON pets(is_active);
-CREATE INDEX IF NOT EXISTS idx_pets_is_neutered ON pets(is_neutered);
-CREATE INDEX IF NOT EXISTS idx_pets_gender ON pets(gender);
-CREATE INDEX IF NOT EXISTS idx_pets_name ON pets(name);
-CREATE INDEX IF NOT EXISTS idx_pets_microchip ON pets(microchip);
-CREATE INDEX IF NOT EXISTS idx_pets_date_of_birth ON pets(date_of_birth);
-CREATE INDEX IF NOT EXISTS idx_pets_last_vet_visit ON pets(last_vet_visit);
-CREATE INDEX IF NOT EXISTS idx_pets_next_vet_visit ON pets(next_vet_visit);
-CREATE INDEX IF NOT EXISTS idx_pets_created_at ON pets(created_at);
-CREATE INDEX IF NOT EXISTS idx_pets_deleted_at ON pets(deleted_at) WHERE deleted_at IS NULL;
+CREATE TABLE IF NOT EXISTS pet_veterinary_contacts (
+    id SERIAL PRIMARY KEY,
+    pet_id INT NOT NULL,
+    clinic_name VARCHAR(255) NOT NULL,
+    phone VARCHAR(20),
+    address TEXT,
+    is_primary BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (pet_id) REFERENCES pets(id) ON DELETE CASCADE
+);
 
-CREATE INDEX IF NOT EXISTS idx_pets_species_breed ON pets(species, breed);
-CREATE INDEX IF NOT EXISTS idx_pets_customer_active ON pets(customer_id, is_active);
-CREATE INDEX IF NOT EXISTS idx_pets_vaccination_dates ON pets(last_vaccination_date, next_vaccination_date);
-CREATE INDEX IF NOT EXISTS idx_pets_deworming_dates ON pets(last_deworming_date, next_deworming_date);
+CREATE TABLE IF NOT EXISTS pet_emergency_contacts (
+    id SERIAL PRIMARY KEY,
+    pet_id INT NOT NULL,
+    contact_name VARCHAR(255) NOT NULL,
+    phone VARCHAR(20) NOT NULL,
+    relationship VARCHAR(100),
+    is_primary BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (pet_id) REFERENCES pets(id) ON DELETE CASCADE
+);
 
-CREATE UNIQUE INDEX IF NOT EXISTS uq_pets_microchip ON pets(microchip) WHERE microchip IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_pets_active_filter ON pets(id) WHERE is_active = TRUE AND deleted_at IS NULL;
-CREATE INDEX IF NOT EXISTS idx_pets_vet_visit_dates ON pets(last_vet_visit, next_vet_visit) WHERE last_vet_visit IS NOT NULL OR next_vet_visit IS NOT NULL;
+CREATE TABLE IF NOT EXISTS pet_feeding_instructions (
+    id SERIAL PRIMARY KEY,
+    pet_id INT NOT NULL,
+    food_brand VARCHAR(255),
+    food_type VARCHAR(100), -- "seco", "húmedo", "casero"
+    amount_per_serving VARCHAR(100), -- "1 taza", "200g"
+    frequency VARCHAR(100), -- "2 veces al día"
+    special_instructions TEXT,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (pet_id) REFERENCES pets(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS pet_behavioral_notes (
+    id SERIAL PRIMARY KEY,
+    pet_id INT NOT NULL,
+    note TEXT NOT NULL,
+    noted_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    noted_by INT, -- employee_id or customer_id
+    FOREIGN KEY (pet_id) REFERENCES pets(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS pet_vaccinations (
+    id SERIAL PRIMARY KEY,
+    pet_id INT NOT NULL,
+    vaccine_name VARCHAR(255) NOT NULL,
+    administered_date DATE NOT NULL,
+    next_due_date DATE,
+    administered_by INT, -- employee_id
+    notes TEXT,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (pet_id) REFERENCES pets(id) ON DELETE CASCADE,
+    FOREIGN KEY (administered_by) REFERENCES employees(id) ON DELETE SET NULL
+);
+
+CREATE TABLE IF NOT EXISTS pet_deworming (
+    id SERIAL PRIMARY KEY,
+    pet_id INT NOT NULL,
+    medication_name VARCHAR(255) NOT NULL,
+    administered_date DATE NOT NULL,
+    next_due_date DATE,
+    administered_by INT, -- employee_id
+    notes TEXT,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (pet_id) REFERENCES pets(id) ON DELETE CASCADE,
+    FOREIGN KEY (administered_by) REFERENCES employees(id) ON DELETE SET NULL
+);
 
 
+
+
+-- Tabla para implante de chip
+CREATE TABLE IF NOT EXISTS pet_chip_implants (
+    id SERIAL PRIMARY KEY,
+    pet_id INT NOT NULL,
+    implant_date DATE NOT NULL,
+    implant_location VARCHAR(100),
+    chip_number VARCHAR(50) UNIQUE,
+    implanted_by INT, -- employee_id
+    notes TEXT,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (pet_id) REFERENCES pets(id) ON DELETE CASCADE,
+    FOREIGN KEY (implanted_by) REFERENCES employees(id) ON DELETE SET NULL
+);
+
+
+-- Create User Table
 CREATE TABLE IF NOT EXISTS employees (
     id SERIAL PRIMARY KEY,
     first_name VARCHAR(255) NOT NULL, 
@@ -161,22 +216,10 @@ CREATE TABLE IF NOT EXISTS users (
     password VARCHAR(255),
     status user_status NOT NULL,
     role user_role NOT NULL,
-    profile_id INT,
-    customer_id INT,
-    employee_id INT,
     last_login TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
     deleted_at TIMESTAMP
-);
-
-CREATE TABLE IF NOT EXISTS profiles (
-    id SERIAL PRIMARY KEY,
-    user_id INT,
-    bio TEXT,
-    profile_pic VARCHAR(255),
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    last_update TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
 -- Foreign Keys for users table
@@ -192,15 +235,6 @@ ALTER TABLE users
 ADD CONSTRAINT fk_users_employee
     FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE;
 
--- Foreign Keys for profiles table
-ALTER TABLE profiles
-ADD CONSTRAINT fk_profiles_user
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
-
-CREATE INDEX IF NOT EXISTS idx_profile_user_id ON profiles(user_id);
-CREATE INDEX IF NOT EXISTS idx_user_profile_id ON users(profile_id);
-CREATE INDEX IF NOT EXISTS idx_user_email ON users(email);
-CREATE INDEX IF NOT EXISTS idx_user_phone_number ON users(phone_number);
 
 -- Create Appointments Table
 CREATE TABLE IF NOT EXISTS appointments(
@@ -220,10 +254,7 @@ CREATE TABLE IF NOT EXISTS appointments(
     FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE
 );
 
-CREATE INDEX IF NOT EXISTS idx_appointment_customer_id ON appointments(customer_id);
-CREATE INDEX IF NOT EXISTS idx_appointment_vet_id ON appointments(employee_id);
-CREATE INDEX IF NOT EXISTS idx_appointment_pet_id ON appointments(pet_id);
-CREATE INDEX IF NOT EXISTS idx_appointment_status ON appointments(status);
+
 
 -- Create Medical Session Table
 CREATE TABLE IF NOT EXISTS medical_sessions (
@@ -251,22 +282,9 @@ CREATE TABLE IF NOT EXISTS medical_sessions (
     deleted_at TIMESTAMP WITH TIME ZONE NULL,
     FOREIGN KEY (pet_id) REFERENCES pets(id) ON DELETE CASCADE,
     FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE,
-    FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE
-    FOREIGN KEY (appointment_id) REFERENCES appointments(id) ON DELETE SET NULL,
+    FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE,
+    FOREIGN KEY (appointment_id) REFERENCES appointments(id) ON DELETE SET NULL
 );
-
-
--- Indexes
-CREATE INDEX IF NOT EXISTS idx_med_hist_pet_id ON medical_sessions(pet_id);
-CREATE INDEX IF NOT EXISTS idx_med_hist_customer_id ON medical_sessions(customer_id);
-CREATE INDEX IF NOT EXISTS idx_med_hist_employee_id ON medical_sessions(employee_id);
-CREATE INDEX IF NOT EXISTS idx_med_hist_visit_date ON medical_sessions(visit_date);
-CREATE INDEX IF NOT EXISTS idx_med_hist_visit_type ON medical_sessions(visit_type);
-CREATE INDEX IF NOT EXISTS idx_med_hist_condition ON medical_sessions(condition);
-CREATE INDEX IF NOT EXISTS idx_med_hist_is_emergency ON medical_sessions(is_emergency);
-CREATE INDEX IF NOT EXISTS idx_med_hist_follow_up_date ON medical_sessions(follow_up_date);
-
-
 
 -- Create Payment Table
 CREATE TABLE IF NOT EXISTS payments (
@@ -300,7 +318,18 @@ CREATE TABLE IF NOT EXISTS payments (
     CONSTRAINT chk_refund_date CHECK (refunded_at IS NULL OR status = 'refunded')
 );
 
--- Indexes
+-- Indexes for Medical Sessions
+CREATE INDEX IF NOT EXISTS idx_med_hist_pet_id ON medical_sessions(pet_id);
+CREATE INDEX IF NOT EXISTS idx_med_hist_customer_id ON medical_sessions(customer_id);
+CREATE INDEX IF NOT EXISTS idx_med_hist_employee_id ON medical_sessions(employee_id);
+CREATE INDEX IF NOT EXISTS idx_med_hist_visit_date ON medical_sessions(visit_date);
+CREATE INDEX IF NOT EXISTS idx_med_hist_visit_type ON medical_sessions(visit_type);
+CREATE INDEX IF NOT EXISTS idx_med_hist_condition ON medical_sessions(condition);
+CREATE INDEX IF NOT EXISTS idx_med_hist_is_emergency ON medical_sessions(is_emergency);
+CREATE INDEX IF NOT EXISTS idx_med_hist_follow_up_date ON medical_sessions(follow_up_date);
+
+
+-- Indexes for Payments
 CREATE INDEX IF NOT EXISTS idx_payments_status ON payments(status);
 CREATE INDEX IF NOT EXISTS idx_payments_customer_id ON payments(paid_from_customer);
 CREATE INDEX IF NOT EXISTS idx_payments_employee_id ON payments(paid_to_employee);
@@ -318,3 +347,59 @@ CREATE INDEX IF NOT EXISTS idx_payments_customer_status ON payments(paid_from_cu
 CREATE INDEX IF NOT EXISTS idx_payments_status_date ON payments(status, created_at);
 CREATE INDEX IF NOT EXISTS idx_payments_customer_date ON payments(paid_from_customer, created_at);
 CREATE INDEX IF NOT EXISTS idx_payments_due_status ON payments(due_date, status) WHERE status != 'completed';
+
+
+-- Indexes for Appointments
+CREATE INDEX IF NOT EXISTS idx_appointment_customer_id ON appointments(customer_id);
+CREATE INDEX IF NOT EXISTS idx_appointment_vet_id ON appointments(employee_id);
+CREATE INDEX IF NOT EXISTS idx_appointment_pet_id ON appointments(pet_id);
+CREATE INDEX IF NOT EXISTS idx_appointment_status ON appointments(status);
+
+-- Indexes for Users and Profiles
+CREATE INDEX IF NOT EXISTS idx_user_email ON users(email);
+CREATE INDEX IF NOT EXISTS idx_user_phone_number ON users(phone_number);
+
+
+-- Indexes
+CREATE INDEX IF NOT EXISTS idx_pets_customer_id ON pets(customer_id);
+CREATE INDEX IF NOT EXISTS idx_pets_species ON pets(species);
+CREATE INDEX IF NOT EXISTS idx_pets_breed ON pets(breed);
+CREATE INDEX IF NOT EXISTS idx_pets_is_active ON pets(is_active);
+CREATE INDEX IF NOT EXISTS idx_pets_is_neutered ON pets(is_neutered);
+CREATE INDEX IF NOT EXISTS idx_pets_gender ON pets(gender);
+CREATE INDEX IF NOT EXISTS idx_pets_name ON pets(name);
+CREATE INDEX IF NOT EXISTS idx_pets_microchip ON pets(microchip);
+CREATE INDEX IF NOT EXISTS idx_pets_date_of_birth ON pets(date_of_birth);
+CREATE INDEX IF NOT EXISTS idx_pets_last_vet_visit ON pets(last_vet_visit);
+CREATE INDEX IF NOT EXISTS idx_pets_next_vet_visit ON pets(next_vet_visit);
+CREATE INDEX IF NOT EXISTS idx_pets_created_at ON pets(created_at);
+CREATE INDEX IF NOT EXISTS idx_pets_deleted_at ON pets(deleted_at) WHERE deleted_at IS NULL;
+
+CREATE INDEX IF NOT EXISTS idx_pets_species_breed ON pets(species, breed);
+CREATE INDEX IF NOT EXISTS idx_pets_customer_active ON pets(customer_id, is_active);
+CREATE INDEX IF NOT EXISTS idx_pets_vaccination_dates ON pets(last_vaccination_date, next_vaccination_date);
+CREATE INDEX IF NOT EXISTS idx_pets_deworming_dates ON pets(last_deworming_date, next_deworming_date);
+
+CREATE UNIQUE INDEX IF NOT EXISTS uq_pets_microchip ON pets(microchip) WHERE microchip IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_pets_active_filter ON pets(id) WHERE is_active = TRUE AND deleted_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_pets_vet_visit_dates ON pets(last_vet_visit, next_vet_visit) WHERE last_vet_visit IS NOT NULL OR next_vet_visit IS NOT NULL;
+
+-- Para la tabla pets (solo los realmente necesarios)
+CREATE INDEX IF NOT EXISTS idx_pets_customer_id ON pets(customer_id);
+CREATE INDEX IF NOT EXISTS idx_pets_is_active ON pets(is_active) WHERE is_active = TRUE;
+CREATE INDEX IF NOT EXISTS idx_pets_microchip ON pets(microchip) WHERE microchip IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_pets_species_breed ON pets(species, breed);
+CREATE INDEX IF NOT EXISTS idx_pets_active_customer ON pets(customer_id, is_active) WHERE is_active = TRUE;
+
+CREATE INDEX IF NOT EXISTS idx_pets_name ON pets(name);
+CREATE INDEX IF NOT EXISTS idx_pets_species ON pets(species);
+CREATE INDEX IF NOT EXISTS idx_pets_breed ON pets(breed) WHERE breed IS NOT NULL;
+
+CREATE INDEX IF NOT EXISTS idx_pet_vaccinations_pet_id ON pet_vaccinations(pet_id);
+CREATE INDEX IF NOT EXISTS idx_pet_vaccinations_dates ON pet_vaccinations(administered_date, next_due_date);
+CREATE INDEX IF NOT EXISTS idx_pet_deworming_pet_id ON pet_deworming(pet_id);
+CREATE INDEX IF NOT EXISTS idx_pet_deworming_dates ON pet_deworming(administered_date, next_due_date);
+CREATE INDEX IF NOT EXISTS idx_pet_chip_implants_pet_id ON pet_chip_implants(pet_id);
+
+CREATE UNIQUE INDEX IF NOT EXISTS uq_pets_microchip ON pets(microchip) WHERE microchip IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS uq_pet_chip_implants_chip ON pet_chip_implants(chip_number) WHERE chip_number IS NOT NULL;

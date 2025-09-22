@@ -2,7 +2,7 @@
 package dto
 
 import (
-	"clinic-vet-api/app/core/domain/valueobject"
+	"clinic-vet-api/app/modules/core/domain/valueobject"
 	"clinic-vet-api/app/modules/pets/application/cqrs/command"
 )
 
@@ -65,13 +65,6 @@ type PetRequestData struct {
 	// Example: Male
 	Gender *string `json:"gender,omitempty" validate:"omitempty,oneof=Male Female Unknown"`
 
-	// Weight of the pet in kilograms
-	// Required: false
-	// Minimum: 0.1
-	// Maximum: 1000.0
-	// Example: 25.5
-	Weight *float64 `json:"weight,omitempty" validate:"omitempty,gt=0,lte=1000"`
-
 	// Color of the pet's fur or coat
 	// Required: false
 	// Minimum length: 2
@@ -90,41 +83,33 @@ type PetRequestData struct {
 	// Example: true
 	IsNeutered *bool `json:"is_neutered,omitempty"`
 
-	// Known allergies of the pet
+	// Tattoo identification (if applicable)
 	// Required: false
-	// Maximum length: 500
-	// Example: Pollen, Chicken, Wheat
-	Allergies *string `json:"allergies,omitempty" validate:"omitempty,max=500"`
+	// Minimum length: 2
+	// Maximum length: 20
+	// Example: A12345
+	Tattoo *string `json:"tattoo,omitempty"`
 
-	// Current medications the pet is taking
+	// Blood type of the pet (if known)
 	// Required: false
-	// Maximum length: 500
-	// Example: Heartworm prevention, Flea treatment
-	CurrentMedications *string `json:"current_medications,omitempty" validate:"omitempty,max=500"`
-
-	// Special needs or care instructions for the pet
-	// Required: false
-	// Maximum length: 500
-	// Example: Requires daily medication, Blind in left eye
-	SpecialNeeds *string `json:"special_needs,omitempty" validate:"omitempty,max=500"`
+	// Minimum length: 1
+	// Maximum length: 3
+	// Example: A+
+	BloodType *string `json:"blood_type,omitempty"`
 }
 
 func (r *PetRequestData) ToCommand(customerID uint, isActive bool) command.CreatePetCommand {
 	cmd := &command.CreatePetCommand{
-		Name:               r.Name,
-		Photo:              r.Photo,
-		CustomerID:         valueobject.NewCustomerID(customerID),
-		Species:            r.Species,
-		Breed:              r.Breed,
-		Age:                r.Age,
-		IsNeutered:         r.IsNeutered,
-		Weight:             r.Weight,
-		Color:              r.Color,
-		Microchip:          r.Microchip,
-		Allergies:          r.Allergies,
-		CurrentMedications: r.CurrentMedications,
-		SpecialNeeds:       r.SpecialNeeds,
-		IsActive:           isActive,
+		Name:       r.Name,
+		Photo:      r.Photo,
+		CustomerID: valueobject.NewCustomerID(customerID),
+		Species:    r.Species,
+		Breed:      r.Breed,
+		Age:        r.Age,
+		IsNeutered: r.IsNeutered,
+		Color:      r.Color,
+		Microchip:  r.Microchip,
+		IsActive:   isActive,
 	}
 	return *cmd
 }

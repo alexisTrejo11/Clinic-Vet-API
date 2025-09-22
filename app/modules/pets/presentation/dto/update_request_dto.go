@@ -1,7 +1,7 @@
 package dto
 
 import (
-	"clinic-vet-api/app/core/domain/valueobject"
+	"clinic-vet-api/app/modules/core/domain/valueobject"
 	"clinic-vet-api/app/modules/pets/application/cqrs/command"
 )
 
@@ -68,13 +68,6 @@ type UpdatePetRequest struct {
 	// Example: Male
 	Gender *string `json:"gender,omitempty" validate:"omitempty,oneof=Male Female Unknown"`
 
-	// Weight of the pet in kilograms
-	// Required: false
-	// Minimum: 0.1
-	// Maximum: 1000.0
-	// Example: 25.5
-	Weight *float64 `json:"weight,omitempty" validate:"omitempty,gt=0,lte=1000"`
-
 	// Color of the pet
 	// Required: false
 	// Minimum length: 2
@@ -93,23 +86,19 @@ type UpdatePetRequest struct {
 	// Example: true
 	IsNeutered *bool `json:"is_neutered,omitempty"`
 
-	// Known allergies of the pet
+	// Tattoo identification (if applicable)
 	// Required: false
-	// Maximum length: 500
-	// Example: Pollen, Chicken
-	Allergies *string `json:"allergies,omitempty" validate:"omitempty,max=500"`
+	// Minimum length: 2
+	// Maximum length: 20
+	// Example: A12345
+	Tattoo *string `json:"tattoo,omitempty"`
 
-	// Current medications the pet is taking
+	// Blood type of the pet (if known)
 	// Required: false
-	// Maximum length: 500
-	// Example: Heartworm prevention, Flea treatment
-	CurrentMedications *string `json:"current_medications,omitempty" validate:"omitempty,max=500"`
-
-	// Any special needs or care instructions
-	// Required: false
-	// Maximum length: 500
-	// Example: Requires daily medication, Blind in left eye
-	SpecialNeeds *string `json:"special_needs,omitempty" validate:"omitempty,max=500"`
+	// Minimum length: 1
+	// Maximum length: 3
+	// Example: A+
+	BloodType *string `json:"blood_type,omitempty"`
 }
 
 func (r *UpdatePetRequest) ToCommand(petIDInt uint, customerIDUInt *uint, isActive *bool) command.UpdatePetCommand {
@@ -120,19 +109,17 @@ func (r *UpdatePetRequest) ToCommand(petIDInt uint, customerIDUInt *uint, isActi
 	}
 
 	cmd := &command.UpdatePetCommand{
-		PetID:              valueobject.NewPetID(petIDInt),
-		Photo:              r.Photo,
-		CustomerID:         customerID,
-		Breed:              r.Breed,
-		Age:                r.Age,
-		Gender:             r.Gender,
-		Weight:             r.Weight,
-		Color:              r.Color,
-		Microchip:          r.Microchip,
-		IsNeutered:         r.IsNeutered,
-		Allergies:          r.Allergies,
-		CurrentMedications: r.CurrentMedications,
-		SpecialNeeds:       r.SpecialNeeds,
+		PetID:      valueobject.NewPetID(petIDInt),
+		Photo:      r.Photo,
+		CustomerID: customerID,
+		Breed:      r.Breed,
+		Age:        r.Age,
+		Gender:     r.Gender,
+		Color:      r.Color,
+		Microchip:  r.Microchip,
+		IsNeutered: r.IsNeutered,
+		Tattoo:     r.Tattoo,
+		BloodType:  r.BloodType,
 	}
 
 	if r.Name != nil {

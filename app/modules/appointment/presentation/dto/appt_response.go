@@ -3,8 +3,8 @@ package dto
 import (
 	"time"
 
-	"clinic-vet-api/app/core/domain/enum"
 	"clinic-vet-api/app/modules/appointment/application/query"
+	"clinic-vet-api/app/modules/core/domain/enum"
 	"clinic-vet-api/app/shared/page"
 )
 

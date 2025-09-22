@@ -2,9 +2,6 @@
 package repositoryimpl
 
 import (
-	"clinic-vet-api/app/core/domain/specification"
-	"clinic-vet-api/app/core/domain/valueobject"
-	"clinic-vet-api/app/core/repository"
 	"clinic-vet-api/sqlc"
 	"context"
 	"database/sql"
@@ -12,7 +9,10 @@ import (
 	"fmt"
 	"time"
 
-	med "clinic-vet-api/app/core/domain/entity/medical"
+	med "clinic-vet-api/app/modules/core/domain/entity/medical"
+	"clinic-vet-api/app/modules/core/domain/specification"
+	"clinic-vet-api/app/modules/core/domain/valueobject"
+	"clinic-vet-api/app/modules/core/repository"
 
 	p "clinic-vet-api/app/shared/page"
 

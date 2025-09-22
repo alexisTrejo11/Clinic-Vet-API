@@ -3,7 +3,7 @@ package service
 import (
 	"time"
 
-	"clinic-vet-api/app/core/domain/entity/notification"
+	"clinic-vet-api/app/modules/core/domain/entity/notification"
 )
 
 type NotificationResponse struct {

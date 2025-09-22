@@ -1,7 +1,7 @@
 package query
 
 import (
-	"clinic-vet-api/app/core/domain/entity/employee"
+	"clinic-vet-api/app/modules/core/domain/entity/employee"
 	"time"
 )
 

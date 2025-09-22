@@ -1,7 +1,7 @@
 package command
 
 import (
-	"clinic-vet-api/app/core/domain/valueobject"
+	"clinic-vet-api/app/modules/core/domain/valueobject"
 	"clinic-vet-api/app/shared/cqrs"
 	"context"
 )
@@ -32,7 +32,7 @@ func (h *petCommandHandler) DeletePet(ctx context.Context, cmd DeletePetCommand)
 		return *cqrs.FailureResult("Error Getting Pet", err)
 	}
 
-	if err := h.petRepository.Delete(ctx, pet.ID()); err != nil {
+	if err := h.petRepository.Delete(ctx, pet.ID(), false); err != nil {
 		return *cqrs.FailureResult("Error Deleting Pet", err)
 	}
 

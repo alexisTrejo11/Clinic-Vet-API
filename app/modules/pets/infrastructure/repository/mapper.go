@@ -3,9 +3,9 @@ package repository
 import (
 	"fmt"
 
-	"clinic-vet-api/app/core/domain/entity/pet"
-	"clinic-vet-api/app/core/domain/enum"
-	"clinic-vet-api/app/core/domain/valueobject"
+	"clinic-vet-api/app/modules/core/domain/entity/pet"
+	"clinic-vet-api/app/modules/core/domain/enum"
+	"clinic-vet-api/app/modules/core/domain/valueobject"
 	"clinic-vet-api/sqlc"
 
 	"github.com/jackc/pgx/v5/pgtype"
@@ -39,11 +39,6 @@ func sqlcRowToEntity(sqlPet sqlc.Pet) (*pet.Pet, error) {
 		opts = append(opts, pet.WithGender(&petGender))
 	}
 
-	if sqlPet.Weight.Valid {
-		weight := float64(sqlPet.Weight.Int.Int64()) / 100.0 // Ajustar según la precisión de tu BD
-		opts = append(opts, pet.WithWeight(&weight))
-	}
-
 	if sqlPet.Color.Valid && sqlPet.Color.String != "" {
 		opts = append(opts, pet.WithColor(&sqlPet.Color.String))
 	}
@@ -54,18 +49,6 @@ func sqlcRowToEntity(sqlPet sqlc.Pet) (*pet.Pet, error) {
 
 	if sqlPet.IsNeutered.Valid {
 		opts = append(opts, pet.WithIsNeutered(&sqlPet.IsNeutered.Bool))
-	}
-
-	if sqlPet.Allergies.Valid && sqlPet.Allergies.String != "" {
-		opts = append(opts, pet.WithAllergies(&sqlPet.Allergies.String))
-	}
-
-	if sqlPet.CurrentMedications.Valid && sqlPet.CurrentMedications.String != "" {
-		opts = append(opts, pet.WithCurrentMedications(&sqlPet.CurrentMedications.String))
-	}
-
-	if sqlPet.SpecialNeeds.Valid && sqlPet.SpecialNeeds.String != "" {
-		opts = append(opts, pet.WithSpecialNeeds(&sqlPet.SpecialNeeds.String))
 	}
 
 	petEntity, err := pet.NewPet(
@@ -99,42 +82,34 @@ func sqlcRowsToEntities(rows []sqlc.Pet) ([]pet.Pet, error) {
 
 func ToSqlCreateParam(pet pet.Pet) *sqlc.CreatePetParams {
 	return &sqlc.CreatePetParams{
-		Name:               pet.Name(),
-		Photo:              toPgTypeText(pet.Photo()),
-		Species:            pet.Species().String(),
-		Breed:              toPgTypeText(pet.Breed()),
-		Age:                toPgTypeInt2(pet.Age()),
-		Gender:             toPgTypeText((*string)(pet.Gender())),
-		Weight:             toPgTypeNumeric(pet.Weight()),
-		Color:              toPgTypeText(pet.Color()),
-		Microchip:          toPgTypeText(pet.Microchip()),
-		IsNeutered:         toPgTypeBool(pet.IsNeutered()),
-		CustomerID:         int32(pet.CustomerID().Value()),
-		Allergies:          toPgTypeText(pet.Allergies()),
-		CurrentMedications: toPgTypeText(pet.CurrentMedications()),
-		SpecialNeeds:       toPgTypeText(pet.SpecialNeeds()),
-		IsActive:           pet.IsActive(),
+		Name:       pet.Name(),
+		Photo:      toPgTypeText(pet.Photo()),
+		Species:    pet.Species().String(),
+		Breed:      toPgTypeText(pet.Breed()),
+		Age:        toPgTypeInt2(pet.Age()),
+		Gender:     toPgTypeText((*string)(pet.Gender())),
+		Color:      toPgTypeText(pet.Color()),
+		Microchip:  toPgTypeText(pet.Microchip()),
+		IsNeutered: toPgTypeBool(pet.IsNeutered()),
+		CustomerID: int32(pet.CustomerID().Value()),
+		IsActive:   pet.IsActive(),
 	}
 }
 
 func ToSqlUpdateParam(pet *pet.Pet) *sqlc.UpdatePetParams {
 	return &sqlc.UpdatePetParams{
-		ID:                 int32(pet.ID().Value()),
-		Name:               pet.Name(),
-		Photo:              toPgTypeText(pet.Photo()),
-		Species:            pet.Species().String(),
-		Breed:              toPgTypeText(pet.Breed()),
-		Age:                toPgTypeInt2(pet.Age()),
-		Gender:             toPgTypeText((*string)(pet.Gender())),
-		Weight:             toPgTypeNumeric(pet.Weight()),
-		Color:              toPgTypeText(pet.Color()),
-		Microchip:          toPgTypeText(pet.Microchip()),
-		IsNeutered:         toPgTypeBool(pet.IsNeutered()),
-		CustomerID:         int32(pet.CustomerID().Value()),
-		Allergies:          toPgTypeText(pet.Allergies()),
-		CurrentMedications: toPgTypeText(pet.CurrentMedications()),
-		SpecialNeeds:       toPgTypeText(pet.SpecialNeeds()),
-		IsActive:           pet.IsActive(),
+		ID:         int32(pet.ID().Value()),
+		Name:       pet.Name(),
+		Photo:      toPgTypeText(pet.Photo()),
+		Species:    pet.Species().String(),
+		Breed:      toPgTypeText(pet.Breed()),
+		Age:        toPgTypeInt2(pet.Age()),
+		Gender:     toPgTypeText((*string)(pet.Gender())),
+		Color:      toPgTypeText(pet.Color()),
+		Microchip:  toPgTypeText(pet.Microchip()),
+		IsNeutered: toPgTypeBool(pet.IsNeutered()),
+		CustomerID: int32(pet.CustomerID().Value()),
+		IsActive:   pet.IsActive(),
 	}
 }
 

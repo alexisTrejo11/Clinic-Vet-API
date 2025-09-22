@@ -59,6 +59,7 @@ type MedicalSession struct {
 	PetID           int32
 	CustomerID      int32
 	EmployeeID      int32
+	AppointmentID   pgtype.Int4
 	VisitDate       pgtype.Timestamptz
 	VisitType       string
 	Diagnosis       pgtype.Text
@@ -107,34 +108,22 @@ type Pet struct {
 	Photo                 pgtype.Text
 	Species               string
 	Breed                 pgtype.Text
+	DateOfBirth           pgtype.Date
 	Age                   pgtype.Int2
 	Gender                pgtype.Text
-	Weight                pgtype.Numeric
 	Color                 pgtype.Text
 	Microchip             pgtype.Text
+	Tattoo                pgtype.Text
+	BloodType             pgtype.Text
 	IsNeutered            pgtype.Bool
 	CustomerID            int32
+	IsActive              bool
 	Allergies             pgtype.Text
 	CurrentMedications    pgtype.Text
 	SpecialNeeds          pgtype.Text
-	IsActive              bool
-	DateOfBirth           pgtype.Date
-	InsuranceInfo         pgtype.Text
-	VeterinaryContact     pgtype.Text
 	FeedingInstructions   pgtype.Text
 	BehavioralNotes       pgtype.Text
-	Tattoo                pgtype.Text
-	LastVaccinationDate   pgtype.Date
-	NextVaccinationDate   pgtype.Date
-	LastDewormingDate     pgtype.Date
-	NextDewormingDate     pgtype.Date
-	LastVetVisit          pgtype.Date
-	NextVetVisit          pgtype.Date
-	BloodType             pgtype.Text
-	ChipImplantDate       pgtype.Date
-	ChipImplantLocation   pgtype.Text
-	InsurancePolicyNumber pgtype.Text
-	InsuranceCompany      pgtype.Text
+	VeterinaryContact     pgtype.Text
 	EmergencyContactName  pgtype.Text
 	EmergencyContactPhone pgtype.Text
 	CreatedAt             pgtype.Timestamptz
@@ -142,13 +131,78 @@ type Pet struct {
 	DeletedAt             pgtype.Timestamptz
 }
 
-type Profile struct {
+type PetBehavioralNote struct {
+	ID      int32
+	PetID   int32
+	Note    string
+	NotedAt pgtype.Timestamptz
+	NotedBy pgtype.Int4
+}
+
+type PetChipImplant struct {
+	ID              int32
+	PetID           int32
+	ImplantDate     pgtype.Date
+	ImplantLocation pgtype.Text
+	ChipNumber      pgtype.Text
+	ImplantedBy     pgtype.Int4
+	Notes           pgtype.Text
+	CreatedAt       pgtype.Timestamptz
+}
+
+type PetDeworming struct {
+	ID               int32
+	PetID            int32
+	MedicationName   string
+	AdministeredDate pgtype.Date
+	NextDueDate      pgtype.Date
+	AdministeredBy   pgtype.Int4
+	Notes            pgtype.Text
+	CreatedAt        pgtype.Timestamptz
+}
+
+type PetEmergencyContact struct {
+	ID           int32
+	PetID        int32
+	ContactName  string
+	Phone        string
+	Relationship pgtype.Text
+	IsPrimary    pgtype.Bool
+	CreatedAt    pgtype.Timestamptz
+}
+
+type PetFeedingInstruction struct {
+	ID                  int32
+	PetID               int32
+	FoodBrand           pgtype.Text
+	FoodType            pgtype.Text
+	AmountPerServing    pgtype.Text
+	Frequency           pgtype.Text
+	SpecialInstructions pgtype.Text
+	CreatedAt           pgtype.Timestamptz
+	UpdatedAt           pgtype.Timestamptz
+}
+
+type PetVaccination struct {
+	ID               int32
+	PetID            int32
+	VaccineName      string
+	AdministeredDate pgtype.Date
+	NextDueDate      pgtype.Date
+	AdministeredBy   pgtype.Int4
+	Notes            pgtype.Text
+	CreatedAt        pgtype.Timestamptz
+}
+
+type PetVeterinaryContact struct {
 	ID         int32
-	UserID     pgtype.Int4
-	Bio        pgtype.Text
-	ProfilePic pgtype.Text
+	PetID      int32
+	ClinicName string
+	Phone      pgtype.Text
+	Address    pgtype.Text
+	IsPrimary  pgtype.Bool
 	CreatedAt  pgtype.Timestamptz
-	LastUpdate pgtype.Timestamptz
+	UpdatedAt  pgtype.Timestamptz
 }
 
 type User struct {
@@ -158,9 +212,6 @@ type User struct {
 	Password    pgtype.Text
 	Status      models.UserStatus
 	Role        models.UserRole
-	ProfileID   pgtype.Int4
-	CustomerID  pgtype.Int4
-	EmployeeID  pgtype.Int4
 	LastLogin   pgtype.Timestamptz
 	CreatedAt   pgtype.Timestamptz
 	UpdatedAt   pgtype.Timestamptz

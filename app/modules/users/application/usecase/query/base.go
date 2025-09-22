@@ -4,7 +4,7 @@ package query
 import (
 	"time"
 
-	"clinic-vet-api/app/core/domain/entity/user"
+	"clinic-vet-api/app/modules/core/domain/entity/user"
 	"clinic-vet-api/app/shared/page"
 )
 

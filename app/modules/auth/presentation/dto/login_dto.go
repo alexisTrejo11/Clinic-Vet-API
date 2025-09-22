@@ -2,8 +2,7 @@
 package dto
 
 import (
-	"clinic-vet-api/app/modules/auth/application/command"
-	"context"
+	authCmd "clinic-vet-api/app/modules/auth/application/command/authentication"
 )
 
 type RequestLogin struct {
@@ -11,11 +10,10 @@ type RequestLogin struct {
 	Password   string `json:"password" binding:"required,min=8"`
 }
 
-func (r *RequestLogin) ToCommand(ctx context.Context) *command.LoginCommand {
-	return &command.LoginCommand{
+func (r *RequestLogin) ToCommand() *authCmd.LoginCommand {
+	return &authCmd.LoginCommand{
 		Identifier: r.Identifier,
 		Password:   r.Password,
-		CTX:        ctx,
 	}
 }
 

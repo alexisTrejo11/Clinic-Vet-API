@@ -1,10 +1,10 @@
 package repositoryimpl
 
 import (
-	"clinic-vet-api/app/core/domain/entity/base"
-	"clinic-vet-api/app/core/domain/entity/payment"
-	"clinic-vet-api/app/core/domain/enum"
-	"clinic-vet-api/app/core/domain/valueobject"
+	"clinic-vet-api/app/modules/core/domain/entity/base"
+	"clinic-vet-api/app/modules/core/domain/entity/payment"
+	"clinic-vet-api/app/modules/core/domain/enum"
+	"clinic-vet-api/app/modules/core/domain/valueobject"
 	"clinic-vet-api/db/models"
 	"clinic-vet-api/sqlc"
 	"fmt"
@@ -237,7 +237,7 @@ func numericToMoney(num pgtype.Numeric, currency string) (valueobject.Money, err
 		return valueobject.Money{}, fmt.Errorf("failed to convert numeric to amount: %w", err)
 	}
 
-	return valueobject.NewMoney(amount, currency), nil
+	return valueobject.NewMoney(valueobject.NewDecimalFromFloat(amount), currency), nil
 }
 
 func stringToPgText(s *string) pgtype.Text {

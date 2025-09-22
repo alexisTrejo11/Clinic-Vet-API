@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	"clinic-vet-api/app/core/domain/enum"
-	"clinic-vet-api/app/core/domain/valueobject"
+	"clinic-vet-api/app/modules/core/domain/enum"
+	"clinic-vet-api/app/modules/core/domain/valueobject"
 	apperror "clinic-vet-api/app/shared/error/application"
 )
 
@@ -83,30 +83,16 @@ type UpdatePaymentCommand struct {
 func NewUpdatePaymentCommand(
 	ctx context.Context,
 	idInt uint,
-	amountValue *float64,
-	amountCurrency *string,
+	amount *valueobject.Money,
 	paymentMethodStr *string,
 	description *string,
 	dueDate *time.Time,
 ) (UpdatePaymentCommand, error) {
 	var errors []string
-
 	if idInt == 0 {
 		errors = append(errors, "payment ID is required")
 	}
 	paymentID := valueobject.NewPaymentID(idInt)
-
-	var amount *valueobject.Money
-	if amountValue != nil {
-		if amountCurrency == nil {
-			errors = append(errors, "currency is required when amount is provided")
-		} else {
-			money := valueobject.NewMoney(*amountValue, *amountCurrency)
-			amount = &money
-		}
-	} else if amountCurrency != nil {
-		errors = append(errors, "amount is required when currency is provided")
-	}
 
 	var paymentMethod *enum.PaymentMethod
 	if paymentMethodStr != nil {

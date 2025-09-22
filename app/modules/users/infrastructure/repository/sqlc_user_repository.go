@@ -8,11 +8,11 @@ import (
 	"fmt"
 	"time"
 
-	u "clinic-vet-api/app/core/domain/entity/user"
-	"clinic-vet-api/app/core/domain/enum"
-	"clinic-vet-api/app/core/domain/specification"
-	"clinic-vet-api/app/core/domain/valueobject"
-	"clinic-vet-api/app/core/repository"
+	u "clinic-vet-api/app/modules/core/domain/entity/user"
+	"clinic-vet-api/app/modules/core/domain/enum"
+	"clinic-vet-api/app/modules/core/domain/specification"
+	"clinic-vet-api/app/modules/core/domain/valueobject"
+	"clinic-vet-api/app/modules/core/repository"
 
 	"clinic-vet-api/app/shared/page"
 
@@ -32,6 +32,10 @@ func NewSQLCUserRepository(queries *sqlc.Queries) repository.UserRepository {
 	}
 }
 
+func (r *SQLCUserRepository) FindByOAuthProvider(ctx context.Context, provider string, providerID string) (u.User, error) {
+	panic("unimplemented")
+}
+
 func (r *SQLCUserRepository) FindByID(ctx context.Context, id valueobject.UserID) (u.User, error) {
 	sqlRow, err := r.queries.FindUserByID(ctx, int32(id.Value()))
 	if err != nil {
@@ -41,7 +45,7 @@ func (r *SQLCUserRepository) FindByID(ctx context.Context, id valueobject.UserID
 		return u.User{}, r.dbError(OpSelect, fmt.Sprintf("%s with ID %d", ErrMsgFindUser, id.Value()), err)
 	}
 
-	user, err := sqlcRowToEntity(sqlRow)
+	user, err := sqlcRowWithJoinToEntity(sqlRow)
 	if err != nil {
 		return u.User{}, r.wrapConversionError(err)
 	}
@@ -57,7 +61,7 @@ func (r *SQLCUserRepository) FindByEmail(ctx context.Context, email string) (u.U
 		return u.User{}, r.dbError(OpSelect, fmt.Sprintf("%s with email %s", ErrMsgFindUserByEmail, email), err)
 	}
 
-	user, err := sqlcRowToEntity(sqlRow)
+	user, err := sqlcRowWithJoinToEntity(sqlRow)
 	if err != nil {
 		return u.User{}, r.wrapConversionError(err)
 	}
@@ -73,7 +77,10 @@ func (r *SQLCUserRepository) FindByPhone(ctx context.Context, phone string) (u.U
 		return u.User{}, r.dbError(OpSelect, fmt.Sprintf("%s with phone %s", ErrMsgFindUserByPhone, phone), err)
 	}
 
-	user, _ := sqlcRowToEntity(sqlRow)
+	user, err := sqlcRowWithJoinToEntity(sqlRow)
+	if err != nil {
+		return u.User{}, r.wrapConversionError(err)
+	}
 	return user, nil
 }
 
@@ -153,7 +160,7 @@ func (r *SQLCUserRepository) FindAll(ctx context.Context, pageInput page.PageInp
 }
 
 func (r *SQLCUserRepository) FindByCustomerID(ctx context.Context, customerID valueobject.CustomerID) (u.User, error) {
-	userRow, err := r.queries.FindUserByCustomerID(ctx, pgtype.Int4{Int32: int32(customerID.Value()), Valid: true})
+	userRow, err := r.queries.FindUserByCustomerID(ctx, int32(customerID.Value()))
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return u.User{}, r.notFoundError("customer_id", customerID.String())
@@ -170,7 +177,7 @@ func (r *SQLCUserRepository) FindByCustomerID(ctx context.Context, customerID va
 }
 
 func (r *SQLCUserRepository) FindByEmployeeID(ctx context.Context, employeeID valueobject.EmployeeID) (u.User, error) {
-	userRow, err := r.queries.FindUserByEmployeeID(ctx, pgtype.Int4{Int32: int32(employeeID.Value()), Valid: true})
+	userRow, err := r.queries.FindUserByEmployeeID(ctx, int32(employeeID.Value()))
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return u.User{}, r.notFoundError("employee_id", employeeID.String())
@@ -227,19 +234,13 @@ func (r *SQLCUserRepository) FindRecentlyLoggedIn(ctx context.Context, since tim
 		return page.Page[u.User]{}, r.dbError("select", "failed to find recently logged in users", err)
 	}
 
-	total, err := r.queries.CountUsersBySpecification(ctx, sqlc.CountUsersBySpecificationParams{
-		Column5: pgtype.Timestamptz{Time: since, Valid: true},
-	})
-	if err != nil {
-		return page.Page[u.User]{}, r.dbError("select", "failed to count recently logged in users", err)
-	}
-
 	users, err := sqlcRowsToEntities(userRows)
 	if err != nil {
 		return page.Page[u.User]{}, r.wrapConversionError(err)
 	}
 
-	return page.NewPage(users, *page.GetPageMetadata(int(total), pageInput)), nil
+	// TODO: Add Count Query
+	return page.NewPage(users, *page.GetPageMetadata(int(0), pageInput)), nil
 }
 
 func (r *SQLCUserRepository) FindSpecification(ctx context.Context, spec specification.UserSpecification) (page.Page[u.User], error) {
@@ -297,11 +298,7 @@ func (r *SQLCUserRepository) HardDelete(ctx context.Context, id valueobject.User
 }
 
 func (r *SQLCUserRepository) create(ctx context.Context, user *u.User) error {
-	params, err := entityToCreateParams(user)
-	if err != nil {
-		return r.wrapConversionError(err)
-	}
-
+	params := entityToCreateParams(user)
 	userCreated, err := r.queries.CreateUser(ctx, *params)
 	if err != nil {
 		return r.dbError(OpInsert, ErrMsgCreateUser, err)
@@ -322,7 +319,7 @@ func (r *SQLCUserRepository) update(ctx context.Context, user *u.User) error {
 }
 
 func (r *SQLCUserRepository) ExistsByCustomerID(ctx context.Context, customerID valueobject.CustomerID) (bool, error) {
-	exists, err := r.queries.ExistsUserByCustomerID(ctx, pgtype.Int4{Int32: int32(customerID.Value()), Valid: true})
+	exists, err := r.queries.ExistsUserByCustomerID(ctx, int32(customerID.Value()))
 	if err != nil {
 		return false, r.dbError("select", fmt.Sprintf("failed to check user existence by customer ID %d", customerID.Value()), err)
 	}
@@ -330,7 +327,7 @@ func (r *SQLCUserRepository) ExistsByCustomerID(ctx context.Context, customerID 
 }
 
 func (r *SQLCUserRepository) ExistsByEmployeeID(ctx context.Context, employeeID valueobject.EmployeeID) (bool, error) {
-	exists, err := r.queries.ExistsUserByEmployeeID(ctx, pgtype.Int4{Int32: int32(employeeID.Value()), Valid: true})
+	exists, err := r.queries.ExistsUserByEmployeeID(ctx, int32(employeeID.Value()))
 	if err != nil {
 		return false, r.dbError("select", fmt.Sprintf("failed to check user existence by employee ID %d", employeeID.Value()), err)
 	}

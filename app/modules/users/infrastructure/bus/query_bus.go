@@ -1,7 +1,7 @@
 package bus
 
 import (
-	"clinic-vet-api/app/core/repository"
+	"clinic-vet-api/app/modules/core/repository"
 	"clinic-vet-api/app/modules/users/application/usecase/query"
 	"clinic-vet-api/app/shared/page"
 	"context"

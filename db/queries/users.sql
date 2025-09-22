@@ -5,14 +5,11 @@ INSERT INTO users (
     password, 
     status, 
     role, 
-    profile_id,
-    customer_id,
-    employee_id,
     created_at,
     updated_at
 )
 VALUES (
-    $1, $2, $3, $4, $5, $6, $7, $8,
+    $1, $2, $3, $4, $5,
     CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 )
 RETURNING *;
@@ -25,28 +22,57 @@ SET
     password = $4,
     status = $5,
     role = $6,
-    profile_id = $7,
     updated_at = CURRENT_TIMESTAMP
 WHERE id = $1
 RETURNING *;
 
 -- name: FindUserByID :one
-SELECT *
-FROM users
-WHERE id = $1 
-AND deleted_at IS NULL;
+SELECT 
+    u.*,
+    c.id as customer_id,
+    e.id as employee_id,
+    CASE 
+        WHEN c.id IS NOT NULL THEN 'customer'
+        WHEN e.id IS NOT NULL THEN 'employee'
+        ELSE 'user'
+    END as user_type
+FROM users u
+LEFT JOIN customers c ON u.id = c.user_id AND c.deleted_at IS NULL
+LEFT JOIN employees e ON u.id = e.user_id AND e.deleted_at IS NULL
+WHERE u.id = $1 
+AND u.deleted_at IS NULL;
 
 -- name: FindUserByEmail :one
-SELECT *
-FROM users
-WHERE email = $1
-AND deleted_at IS NULL;
+SELECT 
+    u.*,
+    c.id as customer_id,
+    e.id as employee_id,
+    CASE 
+        WHEN c.id IS NOT NULL THEN 'customer'
+        WHEN e.id IS NOT NULL THEN 'employee'
+        ELSE 'user'
+    END as user_type
+FROM users u
+LEFT JOIN customers c ON u.id = c.user_id AND c.deleted_at IS NULL
+LEFT JOIN employees e ON u.id = e.user_id AND e.deleted_at IS NULL
+WHERE u.email = $1
+AND u.deleted_at IS NULL;
 
 -- name: FindUserByPhoneNumber :one
-SELECT *
-FROM users
-WHERE phone_number = $1
-AND deleted_at IS NULL;
+SELECT 
+    u.*,
+    c.id as customer_id,
+    e.id as employee_id,
+    CASE 
+        WHEN c.id IS NOT NULL THEN 'customer'
+        WHEN e.id IS NOT NULL THEN 'employee'
+        ELSE 'user'
+    END as user_type
+FROM users u
+LEFT JOIN customers c ON u.id = c.user_id AND c.deleted_at IS NULL
+LEFT JOIN employees e ON u.id = e.user_id AND e.deleted_at IS NULL
+WHERE u.phone_number = $1
+AND u.deleted_at IS NULL;
 
 -- name: SoftDeleteUser :exec
 UPDATE users
@@ -116,14 +142,14 @@ AND deleted_at IS NULL;
 
 -- name: ExistsUserByCustomerID :one
 SELECT COUNT(*) > 0
-FROM users
-WHERE customer_id = $1
+FROM customers
+WHERE id = $1
 AND deleted_at IS NULL;
 
 -- name: ExistsUserByEmployeeID :one
 SELECT COUNT(*) > 0
-FROM users
-WHERE employee_id = $1
+FROM employees
+WHERE id = $1
 AND deleted_at IS NULL;
 
 -- name: FindActiveUsers :many
@@ -142,16 +168,18 @@ ORDER BY created_at DESC
 LIMIT $1 OFFSET $2;
 
 -- name: FindUserByCustomerID :one
-SELECT *
-FROM users
-WHERE customer_id = $1
-AND deleted_at IS NULL;
+SELECT u.*
+FROM users u
+INNER JOIN customers c ON u.id = c.user_id
+WHERE c.id = $1
+AND u.deleted_at IS NULL;
 
 -- name: FindUserByEmployeeID :one
-SELECT *
-FROM users
-WHERE employee_id = $1
-AND deleted_at IS NULL;
+SELECT u.*
+FROM users u
+INNER JOIN employees e ON u.id = e.user_id
+WHERE e.id = $1
+AND u.deleted_at IS NULL;
 
 -- name: FindInactiveUsers :many
 SELECT *
@@ -169,29 +197,7 @@ AND deleted_at IS NULL
 ORDER BY last_login DESC
 LIMIT $2 OFFSET $3;
 
--- name: FindUsersBySpecification :many
-SELECT *
-FROM users
-WHERE deleted_at IS NULL
-AND ($1::text IS NULL OR email ILIKE '%' || $1 || '%')
-AND ($2::text IS NULL OR phone_number ILIKE '%' || $2 || '%')
-AND ($3::text IS NULL OR role = $3)
-AND ($4::text IS NULL OR status = $4)
-AND ($5::timestamptz IS NULL OR last_login >= $5)
-AND ($6::timestamptz IS NULL OR created_at >= $6)
-ORDER BY created_at DESC
-LIMIT $7 OFFSET $8;
 
--- name: CountUsersBySpecification :one
-SELECT COUNT(*)
-FROM users
-WHERE deleted_at IS NULL
-AND ($1::text IS NULL OR email ILIKE '%' || $1 || '%')
-AND ($2::text IS NULL OR phone_number ILIKE '%' || $2 || '%')
-AND ($3::text IS NULL OR role = $3)
-AND ($4::text IS NULL OR status = $4)
-AND ($5::timestamptz IS NULL OR last_login >= $5)
-AND ($6::timestamptz IS NULL OR created_at >= $6);
 
 -- name: UpdateUserPassword :exec
 UPDATE users
@@ -207,3 +213,30 @@ SET
     status = $2,
     updated_at = CURRENT_TIMESTAMP
 WHERE id = $1;
+
+
+-- name: GetCustomerIDByUserID :one
+SELECT c.id
+FROM customers c
+WHERE c.user_id = $1
+AND c.deleted_at IS NULL;
+
+-- name: GetEmployeeIDByUserID :one
+SELECT e.id
+FROM employees e
+WHERE e.user_id = $1
+AND e.deleted_at IS NULL;
+
+-- name: GetUserCustomerProfile :one
+SELECT u.*, c.*
+FROM users u
+JOIN customers c ON u.id = c.user_id
+WHERE u.id = $1
+AND u.deleted_at IS NULL;
+
+-- name: GetUserEmployeeProfile :one
+SELECT u.*, e.*
+FROM users u
+JOIN employees e ON u.id = e.user_id
+WHERE u.id = $1
+AND u.deleted_at IS NULL;

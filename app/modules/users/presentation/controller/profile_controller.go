@@ -5,7 +5,6 @@ import (
 
 	"clinic-vet-api/app/middleware"
 	"clinic-vet-api/app/modules/users/application/usecase"
-	"clinic-vet-api/app/modules/users/presentation/dto"
 	authError "clinic-vet-api/app/shared/error/auth"
 	"clinic-vet-api/app/shared/response"
 
@@ -23,39 +22,17 @@ func NewProfileController(useCases usecase.ProfileUseCases) *ProfileController {
 }
 
 func (controller *ProfileController) GetUserProfile(c *gin.Context) {
-	userID, exists := middleware.GetUserIDFromContext(c)
+	user, exists := middleware.GetUserFromContext(c)
 	if !exists {
 		authError.UnauthorizedCTXError()
 		return
 	}
 
-	profile, err := controller.useCases.GetUserProfile(context.Background(), userID.Value())
+	profile, err := controller.useCases.GetUserProfile(context.Background(), user.UserID, user.CustomerID, user.EmployeeID)
 	if err != nil {
 		response.ApplicationError(c, err)
 		return
 	}
 
 	response.Found(c, profile, "User Profile")
-}
-
-func (controller *ProfileController) UpdateUserProfile(c *gin.Context) {
-	userID, exists := middleware.GetUserIDFromContext(c)
-	if !exists {
-		authError.UnauthorizedCTXError()
-		return
-	}
-
-	var requestData dto.UpdateProfileRequest
-	if err := c.ShouldBindJSON(&requestData); err != nil {
-		response.BadRequest(c, err)
-		return
-	}
-
-	profileUpdateData := requestData.ToProfileUpdateDTO(userID)
-	if err := controller.useCases.UpdateProfile(c.Request.Context(), profileUpdateData); err != nil {
-		response.ApplicationError(c, err)
-		return
-	}
-
-	response.Updated(c, nil, "User Profile")
 }

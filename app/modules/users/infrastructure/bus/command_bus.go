@@ -3,8 +3,8 @@ package bus
 import (
 	"context"
 
-	"clinic-vet-api/app/core/repository"
-	"clinic-vet-api/app/core/service"
+	"clinic-vet-api/app/modules/core/repository"
+	"clinic-vet-api/app/modules/core/service"
 	"clinic-vet-api/app/modules/users/application/usecase/command"
 	"clinic-vet-api/app/shared/cqrs"
 	"clinic-vet-api/app/shared/password"

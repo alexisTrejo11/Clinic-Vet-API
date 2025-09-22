@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"html/template"
 
-	"clinic-vet-api/app/core/domain/entity/notification"
+	"clinic-vet-api/app/modules/core/domain/entity/notification"
 	service "clinic-vet-api/app/modules/notifications/application"
 
 	"clinic-vet-api/app/config"

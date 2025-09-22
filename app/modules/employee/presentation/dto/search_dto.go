@@ -5,9 +5,9 @@ import (
 	"strconv"
 	"strings"
 
-	"clinic-vet-api/app/core/domain/enum"
-	"clinic-vet-api/app/core/domain/specification"
-	"clinic-vet-api/app/core/domain/valueobject"
+	"clinic-vet-api/app/modules/core/domain/enum"
+	"clinic-vet-api/app/modules/core/domain/specification"
+	"clinic-vet-api/app/modules/core/domain/valueobject"
 	"clinic-vet-api/app/modules/employee/application/cqrs/query"
 
 	"github.com/gin-gonic/gin"
@@ -97,14 +97,15 @@ func (r *EmployeeSearchRequest) ToSpecification() (*specification.EmployeeSearch
 
 	// Fee range
 	if r.MinFee > 0 && r.MaxFee > 0 {
-		minFee := valueobject.NewMoney(r.MinFee, "USD") // Asumiendo USD como moneda por defecto
-		maxFee := valueobject.NewMoney(r.MaxFee, "USD")
+
+		minFee := valueobject.NewMoney(valueobject.NewDecimalFromFloat(r.MinFee), "USD")
+		maxFee := valueobject.NewMoney(valueobject.NewDecimalFromFloat(r.MaxFee), "USD")
 		spec = spec.WithFeeRange(minFee, maxFee)
 	} else if r.MinFee > 0 {
-		minFee := valueobject.NewMoney(r.MinFee, "USD")
+		minFee := valueobject.NewMoney(valueobject.NewDecimalFromFloat(r.MinFee), "USD")
 		spec = spec.WithMinFee(minFee)
 	} else if r.MaxFee > 0 {
-		maxFee := valueobject.NewMoney(r.MaxFee, "USD")
+		maxFee := valueobject.NewMoney(valueobject.NewDecimalFromFloat(r.MaxFee), "USD")
 		spec = spec.WithMaxFee(maxFee)
 	}
 

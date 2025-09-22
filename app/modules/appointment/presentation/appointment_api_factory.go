@@ -1,13 +1,13 @@
 package api
 
 import (
-	"clinic-vet-api/app/core/repository"
 	"clinic-vet-api/app/middleware"
 	"clinic-vet-api/app/modules/appointment/application/command"
 	"clinic-vet-api/app/modules/appointment/application/query"
 	"clinic-vet-api/app/modules/appointment/infrastructure/bus"
 	"clinic-vet-api/app/modules/appointment/presentation/controller"
 	"clinic-vet-api/app/modules/appointment/presentation/routes"
+	"clinic-vet-api/app/modules/core/repository"
 	"clinic-vet-api/sqlc"
 	"fmt"
 

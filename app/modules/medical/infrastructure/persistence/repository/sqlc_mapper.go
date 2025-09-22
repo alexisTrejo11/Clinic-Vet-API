@@ -6,9 +6,9 @@ import (
 	"math/big"
 	"time"
 
-	"clinic-vet-api/app/core/domain/entity/medical"
-	"clinic-vet-api/app/core/domain/enum"
-	"clinic-vet-api/app/core/domain/valueobject"
+	"clinic-vet-api/app/modules/core/domain/entity/medical"
+	"clinic-vet-api/app/modules/core/domain/enum"
+	"clinic-vet-api/app/modules/core/domain/valueobject"
 	"clinic-vet-api/sqlc"
 
 	"github.com/jackc/pgx/v5/pgtype"

@@ -1,9 +1,8 @@
 package query
 
 import (
+	"clinic-vet-api/app/modules/core/domain/valueobject"
 	"time"
-
-	"clinic-vet-api/app/core/domain/valueobject"
 )
 
 type MedSessionResult struct {

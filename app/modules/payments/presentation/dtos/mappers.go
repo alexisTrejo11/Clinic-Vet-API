@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"clinic-vet-api/app/core/domain/entity/payment"
-	"clinic-vet-api/app/core/domain/enum"
-	"clinic-vet-api/app/core/domain/valueobject"
+	"clinic-vet-api/app/modules/core/domain/entity/payment"
+	"clinic-vet-api/app/modules/core/domain/enum"
+	"clinic-vet-api/app/modules/core/domain/valueobject"
 	cmd "clinic-vet-api/app/modules/payments/application/command"
 	query "clinic-vet-api/app/modules/payments/application/queries"
 )
@@ -27,7 +27,7 @@ func (req CreatePaymentRequest) ToCreatePaymentCommand(ctx context.Context) (cmd
 		paymentStatus = enum.PaymentStatusPending
 	}
 
-	amount := valueobject.NewMoney(req.Amount, req.Currency)
+	amount := valueobject.NewMoney(valueobject.NewDecimalFromFloat(req.Amount), req.Currency)
 
 	customerID := valueobject.NewCustomerID(uint(req.CustomerID))
 	appointmentID := valueobject.NewAppointmentID(uint(req.AppointmentID))
@@ -49,11 +49,16 @@ func (req CreatePaymentRequest) ToCreatePaymentCommand(ctx context.Context) (cmd
 }
 
 func (req UpdatePaymentRequest) ToUpdatePaymentCommand(ctx context.Context, paymentID uint) (cmd.UpdatePaymentCommand, error) {
+	var amount *valueobject.Money
+	if req.Amount != nil && req.Currency != nil {
+		amountoObj := valueobject.NewMoney(valueobject.NewDecimalFromFloat(*req.Amount), *req.Currency)
+		amount = &amountoObj
+	}
+
 	command, errors := cmd.NewUpdatePaymentCommand(
 		ctx,
 		paymentID,
-		req.Amount,
-		req.Currency,
+		amount,
 		req.PaymentMethod,
 		req.Description,
 		req.DueDate,
@@ -84,7 +89,7 @@ func ToPaymentResponse(pay any) PaymentResponse {
 	return PaymentResponse{
 		ID:            payment.ID().Value(),
 		AppointmentID: payment.AppointmentID().Value(),
-		Amount:        payment.Amount().ToFloat(),
+		Amount:        payment.Amount().Amount().Float64(),
 		Currency:      payment.Currency(),
 		Method:        payment.Method().DisplayName(),
 		Status:        payment.Status().DisplayName(),

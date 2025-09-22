@@ -2,24 +2,16 @@ package repositoryimpl
 
 import (
 	"context"
+	"errors"
 
-	"clinic-vet-api/app/core/domain/entity/user/profile"
-	"clinic-vet-api/app/core/domain/valueobject"
-	"clinic-vet-api/app/core/repository"
-	"clinic-vet-api/app/shared/log"
+	"clinic-vet-api/app/modules/core/domain/enum"
+	"clinic-vet-api/app/modules/core/domain/valueobject"
+	"clinic-vet-api/app/modules/core/repository"
 	"clinic-vet-api/sqlc"
-
-	"github.com/jackc/pgx/v5/pgtype"
-	"go.uber.org/zap"
 )
 
 type SQLCProfileRepository struct {
 	queries *sqlc.Queries
-}
-
-// GetMapByUserID implements repository.ProfileRepository.
-func (r *SQLCProfileRepository) GetMapByUserID(ctx context.Context, userID valueobject.UserID) (map[string]any, error) {
-	panic("unimplemented")
 }
 
 func NewSQLCProfileRepository(queries *sqlc.Queries) repository.ProfileRepository {
@@ -28,55 +20,54 @@ func NewSQLCProfileRepository(queries *sqlc.Queries) repository.ProfileRepositor
 	}
 }
 
-func (r *SQLCProfileRepository) GetByUserID(ctx context.Context, userID valueobject.UserID) (profile.Profile, error) {
-	sqlRow, err := r.queries.GetUserProfile(ctx, pgtype.Int4{Int32: int32(userID.Value()), Valid: true})
-	if err != nil {
-		return profile.Profile{}, err
+func (r *SQLCProfileRepository) GetMapByUserID(ctx context.Context, userID valueobject.UserID, role enum.UserRole) (map[string]any, error) {
+	profileMap := make(map[string]any)
+	if role.IsStaff() {
+		sqlcRow, err := r.queries.GetUserEmployeeProfile(ctx, int32(userID.Value()))
+		if err != nil {
+			return nil, err
+		}
+		profileMap["employee_id"] = sqlcRow.ID
+		profileMap["email"] = sqlcRow.Email.String
+		profileMap["phone_number"] = sqlcRow.PhoneNumber.String
+		profileMap["status"] = sqlcRow.Status
+		profileMap["role"] = sqlcRow.Role
+		profileMap["first_name"] = sqlcRow.FirstName
+		profileMap["last_name"] = sqlcRow.LastName
+		profileMap["photo"] = sqlcRow.Photo
+		profileMap["license_number"] = sqlcRow.LicenseNumber
+		profileMap["speciality"] = sqlcRow.Speciality
+		profileMap["years_of_experience"] = sqlcRow.YearsOfExperience
+		profileMap["is_active"] = sqlcRow.IsActive
+		profileMap["user_id"] = sqlcRow.UserID.Int32
+
+		if sqlcRow.LastLogin.Valid {
+			profileMap["last_login"] = sqlcRow.LastLogin.Time
+		} else {
+			profileMap["last_login"] = nil
+		}
+		profileMap["created_at"] = sqlcRow.CreatedAt.Time
+		if sqlcRow.UpdatedAt.Valid {
+			profileMap["updated_at"] = sqlcRow.UpdatedAt.Time
+		}
+
+		return profileMap, nil
+
+	} else if role == enum.UserRoleCustomer {
+		sqlcRow, err := r.queries.GetUserCustomerProfile(ctx, int32(userID.Value()))
+		if err != nil {
+			return nil, err
+		}
+		profileMap["customer_id"] = sqlcRow.ID
+		profileMap["email"] = sqlcRow.Email.String
+		profileMap["phone_number"] = sqlcRow.PhoneNumber.String
+		profileMap["status"] = sqlcRow.Status
+		profileMap["role"] = sqlcRow.Role
+		profileMap["first_name"] = sqlcRow.FirstName
+		profileMap["last_name"] = sqlcRow.LastName
+		profileMap["photo"] = sqlcRow.Photo
+		profileMap["is_active"] = sqlcRow.IsActive
+		profileMap["user_id"] = sqlcRow.UserID.Int32
 	}
-
-	return profile.Profile{
-		UserID:   userID,
-		PhotoURL: sqlRow.ProfilePic.String,
-		Bio:      sqlRow.Bio.String,
-		JoinedAt: sqlRow.CreatedAt.Time,
-	}, nil
-}
-
-func (r *SQLCProfileRepository) Create(ctx context.Context, profile *profile.Profile) error {
-	log.App.Debug("Creating profile in repository", zap.Int("userID", int(profile.UserID.Value())))
-
-	profileCreated, err := r.queries.CreateProfile(ctx, sqlc.CreateProfileParams{
-		UserID:     pgtype.Int4{Int32: int32(profile.UserID.Value()), Valid: true},
-		Bio:        pgtype.Text{String: profile.Bio, Valid: true},
-		ProfilePic: pgtype.Text{String: profile.PhotoURL, Valid: profile.PhotoURL != ""},
-	})
-	if err != nil {
-		return err
-	}
-
-	profile.SetID(uint(profileCreated.ID))
-
-	return nil
-}
-
-func (r *SQLCProfileRepository) Update(ctx context.Context, profile *profile.Profile) error {
-	_, err := r.queries.UpdateUserProfile(ctx, sqlc.UpdateUserProfileParams{
-		UserID:     pgtype.Int4{Int32: int32(profile.UserID.Value()), Valid: !profile.UserID.IsZero()},
-		Bio:        pgtype.Text{String: profile.Bio, Valid: true},
-		ProfilePic: pgtype.Text{String: profile.PhotoURL, Valid: profile.PhotoURL != ""},
-	})
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (r *SQLCProfileRepository) DeleteByUserID(ctx context.Context, userID valueobject.UserID) error {
-	err := r.queries.DeleteUserProfile(ctx, pgtype.Int4{Int32: int32(userID.Value()), Valid: true})
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return nil, errors.New("unsupported role for profile retrieval")
 }

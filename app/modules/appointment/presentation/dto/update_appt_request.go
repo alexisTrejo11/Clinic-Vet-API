@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"clinic-vet-api/app/core/domain/enum"
 	"clinic-vet-api/app/modules/appointment/application/command"
+	"clinic-vet-api/app/modules/core/domain/enum"
 )
 
 type UpdateApptRequest struct {

@@ -1,8 +1,8 @@
 package command
 
 import (
-	appt "clinic-vet-api/app/core/domain/entity/appointment"
-	"clinic-vet-api/app/core/domain/enum"
+	appt "clinic-vet-api/app/modules/core/domain/entity/appointment"
+	"clinic-vet-api/app/modules/core/domain/enum"
 	apperror "clinic-vet-api/app/shared/error/application"
 )
 

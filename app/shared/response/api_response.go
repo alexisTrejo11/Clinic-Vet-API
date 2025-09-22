@@ -4,7 +4,7 @@ package response
 import (
 	"time"
 
-	domainerr "clinic-vet-api/app/core/error"
+	domainerr "clinic-vet-api/app/modules/core/error"
 	apperror "clinic-vet-api/app/shared/error/application"
 )
 

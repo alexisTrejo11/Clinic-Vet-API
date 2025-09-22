@@ -2,9 +2,9 @@
 package api
 
 import (
-	domainerr "clinic-vet-api/app/core/error"
-	"clinic-vet-api/app/core/repository"
 	"clinic-vet-api/app/middleware"
+	domainerr "clinic-vet-api/app/modules/core/error"
+	"clinic-vet-api/app/modules/core/repository"
 	"clinic-vet-api/app/modules/payments/infrastructure/bus"
 	repositoryimpl "clinic-vet-api/app/modules/payments/infrastructure/repository"
 	"clinic-vet-api/app/modules/payments/presentation/controller"

@@ -1,9 +1,9 @@
 package command
 
 import (
-	"clinic-vet-api/app/core/domain/entity/pet"
-	"clinic-vet-api/app/core/domain/enum"
-	"clinic-vet-api/app/core/domain/valueobject"
+	"clinic-vet-api/app/modules/core/domain/entity/pet"
+	"clinic-vet-api/app/modules/core/domain/enum"
+	"clinic-vet-api/app/modules/core/domain/valueobject"
 	"clinic-vet-api/app/shared/cqrs"
 	"context"
 	"fmt"
@@ -11,22 +11,20 @@ import (
 )
 
 type UpdatePetCommand struct {
-	PetID              valueobject.PetID       `json:"pet_id"`
-	Name               *string                 `json:"name,omitempty" validate:"omitempty,min=2,max=100"`
-	Photo              *string                 `json:"photo,omitempty" validate:"omitempty,url"`
-	Species            *string                 `json:"species,omitempty" validate:"omitempty,min=2,max=50"`
-	Breed              *string                 `json:"breed,omitempty" validate:"omitempty,min=2,max=50"`
-	Age                *int                    `json:"age,omitempty" validate:"omitempty,min=0"`
-	Gender             *string                 `json:"gender,omitempty" validate:"omitempty,oneof=Male Female Unknown"`
-	Weight             *float64                `json:"weight,omitempty" validate:"omitempty,gt=0,lte=1000"`
-	Color              *string                 `json:"color,omitempty" validate:"omitempty,min=2,max=50"`
-	Microchip          *string                 `json:"microchip,omitempty" validate:"omitempty,len=15,numeric"`
-	IsNeutered         *bool                   `json:"is_neutered,omitempty"`
-	CustomerID         *valueobject.CustomerID `json:"customer_id,omitempty" validate:"omitempty,gt=0"`
-	Allergies          *string                 `json:"allergies,omitempty" validate:"omitempty,max=500"`
-	CurrentMedications *string                 `json:"current_medications,omitempty" validate:"omitempty,max=500"`
-	SpecialNeeds       *string                 `json:"special_needs,omitempty" validate:"omitempty,max=500"`
-	IsActive           *bool                   `json:"is_active,omitempty"`
+	PetID      valueobject.PetID
+	Name       *string
+	Photo      *string
+	Species    *string
+	Breed      *string
+	Age        *int
+	BloodType  *string
+	Tattoo     *string
+	Gender     *string
+	Color      *string
+	Microchip  *string
+	IsNeutered *bool
+	CustomerID *valueobject.CustomerID
+	IsActive   *bool
 }
 
 func (h *petCommandHandler) UpdatePet(ctx context.Context, cmd UpdatePetCommand) cqrs.CommandResult {
@@ -79,10 +77,6 @@ func appyUpdates(ctx context.Context, p *pet.Pet, cmd UpdatePetCommand) error {
 		}
 	}
 
-	if cmd.Weight != nil {
-		options = append(options, pet.UpdateWeight(cmd.Weight))
-	}
-
 	if cmd.Color != nil {
 		options = append(options, pet.UpdateColor(cmd.Color))
 	}
@@ -97,18 +91,6 @@ func appyUpdates(ctx context.Context, p *pet.Pet, cmd UpdatePetCommand) error {
 
 	if cmd.CustomerID != nil {
 		options = append(options, pet.UpdateCustomerID(*cmd.CustomerID))
-	}
-
-	if cmd.Allergies != nil {
-		options = append(options, pet.UpdateAllergies(cmd.Allergies))
-	}
-
-	if cmd.CurrentMedications != nil {
-		options = append(options, pet.UpdateMedications(cmd.CurrentMedications))
-	}
-
-	if cmd.SpecialNeeds != nil {
-		options = append(options, pet.UpdateSpecialNeeds(cmd.SpecialNeeds))
 	}
 
 	if cmd.IsActive != nil {

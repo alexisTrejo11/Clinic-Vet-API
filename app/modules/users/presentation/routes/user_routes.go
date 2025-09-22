@@ -27,5 +27,4 @@ func ProfileRoutes(appGroup *gin.RouterGroup, profileController *controller.Prof
 	profileGroup.Use(authMiddleware.Authenticate())
 
 	profileGroup.GET("", profileController.GetUserProfile)
-	profileGroup.PATCH("", profileController.UpdateUserProfile)
 }

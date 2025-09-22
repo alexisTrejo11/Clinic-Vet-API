@@ -1,10 +1,9 @@
 package query
 
 import (
+	"clinic-vet-api/app/modules/core/domain/specification"
+	"clinic-vet-api/app/modules/core/domain/valueobject"
 	"context"
-
-	"clinic-vet-api/app/core/domain/specification"
-	"clinic-vet-api/app/core/domain/valueobject"
 )
 
 type FindCustomerByIDQuery struct {

@@ -5,8 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"clinic-vet-api/app/core/domain/entity/notification"
+	"clinic-vet-api/app/modules/core/domain/entity/notification"
 	service "clinic-vet-api/app/modules/notifications/application"
+
 	"github.com/twilio/twilio-go"
 	twilioApi "github.com/twilio/twilio-go/rest/api/v2010"
 )

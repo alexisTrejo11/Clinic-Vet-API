@@ -1,9 +1,9 @@
 package repository
 
 import (
-	"clinic-vet-api/app/core/domain/entity/employee"
-	"clinic-vet-api/app/core/domain/enum"
-	"clinic-vet-api/app/core/domain/valueobject"
+	"clinic-vet-api/app/modules/core/domain/entity/employee"
+	"clinic-vet-api/app/modules/core/domain/enum"
+	"clinic-vet-api/app/modules/core/domain/valueobject"
 	"clinic-vet-api/db/models"
 	"clinic-vet-api/sqlc"
 	"database/sql"

@@ -5,8 +5,8 @@ import (
 	"context"
 	"time"
 
-	"clinic-vet-api/app/core/domain/enum"
-	"clinic-vet-api/app/core/domain/specification"
+	"clinic-vet-api/app/modules/core/domain/enum"
+	"clinic-vet-api/app/modules/core/domain/specification"
 	query "clinic-vet-api/app/modules/payments/application/queries"
 	"clinic-vet-api/app/shared/page"
 )

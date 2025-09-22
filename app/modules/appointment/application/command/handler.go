@@ -3,9 +3,9 @@ package command
 import (
 	"context"
 
-	appt "clinic-vet-api/app/core/domain/entity/appointment"
-	"clinic-vet-api/app/core/domain/valueobject"
-	"clinic-vet-api/app/core/repository"
+	appt "clinic-vet-api/app/modules/core/domain/entity/appointment"
+	"clinic-vet-api/app/modules/core/domain/valueobject"
+	"clinic-vet-api/app/modules/core/repository"
 	"clinic-vet-api/app/shared/cqrs"
 )
 

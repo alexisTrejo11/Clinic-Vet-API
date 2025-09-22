@@ -1,9 +1,9 @@
 package query
 
 import (
-	"clinic-vet-api/app/core/domain/entity/medical"
-	"clinic-vet-api/app/core/domain/enum"
-	"clinic-vet-api/app/core/domain/valueobject"
+	"clinic-vet-api/app/modules/core/domain/entity/medical"
+	"clinic-vet-api/app/modules/core/domain/enum"
+	"clinic-vet-api/app/modules/core/domain/valueobject"
 	p "clinic-vet-api/app/shared/page"
 )
 
@@ -13,7 +13,6 @@ func toResult(entity medical.MedicalSession) MedSessionResult {
 		notes = entityNotes
 	}
 
-	// Convertir campos Decimal a float64 para la respuesta
 	var weight *valueobject.Decimal
 	if entity.Weight() != nil {
 		weight = entity.Weight()

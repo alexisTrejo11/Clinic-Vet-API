@@ -4,7 +4,7 @@ package query
 import (
 	"time"
 
-	"clinic-vet-api/app/core/domain/entity/payment"
+	"clinic-vet-api/app/modules/core/domain/entity/payment"
 )
 
 type PaymentResult struct {
@@ -35,7 +35,7 @@ func entityToResult(payment *payment.Payment) PaymentResult {
 	return PaymentResult{
 		ID:            payment.ID().Value(),
 		AppointmentID: payment.AppointmentID().Value(),
-		Amount:        payment.Amount().ToFloat(),
+		Amount:        payment.Amount().Amount().Float64(),
 		Currency:      payment.Currency(),
 		Method:        payment.Method().DisplayName(),
 		Status:        string(payment.Status()),

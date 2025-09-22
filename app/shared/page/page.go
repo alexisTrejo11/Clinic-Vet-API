@@ -10,7 +10,7 @@
 package page
 
 import (
-	"clinic-vet-api/app/core/domain/specification"
+	"clinic-vet-api/app/modules/core/domain/specification"
 	"fmt"
 	"math"
 	"reflect"

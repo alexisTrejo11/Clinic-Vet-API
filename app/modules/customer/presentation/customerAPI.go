@@ -1,8 +1,8 @@
 package customerAPI
 
 import (
-	"clinic-vet-api/app/core/repository"
 	"clinic-vet-api/app/middleware"
+	"clinic-vet-api/app/modules/core/repository"
 	"clinic-vet-api/app/modules/customer/application/command"
 	"clinic-vet-api/app/modules/customer/application/query"
 	"clinic-vet-api/app/modules/customer/infrastructure/bus"

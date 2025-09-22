@@ -2,9 +2,9 @@
 package api
 
 import (
-	"clinic-vet-api/app/core/repository"
-	"clinic-vet-api/app/core/service"
 	"clinic-vet-api/app/middleware"
+	"clinic-vet-api/app/modules/core/repository"
+	"clinic-vet-api/app/modules/core/service"
 	employeeRepo "clinic-vet-api/app/modules/employee/infrastructure/repository"
 	"clinic-vet-api/app/modules/users/application/usecase"
 	"clinic-vet-api/app/modules/users/infrastructure/bus"

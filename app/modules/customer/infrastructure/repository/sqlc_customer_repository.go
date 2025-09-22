@@ -1,11 +1,11 @@
 package repository
 
 import (
-	c "clinic-vet-api/app/core/domain/entity/customer"
-	"clinic-vet-api/app/core/domain/entity/pet"
-	"clinic-vet-api/app/core/domain/specification"
-	"clinic-vet-api/app/core/domain/valueobject"
-	"clinic-vet-api/app/core/repository"
+	c "clinic-vet-api/app/modules/core/domain/entity/customer"
+	"clinic-vet-api/app/modules/core/domain/entity/pet"
+	"clinic-vet-api/app/modules/core/domain/specification"
+	"clinic-vet-api/app/modules/core/domain/valueobject"
+	"clinic-vet-api/app/modules/core/repository"
 	"clinic-vet-api/app/shared/page"
 	"clinic-vet-api/sqlc"
 	"context"

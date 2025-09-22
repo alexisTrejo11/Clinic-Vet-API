@@ -3,8 +3,8 @@ package query
 import (
 	"context"
 
-	"clinic-vet-api/app/core/domain/specification"
-	"clinic-vet-api/app/core/repository"
+	"clinic-vet-api/app/modules/core/domain/specification"
+	"clinic-vet-api/app/modules/core/repository"
 	"clinic-vet-api/app/shared/page"
 )
 

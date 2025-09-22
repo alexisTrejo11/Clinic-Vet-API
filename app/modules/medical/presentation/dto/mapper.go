@@ -1,7 +1,7 @@
 package dto
 
 import (
-	"clinic-vet-api/app/core/domain/valueobject"
+	"clinic-vet-api/app/modules/core/domain/valueobject"
 	"clinic-vet-api/app/modules/medical/application/command"
 	"clinic-vet-api/app/modules/medical/application/query"
 	commondto "clinic-vet-api/app/shared/dto"

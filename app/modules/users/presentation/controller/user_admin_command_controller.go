@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"clinic-vet-api/app/core/domain/enum"
+	"clinic-vet-api/app/modules/core/domain/enum"
 	"clinic-vet-api/app/modules/users/application/usecase/command"
 	"clinic-vet-api/app/modules/users/infrastructure/bus"
 	"clinic-vet-api/app/modules/users/presentation/dto"

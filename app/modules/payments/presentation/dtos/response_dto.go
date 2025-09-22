@@ -1,9 +1,8 @@
 package dto
 
 import (
+	"clinic-vet-api/app/modules/core/domain/enum"
 	"time"
-
-	"clinic-vet-api/app/core/domain/enum"
 )
 
 // PaymentResponse represents a payment API response

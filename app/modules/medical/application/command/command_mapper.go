@@ -1,8 +1,8 @@
 package command
 
 import (
-	"clinic-vet-api/app/core/domain/entity/medical"
-	"clinic-vet-api/app/core/domain/enum"
+	"clinic-vet-api/app/modules/core/domain/entity/medical"
+	"clinic-vet-api/app/modules/core/domain/enum"
 )
 
 func ToEntityFromCreate(command *CreateMedSessionCommand) (*medical.MedicalSession, error) {
@@ -32,7 +32,7 @@ func ToEntityFromCreate(command *CreateMedSessionCommand) (*medical.MedicalSessi
 		medical.WithVisitReason(visitReason),
 		medical.WithCondition(condition),
 		medical.WithTreatment(command.Treatment),
-		medical.WithNotes(*command.Notes),
+		medical.WithNotes(command.Notes),
 	)
 	if err != nil {
 		return nil, err
@@ -81,7 +81,7 @@ func ToEntityFromUpdate(command *UpdateMedSessionCommand, existingEntity *medica
 	}
 
 	if command.Notes != nil {
-		opts = append(opts, medical.WithNotes(*command.Notes))
+		opts = append(opts, medical.WithNotes(command.Notes))
 	}
 
 	for _, opt := range opts {

@@ -2,7 +2,7 @@
 package bus
 
 import (
-	"clinic-vet-api/app/core/repository"
+	"clinic-vet-api/app/modules/core/repository"
 	query "clinic-vet-api/app/modules/payments/application/queries"
 	"clinic-vet-api/app/shared/page"
 )

@@ -2,8 +2,8 @@
 package dto
 
 import (
-	"clinic-vet-api/app/core/domain/enum"
-	"clinic-vet-api/app/core/domain/valueobject"
+	"clinic-vet-api/app/modules/core/domain/enum"
+	"clinic-vet-api/app/modules/core/domain/valueobject"
 	"clinic-vet-api/app/modules/employee/application/cqrs/command"
 	"clinic-vet-api/app/shared/page"
 	"time"

@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	"clinic-vet-api/app/core/domain/entity/notification"
+	"clinic-vet-api/app/modules/core/domain/entity/notification"
 	emailTemplates "clinic-vet-api/app/modules/notifications/infrastructure/sending/email/templates"
 )
 

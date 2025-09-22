@@ -2,11 +2,11 @@
 package repository
 
 import (
-	appt "clinic-vet-api/app/core/domain/entity/appointment"
-	"clinic-vet-api/app/core/domain/enum"
-	"clinic-vet-api/app/core/domain/specification"
-	"clinic-vet-api/app/core/domain/valueobject"
-	"clinic-vet-api/app/core/repository"
+	appt "clinic-vet-api/app/modules/core/domain/entity/appointment"
+	"clinic-vet-api/app/modules/core/domain/enum"
+	"clinic-vet-api/app/modules/core/domain/specification"
+	"clinic-vet-api/app/modules/core/domain/valueobject"
+	"clinic-vet-api/app/modules/core/repository"
 	"clinic-vet-api/app/shared/page"
 	p "clinic-vet-api/app/shared/page"
 	"clinic-vet-api/db/models"

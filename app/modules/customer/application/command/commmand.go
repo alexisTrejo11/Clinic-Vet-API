@@ -2,9 +2,9 @@
 package command
 
 import (
-	"clinic-vet-api/app/core/domain/entity/customer"
-	"clinic-vet-api/app/core/domain/enum"
-	"clinic-vet-api/app/core/domain/valueobject"
+	"clinic-vet-api/app/modules/core/domain/entity/customer"
+	"clinic-vet-api/app/modules/core/domain/enum"
+	"clinic-vet-api/app/modules/core/domain/valueobject"
 	"context"
 	"time"
 )

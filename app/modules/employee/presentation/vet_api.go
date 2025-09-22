@@ -1,8 +1,8 @@
 package api
 
 import (
-	"clinic-vet-api/app/core/repository"
 	"clinic-vet-api/app/middleware"
+	"clinic-vet-api/app/modules/core/repository"
 	"clinic-vet-api/app/modules/employee/application/cqrs/command"
 	"clinic-vet-api/app/modules/employee/application/cqrs/query"
 	"clinic-vet-api/app/modules/employee/infrastructure/bus"

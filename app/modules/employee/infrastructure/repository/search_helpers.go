@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"clinic-vet-api/app/core/domain/specification"
+	"clinic-vet-api/app/modules/core/domain/specification"
 	"context"
 	"strings"
 )

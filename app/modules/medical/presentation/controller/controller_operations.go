@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"clinic-vet-api/app/core/domain/valueobject"
+	"clinic-vet-api/app/modules/core/domain/valueobject"
 	"clinic-vet-api/app/modules/medical/application/command"
 	"clinic-vet-api/app/modules/medical/application/query"
 	"clinic-vet-api/app/modules/medical/infrastructure/bus"

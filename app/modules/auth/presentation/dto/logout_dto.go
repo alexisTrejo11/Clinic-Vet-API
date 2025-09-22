@@ -1,20 +1,18 @@
 package dto
 
 import (
-	"clinic-vet-api/app/core/domain/valueobject"
-	"clinic-vet-api/app/modules/auth/application/command"
-	"context"
+	sessionCmd "clinic-vet-api/app/modules/auth/application/command/session"
+	"clinic-vet-api/app/modules/core/domain/valueobject"
 )
 
 type RequestLogout struct {
 	RefreshToken string `json:"refresh_token" binding:"required"`
 }
 
-func (r *RequestLogout) ToCommand(ctx context.Context, userIDUint uint) (command.LogoutCommand, error) {
-	cmd := &command.LogoutCommand{
+func (r *RequestLogout) ToCommand(userIDUint uint) (sessionCmd.RevokeUserSessionCommand, error) {
+	cmd := &sessionCmd.RevokeUserSessionCommand{
 		RefreshToken: r.RefreshToken,
 		UserID:       valueobject.NewUserID(userIDUint),
-		CTX:          ctx,
 	}
 
 	return *cmd, nil
