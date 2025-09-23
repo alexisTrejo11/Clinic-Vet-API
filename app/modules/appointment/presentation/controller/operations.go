@@ -239,16 +239,19 @@ func (ctrl *ApptControllerOperations) DeleteAppointment(c *gin.Context) {
 }
 
 func (ctrl *ApptControllerOperations) RescheduleAppointment(c *gin.Context, employeeID *uint) {
-	var requestApptData dto.RescheduleApptRequest
+	appointmentID, err := ginUtils.ParseParamToUInt(c, "id")
+	if err != nil {
+		response.BadRequest(c, httpError.RequestURLParamError(err, "id", c.Param("id")))
+		return
+	}
+
+	var requestApptData dto.RescheduleAppointData
 	if err := c.ShouldBindJSON(&requestApptData); err != nil {
 		response.BadRequest(c, httpError.RequestBodyDataError(err))
 		return
 	}
 
-	command, err := requestApptData.ToCommand(c.Request.Context(), employeeID)
-	if err != nil {
-		response.ApplicationError(c, err)
-	}
+	command := requestApptData.ToCommand(c.Request.Context(), appointmentID)
 	result := ctrl.bus.CommandBus.RescheduleAppointment(command)
 	if !result.IsSuccess() {
 		response.ApplicationError(c, result.Error())

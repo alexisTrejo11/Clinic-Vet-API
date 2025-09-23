@@ -19,10 +19,10 @@ type CreateApptRequest struct {
 	// Required: true
 	PetID uint `json:"pet_id" binding:"required" example:"456"`
 
-	// Date and time of the appointment in ISO 8601 format
+	// Date and time of the appointment
 	// Required: true
-	// Format: 2006-01-02T15:04:05Z07:00
-	Date string `json:"date" binding:"required,datetime=2006-01-02T15:04:05Z07:00" example:"2024-03-15T10:30:00Z"`
+	// Format: RFC3339
+	Datetime time.Time `json:"datetime" binding:"required" example:"2024-03-15T10:30:00Z"`
 
 	// Reason for the appointment
 	// Required: true
@@ -47,10 +47,10 @@ type RequestApptResponse struct {
 	// Required: true
 	PetID uint `json:"pet_id" binding:"required" example:"456"`
 
-	// Date and time of the appointment in ISO 8601 format
+	// Date and time of the appointment
 	// Required: true
-	// Format: 2006-01-02T15:04:05Z07:00
-	Date string `json:"date" binding:"required,datetime=2006-01-02T15:04:05Z07:00" example:"2024-03-15T10:30:00Z"`
+	// Format: RFC3339
+	Datetime time.Time `json:"datetime" binding:"required" example:"2024-03-15T10:30:00Z"`
 
 	// Reason for the appointment
 	// Required: true
@@ -78,18 +78,13 @@ func (r *CreateApptRequest) ToCommand(ctx context.Context, employeeID *uint) (*c
 		return nil, err
 	}
 
-	scheduleData, err := time.Parse(time.RFC3339, r.Date)
-	if err != nil {
-		return nil, err
-	}
-
 	return command.NewCreateApptCommand(
 		ctx,
 		r.CustomerID,
 		r.PetID,
 		employeeID,
 		clinicService,
-		scheduleData,
+		r.Datetime,
 		apptStatus,
 		apptVisitReason,
 		r.Notes,

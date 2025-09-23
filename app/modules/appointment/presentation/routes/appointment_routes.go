@@ -39,6 +39,7 @@ func (r *AppointmentRoutes) RegisterCustomerRoutes(router *gin.RouterGroup, auth
 	customerGroup.Use(authMiddleware.RequireAnyRole("customer"))
 
 	customerGroup.GET("/", r.customerController.GetMyAppointments)
+	customerGroup.GET("/upcoming", r.customerController.GetMyUpcomingAppointments)
 	customerGroup.GET("/:id", r.customerController.GetMyAppointmentByID)
 	customerGroup.GET("/pets/:petID/", r.customerController.GetAppointmentsByPet)
 	customerGroup.POST("/", r.customerController.RequestAppointment)

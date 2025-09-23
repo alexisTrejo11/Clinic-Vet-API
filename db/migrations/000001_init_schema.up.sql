@@ -222,7 +222,6 @@ CREATE TABLE IF NOT EXISTS appointments(
     clinic_service clinic_service NOT NULL,
     schedule_date TIMESTAMP WITH TIME ZONE NOT NULL,
     status appointment_status NOT NULL,
-    reason VARCHAR(50) NOT NULL DEFAULT '',
     notes TEXT DEFAULT '',
     customer_id INT NOT NULL,
     pet_id INT NOT NULL,

@@ -62,7 +62,7 @@ func (ctrl *CustomerAppointmetController) RequestAppointment(c *gin.Context) {
 		return
 	}
 
-	var requestData *dto.RequestApptmentData
+	var requestData dto.RequestApptmentData
 	if err := c.ShouldBindJSON(&requestData); err != nil {
 		response.BadRequest(c, httpError.RequestBodyDataError(err))
 		return
@@ -157,7 +157,7 @@ func (ctrl *CustomerAppointmetController) GetAppointmentsByPet(c *gin.Context) {
 // @Param limit query int false "Items per page" default(10)
 // @Security BearerAuth
 // @Router /customer/appointments/upcoming [get]
-func (ctrl *CustomerAppointmetController) GetUpcomingAppointments(c *gin.Context) {
+func (ctrl *CustomerAppointmetController) GetMyUpcomingAppointments(c *gin.Context) {
 	userCTX, exists := middleware.GetUserFromContext(c)
 	if !exists {
 		response.Unauthorized(c, errors.New("unauthorized"))

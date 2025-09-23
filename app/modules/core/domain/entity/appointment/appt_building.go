@@ -15,9 +15,6 @@ type AppointmentOption func(context.Context, *Appointment) error
 
 func WithService(service enum.ClinicService) AppointmentOption {
 	return func(ctx context.Context, a *Appointment) error {
-		if !service.IsValid() {
-			return domainerr.ValidationError(ctx, "appointment", "service", "invalid clinic service", "WithService")
-		}
 		a.service = service
 		return nil
 	}
@@ -25,9 +22,6 @@ func WithService(service enum.ClinicService) AppointmentOption {
 
 func WithScheduledDate(date time.Time) AppointmentOption {
 	return func(ctx context.Context, a *Appointment) error {
-		if err := validateScheduledDate(ctx, date); err != nil {
-			return err
-		}
 		a.scheduledDate = date
 		return nil
 	}
@@ -35,9 +29,6 @@ func WithScheduledDate(date time.Time) AppointmentOption {
 
 func WithStatus(status enum.AppointmentStatus) AppointmentOption {
 	return func(ctx context.Context, a *Appointment) error {
-		if !status.IsValid() {
-			return domainerr.ValidationError(ctx, "appointment", "status", "invalid appointment status", "WithStatus")
-		}
 		a.status = status
 		return nil
 	}
@@ -45,9 +36,6 @@ func WithStatus(status enum.AppointmentStatus) AppointmentOption {
 
 func WithReason(reason enum.VisitReason) AppointmentOption {
 	return func(ctx context.Context, a *Appointment) error {
-		if !reason.IsValid() {
-			return domainerr.ValidationError(ctx, "appointment", "reason", "invalid visit reason", "WithReason")
-		}
 		a.reason = reason
 		return nil
 	}
@@ -55,9 +43,6 @@ func WithReason(reason enum.VisitReason) AppointmentOption {
 
 func WithNotes(notes *string) AppointmentOption {
 	return func(ctx context.Context, a *Appointment) error {
-		if notes != nil && len(*notes) > 1000 {
-			return domainerr.ValidationError(ctx, "appointment", "notes", "notes too long (max 1000 characters)", "WithNotes")
-		}
 		a.notes = notes
 		return nil
 	}
@@ -65,9 +50,6 @@ func WithNotes(notes *string) AppointmentOption {
 
 func WithEmployeeID(employeeID *valueobject.EmployeeID) AppointmentOption {
 	return func(ctx context.Context, a *Appointment) error {
-		if employeeID == nil || employeeID.IsZero() {
-			return domainerr.ValidationError(ctx, "appointment", "employee_id", "employee ID cannot be nil or zero", "WithEmployeeID")
-		}
 		a.employeeID = employeeID
 		return nil
 	}
@@ -113,16 +95,6 @@ func NewAppointmentWithContext(
 	customerID valueobject.CustomerID,
 	opts ...AppointmentOption,
 ) (*Appointment, error) {
-	operation := "NewAppointmentWithContext"
-
-	// Validate required fields
-	if petID.IsZero() {
-		return nil, domainerr.ValidationError(ctx, "appointment", "pet_id", "pet ID is required", operation)
-	}
-	if customerID.IsZero() {
-		return nil, domainerr.ValidationError(ctx, "appointment", "customer_id", "customer ID is required", operation)
-	}
-
 	appointment := &Appointment{
 		Entity:     base.NewEntity(id, time.Now(), time.Now(), 1),
 		petID:      petID,
@@ -134,10 +106,6 @@ func NewAppointmentWithContext(
 		if err := opt(ctx, appointment); err != nil {
 			return nil, err
 		}
-	}
-
-	if err := appointment.validate(ctx); err != nil {
-		return nil, err
 	}
 
 	return appointment, nil

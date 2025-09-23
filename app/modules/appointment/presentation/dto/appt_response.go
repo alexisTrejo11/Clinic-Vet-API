@@ -13,7 +13,7 @@ type AppointmentResponse struct {
 	ID            uint    `json:"id"`
 	PetID         uint    `json:"pet_id"`
 	CustomerID    uint    `json:"customer_id"`
-	EmployeeID    uint    `json:"vet_id,omitempty"`
+	EmployeeID    *uint   `json:"vet_id,omitempty"`
 	Service       string  `json:"service"`
 	Datetime      string  `json:"date_time"`
 	ScheduledDate string  `json:"scheduled_date"`
@@ -82,11 +82,17 @@ func NewResponseMapper() *ResponseMapper {
 }
 
 func (m *ResponseMapper) FromResult(result query.ApptResult) *AppointmentResponse {
+	var empID *uint
+	if result.EmployeeID != nil {
+		empIDValue := result.EmployeeID.Value()
+		empID = &empIDValue
+	}
+
 	return &AppointmentResponse{
 		ID:         result.ID.Value(),
 		PetID:      result.PetID.Value(),
 		CustomerID: result.CustomerID.Value(),
-		EmployeeID: result.EmployeeID.Value(),
+		EmployeeID: empID,
 		Service:    result.Service.DisplayName(),
 		Datetime:   result.ScheduledDate.Format(time.RFC822),
 		Reason:     result.Reason,

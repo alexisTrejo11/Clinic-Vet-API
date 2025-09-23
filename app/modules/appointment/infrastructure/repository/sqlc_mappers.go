@@ -14,18 +14,20 @@ import (
 func sqlRowToAppointment(row sqlc.Appointment) (*appointment.Appointment, error) {
 	errorMessage := make([]string, 0)
 	id := valueobject.NewAppointmentID(uint(row.ID))
-	vetID := valueobject.NewEmployeeID(uint(row.EmployeeID.Int32))
+	// vetID := valueobject.NewEmployeeID(uint(row.EmployeeID.Int32))
 	petID := valueobject.NewPetID(uint(row.PetID))
 	statusEnum, err := enum.ParseAppointmentStatus(string(row.Status))
 	if err != nil {
 		errorMessage = append(errorMessage, err.Error())
 	}
+	var vetID *valueobject.EmployeeID
+	if row.EmployeeID.Valid {
+		vetIDValue := valueobject.NewEmployeeID(uint(row.EmployeeID.Int32))
+		vetID = &vetIDValue
+	}
 
 	customerID := valueobject.NewCustomerID(uint(row.CustomerID))
-	reason, err := enum.ParseVisitReason(row.Reason)
-	if err != nil {
-		errorMessage = append(errorMessage, err.Error())
-	}
+	reason := enum.VisitReason(row.Reason)
 
 	var notes *string
 	if row.Notes.Valid {
@@ -38,7 +40,7 @@ func sqlRowToAppointment(row sqlc.Appointment) (*appointment.Appointment, error)
 
 	return appointment.NewAppointment(
 		id, petID, customerID,
-		appointment.WithEmployeeID(&vetID),
+		appointment.WithEmployeeID(vetID),
 		appointment.WithStatus(statusEnum),
 		appointment.WithScheduledDate(row.ScheduleDate.Time),
 		appointment.WithReason(reason),
@@ -63,14 +65,33 @@ func sqlRowsToAppointments(rows []sqlc.Appointment) ([]appointment.Appointment, 
 }
 
 func appointmentToCreateParams(appointment *appointment.Appointment) sqlc.CreateAppointmentParams {
-	return sqlc.CreateAppointmentParams{
-		CustomerID:   int32(appointment.CustomerID().Value()),
-		EmployeeID:   pgtype.Int4{Int32: int32(appointment.EmployeeID().Value()), Valid: appointment.EmployeeID().IsZero()},
-		PetID:        int32(appointment.PetID().Value()),
-		ScheduleDate: pgtype.Timestamptz{Time: appointment.ScheduledDate(), Valid: true},
-		Notes:        pgtype.Text{String: *appointment.Notes(), Valid: appointment.Notes() != nil},
-		Status:       models.AppointmentStatus(string(appointment.Status())),
+	params := sqlc.CreateAppointmentParams{
+		CustomerID:    int32(appointment.CustomerID().Value()),
+		PetID:         int32(appointment.PetID().Value()),
+		ScheduleDate:  pgtype.Timestamptz{Time: appointment.ScheduledDate(), Valid: true},
+		Status:        models.AppointmentStatus(string(appointment.Status())),
+		ClinicService: models.ClinicService(string(appointment.Reason())),
 	}
+
+	if appointment.EmployeeID() != nil {
+		params.EmployeeID = pgtype.Int4{
+			Int32: int32(appointment.EmployeeID().Value()),
+			Valid: true,
+		}
+	} else {
+		params.EmployeeID = pgtype.Int4{Valid: false}
+	}
+
+	if appointment.Notes() != nil {
+		params.Notes = pgtype.Text{
+			String: *appointment.Notes(),
+			Valid:  true,
+		}
+	} else {
+		params.Notes = pgtype.Text{Valid: false}
+	}
+
+	return params
 }
 
 func appointmentToUpdateParams(appointment *appointment.Appointment) sqlc.UpdateAppointmentParams {

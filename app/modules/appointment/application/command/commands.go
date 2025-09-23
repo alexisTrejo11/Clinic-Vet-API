@@ -211,16 +211,11 @@ func NewRequestApptByCustomerCommand(
 	ctx context.Context,
 	petID uint,
 	customerID uint,
-	requestedDate string,
+	requestedDate time.Time,
 	reason string,
 	service string,
 	notes *string,
 ) (*RequestApptByCustomerCommand, error) {
-	parsedDate, err := time.Parse(time.RFC822, requestedDate)
-	if err != nil {
-		return nil, err
-	}
-
 	parsedReason, err := enum.ParseVisitReason(reason)
 	if err != nil {
 		return nil, err
@@ -234,7 +229,7 @@ func NewRequestApptByCustomerCommand(
 	return &RequestApptByCustomerCommand{
 		ctx:           ctx,
 		petID:         valueobject.NewPetID(petID),
-		requestedDate: parsedDate,
+		requestedDate: requestedDate,
 		customerID:    valueobject.NewCustomerID(customerID),
 		reason:        parsedReason,
 		service:       parsedService,

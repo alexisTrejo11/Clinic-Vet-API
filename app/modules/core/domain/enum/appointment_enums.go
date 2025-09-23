@@ -206,7 +206,7 @@ func ParseClinicService(service string) (ClinicService, error) {
 	if val, exists := clinicServiceMap[normalized]; exists {
 		return val, nil
 	}
-	return "", fmt.Errorf("invalid clinic service: %s", service)
+	return "", InvalidEnumParserError("ClinicService", service)
 }
 
 func MustParseClinicService(service string) ClinicService {
