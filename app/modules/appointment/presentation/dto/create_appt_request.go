@@ -1,7 +1,6 @@
 package dto
 
 import (
-	"context"
 	"time"
 
 	"clinic-vet-api/app/modules/appointment/application/command"
@@ -64,7 +63,7 @@ type RequestApptResponse struct {
 	Notes *string `json:"notes" example:"Patient has allergy to penicillin"`
 }
 
-func (r *CreateApptRequest) ToCommand(ctx context.Context, employeeID *uint) (*command.CreateApptCommand, error) {
+func (r *CreateApptRequest) ToCommand(employeeID *uint) (*command.CreateApptCommand, error) {
 	clinicService, err := enum.ParseClinicService(r.Service)
 	if err != nil {
 		return nil, err
@@ -73,20 +72,14 @@ func (r *CreateApptRequest) ToCommand(ctx context.Context, employeeID *uint) (*c
 	if err != nil {
 		return nil, err
 	}
-	apptVisitReason, err := enum.ParseVisitReason(r.Reason)
-	if err != nil {
-		return nil, err
-	}
 
 	return command.NewCreateApptCommand(
-		ctx,
 		r.CustomerID,
 		r.PetID,
 		employeeID,
 		clinicService,
 		r.Datetime,
 		apptStatus,
-		apptVisitReason,
 		r.Notes,
 	), nil
 }

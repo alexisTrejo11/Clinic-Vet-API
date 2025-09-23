@@ -2,7 +2,6 @@
 package dto
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -17,8 +16,8 @@ type ListApptByDateRangeRequest struct {
 	page.PageInput
 }
 
-func (r *ListApptByDateRangeRequest) ToQuery(ctx context.Context) (query.FindApptsByDateRangeQuery, error) {
-	qry, err := query.NewFindApptsByDateRangeQuery(ctx, r.StartDate.Time, r.EndDate.Time, r.PageInput)
+func (r *ListApptByDateRangeRequest) ToQuery() (query.FindApptsByDateRangeQuery, error) {
+	qry, err := query.NewFindApptsByDateRangeQuery(r.StartDate.Time, r.EndDate.Time, r.PageInput)
 	if err != nil {
 		return query.FindApptsByDateRangeQuery{}, err
 	}

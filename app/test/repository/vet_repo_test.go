@@ -14,6 +14,7 @@ import (
 	sqlcVetRepo "clinic-vet-api/app/veterinarians/infrastructure/persistence/repositories"
 	"clinic-vet-api/sqlc"
 	"clinic-vet-api/test/mock"
+
 	"github.com/jackc/pgx/v5/pgtype"
 
 	"github.com/golang/mock/gomock"
@@ -77,7 +78,7 @@ func (s *SqlcVetRepositoryTestSuite) TestList_WithFiltersAndSorting() {
 	// Configurar parámetros de búsqueda
 	searchParams := vetDtos.VetSearchParams{
 		PageData: page.PageData{
-			PageSize:      10,
+			Limit:         10,
 			PageNumber:    0,
 			SortDirection: page.DESC,
 		},
@@ -165,7 +166,7 @@ func (s *SqlcVetRepositoryTestSuite) TestList_NoFilters() {
 	// Parámetros vacíos
 	searchParams := vetDtos.VetSearchParams{
 		PageData: page.PageData{
-			PageSize:   10,
+			Limit:      10,
 			PageNumber: 0,
 		},
 	}

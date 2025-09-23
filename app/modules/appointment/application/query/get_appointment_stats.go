@@ -5,7 +5,6 @@ import (
 	"clinic-vet-api/app/modules/core/domain/enum"
 	"clinic-vet-api/app/modules/core/repository"
 	"clinic-vet-api/app/shared/cqrs"
-	"clinic-vet-api/app/shared/page"
 	"context"
 	"fmt"
 	"time"
@@ -39,53 +38,58 @@ func NewFindApptStatsHandler(apptRepo repository.AppointmentRepository) cqrs.Que
 }
 
 func (h *FindApptStatsHandler) Handle(q cqrs.Query) (ApptStatsResult, error) {
-	query := q.(FindApptStatsQuery)
+	/*
+		query := q.(FindApptStatsQuery)
 
-	var appointments []appointment.Appointment
-	var err error
-	maxPage := page.PageInput{
-		Page:     1,
-		PageSize: 10000,
-	}
+		var appointments []appointment.Appointment
+		var err error
+		maxPage := page.PageInput{
+			Offset:     1,
+			Limit: 10000,
+		}
 
-	if query.startDate != nil && query.endDate != nil {
-		appointmentsPage, dberr := h.apptRepo.FindByDateRange(query.ctx, *query.startDate, *query.endDate, maxPage)
-		appointments = appointmentsPage.Items
-		err = dberr
-	} else {
-		appointmentsPage, dberr := h.apptRepo.FindAll(query.ctx, maxPage)
-		appointments = appointmentsPage.Items
-		err = dberr
-	}
+		if query.startDate != nil && query.endDate != nil {
 
-	if err != nil {
-		return ApptStatsResult{}, err
-	}
-	// Apply additional filters
-	var filteredAppointments []appointment.Appointment
-	for _, appointment := range appointments {
-		includeAppointment := true
 
-		// Filter by vet ID
-		if query.employeeID != nil {
-			if appointment.EmployeeID() == nil || appointment.EmployeeID().Value() != *query.employeeID {
+			appointmentsPage, dberr := h.apptRepo.FindByDateRange(query.ctx, *query.startDate, *query.endDate, maxPage)
+			appointments = appointmentsPage.Items
+			err = dberr
+		} else {
+			appointmentsPage, dberr := h.apptRepo.FindAll(query.ctx, maxPage)
+			appointments = appointmentsPage.Items
+			err = dberr
+		}
+
+		if err != nil {
+			return ApptStatsResult{}, err
+		}
+		// Apply additional filters
+		var filteredAppointments []appointment.Appointment
+		for _, appointment := range appointments {
+			includeAppointment := true
+
+			// Filter by vet ID
+			if query.employeeID != nil {
+				if appointment.EmployeeID() == nil || appointment.EmployeeID().Value() != *query.employeeID {
+					includeAppointment = false
+				}
+			}
+
+			// Filter by customer ID
+			if query.customerID != nil && appointment.CustomerID().Equals(*query.customerID) {
 				includeAppointment = false
+			}
+
+			if includeAppointment {
+				filteredAppointments = append(filteredAppointments, appointment)
 			}
 		}
 
-		// Filter by customer ID
-		if query.customerID != nil && appointment.CustomerID().Equals(*query.customerID) {
-			includeAppointment = false
-		}
+		stats := h.calculateStats(filteredAppointments, query)
 
-		if includeAppointment {
-			filteredAppointments = append(filteredAppointments, appointment)
-		}
-	}
-
-	stats := h.calculateStats(filteredAppointments, query)
-
-	return stats, nil
+		return stats, nil
+	*/
+	return ApptStatsResult{}, nil
 }
 
 func (h *FindApptStatsHandler) calculateStats(appointments []appointment.Appointment, query FindApptStatsQuery) ApptStatsResult {

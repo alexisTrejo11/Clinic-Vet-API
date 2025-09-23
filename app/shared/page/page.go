@@ -59,16 +59,16 @@ func (sd *SortDirection) UnmarshalParam(param string) error {
 // for paginating and sorting query results.
 // Uses JSON tags for API serialization and validate tags for input validation.
 type PageInput struct {
-	PageSize      int           `json:"page_limit" form:"page_limit" validate:"omitempty,gte=1,lte=100"`
-	Page          int           `json:"page" form:"page" validate:"omitempty,gte=1"`
+	Limit         int           `json:"page_limit" form:"page_limit" validate:"omitempty,gte=1,lte=100"`
+	Offset        int           `json:"offset" form:"offset" validate:"omitempty,gte=0"`
 	SortDirection SortDirection `json:"sort_direction" form:"sort_direction" validate:"omitempty"`
 	OrderBy       string        `json:"order_by" form:"order_by" validate:"omitempty,max=50"`
 }
 
 func (p PageInput) ToMap() map[string]any {
 	return map[string]any{
-		"page_limit":     p.PageSize,
-		"page":           p.Page,
+		"page_limit":     p.Limit,
+		"offset":         p.Offset,
 		"sort_direction": p.SortDirection,
 		"order_by":       p.OrderBy,
 	}
@@ -77,36 +77,50 @@ func (p PageInput) ToMap() map[string]any {
 func (p PageInput) Validate() error {
 	return nil
 }
+
+func (p PageInput) ToSpecPagination() specification.Pagination {
+	return specification.Pagination{
+		Limit:   p.Limit,
+		Offset:  p.Offset,
+		SortDir: string(p.SortDirection),
+		OrderBy: p.OrderBy,
+	}
+}
+
 func FromSpecPagination(pagi specification.Pagination) PageInput {
 	return PageInput{
-		PageSize:      pagi.PageSize,
-		Page:          pagi.Page,
+		Limit:         pagi.Limit,
+		Offset:        pagi.Offset,
 		SortDirection: SortDirection(pagi.SortDir),
 		OrderBy:       pagi.OrderBy,
 	}
 }
 
+func (p PageInput) Page() int {
+	return p.Offset + 1
+}
+
+func (p PageInput) PageSize() int {
+	return p.Limit
+}
+
 // SetDefaultsFieldsIfEmpty sets default values for PageInput fields if they are empty or invalid.
 // Defaults:
 // - SortDirection: ASC (if empty)
-// - Page: 1 (if ≤ 0)
-// - PageSize: 10 (if ≤ 0)
+// - Offset: 1 (if ≤ 0)
+// - Limit: 10 (if ≤ 0)
 func (p *PageInput) SetDefaultsFieldsIfEmpty() {
 	if p.SortDirection == "" {
 		p.SortDirection = ASC
 	}
 
-	if p.Page <= 0 {
-		p.Page = 1
+	if p.Offset <= 0 {
+		p.Offset = 1
 	}
 
-	if p.PageSize <= 0 {
-		p.PageSize = 10
+	if p.Limit <= 0 {
+		p.Limit = 10
 	}
-}
-
-func (p PageInput) Offset() int {
-	return (p.Page - 1) * p.PageSize
 }
 
 // PageMetadata contains comprehensive information about the pagination state.
@@ -114,7 +128,7 @@ type PageMetadata struct {
 	TotalCount      int           `json:"total_count"`       // Total number of items across all pages
 	TotalPages      int           `json:"total_pages"`       // Total number of pages
 	CurrentPage     int           `json:"current_page"`      // Current page number
-	PageSize        int           `json:"page_limit"`        // Number of items per page
+	Limit           int           `json:"page_limit"`        // Number of items per page
 	SortDirection   SortDirection `json:"sort_direction"`    // Sorting direction applied
 	HasNextPage     bool          `json:"has_next_page"`     // True if another page exists after current
 	HasPreviousPage bool          `json:"has_previous_page"` // True if a page exists before current
@@ -152,7 +166,7 @@ func EmptyPage[T any]() Page[T] {
 			TotalCount:      0,
 			TotalPages:      0,
 			CurrentPage:     1,
-			PageSize:        0,
+			Limit:           0,
 			SortDirection:   ASC,
 			HasNextPage:     false,
 			HasPreviousPage: false,
@@ -164,8 +178,8 @@ func EmptyPage[T any]() Page[T] {
 // Returns a PageMetadata pointer with all pagination information populated.
 func GetPageMetadata(totalItems int, page PageInput) *PageMetadata {
 	var totalPages int
-	if page.PageSize > 0 {
-		totalPages = int(math.Ceil(float64(totalItems) / float64(page.PageSize)))
+	if page.Limit > 0 {
+		totalPages = int(math.Ceil(float64(totalItems) / float64(page.Limit)))
 	} else {
 		totalPages = 1
 	}
@@ -173,10 +187,10 @@ func GetPageMetadata(totalItems int, page PageInput) *PageMetadata {
 	return &PageMetadata{
 		TotalCount:      totalItems,
 		TotalPages:      totalPages,
-		CurrentPage:     page.Page,
-		PageSize:        page.PageSize,
+		CurrentPage:     page.Page(),
+		Limit:           page.PageSize(),
 		SortDirection:   page.SortDirection,
-		HasNextPage:     page.Page < totalPages,
-		HasPreviousPage: page.Page > 1,
+		HasNextPage:     page.Page() < totalPages,
+		HasPreviousPage: page.Page() > 1,
 	}
 }

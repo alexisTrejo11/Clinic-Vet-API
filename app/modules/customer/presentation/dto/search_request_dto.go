@@ -60,10 +60,10 @@ type CustomerSearchQuery struct {
 // ToPagination convierte los query params a estructura de paginación
 func (q *CustomerSearchQuery) ToPagination() specification.Pagination {
 	return specification.Pagination{
-		Page:     q.Page,
-		PageSize: q.PageSize,
-		OrderBy:  q.OrderBy,
-		SortDir:  string(q.SortDirection),
+		Offset:  q.Offset,
+		Limit:   q.Limit,
+		OrderBy: q.OrderBy,
+		SortDir: string(q.SortDirection),
 	}
 }
 

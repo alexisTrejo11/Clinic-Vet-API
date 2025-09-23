@@ -130,8 +130,8 @@ func (h *paymentCommandHandler) UpdatePayment(command UpdatePaymentCommand) cqrs
 
 func (h *paymentCommandHandler) MarkOverudePayments(command MarkOverduePaymentsCommand) cqrs.CommandResult {
 	pagination := page.PageInput{
-		PageSize: 100,
-		Page:     1,
+		Limit:  100,
+		Offset: 1,
 	}
 
 	var updatedCount int
@@ -154,7 +154,7 @@ func (h *paymentCommandHandler) MarkOverudePayments(command MarkOverduePaymentsC
 			updatedCount++
 		}
 
-		pagination.Page++
+		pagination.Offset++
 
 		if h.IsLastPage(pagination, paymentsPage.Metadata.TotalPages) {
 			break
@@ -177,7 +177,7 @@ func (h *paymentCommandHandler) UpdatePaymentOverdued(ctx context.Context, payme
 }
 
 func (h *paymentCommandHandler) IsLastPage(pagination page.PageInput, totalPages int) bool {
-	return pagination.Page >= totalPages
+	return pagination.Page() >= totalPages
 }
 
 func (h *paymentCommandHandler) IsEmptyList(payments []payment.Payment) bool {

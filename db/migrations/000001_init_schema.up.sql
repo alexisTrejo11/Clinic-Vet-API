@@ -220,7 +220,7 @@ CREATE TABLE IF NOT EXISTS pet_chip_implants (
 CREATE TABLE IF NOT EXISTS appointments(
     id SERIAL PRIMARY KEY,
     clinic_service clinic_service NOT NULL,
-    schedule_date TIMESTAMP WITH TIME ZONE NOT NULL,
+    scheduled_date TIMESTAMP WITH TIME ZONE NOT NULL,
     status appointment_status NOT NULL,
     notes TEXT DEFAULT '',
     customer_id INT NOT NULL,

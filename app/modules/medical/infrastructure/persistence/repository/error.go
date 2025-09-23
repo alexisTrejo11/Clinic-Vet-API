@@ -38,7 +38,7 @@ const (
 )
 
 func (r *SQLCMedSessionRepository) calculateOffset(pageData page.PageInput) int32 {
-	return int32(pageData.PageSize * (pageData.Page - 1))
+	return int32(pageData.Limit * (pageData.Offset))
 }
 
 func (r *SQLCMedSessionRepository) buildNotesParam(notes *string) pgtype.Text {

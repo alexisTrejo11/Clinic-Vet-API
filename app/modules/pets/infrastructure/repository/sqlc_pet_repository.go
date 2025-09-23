@@ -32,10 +32,10 @@ func (r *SqlcPetRepository) FindBySpecification(ctx context.Context, spec specif
 }
 
 func (r *SqlcPetRepository) FindBySpecies(ctx context.Context, petSpecies enum.PetSpecies, pageInput page.PageInput) (page.Page[pet.Pet], error) {
-	offset := (pageInput.Page - 1) * pageInput.PageSize
+	offset := (pageInput.Offset) * pageInput.Limit
 	petRows, err := r.queries.FindPetsBySpecies(ctx, sqlc.FindPetsBySpeciesParams{
 		Species: petSpecies.String(),
-		Limit:   int32(pageInput.PageSize),
+		Limit:   int32(pageInput.Limit),
 		Offset:  int32(offset),
 	})
 
@@ -80,10 +80,10 @@ func (r *SqlcPetRepository) FindAllByCustomerID(ctx context.Context, customerID 
 }
 
 func (r *SqlcPetRepository) FindByCustomerID(ctx context.Context, customerID valueobject.CustomerID, pageInput page.PageInput) (page.Page[pet.Pet], error) {
-	offset := (pageInput.Page - 1) * pageInput.PageSize
+	offset := (pageInput.Offset) * pageInput.Limit
 	petRows, err := r.queries.FindPetsByCustomerID(ctx, sqlc.FindPetsByCustomerIDParams{
 		CustomerID: int32(customerID.Value()),
-		Limit:      int32(pageInput.PageSize),
+		Limit:      int32(pageInput.Limit),
 		Offset:     int32(offset),
 	})
 	if err != nil {

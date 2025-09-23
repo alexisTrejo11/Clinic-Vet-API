@@ -88,8 +88,8 @@ func (r *SQLCUserRepository) FindByPhone(ctx context.Context, phone string) (u.U
 }
 
 func (r *SQLCUserRepository) FindByRole(ctx context.Context, role string, pageInput page.PageInput) (page.Page[u.User], error) {
-	limit := int32(pageInput.PageSize)
-	offset := int32((pageInput.Page - 1) * pageInput.PageSize)
+	limit := int32(pageInput.Limit)
+	offset := int32((pageInput.Offset) * pageInput.Limit)
 
 	sqlRows, err := r.queries.FindUsersByRole(ctx, sqlc.FindUsersByRoleParams{
 		Role:   models.UserRole(role),
@@ -115,10 +115,10 @@ func (r *SQLCUserRepository) FindByRole(ctx context.Context, role string, pageIn
 }
 
 func (r *SQLCUserRepository) FindActive(ctx context.Context, pageInput page.PageInput) (page.Page[u.User], error) {
-	offset := (pageInput.Page - 1) * pageInput.PageSize
+	offset := (pageInput.Offset) * pageInput.Limit
 
 	userRows, err := r.queries.FindActiveUsers(ctx, sqlc.FindActiveUsersParams{
-		Limit:  int32(pageInput.PageSize),
+		Limit:  int32(pageInput.Limit),
 		Offset: int32(offset),
 	})
 	if err != nil {
@@ -139,10 +139,10 @@ func (r *SQLCUserRepository) FindActive(ctx context.Context, pageInput page.Page
 }
 
 func (r *SQLCUserRepository) FindAll(ctx context.Context, pageInput page.PageInput) (page.Page[u.User], error) {
-	offset := (pageInput.Page - 1) * pageInput.PageSize
+	offset := (pageInput.Offset) * pageInput.Limit
 
 	userRows, err := r.queries.FindAllUsers(ctx, sqlc.FindAllUsersParams{
-		Limit:  int32(pageInput.PageSize),
+		Limit:  int32(pageInput.Limit),
 		Offset: int32(offset),
 	})
 	if err != nil {
@@ -197,10 +197,10 @@ func (r *SQLCUserRepository) FindByEmployeeID(ctx context.Context, employeeID va
 }
 
 func (r *SQLCUserRepository) FindInactive(ctx context.Context, pageInput page.PageInput) (page.Page[u.User], error) {
-	offset := (pageInput.Page - 1) * pageInput.PageSize
+	offset := (pageInput.Offset) * pageInput.Limit
 
 	userRows, err := r.queries.FindInactiveUsers(ctx, sqlc.FindInactiveUsersParams{
-		Limit:  int32(pageInput.PageSize),
+		Limit:  int32(pageInput.Limit),
 		Offset: int32(offset),
 	})
 	if err != nil {
@@ -226,11 +226,11 @@ func (r *SQLCUserRepository) FindInactive(ctx context.Context, pageInput page.Pa
 }
 
 func (r *SQLCUserRepository) FindRecentlyLoggedIn(ctx context.Context, since time.Time, pageInput page.PageInput) (page.Page[u.User], error) {
-	offset := (pageInput.Page - 1) * pageInput.PageSize
+	offset := (pageInput.Offset) * pageInput.Limit
 
 	userRows, err := r.queries.FindRecentlyLoggedInUsers(ctx, sqlc.FindRecentlyLoggedInUsersParams{
 		LastLogin: pgtype.Timestamptz{Time: since, Valid: true},
-		Limit:     int32(pageInput.PageSize),
+		Limit:     int32(pageInput.Limit),
 		Offset:    int32(offset),
 	})
 	if err != nil {

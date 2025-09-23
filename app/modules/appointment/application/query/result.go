@@ -17,7 +17,6 @@ type ApptResult struct {
 	Service       enum.ClinicService
 	ScheduledDate time.Time
 	Status        enum.AppointmentStatus
-	Reason        *string
 	Notes         *string
 	IsEmergency   bool
 	CreatedAt     time.Time

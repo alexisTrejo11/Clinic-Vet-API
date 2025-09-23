@@ -28,7 +28,7 @@ type AppointmentResponse struct {
 type AppointmentDetail struct {
 	ID            int                    `json:"id"`
 	Pet           *PetSummary            `json:"pet,omitempty"`
-	customer      *customerSummary       `json:"customer,omitempty"`
+	Customer      *customerSummary       `json:"customer,omitempty"`
 	Veterinarian  *VetSummary            `json:"veterinarian,omitempty"`
 	Service       enum.ClinicService     `json:"service"`
 	ScheduledDate time.Time              `json:"scheduled_date"`
@@ -95,7 +95,6 @@ func (m *ResponseMapper) FromResult(result query.ApptResult) *AppointmentRespons
 		EmployeeID: empID,
 		Service:    result.Service.DisplayName(),
 		Datetime:   result.ScheduledDate.Format(time.RFC822),
-		Reason:     result.Reason,
 		Notes:      result.Notes,
 		Status:     result.Status.DisplayName(),
 		CreatedAt:  result.CreatedAt.Format(time.RFC822),

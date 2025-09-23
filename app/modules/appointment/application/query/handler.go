@@ -3,6 +3,7 @@ package query
 import (
 	"context"
 
+	"clinic-vet-api/app/modules/core/domain/specification"
 	"clinic-vet-api/app/modules/core/domain/valueobject"
 	"clinic-vet-api/app/modules/core/repository"
 	apperror "clinic-vet-api/app/shared/error/application"
@@ -10,15 +11,12 @@ import (
 )
 
 type AppointmentQueryHandler interface {
-	FindByID(query FindApptByIDQuery) (ApptResult, error)
-	FindByIDAndCustomerID(query FindApptByIDAndCustomerIDQuery) (ApptResult, error)
-	FindByIDAndEmployeeID(query FindApptByIDAndEmployeeIDQuery) (ApptResult, error)
-
-	FindBySpecification(query FindApptsBySpecQuery) (p.Page[ApptResult], error)
-	FindByDateRange(query FindApptsByDateRangeQuery) (p.Page[ApptResult], error)
-	FindByCustomerID(query FindApptsByCustomerIDQuery) (p.Page[ApptResult], error)
-	FindByEmployeeID(query FindApptsByEmployeeIDQuery) (p.Page[ApptResult], error)
-	FindByPetID(query FindApptsByPetQuery) (p.Page[ApptResult], error)
+	FindByID(ctx context.Context, query FindApptByIDQuery) (ApptResult, error)
+	FindBySpecification(ctx context.Context, query FindApptsBySpecQuery) (p.Page[ApptResult], error)
+	FindByDateRange(ctx context.Context, query FindApptsByDateRangeQuery) (p.Page[ApptResult], error)
+	FindByEmployee(ctx context.Context, query FindApptsByEmployeeIDQuery) (p.Page[ApptResult], error)
+	FindByCustomerID(ctx context.Context, query FindApptsByCustomerIDQuery) (p.Page[ApptResult], error)
+	FindByPetID(ctx context.Context, query FindApptsByPetQuery) (p.Page[ApptResult], error)
 }
 
 type apptQueryHandler struct {
@@ -35,52 +33,29 @@ func NewAppointmentQueryHandler(apptRepository repository.AppointmentRepository,
 	}
 }
 
-func (h *apptQueryHandler) FindBySpecification(query FindApptsBySpecQuery) (p.Page[ApptResult], error) {
-	appointmentPage, err := h.apptRepository.FindBySpecification(query.ctx, query.spec)
+func (h *apptQueryHandler) FindBySpecification(ctx context.Context, query FindApptsBySpecQuery) (p.Page[ApptResult], error) {
+	appointmentPage, err := h.apptRepository.Find(ctx, query.spec)
 	if err != nil {
 		return p.Page[ApptResult]{}, err
 	}
 
-	responses := mapApptsToResult(appointmentPage.Items)
-	return p.NewPage(responses, appointmentPage.Metadata), nil
+	apptResults := mapApptsToResult(appointmentPage.Items)
+	return p.NewPage(apptResults, appointmentPage.Metadata), nil
 }
 
-func (h *apptQueryHandler) FindByID(query FindApptByIDQuery) (ApptResult, error) {
-	appointment, err := h.apptRepository.FindByID(query.ctx, query.appointmentID)
+func (h *apptQueryHandler) FindByID(ctx context.Context, query FindApptByIDQuery) (ApptResult, error) {
+	appointment, err := h.apptRepository.FindByID(ctx, query.appointmentID)
 	if err != nil {
 		return ApptResult{}, err
 	}
 	return NewApptResult(&appointment), nil
 }
 
-func (h *apptQueryHandler) FindByIDAndCustomerID(query FindApptByIDAndCustomerIDQuery) (ApptResult, error) {
-	if err := h.validateCustomer(query.ctx, query.customerID); err != nil {
-		return ApptResult{}, err
-	}
+func (h *apptQueryHandler) FindByDateRange(ctx context.Context, query FindApptsByDateRangeQuery) (p.Page[ApptResult], error) {
+	spec := specification.ApptByDateRange(query.startDate, query.endDate).
+		WithPagination(query.pagination)
 
-	appointment, err := h.apptRepository.FindByIDAndCustomerID(query.ctx, query.apptID, query.customerID)
-	if err != nil {
-		return ApptResult{}, err
-	}
-
-	return NewApptResult(&appointment), nil
-}
-
-func (h *apptQueryHandler) FindByIDAndEmployeeID(query FindApptByIDAndEmployeeIDQuery) (ApptResult, error) {
-	if err := h.validateEmployee(query.ctx, query.employeeID); err != nil {
-		return ApptResult{}, err
-	}
-
-	appointment, err := h.apptRepository.FindByIDAndEmployeeID(query.ctx, query.apptID, query.employeeID)
-	if err != nil {
-		return ApptResult{}, err
-	}
-
-	return NewApptResult(&appointment), nil
-}
-
-func (h *apptQueryHandler) FindByDateRange(query FindApptsByDateRangeQuery) (p.Page[ApptResult], error) {
-	appointmentsPage, err := h.apptRepository.FindByDateRange(query.ctx, query.startDate, query.endDate, query.pageInput)
+	appointmentsPage, err := h.apptRepository.Find(ctx, spec)
 	if err != nil {
 		return p.Page[ApptResult]{}, err
 	}
@@ -117,12 +92,20 @@ func (h *apptQueryHandler) validateCustomer(ctx context.Context, customerID valu
 	return nil
 }
 
-func (h *apptQueryHandler) FindByCustomerID(query FindApptsByCustomerIDQuery) (p.Page[ApptResult], error) {
-	if err := h.validateCustomer(query.ctx, query.customerID); err != nil {
+func (h *apptQueryHandler) FindByCustomerID(ctx context.Context, query FindApptsByCustomerIDQuery) (p.Page[ApptResult], error) {
+	if err := h.validateCustomer(ctx, query.customerID); err != nil {
 		return p.Page[ApptResult]{}, err
 	}
 
-	appointmentsp, err := h.apptRepository.FindByCustomerID(query.ctx, query.customerID, query.petID, query.pageInput)
+	querySpec := specification.
+		ApptByCustomer(query.customerID).
+		WithPagination(query.pagination)
+
+	if query.petID != nil {
+		querySpec = querySpec.And(specification.ApptByPet(*query.petID))
+	}
+
+	appointmentsp, err := h.apptRepository.Find(ctx, querySpec)
 	if err != nil {
 		return p.Page[ApptResult]{}, err
 	}
@@ -130,18 +113,40 @@ func (h *apptQueryHandler) FindByCustomerID(query FindApptsByCustomerIDQuery) (p
 	return p.NewPage(mapApptsToResult(appointmentsp.Items), appointmentsp.Metadata), nil
 }
 
-func (h *apptQueryHandler) FindByEmployeeID(query FindApptsByEmployeeIDQuery) (p.Page[ApptResult], error) {
-	appointmentsPage, err := h.apptRepository.FindByEmployeeID(query.ctx, query.vetID, query.pageInput)
+func (h *apptQueryHandler) FindByEmployee(ctx context.Context, query FindApptsByEmployeeIDQuery) (p.Page[ApptResult], error) {
+	querySpec := specification.
+		ApptByEmployee(query.employeeID).
+		WithPagination(query.pagination)
+
+	appointmentsPage, err := h.apptRepository.Find(ctx, querySpec)
 	if err != nil {
 		return p.Page[ApptResult]{}, err
 	}
 
-	responses := mapApptsToResult(appointmentsPage.Items)
-	return p.NewPage(responses, appointmentsPage.Metadata), nil
+	return p.NewPage(mapApptsToResult(appointmentsPage.Items), appointmentsPage.Metadata), nil
 }
 
-func (h *apptQueryHandler) FindByPetID(query FindApptsByPetQuery) (p.Page[ApptResult], error) {
-	appointmentsPage, err := h.apptRepository.FindByPetID(query.ctx, query.petID, query.pageInput)
+func (h *apptQueryHandler) FindByEmployeeID(ctx context.Context, query FindApptsByEmployeeIDQuery) (p.Page[ApptResult], error) {
+	if err := h.validateEmployee(ctx, query.employeeID); err != nil {
+		return p.Page[ApptResult]{}, err
+	}
+
+	querySpec := specification.
+		ApptByEmployee(query.employeeID).
+		WithPagination(query.pagination)
+
+	appointmentsPage, err := h.apptRepository.Find(ctx, querySpec)
+	if err != nil {
+		return p.Page[ApptResult]{}, err
+	}
+
+	return p.NewPage(mapApptsToResult(appointmentsPage.Items), appointmentsPage.Metadata), nil
+}
+
+func (h *apptQueryHandler) FindByPetID(ctx context.Context, query FindApptsByPetQuery) (p.Page[ApptResult], error) {
+	querySpec := specification.ApptByPet(query.petID).WithPagination(query.pagination)
+
+	appointmentsPage, err := h.apptRepository.Find(ctx, querySpec)
 	if err != nil {
 		return p.Page[ApptResult]{}, err
 	}

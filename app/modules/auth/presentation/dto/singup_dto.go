@@ -1,10 +1,11 @@
 package dto
 
 import (
+	"time"
+
 	registerCmd "clinic-vet-api/app/modules/auth/application/command/register"
 	"clinic-vet-api/app/modules/core/domain/enum"
 	"clinic-vet-api/app/modules/core/domain/valueobject"
-	"time"
 
 	apperror "clinic-vet-api/app/shared/error/application"
 )
@@ -25,7 +26,7 @@ type UserCredentials struct {
 	// User password
 	// Required: true
 	// Minimum length: 8 characters
-	Password string `json:"password" binding:"required,min=8" example:"SecurePass123!"`
+	Password string `json:"password" binding:"required,min=6" example:"SecurePass123!"`
 }
 
 // EmployeeRequestSingup represents employee registration request
@@ -75,10 +76,6 @@ func (r *EmployeeRequestRegister) ToCommand() (registerCmd.StaffRegisterCommand,
 		errorMessages = append(errorMessages, "email: "+err.Error())
 	}
 
-	if r.EmployeeID == 0 {
-		errorMessages = append(errorMessages, "employee_id must be a positive integer")
-	}
-
 	var phone *valueobject.PhoneNumber
 	if r.PhoneNumber != "" {
 		phoneVo, err := valueobject.NewPhoneNumber(r.PhoneNumber)
@@ -112,9 +109,14 @@ func (r *CustomerRequestSingup) ToCommand() (registerCmd.CustomerRegisterCommand
 		errorMessages = append(errorMessages, "email: "+err.Error())
 	}
 
-	phoneVo, err := valueobject.NewPhoneNumber(r.PhoneNumber)
-	if err != nil {
-		errorMessages = append(errorMessages, "phone: "+err.Error())
+	var phoneNumber *valueobject.PhoneNumber
+	if r.PhoneNumber != "" {
+		phoneVo, err := valueobject.NewPhoneNumber(r.PhoneNumber)
+		if err != nil {
+			errorMessages = append(errorMessages, "phone: "+err.Error())
+		}
+
+		phoneNumber = &phoneVo
 	}
 
 	if len(errorMessages) > 0 {
@@ -124,7 +126,7 @@ func (r *CustomerRequestSingup) ToCommand() (registerCmd.CustomerRegisterCommand
 	cmd := &registerCmd.CustomerRegisterCommand{
 		Email:       emailVo,
 		Password:    r.Password,
-		PhoneNumber: &phoneVo,
+		PhoneNumber: phoneNumber,
 		FirstName:   r.FirstName,
 		LastName:    r.LastName,
 		Gender:      gender,

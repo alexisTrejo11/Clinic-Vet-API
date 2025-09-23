@@ -3,12 +3,12 @@ package dto
 import (
 	"fmt"
 	"strconv"
-	"strings"
 
 	"clinic-vet-api/app/modules/core/domain/enum"
 	"clinic-vet-api/app/modules/core/domain/specification"
 	"clinic-vet-api/app/modules/core/domain/valueobject"
 	"clinic-vet-api/app/modules/employee/application/cqrs/query"
+	"clinic-vet-api/app/shared/page"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -25,11 +25,7 @@ type EmployeeSearchRequest struct {
 	MaxFee         float64 `form:"max_fee" validate:"omitempty,min=0,max=10000,gtfield=MinFee"`
 	HasUserAccount *bool   `form:"has_user_account" validate:"omitempty"`
 
-	// Pagination
-	Page     int    `form:"page" validate:"omitempty,min=1"`
-	PageSize int    `form:"page_size" validate:"omitempty,min=1,max=100"`
-	OrderBy  string `form:"order_by" validate:"omitempty,oneof=name specialty experience fee created_at updated_at"`
-	SortDir  string `form:"sort_dir" validate:"omitempty,oneof=ASC DESC asc desc"`
+	page.PageInput
 }
 
 func NewEmployeeSearchRequestFromContext(c *gin.Context) (*EmployeeSearchRequest, error) {
@@ -114,28 +110,9 @@ func (r *EmployeeSearchRequest) ToSpecification() (*specification.EmployeeSearch
 		spec = spec.WithUserAccount(*r.HasUserAccount)
 	}
 
-	// Paginación con valores por defecto
-	page := 1
-	if r.Page > 0 {
-		page = r.Page
-	}
+	r.SetDefaultsFieldsIfEmpty()
 
-	pageSize := 10
-	if r.PageSize > 0 {
-		pageSize = r.PageSize
-	}
-
-	orderBy := "created_at"
-	if r.OrderBy != "" {
-		orderBy = r.OrderBy
-	}
-
-	sortDir := "DESC"
-	if r.SortDir != "" {
-		sortDir = strings.ToUpper(r.SortDir)
-	}
-
-	spec = spec.WithPagination(page, pageSize, orderBy, sortDir)
+	spec = spec.WithPagination(r.Offset, r.Limit, r.OrderBy, string(r.SortDirection))
 
 	return spec, nil
 }

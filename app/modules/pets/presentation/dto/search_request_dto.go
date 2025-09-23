@@ -5,6 +5,7 @@ import (
 	"clinic-vet-api/app/modules/core/domain/specification"
 	"clinic-vet-api/app/modules/core/domain/valueobject"
 	"clinic-vet-api/app/modules/pets/application/cqrs/query"
+	"clinic-vet-api/app/shared/page"
 )
 
 type PetSearchRequest struct {
@@ -18,10 +19,7 @@ type PetSearchRequest struct {
 	CustomerID uint           `form:"customer_id" examle:"12345"`
 	IsActive   *bool          `form:"is_active" validate:"omitempty" example:"true"`
 	IsNeutered *bool          `form:"is_neutered" validate:"omitempty" example:"true"`
-	Page       int            `form:"page" validate:"omitempty,min=1" example:"1"`
-	PageSize   int            `form:"page_size" validate:"omitempty,min=1,max=100" example:"10"`
-	OrderBy    string         `form:"order_by" validate:"omitempty,oneof=name species breed age created_at" example:"name"`
-	SortDir    string         `form:"sort_dir" validate:"omitempty,oneof=ASC DESC" example:"ASC"`
+	page.PageInput
 }
 
 func (params *PetSearchRequest) ToSpecification() *specification.PetSpecification {
@@ -72,12 +70,11 @@ func (params *PetSearchRequest) ToSpecification() *specification.PetSpecificatio
 		builder.IsNeutered(*params.IsNeutered)
 	}
 
-	// Configurar paginación
 	pagination := specification.Pagination{
-		Page:     params.Page,
-		PageSize: params.PageSize,
-		OrderBy:  params.OrderBy,
-		SortDir:  params.SortDir,
+		Offset:  params.Offset,
+		Limit:   params.Limit,
+		OrderBy: params.OrderBy,
+		SortDir: string(params.SortDirection),
 	}
 	builder.Pagination(pagination)
 

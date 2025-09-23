@@ -329,10 +329,10 @@ func (s *MedicalSessionSpecification) WithSearchTerm(term string) *MedicalSessio
 
 func (s *MedicalSessionSpecification) WithPagination(page, pageSize int, orderBy, sortDir string) *MedicalSessionSpecification {
 	s.Pagination = Pagination{
-		Page:     page,
-		PageSize: pageSize,
-		OrderBy:  orderBy,
-		SortDir:  sortDir,
+		Offset:  page,
+		Limit:   pageSize,
+		OrderBy: orderBy,
+		SortDir: sortDir,
 	}
 	return s
 }

@@ -116,8 +116,8 @@ func (r *MongoNotificationRepository) ListByChannel(ctx context.Context, channel
 }
 
 func (r *MongoNotificationRepository) paginateSearch(pagination page.PageInput) *options.FindOptionsBuilder {
-	pageSize := int64(pagination.PageSize)
-	pageNumber := int64(pagination.Page)
+	pageSize := int64(pagination.Limit)
+	pageNumber := int64(pagination.Page())
 
 	offset := (pageNumber - 1) * pageSize
 

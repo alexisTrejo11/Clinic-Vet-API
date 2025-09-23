@@ -49,10 +49,6 @@ func (a *Appointment) Status() enum.AppointmentStatus {
 	return a.status
 }
 
-func (a *Appointment) Reason() enum.VisitReason {
-	return a.reason
-}
-
 func (a *Appointment) Notes() *string {
 	return a.notes
 }

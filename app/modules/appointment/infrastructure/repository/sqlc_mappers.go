@@ -4,7 +4,6 @@ import (
 	"clinic-vet-api/app/modules/core/domain/entity/appointment"
 	"clinic-vet-api/app/modules/core/domain/enum"
 	"clinic-vet-api/app/modules/core/domain/valueobject"
-	apperror "clinic-vet-api/app/shared/error/application"
 	"clinic-vet-api/db/models"
 	"clinic-vet-api/sqlc"
 
@@ -12,39 +11,31 @@ import (
 )
 
 func sqlRowToAppointment(row sqlc.Appointment) (*appointment.Appointment, error) {
-	errorMessage := make([]string, 0)
 	id := valueobject.NewAppointmentID(uint(row.ID))
-	// vetID := valueobject.NewEmployeeID(uint(row.EmployeeID.Int32))
 	petID := valueobject.NewPetID(uint(row.PetID))
-	statusEnum, err := enum.ParseAppointmentStatus(string(row.Status))
-	if err != nil {
-		errorMessage = append(errorMessage, err.Error())
-	}
+	statusEnum := enum.AppointmentStatus(string(row.Status))
 	var vetID *valueobject.EmployeeID
+
 	if row.EmployeeID.Valid {
 		vetIDValue := valueobject.NewEmployeeID(uint(row.EmployeeID.Int32))
 		vetID = &vetIDValue
 	}
 
 	customerID := valueobject.NewCustomerID(uint(row.CustomerID))
-	reason := enum.VisitReason(row.Reason)
 
 	var notes *string
 	if row.Notes.Valid {
 		notes = &row.Notes.String
 	}
 
-	if len(errorMessage) > 0 {
-		return &appointment.Appointment{}, apperror.MappingError(errorMessage, "sql", "appointmentEntity", "appointment")
-	}
-
 	return appointment.NewAppointment(
 		id, petID, customerID,
 		appointment.WithEmployeeID(vetID),
 		appointment.WithStatus(statusEnum),
-		appointment.WithScheduledDate(row.ScheduleDate.Time),
-		appointment.WithReason(reason),
-		appointment.WithNotes(notes))
+		appointment.WithScheduledDate(row.ScheduledDate.Time),
+		appointment.WithNotes(notes),
+		appointment.WithTimestamps(row.CreatedAt.Time, row.UpdatedAt.Time),
+	)
 }
 
 func sqlRowsToAppointments(rows []sqlc.Appointment) ([]appointment.Appointment, error) {
@@ -68,9 +59,9 @@ func appointmentToCreateParams(appointment *appointment.Appointment) sqlc.Create
 	params := sqlc.CreateAppointmentParams{
 		CustomerID:    int32(appointment.CustomerID().Value()),
 		PetID:         int32(appointment.PetID().Value()),
-		ScheduleDate:  pgtype.Timestamptz{Time: appointment.ScheduledDate(), Valid: true},
+		ScheduledDate: pgtype.Timestamptz{Time: appointment.ScheduledDate(), Valid: true},
 		Status:        models.AppointmentStatus(string(appointment.Status())),
-		ClinicService: models.ClinicService(string(appointment.Reason())),
+		ClinicService: models.ClinicService(string(appointment.Service().String())),
 	}
 
 	if appointment.EmployeeID() != nil {
@@ -96,12 +87,60 @@ func appointmentToCreateParams(appointment *appointment.Appointment) sqlc.Create
 
 func appointmentToUpdateParams(appointment *appointment.Appointment) sqlc.UpdateAppointmentParams {
 	return sqlc.UpdateAppointmentParams{
-		ID:           int32(appointment.ID().Value()),
-		CustomerID:   int32(appointment.CustomerID().Value()),
-		EmployeeID:   pgtype.Int4{Int32: int32(appointment.EmployeeID().Value()), Valid: appointment.EmployeeID().IsZero()},
-		PetID:        int32(appointment.PetID().Value()),
-		ScheduleDate: pgtype.Timestamptz{Time: appointment.ScheduledDate(), Valid: true},
-		Notes:        pgtype.Text{String: *appointment.Notes(), Valid: appointment.Notes() != nil},
-		Status:       models.AppointmentStatus(string(appointment.Status())),
+		ID:            int32(appointment.ID().Value()),
+		CustomerID:    int32(appointment.CustomerID().Value()),
+		EmployeeID:    pgtype.Int4{Int32: int32(appointment.EmployeeID().Value()), Valid: appointment.EmployeeID().IsZero()},
+		PetID:         int32(appointment.PetID().Value()),
+		ScheduledDate: pgtype.Timestamptz{Time: appointment.ScheduledDate(), Valid: true},
+		Notes:         pgtype.Text{String: *appointment.Notes(), Valid: appointment.Notes() != nil},
+		Status:        models.AppointmentStatus(string(appointment.Status())),
 	}
+}
+
+func (r *SqlcAppointmentRepository) toDomainEntity(row sqlc.FindAppointmentsBySpecRow) (appointment.Appointment, error) {
+	id := valueobject.NewAppointmentID(uint(row.ID))
+	petID := valueobject.NewPetID(uint(row.PetID))
+	customerID := valueobject.NewCustomerID(uint(row.CustomerID))
+
+	var vetID *valueobject.EmployeeID
+	if row.EmployeeID.Valid {
+		vetIDObj := valueobject.NewEmployeeID(uint(row.EmployeeID.Int32))
+		vetID = &vetIDObj
+	}
+
+	statusEnum := enum.AppointmentStatus(row.Status)
+
+	var notes *string
+	if row.Notes.Valid {
+		notes = &row.Notes.String
+	}
+
+	appt, err := appointment.NewAppointment(
+		id, petID, customerID,
+		appointment.WithEmployeeID(vetID),
+		appointment.WithStatus(statusEnum),
+		appointment.WithScheduledDate(row.ScheduledDate.Time),
+		appointment.WithNotes(notes),
+		appointment.WithTimestamps(row.CreatedAt.Time, row.UpdatedAt.Time),
+	)
+	if err != nil {
+		return appointment.Appointment{}, r.wrapConversionError(err)
+	}
+	return *appt, nil
+}
+
+func (r *SqlcAppointmentRepository) ToDomainEntities(rows []sqlc.FindAppointmentsBySpecRow) ([]appointment.Appointment, error) {
+	if len(rows) == 0 {
+		return []appointment.Appointment{}, nil
+	}
+
+	appointments := make([]appointment.Appointment, len(rows))
+	for i, row := range rows {
+		appt, err := r.toDomainEntity(row)
+		if err != nil {
+			return nil, r.wrapConversionError(err)
+		}
+		appointments[i] = appt
+	}
+	return appointments, nil
 }

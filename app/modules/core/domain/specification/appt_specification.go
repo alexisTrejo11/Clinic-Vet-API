@@ -1,5 +1,6 @@
 package specification
 
+/*
 import (
 	"fmt"
 	"strings"
@@ -26,8 +27,8 @@ type ApptSearchSpecification struct {
 func NewAppointmentSearchSpecification() *ApptSearchSpecification {
 	return &ApptSearchSpecification{
 		Pagination: Pagination{
-			Page:     1,
-			PageSize: 10,
+			Offset:     1,
+			Limit: 10,
 			OrderBy:  "scheduled_date",
 			SortDir:  "DESC",
 		},
@@ -87,8 +88,8 @@ func (a *ApptSearchSpecification) WithHasNotes(hasNotes bool) *ApptSearchSpecifi
 
 func (a *ApptSearchSpecification) WithPagination(page, pageSize int, orderBy, sortDir string) *ApptSearchSpecification {
 	a.Pagination = Pagination{
-		Page:     page,
-		PageSize: pageSize,
+		Offset:     page,
+		Limit: pageSize,
 		OrderBy:  orderBy,
 		SortDir:  strings.ToUpper(sortDir),
 	}
@@ -123,10 +124,6 @@ func (a *ApptSearchSpecification) IsSatisfiedBy(candidate any) bool {
 	}
 
 	if a.Status != nil && appt.Status() != *a.Status {
-		return false
-	}
-
-	if a.Reason != nil && appt.Reason() != *a.Reason {
 		return false
 	}
 
@@ -224,11 +221,11 @@ func (a *ApptSearchSpecification) ToSQL() (string, []any) {
 	params = append(params, a.Pagination.GetLimit(), a.Pagination.GetOffset())
 
 	query := fmt.Sprintf(`
-		SELECT id, service, scheduled_date, status, reason, notes, 
+		SELECT id, service, scheduled_date, status, reason, notes,
 			   customer_id, vet_id, pet_id, created_at, updated_at
-		FROM appointments 
-		%s 
-		%s 
+		FROM appointments
+		%s
+		%s
 		%s`,
 		whereClause, orderBy, limitOffset)
 
@@ -260,3 +257,4 @@ func (a *ApptSearchSpecification) getOrderByClause() string {
 func (a *ApptSearchSpecification) GetPagination() Pagination {
 	return a.Pagination
 }
+*/

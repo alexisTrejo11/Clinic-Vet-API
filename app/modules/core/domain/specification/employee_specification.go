@@ -27,10 +27,10 @@ type EmployeeSearchSpecification struct {
 func NewEmployeeSearchSpecification() *EmployeeSearchSpecification {
 	return &EmployeeSearchSpecification{
 		Pagination: Pagination{
-			Page:     1,
-			PageSize: 10,
-			OrderBy:  "created_at",
-			SortDir:  "DESC",
+			Offset:  0,
+			Limit:   10,
+			OrderBy: "created_at",
+			SortDir: "DESC",
 		},
 	}
 }
@@ -104,12 +104,12 @@ func (v *EmployeeSearchSpecification) WithUserAccount(hasUserAccount bool) *Empl
 }
 
 // WithPagination configura la paginación
-func (v *EmployeeSearchSpecification) WithPagination(page, pageSize int, orderBy, sortDir string) *EmployeeSearchSpecification {
+func (v *EmployeeSearchSpecification) WithPagination(offset, limit int, orderBy, sortDir string) *EmployeeSearchSpecification {
 	v.Pagination = Pagination{
-		Page:     page,
-		PageSize: pageSize,
-		OrderBy:  orderBy,
-		SortDir:  strings.ToUpper(sortDir),
+		Offset:  offset,
+		Limit:   limit,
+		OrderBy: orderBy,
+		SortDir: strings.ToUpper(sortDir),
 	}
 	return v
 }

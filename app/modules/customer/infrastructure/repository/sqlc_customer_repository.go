@@ -73,8 +73,8 @@ func (r *SqlcCustomerRepository) FindByID(ctx context.Context, id valueobject.Cu
 }
 
 func (r *SqlcCustomerRepository) FindActive(ctx context.Context, pageInput page.PageInput) (page.Page[c.Customer], error) {
-	offset := (pageInput.Page - 1) * pageInput.PageSize
-	limit := pageInput.PageSize
+	offset := (pageInput.Offset) * pageInput.Limit
+	limit := pageInput.Limit
 
 	customerRows, err := r.queries.FindActiveCustomers(ctx, sqlc.FindActiveCustomersParams{
 		Limit:  int32(limit),

@@ -2,11 +2,12 @@
 package appointment
 
 import (
-	"clinic-vet-api/app/modules/core/domain/enum"
-	"clinic-vet-api/app/modules/core/domain/valueobject"
 	"context"
 	"slices"
 	"time"
+
+	"clinic-vet-api/app/modules/core/domain/enum"
+	"clinic-vet-api/app/modules/core/domain/valueobject"
 )
 
 const (
@@ -14,7 +15,12 @@ const (
 	MaxAllowedDaysToSchedule = 30
 )
 
-func (a *Appointment) Update(ctx context.Context, notes *string, employeeID *valueobject.EmployeeID, service *enum.ClinicService, reason *string) error {
+func (a *Appointment) Update(
+	ctx context.Context,
+	notes *string,
+	employeeID *valueobject.EmployeeID,
+	service *enum.ClinicService,
+) error {
 	operation := "UpdateAppointment"
 
 	if notes != nil {
@@ -33,14 +39,6 @@ func (a *Appointment) Update(ctx context.Context, notes *string, employeeID *val
 			return InvalidServiceError(ctx, *service, operation)
 		}
 		a.service = *service
-	}
-
-	if reason != nil {
-		parsedReason, err := enum.ParseVisitReason(*reason)
-		if err != nil {
-			return InvalidReasonError(ctx, *reason, operation)
-		}
-		a.reason = parsedReason
 	}
 
 	a.IncrementVersion()

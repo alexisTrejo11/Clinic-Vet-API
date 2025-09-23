@@ -4,22 +4,22 @@ import (
 	appt "clinic-vet-api/app/modules/core/domain/entity/appointment"
 	"clinic-vet-api/app/modules/core/domain/enum"
 	apperror "clinic-vet-api/app/shared/error/application"
+	"context"
 )
 
-func createCommandToDomain(command CreateApptCommand) (*appt.Appointment, error) {
+func createCommandToDomain(ctx context.Context, command CreateApptCommand) (*appt.Appointment, error) {
 	status := enum.AppointmentStatusPending
 	if command.status != nil {
 		status = *command.status
 	}
 
 	appointmentEntity, err := appt.CreateAppointment(
-		command.ctx,
+		ctx,
 		command.petID,
 		command.customerID,
 		appt.WithEmployeeID(command.vetID),
 		appt.WithService(command.service),
 		appt.WithScheduledDate(command.datetime),
-		appt.WithReason(command.reason),
 		appt.WithNotes(command.notes),
 		appt.WithStatus(status),
 	)
@@ -29,14 +29,13 @@ func createCommandToDomain(command CreateApptCommand) (*appt.Appointment, error)
 	return appointmentEntity, nil
 }
 
-func requestByCustomerCommandToDomain(command RequestApptByCustomerCommand) (*appt.Appointment, error) {
+func requestByCustomerCommandToDomain(ctx context.Context, command RequestApptByCustomerCommand) (*appt.Appointment, error) {
 	appointmentEntity, err := appt.CreateAppointment(
-		command.ctx,
+		ctx,
 		command.petID,
 		command.customerID,
 		appt.WithService(command.service),
 		appt.WithScheduledDate(command.requestedDate),
-		appt.WithReason(command.reason),
 		appt.WithNotes(command.notes),
 		appt.WithStatus(enum.AppointmentStatusPending),
 	)

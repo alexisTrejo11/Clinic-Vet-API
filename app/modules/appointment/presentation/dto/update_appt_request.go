@@ -1,7 +1,6 @@
 package dto
 
 import (
-	"context"
 	"fmt"
 	"strings"
 	"time"
@@ -20,9 +19,6 @@ type UpdateApptRequest struct {
 	// @Required Required: New status of the appointment (e.g., "confirmed", "cancelled", "completed")
 	Status string `json:"status" binding:"required,oneof=scheduled confirmed cancelled completed no_show" example:"confirmed"`
 
-	// Optional: Reason for the appointment update (e.g., cancellation reason)
-	Reason *string `json:"reason,omitempty" binding:"omitempty,max=500" example:"Patient rescheduled"`
-
 	// Optional: Additional notes or observations about the appointment
 	Notes *string `json:"notes,omitempty" binding:"omitempty,max=1000" example:"Patient requires special handling"`
 
@@ -39,9 +35,6 @@ type RequestApptmentData struct {
 
 	// @Required Required: Date and time for the appointment (ISO 8601 format)
 	Datetime time.Time `json:"datetime" binding:"required" example:"2024-01-15T14:30:00Z"`
-
-	// @Required Required: Reason for the appointment
-	Reason string `json:"reason" binding:"required,max=500" example:"Annual vaccination"`
 
 	// Optional: Additional notes or special instructions
 	Notes *string `json:"notes,omitempty" binding:"omitempty,max=1000" example:"Pet is anxious around other animals"`
@@ -60,15 +53,15 @@ func (a *RescheduleAppointData) Clean() {
 	a.Reason = strings.TrimSpace(a.Reason)
 }
 
-func (a *RescheduleAppointData) ToCommand(ctx context.Context, appointmentID uint) command.RescheduleApptCommand {
-	return *command.NewRescheduleApptCommand(ctx, appointmentID, nil, a.NewDateTime, &a.Reason)
+func (a *RescheduleAppointData) ToCommand(appointmentID uint) command.RescheduleApptCommand {
+	return *command.NewRescheduleApptCommand(appointmentID, nil, a.NewDateTime, &a.Reason)
 }
 
-func (r *RequestApptmentData) ToCommand(ctx context.Context, customerID uint) (*command.RequestApptByCustomerCommand, error) {
-	return command.NewRequestApptByCustomerCommand(ctx, uint(r.PetID), customerID, r.Datetime, r.Reason, r.Service, r.Notes)
+func (r *RequestApptmentData) ToCommand(customerID uint) (*command.RequestApptByCustomerCommand, error) {
+	return command.NewRequestApptByCustomerCommand(uint(r.PetID), customerID, r.Datetime, r.Service, r.Notes)
 }
 
-func (r *UpdateApptRequest) ToCommand(ctx context.Context) (command.UpdateApptCommand, error) {
+func (r *UpdateApptRequest) ToCommand() (command.UpdateApptCommand, error) {
 	var clinicService *enum.ClinicService
 	if r.Service != nil {
 		serviceEnum, err := enum.ParseClinicService(*r.Service)
@@ -79,11 +72,9 @@ func (r *UpdateApptRequest) ToCommand(ctx context.Context) (command.UpdateApptCo
 	}
 
 	updateCommand := command.NewUpdateApptCommand(
-		ctx,
 		r.AppointmentID,
 		r.VetID,
 		r.Status,
-		r.Reason,
 		r.Notes,
 		clinicService)
 

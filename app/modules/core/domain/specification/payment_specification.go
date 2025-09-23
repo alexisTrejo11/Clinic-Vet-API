@@ -439,7 +439,7 @@ func (pq *PaymentQuery) ToSQL() (string, []any, string) {
 		}
 		orderClause = fmt.Sprintf("ORDER BY %s %s", pq.Pagination.OrderBy, sortDir)
 
-		if pq.Pagination.PageSize > 0 {
+		if pq.Pagination.Limit > 0 {
 			orderClause += fmt.Sprintf(" LIMIT %d OFFSET %d",
 				pq.Pagination.GetLimit(),
 				pq.Pagination.GetOffset())

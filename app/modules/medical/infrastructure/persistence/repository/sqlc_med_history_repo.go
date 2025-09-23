@@ -113,11 +113,11 @@ func (r *SQLCMedSessionRepository) FindByID(ctx context.Context, medSessionID va
 }
 
 func (r *SQLCMedSessionRepository) FindByEmployeeID(ctx context.Context, employeeID valueobject.EmployeeID, pageInput p.PageInput) (p.Page[med.MedicalSession], error) {
-	offset := (pageInput.Page - 1) * pageInput.PageSize
+	offset := (pageInput.Offset) * pageInput.Limit
 
 	medSessionRows, err := r.queries.FindMedicalSessionByEmployeeID(ctx, sqlc.FindMedicalSessionByEmployeeIDParams{
 		EmployeeID: int32(employeeID.Value()),
-		Limit:      int32(pageInput.PageSize),
+		Limit:      int32(pageInput.Limit),
 		Offset:     int32(offset),
 	})
 	if err != nil {
@@ -139,11 +139,11 @@ func (r *SQLCMedSessionRepository) FindByEmployeeID(ctx context.Context, employe
 }
 
 func (r *SQLCMedSessionRepository) FindByPetID(ctx context.Context, petID valueobject.PetID, pageInput p.PageInput) (p.Page[med.MedicalSession], error) {
-	offset := (pageInput.Page - 1) * pageInput.PageSize
+	offset := (pageInput.Offset) * pageInput.Limit
 
 	medSessionRows, err := r.queries.FindMedicalSessionByPetID(ctx, sqlc.FindMedicalSessionByPetIDParams{
 		PetID:  int32(petID.Value()),
-		Limit:  int32(pageInput.PageSize),
+		Limit:  int32(pageInput.Limit),
 		Offset: int32(offset),
 	})
 	if err != nil {
@@ -165,11 +165,11 @@ func (r *SQLCMedSessionRepository) FindByPetID(ctx context.Context, petID valueo
 }
 
 func (r *SQLCMedSessionRepository) FindByCustomerID(ctx context.Context, customerID valueobject.CustomerID, pageInput p.PageInput) (p.Page[med.MedicalSession], error) {
-	offset := (pageInput.Page - 1) * pageInput.PageSize
+	offset := (pageInput.Offset) * pageInput.Limit
 
 	medSessionRows, err := r.queries.FindMedicalSessionByCustomerID(ctx, sqlc.FindMedicalSessionByCustomerIDParams{
 		CustomerID: int32(customerID.Value()),
-		Limit:      int32(pageInput.PageSize),
+		Limit:      int32(pageInput.Limit),
 		Offset:     int32(offset),
 	})
 	if err != nil {
@@ -208,12 +208,12 @@ func (r *SQLCMedSessionRepository) FindRecentByPetID(ctx context.Context, petID 
 }
 
 func (r *SQLCMedSessionRepository) FindByDateRange(ctx context.Context, startDate, endDate time.Time, pageInput p.PageInput) (p.Page[med.MedicalSession], error) {
-	offset := (pageInput.Page - 1) * pageInput.PageSize
+	offset := (pageInput.Offset) * pageInput.Limit
 
 	medSessionRows, err := r.queries.FindMedicalSessionByDateRange(ctx, sqlc.FindMedicalSessionByDateRangeParams{
 		VisitDate:   pgtype.Timestamptz{Time: startDate, Valid: true},
 		VisitDate_2: pgtype.Timestamptz{Time: endDate, Valid: true},
-		Limit:       int32(pageInput.PageSize),
+		Limit:       int32(pageInput.Limit),
 		Offset:      int32(offset),
 	})
 	if err != nil {
@@ -256,11 +256,11 @@ func (r *SQLCMedSessionRepository) FindByPetAndDateRange(ctx context.Context, pe
 }
 
 func (r *SQLCMedSessionRepository) FindByDiagnosis(ctx context.Context, diagnosis string, pageInput p.PageInput) (p.Page[med.MedicalSession], error) {
-	offset := (pageInput.Page - 1) * pageInput.PageSize
+	offset := (pageInput.Offset) * pageInput.Limit
 
 	medSessionRows, err := r.queries.FindMedicalSessionByDiagnosis(ctx, sqlc.FindMedicalSessionByDiagnosisParams{
 		Column1: pgtype.Text{String: diagnosis, Valid: true},
-		Limit:   int32(pageInput.PageSize),
+		Limit:   int32(pageInput.Limit),
 		Offset:  int32(offset),
 	})
 	if err != nil {

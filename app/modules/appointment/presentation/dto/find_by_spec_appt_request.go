@@ -6,7 +6,6 @@ import (
 	"clinic-vet-api/app/modules/core/domain/specification"
 	"clinic-vet-api/app/modules/core/domain/valueobject"
 	"clinic-vet-api/app/shared/page"
-	"context"
 	"fmt"
 	"strconv"
 	"strings"
@@ -28,18 +27,12 @@ type AppointmentSearchRequest struct {
 	HasNotes   *bool  `form:"has_notes" validate:"omitempty"`
 
 	page.PageInput
-	/*
-		Page     int    `form:"page" validate:"omitempty,min=1"`
-		PageSize int    `form:"page_size" validate:"omitempty,min=1,max=100"`
-		OrderBy  string `form:"order_by" validate:"omitempty,oneof=scheduled_date status service created_at updated_at"`
-		SortDir  string `form:"sort_dir" validate:"omitempty,oneof=ASC DESC asc desc"`
-	*/
 }
 
 func (r *AppointmentSearchRequest) Pagination() map[string]any {
 	return map[string]any{
-		"page":      r.Page,
-		"page_size": r.PageSize,
+		"page":      r.Page(),
+		"page_size": r.PageSize(),
 		"order_by":  r.OrderBy,
 		"sort_dir":  r.SortDirection,
 	}
@@ -65,89 +58,64 @@ func (r *AppointmentSearchRequest) processBooleanParams(c *gin.Context) {
 	}
 }
 
-func (r *AppointmentSearchRequest) ToQuery(ctx context.Context) (*query.FindApptsBySpecQuery, error) {
+func (r *AppointmentSearchRequest) ToQuery() (*query.FindApptsBySpecQuery, error) {
 	spec, err := r.ToSpecification()
 	if err != nil {
 		return nil, fmt.Errorf("failed to create specification: %w", err)
 	}
-	return query.NewFindApptsBySpecQuery(ctx, *spec), nil
+	return query.NewFindApptsBySpecQuery(spec), nil
 }
 
-func (r *AppointmentSearchRequest) ToSpecification() (*specification.ApptSearchSpecification, error) {
-	spec := specification.NewAppointmentSearchSpecification()
+func (r *AppointmentSearchRequest) ToSpecification() (specification.ApptSearchSpecification, error) {
+	spec := specification.NewApptSearch()
 
 	if r.CustomerID > 0 {
 		customerID := valueobject.NewCustomerID(r.CustomerID)
-		spec = spec.WithCustomerID(customerID)
+		spec = spec.And(specification.ApptByCustomer(customerID))
 	}
 
-	// Vet ID
 	if r.EmployeeID > 0 {
 		vetID := valueobject.NewEmployeeID(r.EmployeeID)
-		spec = spec.WithEmployeeID(vetID)
+		spec = spec.And(specification.ApptByEmployee(vetID))
 	}
-
-	// Pet ID
 	if r.PetID > 0 {
 		petID := valueobject.NewPetID(r.PetID)
-		spec = spec.WithPetID(petID)
+		spec = spec.And(specification.ApptByPet(petID))
 	}
 
-	// Service
 	if r.Service != "" {
 		service, err := enum.ParseClinicService(r.Service)
 		if err != nil {
 			return nil, fmt.Errorf("invalid service: %w", err)
 		}
-		spec = spec.WithService(service)
+		spec = spec.And(specification.ApptByService(service))
 	}
 
-	// Status
 	if r.Status != "" {
 		status, err := enum.ParseAppointmentStatus(r.Status)
 		if err != nil {
 			return nil, fmt.Errorf("invalid status: %w", err)
 		}
-		spec = spec.WithStatus(status)
+		spec = spec.And(specification.ApptByStatus(status))
 	}
 
-	// Reason
-	if r.Reason != "" {
-		reason, err := enum.ParseVisitReason(r.Reason)
-		if err != nil {
-			return nil, fmt.Errorf("invalid reason: %w", err)
-		}
-		spec = spec.WithReason(reason)
-	}
-
-	// Date range
 	startDate, endDate, err := r.parseDateRange()
 	if err != nil {
 		return nil, err
 	}
 
 	if startDate != nil && endDate != nil {
-		spec = spec.WithDateRange(*startDate, *endDate)
-	} else if startDate != nil {
-		spec = spec.WithStartDate(*startDate)
-	} else if endDate != nil {
-		spec = spec.WithEndDate(*endDate)
+		spec = spec.And(specification.ApptByDateRange(*startDate, *endDate))
 	}
 
-	// Has notes
-	if r.HasNotes != nil {
-		spec = spec.WithHasNotes(*r.HasNotes)
-	}
-
-	// Paginación con valores por defecto
 	page := 1
-	if r.Page > 0 {
-		page = r.Page
+	if r.Offset >= 0 {
+		page = r.Offset
 	}
 
 	pageSize := 10
-	if r.PageSize > 0 {
-		pageSize = r.PageSize
+	if r.Limit > 0 {
+		pageSize = r.Limit
 	}
 
 	orderBy := "scheduled_date"
@@ -159,7 +127,12 @@ func (r *AppointmentSearchRequest) ToSpecification() (*specification.ApptSearchS
 	if r.SortDirection != "" {
 		sortDir = strings.ToUpper(string(r.SortDirection))
 	}
-	spec = spec.WithPagination(page, pageSize, orderBy, sortDir)
+	spec = spec.WithPagination(specification.Pagination{
+		Limit:   pageSize,
+		Offset:  page,
+		OrderBy: orderBy,
+		SortDir: sortDir,
+	})
 
 	return spec, nil
 }

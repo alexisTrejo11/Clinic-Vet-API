@@ -146,7 +146,7 @@ definitions:
     type: object
   appointmentController.PaginationMetadata:
     properties:
-      current_page:
+      current_Offset:
         example: 1
         type: integer
       page_size:

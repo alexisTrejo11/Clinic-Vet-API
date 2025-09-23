@@ -87,11 +87,11 @@ func (r *SqlcPaymentRepository) FindByIDAndCustomerID(ctx context.Context, id va
 }
 
 func (r *SqlcPaymentRepository) FindByCustomerID(ctx context.Context, customerID valueobject.CustomerID, pageInput page.PageInput) (page.Page[payment.Payment], error) {
-	offset := (pageInput.Page - 1) * pageInput.PageSize
+	offset := (pageInput.Offset) * pageInput.Limit
 
 	sqlRows, err := r.queries.FindPaymentsByCustomerID(ctx, sqlc.FindPaymentsByCustomerIDParams{
 		PaidFromCustomer: pgtype.Int4{Int32: int32(customerID.Value()), Valid: true},
-		Limit:            int32(pageInput.PageSize),
+		Limit:            int32(pageInput.Limit),
 		Offset:           int32(offset),
 	})
 	if err != nil {
@@ -112,11 +112,11 @@ func (r *SqlcPaymentRepository) FindByCustomerID(ctx context.Context, customerID
 }
 
 func (r *SqlcPaymentRepository) FindByStatus(ctx context.Context, status enum.PaymentStatus, pageInput page.PageInput) (page.Page[payment.Payment], error) {
-	offset := (pageInput.Page - 1) * pageInput.PageSize
+	offset := (pageInput.Offset) * pageInput.Limit
 
 	sqlRows, err := r.queries.FindPaymentsByStatus(ctx, sqlc.FindPaymentsByStatusParams{
 		Status: models.PaymentStatus(status.String()),
-		Limit:  int32(pageInput.PageSize),
+		Limit:  int32(pageInput.Limit),
 		Offset: int32(offset),
 	})
 	if err != nil {
@@ -137,10 +137,10 @@ func (r *SqlcPaymentRepository) FindByStatus(ctx context.Context, status enum.Pa
 }
 
 func (r *SqlcPaymentRepository) FindOverdue(ctx context.Context, pageInput page.PageInput) (page.Page[payment.Payment], error) {
-	offset := (pageInput.Page - 1) * pageInput.PageSize
+	offset := (pageInput.Offset) * pageInput.Limit
 
 	sqlRows, err := r.queries.FindOverduePayments(ctx, sqlc.FindOverduePaymentsParams{
-		Limit:  int32(pageInput.PageSize),
+		Limit:  int32(pageInput.Limit),
 		Offset: int32(offset),
 	})
 	if err != nil {
@@ -161,12 +161,12 @@ func (r *SqlcPaymentRepository) FindOverdue(ctx context.Context, pageInput page.
 }
 
 func (r *SqlcPaymentRepository) FindByDateRange(ctx context.Context, startDate, endDate time.Time, pageInput page.PageInput) (page.Page[payment.Payment], error) {
-	offset := (pageInput.Page - 1) * pageInput.PageSize
+	offset := (pageInput.Offset) * pageInput.Limit
 
 	sqlRows, err := r.queries.FindPaymentsByDateRange(ctx, sqlc.FindPaymentsByDateRangeParams{
 		CreatedAt:   pgtype.Timestamptz{Time: startDate, Valid: true},
 		CreatedAt_2: pgtype.Timestamptz{Time: endDate, Valid: true},
-		Limit:       int32(pageInput.PageSize),
+		Limit:       int32(pageInput.Limit),
 		Offset:      int32(offset),
 	})
 	if err != nil {

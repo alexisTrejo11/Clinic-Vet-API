@@ -73,13 +73,13 @@ func (ctrl *CustomerAppointmetController) RequestAppointment(c *gin.Context) {
 		return
 	}
 
-	commmand, err := requestData.ToCommand(c.Request.Context(), userCtx.CustomerID)
+	commmand, err := requestData.ToCommand(userCtx.CustomerID)
 	if err != nil {
 		response.ApplicationError(c, err)
 		return
 	}
 
-	result := ctrl.bus.CommandBus.RequestAppointmentByCustomer(*commmand)
+	result := ctrl.bus.CommandBus.RequestAppointmentByCustomer(c.Request.Context(), *commmand)
 	if !result.IsSuccess() {
 		response.ApplicationError(c, result.Error())
 		return

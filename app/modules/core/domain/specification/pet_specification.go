@@ -109,9 +109,9 @@ func (s *PetSpecification) ToSQL() (string, []interface{}) {
 		query += fmt.Sprintf(" ORDER BY %s %s", s.pagination.OrderBy, s.pagination.SortDir)
 	}
 
-	if s.pagination.PageSize > 0 {
-		offset := (s.pagination.Page - 1) * s.pagination.PageSize
-		query += fmt.Sprintf(" LIMIT %d OFFSET %d", s.pagination.PageSize, offset)
+	if s.pagination.Limit > 0 {
+		offset := (s.pagination.Offset) * s.pagination.Limit
+		query += fmt.Sprintf(" LIMIT %d OFFSET %d", s.pagination.Limit, offset)
 	}
 
 	return query, params

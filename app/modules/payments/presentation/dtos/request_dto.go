@@ -113,7 +113,6 @@ type PaymentsByDateRangeRequest struct {
 
 func (r *PaymentsByDateRangeRequest) SetDefaultsFieldsIfEmpty() {
 	r.PageInput.SetDefaultsFieldsIfEmpty()
-
 	if r.StartDate.IsZero() {
 		now := time.Now()
 		startOfToday := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())

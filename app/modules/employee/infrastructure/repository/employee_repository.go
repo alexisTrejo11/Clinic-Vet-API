@@ -98,8 +98,8 @@ func (r *SqlcEmployeeRepository) FindByUserID(ctx context.Context, userID valueo
 }
 
 func (r *SqlcEmployeeRepository) FindActive(ctx context.Context, pageInput p.PageInput) (p.Page[e.Employee], error) {
-	offset := (pageInput.Page - 1) * pageInput.PageSize
-	limit := pageInput.PageSize
+	offset := (pageInput.Offset) * pageInput.Limit
+	limit := pageInput.Limit
 
 	employeeRows, err := r.queries.FindActiveEmployees(ctx, sqlc.FindActiveEmployeesParams{
 		Limit:  int32(limit),
@@ -117,8 +117,8 @@ func (r *SqlcEmployeeRepository) FindActive(ctx context.Context, pageInput p.Pag
 }
 
 func (r *SqlcEmployeeRepository) FindAll(ctx context.Context, pageInput p.PageInput) (p.Page[e.Employee], error) {
-	offset := (pageInput.Page - 1) * pageInput.PageSize
-	limit := pageInput.PageSize
+	offset := (pageInput.Offset) * pageInput.Limit
+	limit := pageInput.Limit
 
 	employeeRows, err := r.queries.FindEmployees(ctx, sqlc.FindEmployeesParams{
 		Limit:  int32(limit),
@@ -137,8 +137,8 @@ func (r *SqlcEmployeeRepository) FindAll(ctx context.Context, pageInput p.PageIn
 }
 
 func (r *SqlcEmployeeRepository) FindBySpeciality(ctx context.Context, speciality enum.VetSpecialty, pageInput p.PageInput) (p.Page[e.Employee], error) {
-	offset := (pageInput.Page - 1) * pageInput.PageSize
-	limit := pageInput.PageSize
+	offset := (pageInput.Offset) * pageInput.Limit
+	limit := pageInput.Limit
 
 	employeeRows, err := r.queries.FindEmployeesBySpeciality(ctx, sqlc.FindEmployeesBySpecialityParams{
 		Speciality: models.VeterinarianSpeciality(speciality.DisplayName()),

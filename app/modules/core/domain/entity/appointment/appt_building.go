@@ -34,13 +34,6 @@ func WithStatus(status enum.AppointmentStatus) AppointmentOption {
 	}
 }
 
-func WithReason(reason enum.VisitReason) AppointmentOption {
-	return func(ctx context.Context, a *Appointment) error {
-		a.reason = reason
-		return nil
-	}
-}
-
 func WithNotes(notes *string) AppointmentOption {
 	return func(ctx context.Context, a *Appointment) error {
 		a.notes = notes
@@ -57,9 +50,6 @@ func WithEmployeeID(employeeID *valueobject.EmployeeID) AppointmentOption {
 
 func WithPetID(petID valueobject.PetID) AppointmentOption {
 	return func(ctx context.Context, a *Appointment) error {
-		if petID.IsZero() {
-			return domainerr.ValidationError(ctx, "appointment", "pet_id", "pet ID is required", "WithPetID")
-		}
 		a.petID = petID
 		return nil
 	}
@@ -67,10 +57,14 @@ func WithPetID(petID valueobject.PetID) AppointmentOption {
 
 func WithCustomerID(customerID valueobject.CustomerID) AppointmentOption {
 	return func(ctx context.Context, a *Appointment) error {
-		if customerID.IsZero() {
-			return domainerr.ValidationError(ctx, "appointment", "customer_id", "customer ID is required", "WithCustomerID")
-		}
 		a.customerID = customerID
+		return nil
+	}
+}
+
+func WithTimestamps(createdAt, updatedAt time.Time) AppointmentOption {
+	return func(ctx context.Context, a *Appointment) error {
+		a.Entity.SetTimeStamps(createdAt, updatedAt)
 		return nil
 	}
 }
@@ -82,9 +76,12 @@ func NewAppointment(
 	customerID valueobject.CustomerID,
 	opts ...AppointmentOption,
 ) (*Appointment, error) {
-	// Use background context for legacy version
 	ctx := context.Background()
-	return NewAppointmentWithContext(ctx, id, petID, customerID, opts...)
+	appointment, err := NewAppointmentWithContext(ctx, id, petID, customerID, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return appointment, nil
 }
 
 // NewAppointmentWithContext creates a new Appointment with context and functional options

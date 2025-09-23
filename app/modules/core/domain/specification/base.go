@@ -7,19 +7,19 @@ type Specification interface {
 }
 
 type Pagination struct {
-	Page     int
-	PageSize int
-	OrderBy  string
-	SortDir  string // "ASC" or "DESC"
+	Offset  int
+	Limit   int
+	OrderBy string
+	SortDir string // "ASC" or "DESC"
 }
 
 func (p Pagination) GetOffset() int {
-	if p.Page <= 0 {
+	if p.Offset <= 0 {
 		return 0
 	}
-	return (p.Page - 1) * p.PageSize
+	return (p.Offset - 1) * p.Limit
 }
 
 func (p Pagination) GetLimit() int {
-	return p.PageSize
+	return p.Limit
 }

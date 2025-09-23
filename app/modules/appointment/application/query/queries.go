@@ -3,21 +3,19 @@ package query
 import (
 	"clinic-vet-api/app/modules/core/domain/specification"
 	"clinic-vet-api/app/modules/core/domain/valueobject"
-	"clinic-vet-api/app/shared/page"
-	"context"
 	"time"
 
 	apperror "clinic-vet-api/app/shared/error/application"
+	"clinic-vet-api/app/shared/page"
 )
 
 type FindApptByIDQuery struct {
 	appointmentID valueobject.AppointmentID
 	customerID    *valueobject.CustomerID
 	employeeID    *valueobject.EmployeeID
-	ctx           context.Context
 }
 
-func NewFindApptByIDQuery(ctx context.Context, id uint, employeeID *uint, customerID *uint) *FindApptByIDQuery {
+func NewFindApptByIDQuery(id uint, employeeID *uint, customerID *uint) *FindApptByIDQuery {
 	var empID *valueobject.EmployeeID
 	if employeeID != nil {
 		val := valueobject.NewEmployeeID(*employeeID)
@@ -34,42 +32,20 @@ func NewFindApptByIDQuery(ctx context.Context, id uint, employeeID *uint, custom
 		appointmentID: valueobject.NewAppointmentID(id),
 		customerID:    custID,
 		employeeID:    empID,
-		ctx:           ctx,
 	}
 }
 
-type FindApptByIDAndCustomerIDQuery struct {
-	apptID     valueobject.AppointmentID
-	customerID valueobject.CustomerID
-	ctx        context.Context
-}
-
-func NewFindApptByIDAndCustomerIDQuery(ctx context.Context, apptID uint, customerID uint) *FindApptByIDAndCustomerIDQuery {
-	return &FindApptByIDAndCustomerIDQuery{ctx: ctx, apptID: valueobject.NewAppointmentID(apptID), customerID: valueobject.NewCustomerID(customerID)}
-}
-
-type FindApptByIDAndEmployeeIDQuery struct {
-	apptID     valueobject.AppointmentID
-	employeeID valueobject.EmployeeID
-	ctx        context.Context
-}
-
-func NewFindApptByIDAndEmployeeIDQuery(ctx context.Context, apptID uint, employeeID uint) *FindApptByIDAndEmployeeIDQuery {
-	return &FindApptByIDAndEmployeeIDQuery{apptID: valueobject.NewAppointmentID(apptID), employeeID: valueobject.NewEmployeeID(employeeID)}
-}
-
 type FindApptsByDateRangeQuery struct {
-	startDate time.Time
-	endDate   time.Time
-	ctx       context.Context
-	pageInput page.PageInput
+	startDate  time.Time
+	endDate    time.Time
+	pagination specification.Pagination
 }
 
-func NewFindApptsByDateRangeQuery(ctx context.Context, startDate, endDate time.Time, pageInput page.PageInput) (FindApptsByDateRangeQuery, error) {
+func NewFindApptsByDateRangeQuery(startDate, endDate time.Time, pagInput page.PageInput) (FindApptsByDateRangeQuery, error) {
 	qry := &FindApptsByDateRangeQuery{
-		startDate: startDate,
-		endDate:   endDate,
-		pageInput: pageInput,
+		startDate:  startDate,
+		endDate:    endDate,
+		pagination: pagInput.ToSpecPagination(),
 	}
 
 	if startDate.IsZero() {
@@ -90,45 +66,52 @@ func NewFindApptsByDateRangeQuery(ctx context.Context, startDate, endDate time.T
 type FindApptsByCustomerIDQuery struct {
 	customerID valueobject.CustomerID
 	petID      *valueobject.PetID
-	ctx        context.Context
-	pageInput  page.PageInput
+	pagination specification.Pagination
 }
 
-func NewFindApptsByCustomerIDQuery(ctx context.Context, pageInput page.PageInput, customerId uint, petID *uint, status *string) *FindApptsByCustomerIDQuery {
+func NewFindApptsByCustomerIDQuery(
+	pagination page.PageInput,
+	customerId uint,
+	petID *uint, status *string,
+) *FindApptsByCustomerIDQuery {
 	var petIDvo *valueobject.PetID
 	if petID != nil {
 		val := valueobject.NewPetID(*petID)
 		petIDvo = &val
 	}
 
-	return &FindApptsByCustomerIDQuery{customerID: valueobject.NewCustomerID(customerId), pageInput: pageInput, ctx: ctx, petID: petIDvo}
+	return &FindApptsByCustomerIDQuery{
+		customerID: valueobject.NewCustomerID(customerId),
+		pagination: pagination.ToSpecPagination(),
+		petID:      petIDvo,
+	}
 }
 
 type FindApptsByPetQuery struct {
-	petID     valueobject.PetID
-	ctx       context.Context
-	pageInput page.PageInput
+	petID      valueobject.PetID
+	pagination specification.Pagination
 }
 
-func NewFindApptsByPetQuery(ctx context.Context, vetID uint, pagination page.PageInput) *FindApptsByPetQuery {
-	return &FindApptsByPetQuery{petID: valueobject.NewPetID(vetID), ctx: ctx, pageInput: pagination}
+func NewFindApptsByPetQuery(employeeID uint, pagination page.PageInput) *FindApptsByPetQuery {
+	return &FindApptsByPetQuery{petID: valueobject.NewPetID(employeeID), pagination: pagination.ToSpecPagination()}
 }
 
 type FindApptsByEmployeeIDQuery struct {
-	vetID     valueobject.EmployeeID
-	ctx       context.Context
-	pageInput page.PageInput
+	employeeID valueobject.EmployeeID
+	pagination specification.Pagination
 }
 
-func NewFindApptsByEmployeeIDQuery(ctx context.Context, vetID uint, pageInput page.PageInput) *FindApptsByEmployeeIDQuery {
-	return &FindApptsByEmployeeIDQuery{ctx: ctx, vetID: valueobject.NewEmployeeID(vetID), pageInput: pageInput}
+func NewFindApptsByEmployeeIDQuery(employeeID uint, pagination page.PageInput) *FindApptsByEmployeeIDQuery {
+	return &FindApptsByEmployeeIDQuery{
+		employeeID: valueobject.NewEmployeeID(employeeID),
+		pagination: pagination.ToSpecPagination(),
+	}
 }
 
 type FindApptsBySpecQuery struct {
 	spec specification.ApptSearchSpecification
-	ctx  context.Context
 }
 
-func NewFindApptsBySpecQuery(ctx context.Context, spec specification.ApptSearchSpecification) *FindApptsBySpecQuery {
-	return &FindApptsBySpecQuery{ctx: ctx, spec: spec}
+func NewFindApptsBySpecQuery(spec specification.ApptSearchSpecification) *FindApptsBySpecQuery {
+	return &FindApptsBySpecQuery{spec: spec}
 }
