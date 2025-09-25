@@ -17,14 +17,14 @@ type PaymentRepository interface {
 	FindByTransactionID(ctx context.Context, transactionID string) (p.Payment, error)
 	FindByIDAndCustomerID(ctx context.Context, id vo.PaymentID, customerID vo.CustomerID) (p.Payment, error)
 
-	FindByCustomerID(ctx context.Context, customerID vo.CustomerID, pageInput page.PageInput) (page.Page[p.Payment], error)
-	FindByStatus(ctx context.Context, status enum.PaymentStatus, pageInput page.PageInput) (page.Page[p.Payment], error)
-	FindOverdue(ctx context.Context, pageInput page.PageInput) (page.Page[p.Payment], error)
-	FindByDateRange(ctx context.Context, startDate, endDate time.Time, pageInput page.PageInput) (page.Page[p.Payment], error)
+	FindByCustomerID(ctx context.Context, customerID vo.CustomerID, PaginationRequest page.PaginationRequest) (page.Page[p.Payment], error)
+	FindByStatus(ctx context.Context, status enum.PaymentStatus, PaginationRequest page.PaginationRequest) (page.Page[p.Payment], error)
+	FindOverdue(ctx context.Context, PaginationRequest page.PaginationRequest) (page.Page[p.Payment], error)
+	FindByDateRange(ctx context.Context, startDate, endDate time.Time, PaginationRequest page.PaginationRequest) (page.Page[p.Payment], error)
 
 	FindRecentByCustomerID(ctx context.Context, customerID vo.CustomerID, limit int) ([]p.Payment, error)
-	FindPendingPayments(ctx context.Context, pageInput page.PageInput) (page.Page[p.Payment], error)
-	FindSuccessfulPayments(ctx context.Context, pageInput page.PageInput) (page.Page[p.Payment], error)
+	FindPendingPayments(ctx context.Context, PaginationRequest page.PaginationRequest) (page.Page[p.Payment], error)
+	FindSuccessfulPayments(ctx context.Context, PaginationRequest page.PaginationRequest) (page.Page[p.Payment], error)
 
 	ExistsByID(ctx context.Context, id vo.PaymentID) (bool, error)
 	ExistsByTransactionID(ctx context.Context, transactionID string) (bool, error)

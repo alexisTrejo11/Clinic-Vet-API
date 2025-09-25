@@ -52,21 +52,21 @@ type FindMedSessionBySpecQuery struct {
 }
 
 type FindAllMedSessionQuery struct {
-	PageInput p.PageInput
+	PaginationRequest p.PaginationRequest
 }
 
 type FindMedSessionByEmployeeIDQuery struct {
-	EmployeeID valueobject.EmployeeID
-	PageInput  p.PageInput
+	EmployeeID        valueobject.EmployeeID
+	PaginationRequest p.PaginationRequest
 }
 
 type FindMedSessionByPetIDQuery struct {
-	petID         valueobject.PetID
-	optCustomerID *valueobject.CustomerID
-	pageInput     p.PageInput
+	petID             valueobject.PetID
+	optCustomerID     *valueobject.CustomerID
+	PaginationRequest p.PaginationRequest
 }
 
-func NewFindMedSessionByPetIDQuery(petID uint, optCustomerID *uint, pageInput p.PageInput) *FindMedSessionByPetIDQuery {
+func NewFindMedSessionByPetIDQuery(petID uint, optCustomerID *uint, PaginationRequest p.PaginationRequest) *FindMedSessionByPetIDQuery {
 	var optCustID *valueobject.CustomerID
 	if optCustomerID != nil {
 		val := valueobject.NewCustomerID(*optCustomerID)
@@ -74,15 +74,15 @@ func NewFindMedSessionByPetIDQuery(petID uint, optCustomerID *uint, pageInput p.
 	}
 
 	return &FindMedSessionByPetIDQuery{
-		petID:         valueobject.NewPetID(petID),
-		optCustomerID: optCustID,
-		pageInput:     pageInput,
+		petID:             valueobject.NewPetID(petID),
+		optCustomerID:     optCustID,
+		PaginationRequest: PaginationRequest,
 	}
 }
 
 type FindMedSessionByCustomerIDQuery struct {
-	CustomerID valueobject.CustomerID
-	PageInput  p.PageInput
+	CustomerID        valueobject.CustomerID
+	PaginationRequest p.PaginationRequest
 }
 
 type FindRecentMedSessionByPetIDQuery struct {
@@ -91,9 +91,9 @@ type FindRecentMedSessionByPetIDQuery struct {
 }
 
 type FindMedSessionByDateRangeQuery struct {
-	StartDate time.Time
-	EndDate   time.Time
-	PageInput p.PageInput
+	StartDate         time.Time
+	EndDate           time.Time
+	PaginationRequest p.PaginationRequest
 }
 
 type FindMedSessionByPetAndDateRangeQuery struct {
@@ -103,8 +103,8 @@ type FindMedSessionByPetAndDateRangeQuery struct {
 }
 
 type FindMedSessionByDiagnosisQuery struct {
-	Diagnosis string
-	PageInput p.PageInput
+	Diagnosis         string
+	PaginationRequest p.PaginationRequest
 }
 
 type ExistsMedSessionByIDQuery struct {

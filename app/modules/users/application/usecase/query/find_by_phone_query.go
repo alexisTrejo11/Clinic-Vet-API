@@ -35,7 +35,7 @@ func NewFindUserByPhoneHandler(userRepository repository.UserRepository) *FindUs
 }
 
 func (h *FindUserByPhoneHandler) Handle(ctx context.Context, query FindUserByPhoneQuery) (UserResult, error) {
-	user, err := h.userRepository.FindByPhone(ctx, query.phone.Value())
+	user, err := h.userRepository.FindByPhone(ctx, query.phone.Value)
 	if err != nil {
 		return UserResult{}, err
 	}

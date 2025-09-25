@@ -13,10 +13,10 @@ import (
 type PetRepository interface {
 	FindBySpecification(ctx context.Context, spec specification.PetSpecification) (page.Page[pet.Pet], error)
 	FindAllByCustomerID(ctx context.Context, customerID valueobject.CustomerID) ([]pet.Pet, error)
-	FindByCustomerID(ctx context.Context, customerID valueobject.CustomerID, pageInput page.PageInput) (page.Page[pet.Pet], error)
+	FindByCustomerID(ctx context.Context, customerID valueobject.CustomerID, PaginationRequest page.PaginationRequest) (page.Page[pet.Pet], error)
 	FindByID(ctx context.Context, petID valueobject.PetID) (pet.Pet, error)
 	FindByIDAndCustomerID(ctx context.Context, id valueobject.PetID, customerID valueobject.CustomerID) (pet.Pet, error)
-	FindBySpecies(ctx context.Context, petSpecies enum.PetSpecies, pageInput page.PageInput) (page.Page[pet.Pet], error)
+	FindBySpecies(ctx context.Context, petSpecies enum.PetSpecies, PaginationRequest page.PaginationRequest) (page.Page[pet.Pet], error)
 
 	ExistsByID(ctx context.Context, petID valueobject.PetID) (bool, error)
 	ExistsByMicrochip(ctx context.Context, microchip string) (bool, error)

@@ -31,12 +31,11 @@ func (r *SqlcPetRepository) FindBySpecification(ctx context.Context, spec specif
 	return page.Page[pet.Pet]{}, errors.New("FindBySpecification not implemented")
 }
 
-func (r *SqlcPetRepository) FindBySpecies(ctx context.Context, petSpecies enum.PetSpecies, pageInput page.PageInput) (page.Page[pet.Pet], error) {
-	offset := (pageInput.Offset) * pageInput.Limit
+func (r *SqlcPetRepository) FindBySpecies(ctx context.Context, petSpecies enum.PetSpecies, pagination page.PaginationRequest) (page.Page[pet.Pet], error) {
 	petRows, err := r.queries.FindPetsBySpecies(ctx, sqlc.FindPetsBySpeciesParams{
 		Species: petSpecies.String(),
-		Limit:   int32(pageInput.Limit),
-		Offset:  int32(offset),
+		Limit:   int32(pagination.Limit()),
+		Offset:  int32(pagination.Offset()),
 	})
 
 	if err != nil {
@@ -53,7 +52,7 @@ func (r *SqlcPetRepository) FindBySpecies(ctx context.Context, petSpecies enum.P
 		return page.Page[pet.Pet]{}, r.wrapConversionError(err)
 	}
 
-	return page.NewPage(pets, *page.GetPageMetadata(int(total), pageInput)), nil
+	return page.NewPage(pets, int(total), pagination), nil
 }
 
 func (r *SqlcPetRepository) FindAllByCustomerID(ctx context.Context, customerID valueobject.CustomerID) ([]pet.Pet, error) {
@@ -79,11 +78,11 @@ func (r *SqlcPetRepository) FindAllByCustomerID(ctx context.Context, customerID 
 	return pets, nil
 }
 
-func (r *SqlcPetRepository) FindByCustomerID(ctx context.Context, customerID valueobject.CustomerID, pageInput page.PageInput) (page.Page[pet.Pet], error) {
-	offset := (pageInput.Offset) * pageInput.Limit
+func (r *SqlcPetRepository) FindByCustomerID(ctx context.Context, customerID valueobject.CustomerID, pagination page.PaginationRequest) (page.Page[pet.Pet], error) {
+	offset := (pagination.Offset()) * pagination.Limit()
 	petRows, err := r.queries.FindPetsByCustomerID(ctx, sqlc.FindPetsByCustomerIDParams{
 		CustomerID: int32(customerID.Value()),
-		Limit:      int32(pageInput.Limit),
+		Limit:      int32(pagination.Limit()),
 		Offset:     int32(offset),
 	})
 	if err != nil {
@@ -97,7 +96,7 @@ func (r *SqlcPetRepository) FindByCustomerID(ctx context.Context, customerID val
 
 	pets, _ := sqlcRowsToEntities(petRows)
 
-	return page.NewPage(pets, *page.GetPageMetadata(int(total), pageInput)), nil
+	return page.NewPage(pets, int(total), pagination), nil
 }
 
 func (r *SqlcPetRepository) FindByID(ctx context.Context, petID valueobject.PetID) (pet.Pet, error) {

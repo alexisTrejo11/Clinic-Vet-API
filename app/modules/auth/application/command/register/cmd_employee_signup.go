@@ -15,14 +15,14 @@ import (
 type StaffRegisterCommand struct {
 	email       valueobject.Email
 	password    string
-	phoneNumber *valueobject.PhoneNumber
+	phoneNumber valueobject.PhoneNumber
 	employeeID  valueobject.EmployeeID
 }
 
 func NewStaffRegisterCommand(
 	email valueobject.Email,
 	password string,
-	phoneNumber *valueobject.PhoneNumber,
+	phoneNumber valueobject.PhoneNumber,
 	employeeID valueobject.EmployeeID,
 ) *StaffRegisterCommand {
 	return &StaffRegisterCommand{

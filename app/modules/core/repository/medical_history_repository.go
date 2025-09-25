@@ -16,16 +16,16 @@ type MedicalSessionRepository interface {
 	FindByIDAndPetID(ctx context.Context, medicalSessionID valueobject.MedSessionID, petID valueobject.PetID) (*medical.MedicalSession, error)
 	FindByIDAndEmployeeID(ctx context.Context, medicalSessionID valueobject.MedSessionID, employeeID valueobject.EmployeeID) (*medical.MedicalSession, error)
 
-	FindByEmployeeID(ctx context.Context, employeeID valueobject.EmployeeID, pageInput p.PageInput) (p.Page[medical.MedicalSession], error)
-	FindByPetID(ctx context.Context, petID valueobject.PetID, pageInput p.PageInput) (p.Page[medical.MedicalSession], error)
-	FindByCustomerID(ctx context.Context, customerID valueobject.CustomerID, pageInput p.PageInput) (p.Page[medical.MedicalSession], error)
+	FindByEmployeeID(ctx context.Context, employeeID valueobject.EmployeeID, PaginationRequest p.PaginationRequest) (p.Page[medical.MedicalSession], error)
+	FindByPetID(ctx context.Context, petID valueobject.PetID, PaginationRequest p.PaginationRequest) (p.Page[medical.MedicalSession], error)
+	FindByCustomerID(ctx context.Context, customerID valueobject.CustomerID, PaginationRequest p.PaginationRequest) (p.Page[medical.MedicalSession], error)
 
 	FindBySpecification(ctx context.Context, spec specification.MedicalSessionSpecification) (p.Page[medical.MedicalSession], error)
 
 	FindRecentByPetID(ctx context.Context, petID valueobject.PetID, limit int) ([]medical.MedicalSession, error)
-	FindByDateRange(ctx context.Context, startDate, endDate time.Time, pageInput p.PageInput) (p.Page[medical.MedicalSession], error)
+	FindByDateRange(ctx context.Context, startDate, endDate time.Time, PaginationRequest p.PaginationRequest) (p.Page[medical.MedicalSession], error)
 	FindByPetAndDateRange(ctx context.Context, petID valueobject.PetID, startDate, endDate time.Time) ([]medical.MedicalSession, error)
-	FindByDiagnosis(ctx context.Context, diagnosis string, pageInput p.PageInput) (p.Page[medical.MedicalSession], error)
+	FindByDiagnosis(ctx context.Context, diagnosis string, PaginationRequest p.PaginationRequest) (p.Page[medical.MedicalSession], error)
 
 	ExistsByID(ctx context.Context, medicalSessionID valueobject.MedSessionID) (bool, error)
 	ExistsByPetAndDate(ctx context.Context, petID valueobject.PetID, date time.Time) (bool, error)

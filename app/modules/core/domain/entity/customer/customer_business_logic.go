@@ -2,28 +2,12 @@ package customer
 
 import (
 	"context"
-	"time"
 
 	"clinic-vet-api/app/modules/core/domain/entity/pet"
 	"clinic-vet-api/app/modules/core/domain/enum"
 	"clinic-vet-api/app/modules/core/domain/valueobject"
 	domainerr "clinic-vet-api/app/modules/core/error"
 )
-
-func validateDateOfBirth(ctx context.Context, dob time.Time, operation string) error {
-	if dob.IsZero() {
-		return DateOfBirthRequiredError(ctx, operation)
-	}
-	if dob.After(time.Now()) {
-		return DateOfBirthFutureError(ctx, dob, operation)
-	}
-
-	minAgeDate := time.Now().AddDate(-18, 0, 0)
-	if dob.After(minAgeDate) {
-		return UnderageCustomerError(ctx, dob, operation)
-	}
-	return nil
-}
 
 func (o *Customer) UpdatePhoto(ctx context.Context, newPhoto string) error {
 	const operation = "update_photo"

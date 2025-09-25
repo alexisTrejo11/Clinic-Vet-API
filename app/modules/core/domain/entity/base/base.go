@@ -13,13 +13,21 @@ type Entity[T any] struct {
 }
 
 // NewEntity creates a new base entity
-func NewEntity[T any](id T, createdAt, updatedAt time.Time, version int) Entity[T] {
-	return Entity[T]{
-		id:        id,
-		createdAt: createdAt,
-		updatedAt: updatedAt,
-		version:   version,
+func NewEntity[T any](id T, createdAt, updatedAt *time.Time, version int) Entity[T] {
+	entity := &Entity[T]{
+		id:      id,
+		version: version,
 	}
+
+	if createdAt != nil {
+		entity.createdAt = *createdAt
+	}
+
+	if updatedAt != nil {
+		entity.updatedAt = *updatedAt
+	}
+
+	return *entity
 }
 
 func CreateEntity[T any](id T) Entity[T] {

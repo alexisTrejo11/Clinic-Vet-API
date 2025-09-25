@@ -14,7 +14,7 @@ import (
 
 type CreateUserCommand struct {
 	email       valueobject.Email
-	phoneNumber *valueobject.PhoneNumber
+	phoneNumber valueobject.PhoneNumber
 	password    string
 	role        enum.UserRole
 	status      enum.UserStatus
@@ -28,14 +28,14 @@ func NewCreateUserCommand(email string, phoneNumber *string, password, role stri
 		errorsMessages = append(errorsMessages, err.Error())
 	}
 
-	var phoneNumberVO *valueobject.PhoneNumber
+	var phoneNumberVO valueobject.PhoneNumber
 	if phoneNumber != nil {
-		phoneNumber, err := valueobject.NewPhoneNumber(*phoneNumber)
+		phoneNumberVO, err = valueobject.NewPhoneNumber(*phoneNumber)
 		if err != nil {
 			errorsMessages = append(errorsMessages, err.Error())
 		}
-
-		phoneNumberVO = &phoneNumber
+	} else {
+		phoneNumberVO = valueobject.EmptyPhoneNumber()
 	}
 
 	userRole, err := enum.ParseUserRole(role)

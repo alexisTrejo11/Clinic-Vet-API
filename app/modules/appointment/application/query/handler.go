@@ -39,8 +39,7 @@ func (h *apptQueryHandler) FindBySpecification(ctx context.Context, query FindAp
 		return p.Page[ApptResult]{}, err
 	}
 
-	apptResults := mapApptsToResult(appointmentPage.Items)
-	return p.NewPage(apptResults, appointmentPage.Metadata), nil
+	return p.MapItems(appointmentPage, apptToResult), nil
 }
 
 func (h *apptQueryHandler) FindByID(ctx context.Context, query FindApptByIDQuery) (ApptResult, error) {
@@ -48,7 +47,7 @@ func (h *apptQueryHandler) FindByID(ctx context.Context, query FindApptByIDQuery
 	if err != nil {
 		return ApptResult{}, err
 	}
-	return NewApptResult(&appointment), nil
+	return apptToResult(appointment), nil
 }
 
 func (h *apptQueryHandler) FindByDateRange(ctx context.Context, query FindApptsByDateRangeQuery) (p.Page[ApptResult], error) {
@@ -60,10 +59,7 @@ func (h *apptQueryHandler) FindByDateRange(ctx context.Context, query FindApptsB
 		return p.Page[ApptResult]{}, err
 	}
 
-	return p.NewPage(
-		mapApptsToResult(appointmentsPage.Items),
-		appointmentsPage.Metadata,
-	), nil
+	return p.MapItems(appointmentsPage, apptToResult), nil
 }
 
 func (h *apptQueryHandler) validateEmployee(ctx context.Context, employeeID valueobject.EmployeeID) error {
@@ -80,15 +76,11 @@ func (h *apptQueryHandler) validateEmployee(ctx context.Context, employeeID valu
 }
 
 func (h *apptQueryHandler) validateCustomer(ctx context.Context, customerID valueobject.CustomerID) error {
-	exists, err := h.customerRepository.ExistsByID(ctx, customerID)
-	if err != nil {
+	if exists, err := h.customerRepository.ExistsByID(ctx, customerID); err != nil {
 		return err
-	}
-
-	if !exists {
+	} else if !exists {
 		return apperror.EntityNotFoundValidationError("customer", "id", customerID.String())
 	}
-
 	return nil
 }
 
@@ -110,7 +102,7 @@ func (h *apptQueryHandler) FindByCustomerID(ctx context.Context, query FindAppts
 		return p.Page[ApptResult]{}, err
 	}
 
-	return p.NewPage(mapApptsToResult(appointmentsp.Items), appointmentsp.Metadata), nil
+	return p.MapItems(appointmentsp, apptToResult), nil
 }
 
 func (h *apptQueryHandler) FindByEmployee(ctx context.Context, query FindApptsByEmployeeIDQuery) (p.Page[ApptResult], error) {
@@ -123,7 +115,7 @@ func (h *apptQueryHandler) FindByEmployee(ctx context.Context, query FindApptsBy
 		return p.Page[ApptResult]{}, err
 	}
 
-	return p.NewPage(mapApptsToResult(appointmentsPage.Items), appointmentsPage.Metadata), nil
+	return p.MapItems(appointmentsPage, apptToResult), nil
 }
 
 func (h *apptQueryHandler) FindByEmployeeID(ctx context.Context, query FindApptsByEmployeeIDQuery) (p.Page[ApptResult], error) {
@@ -140,7 +132,7 @@ func (h *apptQueryHandler) FindByEmployeeID(ctx context.Context, query FindAppts
 		return p.Page[ApptResult]{}, err
 	}
 
-	return p.NewPage(mapApptsToResult(appointmentsPage.Items), appointmentsPage.Metadata), nil
+	return p.MapItems(appointmentsPage, apptToResult), nil
 }
 
 func (h *apptQueryHandler) FindByPetID(ctx context.Context, query FindApptsByPetQuery) (p.Page[ApptResult], error) {
@@ -151,5 +143,5 @@ func (h *apptQueryHandler) FindByPetID(ctx context.Context, query FindApptsByPet
 		return p.Page[ApptResult]{}, err
 	}
 
-	return p.NewPage(mapApptsToResult(appointmentsPage.Items), appointmentsPage.Metadata), nil
+	return p.MapItems(appointmentsPage, apptToResult), nil
 }

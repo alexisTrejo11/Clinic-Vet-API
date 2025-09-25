@@ -30,13 +30,13 @@ func (s *PetControllerOperations) FindPetByID(c *gin.Context, customerID *uint) 
 }
 
 func (s *PetControllerOperations) FindPetsByCustomerID(c *gin.Context, customerID uint) {
-	var pageInput page.PageInput
-	if err := ginutils.ShouldBindPageParams(&pageInput, c, s.validator); err != nil {
+	var paginatioRequest page.PaginationRequest
+	if err := ginutils.ShouldBindPageParams(&paginatioRequest, c, s.validator); err != nil {
 		response.BadRequest(c, err)
 		return
 	}
 
-	query := query.NewFindPetsByCustomerIDQuery(customerID, pageInput)
+	query := query.NewFindPetsByCustomerIDQuery(customerID, paginatioRequest)
 	resultPage, err := s.bus.FindPetsByCustomerID(c.Request.Context(), *query)
 	if err != nil {
 		response.ApplicationError(c, err)
@@ -72,7 +72,7 @@ func (s *PetControllerOperations) FindPetsBySpecies(c *gin.Context) {
 		return
 	}
 
-	var pagination page.PageInput
+	var pagination page.PaginationRequest
 	if err := ginutils.ShouldBindPageParams(&pagination, c, s.validator); err != nil {
 		response.BadRequest(c, err)
 		return

@@ -59,8 +59,8 @@ func (r *SqlcEmployeeRepository) FindBySpecification(ctx context.Context, spec s
 		return p.Page[e.Employee]{}, err
 	}
 
-	pageInput := p.FromSpecPagination(spec.Pagination)
-	return p.NewPage(employees, *p.GetPageMetadata(totalCount, pageInput)), nil
+	pagination := p.FromSpecPagination(spec.Pagination)
+	return p.NewPage(employees, totalCount, pagination), nil
 }
 
 func (r *SqlcEmployeeRepository) FindByID(ctx context.Context, id valueobject.EmployeeID) (e.Employee, error) {
@@ -72,11 +72,7 @@ func (r *SqlcEmployeeRepository) FindByID(ctx context.Context, id valueobject.Em
 		return e.Employee{}, r.dbError("select", "failed to get employee by ID", err)
 	}
 
-	employeeEntity, err := sqlcRowToEntity(sqlRow)
-	if err != nil {
-		return e.Employee{}, r.wrapConversionError(err)
-	}
-
+	employeeEntity := sqlcRowToEntity(sqlRow)
 	return *employeeEntity, nil
 }
 
@@ -89,21 +85,14 @@ func (r *SqlcEmployeeRepository) FindByUserID(ctx context.Context, userID valueo
 		return e.Employee{}, r.dbError("select", "failed to get employee by user ID", err)
 	}
 
-	employee, err := sqlcRowToEntity(sqlRow)
-	if err != nil {
-		return e.Employee{}, r.wrapConversionError(err)
-	}
-
+	employee := sqlcRowToEntity(sqlRow)
 	return *employee, nil
 }
 
-func (r *SqlcEmployeeRepository) FindActive(ctx context.Context, pageInput p.PageInput) (p.Page[e.Employee], error) {
-	offset := (pageInput.Offset) * pageInput.Limit
-	limit := pageInput.Limit
-
+func (r *SqlcEmployeeRepository) FindActive(ctx context.Context, pagination p.PaginationRequest) (p.Page[e.Employee], error) {
 	employeeRows, err := r.queries.FindActiveEmployees(ctx, sqlc.FindActiveEmployeesParams{
-		Limit:  int32(limit),
-		Offset: int32(offset),
+		Limit:  int32(pagination.Limit()),
+		Offset: int32(pagination.Offset()),
 	})
 	if err != nil {
 		return p.Page[e.Employee]{}, r.dbError("select", "failed to list active employees", err)
@@ -113,16 +102,13 @@ func (r *SqlcEmployeeRepository) FindActive(ctx context.Context, pageInput p.Pag
 	if err != nil {
 		return p.Page[e.Employee]{}, r.dbError("select", "failed to count active employees", err)
 	}
-	return r.paginateSqlRow(employeeRows, int(total), pageInput)
+	return p.NewPage(sqlcRowsToEntities(employeeRows), int(total), pagination), nil
 }
 
-func (r *SqlcEmployeeRepository) FindAll(ctx context.Context, pageInput p.PageInput) (p.Page[e.Employee], error) {
-	offset := (pageInput.Offset) * pageInput.Limit
-	limit := pageInput.Limit
-
+func (r *SqlcEmployeeRepository) FindAll(ctx context.Context, pagination p.PaginationRequest) (p.Page[e.Employee], error) {
 	employeeRows, err := r.queries.FindEmployees(ctx, sqlc.FindEmployeesParams{
-		Limit:  int32(limit),
-		Offset: int32(offset),
+		Limit:  int32(pagination.Limit()),
+		Offset: int32(pagination.Offset()),
 	})
 	if err != nil {
 		return p.Page[e.Employee]{}, r.dbError("select", "failed to list employees", err)
@@ -133,17 +119,14 @@ func (r *SqlcEmployeeRepository) FindAll(ctx context.Context, pageInput p.PageIn
 		return p.Page[e.Employee]{}, r.dbError("select", "failed to count employees", err)
 	}
 
-	return r.paginateSqlRow(employeeRows, int(total), pageInput)
+	return p.NewPage(sqlcRowsToEntities(employeeRows), int(total), pagination), nil
 }
 
-func (r *SqlcEmployeeRepository) FindBySpeciality(ctx context.Context, speciality enum.VetSpecialty, pageInput p.PageInput) (p.Page[e.Employee], error) {
-	offset := (pageInput.Offset) * pageInput.Limit
-	limit := pageInput.Limit
-
+func (r *SqlcEmployeeRepository) FindBySpeciality(ctx context.Context, speciality enum.VetSpecialty, pagination p.PaginationRequest) (p.Page[e.Employee], error) {
 	employeeRows, err := r.queries.FindEmployeesBySpeciality(ctx, sqlc.FindEmployeesBySpecialityParams{
 		Speciality: models.VeterinarianSpeciality(speciality.DisplayName()),
-		Limit:      int32(limit),
-		Offset:     int32(offset),
+		Limit:      int32(pagination.Limit()),
+		Offset:     int32(pagination.Offset()),
 	})
 	if err != nil {
 		return p.Page[e.Employee]{}, r.dbError("select", "failed to list employees by speciality", err)
@@ -154,7 +137,9 @@ func (r *SqlcEmployeeRepository) FindBySpeciality(ctx context.Context, specialit
 		return p.Page[e.Employee]{}, r.dbError("select", "failed to count employees by speciality", err)
 	}
 
-	return r.paginateSqlRow(employeeRows, int(total), pageInput)
+	employees := sqlcRowsToEntities(employeeRows)
+
+	return p.NewPage(employees, int(total), pagination), nil
 }
 
 func (r *SqlcEmployeeRepository) ExistsByID(ctx context.Context, id valueobject.EmployeeID) (bool, error) {
@@ -236,14 +221,4 @@ func (r *SqlcEmployeeRepository) update(ctx context.Context, employee *e.Employe
 	}
 
 	return nil
-}
-
-func (r *SqlcEmployeeRepository) paginateSqlRow(rows []sqlc.Employee, total int, pageInput p.PageInput) (p.Page[e.Employee], error) {
-	employees, err := sqlcRowsToEntities(rows)
-	if err != nil {
-		return p.Page[e.Employee]{}, r.wrapConversionError(err)
-	}
-
-	metadata := p.GetPageMetadata(total, pageInput)
-	return p.NewPage(employees, *metadata), nil
 }

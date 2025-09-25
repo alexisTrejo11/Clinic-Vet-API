@@ -25,7 +25,7 @@ type EmployeeSearchRequest struct {
 	MaxFee         float64 `form:"max_fee" validate:"omitempty,min=0,max=10000,gtfield=MinFee"`
 	HasUserAccount *bool   `form:"has_user_account" validate:"omitempty"`
 
-	page.PageInput
+	page.PaginationRequest
 }
 
 func NewEmployeeSearchRequestFromContext(c *gin.Context) (*EmployeeSearchRequest, error) {
@@ -110,9 +110,9 @@ func (r *EmployeeSearchRequest) ToSpecification() (*specification.EmployeeSearch
 		spec = spec.WithUserAccount(*r.HasUserAccount)
 	}
 
-	r.SetDefaultsFieldsIfEmpty()
+	pagination := r.WithDefaults()
 
-	spec = spec.WithPagination(r.Offset, r.Limit, r.OrderBy, string(r.SortDirection))
+	spec = spec.WithPagination(pagination.Offset(), pagination.Limit(), pagination.OrderBy, string(pagination.SortDirection))
 
 	return spec, nil
 }

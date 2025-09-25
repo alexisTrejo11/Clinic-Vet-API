@@ -17,14 +17,14 @@ type UserRepository interface {
 	FindByEmail(ctx context.Context, email string) (user.User, error)
 	FindByPhone(ctx context.Context, phone string) (user.User, error)
 
-	FindAll(ctx context.Context, pageInput page.PageInput) (page.Page[user.User], error)
-	FindByRole(ctx context.Context, role string, pageInput page.PageInput) (page.Page[user.User], error)
-	FindActive(ctx context.Context, pageInput page.PageInput) (page.Page[user.User], error)
-	FindInactive(ctx context.Context, pageInput page.PageInput) (page.Page[user.User], error)
+	FindAll(ctx context.Context, PaginationRequest page.PaginationRequest) (page.Page[user.User], error)
+	FindByRole(ctx context.Context, role string, PaginationRequest page.PaginationRequest) (page.Page[user.User], error)
+	FindActive(ctx context.Context, PaginationRequest page.PaginationRequest) (page.Page[user.User], error)
+	FindInactive(ctx context.Context, PaginationRequest page.PaginationRequest) (page.Page[user.User], error)
 
 	FindByEmployeeID(ctx context.Context, employeeID valueobject.EmployeeID) (user.User, error)
 	FindByCustomerID(ctx context.Context, customerID valueobject.CustomerID) (user.User, error)
-	FindRecentlyLoggedIn(ctx context.Context, since time.Time, pageInput page.PageInput) (page.Page[user.User], error)
+	FindRecentlyLoggedIn(ctx context.Context, since time.Time, PaginationRequest page.PaginationRequest) (page.Page[user.User], error)
 	FindByOAuthProvider(ctx context.Context, provider string, providerID string) (user.User, error)
 
 	ExistsByID(ctx context.Context, id valueobject.UserID) (bool, error)

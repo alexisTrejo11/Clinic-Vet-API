@@ -89,7 +89,7 @@ func (r *EmployeeRequestRegister) ToCommand() (registerCmd.StaffRegisterCommand,
 		return registerCmd.StaffRegisterCommand{}, apperror.MappingError(errorMessages, "request", "SignupRequest", "userSingup")
 	}
 
-	cmd := registerCmd.NewStaffRegisterCommand(emailVo, r.Password, phone, valueobject.NewEmployeeID(r.EmployeeID))
+	cmd := registerCmd.NewStaffRegisterCommand(emailVo, r.Password, *phone, valueobject.NewEmployeeID(r.EmployeeID))
 	return *cmd, nil
 }
 
@@ -126,7 +126,7 @@ func (r *CustomerRequestSingup) ToCommand() (registerCmd.CustomerRegisterCommand
 	cmd := &registerCmd.CustomerRegisterCommand{
 		Email:       emailVo,
 		Password:    r.Password,
-		PhoneNumber: phoneNumber,
+		PhoneNumber: *phoneNumber,
 		FirstName:   r.FirstName,
 		LastName:    r.LastName,
 		Gender:      gender,

@@ -7,7 +7,7 @@ import (
 )
 
 type GetActiveEmployeesQuery struct {
-	PageInput page.PageInput
+	PaginationRequest page.PaginationRequest
 }
 
 type GetActiveEmployeesHandler struct {
@@ -21,15 +21,10 @@ func NewGetActiveEmployeesHandler(employeeRepo repository.EmployeeRepository) *G
 }
 
 func (h *GetActiveEmployeesHandler) Handle(ctx context.Context, query GetActiveEmployeesQuery) (page.Page[EmployeeResult], error) {
-	employeesPage, err := h.employeeRepo.FindActive(ctx, query.PageInput)
+	employeesPage, err := h.employeeRepo.FindActive(ctx, query.PaginationRequest)
 	if err != nil {
 		return page.Page[EmployeeResult]{}, err
 	}
 
-	responses := make([]EmployeeResult, len(employeesPage.Items))
-	for i, emp := range employeesPage.Items {
-		responses[i] = ToResult(&emp)
-	}
-
-	return page.NewPage(responses, employeesPage.Metadata), nil
+	return page.MapItems(employeesPage, employeeToResult), nil
 }

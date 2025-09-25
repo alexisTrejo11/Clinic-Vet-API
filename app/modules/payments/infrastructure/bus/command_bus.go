@@ -41,5 +41,5 @@ func (bus *PaymentCommandBus) DeletePayment(cmd command.DeletePaymentCommand) cq
 }
 
 func (bus *PaymentCommandBus) MarkOverduePayments(cmd command.MarkOverduePaymentsCommand) cqrs.CommandResult {
-	return bus.handlers.MarkOverudePayments(cmd)
+	return bus.handlers.MarkOverduePayments(cmd)
 }

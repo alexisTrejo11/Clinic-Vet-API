@@ -23,7 +23,7 @@ type ApptResult struct {
 	UpdatedAt     time.Time
 }
 
-func NewApptResult(appointment *appointment.Appointment) ApptResult {
+func apptToResult(appointment appointment.Appointment) ApptResult {
 	return ApptResult{
 		ID:            appointment.ID(),
 		CustomerID:    appointment.CustomerID(),
@@ -35,14 +35,6 @@ func NewApptResult(appointment *appointment.Appointment) ApptResult {
 		CreatedAt:     appointment.CreatedAt(),
 		UpdatedAt:     appointment.UpdatedAt(),
 	}
-}
-
-func mapApptsToResult(appointments []appointment.Appointment) []ApptResult {
-	responses := make([]ApptResult, 0, len(appointments))
-	for _, appointment := range appointments {
-		responses = append(responses, NewApptResult(&appointment))
-	}
-	return responses
 }
 
 type ApptStatsResult struct {

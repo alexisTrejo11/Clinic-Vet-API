@@ -32,5 +32,5 @@ func (h *GetEmployeeByIDHandler) Handle(ctx context.Context, query GetEmployeeBy
 		return EmployeeResult{}, err
 	}
 
-	return ToResult(&employee), nil
+	return employeeToResult(employee), nil
 }

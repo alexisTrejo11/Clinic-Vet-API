@@ -84,7 +84,7 @@ func (r *SqlcEmployeeRepository) Search(ctx context.Context, spec specification)
 	}
 
 	// Handle pagination
-	pageMetadata := page.GetPageMetadata(totalCount, page.PageInput{
+	pageMetadata := page.GetPageMetadata(totalCount, page.PaginationRequest{
 		PageNumber: spec.GetPagination().Page,
 		Limit:   spec.GetPagination().Limit,
 	})

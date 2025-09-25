@@ -2,7 +2,6 @@ package user
 
 import (
 	"errors"
-	"fmt"
 	"time"
 
 	"clinic-vet-api/app/modules/core/domain/entity/auth"
@@ -12,80 +11,67 @@ import (
 )
 
 // UserOption defines the functional option type
-type UserOption func(*User) error
+type UserOption func(*User)
 
 func WithEmail(email valueobject.Email) UserOption {
-	return func(u *User) error {
+	return func(u *User) {
 		u.email = email
-		return nil
 	}
 }
 
-func WithPhoneNumber(phone *valueobject.PhoneNumber) UserOption {
-	return func(u *User) error {
-		if phone == nil {
-			return nil
-		}
-		u.phoneNumber = *phone
-		return nil
+func WithPhoneNumber(phone valueobject.PhoneNumber) UserOption {
+	return func(u *User) {
+		u.phoneNumber = phone
 	}
 }
 
 func WithPassword(password string) UserOption {
-	return func(u *User) error {
+	return func(u *User) {
 		u.password = password
-		return nil
 	}
 }
 
 func WithLastLoginAt(lastLogin time.Time) UserOption {
-	return func(u *User) error {
+	return func(u *User) {
 		u.lastLoginAt = &lastLogin
-		return nil
 	}
 }
 
 func WithTwoFactorAuth(twoFA auth.TwoFactorAuth) UserOption {
-	return func(u *User) error {
+	return func(u *User) {
 		u.twoFactorAuth = twoFA
-		return nil
 	}
 }
 
 func WithCustomerID(customerID valueobject.CustomerID) UserOption {
-	return func(u *User) error {
+	return func(u *User) {
 		u.customerID = &customerID
-		return nil
 	}
 
 }
 
 func WithEmployeeID(employeeID valueobject.EmployeeID) UserOption {
-	return func(u *User) error {
+	return func(u *User) {
 		u.employeeID = &employeeID
-		return nil
 	}
 }
 
 func WithJoinedAt(joinedAt time.Time) UserOption {
-	return func(u *User) error {
+	return func(u *User) {
 		u.SetTimeStamps(joinedAt, time.Time{})
-		return nil
 	}
 }
 
 // NewUser creates a new User with functional options
 func NewUser(id valueobject.UserID, role enum.UserRole, status enum.UserStatus, opts ...UserOption) (User, error) {
 	user := &User{
-		Entity: base.NewEntity(id, time.Time{}, time.Time{}, 1),
+		Entity: base.NewEntity(id, nil, nil, 0),
 		role:   role,
 		status: status,
 	}
 
 	for _, opt := range opts {
-		if err := opt(user); err != nil {
-			return User{}, fmt.Errorf("invalid user option: %w", err)
-		}
+		opt(user)
 	}
 
 	return *user, nil
@@ -100,9 +86,7 @@ func CreateUser(role enum.UserRole, status enum.UserStatus, opts ...UserOption) 
 	}
 
 	for _, opt := range opts {
-		if err := opt(user); err != nil {
-			return nil, fmt.Errorf("invalid user option: %w", err)
-		}
+		opt(user)
 	}
 
 	if err := user.validate(); err != nil {

@@ -91,7 +91,7 @@ func (ctrl *UserAdminController) FindByRole(ctx *gin.Context) {
 		return
 	}
 
-	var pagination page.PageInput
+	var pagination page.PaginationRequest
 	if err := ginUtils.ShouldBindPageParams(&pagination, ctx, ctrl.validator); err != nil {
 		response.BadRequest(ctx, httpError.RequestURLQueryError(err, ctx.Request.URL.RawQuery))
 		return

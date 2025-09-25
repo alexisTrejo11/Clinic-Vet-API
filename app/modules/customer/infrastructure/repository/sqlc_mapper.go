@@ -8,31 +8,37 @@ import (
 	"clinic-vet-api/db/models"
 	"clinic-vet-api/sqlc"
 
-	appError "clinic-vet-api/app/shared/error/application"
-
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
 func toCreateParams(customer customer.Customer) *sqlc.CreateCustomerParams {
-	createcustomerParam := &sqlc.CreateCustomerParams{
+	var userID pgtype.Int4
+	if customer.UserID() != nil {
+		userID = pgtype.Int4{Int32: int32(customer.UserID().Value()), Valid: true}
+	} else {
+		userID = pgtype.Int4{Valid: false}
+	}
+
+	return &sqlc.CreateCustomerParams{
 		Photo:       customer.Photo(),
 		DateOfBirth: pgtype.Date{Time: customer.DateOfBirth(), Valid: true},
 		Gender:      models.PersonGender(customer.Gender().String()),
 		FirstName:   customer.Name().FirstName,
 		LastName:    customer.Name().LastName,
 		IsActive:    customer.IsActive(),
-		UserID:      pgtype.Int4{Int32: int32(customer.ID().Value())},
+		UserID:      userID,
 	}
-
-	if customer.UserID() != nil {
-		createcustomerParam.UserID = pgtype.Int4{Int32: int32(customer.UserID().Value())}
-	}
-
-	return createcustomerParam
 }
 
 func entityToUpdateParams(customer customer.Customer) *sqlc.UpdateCustomerParams {
-	updatecustomerParam := &sqlc.UpdateCustomerParams{
+	var userID pgtype.Int4
+	if customer.UserID() != nil {
+		userID = pgtype.Int4{Int32: int32(customer.UserID().Value()), Valid: true}
+	} else {
+		userID = pgtype.Int4{Valid: false}
+	}
+
+	return &sqlc.UpdateCustomerParams{
 		ID:          int32(customer.ID().Value()),
 		Photo:       customer.Photo(),
 		Gender:      models.PersonGender(customer.Gender()),
@@ -40,46 +46,24 @@ func entityToUpdateParams(customer customer.Customer) *sqlc.UpdateCustomerParams
 		FirstName:   customer.Name().FirstName,
 		LastName:    customer.Name().LastName,
 		IsActive:    customer.IsActive(),
+		UserID:      userID,
 	}
-
-	if customer.UserID() != nil {
-		updatecustomerParam.UserID = pgtype.Int4{Int32: int32(customer.UserID().Value())}
-	}
-
-	return updatecustomerParam
 }
 
 func sqlRowToCustomer(row sqlc.Customer, pets []pet.Pet) (customer.Customer, error) {
-	errorMessages := make([]string, 0)
-
-	fullName, err := valueobject.NewPersonName(row.FirstName, row.LastName)
-	if err != nil {
-		errorMessages = append(errorMessages, err.Error())
-	}
-
+	fullName := valueobject.NewPersonNameNoErr(row.FirstName, row.LastName)
 	customerID := valueobject.NewCustomerID(uint(row.ID))
 	userID := valueobject.NewUserID(uint(row.UserID.Int32))
 
-	if len(errorMessages) > 0 {
-		return customer.Customer{}, appError.MappingError(errorMessages, "sql", "domain-entity", "customer")
-	}
-
-	gender, err := enum.ParseGender(string(row.Gender))
-	if err != nil {
-		return customer.Customer{}, err
-	}
-	customerEntity, err := customer.NewCustomer(
+	customerEntity := customer.NewCustomer(
 		customerID,
 		customer.WithFullName(fullName),
 		customer.WithDateOfBirth(row.DateOfBirth.Time),
 		customer.WithUserID(&userID),
-		customer.WithGender(gender),
+		customer.WithGender(enum.PersonGender(string(row.Gender))),
 		customer.WithIsActive(row.IsActive),
 		customer.WithPets(pets),
 	)
-	if err != nil {
-		return customer.Customer{}, err
-	}
 
 	return *customerEntity, nil
 }

@@ -103,11 +103,11 @@ func (ctrl *ApptControllerOperations) FindAppointmentsByDateRange(c *gin.Context
 		return
 	}
 
-	ctrl.HandlePaginatedResult(c, appointmentPage, dateRangeQueryData.PageInput.ToMap())
+	ctrl.HandlePaginatedResult(c, appointmentPage, dateRangeQueryData.PaginationRequest.ToMap())
 }
 
 func (ctrl *ApptControllerOperations) FindAppointmentsByCustomer(c *gin.Context, customerID uint, extraArgs customerQueryExtraArgs) {
-	var pageParams page.PageInput
+	var pageParams page.PaginationRequest
 	if err := ginUtils.ShouldBindPageParams(&pageParams, c, ctrl.validate); err != nil {
 		response.BadRequest(c, httpError.RequestURLQueryError(err, c.Request.URL.RawQuery))
 		return
@@ -124,7 +124,7 @@ func (ctrl *ApptControllerOperations) FindAppointmentsByCustomer(c *gin.Context,
 }
 
 func (ctrl *ApptControllerOperations) GetAppointmentsByEmployee(c *gin.Context, employeeID uint) {
-	var pageParams page.PageInput
+	var pageParams page.PaginationRequest
 	if err := c.ShouldBindQuery(&pageParams); err != nil {
 		response.BadRequest(c, httpError.RequestURLQueryError(err, c.Request.URL.RawQuery))
 		return
@@ -141,7 +141,7 @@ func (ctrl *ApptControllerOperations) GetAppointmentsByEmployee(c *gin.Context, 
 }
 
 func (ctrl *ApptControllerOperations) GetAppointmentsByPet(c *gin.Context, petID uint) {
-	var pageParams page.PageInput
+	var pageParams page.PaginationRequest
 	if err := c.ShouldBindQuery(&pageParams); err != nil {
 		response.BadRequest(c, httpError.RequestURLQueryError(err, c.Request.URL.RawQuery))
 		return

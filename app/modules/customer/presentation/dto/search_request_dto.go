@@ -54,52 +54,40 @@ type CustomerSearchQuery struct {
 
 	// Filter by associated user ID
 	UserID *uint `form:"user_id" example:"456"`
-	page.PageInput
-}
-
-// ToPagination convierte los query params a estructura de paginación
-func (q *CustomerSearchQuery) ToPagination() specification.Pagination {
-	return specification.Pagination{
-		Offset:  q.Offset,
-		Limit:   q.Limit,
-		OrderBy: q.OrderBy,
-		SortDir: string(q.SortDirection),
-	}
+	page.PaginationRequest
 }
 
 func (q *CustomerSearchQuery) ToSpecification() specification.CustomerSpecification {
-	{
-		var ID *valueobject.CustomerID
-		if q.CustomerID != nil {
-			id := valueobject.NewCustomerID(*q.CustomerID)
-			ID = &id
-		}
-
-		var userID *valueobject.UserID
-		if q.UserID != nil {
-			uid := valueobject.NewUserID(*q.UserID)
-			userID = &uid
-		}
-
-		spec := &specification.CustomerSpecification{
-			ID:              ID,
-			Name:            q.Name,
-			LastName:        q.LastName,
-			Email:           q.Email,
-			PhoneNumber:     q.PhoneNumber,
-			Gender:          q.Gender,
-			DateOfBirthFrom: q.DateOfBirthFrom,
-			DateOfBirthTo:   q.DateOfBirthTo,
-			IsActive:        q.IsActive,
-			CreatedAtFrom:   q.CreatedAtFrom,
-			CreatedAtTo:     q.CreatedAtTo,
-			MinPets:         q.MinPets,
-			MaxPets:         q.MaxPets,
-			UserID:          userID,
-		}
-
-		return *spec
+	var ID *valueobject.CustomerID
+	if q.CustomerID != nil {
+		id := valueobject.NewCustomerID(*q.CustomerID)
+		ID = &id
 	}
+
+	var userID *valueobject.UserID
+	if q.UserID != nil {
+		uid := valueobject.NewUserID(*q.UserID)
+		userID = &uid
+	}
+
+	spec := &specification.CustomerSpecification{
+		ID:              ID,
+		Name:            q.Name,
+		LastName:        q.LastName,
+		Email:           q.Email,
+		PhoneNumber:     q.PhoneNumber,
+		Gender:          q.Gender,
+		DateOfBirthFrom: q.DateOfBirthFrom,
+		DateOfBirthTo:   q.DateOfBirthTo,
+		IsActive:        q.IsActive,
+		CreatedAtFrom:   q.CreatedAtFrom,
+		CreatedAtTo:     q.CreatedAtTo,
+		MinPets:         q.MinPets,
+		MaxPets:         q.MaxPets,
+		UserID:          userID,
+	}
+
+	return *spec
 }
 
 func (q *CustomerSearchQuery) ToQuery(ctx context.Context) *query.FindCustomerBySpecificationQuery {

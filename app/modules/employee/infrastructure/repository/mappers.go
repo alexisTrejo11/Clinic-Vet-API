@@ -16,7 +16,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-func sqlcRowToEntity(sql sqlc.Employee) (*employee.Employee, error) {
+func sqlcRowToEntity(sql sqlc.Employee) *employee.Employee {
 	employeeID := valueobject.NewEmployeeID(uint(sql.ID))
 
 	personName := valueobject.PersonName{
@@ -54,24 +54,21 @@ func sqlcRowToEntity(sql sqlc.Employee) (*employee.Employee, error) {
 		employee.WithTimestamps(sql.CreatedAt.Time, sql.UpdatedAt.Time),
 	}
 
-	employee, err := employee.NewEmployee(employeeID, opts...)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create employee from database: %w", err)
-	}
-
-	return employee, nil
+	employee := employee.NewEmployee(employeeID, opts...)
+	return employee
 }
 
-func sqlcRowsToEntities(rows []sqlc.Employee) ([]employee.Employee, error) {
-	employees := make([]employee.Employee, 0, len(rows))
+func sqlcRowsToEntities(rows []sqlc.Employee) []employee.Employee {
+	if len(rows) == 0 {
+		return []employee.Employee{}
+	}
+
+	employees := make([]employee.Employee, len(rows))
 	for _, row := range rows {
-		emp, err := sqlcRowToEntity(row)
-		if err != nil {
-			return nil, fmt.Errorf("error converting row to entity: %w", err)
-		}
+		emp := sqlcRowToEntity(row)
 		employees = append(employees, *emp)
 	}
-	return employees, nil
+	return employees
 }
 
 type postgresSchedule struct {
@@ -98,7 +95,6 @@ func parseScheduleFromPostgres(jsonData []byte) (*valueobject.Schedule, error) {
 
 	schedule := &valueobject.Schedule{WorkDays: make([]valueobject.WorkDaySchedule, 0)}
 
-	// Mapear cada día
 	if pgSchedule.Monday != nil {
 		schedule.WorkDays = append(schedule.WorkDays, parseDaySchedule(time.Monday, pgSchedule.Monday))
 	}
@@ -204,7 +200,7 @@ func (r *SqlcEmployeeRepository) scanEmployeeFromRow(row pgx.Row, employee *empl
 }
 
 func entityToUpdateParams(employee *employee.Employee) *sqlc.UpdateEmployeeParams {
-	return &sqlc.UpdateEmployeeParams{
+	updateParams := &sqlc.UpdateEmployeeParams{
 		ID:                int32(employee.ID().Value()),
 		FirstName:         employee.Name().FirstName,
 		LastName:          employee.Name().LastName,
@@ -213,14 +209,23 @@ func entityToUpdateParams(employee *employee.Employee) *sqlc.UpdateEmployeeParam
 		Speciality:        models.VeterinarianSpeciality(employee.Specialty().String()),
 		YearsOfExperience: int32(employee.YearsExperience()),
 		IsActive:          employee.IsActive(),
-		UserID: pgtype.Int4{
-			Int32: int32(employee.UserID().Value()),
-			Valid: employee.UserID() != nil,
-		},
 	}
+
+	if employee.UserID() != nil {
+		updateParams.UserID = pgtype.Int4{Int32: int32(employee.UserID().Value()), Valid: true}
+	}
+
+	return updateParams
 }
 
 func entityToCreateParams(employee *employee.Employee) *sqlc.CreateEmployeeParams {
+	var userID pgtype.Int4
+	if employee.UserID() != nil {
+		userID = pgtype.Int4{Int32: int32(employee.UserID().Value()), Valid: true}
+	} else {
+		userID = pgtype.Int4{Valid: false}
+	}
+
 	return &sqlc.CreateEmployeeParams{
 		FirstName:         employee.Name().FirstName,
 		LastName:          employee.Name().LastName,
@@ -229,9 +234,6 @@ func entityToCreateParams(employee *employee.Employee) *sqlc.CreateEmployeeParam
 		Speciality:        models.VeterinarianSpeciality(employee.Specialty().String()),
 		YearsOfExperience: int32(employee.YearsExperience()),
 		IsActive:          employee.IsActive(),
-		UserID: pgtype.Int4{
-			Int32: int32(employee.UserID().Value()),
-			Valid: employee.UserID() != nil,
-		},
+		UserID:            userID,
 	}
 }

@@ -10,65 +10,60 @@ import (
 	"clinic-vet-api/app/modules/core/domain/valueobject"
 )
 
-type CustomerOption func(context.Context, *Customer) error
+type CustomerOption func(context.Context, *Customer)
 
 func WithPhoto(photo string) CustomerOption {
-	return func(ctx context.Context, o *Customer) error {
+	return func(ctx context.Context, o *Customer) {
 		o.photo = photo
-		return nil
 	}
 }
 
 func WithFullName(fullName valueobject.PersonName) CustomerOption {
-	return func(ctx context.Context, o *Customer) error {
-		return o.UpdateName(ctx, fullName)
+	return func(ctx context.Context, o *Customer) {
+		o.UpdateName(ctx, fullName)
 	}
 }
 
 func WithGender(gender enum.PersonGender) CustomerOption {
-	return func(ctx context.Context, o *Customer) error {
-		return o.Person.UpdateGender(ctx, gender)
+	return func(ctx context.Context, o *Customer) {
+		o.Person.UpdateGender(ctx, gender)
 	}
 }
 
 func WithDateOfBirth(dob time.Time) CustomerOption {
-	return func(ctx context.Context, o *Customer) error {
-		return o.UpdateDateOfBirth(ctx, dob)
+	return func(ctx context.Context, o *Customer) {
+		o.UpdateDateOfBirth(ctx, dob)
 	}
 }
 
 func WithUserID(userID *valueobject.UserID) CustomerOption {
-	return func(ctx context.Context, o *Customer) error {
+	return func(ctx context.Context, o *Customer) {
 		o.userID = userID
-		return nil
 	}
 }
 
 func WithIsActive(isActive bool) CustomerOption {
-	return func(ctx context.Context, o *Customer) error {
+	return func(ctx context.Context, o *Customer) {
 		o.isActive = isActive
-		return nil
 	}
 }
 
 func WithPets(pets []pet.Pet) CustomerOption {
-	return func(ctx context.Context, o *Customer) error {
+	return func(ctx context.Context, o *Customer) {
 		o.pets = pets
-		return nil
 	}
 }
 
 func WithTimestamp(createdAt, updatedAt time.Time) CustomerOption {
-	return func(ctx context.Context, o *Customer) error {
+	return func(ctx context.Context, o *Customer) {
 		o.Entity.SetTimeStamps(createdAt, updatedAt)
-		return nil
 	}
 }
 
 func NewCustomer(
 	id valueobject.CustomerID,
 	opts ...CustomerOption,
-) (*Customer, error) {
+) *Customer {
 	ctx := context.Background()
 	return NewCustomerWithContext(ctx, id, opts...)
 }
@@ -77,26 +72,19 @@ func NewCustomerWithContext(
 	ctx context.Context,
 	id valueobject.CustomerID,
 	opts ...CustomerOption,
-) (*Customer, error) {
-	operation := "NewCustomerWithContext"
-
+) *Customer {
 	customer := &Customer{
-		Entity:   base.NewEntity(id, time.Now(), time.Now(), 1),
+		Entity:   base.NewEntity(id, nil, nil, 1),
 		isActive: true,
 		pets:     []pet.Pet{},
 	}
 
 	for _, opt := range opts {
-		if err := opt(ctx, customer); err != nil {
-			return nil, err
-		}
+		opt(ctx, customer)
+
 	}
 
-	if err := customer.validate(ctx, operation); err != nil {
-		return nil, err
-	}
-
-	return customer, nil
+	return customer
 }
 
 func CreateCustomer(ctx context.Context, opts ...CustomerOption) (*Customer, error) {
@@ -109,9 +97,7 @@ func CreateCustomer(ctx context.Context, opts ...CustomerOption) (*Customer, err
 	}
 
 	for _, opt := range opts {
-		if err := opt(ctx, customer); err != nil {
-			return nil, err
-		}
+		opt(ctx, customer)
 	}
 
 	if err := customer.validate(ctx, operation); err != nil {
@@ -122,9 +108,5 @@ func CreateCustomer(ctx context.Context, opts ...CustomerOption) (*Customer, err
 }
 
 func (c *Customer) validate(ctx context.Context, operation string) error {
-	if err := c.Person.Validate(ctx, "create customer"); err != nil {
-		return err
-	}
-
-	return nil
+	return c.Person.Validate(ctx, operation)
 }

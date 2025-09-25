@@ -15,7 +15,7 @@ import (
 type PaymentCommandHandler interface {
 	CreatePayment(command CreatePaymentCommand) cqrs.CommandResult
 	ProcessPayment(command ProcessPaymentCommand) cqrs.CommandResult
-	MarkOverudePayments(command MarkOverduePaymentsCommand) cqrs.CommandResult
+	MarkOverduePayments(command MarkOverduePaymentsCommand) cqrs.CommandResult
 	UpdatePayment(command UpdatePaymentCommand) cqrs.CommandResult
 	RefundPayment(command RefundPaymentCommand) cqrs.CommandResult
 	CancelPayment(command CancelPaymentCommand) cqrs.CommandResult
@@ -128,10 +128,10 @@ func (h *paymentCommandHandler) UpdatePayment(command UpdatePaymentCommand) cqrs
 	)
 }
 
-func (h *paymentCommandHandler) MarkOverudePayments(command MarkOverduePaymentsCommand) cqrs.CommandResult {
-	pagination := page.PageInput{
-		Limit:  100,
-		Offset: 1,
+func (h *paymentCommandHandler) MarkOverduePayments(command MarkOverduePaymentsCommand) cqrs.CommandResult {
+	pagination := page.PaginationRequest{
+		PageSize: 100,
+		Page:     1,
 	}
 
 	var updatedCount int
@@ -154,7 +154,7 @@ func (h *paymentCommandHandler) MarkOverudePayments(command MarkOverduePaymentsC
 			updatedCount++
 		}
 
-		pagination.Offset++
+		pagination.Page++
 
 		if h.IsLastPage(pagination, paymentsPage.Metadata.TotalPages) {
 			break
@@ -176,8 +176,8 @@ func (h *paymentCommandHandler) UpdatePaymentOverdued(ctx context.Context, payme
 	return nil
 }
 
-func (h *paymentCommandHandler) IsLastPage(pagination page.PageInput, totalPages int) bool {
-	return pagination.Page() >= totalPages
+func (h *paymentCommandHandler) IsLastPage(pagination page.PaginationRequest, totalPages int) bool {
+	return pagination.Page >= totalPages
 }
 
 func (h *paymentCommandHandler) IsEmptyList(payments []payment.Payment) bool {

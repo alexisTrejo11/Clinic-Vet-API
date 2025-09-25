@@ -12,9 +12,9 @@ import (
 
 type NotificationService interface {
 	SendNotification(ctx context.Context, notification *notification.Notification) error
-	ListNotificationByUserID(ctx context.Context, userID valueobject.UserID, pagination page.PageInput) (page.Page[NotificationResponse], error)
-	ListNotificationBySpecies(ctx context.Context, notificationType string, pagination page.PageInput) (page.Page[NotificationResponse], error)
-	ListNotificationByChannel(ctx context.Context, channel string, pagination page.PageInput) (page.Page[NotificationResponse], error)
+	ListNotificationByUserID(ctx context.Context, userID valueobject.UserID, pagination page.PaginationRequest) (page.Page[NotificationResponse], error)
+	ListNotificationBySpecies(ctx context.Context, notificationType string, pagination page.PaginationRequest) (page.Page[NotificationResponse], error)
+	ListNotificationByChannel(ctx context.Context, channel string, pagination page.PaginationRequest) (page.Page[NotificationResponse], error)
 	GenerateSummary(ctx context.Context, senderID string) ([]notification.Notification, error)
 	GetNotificationByID(ctx context.Context, id string) (notification.Notification, error)
 }
@@ -39,38 +39,35 @@ func (s *notificationServiceImpl) SendNotification(ctx context.Context, notifica
 	return s.senders[typeStr].Send(ctx, notification)
 }
 
-func (s *notificationServiceImpl) ListNotificationByUserID(ctx context.Context, userID valueobject.UserID, pagination page.PageInput) (page.Page[NotificationResponse], error) {
+func (s *notificationServiceImpl) ListNotificationByUserID(ctx context.Context, userID valueobject.UserID, pagination page.PaginationRequest) (page.Page[NotificationResponse], error) {
 	notificationPage, err := s.notificationRepo.ListByUser(ctx, userID, pagination)
 	if err != nil {
 		return page.Page[NotificationResponse]{}, err
 	}
 
-	responsePage := page.NewPage(fromDomainList(notificationPage.Items), notificationPage.Metadata)
-	return responsePage, nil
+	return page.MapItems(notificationPage, fromDomain), nil
 }
 
 func (s *notificationServiceImpl) GetNotificationByID(ctx context.Context, id string) (notification.Notification, error) {
 	return s.notificationRepo.GetByID(ctx, id)
 }
 
-func (s *notificationServiceImpl) ListNotificationBySpecies(ctx context.Context, notificationType string, pagination page.PageInput) (page.Page[NotificationResponse], error) {
+func (s *notificationServiceImpl) ListNotificationBySpecies(ctx context.Context, notificationType string, pagination page.PaginationRequest) (page.Page[NotificationResponse], error) {
 	notificationPage, err := s.notificationRepo.ListBySpecies(ctx, notificationType, pagination)
 	if err != nil {
 		return page.Page[NotificationResponse]{}, err
 	}
 
-	responsePage := page.NewPage(fromDomainList(notificationPage.Items), notificationPage.Metadata)
-	return responsePage, nil
+	return page.MapItems(notificationPage, fromDomain), nil
 }
 
-func (s *notificationServiceImpl) ListNotificationByChannel(ctx context.Context, channel string, pagination page.PageInput) (page.Page[NotificationResponse], error) {
+func (s *notificationServiceImpl) ListNotificationByChannel(ctx context.Context, channel string, pagination page.PaginationRequest) (page.Page[NotificationResponse], error) {
 	notificationPage, err := s.notificationRepo.ListByChannel(ctx, channel, pagination)
 	if err != nil {
 		return page.Page[NotificationResponse]{}, err
 	}
 
-	responsePage := page.NewPage(fromDomainList(notificationPage.Items), notificationPage.Metadata)
-	return responsePage, nil
+	return page.MapItems(notificationPage, fromDomain), nil
 }
 
 func (s *notificationServiceImpl) GenerateSummary(ctx context.Context, senderID string) ([]notification.Notification, error) {

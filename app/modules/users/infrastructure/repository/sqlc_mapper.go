@@ -96,7 +96,7 @@ func sqlcRowWithJoinToEntity(row any) (user.User, error) {
 
 	if phoneNumber.Valid && phoneNumber.String != "" {
 		phoneNumberVO := valueobject.NewPhoneNumberNoErr(phoneNumber.String)
-		opts = append(opts, user.WithPhoneNumber(&phoneNumberVO))
+		opts = append(opts, user.WithPhoneNumber(phoneNumberVO))
 	}
 
 	if password.Valid && password.String != "" {
@@ -129,7 +129,7 @@ func sqlcRowToEntity(sqlRow sqlc.User) (user.User, error) {
 
 	if sqlRow.PhoneNumber.Valid && sqlRow.PhoneNumber.String != "" {
 		phoneNumber := valueobject.NewPhoneNumberNoErr(sqlRow.PhoneNumber.String)
-		opts = append(opts, user.WithPhoneNumber(&phoneNumber))
+		opts = append(opts, user.WithPhoneNumber(phoneNumber))
 	}
 
 	if sqlRow.Password.Valid && sqlRow.Password.String != "" {

@@ -10,96 +10,83 @@ import (
 )
 
 // PetOption defines the functional option type
-type PetOption func(*Pet) error
+type PetOption func(*Pet)
 
 func WithName(name string) PetOption {
-	return func(p *Pet) error {
+	return func(p *Pet) {
 		p.name = name
-		return nil
 	}
 }
 
 func WithPhoto(photo *string) PetOption {
-	return func(p *Pet) error {
+	return func(p *Pet) {
 		p.photo = photo
-		return nil
 	}
 }
 
 func WithSpecies(species string) PetOption {
-	return func(p *Pet) error {
+	return func(p *Pet) {
 		p.species = enum.PetSpecies(species)
-		return nil
 	}
 }
 
 func WithBreed(breed *string) PetOption {
-	return func(p *Pet) error {
+	return func(p *Pet) {
 		p.breed = breed
-		return nil
 	}
 }
 
 func WithAge(age *int) PetOption {
-	return func(p *Pet) error {
+	return func(p *Pet) {
 		p.age = age
-		return nil
 	}
 }
 
 func WithGender(gender *enum.PetGender) PetOption {
-	return func(p *Pet) error {
+	return func(p *Pet) {
 		p.gender = gender
-		return nil
 	}
 }
 
 func WithColor(color *string) PetOption {
-	return func(p *Pet) error {
+	return func(p *Pet) {
 		p.color = color
-		return nil
 	}
 }
 
 func WithBloodType(bloodType *string) PetOption {
-	return func(p *Pet) error {
+	return func(p *Pet) {
 		p.bloodType = bloodType
-		return nil
 	}
 }
 
 func WithTattoo(tattoo *string) PetOption {
-	return func(p *Pet) error {
+	return func(p *Pet) {
 		p.tattoo = tattoo
-		return nil
 	}
 }
 
 func WithMicrochip(microchip *string) PetOption {
-	return func(p *Pet) error {
+	return func(p *Pet) {
 		p.microchip = microchip
-		return nil
 	}
 }
 
 func WithIsNeutered(isNeutered *bool) PetOption {
-	return func(p *Pet) error {
+	return func(p *Pet) {
 		p.isNeutered = isNeutered
-		return nil
 	}
 }
 
 func WithTimeStamps(createdAt, updatedAt time.Time) PetOption {
-	return func(p *Pet) error {
+	return func(p *Pet) {
 		p.SetTimeStamps(createdAt, updatedAt)
-		return nil
 	}
 }
 
 func WithIsActive(isActive bool) PetOption {
-	return func(p *Pet) error {
+	return func(p *Pet) {
 		p.isActive = isActive
-		return nil
 	}
 }
 
@@ -157,28 +144,7 @@ func (p *Pet) validate(ctx context.Context) error {
 	return nil
 }
 
-func NewPetWithContext(
-	ctx context.Context,
-	id valueobject.PetID,
-	customerID valueobject.CustomerID,
-	opts ...PetOption,
-) (*Pet, error) {
-
-	pet := &Pet{
-		Entity:     base.NewEntity(id, time.Now(), time.Now(), 1),
-		customerID: customerID,
-		isActive:   true,
-	}
-
-	for _, opt := range opts {
-		if err := opt(pet); err != nil {
-			return nil, err
-		}
-	}
-	return pet, nil
-}
-
-func CreatePetWithContext(
+func CreatePet(
 	ctx context.Context,
 	customerID valueobject.CustomerID,
 	opts ...PetOption,
@@ -189,16 +155,15 @@ func CreatePetWithContext(
 		return nil, CustomerIDRequiredError(ctx, operation)
 	}
 
+	now := time.Now()
 	pet := &Pet{
-		Entity:     base.NewEntity(valueobject.PetID{}, time.Now(), time.Now(), 1),
+		Entity:     base.NewEntity(valueobject.PetID{}, &now, &now, 1),
 		customerID: customerID,
 		isActive:   true,
 	}
 
 	for _, opt := range opts {
-		if err := opt(pet); err != nil {
-			return nil, err
-		}
+		opt(pet)
 	}
 
 	if err := pet.validate(ctx); err != nil {
@@ -208,11 +173,14 @@ func CreatePetWithContext(
 }
 
 func NewPet(id valueobject.PetID, customerID valueobject.CustomerID, opts ...PetOption) (*Pet, error) {
-	ctx := context.Background()
-	return NewPetWithContext(ctx, id, customerID, opts...)
-}
+	pet := &Pet{
+		Entity:     base.NewEntity(id, nil, nil, 0),
+		customerID: customerID,
+	}
 
-func CreatePet(customerID valueobject.CustomerID, opts ...PetOption) (*Pet, error) {
-	ctx := context.Background()
-	return CreatePetWithContext(ctx, customerID, opts...)
+	for _, opt := range opts {
+		opt(pet)
+	}
+
+	return pet, nil
 }

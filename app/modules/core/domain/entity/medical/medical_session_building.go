@@ -130,8 +130,9 @@ func NewMedicalSession(
 	employeeID valueobject.EmployeeID,
 	opts ...MedicalSessionOptions,
 ) (*MedicalSession, error) {
+	now := time.Now()
 	mh := &MedicalSession{
-		Entity: base.NewEntity(medhistoryID, time.Now(), time.Now(), 1),
+		Entity: base.NewEntity(medhistoryID, &now, &now, 1),
 		PetSessionSummary: PetSessionSummary{
 			petID: petID,
 		},
@@ -235,10 +236,8 @@ func (mh *MedicalSession) Validate(ctx context.Context) error {
 		return domainerr.InvalidEnumValue(ctx, "condition", "medical history", string(mh.Condition()), operation)
 	}
 
-	if mh.Medications != nil {
-		if len(mh.medications) > 100 {
-			return domainerr.InvalidFieldValue(ctx, "medications", "medical history", "medications cannot have more than 100 items", operation)
-		}
+	if len(mh.medications) > 100 {
+		return domainerr.InvalidFieldValue(ctx, "medications", "medical history", "medications cannot have more than 100 items", operation)
 	}
 
 	return nil

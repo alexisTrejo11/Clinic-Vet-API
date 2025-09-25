@@ -108,26 +108,11 @@ type CancelPaymentRequest struct {
 type PaymentsByDateRangeRequest struct {
 	StartDate time.Time `form:"start_date" json:"start_date" validate:"required" example:"2024-01-01T00:00:00Z"`
 	EndDate   time.Time `form:"end_date" json:"end_date" validate:"required" example:"2024-12-31T23:59:59Z"`
-	page.PageInput
-}
-
-func (r *PaymentsByDateRangeRequest) SetDefaultsFieldsIfEmpty() {
-	r.PageInput.SetDefaultsFieldsIfEmpty()
-	if r.StartDate.IsZero() {
-		now := time.Now()
-		startOfToday := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
-		r.StartDate = startOfToday
-	}
-
-	if r.EndDate.IsZero() {
-		now := time.Now()
-		endOfToday := time.Date(now.Year(), now.Month(), now.Day(), 23, 59, 59, int(time.Second-time.Nanosecond), now.Location())
-		r.EndDate = endOfToday
-	}
+	page.PaginationRequest
 }
 
 func (r *PaymentsByDateRangeRequest) ToQuery(ctx context.Context) *query.FindPaymentsByDateRangeQuery {
-	return query.NewFindPaymentsByDateRangeQuery(r.StartDate, r.EndDate, r.PageInput)
+	return query.NewFindPaymentsByDateRangeQuery(r.StartDate, r.EndDate, r.PaginationRequest)
 }
 
 // PaymentSearchRequest represents the request to search payments
@@ -161,7 +146,7 @@ type PaymentSearchRequest struct {
 	EndDate *time.Time `json:"end_date,omitempty" example:"2024-12-31T23:59:59Z"`
 
 	// Pagination parameters
-	Page page.PageInput `json:"page"`
+	Page page.PaginationRequest `json:"page"`
 }
 
 // TODO: IMPLEMENT

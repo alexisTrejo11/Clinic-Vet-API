@@ -8,7 +8,6 @@ import (
 	"clinic-vet-api/app/shared/page"
 	"fmt"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -26,16 +25,11 @@ type AppointmentSearchRequest struct {
 	EndDate    string `form:"end_date" validate:"omitempty,datetime=2006-01-02"`
 	HasNotes   *bool  `form:"has_notes" validate:"omitempty"`
 
-	page.PageInput
+	page.PaginationRequest
 }
 
 func (r *AppointmentSearchRequest) Pagination() map[string]any {
-	return map[string]any{
-		"page":      r.Page(),
-		"page_size": r.PageSize(),
-		"order_by":  r.OrderBy,
-		"sort_dir":  r.SortDirection,
-	}
+	return r.PaginationRequest.ToMap()
 }
 
 func NewApptSearchRequestFromContext(c *gin.Context) (*AppointmentSearchRequest, error) {
@@ -108,32 +102,7 @@ func (r *AppointmentSearchRequest) ToSpecification() (specification.ApptSearchSp
 		spec = spec.And(specification.ApptByDateRange(*startDate, *endDate))
 	}
 
-	page := 1
-	if r.Offset >= 0 {
-		page = r.Offset
-	}
-
-	pageSize := 10
-	if r.Limit > 0 {
-		pageSize = r.Limit
-	}
-
-	orderBy := "scheduled_date"
-	if r.OrderBy != "" {
-		orderBy = r.OrderBy
-	}
-
-	sortDir := "DESC"
-	if r.SortDirection != "" {
-		sortDir = strings.ToUpper(string(r.SortDirection))
-	}
-	spec = spec.WithPagination(specification.Pagination{
-		Limit:   pageSize,
-		Offset:  page,
-		OrderBy: orderBy,
-		SortDir: sortDir,
-	})
-
+	spec = spec.WithPagination(r.ToSpecPagination())
 	return spec, nil
 }
 

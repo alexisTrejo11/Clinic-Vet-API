@@ -1,4 +1,3 @@
-// appointment.go
 package appointment
 
 import (
@@ -15,12 +14,7 @@ const (
 	MaxAllowedDaysToSchedule = 30
 )
 
-func (a *Appointment) Update(
-	ctx context.Context,
-	notes *string,
-	employeeID *valueobject.EmployeeID,
-	service *enum.ClinicService,
-) error {
+func (a *Appointment) Update(ctx context.Context, notes *string, employeeID *valueobject.EmployeeID, service *enum.ClinicService) error {
 	operation := "UpdateAppointment"
 
 	if notes != nil {

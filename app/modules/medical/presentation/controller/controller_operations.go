@@ -66,7 +66,7 @@ func (co *MedSessionControllerOperations) GetMedSessionsByID(c *gin.Context, get
 }
 
 func (co *MedSessionControllerOperations) GetMedSessionsByPetID(c *gin.Context, petID uint, customerID *uint) {
-	var pagination page.PageInput
+	var pagination page.PaginationRequest
 	if err := ginUtils.ShouldBindPageParams(&pagination, c, co.validator); err != nil {
 		response.BadRequest(c, err)
 		return
@@ -84,15 +84,15 @@ func (co *MedSessionControllerOperations) GetMedSessionsByPetID(c *gin.Context, 
 }
 
 func (co *MedSessionControllerOperations) GetMedSessionsByEmployeeID(c *gin.Context, employeeID uint) {
-	var pagination page.PageInput
+	var pagination page.PaginationRequest
 	if err := ginUtils.ShouldBindPageParams(&pagination, c, co.validator); err != nil {
 		response.BadRequest(c, err)
 		return
 	}
 
 	query := &query.FindMedSessionByEmployeeIDQuery{
-		EmployeeID: valueobject.NewEmployeeID(employeeID),
-		PageInput:  pagination,
+		EmployeeID:        valueobject.NewEmployeeID(employeeID),
+		PaginationRequest: pagination,
 	}
 	resultPage, err := co.bus.QueryBus.FindMedSessionByEmployeeID(c.Request.Context(), *query)
 	if err != nil {
@@ -105,13 +105,13 @@ func (co *MedSessionControllerOperations) GetMedSessionsByEmployeeID(c *gin.Cont
 }
 
 func (co *MedSessionControllerOperations) GetMedSessionsByDateRange(c *gin.Context, startDate, endDate time.Time) {
-	var pagination page.PageInput
+	var pagination page.PaginationRequest
 	if err := ginUtils.ShouldBindPageParams(&pagination, c, co.validator); err != nil {
 		response.BadRequest(c, err)
 		return
 	}
 
-	query := &query.FindMedSessionByDateRangeQuery{StartDate: startDate, EndDate: endDate, PageInput: pagination}
+	query := &query.FindMedSessionByDateRangeQuery{StartDate: startDate, EndDate: endDate, PaginationRequest: pagination}
 	resultPage, err := co.bus.QueryBus.FindMedSessionByDateRange(c.Request.Context(), *query)
 	if err != nil {
 		response.ApplicationError(c, err)
@@ -123,13 +123,13 @@ func (co *MedSessionControllerOperations) GetMedSessionsByDateRange(c *gin.Conte
 }
 
 func (co MedSessionControllerOperations) GetMedicalSessionByCustomerID(c *gin.Context, customerID uint, petID *uint) {
-	var pagination page.PageInput
+	var pagination page.PaginationRequest
 	if err := ginUtils.ShouldBindPageParams(&pagination, c, co.validator); err != nil {
 		response.BadRequest(c, err)
 		return
 	}
 
-	query := &query.FindMedSessionByCustomerIDQuery{CustomerID: valueobject.NewCustomerID(customerID), PageInput: pagination}
+	query := &query.FindMedSessionByCustomerIDQuery{CustomerID: valueobject.NewCustomerID(customerID), PaginationRequest: pagination}
 	resultPage, err := co.bus.QueryBus.FindMedSessionByCustomerID(c.Request.Context(), *query)
 	if err != nil {
 		response.ApplicationError(c, err)
@@ -158,13 +158,13 @@ func (co *MedSessionControllerOperations) CreateMedicalSession(c *gin.Context, e
 }
 
 func (co *MedSessionControllerOperations) FindMedSessionsByDateRange(c *gin.Context, petID uint, startDate, endDate time.Time) {
-	var pagination page.PageInput
+	var pagination page.PaginationRequest
 	if err := ginUtils.ShouldBindPageParams(&pagination, c, co.validator); err != nil {
 		response.BadRequest(c, err)
 		return
 	}
 
-	query := &query.FindMedSessionByDateRangeQuery{StartDate: startDate, EndDate: endDate, PageInput: pagination}
+	query := &query.FindMedSessionByDateRangeQuery{StartDate: startDate, EndDate: endDate, PaginationRequest: pagination}
 	resultPage, err := co.bus.QueryBus.FindMedSessionByDateRange(c.Request.Context(), *query)
 	if err != nil {
 		response.ApplicationError(c, err)

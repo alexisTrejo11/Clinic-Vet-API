@@ -72,13 +72,10 @@ func (r *SqlcCustomerRepository) FindByID(ctx context.Context, id valueobject.Cu
 	return customerEntity, nil
 }
 
-func (r *SqlcCustomerRepository) FindActive(ctx context.Context, pageInput page.PageInput) (page.Page[c.Customer], error) {
-	offset := (pageInput.Offset) * pageInput.Limit
-	limit := pageInput.Limit
-
+func (r *SqlcCustomerRepository) FindActive(ctx context.Context, pagination page.PaginationRequest) (page.Page[c.Customer], error) {
 	customerRows, err := r.queries.FindActiveCustomers(ctx, sqlc.FindActiveCustomersParams{
-		Limit:  int32(limit),
-		Offset: int32(offset),
+		Limit:  int32(pagination.Limit()),
+		Offset: int32(pagination.Offset()),
 	})
 	if err != nil {
 		return page.Page[c.Customer]{}, r.dbError("select", "failed to list active customers", err)
@@ -94,8 +91,7 @@ func (r *SqlcCustomerRepository) FindActive(ctx context.Context, pageInput page.
 		return page.Page[c.Customer]{}, r.wrapConversionError(err)
 	}
 
-	paginationMetadata := page.GetPageMetadata(int(total), pageInput)
-	return page.NewPage(customers, *paginationMetadata), nil
+	return page.NewPage(customers, int(total), pagination), nil
 }
 
 func (r *SqlcCustomerRepository) ExistsByID(ctx context.Context, id valueobject.CustomerID) (bool, error) {
@@ -162,7 +158,6 @@ func (r *SqlcCustomerRepository) create(ctx context.Context, customer *c.Custome
 
 func (r *SqlcCustomerRepository) update(ctx context.Context, customer *c.Customer) error {
 	params := entityToUpdateParams(*customer)
-
 	if err := r.queries.UpdateCustomer(ctx, *params); err != nil {
 		return r.dbError("update", fmt.Sprintf("failed to update customer with ID %d", customer.ID().Value()), err)
 	}

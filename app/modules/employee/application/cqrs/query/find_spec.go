@@ -27,11 +27,5 @@ func (h *SearchEmployeesHandler) Handle(ctx context.Context, query SearchEmploye
 		return page.Page[EmployeeResult]{}, err
 	}
 
-	// Convert to response
-	responses := make([]EmployeeResult, len(employeesPage.Items))
-	for i, emp := range employeesPage.Items {
-		responses[i] = ToResult(&emp)
-	}
-
-	return page.NewPage(responses, employeesPage.Metadata), nil
+	return page.MapItems(employeesPage, employeeToResult), nil
 }

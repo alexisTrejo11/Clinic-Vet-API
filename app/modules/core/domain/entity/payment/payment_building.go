@@ -10,193 +10,117 @@ import (
 	"clinic-vet-api/app/modules/core/domain/valueobject"
 )
 
-type PaymentOption func(context.Context, *Payment) error
+type PaymentOption func(*Payment)
 
 func WithAmount(amount valueobject.Money) PaymentOption {
-	return func(ctx context.Context, p *Payment) error {
-		if amount.Amount().IsZero() || amount.Amount().IsNegative() {
-			return AmountInvalidError(ctx, amount, "WithAmount")
-		}
+	return func(p *Payment) {
 		p.amount = amount
-		return nil
 	}
 }
 
 func WithPaymentMethod(method enum.PaymentMethod) PaymentOption {
-	return func(ctx context.Context, p *Payment) error {
-		if !method.IsValid() {
-			return MethodInvalidError(ctx, method, "WithPaymentMethod")
-		}
+	return func(p *Payment) {
 		p.method = method
-		return nil
 	}
 }
 
 func WithStatus(status enum.PaymentStatus) PaymentOption {
-	return func(ctx context.Context, p *Payment) error {
-		if !status.IsValid() {
-			return StatusInvalidError(ctx, status, "WithStatus")
-		}
+	return func(p *Payment) {
 		p.status = status
-		return nil
 	}
 }
 
 func WithTransactionID(transactionID string) PaymentOption {
-	return func(ctx context.Context, p *Payment) error {
-		if transactionID == "" {
-			return TransactionIDEmptyError(ctx, "WithTransactionID")
-		}
+	return func(p *Payment) {
 		p.transactionID = &transactionID
-		return nil
 	}
 }
 
 func WithDescription(description string) PaymentOption {
-	return func(ctx context.Context, p *Payment) error {
-		if len(description) > 500 {
-			return DescriptionTooLongError(ctx, len(description), "WithDescription")
-		}
+	return func(p *Payment) {
 		p.description = &description
-		return nil
 	}
 }
 
 func WithDueDate(dueDate time.Time) PaymentOption {
-	return func(ctx context.Context, p *Payment) error {
-		if dueDate.Before(time.Now()) {
-			return DueDatePastError(ctx, "WithDueDate")
-		}
+	return func(p *Payment) {
 		p.dueDate = &dueDate
-		return nil
 	}
 }
 
 func WithPaidAt(paidAt time.Time) PaymentOption {
-	return func(ctx context.Context, p *Payment) error {
-		if paidAt.After(time.Now()) {
-			return PaidDateFutureError(ctx, "WithPaidAt")
-		}
+	return func(p *Payment) {
 		p.paidAt = &paidAt
-		return nil
 	}
 }
 
 func WithRefundedAt(refundedAt time.Time) PaymentOption {
-	return func(ctx context.Context, p *Payment) error {
-		if refundedAt.After(time.Now()) {
-			return RefundDateFutureError(ctx, "WithRefundedAt")
-		}
+	return func(p *Payment) {
 		p.refundedAt = &refundedAt
-		return nil
 	}
 }
 
 func WithPaidFromCustomer(customerID valueobject.CustomerID) PaymentOption {
-	return func(ctx context.Context, p *Payment) error {
-		if customerID.IsZero() {
-			return CustomerIDRequiredError(ctx, "WithPaidFromCustomer")
-		}
+	return func(p *Payment) {
 		p.paidFromCustomer = customerID
-		return nil
 	}
 }
 
 func WithPaidToEmployee(employeeID valueobject.EmployeeID) PaymentOption {
-	return func(ctx context.Context, p *Payment) error {
+	return func(p *Payment) {
 		p.paidToEmployee = employeeID
-		return nil
 	}
 }
 
 func WithAppointmentID(appointmentID valueobject.AppointmentID) PaymentOption {
-	return func(ctx context.Context, p *Payment) error {
-		if appointmentID.IsZero() {
-			return AppointmentIDRequiredError(ctx, "WithAppointmentID")
-		}
+	return func(p *Payment) {
 		p.appointmentID = &appointmentID
-		return nil
 	}
 }
 
 func WithInvoiceID(invoiceID string) PaymentOption {
-	return func(ctx context.Context, p *Payment) error {
-		if invoiceID == "" {
-			return InvoiceIDEmptyError(ctx, "WithInvoiceID")
-		}
+	return func(p *Payment) {
 		p.invoiceID = &invoiceID
-		return nil
 	}
 }
 
 func WithRefundAmount(refundAmount valueobject.Money) PaymentOption {
-	return func(ctx context.Context, p *Payment) error {
-		if refundAmount.Amount().IsNegative() {
-			return RefundAmountNegativeError(ctx, refundAmount, "WithRefundAmount")
-		}
+	return func(p *Payment) {
 		p.refundAmount = &refundAmount
-		return nil
 	}
 }
 
 func WithFailureReason(failureReason string) PaymentOption {
-	return func(ctx context.Context, p *Payment) error {
-		if failureReason == "" {
-			return FailureReasonEmptyError(ctx, "WithFailureReason")
-		}
+	return func(p *Payment) {
 		p.failureReason = &failureReason
-		return nil
 	}
 }
 
 func WithIsActive(isActive bool) PaymentOption {
-	return func(ctx context.Context, p *Payment) error {
+	return func(p *Payment) {
 		p.isActive = isActive
-		return nil
 	}
 }
 
-func NewPayment(
-	paymentID valueobject.PaymentID,
-	createAt time.Time,
-	updatedAt time.Time,
-	opts ...PaymentOption,
-) (*Payment, error) {
-	ctx := context.Background()
-	return NewPaymentWithContext(ctx, paymentID, createAt, updatedAt, opts...)
+func WithTimeStamps(createdAt, updatedAt time.Time, version int) PaymentOption {
+	return func(p *Payment) {
+		p.Entity = base.NewEntity(p.ID(), &createdAt, &updatedAt, version)
+	}
 }
 
-func NewPaymentWithContext(
-	ctx context.Context,
-	paymentID valueobject.PaymentID,
-	createAt time.Time,
-	updatedAt time.Time,
-	opts ...PaymentOption,
-) (*Payment, error) {
-	operation := "NewPaymentWithContext"
-
+func NewPayment(paymentID valueobject.PaymentID, opts ...PaymentOption) *Payment {
 	payment := &Payment{
-		Entity: base.NewEntity(paymentID, createAt, updatedAt, 1),
+		Entity: base.NewEntity(paymentID, nil, nil, 0),
 	}
 
 	for _, opt := range opts {
-		if err := opt(ctx, payment); err != nil {
-			return nil, err
-		}
+		opt(payment)
 	}
 
-	if err := payment.validate(ctx, operation); err != nil {
-		return nil, err
-	}
-
-	return payment, nil
+	return payment
 }
 
-func CreatePayment(
-	ctx context.Context,
-	paidFromCustomer valueobject.CustomerID,
-	opts ...PaymentOption,
-) (*Payment, error) {
+func CreatePayment(ctx context.Context, paidFromCustomer valueobject.CustomerID, opts ...PaymentOption) (*Payment, error) {
 	operation := "CreatePayment"
 
 	if paidFromCustomer.IsZero() {
@@ -213,9 +137,7 @@ func CreatePayment(
 	}
 
 	for _, opt := range opts {
-		if err := opt(ctx, payment); err != nil {
-			return nil, err
-		}
+		opt(payment)
 	}
 
 	if err := payment.validate(ctx, operation); err != nil {

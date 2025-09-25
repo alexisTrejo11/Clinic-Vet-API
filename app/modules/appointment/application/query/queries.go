@@ -41,7 +41,7 @@ type FindApptsByDateRangeQuery struct {
 	pagination specification.Pagination
 }
 
-func NewFindApptsByDateRangeQuery(startDate, endDate time.Time, pagInput page.PageInput) (FindApptsByDateRangeQuery, error) {
+func NewFindApptsByDateRangeQuery(startDate, endDate time.Time, pagInput page.PaginationRequest) (FindApptsByDateRangeQuery, error) {
 	qry := &FindApptsByDateRangeQuery{
 		startDate:  startDate,
 		endDate:    endDate,
@@ -70,7 +70,7 @@ type FindApptsByCustomerIDQuery struct {
 }
 
 func NewFindApptsByCustomerIDQuery(
-	pagination page.PageInput,
+	pagination page.PaginationRequest,
 	customerId uint,
 	petID *uint, status *string,
 ) *FindApptsByCustomerIDQuery {
@@ -92,7 +92,7 @@ type FindApptsByPetQuery struct {
 	pagination specification.Pagination
 }
 
-func NewFindApptsByPetQuery(employeeID uint, pagination page.PageInput) *FindApptsByPetQuery {
+func NewFindApptsByPetQuery(employeeID uint, pagination page.PaginationRequest) *FindApptsByPetQuery {
 	return &FindApptsByPetQuery{petID: valueobject.NewPetID(employeeID), pagination: pagination.ToSpecPagination()}
 }
 
@@ -101,7 +101,7 @@ type FindApptsByEmployeeIDQuery struct {
 	pagination specification.Pagination
 }
 
-func NewFindApptsByEmployeeIDQuery(employeeID uint, pagination page.PageInput) *FindApptsByEmployeeIDQuery {
+func NewFindApptsByEmployeeIDQuery(employeeID uint, pagination page.PaginationRequest) *FindApptsByEmployeeIDQuery {
 	return &FindApptsByEmployeeIDQuery{
 		employeeID: valueobject.NewEmployeeID(employeeID),
 		pagination: pagination.ToSpecPagination(),

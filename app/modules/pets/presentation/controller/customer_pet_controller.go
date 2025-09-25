@@ -15,10 +15,7 @@ type CustomerPetController struct {
 	operations *service.PetControllerOperations
 }
 
-func NewCustomerPetController(
-	validate *validator.Validate,
-	operations *service.PetControllerOperations,
-) *CustomerPetController {
+func NewCustomerPetController(validate *validator.Validate, operations *service.PetControllerOperations) *CustomerPetController {
 	return &CustomerPetController{
 		validate:   validate,
 		operations: operations,

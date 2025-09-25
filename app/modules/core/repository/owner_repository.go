@@ -11,7 +11,7 @@ import (
 type CustomerRepository interface {
 	FindBySpecification(ctx context.Context, spec specification.CustomerSpecification) (page.Page[customer.Customer], error)
 	FindByID(ctx context.Context, id valueobject.CustomerID) (customer.Customer, error)
-	FindActive(ctx context.Context, pageInput page.PageInput) (page.Page[customer.Customer], error)
+	FindActive(ctx context.Context, PaginationRequest page.PaginationRequest) (page.Page[customer.Customer], error)
 
 	ExistsByID(ctx context.Context, id valueobject.CustomerID) (bool, error)
 

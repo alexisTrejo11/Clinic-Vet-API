@@ -19,7 +19,7 @@ type PetSearchRequest struct {
 	CustomerID uint           `form:"customer_id" examle:"12345"`
 	IsActive   *bool          `form:"is_active" validate:"omitempty" example:"true"`
 	IsNeutered *bool          `form:"is_neutered" validate:"omitempty" example:"true"`
-	page.PageInput
+	page.PaginationRequest
 }
 
 func (params *PetSearchRequest) ToSpecification() *specification.PetSpecification {
@@ -71,8 +71,8 @@ func (params *PetSearchRequest) ToSpecification() *specification.PetSpecificatio
 	}
 
 	pagination := specification.Pagination{
-		Offset:  params.Offset,
-		Limit:   params.Limit,
+		Offset:  params.Offset(),
+		Limit:   params.Limit(),
 		OrderBy: params.OrderBy,
 		SortDir: string(params.SortDirection),
 	}

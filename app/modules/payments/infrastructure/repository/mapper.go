@@ -1,7 +1,6 @@
 package repositoryimpl
 
 import (
-	"clinic-vet-api/app/modules/core/domain/entity/base"
 	"clinic-vet-api/app/modules/core/domain/entity/payment"
 	"clinic-vet-api/app/modules/core/domain/enum"
 	"clinic-vet-api/app/modules/core/domain/valueobject"
@@ -120,9 +119,6 @@ func sqlcRowToEntity(row *sqlc.Payment) (*payment.Payment, error) {
 	if row == nil {
 		return nil, fmt.Errorf("row cannot be nil")
 	}
-
-	paymentID := valueobject.NewPaymentID(uint(row.ID))
-
 	amount, err := numericToMoney(row.Amount, row.Currency)
 	if err != nil {
 		return nil, fmt.Errorf("failed to convert amount: %w", err)
@@ -140,10 +136,8 @@ func sqlcRowToEntity(row *sqlc.Payment) (*payment.Payment, error) {
 
 	customerID := pgInt4ToCustomerID(row.PaidFromCustomer)
 
-	p, err := payment.NewPayment(
+	p := payment.NewPayment(
 		valueobject.NewPaymentID(uint(row.ID)),
-		row.CreatedAt.Time,
-		row.UpdatedAt.Time,
 		payment.WithInvoiceID(row.InvoiceID.String),
 		payment.WithPaidFromCustomer(customerID),
 		payment.WithPaidToEmployee(valueobject.NewEmployeeID(uint(row.PaidToEmployee.Int32))),
@@ -153,13 +147,8 @@ func sqlcRowToEntity(row *sqlc.Payment) (*payment.Payment, error) {
 		payment.WithStatus(status),
 		payment.WithDueDate(pgTimestamptzToTime(row.DueDate)),
 		payment.WithIsActive(row.IsActive),
+		payment.WithTimeStamps(row.CreatedAt.Time, row.UpdatedAt.Time, 1),
 	)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create payment: %w", err)
-	}
-
-	p.Entity = base.NewEntity(paymentID, pgTimestamptzToTime(row.CreatedAt), pgTimestamptzToTime(row.UpdatedAt), 1)
-
 	if row.TransactionID.Valid {
 		p.SetTransactionID(row.TransactionID.String)
 	}

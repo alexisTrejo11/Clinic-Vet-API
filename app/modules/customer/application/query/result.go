@@ -24,9 +24,8 @@ type CustomerResult struct {
 	UpdatedAt   time.Time              `json:"updated_at"`
 }
 
-// ToResponse convierte CustomerResult a CustomerResponse
-func FromEntityToResult(customer customer.Customer) *CustomerResult {
-	return &CustomerResult{
+func customerToResult(customer customer.Customer) CustomerResult {
+	result := &CustomerResult{
 		ID:          customer.ID(),
 		PetsCount:   len(customer.Pets()),
 		IsActive:    customer.IsActive(),
@@ -39,12 +38,5 @@ func FromEntityToResult(customer customer.Customer) *CustomerResult {
 		LastName:    customer.Name().LastName,
 		DateOfBirth: customer.DateOfBirth(),
 	}
-}
-
-func FromEntityListToResultList(customers []customer.Customer) []CustomerResult {
-	results := make([]CustomerResult, len(customers))
-	for i, cust := range customers {
-		results[i] = *FromEntityToResult(cust)
-	}
-	return results
+	return *result
 }

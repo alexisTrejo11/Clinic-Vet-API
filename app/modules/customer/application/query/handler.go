@@ -26,15 +26,14 @@ func (h *customerQueryHandler) FindByID(cmd FindCustomerByIDQuery) (CustomerResu
 	if err != nil {
 		return CustomerResult{}, err
 	}
-
-	return *FromEntityToResult(customer), nil
+	return customerToResult(customer), nil
 }
 
 func (h *customerQueryHandler) FindBySpecification(cmd FindCustomerBySpecificationQuery) (page.Page[CustomerResult], error) {
 	customerPage, err := h.customerRepository.FindBySpecification(cmd.CTX, cmd.querySpect)
 	if err != nil {
-		return page.EmptyPage[CustomerResult](), err
+		return page.Page[CustomerResult]{}, err
 	}
-	customerResults := FromEntityListToResultList(customerPage.Items)
-	return page.NewPage(customerResults, customerPage.Metadata), nil
+
+	return page.MapItems(customerPage, customerToResult), nil
 }

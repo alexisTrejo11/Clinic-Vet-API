@@ -15,7 +15,7 @@ import (
 
 type CustomerRegisterCommand struct {
 	Email       valueobject.Email
-	PhoneNumber *valueobject.PhoneNumber
+	PhoneNumber valueobject.PhoneNumber
 	Password    string
 	Role        enum.UserRole
 

@@ -72,7 +72,7 @@ func (s *UserSecurityService) authenticateWithPassword(user u.User, plainPasswor
 	return user, nil
 }
 
-func (s *UserSecurityService) ValidateUserCredentials(ctx context.Context, email valueobject.Email, phone *valueobject.PhoneNumber, rawPassword string) error {
+func (s *UserSecurityService) ValidateUserCredentials(ctx context.Context, email valueobject.Email, phone valueobject.PhoneNumber, rawPassword string) error {
 	var wg sync.WaitGroup
 	errorChannel := make(chan error, 3)
 	var validationErrors []error
@@ -88,7 +88,7 @@ func (s *UserSecurityService) ValidateUserCredentials(ctx context.Context, email
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		if err := s.ValidatePhoneNumber(ctx, phone); err != nil {
+		if err := s.ValidatePhoneNumber(ctx, &phone); err != nil {
 			errorChannel <- err
 		}
 	}()

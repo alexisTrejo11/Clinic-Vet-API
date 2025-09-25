@@ -43,7 +43,7 @@ func (h *FindApptStatsHandler) Handle(q cqrs.Query) (ApptStatsResult, error) {
 
 		var appointments []appointment.Appointment
 		var err error
-		maxPage := page.PageInput{
+		maxPage := page.PaginationRequest{
 			Offset:     1,
 			Limit: 10000,
 		}

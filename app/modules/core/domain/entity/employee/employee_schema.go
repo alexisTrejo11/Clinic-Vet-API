@@ -56,6 +56,10 @@ func (v *Employee) IsActive() bool {
 	return v.isActive
 }
 
+func (v *Employee) IsWithinWorkdayBreak(start, end time.Time) bool {
+	return false
+}
+
 func (v *Employee) UserID() *valueobject.UserID {
 	return v.userID
 }

@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	dberr "clinic-vet-api/app/shared/error/infrastructure/database"
-	"clinic-vet-api/app/shared/page"
 
 	"github.com/jackc/pgx/v5/pgtype"
 )
@@ -36,10 +35,6 @@ const (
 	ErrMsgInvalidSearchParams  = "invalid search parameters type"
 	ErrMsgCountMedicalSession  = "failed to count medical history records"
 )
-
-func (r *SQLCMedSessionRepository) calculateOffset(pageData page.PageInput) int32 {
-	return int32(pageData.Limit * (pageData.Offset))
-}
 
 func (r *SQLCMedSessionRepository) buildNotesParam(notes *string) pgtype.Text {
 	if notes != nil {

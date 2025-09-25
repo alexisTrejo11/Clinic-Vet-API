@@ -7,6 +7,7 @@ import (
 	"clinic-vet-api/app/modules/core/domain/valueobject"
 	"clinic-vet-api/app/modules/core/repository"
 
+	"clinic-vet-api/app/shared/page"
 	p "clinic-vet-api/app/shared/page"
 	"clinic-vet-api/sqlc"
 	"context"
@@ -41,10 +42,10 @@ func (r *SqlcAppointmentRepository) Find(ctx context.Context, spec specification
 
 	// TODO: NIL FIX
 	sqlcParams := sqlc.FindAppointmentsBySpecParams{
-		Column1: int32(*params.ApptID),                                                             // ID
-		Column2: int32(*params.CustomerID),                                                         // CustomerID
-		Column3: int32(*params.EmployeeID),                                                         // EmployeeID
-		Column4: int32(*params.PetID),                                                              // PetID
+		Column1: ParsePointerInt32(params.ApptID),                                                  // ID
+		Column2: ParsePointerInt32(params.CustomerID),                                              // CustomerID
+		Column3: ParsePointerInt32(params.EmployeeID),                                              // EmployeeID
+		Column4: ParsePointerInt32(params.PetID),                                                   // PetID
 		Column5: service,                                                                           // Service
 		Column6: status,                                                                            // Status
 		Column7: pgtype.Timestamp{Time: *params.StartDate, Valid: params.StartDate != nil},         // StartDate
@@ -82,14 +83,14 @@ func (r *SqlcAppointmentRepository) Find(ctx context.Context, spec specification
 		return p.Page[appt.Appointment]{}, err
 	}
 
-	pagination := p.PageInput{
-		Limit:  int(params.Limit),
-		Offset: int(params.Offset),
+	pagination := page.PaginationRequest{
+		PageSize: int(params.Limit),
+		Page:     (int(params.Offset) / int(params.Limit)) + 1,
 	}
-	return p.NewPage(appointments, *p.GetPageMetadata(int(total), pagination)), nil
+
+	return p.NewPage(appointments, int(total), pagination), nil
 }
 
-// FindByID finds an appointment by ID
 func (r *SqlcAppointmentRepository) FindByID(ctx context.Context, id valueobject.AppointmentID) (appt.Appointment, error) {
 	sqlRow, err := r.queries.FindAppointmentByID(ctx, int32(id.Value()))
 	if err != nil {
@@ -107,7 +108,6 @@ func (r *SqlcAppointmentRepository) FindByID(ctx context.Context, id valueobject
 	return *appointmentEntity, nil
 }
 
-// ExistsByID checks if an appointment exists by ID
 func (r *SqlcAppointmentRepository) ExistsByID(ctx context.Context, id valueobject.AppointmentID) (bool, error) {
 	exists, err := r.queries.ExistsAppointmentID(ctx, int32(id.Value()))
 	if err != nil {
@@ -141,7 +141,6 @@ func (r *SqlcAppointmentRepository) create(ctx context.Context, appointment *app
 	return nil
 }
 
-// update modifies an existing appointment
 func (r *SqlcAppointmentRepository) update(ctx context.Context, appointment *appt.Appointment) error {
 	params := appointmentToUpdateParams(appointment)
 
@@ -153,7 +152,6 @@ func (r *SqlcAppointmentRepository) update(ctx context.Context, appointment *app
 	return nil
 }
 
-// Count returns the total number of appointments matching the given specification.
 func (r *SqlcAppointmentRepository) Count(ctx context.Context, spec specification.ApptSearchSpecification) (int, error) {
 	params := spec.ToSQLCParams()
 	var service string
@@ -165,10 +163,10 @@ func (r *SqlcAppointmentRepository) Count(ctx context.Context, spec specificatio
 		status = *params.Status
 	}
 	sqlcParams := sqlc.CountAppointmentsBySpecParams{
-		Column1: int32(*params.ApptID),                                                             // ID
-		Column2: int32(*params.CustomerID),                                                         // CustomerID
-		Column3: int32(*params.EmployeeID),                                                         // EmployeeID
-		Column4: int32(*params.PetID),                                                              // PetID
+		Column1: ParsePointerInt32(params.ApptID),                                                  // ID
+		Column2: ParsePointerInt32(params.CustomerID),                                              // CustomerID
+		Column3: ParsePointerInt32(params.EmployeeID),                                              // EmployeeID
+		Column4: ParsePointerInt32(params.PetID),                                                   // PetID
 		Column5: service,                                                                           // Service
 		Column6: status,                                                                            // Status
 		Column7: pgtype.Timestamp{Time: *params.StartDate, Valid: params.StartDate != nil},         // StartDate
@@ -180,4 +178,11 @@ func (r *SqlcAppointmentRepository) Count(ctx context.Context, spec specificatio
 		return 0, r.dbError("count", "failed to count appointments", err)
 	}
 	return int(total), nil
+}
+
+func ParsePointerInt32(n *int32) int32 {
+	if n == nil {
+		return 0
+	}
+	return *n
 }

@@ -78,7 +78,11 @@ func (e Email) String() string {
 }
 
 type PhoneNumber struct {
-	value string
+	Value string
+}
+
+func EmptyPhoneNumber() PhoneNumber {
+	return PhoneNumber{Value: ""}
 }
 
 func NewPhoneNumber(phone string) (PhoneNumber, error) {
@@ -92,7 +96,7 @@ func NewPhoneNumber(phone string) (PhoneNumber, error) {
 		return PhoneNumber{}, domainerr.InvalidFieldFormat(context.Background(), "phone", "too short", "phone number must have at least 10 digits", "create phone number")
 	}
 
-	return PhoneNumber{value: cleaned}, nil
+	return PhoneNumber{Value: cleaned}, nil
 }
 
 func NewPhoneNumberNoErr(phone string) PhoneNumber {
@@ -100,12 +104,8 @@ func NewPhoneNumberNoErr(phone string) PhoneNumber {
 	return p
 }
 
-func (p PhoneNumber) Value() string {
-	return p.value
-}
-
 func (p PhoneNumber) String() string {
-	return p.value
+	return p.Value
 }
 
 type PersonName struct {
@@ -129,6 +129,15 @@ func NewPersonName(firstName, lastName string) (PersonName, error) {
 		FirstName: firstName,
 		LastName:  lastName,
 	}, nil
+}
+
+func NewPersonNameNoErr(firstName, lastName string) PersonName {
+	n, _ := NewPersonName(firstName, lastName)
+	return n
+}
+
+func (n PersonName) IsValid() bool {
+	return n.FirstName != "" && n.LastName != ""
 }
 
 func (n PersonName) FullName() string {

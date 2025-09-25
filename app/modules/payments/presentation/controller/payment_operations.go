@@ -82,20 +82,13 @@ func (ctrl *PaymentControllerOperations) GetPayment(c *gin.Context) {
 }
 
 func (ctrl *PaymentControllerOperations) GetPaymentsByCustomer(c *gin.Context, customerID uint) {
-	var pagination *page.PageInput
-	if err := c.ShouldBindQuery(&pagination); err != nil {
+	var pagination page.PaginationRequest
+	if err := ginUtils.ShouldBindPageParams(&pagination, c, ctrl.validator); err != nil {
 		response.BadRequest(c, httpError.RequestURLQueryError(err, c.Request.URL.RawQuery))
 		return
 	}
 
-	if err := ctrl.validator.Struct(pagination); err != nil {
-		response.BadRequest(c, httpError.InvalidDataError(err))
-		return
-	}
-
-	pagination.SetDefaultsFieldsIfEmpty()
-
-	query := query.NewFindPaymentsByCustomerQuery(c.Request.Context(), customerID, *pagination)
+	query := query.NewFindPaymentsByCustomerQuery(c.Request.Context(), customerID, pagination)
 	paymentPage, err := ctrl.bus.QueryBus.FindByCustomer(query)
 	if err != nil {
 		response.ApplicationError(c, err)
@@ -107,20 +100,13 @@ func (ctrl *PaymentControllerOperations) GetPaymentsByCustomer(c *gin.Context, c
 
 func (ctrl *PaymentControllerOperations) GetPaymentsByStatus(c *gin.Context) {
 	statusStr := c.Param("status")
-	var pagination *page.PageInput
-	if err := c.ShouldBindQuery(&pagination); err != nil {
+	var pagination page.PaginationRequest
+	if err := ginUtils.ShouldBindPageParams(&pagination, c, ctrl.validator); err != nil {
 		response.BadRequest(c, httpError.RequestURLQueryError(err, c.Request.URL.RawQuery))
 		return
 	}
 
-	if err := ctrl.validator.Struct(pagination); err != nil {
-		response.BadRequest(c, httpError.InvalidDataError(err))
-		return
-	}
-
-	pagination.SetDefaultsFieldsIfEmpty()
-
-	query, err := query.NewFindPaymentsByStatusQuery(c.Request.Context(), statusStr, *pagination)
+	query, err := query.NewFindPaymentsByStatusQuery(c.Request.Context(), statusStr, pagination)
 	if err != nil {
 		response.ApplicationError(c, err)
 		return
@@ -137,13 +123,13 @@ func (ctrl *PaymentControllerOperations) GetPaymentsByStatus(c *gin.Context) {
 
 func (ctrl *PaymentControllerOperations) GetPaymentsByDateRange(c *gin.Context) {
 	var requestData *dto.PaymentsByDateRangeRequest
-
 	if err := c.ShouldBindQuery(&requestData); err != nil {
 		response.BadRequest(c, httpError.RequestURLQueryError(err, c.Request.URL.RawQuery))
 		return
 	}
 
-	requestData.SetDefaultsFieldsIfEmpty()
+	requestData.WithDefaults()
+
 	if err := ctrl.validator.Struct(requestData); err != nil {
 		response.BadRequest(c, httpError.InvalidDataError(err))
 		return
@@ -161,7 +147,7 @@ func (ctrl *PaymentControllerOperations) GetPaymentsByDateRange(c *gin.Context) 
 }
 
 func (ctrl *PaymentControllerOperations) GetOverduePayments(c *gin.Context) {
-	var pagination *page.PageInput
+	var pagination *page.PaginationRequest
 	if err := c.ShouldBindQuery(&pagination); err != nil {
 		response.BadRequest(c, httpError.RequestURLQueryError(err, c.Request.URL.RawQuery))
 		return

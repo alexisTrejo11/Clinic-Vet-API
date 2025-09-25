@@ -93,10 +93,10 @@ func NewAppointmentWithContext(
 	opts ...AppointmentOption,
 ) (*Appointment, error) {
 	appointment := &Appointment{
-		Entity:     base.NewEntity(id, time.Now(), time.Now(), 1),
+		Entity:     base.NewEntity(id, nil, nil, 1),
 		petID:      petID,
 		customerID: customerID,
-		status:     enum.AppointmentStatusPending, // Default status
+		status:     enum.AppointmentStatusPending,
 	}
 
 	for _, opt := range opts {
@@ -108,7 +108,6 @@ func NewAppointmentWithContext(
 	return appointment, nil
 }
 
-// CreateAppointment creates a new appointment with auto-generated ID
 func CreateAppointment(
 	ctx context.Context,
 	petID valueobject.PetID,
@@ -117,7 +116,6 @@ func CreateAppointment(
 ) (*Appointment, error) {
 	operation := "CreateAppointment"
 
-	// Validate required fields
 	if petID.IsZero() {
 		return nil, domainerr.ValidationError(ctx, "appointment", "pet_id", "pet ID is required", operation)
 	}
@@ -129,7 +127,7 @@ func CreateAppointment(
 		Entity:     base.CreateEntity(valueobject.AppointmentID{}),
 		petID:      petID,
 		customerID: customerID,
-		status:     enum.AppointmentStatusPending, // Default status
+		status:     enum.AppointmentStatusPending,
 	}
 
 	for _, opt := range opts {

@@ -13,9 +13,9 @@ type EmployeeRepository interface {
 	FindBySpecification(ctx context.Context, spec specification.EmployeeSearchSpecification) (page.Page[employee.Employee], error)
 	FindByID(ctx context.Context, id valueobject.EmployeeID) (employee.Employee, error)
 	FindByUserID(ctx context.Context, userID valueobject.UserID) (employee.Employee, error)
-	FindActive(ctx context.Context, pageInput page.PageInput) (page.Page[employee.Employee], error)
-	FindAll(ctx context.Context, pageInput page.PageInput) (page.Page[employee.Employee], error)
-	FindBySpeciality(ctx context.Context, speciality enum.VetSpecialty, pageInput page.PageInput) (page.Page[employee.Employee], error)
+	FindActive(ctx context.Context, PaginationRequest page.PaginationRequest) (page.Page[employee.Employee], error)
+	FindAll(ctx context.Context, PaginationRequest page.PaginationRequest) (page.Page[employee.Employee], error)
+	FindBySpeciality(ctx context.Context, speciality enum.VetSpecialty, PaginationRequest page.PaginationRequest) (page.Page[employee.Employee], error)
 
 	ExistsByID(ctx context.Context, id valueobject.EmployeeID) (bool, error)
 	ExistsByUserID(ctx context.Context, userID valueobject.UserID) (bool, error)

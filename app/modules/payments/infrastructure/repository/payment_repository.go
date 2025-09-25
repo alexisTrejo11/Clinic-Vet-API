@@ -86,13 +86,11 @@ func (r *SqlcPaymentRepository) FindByIDAndCustomerID(ctx context.Context, id va
 	return *paymentEntity, nil
 }
 
-func (r *SqlcPaymentRepository) FindByCustomerID(ctx context.Context, customerID valueobject.CustomerID, pageInput page.PageInput) (page.Page[payment.Payment], error) {
-	offset := (pageInput.Offset) * pageInput.Limit
-
+func (r *SqlcPaymentRepository) FindByCustomerID(ctx context.Context, customerID valueobject.CustomerID, pagination page.PaginationRequest) (page.Page[payment.Payment], error) {
 	sqlRows, err := r.queries.FindPaymentsByCustomerID(ctx, sqlc.FindPaymentsByCustomerIDParams{
 		PaidFromCustomer: pgtype.Int4{Int32: int32(customerID.Value()), Valid: true},
-		Limit:            int32(pageInput.Limit),
-		Offset:           int32(offset),
+		Limit:            int32(pagination.Limit()),
+		Offset:           int32(pagination.Offset()),
 	})
 	if err != nil {
 		return page.Page[payment.Payment]{}, r.dbError(OpSelect, ErrMsgListPaymentsByUser, err)
@@ -108,16 +106,14 @@ func (r *SqlcPaymentRepository) FindByCustomerID(ctx context.Context, customerID
 		return page.Page[payment.Payment]{}, err
 	}
 
-	return page.NewPage(payments, *page.GetPageMetadata(int(total), pageInput)), nil
+	return page.NewPage(payments, int(total), pagination), nil
 }
 
-func (r *SqlcPaymentRepository) FindByStatus(ctx context.Context, status enum.PaymentStatus, pageInput page.PageInput) (page.Page[payment.Payment], error) {
-	offset := (pageInput.Offset) * pageInput.Limit
-
+func (r *SqlcPaymentRepository) FindByStatus(ctx context.Context, status enum.PaymentStatus, pagination page.PaginationRequest) (page.Page[payment.Payment], error) {
 	sqlRows, err := r.queries.FindPaymentsByStatus(ctx, sqlc.FindPaymentsByStatusParams{
 		Status: models.PaymentStatus(status.String()),
-		Limit:  int32(pageInput.Limit),
-		Offset: int32(offset),
+		Limit:  int32(pagination.Limit()),
+		Offset: int32(pagination.Offset()),
 	})
 	if err != nil {
 		return page.Page[payment.Payment]{}, fmt.Errorf("failed to find payments by status: %w", err)
@@ -133,15 +129,13 @@ func (r *SqlcPaymentRepository) FindByStatus(ctx context.Context, status enum.Pa
 		return page.Page[payment.Payment]{}, err
 	}
 
-	return page.NewPage(payments, *page.GetPageMetadata(int(total), pageInput)), nil
+	return page.NewPage(payments, int(total), pagination), nil
 }
 
-func (r *SqlcPaymentRepository) FindOverdue(ctx context.Context, pageInput page.PageInput) (page.Page[payment.Payment], error) {
-	offset := (pageInput.Offset) * pageInput.Limit
-
+func (r *SqlcPaymentRepository) FindOverdue(ctx context.Context, pagination page.PaginationRequest) (page.Page[payment.Payment], error) {
 	sqlRows, err := r.queries.FindOverduePayments(ctx, sqlc.FindOverduePaymentsParams{
-		Limit:  int32(pageInput.Limit),
-		Offset: int32(offset),
+		Limit:  int32(pagination.Limit()),
+		Offset: int32(pagination.Offset()),
 	})
 	if err != nil {
 		return page.Page[payment.Payment]{}, fmt.Errorf("failed to find overdue payments: %w", err)
@@ -157,17 +151,15 @@ func (r *SqlcPaymentRepository) FindOverdue(ctx context.Context, pageInput page.
 		return page.Page[payment.Payment]{}, err
 	}
 
-	return page.NewPage(payments, *page.GetPageMetadata(int(total), pageInput)), nil
+	return page.NewPage(payments, int(total), pagination), nil
 }
 
-func (r *SqlcPaymentRepository) FindByDateRange(ctx context.Context, startDate, endDate time.Time, pageInput page.PageInput) (page.Page[payment.Payment], error) {
-	offset := (pageInput.Offset) * pageInput.Limit
-
+func (r *SqlcPaymentRepository) FindByDateRange(ctx context.Context, startDate, endDate time.Time, pagination page.PaginationRequest) (page.Page[payment.Payment], error) {
 	sqlRows, err := r.queries.FindPaymentsByDateRange(ctx, sqlc.FindPaymentsByDateRangeParams{
 		CreatedAt:   pgtype.Timestamptz{Time: startDate, Valid: true},
 		CreatedAt_2: pgtype.Timestamptz{Time: endDate, Valid: true},
-		Limit:       int32(pageInput.Limit),
-		Offset:      int32(offset),
+		Limit:       int32(pagination.Limit()),
+		Offset:      int32(pagination.Offset()),
 	})
 	if err != nil {
 		return page.Page[payment.Payment]{}, fmt.Errorf("failed to find payments by date range: %w", err)
@@ -186,7 +178,7 @@ func (r *SqlcPaymentRepository) FindByDateRange(ctx context.Context, startDate, 
 		return page.Page[payment.Payment]{}, err
 	}
 
-	return page.NewPage(payments, *page.GetPageMetadata(int(total), pageInput)), nil
+	return page.NewPage(payments, int(total), pagination), nil
 }
 
 func (r *SqlcPaymentRepository) FindRecentByCustomerID(ctx context.Context, customerID valueobject.CustomerID, limit int) ([]payment.Payment, error) {
@@ -201,12 +193,12 @@ func (r *SqlcPaymentRepository) FindRecentByCustomerID(ctx context.Context, cust
 	return r.sqlRowsToEntities(sqlRows)
 }
 
-func (r *SqlcPaymentRepository) FindPendingPayments(ctx context.Context, pageInput page.PageInput) (page.Page[payment.Payment], error) {
-	return r.FindByStatus(ctx, enum.PaymentStatusPending, pageInput)
+func (r *SqlcPaymentRepository) FindPendingPayments(ctx context.Context, pagination page.PaginationRequest) (page.Page[payment.Payment], error) {
+	return r.FindByStatus(ctx, enum.PaymentStatusPending, pagination)
 }
 
-func (r *SqlcPaymentRepository) FindSuccessfulPayments(ctx context.Context, pageInput page.PageInput) (page.Page[payment.Payment], error) {
-	return r.FindByStatus(ctx, enum.PaymentStatusPaid, pageInput)
+func (r *SqlcPaymentRepository) FindSuccessfulPayments(ctx context.Context, pagination page.PaginationRequest) (page.Page[payment.Payment], error) {
+	return r.FindByStatus(ctx, enum.PaymentStatusPaid, pagination)
 }
 
 func (r *SqlcPaymentRepository) ExistsByID(ctx context.Context, id valueobject.PaymentID) (bool, error) {

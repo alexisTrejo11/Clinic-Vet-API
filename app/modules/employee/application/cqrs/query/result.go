@@ -28,8 +28,9 @@ type ScheduleData struct {
 	EndBreak      int
 }
 
-func ToResult(employee *employee.Employee) EmployeeResult {
+func employeeToResult(employee employee.Employee) EmployeeResult {
 	var scheduleResults *[]ScheduleData
+
 	if employee.Schedule() != nil {
 		days := employee.Schedule().WorkDays
 		scheduleResultsSlice := make([]ScheduleData, len(days))

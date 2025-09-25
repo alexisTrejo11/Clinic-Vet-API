@@ -11,10 +11,10 @@ import (
 
 type FindUsersByRoleQuery struct {
 	role       enum.UserRole
-	pagination p.PageInput
+	pagination p.PaginationRequest
 }
 
-func NewFindUsersByRoleQuery(role string, pagination p.PageInput) *FindUsersByRoleQuery {
+func NewFindUsersByRoleQuery(role string, pagination p.PaginationRequest) *FindUsersByRoleQuery {
 	roleEnum := enum.UserRole(role)
 
 	return &FindUsersByRoleQuery{

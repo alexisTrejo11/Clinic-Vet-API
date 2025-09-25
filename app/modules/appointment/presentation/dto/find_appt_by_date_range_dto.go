@@ -13,11 +13,11 @@ import (
 type ListApptByDateRangeRequest struct {
 	StartDate CustomDate `json:"start_date"  form:"start_date" binding:"required"`
 	EndDate   CustomDate `json:"end_date"  form:"end_date" binding:"required"`
-	page.PageInput
+	page.PaginationRequest
 }
 
 func (r *ListApptByDateRangeRequest) ToQuery() (query.FindApptsByDateRangeQuery, error) {
-	qry, err := query.NewFindApptsByDateRangeQuery(r.StartDate.Time, r.EndDate.Time, r.PageInput)
+	qry, err := query.NewFindApptsByDateRangeQuery(r.StartDate.Time, r.EndDate.Time, r.PaginationRequest)
 	if err != nil {
 		return query.FindApptsByDateRangeQuery{}, err
 	}

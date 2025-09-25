@@ -20,7 +20,7 @@ type FindPaymentsByDateRangeQuery struct {
 	startDate time.Time
 	endDate   time.Time
 	ctx       context.Context
-	page.PageInput
+	page.PaginationRequest
 }
 
 func NewFindPaymentByIDQuery(idInt uint) (*FindPaymentByIDQuery, error) {
@@ -32,21 +32,21 @@ func NewFindPaymentByIDQuery(idInt uint) (*FindPaymentByIDQuery, error) {
 	return &FindPaymentByIDQuery{id: paymentID}, nil
 }
 
-func NewFindPaymentsByDateRangeQuery(startDate, endDate time.Time, pageData page.PageInput) *FindPaymentsByDateRangeQuery {
+func NewFindPaymentsByDateRangeQuery(startDate, endDate time.Time, pageData page.PaginationRequest) *FindPaymentsByDateRangeQuery {
 	return &FindPaymentsByDateRangeQuery{
-		startDate: startDate,
-		endDate:   endDate,
-		PageInput: pageData,
+		startDate:         startDate,
+		endDate:           endDate,
+		PaginationRequest: pageData,
 	}
 }
 
 type FindPaymentsByStatusQuery struct {
 	status     enum.PaymentStatus
-	pagination page.PageInput
+	pagination page.PaginationRequest
 	ctx        context.Context
 }
 
-func NewFindPaymentsByStatusQuery(ctx context.Context, status string, pagination page.PageInput) (*FindPaymentsByStatusQuery, error) {
+func NewFindPaymentsByStatusQuery(ctx context.Context, status string, pagination page.PaginationRequest) (*FindPaymentsByStatusQuery, error) {
 	statusEnum, err := enum.ParsePaymentStatus(status)
 	if err != nil {
 		return nil, err
@@ -60,11 +60,11 @@ func NewFindPaymentsByStatusQuery(ctx context.Context, status string, pagination
 }
 
 type FindOverduePaymentsQuery struct {
-	pagination page.PageInput
+	pagination page.PaginationRequest
 	ctx        context.Context
 }
 
-func NewFindOverduePaymentsQuery(ctx context.Context, pagination page.PageInput) FindOverduePaymentsQuery {
+func NewFindOverduePaymentsQuery(ctx context.Context, pagination page.PaginationRequest) FindOverduePaymentsQuery {
 	return FindOverduePaymentsQuery{
 		pagination: pagination,
 		ctx:        ctx,
@@ -73,11 +73,11 @@ func NewFindOverduePaymentsQuery(ctx context.Context, pagination page.PageInput)
 
 type FindPaymentsByCustomerQuery struct {
 	customerID valueobject.CustomerID
-	pagination page.PageInput
+	pagination page.PaginationRequest
 	ctx        context.Context
 }
 
-func NewFindPaymentsByCustomerQuery(ctx context.Context, customerIDInt uint, pagination page.PageInput) FindPaymentsByCustomerQuery {
+func NewFindPaymentsByCustomerQuery(ctx context.Context, customerIDInt uint, pagination page.PaginationRequest) FindPaymentsByCustomerQuery {
 	customerID := valueobject.NewCustomerID(customerIDInt)
 
 	return FindPaymentsByCustomerQuery{

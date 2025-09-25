@@ -3,6 +3,7 @@ package query
 import (
 	"clinic-vet-api/app/modules/core/domain/entity/medical"
 	"clinic-vet-api/app/modules/core/repository"
+	"clinic-vet-api/app/shared/page"
 	p "clinic-vet-api/app/shared/page"
 	"context"
 )
@@ -53,42 +54,42 @@ func (h *medSessionQueryHandler) FindMedSessionByID(ctx context.Context, query F
 }
 
 func (h *medSessionQueryHandler) FindMedSessionBySpec(ctx context.Context, query FindMedSessionBySpecQuery) (*p.Page[MedSessionResult], error) {
-	page, err := h.repo.FindBySpecification(ctx, query.Spec)
+	medSessionpage, err := h.repo.FindBySpecification(ctx, query.Spec)
 	if err != nil {
 		return nil, err
 	}
 
-	age := toResultPage(page)
-	return &age, nil
+	result := page.MapItems(medSessionpage, toResult)
+	return &result, nil
 }
 
 func (h *medSessionQueryHandler) FindMedSessionByEmployeeID(ctx context.Context, query FindMedSessionByEmployeeIDQuery) (*p.Page[MedSessionResult], error) {
-	page, err := h.repo.FindByEmployeeID(ctx, query.EmployeeID, query.PageInput)
+	medSessionpage, err := h.repo.FindByEmployeeID(ctx, query.EmployeeID, query.PaginationRequest)
 	if err != nil {
 		return nil, err
 	}
 
-	age := toResultPage(page)
-	return &age, nil
+	result := page.MapItems(medSessionpage, toResult)
+	return &result, nil
 }
 
 func (h *medSessionQueryHandler) FindMedSessionByPetID(ctx context.Context, query FindMedSessionByPetIDQuery) (*p.Page[MedSessionResult], error) {
-	page, err := h.repo.FindByPetID(ctx, query.petID, query.pageInput)
+	medSessionpage, err := h.repo.FindByPetID(ctx, query.petID, query.PaginationRequest)
 	if err != nil {
 		return nil, err
 	}
 
-	age := toResultPage(page)
-	return &age, nil
+	result := page.MapItems(medSessionpage, toResult)
+	return &result, nil
 }
 
 func (h *medSessionQueryHandler) FindMedSessionByCustomerID(ctx context.Context, query FindMedSessionByCustomerIDQuery) (*p.Page[MedSessionResult], error) {
-	page, err := h.repo.FindByCustomerID(ctx, query.CustomerID, query.PageInput)
+	medSessionpage, err := h.repo.FindByCustomerID(ctx, query.CustomerID, query.PaginationRequest)
 	if err != nil {
 		return nil, err
 	}
 
-	result := toResultPage(page)
+	result := page.MapItems(medSessionpage, toResult)
 	return &result, nil
 }
 
@@ -102,13 +103,13 @@ func (h *medSessionQueryHandler) FindRecentMedSessionByPetID(ctx context.Context
 }
 
 func (h *medSessionQueryHandler) FindMedSessionByDateRange(ctx context.Context, query FindMedSessionByDateRangeQuery) (*p.Page[MedSessionResult], error) {
-	page, err := h.repo.FindByDateRange(ctx, query.StartDate, query.EndDate, query.PageInput)
+	medSessionpage, err := h.repo.FindByDateRange(ctx, query.StartDate, query.EndDate, query.PaginationRequest)
 	if err != nil {
 		return nil, err
 	}
 
-	age := toResultPage(page)
-	return &age, nil
+	result := page.MapItems(medSessionpage, toResult)
+	return &result, nil
 }
 
 func (h *medSessionQueryHandler) FindMedSessionByPetAndDateRange(ctx context.Context, query FindMedSessionByPetAndDateRangeQuery) ([]MedSessionResult, error) {
@@ -121,11 +122,11 @@ func (h *medSessionQueryHandler) FindMedSessionByPetAndDateRange(ctx context.Con
 }
 
 func (h *medSessionQueryHandler) FindMedSessionByDiagnosis(ctx context.Context, query FindMedSessionByDiagnosisQuery) (*p.Page[MedSessionResult], error) {
-	page, err := h.repo.FindByDiagnosis(ctx, query.Diagnosis, query.PageInput)
+	medSessionpage, err := h.repo.FindByDiagnosis(ctx, query.Diagnosis, query.PaginationRequest)
 	if err != nil {
 		return nil, err
 	}
 
-	result := toResultPage(page)
+	result := page.MapItems(medSessionpage, toResult)
 	return &result, nil
 }

@@ -6,10 +6,10 @@ import (
 	"errors"
 	"fmt"
 
-	"clinic-vet-api/app/modules/core/domain/entity/notification"
+	noti "clinic-vet-api/app/modules/core/domain/entity/notification"
 	"clinic-vet-api/app/modules/core/domain/valueobject"
 	"clinic-vet-api/app/modules/core/repository"
-	"clinic-vet-api/app/shared/page"
+	p "clinic-vet-api/app/shared/page"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
@@ -28,13 +28,12 @@ func NewMongoNotificationRepository(client *mongo.Client) repository.Notificatio
 	}
 }
 
-func (r *MongoNotificationRepository) Create(ctx context.Context, notification *notification.Notification) error {
+func (r *MongoNotificationRepository) Create(ctx context.Context, notification *noti.Notification) error {
 	result, err := r.notificationCollection.InsertOne(ctx, notification)
 	if err != nil {
 		return r.mongoError(OpInsertMongo, ErrMsgCreateNotification, err)
 	}
 
-	// Asumiendo que el ID se genera como ObjectID en MongoDB
 	if oid, ok := result.InsertedID.(bson.ObjectID); ok {
 		notification.ID = oid.Hex()
 	} else {
@@ -44,10 +43,9 @@ func (r *MongoNotificationRepository) Create(ctx context.Context, notification *
 	return nil
 }
 
-func (r *MongoNotificationRepository) GetByID(ctx context.Context, id string) (notification.Notification, error) {
-	var notification notification.Notification
+func (r *MongoNotificationRepository) GetByID(ctx context.Context, id string) (noti.Notification, error) {
+	var notification noti.Notification
 
-	// Convertir el string ID a ObjectID si es necesario
 	objectID, err := convertStringToObjectID(id)
 	if err != nil {
 		return notification, r.mongoError(OpFindMongo, "invalid notification ID format", err)
@@ -64,60 +62,60 @@ func (r *MongoNotificationRepository) GetByID(ctx context.Context, id string) (n
 	return notification, nil
 }
 
-func (r *MongoNotificationRepository) ListByUser(ctx context.Context, userID valueobject.UserID, pagination page.PageInput) (page.Page[notification.Notification], error) {
+func (r *MongoNotificationRepository) ListByUser(ctx context.Context, userID valueobject.UserID, pagination p.PaginationRequest) (p.Page[noti.Notification], error) {
 	findOptions := r.paginateSearch(pagination)
 	queryFilter := bson.M{"user_id": userID.String()}
 
 	notifications, err := r.findByFilter(ctx, queryFilter, findOptions)
 	if err != nil {
-		return page.EmptyPage[notification.Notification](), err
+		return p.Page[noti.Notification]{}, err
 	}
 
-	pageMetadata, err := r.getPaginationMetadata(ctx, queryFilter, pagination)
+	totalItems, err := r.countQueryTotalItems(ctx, queryFilter)
 	if err != nil {
-		return page.EmptyPage[notification.Notification](), err
+		return p.Page[noti.Notification]{}, err
 	}
 
-	return page.NewPage(notifications, pageMetadata), nil
+	return p.NewPage(notifications, int(totalItems), pagination), nil
 }
 
-func (r *MongoNotificationRepository) ListBySpecies(ctx context.Context, notificationType string, pagination page.PageInput) (page.Page[notification.Notification], error) {
+func (r *MongoNotificationRepository) ListBySpecies(ctx context.Context, notificationType string, pagination p.PaginationRequest) (p.Page[noti.Notification], error) {
 	findOptions := r.paginateSearch(pagination)
 	queryFilter := bson.M{"type": notificationType}
 
 	notifications, err := r.findByFilter(ctx, queryFilter, findOptions)
 	if err != nil {
-		return page.EmptyPage[notification.Notification](), err
+		return p.Page[noti.Notification]{}, err
 	}
 
-	pageMetadata, err := r.getPaginationMetadata(ctx, queryFilter, pagination)
+	totalItems, err := r.countQueryTotalItems(ctx, queryFilter)
 	if err != nil {
-		return page.EmptyPage[notification.Notification](), err
+		return p.Page[noti.Notification]{}, err
 	}
 
-	return page.NewPage(notifications, pageMetadata), nil
+	return p.NewPage(notifications, int(totalItems), pagination), nil
 }
 
-func (r *MongoNotificationRepository) ListByChannel(ctx context.Context, channel string, pagination page.PageInput) (page.Page[notification.Notification], error) {
+func (r *MongoNotificationRepository) ListByChannel(ctx context.Context, channel string, pagination p.PaginationRequest) (p.Page[noti.Notification], error) {
 	findOptions := r.paginateSearch(pagination)
 	queryFilter := bson.M{"channel": channel}
 
 	notifications, err := r.findByFilter(ctx, queryFilter, findOptions)
 	if err != nil {
-		return page.EmptyPage[notification.Notification](), err
+		return p.Page[noti.Notification]{}, err
 	}
 
-	pageMetadata, err := r.getPaginationMetadata(ctx, queryFilter, pagination)
+	totalItems, err := r.countQueryTotalItems(ctx, queryFilter)
 	if err != nil {
-		return page.EmptyPage[notification.Notification](), err
+		return p.Page[noti.Notification]{}, err
 	}
 
-	return page.NewPage(notifications, pageMetadata), nil
+	return p.NewPage(notifications, int(totalItems), pagination), nil
 }
 
-func (r *MongoNotificationRepository) paginateSearch(pagination page.PageInput) *options.FindOptionsBuilder {
-	pageSize := int64(pagination.Limit)
-	pageNumber := int64(pagination.Page())
+func (r *MongoNotificationRepository) paginateSearch(pagination p.PaginationRequest) *options.FindOptionsBuilder {
+	pageSize := int64(pagination.PageSize)
+	pageNumber := int64(pagination.Page)
 
 	offset := (pageNumber - 1) * pageSize
 
@@ -139,21 +137,11 @@ func (r *MongoNotificationRepository) countQueryTotalItems(ctx context.Context, 
 	return totalItems, nil
 }
 
-func (r *MongoNotificationRepository) getPaginationMetadata(ctx context.Context, queryFilter bson.M, pagination page.PageInput) (page.PageMetadata, error) {
-	totalItems, err := r.countQueryTotalItems(ctx, queryFilter)
-	if err != nil {
-		return page.PageMetadata{}, err
-	}
-
-	pageMetadata := *page.GetPageMetadata(int(totalItems), pagination)
-	return pageMetadata, nil
-}
-
 func (r *MongoNotificationRepository) findByFilter(ctx context.Context,
 	queryFilter bson.M,
 	findBuilderOptions *options.FindOptionsBuilder,
-) ([]notification.Notification, error) {
-	var notifications []notification.Notification
+) ([]noti.Notification, error) {
+	var notifications []noti.Notification
 
 	cursor, err := r.notificationCollection.Find(ctx, queryFilter, findBuilderOptions)
 	if err != nil {
@@ -162,7 +150,7 @@ func (r *MongoNotificationRepository) findByFilter(ctx context.Context,
 	defer cursor.Close(ctx)
 
 	for cursor.Next(ctx) {
-		var noti notification.Notification
+		var noti noti.Notification
 		if err := cursor.Decode(&noti); err != nil {
 			return nil, r.mongoError(OpDecodeMongo, ErrMsgDecodeNotification, err)
 		}

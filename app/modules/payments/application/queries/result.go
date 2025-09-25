@@ -31,28 +31,42 @@ type PaymentResult struct {
 	IsRefundable     bool
 }
 
-func entityToResult(payment *payment.Payment) PaymentResult {
-	return PaymentResult{
-		ID:            payment.ID().Value(),
-		AppointmentID: payment.AppointmentID().Value(),
-		Amount:        payment.Amount().Amount().Float64(),
-		Currency:      payment.Currency(),
-		Method:        payment.Method().DisplayName(),
-		Status:        string(payment.Status()),
-		TransactionID: payment.TransactionID(),
-		Description:   payment.Description(),
-		DueDate:       payment.DueDate(),
-		PaidAt:        payment.PaidAt(),
-		RefundedAt:    payment.RefundedAt(),
+func entityToResult(payment payment.Payment) PaymentResult {
+	result := &PaymentResult{
+		ID:               payment.ID().Value(),
+		AppointmentID:    payment.AppointmentID().Value(),
+		Amount:           payment.Amount().Amount().Float64(),
+		Currency:         payment.Currency(),
+		Method:           payment.Method().DisplayName(),
+		Status:           string(payment.Status()),
+		TransactionID:    payment.TransactionID(),
+		Description:      payment.Description(),
+		DueDate:          payment.DueDate(),
+		PaidAt:           payment.PaidAt(),
+		IsActive:         payment.IsActive(),
+		RefundedAt:       payment.RefundedAt(),
+		IsOverdue:        payment.IsOverdue(),
+		IsRefundable:     payment.IsRefundable(),
+		PaidFromCustomer: payment.PaidFromCustomer().Value(),
+		PaidToEmployee:   payment.PaidToEmployee().Value(),
+		InvoiceID: func() *string {
+			if payment.InvoiceID() != nil {
+				invoiceID := payment.InvoiceID()
+				return invoiceID
+			}
+			return nil
+		}(),
+		RefundAmount: func() *float64 {
+			if payment.RefundAmount() != nil {
+				refundAmount := payment.RefundAmount().Amount().Float64()
+				return &refundAmount
+			}
+			return nil
+		}(),
+		FailureReason: payment.FailureReason(),
 		CreatedAt:     payment.CreatedAt(),
 		UpdatedAt:     payment.UpdatedAt(),
 	}
-}
 
-func entityToResults(payments []payment.Payment) []PaymentResult {
-	var responses []PaymentResult
-	for _, payment := range payments {
-		responses = append(responses, entityToResult(&payment))
-	}
-	return responses
+	return *result
 }

@@ -33,7 +33,7 @@ func (h *paymentQueryHandler) FindByID(query FindPaymentByIDQuery) (PaymentResul
 		return PaymentResult{}, err
 	}
 
-	return entityToResult(&payment), nil
+	return entityToResult(payment), nil
 }
 
 func (h *paymentQueryHandler) FindOverdues(query FindOverduePaymentsQuery) (page.Page[PaymentResult], error) {
@@ -42,8 +42,7 @@ func (h *paymentQueryHandler) FindOverdues(query FindOverduePaymentsQuery) (page
 		return page.Page[PaymentResult]{}, err
 	}
 
-	response := entityToResults(paymentsPage.Items)
-	return page.NewPage(response, paymentsPage.Metadata), nil
+	return page.MapItems(paymentsPage, entityToResult), nil
 }
 
 func (h *paymentQueryHandler) FindByStatus(query FindPaymentsByStatusQuery) (page.Page[PaymentResult], error) {
@@ -52,8 +51,7 @@ func (h *paymentQueryHandler) FindByStatus(query FindPaymentsByStatusQuery) (pag
 		return page.Page[PaymentResult]{}, err
 	}
 
-	paymentsResults := entityToResults(paymentPage.Items)
-	return page.NewPage(paymentsResults, paymentPage.Metadata), nil
+	return page.MapItems(paymentPage, entityToResult), nil
 }
 
 func (h *paymentQueryHandler) FindByCustomer(query FindPaymentsByCustomerQuery) (page.Page[PaymentResult], error) {
@@ -62,8 +60,7 @@ func (h *paymentQueryHandler) FindByCustomer(query FindPaymentsByCustomerQuery) 
 		return page.Page[PaymentResult]{}, err
 	}
 
-	responses := entityToResults(paymentsPage.Items)
-	return page.NewPage(responses, paymentsPage.Metadata), nil
+	return page.MapItems(paymentsPage, entityToResult), nil
 }
 
 func (h *paymentQueryHandler) FindByDateRange(query FindPaymentsByDateRangeQuery) (page.Page[PaymentResult], error) {
@@ -71,13 +68,12 @@ func (h *paymentQueryHandler) FindByDateRange(query FindPaymentsByDateRangeQuery
 		return page.Page[PaymentResult]{}, PaymentRangeDateErr(query.startDate, query.endDate)
 	}
 
-	paymentsPage, err := h.paymentRepository.FindByDateRange(query.ctx, query.startDate, query.endDate, query.PageInput)
+	paymentsPage, err := h.paymentRepository.FindByDateRange(query.ctx, query.startDate, query.endDate, query.PaginationRequest)
 	if err != nil {
 		return page.Page[PaymentResult]{}, err
 	}
 
-	response := entityToResults(paymentsPage.Items)
-	return page.NewPage(response, paymentsPage.Metadata), nil
+	return page.MapItems(paymentsPage, entityToResult), nil
 }
 
 func (h *paymentQueryHandler) FindBySpecification(query FindPaymentsBySpecification) (page.Page[PaymentResult], error) {
@@ -86,12 +82,7 @@ func (h *paymentQueryHandler) FindBySpecification(query FindPaymentsBySpecificat
 		return page.Page[PaymentResult]{}, err
 	}
 
-	var responses []PaymentResult
-	for _, payment := range paymentsPage.Items {
-		responses = append(responses, entityToResult(&payment))
-	}
-
-	return page.NewPage(responses, paymentsPage.Metadata), nil
+	return page.MapItems(paymentsPage, entityToResult), nil
 }
 
 func PaymentRangeDateErr(startDate, endDate time.Time) error {

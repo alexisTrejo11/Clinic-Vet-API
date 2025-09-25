@@ -128,7 +128,7 @@ type UpdateEmployeeRequest struct {
 // EmployeeSearchParams represents the parameters for searching employees
 // @Description Search parameters for employee queries
 type EmployeeSearchParams struct {
-	page.PageInput
+	page.PaginationRequest
 	Filters EmployeeFilters `json:"filters"`
 	OrderBy EmployeeOrderBy
 }

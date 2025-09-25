@@ -37,7 +37,7 @@ func CreatePerson(ctx context.Context, name valueobject.PersonName, dateOfBirth 
 		updatedAt:   time.Now(),
 	}
 
-	if err := person.Validate(ctx, OperationCreatePerson); err != nil {
+	if err := person.Validate(ctx, "CREATE_PERSON"); err != nil {
 		return nil, err
 	}
 
@@ -45,7 +45,7 @@ func CreatePerson(ctx context.Context, name valueobject.PersonName, dateOfBirth 
 }
 
 // TODO: SEPARATE VALIDATIONS FOR EACH FIELD AND ADD IT ON UPDATE METHODS
-func (p *Person) Validate(ctx context.Context, operation PersonOperation) error {
+func (p *Person) Validate(ctx context.Context, operation string) error {
 	if p.name.FullName() == "" {
 		return domainerr.PersonValidationError(ctx,
 			domainerr.PersonNameRequired, "full_name", "", string(operation))
@@ -61,7 +61,6 @@ func (p *Person) Validate(ctx context.Context, operation PersonOperation) error 
 			domainerr.PersonDOBFuture, "date_of_birth", p.dateOfBirth.Format(time.RFC3339), string(operation))
 	}
 
-	// Validar mayoría de edad (18 años)
 	minAgeDate := time.Now().AddDate(-18, 0, 0)
 	if p.dateOfBirth.After(minAgeDate) {
 		return domainerr.PersonValidationError(ctx,
@@ -76,21 +75,45 @@ func (p *Person) Validate(ctx context.Context, operation PersonOperation) error 
 	return nil
 }
 
-// Métodos de actualización mejorados
 func (p *Person) UpdateName(ctx context.Context, name valueobject.PersonName) error {
+	if !name.IsValid() {
+		return domainerr.PersonValidationError(ctx,
+			domainerr.PersonNameInvalid, "full_name", string(name.FullName()), "UPDATE_PERSON")
+	}
 	p.name = name
+
 	p.updatedAt = time.Now()
 	return nil
 }
 
 func (p *Person) UpdateDateOfBirth(ctx context.Context, dob time.Time) error {
 	p.dateOfBirth = dob
+	if dob.IsZero() {
+		return domainerr.PersonValidationError(ctx,
+			domainerr.PersonDOBRequired, "date_of_birth", "", "UPDATE_PERSON")
+	}
+
+	if dob.After(time.Now()) {
+		return domainerr.PersonValidationError(ctx,
+			domainerr.PersonDOBFuture, "date_of_birth", dob.Format(time.RFC3339), "UPDATE_PERSON")
+	}
+
+	minAgeDate := time.Now().AddDate(-18, 0, 0)
+	if dob.After(minAgeDate) {
+		return domainerr.PersonValidationError(ctx,
+			domainerr.PersonUnderage, "date_of_birth", dob.Format(time.RFC3339), "UPDATE_PERSON")
+	}
 
 	p.updatedAt = time.Now()
 	return nil
 }
 
 func (p *Person) UpdateGender(ctx context.Context, gender enum.PersonGender) error {
+	if !gender.IsValid() {
+		return domainerr.PersonValidationError(ctx,
+			domainerr.PersonGenderInvalid, "gender", string(gender), "UPDATE_PERSON")
+	}
+
 	p.gender = gender
 
 	p.updatedAt = time.Now()

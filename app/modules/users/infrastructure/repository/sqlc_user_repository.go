@@ -39,8 +39,6 @@ func (r *SQLCUserRepository) FindByOAuthProvider(ctx context.Context, provider s
 func (r *SQLCUserRepository) FindByID(ctx context.Context, id valueobject.UserID) (u.User, error) {
 	sqlRow, err := r.queries.FindUserByID(ctx, int32(id.Value()))
 
-	fmt.Println("SQLRow:", sqlRow) // Debugging line to print the retrieved SQL row
-
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return u.User{}, r.notFoundError("id", id.String())
@@ -87,14 +85,11 @@ func (r *SQLCUserRepository) FindByPhone(ctx context.Context, phone string) (u.U
 	return user, nil
 }
 
-func (r *SQLCUserRepository) FindByRole(ctx context.Context, role string, pageInput page.PageInput) (page.Page[u.User], error) {
-	limit := int32(pageInput.Limit)
-	offset := int32((pageInput.Offset) * pageInput.Limit)
-
+func (r *SQLCUserRepository) FindByRole(ctx context.Context, role string, pagination page.PaginationRequest) (page.Page[u.User], error) {
 	sqlRows, err := r.queries.FindUsersByRole(ctx, sqlc.FindUsersByRoleParams{
 		Role:   models.UserRole(role),
-		Limit:  limit,
-		Offset: offset,
+		Limit:  int32(pagination.Limit()),
+		Offset: int32(pagination.Offset()),
 	})
 	if err != nil {
 		return page.Page[u.User]{}, r.dbError(OpSelect, fmt.Sprintf("%s with role %s", ErrMsgFindUsers, role), err)
@@ -110,16 +105,13 @@ func (r *SQLCUserRepository) FindByRole(ctx context.Context, role string, pageIn
 		return page.Page[u.User]{}, r.dbError(OpCount, fmt.Sprintf("failed to count users with role %s", role), err)
 	}
 
-	pageMetadata := page.GetPageMetadata(int(totalCount), pageInput)
-	return page.NewPage(users, *pageMetadata), nil
+	return page.NewPage(users, int(totalCount), pagination), nil
 }
 
-func (r *SQLCUserRepository) FindActive(ctx context.Context, pageInput page.PageInput) (page.Page[u.User], error) {
-	offset := (pageInput.Offset) * pageInput.Limit
-
+func (r *SQLCUserRepository) FindActive(ctx context.Context, pagination page.PaginationRequest) (page.Page[u.User], error) {
 	userRows, err := r.queries.FindActiveUsers(ctx, sqlc.FindActiveUsersParams{
-		Limit:  int32(pageInput.Limit),
-		Offset: int32(offset),
+		Limit:  int32(pagination.Limit()),
+		Offset: int32(pagination.Offset()),
 	})
 	if err != nil {
 		return page.Page[u.User]{}, r.dbError("select", "failed to find active users", err)
@@ -135,15 +127,13 @@ func (r *SQLCUserRepository) FindActive(ctx context.Context, pageInput page.Page
 		return page.Page[u.User]{}, r.wrapConversionError(err)
 	}
 
-	return page.NewPage(users, *page.GetPageMetadata(int(total), pageInput)), nil
+	return page.NewPage(users, int(total), pagination), nil
 }
 
-func (r *SQLCUserRepository) FindAll(ctx context.Context, pageInput page.PageInput) (page.Page[u.User], error) {
-	offset := (pageInput.Offset) * pageInput.Limit
-
+func (r *SQLCUserRepository) FindAll(ctx context.Context, pagination page.PaginationRequest) (page.Page[u.User], error) {
 	userRows, err := r.queries.FindAllUsers(ctx, sqlc.FindAllUsersParams{
-		Limit:  int32(pageInput.Limit),
-		Offset: int32(offset),
+		Limit:  int32(pagination.Limit()),
+		Offset: int32(pagination.Offset()),
 	})
 	if err != nil {
 		return page.Page[u.User]{}, r.dbError("select", "failed to find all users", err)
@@ -159,7 +149,7 @@ func (r *SQLCUserRepository) FindAll(ctx context.Context, pageInput page.PageInp
 		return page.Page[u.User]{}, r.wrapConversionError(err)
 	}
 
-	return page.NewPage(users, *page.GetPageMetadata(int(total), pageInput)), nil
+	return page.NewPage(users, int(total), pagination), nil
 }
 
 func (r *SQLCUserRepository) FindByCustomerID(ctx context.Context, customerID valueobject.CustomerID) (u.User, error) {
@@ -196,12 +186,10 @@ func (r *SQLCUserRepository) FindByEmployeeID(ctx context.Context, employeeID va
 	return user, nil
 }
 
-func (r *SQLCUserRepository) FindInactive(ctx context.Context, pageInput page.PageInput) (page.Page[u.User], error) {
-	offset := (pageInput.Offset) * pageInput.Limit
-
+func (r *SQLCUserRepository) FindInactive(ctx context.Context, pagination page.PaginationRequest) (page.Page[u.User], error) {
 	userRows, err := r.queries.FindInactiveUsers(ctx, sqlc.FindInactiveUsersParams{
-		Limit:  int32(pageInput.Limit),
-		Offset: int32(offset),
+		Limit:  int32(pagination.Limit()),
+		Offset: int32(pagination.Offset()),
 	})
 	if err != nil {
 		return page.Page[u.User]{}, r.dbError("select", "failed to find inactive users", err)
@@ -222,16 +210,14 @@ func (r *SQLCUserRepository) FindInactive(ctx context.Context, pageInput page.Pa
 		return page.Page[u.User]{}, r.wrapConversionError(err)
 	}
 
-	return page.NewPage(users, *page.GetPageMetadata(int(total), pageInput)), nil
+	return page.NewPage(users, int(total), pagination), nil
 }
 
-func (r *SQLCUserRepository) FindRecentlyLoggedIn(ctx context.Context, since time.Time, pageInput page.PageInput) (page.Page[u.User], error) {
-	offset := (pageInput.Offset) * pageInput.Limit
-
+func (r *SQLCUserRepository) FindRecentlyLoggedIn(ctx context.Context, since time.Time, pagination page.PaginationRequest) (page.Page[u.User], error) {
 	userRows, err := r.queries.FindRecentlyLoggedInUsers(ctx, sqlc.FindRecentlyLoggedInUsersParams{
 		LastLogin: pgtype.Timestamptz{Time: since, Valid: true},
-		Limit:     int32(pageInput.Limit),
-		Offset:    int32(offset),
+		Limit:     int32(pagination.Limit()),
+		Offset:    int32(pagination.Offset()),
 	})
 	if err != nil {
 		return page.Page[u.User]{}, r.dbError("select", "failed to find recently logged in users", err)
@@ -242,10 +228,8 @@ func (r *SQLCUserRepository) FindRecentlyLoggedIn(ctx context.Context, since tim
 		return page.Page[u.User]{}, r.wrapConversionError(err)
 	}
 
-	// TODO: Add Count Query
-	return page.NewPage(users, *page.GetPageMetadata(int(0), pageInput)), nil
+	return page.NewPage(users, 0, pagination), nil
 }
-
 func (r *SQLCUserRepository) FindSpecification(ctx context.Context, spec specification.UserSpecification) (page.Page[u.User], error) {
 	return page.Page[u.User]{}, fmt.Errorf("method FindSpecification not implemented yet")
 }

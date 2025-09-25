@@ -4,7 +4,6 @@ import (
 	"clinic-vet-api/app/modules/core/domain/entity/medical"
 	"clinic-vet-api/app/modules/core/domain/enum"
 	"clinic-vet-api/app/modules/core/domain/valueobject"
-	p "clinic-vet-api/app/shared/page"
 )
 
 func toResult(entity medical.MedicalSession) MedSessionResult {
@@ -56,9 +55,4 @@ func toResultList(entities []medical.MedicalSession) []MedSessionResult {
 		dtos[i] = toResult(entity)
 	}
 	return dtos
-}
-
-func toResultPage(page p.Page[medical.MedicalSession]) p.Page[MedSessionResult] {
-	dtos := toResultList(page.Items)
-	return p.NewPage(dtos, page.Metadata)
 }

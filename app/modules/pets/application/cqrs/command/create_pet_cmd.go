@@ -35,7 +35,7 @@ func (h *petCommandHandler) CreatePet(ctx context.Context, cmd CreatePetCommand)
 		return *cqrs.FailureResult("Customer validation failed", err)
 	}
 
-	newPet, err := cmd.ToEntity()
+	newPet, err := cmd.ToEntity(ctx)
 	if err != nil {
 		return *cqrs.FailureResult("Failed to create pet entity", err)
 	}
@@ -64,14 +64,13 @@ func (h *petCommandHandler) getPet(ctx context.Context, petID valueobject.PetID,
 	return h.petRepository.FindByID(ctx, petID)
 }
 
-func (cmd *CreatePetCommand) ToEntity() (pet.Pet, error) {
+func (cmd *CreatePetCommand) ToEntity(ctx context.Context) (pet.Pet, error) {
 	opts := []pet.PetOption{
 		pet.WithName(cmd.Name),
 		pet.WithSpecies(cmd.Species),
 		pet.WithIsActive(cmd.IsActive),
 	}
 
-	// Agregar options para campos opcionales
 	if cmd.Photo != nil {
 		opts = append(opts, pet.WithPhoto(cmd.Photo))
 	}
@@ -112,7 +111,7 @@ func (cmd *CreatePetCommand) ToEntity() (pet.Pet, error) {
 		opts = append(opts, pet.WithIsNeutered(cmd.IsNeutered))
 	}
 
-	petEntity, err := pet.CreatePet(cmd.CustomerID, opts...)
+	petEntity, err := pet.CreatePet(ctx, cmd.CustomerID, opts...)
 	if err != nil {
 		return pet.Pet{}, err
 	}

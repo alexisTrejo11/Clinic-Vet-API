@@ -31,8 +31,7 @@ func (h *petQueryHandler) FindPetsByCustomerID(ctx context.Context, query FindPe
 		return page.Page[PetResult]{}, err
 	}
 
-	results := entitiesToResults(petsPage.Items)
-	return page.NewPage(results, petsPage.Metadata), nil
+	return page.MapItems(petsPage, entityToResult), nil
 }
 
 func (h *petQueryHandler) FindPetByID(ctx context.Context, query FindPetByIDQuery) (PetResult, error) {
@@ -57,9 +56,7 @@ func (h *petQueryHandler) FindPetBySpecification(ctx context.Context, query Find
 	if err != nil {
 		return page.Page[PetResult]{}, err
 	}
-
-	results := entitiesToResults(petsPage.Items)
-	return page.NewPage(results, petsPage.Metadata), nil
+	return page.MapItems(petsPage, entityToResult), nil
 }
 
 func (h *petQueryHandler) FindPetsBySpecies(ctx context.Context, query FindPetsBySpeciesQuery) (page.Page[PetResult], error) {
@@ -68,6 +65,5 @@ func (h *petQueryHandler) FindPetsBySpecies(ctx context.Context, query FindPetsB
 		return page.Page[PetResult]{}, err
 	}
 
-	results := entitiesToResults(petsPage.Items)
-	return page.NewPage(results, petsPage.Metadata), nil
+	return page.MapItems(petsPage, entityToResult), nil
 }
