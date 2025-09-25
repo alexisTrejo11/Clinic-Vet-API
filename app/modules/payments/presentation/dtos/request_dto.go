@@ -2,7 +2,6 @@
 package dto
 
 import (
-	"context"
 	"time"
 
 	"clinic-vet-api/app/modules/core/domain/enum"
@@ -17,12 +16,7 @@ type CreatePaymentRequest struct {
 	// Appointment ID associated with the payment
 	// Required: true
 	// Minimum: 1
-	AppointmentID int `json:"appointment_id" validate:"required,min=1" example:"123"`
-
-	// Customer ID making the payment
-	// Required: true
-	// Minimum: 1
-	CustomerID int `json:"customer_id" validate:"required,min=1" example:"456"`
+	MedSessionID int `json:"med_session_id" validate:"min=1" example:"123"`
 
 	// Payment amount
 	// Required: true
@@ -43,11 +37,16 @@ type CreatePaymentRequest struct {
 	// Enum: pending,paid,failed,refunded,cancelled
 	Status string `json:"status,omitempty" validate:"omitempty,oneof=pending paid failed refunded cancelled" example:"pending"`
 
+	// Customer ID making the payment
+	// Required: true
+	// Minimum: 1
+	CustomerID *int `json:"customer_id" validate:"required,min=1" example:"456"`
+
 	// Optional payment description
 	Description *string `json:"description,omitempty" example:"Veterinary consultation payment"`
 
 	// Optional due date for payment
-	DueDate time.Time `json:"due_date,omitempty" example:"2024-12-31T23:59:59Z"`
+	DueDate *time.Time `json:"due_date,omitempty" example:"2024-12-31T23:59:59Z"`
 
 	// Optional transaction ID from payment gateway
 	TransactionID *string `json:"transaction_id,omitempty" example:"txn_123456789"`
@@ -106,13 +105,13 @@ type CancelPaymentRequest struct {
 // GetPaymentsByDateRange represents the request to get payments within a date range
 // @Description Request body for retrieving payments filtered by a date range with pagination
 type PaymentsByDateRangeRequest struct {
-	StartDate time.Time `form:"start_date" json:"start_date" validate:"required" example:"2024-01-01T00:00:00Z"`
-	EndDate   time.Time `form:"end_date" json:"end_date" validate:"required" example:"2024-12-31T23:59:59Z"`
-	page.PaginationRequest
+	StartDate  time.Time `form:"start_date" json:"start_date" validate:"required" example:"2024-01-01T00:00:00Z"`
+	EndDate    time.Time `form:"end_date" json:"end_date" validate:"required" example:"2024-12-31T23:59:59Z"`
+	Pagination page.PaginationRequest
 }
 
-func (r *PaymentsByDateRangeRequest) ToQuery(ctx context.Context) *query.FindPaymentsByDateRangeQuery {
-	return query.NewFindPaymentsByDateRangeQuery(r.StartDate, r.EndDate, r.PaginationRequest)
+func (r *PaymentsByDateRangeRequest) ToQuery() *query.FindPaymentsByDateRangeQuery {
+	return query.NewFindPaymentsByDateRangeQuery(r.StartDate, r.EndDate, r.Pagination)
 }
 
 // PaymentSearchRequest represents the request to search payments
@@ -150,6 +149,6 @@ type PaymentSearchRequest struct {
 }
 
 // TODO: IMPLEMENT
-func (r *PaymentSearchRequest) ToQuery(ctx context.Context) (*query.FindPaymentsBySpecification, error) {
-	return query.NewFindPaymentsBySpecification(ctx, specification.PaymentSpecification{}), nil
+func (r *PaymentSearchRequest) ToQuery() *query.FindPaymentsBySpecification {
+	return query.NewFindPaymentsBySpecification(specification.PaymentSpecification{})
 }

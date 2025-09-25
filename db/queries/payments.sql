@@ -8,17 +8,17 @@ WHERE transaction_id = $1 AND deleted_at IS NULL;
 
 -- name: FindPaymentByIDAndCustomerID :one
 SELECT * FROM payments
-WHERE id = $1 AND paid_from_customer = $2 AND deleted_at IS NULL;
+WHERE id = $1 AND paid_by_customer_id = $2 AND deleted_at IS NULL;
 
 -- name: FindPaymentsByCustomerID :many
 SELECT * FROM payments
-WHERE paid_from_customer = $1 AND deleted_at IS NULL
+WHERE paid_by_customer_id = $1 AND deleted_at IS NULL
 ORDER BY created_at DESC
 LIMIT $2 OFFSET $3;
 
 -- name: CountPaymentsByCustomerID :one
 SELECT COUNT(*) FROM payments
-WHERE paid_from_customer = $1 AND deleted_at IS NULL;
+WHERE paid_by_customer_id = $1 AND deleted_at IS NULL;
 
 -- name: FindPaymentsByStatus :many
 SELECT * FROM payments
@@ -56,7 +56,7 @@ WHERE created_at BETWEEN $1 AND $2 AND deleted_at IS NULL;
 
 -- name: FindRecentPaymentsByCustomerID :many
 SELECT * FROM payments
-WHERE paid_from_customer = $1 AND deleted_at IS NULL
+WHERE paid_by_customer_id = $1 AND deleted_at IS NULL
 ORDER BY created_at DESC
 LIMIT $2;
 
@@ -82,17 +82,17 @@ WHERE transaction_id = $1 AND deleted_at IS NULL;
 
 -- name: ExistsPendingPaymentByCustomerID :one
 SELECT COUNT(*) > 0 FROM payments
-WHERE paid_from_customer = $1 
+WHERE paid_by_customer_id = $1 
 AND status = 'pending' 
 AND deleted_at IS NULL;
 
 -- name: CreatePayment :one
 INSERT INTO payments (
     amount, currency, status, method, transaction_id, description,
-    due_date, paid_at, refunded_at, paid_from_customer, paid_to_employee,
-    appointment_id, invoice_id, refund_amount, failure_reason
+    due_date, paid_at, refunded_at, paid_by_customer_id,
+    med_session_id, invoice_id, refund_amount, failure_reason
 ) VALUES (
-    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15
+    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14
 ) RETURNING *;
 
 -- name: UpdatePayment :one
@@ -106,12 +106,11 @@ UPDATE payments SET
     due_date = $8,
     paid_at = $9,
     refunded_at = $10,
-    paid_from_customer = $11,
-    paid_to_employee = $12,
-    appointment_id = $13,
-    invoice_id = $14,
-    refund_amount = $15,
-    failure_reason = $16,
+    paid_by_customer_id = $11,
+    med_session_id = $12,
+    invoice_id = $13,
+    refund_amount = $14,
+    failure_reason = $15,
     updated_at = CURRENT_TIMESTAMP
 WHERE id = $1 AND deleted_at IS NULL
 RETURNING *;
@@ -142,7 +141,7 @@ WHERE id = $1 AND deleted_at IS NULL;
 
 -- name: FindPaymentsByAppointmentID :one
 SELECT * FROM payments
-WHERE appointment_id = $1 AND deleted_at IS NULL;
+WHERE med_session_id = $1 AND deleted_at IS NULL;
 
 -- name: FindPaymentsByInvoiceID :one
 SELECT * FROM payments

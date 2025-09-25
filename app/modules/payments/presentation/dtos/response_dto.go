@@ -62,12 +62,12 @@ type PaymentResponse struct {
 	// Example: 456
 	CustomerID uint `json:"customer_id"`
 
-	// Appointment ID associated with the payment
+	// Medical Session ID associated with the payment
 	// Example: 123
-	AppointmentID uint `json:"appointment_id,omitempty"`
+	MedSessionID uint `json:"med_session_id,omitempty"`
 
 	// Invoice number
-	// Example: "INV-001"
+	// Example: "INV-001"Medical Session
 	InvoiceID *string `json:"invoice_id,omitempty"`
 
 	// Refund amount if applicable

@@ -21,7 +21,6 @@ func NewClientPaymentController(validator *validator.Validate, operations *Payme
 	}
 }
 
-// GetMyPayments retrieves payments for the authenticated customer
 func (ctrl *ClientPaymentController) GetMyPayments(c *gin.Context) {
 	userCTX, ok := middleware.GetUserFromContext(c)
 	if !ok {
@@ -30,4 +29,14 @@ func (ctrl *ClientPaymentController) GetMyPayments(c *gin.Context) {
 	}
 
 	ctrl.operations.GetPaymentsByCustomer(c, userCTX.CustomerID)
+}
+
+func (ctrl *ClientPaymentController) GetMyPaymentByID(c *gin.Context) {
+	userCTX, ok := middleware.GetUserFromContext(c)
+	if !ok {
+		response.Unauthorized(c, autherror.UnauthorizedCTXError())
+		return
+	}
+
+	ctrl.operations.GetPaymentByID(c, &userCTX.CustomerID)
 }

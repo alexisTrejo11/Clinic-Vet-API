@@ -272,25 +272,24 @@ CREATE TABLE IF NOT EXISTS payments (
     currency VARCHAR(10) NOT NULL DEFAULT 'MXN',
     status payment_status NOT NULL DEFAULT 'pending',
     method payment_method NOT NULL DEFAULT 'cash',
+    med_session_id INT,
     transaction_id VARCHAR(255) UNIQUE,
     description TEXT,
-    due_date TIMESTAMP WITH TIME ZONE NOT NULL,
+    due_date TIMESTAMP WITH TIME ZONE,
     paid_at TIMESTAMP WITH TIME ZONE,
     refunded_at TIMESTAMP WITH TIME ZONE,
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
     deleted_at TIMESTAMP WITH TIME ZONE NULL,
-    paid_from_customer INT,
-    paid_to_employee INT,
-    appointment_id INT, 
+    paid_by_customer_id INT,
     invoice_id VARCHAR(100), 
     refund_amount NUMERIC(10, 2) CHECK (refund_amount >= 0),
     failure_reason TEXT,
     
-    FOREIGN KEY (paid_from_customer) REFERENCES customers(id) ON DELETE SET NULL,
+    FOREIGN KEY (paid_by_customer_id) REFERENCES customers(id) ON DELETE SET NULL,
     FOREIGN KEY (paid_to_employee) REFERENCES employees(id) ON DELETE SET NULL,
-    FOREIGN KEY (appointment_id) REFERENCES appointments(id) ON DELETE SET NULL,
+    FOREIGN KEY (med_session_id) REFERENCES medical_sessions(id) ON DELETE SET NULL,
     
     CONSTRAINT chk_refund_amount CHECK (refund_amount IS NULL OR refund_amount <= amount),
     CONSTRAINT chk_paid_date CHECK (paid_at IS NULL OR status = 'completed' OR status = 'refunded'),
@@ -310,8 +309,7 @@ CREATE INDEX IF NOT EXISTS idx_med_hist_follow_up_date ON medical_sessions(follo
 
 -- Indexes for Payments
 CREATE INDEX IF NOT EXISTS idx_payments_status ON payments(status);
-CREATE INDEX IF NOT EXISTS idx_payments_customer_id ON payments(paid_from_customer);
-CREATE INDEX IF NOT EXISTS idx_payments_employee_id ON payments(paid_to_employee);
+CREATE INDEX IF NOT EXISTS idx_payments_customer_id ON payments(paid_by_customer_id);
 CREATE INDEX IF NOT EXISTS idx_payments_method ON payments(method);
 CREATE INDEX IF NOT EXISTS idx_payments_created_at ON payments(created_at);
 CREATE INDEX IF NOT EXISTS idx_payments_due_date ON payments(due_date);
@@ -322,9 +320,9 @@ CREATE INDEX IF NOT EXISTS idx_payments_invoice_id ON payments(invoice_id);
 CREATE INDEX IF NOT EXISTS idx_payments_is_active ON payments(is_active) WHERE is_active = TRUE;
 CREATE INDEX IF NOT EXISTS idx_payments_deleted_at ON payments(deleted_at) WHERE deleted_at IS NULL;
 
-CREATE INDEX IF NOT EXISTS idx_payments_customer_status ON payments(paid_from_customer, status);
+CREATE INDEX IF NOT EXISTS idx_payments_customer_status ON payments(paid_by_customer_id, status);
 CREATE INDEX IF NOT EXISTS idx_payments_status_date ON payments(status, created_at);
-CREATE INDEX IF NOT EXISTS idx_payments_customer_date ON payments(paid_from_customer, created_at);
+CREATE INDEX IF NOT EXISTS idx_payments_customer_date ON payments(paid_by_customer_id, created_at);
 CREATE INDEX IF NOT EXISTS idx_payments_due_status ON payments(due_date, status) WHERE status != 'completed';
 
 

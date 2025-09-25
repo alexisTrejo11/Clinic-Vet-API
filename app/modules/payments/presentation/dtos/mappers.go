@@ -1,9 +1,6 @@
 package dto
 
 import (
-	"context"
-	"fmt"
-
 	"clinic-vet-api/app/modules/core/domain/entity/payment"
 	"clinic-vet-api/app/modules/core/domain/enum"
 	"clinic-vet-api/app/modules/core/domain/valueobject"
@@ -11,75 +8,52 @@ import (
 	query "clinic-vet-api/app/modules/payments/application/queries"
 )
 
-func (req CreatePaymentRequest) ToCreatePaymentCommand(ctx context.Context) (cmd.CreatePaymentCommand, error) {
-	paymentMethod, err := enum.ParsePaymentMethod(req.PaymentMethod)
-	if err != nil {
-		return cmd.CreatePaymentCommand{}, fmt.Errorf("invalid payment method: %w", err)
-	}
-
-	var paymentStatus enum.PaymentStatus
-	if req.Status != "" {
-		paymentStatus, err = enum.ParsePaymentStatus(req.Status)
-		if err != nil {
-			return cmd.CreatePaymentCommand{}, fmt.Errorf("invalid payment status: %w", err)
-		}
-	} else {
-		paymentStatus = enum.PaymentStatusPending
-	}
-
+func (req CreatePaymentRequest) ToCommand() cmd.CreatePaymentCommand {
+	paymentMethod := enum.PaymentMethod(req.PaymentMethod)
+	paymentStatus := enum.PaymentStatus(req.Status)
 	amount := valueobject.NewMoney(valueobject.NewDecimalFromFloat(req.Amount), req.Currency)
+	medSessionID := valueobject.NewMedSessionID(uint(req.MedSessionID))
 
-	customerID := valueobject.NewCustomerID(uint(req.CustomerID))
-	appointmentID := valueobject.NewAppointmentID(uint(req.AppointmentID))
-
-	c := cmd.CreatePaymentCommand{
-		Ctx:              ctx,
-		Amount:           amount,
-		Status:           paymentStatus,
-		Method:           paymentMethod,
-		TransactionID:    req.TransactionID,
-		Description:      req.Description,
-		DueDate:          req.DueDate,
-		PaidFromCustomer: customerID,
-		AppointmentID:    &appointmentID,
-		InvoiceID:        req.InvoiceID,
+	var customerID *valueobject.CustomerID
+	if req.CustomerID != nil {
+		custID := valueobject.NewCustomerID(uint(*req.CustomerID))
+		customerID = &custID
 	}
 
-	return c, nil
+	c := &cmd.CreatePaymentCommand{
+		Amount:        amount,
+		Status:        paymentStatus,
+		Method:        paymentMethod,
+		TransactionID: req.TransactionID,
+		Description:   req.Description,
+		DueDate:       req.DueDate,
+		PaidBy:        customerID,
+		MedSessionID:  medSessionID,
+		InvoiceID:     req.InvoiceID,
+	}
+
+	return *c
 }
 
-func (req UpdatePaymentRequest) ToUpdatePaymentCommand(ctx context.Context, paymentID uint) (cmd.UpdatePaymentCommand, error) {
+func (req UpdatePaymentRequest) ToCommand(paymentID uint) cmd.UpdatePaymentCommand {
 	var amount *valueobject.Money
 	if req.Amount != nil && req.Currency != nil {
 		amountoObj := valueobject.NewMoney(valueobject.NewDecimalFromFloat(*req.Amount), *req.Currency)
 		amount = &amountoObj
 	}
 
-	command, errors := cmd.NewUpdatePaymentCommand(
-		ctx,
-		paymentID,
-		amount,
-		req.PaymentMethod,
-		req.Description,
-		req.DueDate,
-	)
-
-	if errors != nil {
-		return cmd.UpdatePaymentCommand{}, errors
-	}
-
-	return command, nil
+	return cmd.NewUpdatePaymentCommand(paymentID, amount, req.PaymentMethod, req.Description, req.DueDate)
 }
 
-func (req ProcessPaymentRequest) ToProcessPaymentCommand(paymentID uint) (*cmd.ProcessPaymentCommand, error) {
+func (req ProcessPaymentRequest) ToCommand(paymentID uint) *cmd.ProcessPaymentCommand {
 	return cmd.NewProcessPaymentCommand(paymentID, req.TransactionID)
 }
 
-func (req RefundPaymentRequest) ToRefundPaymentCommand(ctx context.Context, paymentID uint) *cmd.RefundPaymentCommand {
-	return cmd.NewRefundPaymentCommand(ctx, paymentID, req.Reason)
+func (req RefundPaymentRequest) ToCommand(paymentID uint) *cmd.RefundPaymentCommand {
+	return cmd.NewRefundPaymentCommand(paymentID, req.Reason)
 }
 
-func (req CancelPaymentRequest) ToCancelPaymentCommand(paymentID uint) *cmd.CancelPaymentCommand {
+func (req CancelPaymentRequest) ToCommand(paymentID uint) *cmd.CancelPaymentCommand {
 	return cmd.NewCancelPaymentCommand(paymentID, req.Reason)
 }
 
@@ -88,7 +62,7 @@ func ToPaymentResponse(pay any) PaymentResponse {
 
 	return PaymentResponse{
 		ID:            payment.ID().Value(),
-		AppointmentID: payment.AppointmentID().Value(),
+		MedSessionID:  payment.MedSessionID().Value(),
 		Amount:        payment.Amount().Amount().Float64(),
 		Currency:      payment.Currency(),
 		Method:        payment.Method().DisplayName(),
@@ -162,8 +136,8 @@ func PaymentFromResult(result *query.PaymentResult) *PaymentResponse {
 		DueDate:       result.DueDate,
 		PaidAt:        result.PaidAt,
 		RefundedAt:    result.RefundedAt,
-		CustomerID:    result.PaidFromCustomer,
-		AppointmentID: result.AppointmentID,
+		CustomerID:    result.PaidByCustomer,
+		MedSessionID:  result.MedSessionID,
 		InvoiceID:     result.InvoiceID,
 		RefundAmount:  result.RefundAmount,
 		FailureReason: result.FailureReason,

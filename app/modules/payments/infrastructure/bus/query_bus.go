@@ -5,6 +5,7 @@ import (
 	"clinic-vet-api/app/modules/core/repository"
 	query "clinic-vet-api/app/modules/payments/application/queries"
 	"clinic-vet-api/app/shared/page"
+	"context"
 )
 
 type PaymentQueryBus struct {
@@ -16,26 +17,26 @@ func NewPaymentQueryBus(paymentRepo repository.PaymentRepository) *PaymentQueryB
 	return &PaymentQueryBus{handler: handler}
 }
 
-func (b *PaymentQueryBus) FindByID(qry query.FindPaymentByIDQuery) (query.PaymentResult, error) {
-	return b.handler.FindByID(qry)
+func (b *PaymentQueryBus) FindByID(ctx context.Context, qry query.FindPaymentByIDQuery) (query.PaymentResult, error) {
+	return b.handler.FindByID(ctx, qry)
 }
 
-func (b *PaymentQueryBus) FindOverdues(qry query.FindOverduePaymentsQuery) (page.Page[query.PaymentResult], error) {
-	return b.handler.FindOverdues(qry)
+func (b *PaymentQueryBus) FindOverdues(ctx context.Context, qry query.FindOverduePaymentsQuery) (page.Page[query.PaymentResult], error) {
+	return b.handler.FindOverdues(ctx, qry)
 }
 
-func (b *PaymentQueryBus) FindByStatus(qry query.FindPaymentsByStatusQuery) (page.Page[query.PaymentResult], error) {
-	return b.handler.FindByStatus(qry)
+func (b *PaymentQueryBus) FindByStatus(ctx context.Context, qry query.FindPaymentsByStatusQuery) (page.Page[query.PaymentResult], error) {
+	return b.handler.FindByStatus(ctx, qry)
 }
 
-func (b *PaymentQueryBus) FindByCustomer(qry query.FindPaymentsByCustomerQuery) (page.Page[query.PaymentResult], error) {
-	return b.handler.FindByCustomer(qry)
+func (b *PaymentQueryBus) FindByCustomer(ctx context.Context, qry query.FindPaymentsByCustomerQuery) (page.Page[query.PaymentResult], error) {
+	return b.handler.FindByCustomer(ctx, qry)
 }
 
-func (b *PaymentQueryBus) FindByDateRange(qry query.FindPaymentsByDateRangeQuery) (page.Page[query.PaymentResult], error) {
-	return b.handler.FindByDateRange(qry)
+func (b *PaymentQueryBus) FindByDateRange(ctx context.Context, qry query.FindPaymentsByDateRangeQuery) (page.Page[query.PaymentResult], error) {
+	return b.handler.FindByDateRange(ctx, qry)
 }
 
-func (b *PaymentQueryBus) FindBySpecification(qry query.FindPaymentsBySpecification) (page.Page[query.PaymentResult], error) {
-	return b.handler.FindBySpecification(qry)
+func (b *PaymentQueryBus) FindBySpecification(ctx context.Context, qry query.FindPaymentsBySpecification) (page.Page[query.PaymentResult], error) {
+	return b.handler.FindBySpecification(ctx, qry)
 }

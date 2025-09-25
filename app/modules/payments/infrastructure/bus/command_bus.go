@@ -4,6 +4,7 @@ import (
 	"clinic-vet-api/app/modules/core/repository"
 	"clinic-vet-api/app/modules/payments/application/command"
 	"clinic-vet-api/app/shared/cqrs"
+	"context"
 )
 
 type PaymentCommandBus struct {
@@ -16,30 +17,30 @@ func NewPaymentCommandBus(paymentRepo repository.PaymentRepository) *PaymentComm
 	return &PaymentCommandBus{handlers: handlers}
 }
 
-func (bus *PaymentCommandBus) CreatePayment(cmd command.CreatePaymentCommand) cqrs.CommandResult {
-	return bus.handlers.CreatePayment(cmd)
+func (bus *PaymentCommandBus) CreatePayment(ctx context.Context, cmd command.CreatePaymentCommand) cqrs.CommandResult {
+	return bus.handlers.CreatePayment(ctx, cmd)
 }
 
-func (bus *PaymentCommandBus) ProcessPayment(cmd command.ProcessPaymentCommand) cqrs.CommandResult {
-	return bus.handlers.ProcessPayment(cmd)
+func (bus *PaymentCommandBus) ProcessPayment(ctx context.Context, cmd command.ProcessPaymentCommand) cqrs.CommandResult {
+	return bus.handlers.ProcessPayment(ctx, cmd)
 }
 
-func (bus *PaymentCommandBus) RefundPayment(cmd command.RefundPaymentCommand) cqrs.CommandResult {
-	return bus.handlers.RefundPayment(cmd)
+func (bus *PaymentCommandBus) RefundPayment(ctx context.Context, cmd command.RefundPaymentCommand) cqrs.CommandResult {
+	return bus.handlers.RefundPayment(ctx, cmd)
 }
 
-func (bus *PaymentCommandBus) CancelPayment(cmd command.CancelPaymentCommand) cqrs.CommandResult {
-	return bus.handlers.CancelPayment(cmd)
+func (bus *PaymentCommandBus) CancelPayment(ctx context.Context, cmd command.CancelPaymentCommand) cqrs.CommandResult {
+	return bus.handlers.CancelPayment(ctx, cmd)
 }
 
-func (bus *PaymentCommandBus) UpdatePayment(cmd command.UpdatePaymentCommand) cqrs.CommandResult {
-	return bus.handlers.UpdatePayment(cmd)
+func (bus *PaymentCommandBus) UpdatePayment(ctx context.Context, cmd command.UpdatePaymentCommand) cqrs.CommandResult {
+	return bus.handlers.UpdatePayment(ctx, cmd)
 }
 
-func (bus *PaymentCommandBus) DeletePayment(cmd command.DeletePaymentCommand) cqrs.CommandResult {
-	return bus.handlers.DeletePayment(cmd)
+func (bus *PaymentCommandBus) DeletePayment(ctx context.Context, cmd command.DeletePaymentCommand) cqrs.CommandResult {
+	return bus.handlers.DeletePayment(ctx, cmd)
 }
 
-func (bus *PaymentCommandBus) MarkOverduePayments(cmd command.MarkOverduePaymentsCommand) cqrs.CommandResult {
-	return bus.handlers.MarkOverduePayments(cmd)
+func (bus *PaymentCommandBus) MarkOverduePayments(ctx context.Context, cmd command.MarkOverduePaymentsCommand) cqrs.CommandResult {
+	return bus.handlers.MarkOverduePayments(ctx, cmd)
 }

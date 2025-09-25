@@ -13,10 +13,7 @@ type PaymentRoutes struct {
 	customerController *controller.ClientPaymentController
 }
 
-func NewPaymentRoutes(
-	adminController *controller.AdminPaymentController,
-	customerController *controller.ClientPaymentController,
-) *PaymentRoutes {
+func NewPaymentRoutes(adminController *controller.AdminPaymentController, customerController *controller.ClientPaymentController) *PaymentRoutes {
 	return &PaymentRoutes{
 		adminController:    adminController,
 		customerController: customerController,
@@ -28,22 +25,18 @@ func (r *PaymentRoutes) RegisterAdminPaymentRoutes(router *gin.RouterGroup, auth
 	//adminGroup.Use(authMiddleware.Authenticate())
 	//adminGroup.Use(authMiddleware.RequireAnyRole("recepetionist", "admin"))
 	{
-		// Basic CRUD operations
 		adminGroup.GET("/", r.adminController.SearchPayments)
 		adminGroup.POST("/", r.adminController.CreatePayment)
-		adminGroup.GET("/:id", r.adminController.GetPayment)
+		adminGroup.GET("/:id", r.adminController.GetPaymentByID)
 		adminGroup.PUT("/:id", r.adminController.UpdatePayment)
 		adminGroup.DELETE("/:id", r.adminController.DeletePayment)
 
-		// Payment operations
 		adminGroup.POST("/:id/process", r.adminController.ProcessPayment)
 		adminGroup.POST("/:id/refund", r.adminController.RefundPayment)
 		adminGroup.POST("/:id/cancel", r.adminController.CancelPayment)
 
-		// Batch operations
 		// adminGroup.POST("/mark-overdue", r.adminController.MarkOverduePayments)
 
-		// Query operations
 		adminGroup.GET("/overdue", r.adminController.GetOverduePayments)
 		adminGroup.GET("/status/:status", r.adminController.GetPaymentsByStatus)
 		adminGroup.GET("/date-range", r.adminController.GetPaymentsByDateRange)
@@ -56,6 +49,7 @@ func (r *PaymentRoutes) RegisterClientRoutes(router *gin.RouterGroup, authnMiddl
 	clientGroup.Use(authnMiddleware.Authenticate())
 	clientGroup.Use(authnMiddleware.RequireAnyRole("customer"))
 	{
-		clientGroup.GET("/customers/:customer_id", r.customerController.GetMyPayments)
+		clientGroup.GET("", r.customerController.GetMyPayments)
+		clientGroup.GET("/:id", r.customerController.GetMyPaymentByID)
 	}
 }

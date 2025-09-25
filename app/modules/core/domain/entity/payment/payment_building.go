@@ -42,9 +42,9 @@ func WithDescription(description string) PaymentOption {
 	}
 }
 
-func WithDueDate(dueDate time.Time) PaymentOption {
+func WithDueDate(dueDate *time.Time) PaymentOption {
 	return func(p *Payment) {
-		p.dueDate = &dueDate
+		p.dueDate = dueDate
 	}
 }
 
@@ -60,21 +60,15 @@ func WithRefundedAt(refundedAt time.Time) PaymentOption {
 	}
 }
 
-func WithPaidFromCustomer(customerID valueobject.CustomerID) PaymentOption {
+func WithPaidByCustomer(customerID valueobject.CustomerID) PaymentOption {
 	return func(p *Payment) {
-		p.paidFromCustomer = customerID
+		p.paidByCustomer = customerID
 	}
 }
 
-func WithPaidToEmployee(employeeID valueobject.EmployeeID) PaymentOption {
+func WithMedSessionID(medSessionID valueobject.MedSessionID) PaymentOption {
 	return func(p *Payment) {
-		p.paidToEmployee = employeeID
-	}
-}
-
-func WithAppointmentID(appointmentID valueobject.AppointmentID) PaymentOption {
-	return func(p *Payment) {
-		p.appointmentID = &appointmentID
+		p.medSessionID = &medSessionID
 	}
 }
 
@@ -120,20 +114,16 @@ func NewPayment(paymentID valueobject.PaymentID, opts ...PaymentOption) *Payment
 	return payment
 }
 
-func CreatePayment(ctx context.Context, paidFromCustomer valueobject.CustomerID, opts ...PaymentOption) (*Payment, error) {
+func CreatePayment(ctx context.Context, amount valueobject.Money, method enum.PaymentMethod, status enum.PaymentStatus, opts ...PaymentOption) (*Payment, error) {
 	operation := "CreatePayment"
 
-	if paidFromCustomer.IsZero() {
-		return nil, CustomerIDRequiredError(ctx, operation)
-	}
-
 	payment := &Payment{
-		Entity:           base.CreateEntity(valueobject.NewPaymentID(0)),
-		paidFromCustomer: paidFromCustomer,
-		status:           enum.PaymentStatusPending,
-		method:           enum.PaymentMethodCash,
-		isActive:         true,
-		dueDate:          func() *time.Time { t := time.Now().Add(7 * 24 * time.Hour); return &t }(), // Default: 7 days from now
+		Entity:   base.CreateEntity(valueobject.NewPaymentID(0)),
+		status:   status,
+		method:   method,
+		amount:   amount,
+		isActive: true,
+		dueDate:  func() *time.Time { t := time.Now().Add(7 * 24 * time.Hour); return &t }(), // Default: 7 days from now
 	}
 
 	for _, opt := range opts {

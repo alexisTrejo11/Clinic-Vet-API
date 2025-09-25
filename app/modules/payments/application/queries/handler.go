@@ -1,6 +1,7 @@
 package query
 
 import (
+	"context"
 	"time"
 
 	"clinic-vet-api/app/modules/core/repository"
@@ -9,12 +10,12 @@ import (
 )
 
 type PaymentQueryHandler interface {
-	FindByID(qry FindPaymentByIDQuery) (PaymentResult, error)
-	FindOverdues(query FindOverduePaymentsQuery) (page.Page[PaymentResult], error)
-	FindByStatus(query FindPaymentsByStatusQuery) (page.Page[PaymentResult], error)
-	FindByCustomer(query FindPaymentsByCustomerQuery) (page.Page[PaymentResult], error)
-	FindByDateRange(query FindPaymentsByDateRangeQuery) (page.Page[PaymentResult], error)
-	FindBySpecification(query FindPaymentsBySpecification) (page.Page[PaymentResult], error)
+	FindByID(ctx context.Context, query FindPaymentByIDQuery) (PaymentResult, error)
+	FindOverdues(ctx context.Context, query FindOverduePaymentsQuery) (page.Page[PaymentResult], error)
+	FindByStatus(ctx context.Context, query FindPaymentsByStatusQuery) (page.Page[PaymentResult], error)
+	FindByCustomer(ctx context.Context, query FindPaymentsByCustomerQuery) (page.Page[PaymentResult], error)
+	FindByDateRange(ctx context.Context, query FindPaymentsByDateRangeQuery) (page.Page[PaymentResult], error)
+	FindBySpecification(ctx context.Context, query FindPaymentsBySpecification) (page.Page[PaymentResult], error)
 }
 
 type paymentQueryHandler struct {
@@ -27,8 +28,8 @@ func NewPaymentQueryHandler(paymentRepository repository.PaymentRepository) Paym
 	}
 }
 
-func (h *paymentQueryHandler) FindByID(query FindPaymentByIDQuery) (PaymentResult, error) {
-	payment, err := h.paymentRepository.FindByID(query.ctx, query.id)
+func (h *paymentQueryHandler) FindByID(ctx context.Context, query FindPaymentByIDQuery) (PaymentResult, error) {
+	payment, err := h.paymentRepository.FindByID(ctx, query.id)
 	if err != nil {
 		return PaymentResult{}, err
 	}
@@ -36,8 +37,8 @@ func (h *paymentQueryHandler) FindByID(query FindPaymentByIDQuery) (PaymentResul
 	return entityToResult(payment), nil
 }
 
-func (h *paymentQueryHandler) FindOverdues(query FindOverduePaymentsQuery) (page.Page[PaymentResult], error) {
-	paymentsPage, err := h.paymentRepository.FindOverdue(query.ctx, query.pagination)
+func (h *paymentQueryHandler) FindOverdues(ctx context.Context, query FindOverduePaymentsQuery) (page.Page[PaymentResult], error) {
+	paymentsPage, err := h.paymentRepository.FindOverdue(ctx, query.pagination)
 	if err != nil {
 		return page.Page[PaymentResult]{}, err
 	}
@@ -45,8 +46,8 @@ func (h *paymentQueryHandler) FindOverdues(query FindOverduePaymentsQuery) (page
 	return page.MapItems(paymentsPage, entityToResult), nil
 }
 
-func (h *paymentQueryHandler) FindByStatus(query FindPaymentsByStatusQuery) (page.Page[PaymentResult], error) {
-	paymentPage, err := h.paymentRepository.FindByStatus(query.ctx, query.status, query.pagination)
+func (h *paymentQueryHandler) FindByStatus(ctx context.Context, query FindPaymentsByStatusQuery) (page.Page[PaymentResult], error) {
+	paymentPage, err := h.paymentRepository.FindByStatus(ctx, query.status, query.pagination)
 	if err != nil {
 		return page.Page[PaymentResult]{}, err
 	}
@@ -54,8 +55,8 @@ func (h *paymentQueryHandler) FindByStatus(query FindPaymentsByStatusQuery) (pag
 	return page.MapItems(paymentPage, entityToResult), nil
 }
 
-func (h *paymentQueryHandler) FindByCustomer(query FindPaymentsByCustomerQuery) (page.Page[PaymentResult], error) {
-	paymentsPage, err := h.paymentRepository.FindByCustomerID(query.ctx, query.customerID, query.pagination)
+func (h *paymentQueryHandler) FindByCustomer(ctx context.Context, query FindPaymentsByCustomerQuery) (page.Page[PaymentResult], error) {
+	paymentsPage, err := h.paymentRepository.FindByCustomerID(ctx, query.customerID, query.pagination)
 	if err != nil {
 		return page.Page[PaymentResult]{}, err
 	}
@@ -63,12 +64,12 @@ func (h *paymentQueryHandler) FindByCustomer(query FindPaymentsByCustomerQuery) 
 	return page.MapItems(paymentsPage, entityToResult), nil
 }
 
-func (h *paymentQueryHandler) FindByDateRange(query FindPaymentsByDateRangeQuery) (page.Page[PaymentResult], error) {
+func (h *paymentQueryHandler) FindByDateRange(ctx context.Context, query FindPaymentsByDateRangeQuery) (page.Page[PaymentResult], error) {
 	if query.startDate.After(query.endDate) {
 		return page.Page[PaymentResult]{}, PaymentRangeDateErr(query.startDate, query.endDate)
 	}
 
-	paymentsPage, err := h.paymentRepository.FindByDateRange(query.ctx, query.startDate, query.endDate, query.PaginationRequest)
+	paymentsPage, err := h.paymentRepository.FindByDateRange(ctx, query.startDate, query.endDate, query.PaginationRequest)
 	if err != nil {
 		return page.Page[PaymentResult]{}, err
 	}
@@ -76,8 +77,8 @@ func (h *paymentQueryHandler) FindByDateRange(query FindPaymentsByDateRangeQuery
 	return page.MapItems(paymentsPage, entityToResult), nil
 }
 
-func (h *paymentQueryHandler) FindBySpecification(query FindPaymentsBySpecification) (page.Page[PaymentResult], error) {
-	paymentsPage, err := h.paymentRepository.FindBySpecification(query.ctx, query.spec)
+func (h *paymentQueryHandler) FindBySpecification(ctx context.Context, query FindPaymentsBySpecification) (page.Page[PaymentResult], error) {
+	paymentsPage, err := h.paymentRepository.FindBySpecification(ctx, query.spec)
 	if err != nil {
 		return page.Page[PaymentResult]{}, err
 	}

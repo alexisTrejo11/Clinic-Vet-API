@@ -2,54 +2,35 @@ package command
 
 import (
 	"clinic-vet-api/app/modules/core/domain/entity/payment"
-	apperror "clinic-vet-api/app/shared/error/application"
+	"context"
 )
 
-func (command *CreatePaymentCommand) ToDomain() (*payment.Payment, error) {
-	opts := []payment.PaymentOption{
-		payment.WithAmount(command.Amount),
-		payment.WithStatus(command.Status),
-		payment.WithPaymentMethod(command.Method),
-		payment.WithPaidFromCustomer(command.PaidFromCustomer),
+func (cmd *CreatePaymentCommand) ToDomain(ctx context.Context) (*payment.Payment, error) {
+	opts := []payment.PaymentOption{}
+
+	if cmd.PaidBy != nil {
+		opts = append(opts, payment.WithPaidByCustomer(*cmd.PaidBy))
 	}
 
-	if command.TransactionID != nil {
-		opts = append(opts, payment.WithTransactionID(*command.TransactionID))
+	if cmd.TransactionID != nil {
+		opts = append(opts, payment.WithTransactionID(*cmd.TransactionID))
 	}
 
-	if command.Description != nil {
-		opts = append(opts, payment.WithDescription(*command.Description))
+	if cmd.Description != nil {
+		opts = append(opts, payment.WithDescription(*cmd.Description))
 	}
 
-	if !command.DueDate.IsZero() {
-		opts = append(opts, payment.WithDueDate(command.DueDate))
+	if !cmd.DueDate.IsZero() {
+		opts = append(opts, payment.WithDueDate(cmd.DueDate))
 	}
 
-	if command.PaidAt != nil {
-		opts = append(opts, payment.WithPaidAt(*command.PaidAt))
+	if cmd.PaidAt != nil {
+		opts = append(opts, payment.WithPaidAt(*cmd.PaidAt))
 	}
 
-	if command.RefundedAt != nil {
-		opts = append(opts, payment.WithRefundedAt(*command.RefundedAt))
+	if cmd.InvoiceID != nil {
+		opts = append(opts, payment.WithInvoiceID(*cmd.InvoiceID))
 	}
 
-	if command.AppointmentID != nil {
-		opts = append(opts, payment.WithAppointmentID(*command.AppointmentID))
-	}
-
-	if command.InvoiceID != nil {
-		opts = append(opts, payment.WithInvoiceID(*command.InvoiceID))
-	}
-
-	paymentEntity, err := payment.CreatePayment(
-		command.Ctx,
-		command.PaidFromCustomer,
-		opts...,
-	)
-
-	if err != nil {
-		return nil, apperror.MappingError([]string{err.Error()}, "constructor", "domain", "Payment")
-	}
-
-	return paymentEntity, nil
+	return payment.CreatePayment(ctx, cmd.Amount, cmd.Method, cmd.Status, opts...)
 }

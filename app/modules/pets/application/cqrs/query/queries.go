@@ -57,7 +57,7 @@ type FindPetBySpecificationQuery struct {
 func NewFindPetBySpecificationQuery(spec specification.PetSpecification) *FindPetBySpecificationQuery {
 	return &FindPetBySpecificationQuery{
 		specification: spec,
-		pagination:    page.NewPaginationRequest().WithDefaults(),
+		pagination:    page.NewPaginationRequest(),
 	}
 }
 

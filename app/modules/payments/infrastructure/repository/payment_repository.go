@@ -12,6 +12,7 @@ import (
 	"clinic-vet-api/sqlc"
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"time"
 
@@ -35,7 +36,7 @@ func (r *SqlcPaymentRepository) FindBySpecification(ctx context.Context, specifi
 func (r *SqlcPaymentRepository) FindByID(ctx context.Context, id valueobject.PaymentID) (payment.Payment, error) {
 	sqlRow, err := r.queries.FindPaymentByID(ctx, int32(id.Value()))
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return payment.Payment{}, r.notFoundError("id", fmt.Sprintf("%d", id.Value()))
 		}
 		return payment.Payment{}, r.dbError(OpSelect, ErrMsgGetPayment, err)
@@ -52,7 +53,7 @@ func (r *SqlcPaymentRepository) FindByID(ctx context.Context, id valueobject.Pay
 func (r *SqlcPaymentRepository) FindByTransactionID(ctx context.Context, transactionID string) (payment.Payment, error) {
 	sqlRow, err := r.queries.FindPaymentByTransactionID(ctx, pgtype.Text{String: transactionID, Valid: true})
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return payment.Payment{}, r.notFoundError("transaction_id", transactionID)
 		}
 		return payment.Payment{}, r.dbError(OpSelect, ErrMsgGetPaymentByTransaction, err)
@@ -69,10 +70,10 @@ func (r *SqlcPaymentRepository) FindByTransactionID(ctx context.Context, transac
 func (r *SqlcPaymentRepository) FindByIDAndCustomerID(ctx context.Context, id valueobject.PaymentID, customerID valueobject.CustomerID) (payment.Payment, error) {
 	sqlRow, err := r.queries.FindPaymentByIDAndCustomerID(ctx, sqlc.FindPaymentByIDAndCustomerIDParams{
 		ID:               int32(id.Value()),
-		PaidFromCustomer: pgtype.Int4{Int32: int32(customerID.Value()), Valid: true},
+		PaidByCustomerID: pgtype.Int4{Int32: int32(customerID.Value()), Valid: true},
 	})
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return payment.Payment{}, fmt.Errorf("payment with ID %d for customer %d not found", id.Value(), customerID.Value())
 		}
 		return payment.Payment{}, fmt.Errorf("failed to find payment by ID and customer ID: %w", err)
@@ -88,7 +89,7 @@ func (r *SqlcPaymentRepository) FindByIDAndCustomerID(ctx context.Context, id va
 
 func (r *SqlcPaymentRepository) FindByCustomerID(ctx context.Context, customerID valueobject.CustomerID, pagination page.PaginationRequest) (page.Page[payment.Payment], error) {
 	sqlRows, err := r.queries.FindPaymentsByCustomerID(ctx, sqlc.FindPaymentsByCustomerIDParams{
-		PaidFromCustomer: pgtype.Int4{Int32: int32(customerID.Value()), Valid: true},
+		PaidByCustomerID: pgtype.Int4{Int32: int32(customerID.Value()), Valid: true},
 		Limit:            int32(pagination.Limit()),
 		Offset:           int32(pagination.Offset()),
 	})
@@ -183,7 +184,7 @@ func (r *SqlcPaymentRepository) FindByDateRange(ctx context.Context, startDate, 
 
 func (r *SqlcPaymentRepository) FindRecentByCustomerID(ctx context.Context, customerID valueobject.CustomerID, limit int) ([]payment.Payment, error) {
 	sqlRows, err := r.queries.FindRecentPaymentsByCustomerID(ctx, sqlc.FindRecentPaymentsByCustomerIDParams{
-		PaidFromCustomer: pgtype.Int4{Int32: int32(customerID.Value()), Valid: true},
+		PaidByCustomerID: pgtype.Int4{Int32: int32(customerID.Value()), Valid: true},
 		Limit:            int32(limit),
 	})
 	if err != nil {

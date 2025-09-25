@@ -1,17 +1,14 @@
 package command
 
 import (
-	"context"
 	"time"
 
 	"clinic-vet-api/app/modules/core/domain/enum"
 	"clinic-vet-api/app/modules/core/domain/valueobject"
-	apperror "clinic-vet-api/app/shared/error/application"
 )
 
 type CancelPaymentCommand struct {
 	paymentID valueobject.PaymentID
-	ctx       context.Context
 	reason    string
 }
 
@@ -23,51 +20,44 @@ func NewCancelPaymentCommand(idInt uint, reason string) *CancelPaymentCommand {
 }
 
 type CreatePaymentCommand struct {
-	Ctx              context.Context
-	Amount           valueobject.Money
-	Status           enum.PaymentStatus
-	Method           enum.PaymentMethod
-	TransactionID    *string
-	Description      *string
-	DueDate          time.Time
-	PaidAt           *time.Time
-	RefundedAt       *time.Time
-	PaidFromCustomer valueobject.CustomerID
-	AppointmentID    *valueobject.AppointmentID
-	InvoiceID        *string
+	Amount        valueobject.Money
+	Status        enum.PaymentStatus
+	Method        enum.PaymentMethod
+	MedSessionID  valueobject.MedSessionID
+	TransactionID *string
+	Description   *string
+	DueDate       *time.Time
+	PaidAt        *time.Time
+	PaidBy        *valueobject.CustomerID
+	InvoiceID     *string
 }
 
 type MarkOverduePaymentsCommand struct {
-	context context.Context
 }
 
-func NewMarkOverduePaymentsCommand(ctx context.Context) *MarkOverduePaymentsCommand {
-	return &MarkOverduePaymentsCommand{context: ctx}
+func NewMarkOverduePaymentsCommand() *MarkOverduePaymentsCommand {
+	return &MarkOverduePaymentsCommand{}
 }
 
 type DeletePaymentCommand struct {
 	paymentID valueobject.PaymentID
-	ctx       context.Context
 }
 
-func NewDeletePaymentCommand(ctx context.Context, idInt uint) *DeletePaymentCommand {
+func NewDeletePaymentCommand(idInt uint) *DeletePaymentCommand {
 	return &DeletePaymentCommand{
 		paymentID: valueobject.NewPaymentID(idInt),
-		ctx:       ctx,
 	}
 }
 
 type RefundPaymentCommand struct {
 	paymentID valueobject.PaymentID
 	reason    string
-	ctx       context.Context
 }
 
-func NewRefundPaymentCommand(ctx context.Context, paymentID uint, reason string) *RefundPaymentCommand {
+func NewRefundPaymentCommand(paymentID uint, reason string) *RefundPaymentCommand {
 	return &RefundPaymentCommand{
 		paymentID: valueobject.NewPaymentID(paymentID),
 		reason:    reason,
-		ctx:       context.Background(),
 	}
 }
 
@@ -77,73 +67,35 @@ type UpdatePaymentCommand struct {
 	paymentMethod *enum.PaymentMethod
 	description   *string
 	dueDate       *time.Time
-	ctx           context.Context
 }
 
-func NewUpdatePaymentCommand(
-	ctx context.Context,
-	idInt uint,
-	amount *valueobject.Money,
-	paymentMethodStr *string,
-	description *string,
-	dueDate *time.Time,
-) (UpdatePaymentCommand, error) {
-	var errors []string
-	if idInt == 0 {
-		errors = append(errors, "payment ID is required")
-	}
-	paymentID := valueobject.NewPaymentID(idInt)
+func NewUpdatePaymentCommand(id uint, amount *valueobject.Money, paymentMethod *string, description *string, dueDate *time.Time) UpdatePaymentCommand {
+	paymentID := valueobject.NewPaymentID(id)
 
-	var paymentMethod *enum.PaymentMethod
-	if paymentMethodStr != nil {
-		pm, err := enum.ParsePaymentMethod(*paymentMethodStr)
-		if err != nil {
-			errors = append(errors, err.Error())
-		} else {
-			paymentMethod = &pm
-		}
-	}
+	var paymentMethodObj *enum.PaymentMethod
+	if paymentMethod != nil {
+		pm := enum.PaymentMethod(*paymentMethod)
+		paymentMethodObj = &pm
 
-	if description != nil && len(*description) > 500 {
-		errors = append(errors, "description must be less than 500 characters")
-	}
-
-	if dueDate != nil && dueDate.Before(time.Now()) {
-		errors = append(errors, "due date must be in the future")
-	}
-
-	if len(errors) > 0 {
-		return UpdatePaymentCommand{}, apperror.MappingError(errors, "constructor", "command", "payment")
 	}
 
 	return UpdatePaymentCommand{
 		paymentID:     paymentID,
 		amount:        amount,
-		paymentMethod: paymentMethod,
+		paymentMethod: paymentMethodObj,
 		description:   description,
 		dueDate:       dueDate,
-		ctx:           ctx,
-	}, nil
+	}
 }
 
 type ProcessPaymentCommand struct {
 	paymentID     valueobject.PaymentID
 	transactionID string
-	ctx           context.Context
 }
 
-func NewProcessPaymentCommand(idInt uint, transactionID string) (*ProcessPaymentCommand, error) {
-	if idInt == 0 {
-		return nil, apperror.FieldValidationError("id", "", "Payment ID cannot be zero")
-	}
-
-	if transactionID == "" {
-		return nil, apperror.FieldValidationError("transaction_id", "", "Transaction ID cannot be empty")
-	}
-
+func NewProcessPaymentCommand(idInt uint, transactionID string) *ProcessPaymentCommand {
 	return &ProcessPaymentCommand{
 		paymentID:     valueobject.NewPaymentID(idInt),
 		transactionID: transactionID,
-		ctx:           context.Background(),
-	}, nil
+	}
 }

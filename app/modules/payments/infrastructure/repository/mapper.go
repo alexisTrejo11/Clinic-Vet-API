@@ -27,19 +27,18 @@ func entityToCreateParams(p *payment.Payment) (*sqlc.CreatePaymentParams, error)
 		Currency:         p.Currency(),
 		Status:           models.PaymentStatus(p.Status().String()),
 		Method:           models.PaymentMethod(p.Method().String()),
-		AppointmentID:    pgtype.Int4{Int32: int32(p.Entity.ID().Value()), Valid: true},
+		MedSessionID:     pgtype.Int4{Int32: int32(p.Entity.ID().Value()), Valid: true},
 		TransactionID:    stringToPgText(p.TransactionID()),
 		Description:      stringToPgText(p.Description()),
 		DueDate:          timeToPgTimestamptzPtr(p.DueDate()),
 		PaidAt:           timeToPgTimestamptzPtr(p.PaidAt()),
 		RefundedAt:       timeToPgTimestamptzPtr(p.RefundedAt()),
-		PaidFromCustomer: customerIDToPgInt4(p.PaidFromCustomer()),
-		PaidToEmployee:   employeeIDToPgInt4(p.PaidToEmployee()),
+		PaidByCustomerID: customerIDToPgInt4(p.PaidByCustomer()),
 	}
 
 	// Campos opcionales
-	if p.AppointmentID() != nil {
-		params.AppointmentID = appointmentIDToPgInt4(*p.AppointmentID())
+	if p.MedSessionID() != nil {
+		params.MedSessionID = MedSessionIDToPgInt4(*p.MedSessionID())
 	}
 
 	if p.InvoiceID() != nil {
@@ -79,7 +78,7 @@ func entityToUpdateParams(p *payment.Payment) (*sqlc.UpdatePaymentParams, error)
 		ID:               int32(p.ID().Value()),
 		Amount:           amountNumeric,
 		Currency:         p.Currency(),
-		AppointmentID:    pgtype.Int4{Int32: int32(p.Entity.ID().Value()), Valid: true},
+		MedSessionID:     pgtype.Int4{Int32: int32(p.Entity.ID().Value()), Valid: true},
 		Status:           models.PaymentStatus(p.Status().String()),
 		Method:           models.PaymentMethod(p.Method().String()),
 		TransactionID:    stringToPgText(p.TransactionID()),
@@ -87,13 +86,12 @@ func entityToUpdateParams(p *payment.Payment) (*sqlc.UpdatePaymentParams, error)
 		DueDate:          timeToPgTimestamptz(*p.DueDate()),
 		PaidAt:           timeToPgTimestamptzPtr(p.PaidAt()),
 		RefundedAt:       timeToPgTimestamptzPtr(p.RefundedAt()),
-		PaidFromCustomer: customerIDToPgInt4(p.PaidFromCustomer()),
-		PaidToEmployee:   employeeIDToPgInt4(p.PaidToEmployee()),
+		PaidByCustomerID: customerIDToPgInt4(p.PaidByCustomer()),
 	}
 
 	// Campos opcionales
-	if p.AppointmentID() != nil {
-		params.AppointmentID = appointmentIDToPgInt4(*p.AppointmentID())
+	if p.MedSessionID() != nil {
+		params.MedSessionID = MedSessionIDToPgInt4(*p.MedSessionID())
 	}
 
 	if p.InvoiceID() != nil {
@@ -134,15 +132,14 @@ func sqlcRowToEntity(row *sqlc.Payment) (*payment.Payment, error) {
 		return nil, fmt.Errorf("invalid payment method: %s", row.Method)
 	}
 
-	customerID := pgInt4ToCustomerID(row.PaidFromCustomer)
+	customerID := pgInt4ToCustomerID(row.PaidByCustomerID)
 
 	p := payment.NewPayment(
 		valueobject.NewPaymentID(uint(row.ID)),
 		payment.WithInvoiceID(row.InvoiceID.String),
-		payment.WithPaidFromCustomer(customerID),
-		payment.WithPaidToEmployee(valueobject.NewEmployeeID(uint(row.PaidToEmployee.Int32))),
+		payment.WithPaidByCustomer(customerID),
 		payment.WithAmount(amount),
-		payment.WithAppointmentID(pgInt4ToAppointmentID(row.AppointmentID)),
+		payment.WithMedSessionID(pgInt4ToMedSessionID(row.MedSessionID)),
 		payment.WithPaymentMethod(method),
 		payment.WithStatus(status),
 		payment.WithDueDate(pgTimestamptzToTime(row.DueDate)),
@@ -167,9 +164,9 @@ func sqlcRowToEntity(row *sqlc.Payment) (*payment.Payment, error) {
 		p.SetRefundedAt(&refundedAt)
 	}
 
-	if row.AppointmentID.Valid {
-		appointmentID := valueobject.NewAppointmentID(uint(row.AppointmentID.Int32))
-		p.SetAppointmentID(&appointmentID)
+	if row.MedSessionID.Valid {
+		MedSessionID := valueobject.NewMedSessionID(uint(row.MedSessionID.Int32))
+		p.SetMedSessionID(&MedSessionID)
 	}
 
 	if row.InvoiceID.Valid {
@@ -247,22 +244,18 @@ func timeToPgTimestamptzPtr(t *time.Time) pgtype.Timestamptz {
 	return pgtype.Timestamptz{Time: *t, Valid: true}
 }
 
-func pgTimestamptzToTime(t pgtype.Timestamptz) time.Time {
+func pgTimestamptzToTime(t pgtype.Timestamptz) *time.Time {
 	if !t.Valid {
-		return time.Time{}
+		return nil
 	}
-	return t.Time
+	return &t.Time
 }
 
 func customerIDToPgInt4(id valueobject.CustomerID) pgtype.Int4 {
 	return pgtype.Int4{Int32: int32(id.Value()), Valid: true}
 }
 
-func employeeIDToPgInt4(id valueobject.EmployeeID) pgtype.Int4 {
-	return pgtype.Int4{Int32: int32(id.Value()), Valid: true}
-}
-
-func appointmentIDToPgInt4(id valueobject.AppointmentID) pgtype.Int4 {
+func MedSessionIDToPgInt4(id valueobject.MedSessionID) pgtype.Int4 {
 	return pgtype.Int4{Int32: int32(id.Value()), Valid: true}
 }
 
@@ -273,9 +266,9 @@ func pgInt4ToCustomerID(num pgtype.Int4) valueobject.CustomerID {
 	return valueobject.NewCustomerID(uint(num.Int32))
 }
 
-func pgInt4ToAppointmentID(num pgtype.Int4) valueobject.AppointmentID {
+func pgInt4ToMedSessionID(num pgtype.Int4) valueobject.MedSessionID {
 	if !num.Valid {
-		return valueobject.AppointmentID{}
+		return valueobject.MedSessionID{}
 	}
-	return valueobject.NewAppointmentID(uint(num.Int32))
+	return valueobject.NewMedSessionID(uint(num.Int32))
 }

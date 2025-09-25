@@ -10,24 +10,24 @@ import (
 
 type Payment struct {
 	base.Entity[valueobject.PaymentID]
-	amount           valueobject.Money
-	status           enum.PaymentStatus
-	method           enum.PaymentMethod
-	transactionID    *string
-	description      *string
-	dueDate          *time.Time
-	paidAt           *time.Time
-	refundedAt       *time.Time
-	isActive         bool
-	paidFromCustomer valueobject.CustomerID
-	paidToEmployee   valueobject.EmployeeID
-	appointmentID    *valueobject.AppointmentID
-	invoiceID        *string
-	refundAmount     *valueobject.Money
-	failureReason    *string
-	createdAt        time.Time
-	updatedAt        time.Time
-	deletedAt        *time.Time
+	amount         valueobject.Money
+	status         enum.PaymentStatus
+	method         enum.PaymentMethod
+	transactionID  *string
+	description    *string
+	dueDate        *time.Time
+	paidAt         *time.Time
+	refundedAt     *time.Time
+	isActive       bool
+	paidByCustomer valueobject.CustomerID
+	paidToEmployee valueobject.EmployeeID
+	medSessionID   *valueobject.MedSessionID
+	invoiceID      *string
+	refundAmount   *valueobject.Money
+	failureReason  *string
+	createdAt      time.Time
+	updatedAt      time.Time
+	deletedAt      *time.Time
 }
 
 func (p *Payment) ID() valueobject.PaymentID {
@@ -74,16 +74,16 @@ func (p *Payment) IsActive() bool {
 	return p.isActive
 }
 
-func (p *Payment) PaidFromCustomer() valueobject.CustomerID {
-	return p.paidFromCustomer
+func (p *Payment) PaidByCustomer() valueobject.CustomerID {
+	return p.paidByCustomer
 }
 
 func (p *Payment) PaidToEmployee() valueobject.EmployeeID {
 	return p.paidToEmployee
 }
 
-func (p *Payment) AppointmentID() *valueobject.AppointmentID {
-	return p.appointmentID
+func (p *Payment) MedSessionID() *valueobject.MedSessionID {
+	return p.medSessionID
 }
 
 func (p *Payment) InvoiceID() *string {
@@ -168,8 +168,8 @@ func (p *Payment) SetRefundedAt(refundedAt *time.Time) {
 	p.refundedAt = refundedAt
 }
 
-func (p *Payment) SetAppointmentID(appointmentID *valueobject.AppointmentID) {
-	p.appointmentID = appointmentID
+func (p *Payment) SetMedSessionID(medSessionID *valueobject.MedSessionID) {
+	p.medSessionID = medSessionID
 }
 
 func (p *Payment) SetInvoiceID(invoiceID string) {

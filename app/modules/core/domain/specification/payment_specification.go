@@ -290,10 +290,10 @@ func (ps *PaymentSpecification) evaluateCondition(payment *payment.Payment, cond
 	switch condition.Field {
 	case "id":
 		return ps.compareValues(payment.ID(), condition.Value, condition.Operator)
-	case "appointment_id":
-		return ps.compareValues(payment.AppointmentID(), condition.Value, condition.Operator)
+	case "med_session_id":
+		return ps.compareValues(payment.MedSessionID(), condition.Value, condition.Operator)
 	case "customer_id":
-		return ps.compareValues(payment.PaidFromCustomer(), condition.Value, condition.Operator)
+		return ps.compareValues(payment.PaidByCustomer(), condition.Value, condition.Operator)
 	case "amount":
 		return ps.compareValues(payment.Amount(), condition.Value, condition.Operator)
 	case "currency":

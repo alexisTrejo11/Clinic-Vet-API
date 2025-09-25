@@ -2,6 +2,9 @@
 package controller
 
 import (
+	"clinic-vet-api/app/shared/error/infrastructure/http"
+	ginutils "clinic-vet-api/app/shared/gin_utils"
+
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )
@@ -42,9 +45,19 @@ func (ctrl *AdminPaymentController) CreatePayment(c *gin.Context) {
 // @Failure 404 {object} response.ErrorResponse "Payment not found"
 // @Failure 500 {object} response.ErrorResponse "Internal server error"
 // @Security BearerAuth
-// @Router /admin/payments/{payment_id} [get]
-func (ctrl *AdminPaymentController) GetPayment(c *gin.Context) {
-	ctrl.operations.GetPayment(c)
+// @Router /admin/payments/{id} [get]
+func (ctrl *AdminPaymentController) GetPaymentByID(c *gin.Context) {
+	ctrl.operations.GetPaymentByID(c, nil)
+}
+
+func (ctrl *AdminPaymentController) GetPaymentsByCustomer(c *gin.Context) {
+	customerID, err := ginutils.ParseParamToUInt(c, "customer_id")
+	if err != nil {
+		http.RequestURLParamError(err, "customer_id", c.Param("customer_id"))
+		return
+	}
+
+	ctrl.operations.GetPaymentsByCustomer(c, customerID)
 }
 
 // UpdatePayment delegates to payment controller

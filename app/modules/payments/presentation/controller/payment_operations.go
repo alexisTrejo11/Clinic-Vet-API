@@ -19,10 +19,7 @@ type PaymentControllerOperations struct {
 	bus       *bus.PaymentBus
 }
 
-func NewPaymentControllerOperations(
-	validator *validator.Validate,
-	bus *bus.PaymentBus,
-) *PaymentControllerOperations {
+func NewPaymentControllerOperations(validator *validator.Validate, bus *bus.PaymentBus) *PaymentControllerOperations {
 	return &PaymentControllerOperations{
 		validator: validator,
 		bus:       bus,
@@ -33,23 +30,13 @@ func NewPaymentControllerOperations(
 
 func (ctrl *PaymentControllerOperations) SearchPayments(c *gin.Context) {
 	var searchRequestData *dto.PaymentSearchRequest
-	if err := c.ShouldBindQuery(&searchRequestData); err != nil {
+	if err := ginUtils.BindAndValidateQuery(c, &searchRequestData, ctrl.validator); err != nil {
 		response.BadRequest(c, httpError.RequestURLQueryError(err, c.Request.URL.RawQuery))
 		return
 	}
 
-	if err := ctrl.validator.Struct(searchRequestData); err != nil {
-		response.BadRequest(c, httpError.InvalidDataError(err))
-		return
-	}
-
-	searchQuery, err := searchRequestData.ToQuery(c.Request.Context())
-	if err != nil {
-		response.ApplicationError(c, err)
-		return
-	}
-
-	paymentsPage, err := ctrl.bus.QueryBus.FindBySpecification(*searchQuery)
+	query := searchRequestData.ToQuery()
+	paymentsPage, err := ctrl.bus.QueryBus.FindBySpecification(c.Request.Context(), *query)
 	if err != nil {
 		response.ApplicationError(c, err)
 		return
@@ -58,20 +45,15 @@ func (ctrl *PaymentControllerOperations) SearchPayments(c *gin.Context) {
 	ctrl.HandlePaginationResult(c, paymentsPage)
 }
 
-func (ctrl *PaymentControllerOperations) GetPayment(c *gin.Context) {
-	paymentID, err := ginUtils.ParseParamToUInt(c, c.Param("payment_id"))
+func (ctrl *PaymentControllerOperations) GetPaymentByID(c *gin.Context, customerID *uint) {
+	paymentID, err := ginUtils.ParseParamToUInt(c, "id")
 	if err != nil {
-		response.BadRequest(c, httpError.RequestURLParamError(err, "payment_id", c.Param("payment_id")))
+		response.BadRequest(c, httpError.RequestURLParamError(err, "id", c.Param("id")))
 		return
 	}
 
-	query, err := query.NewFindPaymentByIDQuery(paymentID)
-	if err != nil {
-		response.ApplicationError(c, err)
-		return
-	}
-
-	payment, err := ctrl.bus.QueryBus.FindByID(*query)
+	query := query.NewFindPaymentByIDQuery(paymentID, customerID)
+	payment, err := ctrl.bus.QueryBus.FindByID(c.Request.Context(), *query)
 	if err != nil {
 		response.ApplicationError(c, err)
 		return
@@ -88,8 +70,8 @@ func (ctrl *PaymentControllerOperations) GetPaymentsByCustomer(c *gin.Context, c
 		return
 	}
 
-	query := query.NewFindPaymentsByCustomerQuery(c.Request.Context(), customerID, pagination)
-	paymentPage, err := ctrl.bus.QueryBus.FindByCustomer(query)
+	query := query.NewFindPaymentsByCustomerQuery(customerID, pagination)
+	paymentPage, err := ctrl.bus.QueryBus.FindByCustomer(c.Request.Context(), query)
 	if err != nil {
 		response.ApplicationError(c, err)
 		return
@@ -106,13 +88,8 @@ func (ctrl *PaymentControllerOperations) GetPaymentsByStatus(c *gin.Context) {
 		return
 	}
 
-	query, err := query.NewFindPaymentsByStatusQuery(c.Request.Context(), statusStr, pagination)
-	if err != nil {
-		response.ApplicationError(c, err)
-		return
-	}
-
-	paymentPage, err := ctrl.bus.QueryBus.FindByStatus(*query)
+	query := query.NewFindPaymentsByStatusQuery(statusStr, pagination)
+	paymentPage, err := ctrl.bus.QueryBus.FindByStatus(c.Request.Context(), *query)
 	if err != nil {
 		response.ApplicationError(c, err)
 		return
@@ -122,22 +99,14 @@ func (ctrl *PaymentControllerOperations) GetPaymentsByStatus(c *gin.Context) {
 }
 
 func (ctrl *PaymentControllerOperations) GetPaymentsByDateRange(c *gin.Context) {
-	var requestData *dto.PaymentsByDateRangeRequest
-	if err := c.ShouldBindQuery(&requestData); err != nil {
+	var requestData dto.PaymentsByDateRangeRequest
+	if err := ginUtils.BindAndValidateQuery(c, &requestData, ctrl.validator); err != nil {
 		response.BadRequest(c, httpError.RequestURLQueryError(err, c.Request.URL.RawQuery))
 		return
 	}
 
-	requestData.WithDefaults()
-
-	if err := ctrl.validator.Struct(requestData); err != nil {
-		response.BadRequest(c, httpError.InvalidDataError(err))
-		return
-	}
-
-	query := requestData.ToQuery(c.Request.Context())
-
-	paymentPage, err := ctrl.bus.QueryBus.FindByDateRange(*query)
+	query := requestData.ToQuery()
+	paymentPage, err := ctrl.bus.QueryBus.FindByDateRange(c.Request.Context(), *query)
 	if err != nil {
 		response.ApplicationError(c, err)
 		return
@@ -147,20 +116,14 @@ func (ctrl *PaymentControllerOperations) GetPaymentsByDateRange(c *gin.Context) 
 }
 
 func (ctrl *PaymentControllerOperations) GetOverduePayments(c *gin.Context) {
-	var pagination *page.PaginationRequest
-	if err := c.ShouldBindQuery(&pagination); err != nil {
+	var pagination page.PaginationRequest
+	if err := ginUtils.ShouldBindPageParams(&pagination, c, ctrl.validator); err != nil {
 		response.BadRequest(c, httpError.RequestURLQueryError(err, c.Request.URL.RawQuery))
 		return
 	}
 
-	if err := ctrl.validator.Struct(pagination); err != nil {
-		response.BadRequest(c, httpError.InvalidDataError(err))
-		return
-	}
-
-	paymentOverdueQuery := query.NewFindOverduePaymentsQuery(c.Request.Context(), *pagination)
-
-	paymentPage, err := ctrl.bus.QueryBus.FindOverdues(paymentOverdueQuery)
+	query := query.NewFindOverduePaymentsQuery(pagination)
+	paymentPage, err := ctrl.bus.QueryBus.FindOverdues(c.Request.Context(), query)
 	if err != nil {
 		response.ApplicationError(c, err)
 		return
@@ -212,23 +175,13 @@ func (ctrl *PaymentControllerOperations) HandlePaginationResult(c *gin.Context, 
 // CreatePayment creates a new payment
 func (ctrl *PaymentControllerOperations) CreatePayment(c *gin.Context) {
 	var req dto.CreatePaymentRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
+	if err := ginUtils.BindAndValidateBody(c, &req, ctrl.validator); err != nil {
 		response.BadRequest(c, httpError.RequestBodyDataError(err))
 		return
 	}
 
-	if err := ctrl.validator.Struct(&req); err != nil {
-		response.BadRequest(c, httpError.InvalidDataError(err))
-		return
-	}
-
-	createCommand, err := req.ToCreatePaymentCommand(c.Request.Context())
-	if err != nil {
-		response.ApplicationError(c, err)
-		return
-	}
-
-	commandResult := ctrl.bus.CommandBus.CreatePayment(createCommand)
+	command := req.ToCommand()
+	commandResult := ctrl.bus.CommandBus.CreatePayment(c.Request.Context(), command)
 	if !commandResult.IsSuccess() {
 		response.ApplicationError(c, commandResult.Error())
 		return
@@ -246,23 +199,13 @@ func (ctrl *PaymentControllerOperations) UpdatePayment(c *gin.Context) {
 	}
 
 	var req dto.UpdatePaymentRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
+	if err := ginUtils.BindAndValidateBody(c, &req, ctrl.validator); err != nil {
 		response.BadRequest(c, httpError.RequestBodyDataError(err))
 		return
 	}
 
-	if err := ctrl.validator.Struct(&req); err != nil {
-		response.BadRequest(c, httpError.InvalidDataError(err))
-		return
-	}
-
-	updatePaymentCommand, err := req.ToUpdatePaymentCommand(c.Request.Context(), id)
-	if err != nil {
-		response.ApplicationError(c, err)
-		return
-	}
-
-	commandResult := ctrl.bus.CommandBus.UpdatePayment(updatePaymentCommand)
+	command := req.ToCommand(id)
+	commandResult := ctrl.bus.CommandBus.UpdatePayment(c.Request.Context(), command)
 	if !commandResult.IsSuccess() {
 		response.ApplicationError(c, commandResult.Error())
 		return
@@ -271,7 +214,6 @@ func (ctrl *PaymentControllerOperations) UpdatePayment(c *gin.Context) {
 	response.Updated(c, nil, "Payment")
 }
 
-// DeletePayment soft deletes a payment
 func (ctrl *PaymentControllerOperations) DeletePayment(c *gin.Context) {
 	id, err := ginUtils.ParseParamToUInt(c, "id")
 	if err != nil {
@@ -279,9 +221,8 @@ func (ctrl *PaymentControllerOperations) DeletePayment(c *gin.Context) {
 		return
 	}
 
-	deleteCommand := command.NewDeletePaymentCommand(c.Request.Context(), id)
-
-	commandResult := ctrl.bus.CommandBus.DeletePayment(*deleteCommand)
+	command := command.NewDeletePaymentCommand(id)
+	commandResult := ctrl.bus.CommandBus.DeletePayment(c.Request.Context(), *command)
 	if !commandResult.IsSuccess() {
 		response.ApplicationError(c, commandResult.Error())
 		return
@@ -290,7 +231,6 @@ func (ctrl *PaymentControllerOperations) DeletePayment(c *gin.Context) {
 	response.NoContent(c)
 }
 
-// ProcessPayment processes a payment
 func (ctrl *PaymentControllerOperations) ProcessPayment(c *gin.Context) {
 	id, err := ginUtils.ParseParamToUInt(c, "id")
 	if err != nil {
@@ -299,23 +239,13 @@ func (ctrl *PaymentControllerOperations) ProcessPayment(c *gin.Context) {
 	}
 
 	var req dto.ProcessPaymentRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
+	if err := ginUtils.BindAndValidateBody(c, &req, ctrl.validator); err != nil {
 		response.BadRequest(c, httpError.RequestBodyDataError(err))
 		return
 	}
 
-	if err := ctrl.validator.Struct(&req); err != nil {
-		response.BadRequest(c, httpError.InvalidDataError(err))
-		return
-	}
-
-	proccessPaymentCommand, err := command.NewProcessPaymentCommand(id, req.TransactionID)
-	if err != nil {
-		response.ApplicationError(c, err)
-		return
-	}
-
-	commandResult := ctrl.bus.CommandBus.ProcessPayment(*proccessPaymentCommand)
+	command := command.NewProcessPaymentCommand(id, req.TransactionID)
+	commandResult := ctrl.bus.CommandBus.ProcessPayment(c.Request.Context(), *command)
 	if !commandResult.IsSuccess() {
 		response.ApplicationError(c, commandResult.Error())
 		return
@@ -324,7 +254,6 @@ func (ctrl *PaymentControllerOperations) ProcessPayment(c *gin.Context) {
 	response.Success(c, nil, commandResult.Message())
 }
 
-// RefundPayment refunds a payment
 func (ctrl *PaymentControllerOperations) RefundPayment(c *gin.Context) {
 	id, err := ginUtils.ParseParamToUInt(c, "id")
 	if err != nil {
@@ -343,9 +272,8 @@ func (ctrl *PaymentControllerOperations) RefundPayment(c *gin.Context) {
 		return
 	}
 
-	refundPaymentCommand := command.NewRefundPaymentCommand(c.Request.Context(), id, req.Reason)
-
-	commandResult := ctrl.bus.CommandBus.RefundPayment(*refundPaymentCommand)
+	command := command.NewRefundPaymentCommand(id, req.Reason)
+	commandResult := ctrl.bus.CommandBus.RefundPayment(c.Request.Context(), *command)
 	if !commandResult.IsSuccess() {
 		response.ApplicationError(c, commandResult.Error())
 		return
@@ -354,7 +282,6 @@ func (ctrl *PaymentControllerOperations) RefundPayment(c *gin.Context) {
 	response.Success(c, nil, commandResult.Message())
 }
 
-// CancelPayment cancels a payment
 func (ctrl *PaymentControllerOperations) CancelPayment(c *gin.Context) {
 	id, err := ginUtils.ParseParamToUInt(c, "id")
 	if err != nil {
@@ -373,13 +300,12 @@ func (ctrl *PaymentControllerOperations) CancelPayment(c *gin.Context) {
 		return
 	}
 
-	cancelPaymentCommand := command.NewCancelPaymentCommand(id, req.Reason)
-
-	commandResult := ctrl.bus.CommandBus.CancelPayment(*cancelPaymentCommand)
+	command := command.NewCancelPaymentCommand(id, req.Reason)
+	commandResult := ctrl.bus.CommandBus.CancelPayment(c.Request.Context(), *command)
 	if !commandResult.IsSuccess() {
 		response.ApplicationError(c, commandResult.Error())
 		return
 	}
 
-	response.Success(c, nil, "Payment Successfully Cancelled")
+	response.Success(c, nil, commandResult.Message())
 }

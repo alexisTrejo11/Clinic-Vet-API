@@ -84,6 +84,7 @@ type Payment struct {
 	Currency         string
 	Status           models.PaymentStatus
 	Method           models.PaymentMethod
+	MedSessionID     pgtype.Int4
 	TransactionID    pgtype.Text
 	Description      pgtype.Text
 	DueDate          pgtype.Timestamptz
@@ -93,9 +94,7 @@ type Payment struct {
 	CreatedAt        pgtype.Timestamptz
 	UpdatedAt        pgtype.Timestamptz
 	DeletedAt        pgtype.Timestamptz
-	PaidFromCustomer pgtype.Int4
-	PaidToEmployee   pgtype.Int4
-	AppointmentID    pgtype.Int4
+	PaidByCustomerID pgtype.Int4
 	InvoiceID        pgtype.Text
 	RefundAmount     pgtype.Numeric
 	FailureReason    pgtype.Text

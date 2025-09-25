@@ -3,6 +3,7 @@ package ginutils
 import (
 	htttpError "clinic-vet-api/app/shared/error/infrastructure/http"
 	"clinic-vet-api/app/shared/page"
+	"fmt"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -13,6 +14,7 @@ func ShouldBindPageParams(requestPageParams *page.PaginationRequest, ctx *gin.Co
 		return htttpError.RequestURLQueryError(err, ctx.Request.URL.RawQuery)
 	}
 
+	fmt.Println(requestPageParams)
 	*requestPageParams = requestPageParams.WithDefaults()
 
 	if err := validator.Struct(requestPageParams); err != nil {
