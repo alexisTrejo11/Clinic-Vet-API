@@ -47,11 +47,7 @@ func (r *SqlcPetRepository) FindBySpecies(ctx context.Context, petSpecies enum.P
 		return page.Page[pet.Pet]{}, r.dbError("select", fmt.Sprintf("failed to count pets for species %s", petSpecies.String()), err)
 	}
 
-	pets, err := sqlcRowsToEntities(petRows)
-	if err != nil {
-		return page.Page[pet.Pet]{}, r.wrapConversionError(err)
-	}
-
+	pets := sqlcRowsToEntities(petRows)
 	return page.NewPage(pets, int(total), pagination), nil
 }
 
@@ -65,16 +61,7 @@ func (r *SqlcPetRepository) FindAllByCustomerID(ctx context.Context, customerID 
 		return nil, r.dbError("select", fmt.Sprintf("failed to find all pets for customer ID %d", customerID.Value()), err)
 	}
 
-	// Convert rows to entities
-	var pets []pet.Pet
-	for _, row := range petRows {
-		petEntity, err := sqlcRowToEntity(row)
-		if err != nil {
-			return nil, r.wrapConversionError(err)
-		}
-		pets = append(pets, *petEntity)
-	}
-
+	pets := sqlcRowsToEntities(petRows)
 	return pets, nil
 }
 
@@ -94,8 +81,7 @@ func (r *SqlcPetRepository) FindByCustomerID(ctx context.Context, customerID val
 		return page.Page[pet.Pet]{}, r.dbError("select", fmt.Sprintf("failed to count pets for customer ID %d", customerID.Value()), err)
 	}
 
-	pets, _ := sqlcRowsToEntities(petRows)
-
+	pets := sqlcRowsToEntities(petRows)
 	return page.NewPage(pets, int(total), pagination), nil
 }
 
@@ -108,12 +94,7 @@ func (r *SqlcPetRepository) FindByID(ctx context.Context, petID valueobject.PetI
 		return pet.Pet{}, r.dbError("select", fmt.Sprintf("failed to find pet with ID %d", petID.Value()), err)
 	}
 
-	domainPet, err := sqlcRowToEntity(sqlPet)
-	if err != nil {
-		return pet.Pet{}, r.wrapConversionError(err)
-	}
-
-	return *domainPet, nil
+	return sqlcRowToEntity(sqlPet), nil
 }
 
 func (r *SqlcPetRepository) FindByIDAndCustomerID(ctx context.Context, id valueobject.PetID, customerID valueobject.CustomerID) (pet.Pet, error) {
@@ -128,12 +109,7 @@ func (r *SqlcPetRepository) FindByIDAndCustomerID(ctx context.Context, id valueo
 		return pet.Pet{}, r.dbError("select", fmt.Sprintf("failed to find pet with ID %d and customer ID %d", id.Value(), customerID.Value()), err)
 	}
 
-	domainPet, err := sqlcRowToEntity(sqlPet)
-	if err != nil {
-		return pet.Pet{}, r.wrapConversionError(err)
-	}
-
-	return *domainPet, nil
+	return sqlcRowToEntity(sqlPet), nil
 }
 
 func (r *SqlcPetRepository) ExistsByID(ctx context.Context, petID valueobject.PetID) (bool, error) {
@@ -183,15 +159,9 @@ func (r *SqlcPetRepository) create(ctx context.Context, entity pet.Pet) (pet.Pet
 		return pet.Pet{}, r.dbError("insert", "failed to create pet", err)
 	}
 
-	petEntity, err := sqlcRowToEntity(petCreated)
-	if err != nil {
-		return pet.Pet{}, r.wrapConversionError(err)
-	}
-
-	return *petEntity, nil
+	return sqlcRowToEntity(petCreated), nil
 }
 
-// update modifies an existing pet
 func (r *SqlcPetRepository) update(ctx context.Context, entity pet.Pet) (pet.Pet, error) {
 	params := ToSqlUpdateParam(&entity)
 
@@ -200,12 +170,7 @@ func (r *SqlcPetRepository) update(ctx context.Context, entity pet.Pet) (pet.Pet
 		return pet.Pet{}, r.dbError("update", fmt.Sprintf("failed to update pet with ID %d", entity.ID().Value()), err)
 	}
 
-	petEntity, err := sqlcRowToEntity(petUpdated)
-	if err != nil {
-		return pet.Pet{}, r.wrapConversionError(err)
-	}
-
-	return *petEntity, nil
+	return sqlcRowToEntity(petUpdated), nil
 }
 
 func (r *SqlcPetRepository) Restore(ctx context.Context, petID valueobject.PetID) error {

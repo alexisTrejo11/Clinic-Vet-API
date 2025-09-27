@@ -44,6 +44,13 @@ func (r UserRole) IsValid() bool {
 	return exists
 }
 
+func (r UserRole) Validate() error {
+	if !r.IsValid() {
+		return InvalidEnumParserError("UserRole", string(r))
+	}
+	return nil
+}
+
 func ParseUserRole(role string) (UserRole, error) {
 	normalized := strings.TrimSpace(strings.ToLower(role))
 	if val, exists := userRoleMap[normalized]; exists {
@@ -118,12 +125,19 @@ func (s UserStatus) IsValid() bool {
 	return exists
 }
 
+func (s UserStatus) Validate() error {
+	if !s.IsValid() {
+		return InvalidEnumParserError("UserStatus", string(s))
+	}
+	return nil
+}
+
 func ParseUserStatus(status string) (UserStatus, error) {
 	normalized := strings.TrimSpace(strings.ToLower(status))
 	if val, exists := userStatusMap[normalized]; exists {
 		return val, nil
 	}
-	return "", fmt.Errorf("invalid user status: %s", status)
+	return "", InvalidEnumParserError("UserStatus", status)
 }
 
 func MustParseUserStatus(status string) UserStatus {

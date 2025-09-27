@@ -147,8 +147,8 @@ func (co *MedSessionControllerOperations) CreateMedicalSession(c *gin.Context, e
 		return
 	}
 
-	command := requestData.ToCommand(c.Request.Context())
-	result := co.bus.CommandBus.CreateMedicalSession(*command)
+	command := requestData.ToCommand()
+	result := co.bus.CommandBus.CreateMedicalSession(c.Request.Context(), *command)
 	if !result.IsSuccess() {
 		response.ApplicationError(c, result.Error())
 		return
@@ -182,8 +182,8 @@ func (co *MedSessionControllerOperations) SoftDeleteMedicalSession(c *gin.Contex
 		return
 	}
 
-	command := &command.SoftDeleteMedSessionCommand{ID: valueobject.NewMedSessionID(idUint), CTX: c.Request.Context()}
-	result := co.bus.CommandBus.SoftDeleteMedicalSession(*command)
+	command := &command.SoftDeleteMedSessionCommand{ID: valueobject.NewMedSessionID(idUint)}
+	result := co.bus.CommandBus.SoftDeleteMedicalSession(c.Request.Context(), *command)
 	if !result.IsSuccess() {
 		response.ApplicationError(c, result.Error())
 		return

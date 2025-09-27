@@ -2,6 +2,7 @@
 package dto
 
 import (
+	"clinic-vet-api/app/modules/core/domain/enum"
 	"clinic-vet-api/app/modules/core/domain/valueobject"
 	"clinic-vet-api/app/modules/pets/application/cqrs/command"
 )
@@ -60,10 +61,10 @@ type PetRequestData struct {
 	Age *int `json:"age,omitempty" validate:"omitempty,min=0,max=30"`
 
 	// Gender of the pet
-	// Required: false
-	// Enum: Male, Female, Unknown
-	// Example: Male
-	Gender *string `json:"gender,omitempty" validate:"omitempty,oneof=Male Female Unknown"`
+	// Required: true
+	// Enum: male, female, unknown
+	// Example: male
+	Gender string `json:"gender" validate:"required,oneof=male female unknown"`
 
 	// Color of the pet's fur or coat
 	// Required: false
@@ -101,9 +102,10 @@ type PetRequestData struct {
 func (r *PetRequestData) ToCommand(customerID uint, isActive bool) command.CreatePetCommand {
 	cmd := &command.CreatePetCommand{
 		Name:       r.Name,
-		Photo:      r.Photo,
 		CustomerID: valueobject.NewCustomerID(customerID),
-		Species:    r.Species,
+		Species:    enum.PetSpecies(r.Species),
+		Gender:     enum.PetGender(r.Gender),
+		Photo:      r.Photo,
 		Breed:      r.Breed,
 		Age:        r.Age,
 		IsNeutered: r.IsNeutered,

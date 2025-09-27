@@ -2,7 +2,6 @@ package repositoryimpl
 
 import (
 	"encoding/json"
-	"fmt"
 	"math/big"
 	"time"
 
@@ -14,31 +13,10 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-func ToEntity(sqlRow sqlc.MedicalSession) (medical.MedicalSession, error) {
-	medSessionID := valueobject.NewMedSessionID(uint(sqlRow.ID))
-	petID := valueobject.NewPetID(uint(sqlRow.PetID))
-	employeeID := valueobject.NewEmployeeID(uint(sqlRow.EmployeeID))
-	customerID := valueobject.NewCustomerID(uint(sqlRow.CustomerID))
-
-	// Parsear enums
-	visitType, err := enum.ParseVisitType(sqlRow.VisitType)
-	if err != nil {
-		return medical.MedicalSession{}, fmt.Errorf("invalid visit type: %w", err)
-	}
-
+func ToEntity(sqlRow sqlc.MedicalSession) medical.MedicalSession {
 	var condition enum.PetCondition
 	if sqlRow.Condition.Valid {
-		condition, err = enum.ParsePetCondition(sqlRow.Condition.String)
-		if err != nil {
-			return medical.MedicalSession{}, fmt.Errorf("invalid pet condition: %w", err)
-		}
-	} else {
-		condition = enum.PetConditionStable
-	}
-
-	visitReason := enum.VisitReasonRoutineCheckup
-	if sqlRow.IsEmergency.Valid && sqlRow.IsEmergency.Bool {
-		visitReason = enum.VisitReasonEmergency
+		condition = enum.PetCondition(sqlRow.Condition.String)
 	}
 
 	var notes *string
@@ -81,18 +59,13 @@ func ToEntity(sqlRow sqlc.MedicalSession) (medical.MedicalSession, error) {
 
 	var symptoms []string
 	if sqlRow.Symptoms.Valid {
-		err := json.Unmarshal([]byte(sqlRow.Symptoms.String), &symptoms)
-		if err != nil {
-			return medical.MedicalSession{}, fmt.Errorf("invalid symptoms format: %w", err)
-		}
+		json.Unmarshal([]byte(sqlRow.Symptoms.String), &symptoms)
+
 	}
 
 	var medications []string
 	if sqlRow.Medications.Valid {
-		err := json.Unmarshal([]byte(sqlRow.Medications.String), &medications)
-		if err != nil {
-			return medical.MedicalSession{}, fmt.Errorf("invalid medications format: %w", err)
-		}
+		json.Unmarshal([]byte(sqlRow.Medications.String), &medications)
 	}
 
 	var followUpDate *time.Time
@@ -100,42 +73,36 @@ func ToEntity(sqlRow sqlc.MedicalSession) (medical.MedicalSession, error) {
 		followUpDate = &sqlRow.FollowUpDate.Time
 	}
 
-	medicalSession, err := medical.NewMedicalSession(
-		medSessionID,
-		petID,
-		customerID,
-		employeeID,
-		medical.WithVisitReason(visitReason),
-		medical.WithVisitType(visitType),
-		medical.WithVisitDate(visitDate),
-		medical.WithNotes(notes),
-		medical.WithDiagnosis(sqlRow.Diagnosis.String),
-		medical.WithTreatment(sqlRow.Treatment.String),
-		medical.WithCondition(condition),
-		medical.WithWeight(weight),
-		medical.WithTemperature(temperature),
-		medical.WithHeartRate(heartRate),
-		medical.WithRespiratoryRate(respiratoryRate),
-		medical.WithSymptoms(symptoms),
-		medical.WithMedications(medications),
-		medical.WithFollowUpDate(followUpDate),
-	)
-	if err != nil {
-		return medical.MedicalSession{}, fmt.Errorf("failed to create medical session: %w", err)
-	}
+	petDetails := medical.NewPetSessionSummaryBuilder().
+		WithPetID(valueobject.NewPetID(uint(sqlRow.PetID))).
+		WithWeight(weight).
+		WithTemperature(temperature).
+		WithHeartRate(heartRate).
+		WithRespiratoryRate(respiratoryRate).
+		WithDiagnosis(sqlRow.Diagnosis.String).
+		WithTreatment(sqlRow.Treatment.String).
+		WithCondition(condition).
+		WithMedications(medications).
+		WithFollowUpDate(followUpDate).
+		WithSymptoms(symptoms).
+		Build()
 
-	return *medicalSession, nil
+	return *medical.NewMedicalSessionBuilder().
+		WithID(valueobject.NewMedSessionID(uint(sqlRow.ID))).
+		WithEmployeeID(valueobject.NewEmployeeID(uint(sqlRow.EmployeeID))).
+		WithCustomerID(valueobject.NewCustomerID(uint(sqlRow.CustomerID))).
+		WithVisitType(enum.VisitType(sqlRow.VisitType)).
+		WithVisitDate(visitDate).
+		WithNotes(notes).
+		WithPetDetails(*petDetails).
+		Build()
 }
 
 func ToEntities(medSessionList []sqlc.MedicalSession) ([]medical.MedicalSession, error) {
 	domainList := make([]medical.MedicalSession, len(medSessionList))
 
 	for i, sqlRow := range medSessionList {
-		domainMedSession, err := ToEntity(sqlRow)
-		if err != nil {
-			return nil, err
-		}
-		domainList[i] = domainMedSession
+		domainList[i] = ToEntity(sqlRow)
 	}
 
 	return domainList, nil
@@ -144,46 +111,46 @@ func ToEntities(medSessionList []sqlc.MedicalSession) ([]medical.MedicalSession,
 func ToUpdateParams(medSession medical.MedicalSession) sqlc.UpdateMedicalSessionParams {
 	params := sqlc.UpdateMedicalSessionParams{
 		ID:         int32(medSession.ID().Value()),
-		PetID:      int32(medSession.PetID().Value()),
+		PetID:      int32(medSession.PetDetails().PetID().Value()),
 		CustomerID: int32(medSession.CustomerID().Value()),
 		EmployeeID: int32(medSession.EmployeeID().Value()),
 		VisitDate:  pgtype.Timestamptz{Time: medSession.VisitDate(), Valid: true},
-		Diagnosis:  pgtype.Text{String: medSession.Diagnosis(), Valid: medSession.Diagnosis() != ""},
-		Treatment:  pgtype.Text{String: medSession.Treatment(), Valid: medSession.Treatment() != ""},
-		VisitType:  medSession.VisitType().DisplayName(),
-		Condition:  pgtype.Text{String: medSession.Condition().DisplayName(), Valid: true},
+		VisitType:  medSession.VisitType().String(),
+		Condition:  pgtype.Text{String: medSession.PetDetails().Condition().DisplayName(), Valid: true},
+	}
+
+	if medSession.PetDetails().Diagnosis() != "" {
+		params.Diagnosis = pgtype.Text{String: medSession.PetDetails().Diagnosis(), Valid: true}
+	}
+
+	if medSession.PetDetails().Treatment() != "" {
+		params.Treatment = pgtype.Text{String: medSession.PetDetails().Treatment(), Valid: true}
+	}
+
+	if medSession.PetDetails().Condition().IsValid() {
+		params.Condition = pgtype.Text{String: medSession.PetDetails().Condition().String(), Valid: true}
 	}
 
 	// Notes
 	if medSession.Notes() != nil && *medSession.Notes() != "" {
 		params.Notes = pgtype.Text{String: *medSession.Notes(), Valid: true}
-	} else {
-		params.Notes = pgtype.Text{Valid: false}
 	}
 
-	if medSession.Weight() != nil {
-		weightInt := big.NewInt(medSession.Weight().Int())
+	if medSession.PetDetails().Weight() != nil {
+		weightInt := big.NewInt(medSession.PetDetails().Weight().Int())
 		params.Weight = pgtype.Numeric{Int: weightInt, Valid: true}
-	} else {
-		params.Weight = pgtype.Numeric{Valid: false}
 	}
 
-	if medSession.Temperature() != nil {
-		params.Temperature = pgtype.Numeric{Int: big.NewInt(medSession.Temperature().Int()), Valid: true}
-	} else {
-		params.Temperature = pgtype.Numeric{Valid: false}
+	if medSession.PetDetails().Temperature() != nil {
+		params.Temperature = pgtype.Numeric{Int: big.NewInt(medSession.PetDetails().Temperature().Int()), Valid: true}
 	}
 
-	if medSession.HeartRate() != nil {
-		params.HeartRate = pgtype.Int4{Int32: int32(*medSession.HeartRate()), Valid: true}
-	} else {
-		params.HeartRate = pgtype.Int4{Valid: false}
+	if medSession.PetDetails().HeartRate() != nil {
+		params.HeartRate = pgtype.Int4{Int32: int32(*medSession.PetDetails().HeartRate()), Valid: true}
 	}
 
-	if medSession.RespiratoryRate() != nil {
-		params.RespiratoryRate = pgtype.Int4{Int32: int32(*medSession.RespiratoryRate()), Valid: true}
-	} else {
-		params.RespiratoryRate = pgtype.Int4{Valid: false}
+	if medSession.PetDetails().RespiratoryRate() != nil {
+		params.RespiratoryRate = pgtype.Int4{Int32: int32(*medSession.PetDetails().RespiratoryRate()), Valid: true}
 	}
 
 	/*
@@ -223,15 +190,29 @@ func ToUpdateParams(medSession medical.MedicalSession) sqlc.UpdateMedicalSession
 
 func ToCreateParams(medSession medical.MedicalSession) sqlc.SaveMedicalSessionParams {
 	params := sqlc.SaveMedicalSessionParams{
-		PetID:      int32(medSession.PetID().Value()),
+		PetID:      int32(medSession.PetDetails().PetID().Value()),
 		CustomerID: int32(medSession.CustomerID().Value()),
 		EmployeeID: int32(medSession.EmployeeID().Value()),
 		VisitType:  medSession.VisitType().DisplayName(),
 		VisitDate:  pgtype.Timestamptz{Time: medSession.VisitDate(), Valid: true},
-		Diagnosis:  pgtype.Text{String: medSession.Diagnosis(), Valid: medSession.Diagnosis() != ""},
-		Treatment:  pgtype.Text{String: medSession.Treatment(), Valid: medSession.Treatment() != ""},
-		Condition:  pgtype.Text{String: medSession.Condition().DisplayName(), Valid: true},
 	}
+
+	if medSession.PetDetails().Diagnosis() != "" {
+		params.Diagnosis = pgtype.Text{String: medSession.PetDetails().Diagnosis(), Valid: true}
+	} else {
+		params.Diagnosis = pgtype.Text{Valid: false}
+	}
+
+	if medSession.PetDetails().Treatment() != "" {
+		params.Treatment = pgtype.Text{String: medSession.PetDetails().Treatment(), Valid: true}
+	} else {
+		params.Treatment = pgtype.Text{Valid: false}
+	}
+
+	if medSession.PetDetails().Condition().IsValid() {
+		params.Condition = pgtype.Text{String: medSession.PetDetails().Condition().String(), Valid: true}
+	}
+	// Notes
 
 	if medSession.Notes() != nil && *medSession.Notes() != "" {
 		params.Notes = pgtype.Text{String: *medSession.Notes(), Valid: true}
@@ -239,26 +220,26 @@ func ToCreateParams(medSession medical.MedicalSession) sqlc.SaveMedicalSessionPa
 		params.Notes = pgtype.Text{Valid: false}
 	}
 
-	if medSession.Weight() != nil {
-		params.Weight = pgtype.Numeric{Int: big.NewInt(medSession.Weight().Int()), Valid: true}
+	if medSession.PetDetails().Weight() != nil {
+		params.Weight = pgtype.Numeric{Int: big.NewInt(medSession.PetDetails().Weight().Int()), Valid: true}
 	} else {
 		params.Weight = pgtype.Numeric{Valid: false}
 	}
 
-	if medSession.Temperature() != nil {
-		params.Temperature = pgtype.Numeric{Int: big.NewInt(medSession.Temperature().Int()), Valid: true}
+	if medSession.PetDetails().Temperature() != nil {
+		params.Temperature = pgtype.Numeric{Int: big.NewInt(medSession.PetDetails().Temperature().Int()), Valid: true}
 	} else {
 		params.Temperature = pgtype.Numeric{Valid: false}
 	}
 
-	if medSession.HeartRate() != nil {
-		params.HeartRate = pgtype.Int4{Int32: int32(*medSession.HeartRate()), Valid: true}
+	if medSession.PetDetails().HeartRate() != nil {
+		params.HeartRate = pgtype.Int4{Int32: int32(*medSession.PetDetails().HeartRate()), Valid: true}
 	} else {
 		params.HeartRate = pgtype.Int4{Valid: false}
 	}
 
-	if medSession.RespiratoryRate() != nil {
-		params.RespiratoryRate = pgtype.Int4{Int32: int32(*medSession.RespiratoryRate()), Valid: true}
+	if medSession.PetDetails().RespiratoryRate() != nil {
+		params.RespiratoryRate = pgtype.Int4{Int32: int32(*medSession.PetDetails().RespiratoryRate()), Valid: true}
 	} else {
 		params.RespiratoryRate = pgtype.Int4{Valid: false}
 	}

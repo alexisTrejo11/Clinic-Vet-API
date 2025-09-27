@@ -73,10 +73,7 @@ func (r *SqlcAppointmentRepository) Find(ctx context.Context, spec specification
 		Column9: sqlcParams.Column9, // ScheduledDate
 	}
 
-	appointments, err := r.ToDomainEntities(rows)
-	if err != nil {
-		return p.Page[appt.Appointment]{}, err
-	}
+	appointments := toEntities(rows)
 
 	total, err := r.queries.CountAppointmentsBySpec(ctx, countParams)
 	if err != nil {
@@ -100,12 +97,7 @@ func (r *SqlcAppointmentRepository) FindByID(ctx context.Context, id valueobject
 		return appt.Appointment{}, r.dbError("select", "failed to get appointment by ID", err)
 	}
 
-	appointmentEntity, err := sqlRowToAppointment(sqlRow)
-	if err != nil {
-		return appt.Appointment{}, r.wrapConversionError(err)
-	}
-
-	return *appointmentEntity, nil
+	return *sqlcToEntity(sqlRow), nil
 }
 
 func (r *SqlcAppointmentRepository) ExistsByID(ctx context.Context, id valueobject.AppointmentID) (bool, error) {

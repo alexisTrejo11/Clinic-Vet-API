@@ -50,11 +50,21 @@ func NewEmail(emailStr string) (Email, error) {
 	}
 
 	email := Email{value: strings.ToLower(emailStr)}
-	if !email.isValid() {
+	if !email.IsValid() {
 		return Email{}, errors.New("invalid email format")
 	}
 
 	return email, nil
+}
+
+func (e *Email) Validate() error {
+	if e.value == "" {
+		return errors.New("email cannot be empty")
+	}
+	if !e.IsValid() {
+		return errors.New("invalid email format")
+	}
+	return nil
 }
 
 func NewEmailNoErr(emailStr string) Email {
@@ -62,7 +72,7 @@ func NewEmailNoErr(emailStr string) Email {
 	return *e
 }
 
-func (e Email) isValid() bool {
+func (e Email) IsValid() bool {
 	// Simple regex for email validation
 	const emailRegex = `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`
 	re := regexp.MustCompile(emailRegex)
@@ -97,6 +107,20 @@ func NewPhoneNumber(phone string) (PhoneNumber, error) {
 	}
 
 	return PhoneNumber{Value: cleaned}, nil
+}
+
+func (p PhoneNumber) Validate() error {
+	if p.Value == "" {
+		return domainerr.InvalidFieldFormat(context.Background(), "phone", "", "phone number cannot be empty", "validate phone number")
+	}
+
+	cleaned := regexp.MustCompile(`[^\d+]`).ReplaceAllString(p.Value, "")
+
+	if len(cleaned) < 10 {
+		return domainerr.InvalidFieldFormat(context.Background(), "phone", "too short", "phone number must have at least 10 digits", "validate phone number")
+	}
+
+	return nil
 }
 
 func NewPhoneNumberNoErr(phone string) PhoneNumber {

@@ -1,23 +1,15 @@
 package dto
 
 import (
-	"fmt"
 	"strings"
 	"time"
 
 	"clinic-vet-api/app/modules/appointment/application/command"
-	"clinic-vet-api/app/modules/core/domain/enum"
 )
 
 type UpdateApptRequest struct {
-	// @Required Required: Unique identifier of the appointment to update
-	AppointmentID uint `json:"appointmentId" binding:"required" example:"123"`
-
-	// Optional: ID of the veterinarian assigned to the appointment
-	VetID *uint `json:"vetId,omitempty" binding:"omitempty,min=1" example:"456"`
-
-	// @Required Required: New status of the appointment (e.g., "confirmed", "cancelled", "completed")
-	Status string `json:"status" binding:"required,oneof=scheduled confirmed cancelled completed no_show" example:"confirmed"`
+	// Optional : New status of the appointment (e.g., "confirmed", "cancelled", "completed")
+	Status *string `json:"status" binding:"required,oneof=scheduled confirmed cancelled completed no_show" example:"confirmed"`
 
 	// Optional: Additional notes or observations about the appointment
 	Notes *string `json:"notes,omitempty" binding:"omitempty,max=1000" example:"Patient requires special handling"`
@@ -61,22 +53,13 @@ func (r *RequestApptmentData) ToCommand(customerID uint) (*command.RequestApptBy
 	return command.NewRequestApptByCustomerCommand(uint(r.PetID), customerID, r.Datetime, r.Service, r.Notes)
 }
 
-func (r *UpdateApptRequest) ToCommand() (command.UpdateApptCommand, error) {
-	var clinicService *enum.ClinicService
-	if r.Service != nil {
-		serviceEnum, err := enum.ParseClinicService(*r.Service)
-		if err != nil {
-			return command.UpdateApptCommand{}, fmt.Errorf("invalid service: %w", err)
-		}
-		clinicService = &serviceEnum
-	}
-
+func (r *UpdateApptRequest) ToCommand(appointmentID uint) command.UpdateApptCommand {
 	updateCommand := command.NewUpdateApptCommand(
-		r.AppointmentID,
-		r.VetID,
+		appointmentID,
 		r.Status,
 		r.Notes,
-		clinicService)
+		r.Service,
+	)
 
-	return *updateCommand, nil
+	return *updateCommand
 }

@@ -6,7 +6,6 @@ import (
 	"clinic-vet-api/app/modules/core/domain/valueobject"
 	"clinic-vet-api/app/modules/customer/application/query"
 	"clinic-vet-api/app/shared/page"
-	"context"
 	"time"
 )
 
@@ -90,7 +89,7 @@ func (q *CustomerSearchQuery) ToSpecification() specification.CustomerSpecificat
 	return *spec
 }
 
-func (q *CustomerSearchQuery) ToQuery(ctx context.Context) *query.FindCustomerBySpecificationQuery {
+func (q *CustomerSearchQuery) ToQuery() *query.FindCustomerBySpecificationQuery {
 	spec := q.ToSpecification()
-	return query.NewFindCustomerBySpecificationQuery(ctx, spec)
+	return query.NewFindCustomerBySpecificationQuery(spec)
 }

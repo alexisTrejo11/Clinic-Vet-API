@@ -7,23 +7,15 @@ import (
 	"clinic-vet-api/db/models"
 	"clinic-vet-api/sqlc"
 	"fmt"
+	"math/big"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-func entityToCreateParams(p *payment.Payment) (*sqlc.CreatePaymentParams, error) {
-	if p == nil {
-		return nil, fmt.Errorf("payment cannot be nil")
-	}
-
-	amountNumeric, err := moneyToNumeric(p.Amount())
-	if err != nil {
-		return nil, fmt.Errorf("failed to convert amount: %w", err)
-	}
-
+func entityToCreateParams(p payment.Payment) *sqlc.CreatePaymentParams {
 	params := &sqlc.CreatePaymentParams{
-		Amount:           amountNumeric,
+		Amount:           moneyToNumeric(p.Amount()),
 		Currency:         p.Currency(),
 		Status:           models.PaymentStatus(p.Status().String()),
 		Method:           models.PaymentMethod(p.Method().String()),
@@ -36,7 +28,6 @@ func entityToCreateParams(p *payment.Payment) (*sqlc.CreatePaymentParams, error)
 		PaidByCustomerID: customerIDToPgInt4(p.PaidByCustomer()),
 	}
 
-	// Campos opcionales
 	if p.MedSessionID() != nil {
 		params.MedSessionID = MedSessionIDToPgInt4(*p.MedSessionID())
 	}
@@ -46,37 +37,20 @@ func entityToCreateParams(p *payment.Payment) (*sqlc.CreatePaymentParams, error)
 	}
 
 	if p.RefundAmount() != nil {
-		refundAmountNumeric, err := moneyToNumeric(*p.RefundAmount())
-		if err != nil {
-			return nil, fmt.Errorf("failed to convert refund amount: %w", err)
-		}
-		params.RefundAmount = refundAmountNumeric
+		params.RefundAmount = moneyToNumeric(*p.RefundAmount())
 	}
 
 	if p.FailureReason() != nil {
 		params.FailureReason = stringToPgText(p.FailureReason())
 	}
 
-	return params, nil
+	return params
 }
 
-func entityToUpdateParams(p *payment.Payment) (*sqlc.UpdatePaymentParams, error) {
-	if p == nil {
-		return nil, fmt.Errorf("payment cannot be nil")
-	}
-
-	if p.ID().IsZero() {
-		return nil, fmt.Errorf("payment ID is required for update")
-	}
-
-	amountNumeric, err := moneyToNumeric(p.Amount())
-	if err != nil {
-		return nil, fmt.Errorf("failed to convert amount: %w", err)
-	}
-
+func entityToUpdateParams(p *payment.Payment) *sqlc.UpdatePaymentParams {
 	params := &sqlc.UpdatePaymentParams{
 		ID:               int32(p.ID().Value()),
-		Amount:           amountNumeric,
+		Amount:           moneyToNumeric(p.Amount()),
 		Currency:         p.Currency(),
 		MedSessionID:     pgtype.Int4{Int32: int32(p.Entity.ID().Value()), Valid: true},
 		Status:           models.PaymentStatus(p.Status().String()),
@@ -89,7 +63,6 @@ func entityToUpdateParams(p *payment.Payment) (*sqlc.UpdatePaymentParams, error)
 		PaidByCustomerID: customerIDToPgInt4(p.PaidByCustomer()),
 	}
 
-	// Campos opcionales
 	if p.MedSessionID() != nil {
 		params.MedSessionID = MedSessionIDToPgInt4(*p.MedSessionID())
 	}
@@ -99,118 +72,87 @@ func entityToUpdateParams(p *payment.Payment) (*sqlc.UpdatePaymentParams, error)
 	}
 
 	if p.RefundAmount() != nil {
-		refundAmountNumeric, err := moneyToNumeric(*p.RefundAmount())
-		if err != nil {
-			return nil, fmt.Errorf("failed to convert refund amount: %w", err)
-		}
-		params.RefundAmount = refundAmountNumeric
+		params.RefundAmount = moneyToNumeric(*p.RefundAmount())
 	}
 
 	if p.FailureReason() != nil {
 		params.FailureReason = stringToPgText(p.FailureReason())
 	}
 
-	return params, nil
+	return params
 }
 
-func sqlcRowToEntity(row *sqlc.Payment) (*payment.Payment, error) {
-	if row == nil {
-		return nil, fmt.Errorf("row cannot be nil")
-	}
-	amount, err := numericToMoney(row.Amount, row.Currency)
-	if err != nil {
-		return nil, fmt.Errorf("failed to convert amount: %w", err)
-	}
+func sqlcRowToEntity(row sqlc.Payment) *payment.Payment {
+	amount, _ := numericToMoney(row.Amount, row.Currency)
+	builder := payment.NewPaymentBuilder().
+		WithID(valueobject.NewPaymentID(uint(row.ID))).
+		WithInvoiceID(row.InvoiceID.String).
+		WithPaidByCustomer(pgInt4ToCustomerID(row.PaidByCustomerID)).
+		WithAmount(amount).
+		WithMedSessionID(pgInt4ToMedSessionID(row.MedSessionID)).
+		WithPaymentMethod(enum.PaymentMethod(row.Method)).
+		WithStatus(enum.PaymentStatus(row.Status)).
+		WithDueDate(pgTimestamptzToTime(row.DueDate)).
+		WithIsActive(row.IsActive).
+		WithTimeStamps(row.CreatedAt.Time, row.UpdatedAt.Time)
 
-	status := enum.PaymentStatus(row.Status)
-	if !status.IsValid() {
-		return nil, fmt.Errorf("invalid payment status: %s", row.Status)
-	}
-
-	method := enum.PaymentMethod(row.Method)
-	if !method.IsValid() {
-		return nil, fmt.Errorf("invalid payment method: %s", row.Method)
-	}
-
-	customerID := pgInt4ToCustomerID(row.PaidByCustomerID)
-
-	p := payment.NewPayment(
-		valueobject.NewPaymentID(uint(row.ID)),
-		payment.WithInvoiceID(row.InvoiceID.String),
-		payment.WithPaidByCustomer(customerID),
-		payment.WithAmount(amount),
-		payment.WithMedSessionID(pgInt4ToMedSessionID(row.MedSessionID)),
-		payment.WithPaymentMethod(method),
-		payment.WithStatus(status),
-		payment.WithDueDate(pgTimestamptzToTime(row.DueDate)),
-		payment.WithIsActive(row.IsActive),
-		payment.WithTimeStamps(row.CreatedAt.Time, row.UpdatedAt.Time, 1),
-	)
 	if row.TransactionID.Valid {
-		p.SetTransactionID(row.TransactionID.String)
+		builder.WithTransactionID(row.TransactionID.String)
 	}
 
 	if row.Description.Valid {
-		p.SetDescription(row.Description.String)
+		builder.WithDescription(&row.Description.String)
 	}
 
 	if row.PaidAt.Valid {
 		paidAt := row.PaidAt.Time
-		p.SetPaidAt(&paidAt)
+		builder.WithPaidAt(paidAt)
 	}
 
 	if row.RefundedAt.Valid {
 		refundedAt := row.RefundedAt.Time
-		p.SetRefundedAt(&refundedAt)
+		builder.WithRefundedAt(refundedAt)
 	}
 
 	if row.MedSessionID.Valid {
-		MedSessionID := valueobject.NewMedSessionID(uint(row.MedSessionID.Int32))
-		p.SetMedSessionID(&MedSessionID)
+		medSessionID := pgInt4ToMedSessionID(row.MedSessionID)
+		builder.WithMedSessionID(medSessionID)
 	}
 
 	if row.InvoiceID.Valid {
-		p.SetInvoiceID(row.InvoiceID.String)
+		builder.WithInvoiceID(row.InvoiceID.String)
 	}
 
 	if row.RefundAmount.Valid {
-		refundAmount, err := numericToMoney(row.RefundAmount, p.Currency())
-		if err != nil {
-			return nil, fmt.Errorf("failed to convert refund amount: %w", err)
-		}
-		p.SetRefundAmount(&refundAmount)
+		refundAmount, _ := numericToMoney(row.RefundAmount, row.Currency)
+		builder.WithRefundAmount(refundAmount)
 	}
 
 	if row.FailureReason.Valid {
-		p.SetFailureReason(row.FailureReason.String)
+		builder.WithFailureReason(row.FailureReason.String)
 	}
 
-	if row.DeletedAt.Valid {
-		deletedAt := row.DeletedAt.Time
-		p.SetDeletedAt(&deletedAt)
-	}
-
-	return p, nil
+	return builder.Build()
 }
 
 func (r *SqlcPaymentRepository) sqlRowsToEntities(sqlRows []sqlc.Payment) ([]payment.Payment, error) {
 	payments := make([]payment.Payment, len(sqlRows))
 	for i, row := range sqlRows {
-		paymentEntity, err := sqlcRowToEntity(&row)
-		if err != nil {
-			return nil, fmt.Errorf("failed to convert SQL row to payment at index %d: %w", i, err)
+		paymentEntity := sqlcRowToEntity(row)
+		if paymentEntity == nil {
+			return nil, fmt.Errorf("failed to convert SQL row to payment at index %d", i)
 		}
 		payments[i] = *paymentEntity
 	}
 	return payments, nil
 }
 
-func moneyToNumeric(money valueobject.Money) (pgtype.Numeric, error) {
+func moneyToNumeric(money valueobject.Money) pgtype.Numeric {
 	amount := money.Amount()
-
-	num := pgtype.Numeric{}
-	err := num.Scan(amount)
-	return num, err
+	return pgtype.Numeric{
+		Int:   big.NewInt(int64(amount.Float64())),
+		Valid: true,
+	}
 }
 
 func numericToMoney(num pgtype.Numeric, currency string) (valueobject.Money, error) {

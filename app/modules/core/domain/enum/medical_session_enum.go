@@ -4,116 +4,6 @@ import (
 	"strings"
 )
 
-// VisitReason represents the reason for a veterinary visit
-type VisitReason string
-
-const (
-	VisitReasonRoutineCheckup VisitReason = "routine_checkup"
-	VisitReasonVaccination    VisitReason = "vaccination"
-	VisitReasonInjury         VisitReason = "injury"
-	VisitReasonIllness        VisitReason = "illness"
-	VisitReasonDental         VisitReason = "dental"
-	VisitReasonGrooming       VisitReason = "grooming"
-	VisitReasonBehavior       VisitReason = "behavior"
-	VisitReasonNutrition      VisitReason = "nutrition"
-	VisitReasonFollowUp       VisitReason = "follow_up"
-	VisitReasonEmergency      VisitReason = "emergency"
-)
-
-// VisitReason constants and methods
-var (
-	ValidVisitReasons = []VisitReason{
-		VisitReasonRoutineCheckup,
-		VisitReasonVaccination,
-		VisitReasonInjury,
-		VisitReasonIllness,
-		VisitReasonDental,
-		VisitReasonGrooming,
-		VisitReasonBehavior,
-		VisitReasonNutrition,
-		VisitReasonFollowUp,
-		VisitReasonEmergency,
-	}
-
-	visitReasonMap = map[string]VisitReason{
-		"routine_checkup": VisitReasonRoutineCheckup,
-		"routine checkup": VisitReasonRoutineCheckup,
-		"checkup":         VisitReasonRoutineCheckup,
-		"vaccination":     VisitReasonVaccination,
-		"injury":          VisitReasonInjury,
-		"illness":         VisitReasonIllness,
-		"dental":          VisitReasonDental,
-		"grooming":        VisitReasonGrooming,
-		"behavior":        VisitReasonBehavior,
-		"nutrition":       VisitReasonNutrition,
-		"follow_up":       VisitReasonFollowUp,
-		"follow up":       VisitReasonFollowUp,
-		"followup":        VisitReasonFollowUp,
-		"emergency":       VisitReasonEmergency,
-	}
-
-	visitReasonDisplayNames = map[VisitReason]string{
-		VisitReasonRoutineCheckup: "Routine Checkup",
-		VisitReasonVaccination:    "Vaccination",
-		VisitReasonInjury:         "Injury",
-		VisitReasonIllness:        "Illness",
-		VisitReasonDental:         "Dental Care",
-		VisitReasonGrooming:       "Grooming",
-		VisitReasonBehavior:       "Behavior Consultation",
-		VisitReasonNutrition:      "Nutrition Consultation",
-		VisitReasonFollowUp:       "Follow-up Visit",
-		VisitReasonEmergency:      "Emergency Visit",
-	}
-)
-
-func (vr VisitReason) IsValid() bool {
-	_, exists := visitReasonMap[string(vr)]
-	return exists
-}
-
-func ParseVisitReason(reason string) (VisitReason, error) {
-	normalized := normalizeInput(reason)
-	if val, exists := visitReasonMap[normalized]; exists {
-		return val, nil
-	}
-	return "", InvalidEnumParserError("VisitReason", reason)
-}
-
-func MustParseVisitReason(reason string) VisitReason {
-	parsed, err := ParseVisitReason(reason)
-	if err != nil {
-		panic(err)
-	}
-	return parsed
-}
-
-func (vr VisitReason) String() string {
-	return string(vr)
-}
-
-func (vr VisitReason) DisplayName() string {
-	if displayName, exists := visitReasonDisplayNames[vr]; exists {
-		return displayName
-	}
-	return "Unknown Reason"
-}
-
-func (vr VisitReason) Values() []VisitReason {
-	return ValidVisitReasons
-}
-
-func (vr VisitReason) IsRoutine() bool {
-	return vr == VisitReasonRoutineCheckup ||
-		vr == VisitReasonVaccination ||
-		vr == VisitReasonGrooming
-}
-
-func (vr VisitReason) IsUrgent() bool {
-	return vr == VisitReasonEmergency ||
-		vr == VisitReasonInjury ||
-		vr == VisitReasonIllness
-}
-
 // VisitType represents the type of veterinary visit
 type VisitType string
 
@@ -351,31 +241,10 @@ func normalizeInput(input string) string {
 	return input
 }
 
-func GetAllVisitReasons() []VisitReason {
-	return ValidVisitReasons
-}
-
 func GetAllVisitTypes() []VisitType {
 	return ValidVisitTypes
 }
 
 func GetAllPetConditions() []PetCondition {
 	return ValidPetConditions
-}
-
-func GetUrgentVisitReasons() []VisitReason {
-	return []VisitReason{
-		VisitReasonEmergency,
-		VisitReasonInjury,
-		VisitReasonIllness,
-	}
-}
-
-func GetRoutineVisitReasons() []VisitReason {
-	return []VisitReason{
-		VisitReasonRoutineCheckup,
-		VisitReasonVaccination,
-		VisitReasonGrooming,
-		VisitReasonDental,
-	}
 }

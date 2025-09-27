@@ -131,36 +131,13 @@ CREATE TABLE IF NOT EXISTS pets (
     CONSTRAINT chk_gender_valid CHECK (gender IN ('male', 'female', 'unknown', 'other'))
 );
 
-CREATE TABLE IF NOT EXISTS pet_veterinary_contacts (
-    id SERIAL PRIMARY KEY,
-    pet_id INT NOT NULL,
-    clinic_name VARCHAR(255) NOT NULL,
-    phone VARCHAR(20),
-    address TEXT,
-    is_primary BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (pet_id) REFERENCES pets(id) ON DELETE CASCADE
-);
-
-CREATE TABLE IF NOT EXISTS pet_emergency_contacts (
-    id SERIAL PRIMARY KEY,
-    pet_id INT NOT NULL,
-    contact_name VARCHAR(255) NOT NULL,
-    phone VARCHAR(20) NOT NULL,
-    relationship VARCHAR(100),
-    is_primary BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (pet_id) REFERENCES pets(id) ON DELETE CASCADE
-);
-
 CREATE TABLE IF NOT EXISTS pet_feeding_instructions (
     id SERIAL PRIMARY KEY,
     pet_id INT NOT NULL,
     food_brand VARCHAR(255),
-    food_type VARCHAR(100), -- "seco", "húmedo", "casero"
-    amount_per_serving VARCHAR(100), -- "1 taza", "200g"
-    frequency VARCHAR(100), -- "2 veces al día"
+    food_type VARCHAR(100), 
+    amount_per_serving VARCHAR(100), 
+    frequency VARCHAR(100), 
     special_instructions TEXT,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -202,7 +179,6 @@ CREATE TABLE IF NOT EXISTS pet_deworming (
     FOREIGN KEY (administered_by) REFERENCES employees(id) ON DELETE SET NULL
 );
 
--- Tabla para implante de chip
 CREATE TABLE IF NOT EXISTS pet_chip_implants (
     id SERIAL PRIMARY KEY,
     pet_id INT NOT NULL,

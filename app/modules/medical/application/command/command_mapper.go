@@ -2,93 +2,62 @@ package command
 
 import (
 	"clinic-vet-api/app/modules/core/domain/entity/medical"
-	"clinic-vet-api/app/modules/core/domain/enum"
 )
 
-func ToEntityFromCreate(command *CreateMedSessionCommand) (*medical.MedicalSession, error) {
-	visitType, err := enum.ParseVisitType(command.VisitType)
-	if err != nil {
-		return nil, err
-	}
+func (cmd *CreateMedSessionCommand) ToEntity() medical.MedicalSession {
+	petSummary := medical.NewPetSessionSummaryBuilder().
+		WithPetID(cmd.PetDetails.PetID).
+		WithCondition(cmd.PetDetails.Condition).
+		WithTreatment(cmd.PetDetails.Treatment).
+		WithFollowUpDate(cmd.PetDetails.FollowUpDate).
+		WithWeight(cmd.PetDetails.Weight).
+		WithDiagnosis(cmd.PetDetails.Diagnosis).
+		WithHeartRate(cmd.PetDetails.HeartRate).
+		WithRespiratoryRate(cmd.PetDetails.RespiratoryRate).
+		WithTemperature(cmd.PetDetails.Temperature).
+		WithMedications(cmd.PetDetails.Medications).
+		Build()
 
-	visitReason, err := enum.ParseVisitReason(command.VisitReason)
-	if err != nil {
-		return nil, err
-	}
+	entity := medical.NewMedicalSessionBuilder().
+		WithCustomerID(cmd.CustomerID).
+		WithEmployeeID(cmd.EmployeeID).
+		WithVisitDate(cmd.VisitDate).
+		WithService(cmd.Service).
+		WithNotes(cmd.Notes).
+		WithVisitType(cmd.VisitType).
+		WithPetDetails(*petSummary).
+		Build()
 
-	condition, err := enum.ParsePetCondition(command.Condition)
-	if err != nil {
-		return nil, err
-	}
-
-	entity, err := medical.CreateMedicalSession(
-		command.CTX,
-		command.PetID,
-		command.CustomerID,
-		command.EmployeeID,
-		medical.WithVisitDate(command.Date),
-		medical.WithDiagnosis(command.Diagnosis),
-		medical.WithVisitType(visitType),
-		medical.WithVisitReason(visitReason),
-		medical.WithCondition(condition),
-		medical.WithTreatment(command.Treatment),
-		medical.WithNotes(command.Notes),
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	return entity, nil
+	return *entity
 }
 
-func ToEntityFromUpdate(command *UpdateMedSessionCommand, existingEntity *medical.MedicalSession) (*medical.MedicalSession, error) {
-	var opts []medical.MedicalSessionOptions
+func applyCommandUpdates(cmd UpdateMedSessionCommand, existingEntity medical.MedicalSession) *medical.MedicalSession {
+	builder := medical.NewMedicalSessionBuilder().
+		WithID(cmd.ID)
 
-	if command.Date != nil {
-		opts = append(opts, medical.WithVisitDate(*command.Date))
+	if cmd.Date != nil {
+		builder.WithVisitDate(*cmd.Date)
+	} else {
+		builder.WithVisitDate(existingEntity.VisitDate())
 	}
 
-	if command.Diagnosis != nil {
-		opts = append(opts, medical.WithDiagnosis(*command.Diagnosis))
+	if cmd.VisitType != nil {
+		builder.WithVisitType(*cmd.VisitType)
+	} else {
+		builder.WithVisitType(existingEntity.VisitType())
 	}
 
-	if command.VisitType != nil {
-		visitType, err := enum.ParseVisitType(*command.VisitType)
-		if err != nil {
-			return nil, err
-		}
-		opts = append(opts, medical.WithVisitType(visitType))
+	if cmd.Service != nil {
+		builder.WithService(*cmd.Service)
+	} else {
+		builder.WithService(existingEntity.Service())
 	}
 
-	if command.VisitReason != nil {
-		visitReason, err := enum.ParseVisitReason(*command.VisitReason)
-		if err != nil {
-			return nil, err
-		}
-		opts = append(opts, medical.WithVisitReason(visitReason))
+	if cmd.Notes != nil {
+		builder.WithNotes(cmd.Notes)
+	} else {
+		builder.WithNotes(existingEntity.Notes())
 	}
 
-	if command.Condition != nil {
-		condition, err := enum.ParsePetCondition(*command.Condition)
-		if err != nil {
-			return nil, err
-		}
-		opts = append(opts, medical.WithCondition(condition))
-	}
-
-	if command.Treatment != nil {
-		opts = append(opts, medical.WithTreatment(*command.Treatment))
-	}
-
-	if command.Notes != nil {
-		opts = append(opts, medical.WithNotes(command.Notes))
-	}
-
-	for _, opt := range opts {
-		if err := opt(existingEntity); err != nil {
-			return nil, err
-		}
-	}
-
-	return existingEntity, nil
+	return builder.Build()
 }

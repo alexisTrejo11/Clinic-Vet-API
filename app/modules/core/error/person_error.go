@@ -31,15 +31,13 @@ func PersonValidationError(ctx context.Context, code PersonErrorCode, field, val
 	}
 
 	return ValidationError(ctx, string(code), field, value,
-		messages[code])
+		messages[code], operation)
 }
 
-// PersonNotFoundError crea un error específico para persona no encontrada
 func PersonNotFoundError(ctx context.Context, personID, operation string) error {
 	return EntityNotFoundError(ctx, "Person", personID, operation)
 }
 
-// PersonConflictError crea un error específico para conflictos de persona
 func PersonConflictError(ctx context.Context, field, value, operation string) error {
 	return ConflictError(ctx, "Person",
 		fmt.Sprintf("Person with %s '%s' already exists", field, value),

@@ -6,6 +6,7 @@ import (
 	"clinic-vet-api/app/modules/customer/application/query"
 	"clinic-vet-api/app/shared/cqrs"
 	"clinic-vet-api/app/shared/page"
+	"context"
 )
 
 type CustomerBus struct {
@@ -30,16 +31,16 @@ func NewCustomerCommandBus(commandBus command.CustomerCommandHandler) *CustomerC
 	}
 }
 
-func (bus *CustomerCommandBus) CreateCustomer(cmd command.CreateCustomerCommand) cqrs.CommandResult {
-	return bus.CommandBus.Create(cmd)
+func (bus *CustomerCommandBus) CreateCustomer(ctx context.Context, cmd command.CreateCustomerCommand) cqrs.CommandResult {
+	return bus.CommandBus.Create(ctx, cmd)
 }
 
-func (bus *CustomerCommandBus) UpdateCustomer(cmd command.UpdateCustomerCommand) cqrs.CommandResult {
-	return bus.CommandBus.Update(cmd)
+func (bus *CustomerCommandBus) UpdateCustomer(ctx context.Context, cmd command.UpdateCustomerCommand) cqrs.CommandResult {
+	return bus.CommandBus.Update(ctx, cmd)
 }
 
-func (bus *CustomerCommandBus) DeactivateCustomer(cmd command.DeactivateCustomerCommand) cqrs.CommandResult {
-	return bus.CommandBus.Deactivate(cmd)
+func (bus *CustomerCommandBus) DeactivateCustomer(ctx context.Context, cmd command.DeactivateCustomerCommand) cqrs.CommandResult {
+	return bus.CommandBus.Deactivate(ctx, cmd)
 }
 
 type CustomerQueryBus struct {
@@ -52,10 +53,10 @@ func NewCustomerQueryBus(queryBus query.CustomerQueryHandler) *CustomerQueryBus 
 	}
 }
 
-func (bus *CustomerQueryBus) GetCustomerByID(cmd query.FindCustomerByIDQuery) (query.CustomerResult, error) {
-	return bus.QueryBus.FindByID(cmd)
+func (bus *CustomerQueryBus) GetCustomerByID(ctx context.Context, cmd query.FindCustomerByIDQuery) (query.CustomerResult, error) {
+	return bus.QueryBus.FindByID(ctx, cmd)
 }
 
-func (bus *CustomerQueryBus) FindCustomerByCriteria(cmd query.FindCustomerBySpecificationQuery) (page.Page[query.CustomerResult], error) {
-	return bus.QueryBus.FindBySpecification(cmd)
+func (bus *CustomerQueryBus) FindCustomerByCriteria(ctx context.Context, cmd query.FindCustomerBySpecificationQuery) (page.Page[query.CustomerResult], error) {
+	return bus.QueryBus.FindBySpecification(ctx, cmd)
 }

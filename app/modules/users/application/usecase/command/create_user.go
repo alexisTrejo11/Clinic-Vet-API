@@ -3,65 +3,35 @@ package command
 import (
 	"context"
 
+	u "clinic-vet-api/app/modules/core/domain/entity/user"
 	"clinic-vet-api/app/modules/core/domain/enum"
 	"clinic-vet-api/app/modules/core/domain/valueobject"
 	"clinic-vet-api/app/modules/core/repository"
 	"clinic-vet-api/app/modules/core/service"
 
 	"clinic-vet-api/app/shared/cqrs"
-	apperror "clinic-vet-api/app/shared/error/application"
 )
 
 type CreateUserCommand struct {
 	email       valueobject.Email
-	phoneNumber valueobject.PhoneNumber
+	phoneNumber *valueobject.PhoneNumber
 	password    string
 	role        enum.UserRole
 	status      enum.UserStatus
 }
 
 func NewCreateUserCommand(email string, phoneNumber *string, password, role string, status string) (CreateUserCommand, error) {
-	var errorsMessages []string
-
-	emailVO, err := valueobject.NewEmail(email)
-	if err != nil {
-		errorsMessages = append(errorsMessages, err.Error())
-	}
-
-	var phoneNumberVO valueobject.PhoneNumber
+	var phoneNumberVO *valueobject.PhoneNumber
 	if phoneNumber != nil {
-		phoneNumberVO, err = valueobject.NewPhoneNumber(*phoneNumber)
-		if err != nil {
-			errorsMessages = append(errorsMessages, err.Error())
-		}
-	} else {
-		phoneNumberVO = valueobject.EmptyPhoneNumber()
+		phone := valueobject.NewPhoneNumberNoErr(*phoneNumber)
+		phoneNumberVO = &phone
 	}
-
-	userRole, err := enum.ParseUserRole(role)
-	if err != nil {
-		errorsMessages = append(errorsMessages, err.Error())
-	}
-
-	userStatus, err := enum.ParseUserStatus(status)
-	if err != nil {
-		errorsMessages = append(errorsMessages, err.Error())
-	}
-
-	if password == "" {
-		errorsMessages = append(errorsMessages, "password cannot be empty")
-	}
-
-	if len(errorsMessages) > 0 {
-		return CreateUserCommand{}, apperror.MappingError(errorsMessages, "constructor", "Create User Command", "user")
-	}
-
 	return CreateUserCommand{
-		email:       emailVO,
+		email:       valueobject.NewEmailNoErr(email),
 		phoneNumber: phoneNumberVO,
 		password:    password,
-		role:        userRole,
-		status:      userStatus,
+		role:        enum.UserRole(role),
+		status:      enum.UserStatus(status),
 	}, nil
 }
 
@@ -78,12 +48,12 @@ func NewCreateUserHandler(repo repository.UserRepository, securityService servic
 }
 
 func (uc *CreateUserHandler) Handle(ctx context.Context, command CreateUserCommand) cqrs.CommandResult {
-	user, err := fromCreateCommand(command)
-	if err != nil {
-		return *cqrs.FailureResult(ErrFailedMappingUser, err)
+	if err := command.Validate(); err != nil {
+		return *cqrs.FailureResult(ErrInvalidUserData, err)
 	}
 
-	err = uc.securityService.ValidateUserCredentials(ctx, command.email, command.phoneNumber, command.password)
+	user := command.ToEntity()
+	err := uc.securityService.ValidateUserCredentials(ctx, command.email, command.phoneNumber, command.password)
 	if err != nil {
 		return *cqrs.FailureResult(ErrFailedValidatingUser, err)
 	}
@@ -91,5 +61,38 @@ func (uc *CreateUserHandler) Handle(ctx context.Context, command CreateUserComma
 	if err := uc.securityService.ProcessUserPersistence(ctx, user); err != nil {
 		return *cqrs.FailureResult(ErrFailedProcessingUser, err)
 	}
+
 	return *cqrs.SuccessResult(user.ID().String(), ErrUserCreationSuccess)
+}
+
+func (cmd CreateUserCommand) ToEntity() *u.User {
+	return u.NewUserBuilder().
+		WithEmail(cmd.email).
+		WithPassword(cmd.password).
+		WithPhoneNumber(cmd.phoneNumber).
+		WithStatus(cmd.status).
+		WithRole(cmd.role).
+		Build()
+}
+
+func (cmd CreateUserCommand) Validate() error {
+	if err := cmd.email.Validate(); err != nil {
+		return err
+	}
+
+	if cmd.phoneNumber != nil {
+		if err := cmd.phoneNumber.Validate(); err != nil {
+			return err
+		}
+	}
+
+	if err := cmd.role.Validate(); err != nil {
+		return err
+	}
+
+	if err := cmd.status.Validate(); err != nil {
+		return err
+	}
+
+	return nil
 }

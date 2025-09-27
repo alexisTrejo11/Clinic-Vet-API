@@ -247,6 +247,13 @@ func (pt PetSpecies) IsValid() bool {
 	return false
 }
 
+func (pt PetSpecies) Validate() error {
+	if !pt.IsValid() {
+		return InvalidEnumParserError("PetSpecies", string(pt))
+	}
+	return nil
+}
+
 func ParsePetSpecies(PetSpecies string) (PetSpecies, error) {
 	normalized := normalizePetSpeciesInput(PetSpecies)
 	if val, exists := PetSpeciesMap[normalized]; exists {
@@ -583,6 +590,13 @@ var (
 func (pg PetGender) IsValid() bool {
 	_, exists := petGenderMap[string(pg)]
 	return exists
+}
+
+func (pg PetGender) Validate() error {
+	if !pg.IsValid() {
+		return InvalidEnumParserError("PetGender", string(pg))
+	}
+	return nil
 }
 
 func ParsePetGender(gender string) (PetGender, error) {

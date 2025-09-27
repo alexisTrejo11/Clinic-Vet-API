@@ -11,7 +11,7 @@ type MedicalSessionSpecification struct {
 	PetIDs          []valueobject.PetID
 	CustomerID      []valueobject.CustomerID
 	EmployeeIDs     []valueobject.EmployeeID
-	VisitReasons    []enum.VisitReason
+	ClinicService   []enum.ClinicService
 	VisitTypes      []enum.VisitType
 	Conditions      []enum.PetCondition
 	Diagnosis       *string
@@ -29,7 +29,7 @@ func (s *MedicalSessionSpecification) IsSatisfiedBy(entity any) bool {
 		PetID() valueobject.PetID
 		customerID() valueobject.CustomerID
 		EmployeeID() valueobject.EmployeeID
-		VisitReason() enum.VisitReason
+		VisitReason() enum.ClinicService
 		VisitType() enum.VisitType
 		VisitDate() time.Time
 		Diagnosis() string
@@ -81,9 +81,9 @@ func (s *MedicalSessionSpecification) IsSatisfiedBy(entity any) bool {
 		}
 	}
 
-	if len(s.VisitReasons) > 0 {
+	if len(s.ClinicService) > 0 {
 		found := false
-		for _, reason := range s.VisitReasons {
+		for _, reason := range s.ClinicService {
 			if reason == history.VisitReason() {
 				found = true
 				break
@@ -194,9 +194,9 @@ func (s *MedicalSessionSpecification) ToSQL() (string, []any) {
 		args = append(args, vetIDs)
 	}
 
-	if len(s.VisitReasons) > 0 {
-		reasons := make([]any, len(s.VisitReasons))
-		for i, reason := range s.VisitReasons {
+	if len(s.ClinicService) > 0 {
+		reasons := make([]any, len(s.ClinicService))
+		for i, reason := range s.ClinicService {
 			reasons[i] = reason.String()
 		}
 		conditions = append(conditions, "visit_reason IN (?)")
@@ -285,8 +285,8 @@ func (s *MedicalSessionSpecification) WithEmployeeIDs(vetIDs ...valueobject.Empl
 	return s
 }
 
-func (s *MedicalSessionSpecification) WithVisitReasons(reasons ...enum.VisitReason) *MedicalSessionSpecification {
-	s.VisitReasons = reasons
+func (s *MedicalSessionSpecification) WithClinicService(reasons ...enum.ClinicService) *MedicalSessionSpecification {
+	s.ClinicService = reasons
 	return s
 }
 

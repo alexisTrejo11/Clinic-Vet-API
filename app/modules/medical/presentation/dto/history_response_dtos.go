@@ -3,6 +3,7 @@ package dto
 import (
 	"time"
 
+	"clinic-vet-api/app/modules/core/domain/valueobject"
 	"clinic-vet-api/app/modules/medical/application/query"
 	commondto "clinic-vet-api/app/shared/dto"
 )
@@ -19,11 +20,6 @@ type MedSessionResponse struct {
 	// Required: true
 	// Example: 5
 	PetID uint `json:"pet_id"`
-
-	// The ID of the customer (pet owner)
-	// Required: true
-	// Example: 8
-	CustomerID uint `json:"customer_id"`
 
 	// The ID of the veterinarian who attended the session
 	// Required: true
@@ -48,17 +44,38 @@ type MedSessionResponse struct {
 	// Example: consultation
 	VisitType string `json:"visit_type"`
 
-	// The reason for the visit
+	// The service provided during the visit
 	// Required: true
-	// Max length: 500
-	// Example: Routine checkup and vaccination
-	VisitReason string `json:"visit_reason"`
+	// Max length: 1000
+	// Example: General Checkup
+	ServiceProvided string `json:"service_provided"`
 
 	// Additional notes about the visit
 	// Required: false
 	// Max length: 2000
 	// Example: Patient responded well to treatment
 	Notes *string `json:"notes,omitempty"`
+
+	// The creation timestamp of the record
+	// Required: true
+	// Format: date-time
+	// Example: 2023-10-15T16:45:00Z
+	CreatedAt time.Time `json:"created_at"`
+
+	// The last update timestamp of the record
+	// Required: true
+	// Format: date-time
+	// Example: 2023-10-15T16:45:00Z
+	UpdatedAt time.Time `json:"updated_at"`
+
+	PetSessionSummaryResponse *PetSessionSummaryResponse `json:"pet_session_summary,omitempty"`
+}
+
+type PetSessionSummaryResponse struct {
+	// The unique identifier of pet
+	// Required: true
+	// Example: 5
+	PetID uint `json:"pet_id"`
 
 	// The medical condition observed
 	// Required: true
@@ -115,59 +132,41 @@ type MedSessionResponse struct {
 	// Format: date-time
 	// Example: 2023-10-22T14:30:00Z
 	FollowUpDate *time.Time `json:"follow_up_date,omitempty"`
-
-	// Indicates if this was an emergency visit
-	// Required: true
-	// Example: false
-	IsEmergency bool `json:"is_emergency"`
-
-	// The creation timestamp of the record
-	// Required: true
-	// Format: date-time
-	// Example: 2023-10-15T16:45:00Z
-	CreatedAt time.Time `json:"created_at"`
-
-	// The last update timestamp of the record
-	// Required: true
-	// Format: date-time
-	// Example: 2023-10-15T16:45:00Z
-	UpdatedAt time.Time `json:"updated_at"`
 }
 
 func FromResult(res *query.MedSessionResult) *MedSessionResponse {
 	response := &MedSessionResponse{
 		ID:              res.ID.Value(),
-		PetID:           res.PetID.Value(),
-		CustomerID:      res.CustomerID.Value(),
 		EmployeeID:      res.EmployeeID.Value(),
-		Date:            res.Date,
+		Date:            res.VisitDate,
 		Diagnosis:       res.Diagnosis,
-		VisitType:       res.VisitType,
-		VisitReason:     res.VisitReason,
+		VisitType:       res.VisitType.DisplayName(),
+		ServiceProvided: res.ClinicService.DisplayName(),
 		Notes:           res.Notes,
-		Condition:       res.Condition,
-		Treatment:       res.Treatment,
-		HeartRate:       res.HeartRate,
-		RespiratoryRate: res.RespiratoryRate,
-		Symptoms:        res.Symptoms,
-		Medications:     res.Medications,
-		FollowUpDate:    res.FollowUpDate,
-		IsEmergency:     res.IsEmergency,
 		CreatedAt:       res.CreatedAt,
 		UpdatedAt:       res.UpdatedAt,
+		PetSessionSummaryResponse: &PetSessionSummaryResponse{
+			PetID:           res.PetDetailsResult.PetID.Value(),
+			Condition:       res.PetDetailsResult.Condition.DisplayName(),
+			Treatment:       res.PetDetailsResult.Treatment,
+			Weight:          decimalToFloat64Ptr(res.PetDetailsResult.Weight),
+			Temperature:     decimalToFloat64Ptr(res.PetDetailsResult.Temperature),
+			HeartRate:       res.PetDetailsResult.HeartRate,
+			RespiratoryRate: res.PetDetailsResult.RespiratoryRate,
+			Symptoms:        res.PetDetailsResult.Symptoms,
+			Medications:     res.PetDetailsResult.Medications,
+			FollowUpDate:    res.PetDetailsResult.FollowUpDate,
+		},
 	}
-
-	if res.Weight != nil {
-		weightFloat := res.Weight.Float64()
-		response.Weight = &weightFloat
-	}
-
-	if res.Temperature != nil {
-		tempFloat := res.Temperature.Float64()
-		response.Temperature = &tempFloat
-	}
-
 	return response
+}
+
+func decimalToFloat64Ptr(d *valueobject.Decimal) *float64 {
+	if d == nil {
+		return nil
+	}
+	f := d.Float64()
+	return &f
 }
 
 func FromResultList(results []query.MedSessionResult) []MedSessionResponse {

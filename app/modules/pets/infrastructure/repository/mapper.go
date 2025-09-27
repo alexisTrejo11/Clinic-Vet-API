@@ -1,8 +1,6 @@
 package repository
 
 import (
-	"fmt"
-
 	"clinic-vet-api/app/modules/core/domain/entity/pet"
 	"clinic-vet-api/app/modules/core/domain/enum"
 	"clinic-vet-api/app/modules/core/domain/valueobject"
@@ -11,73 +9,55 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-func sqlcRowToEntity(sqlPet sqlc.Pet) (*pet.Pet, error) {
-	petID := valueobject.NewPetID(uint(sqlPet.ID))
-	customerID := valueobject.NewCustomerID(uint(sqlPet.CustomerID))
-
-	opts := []pet.PetOption{
-		pet.WithName(sqlPet.Name),
-		pet.WithSpecies(sqlPet.Species),
-		pet.WithIsActive(sqlPet.IsActive),
-	}
+func sqlcRowToEntity(sqlPet sqlc.Pet) pet.Pet {
+	petBuilder := pet.NewPetBuilder().
+		WithID(valueobject.NewPetID(uint(sqlPet.ID))).
+		WithCustomerID(valueobject.NewCustomerID(uint(sqlPet.CustomerID))).
+		WithName(sqlPet.Name).
+		WithSpecies(enum.PetSpecies(sqlPet.Species)).
+		WithIsActive(sqlPet.IsActive)
 
 	if sqlPet.Photo.Valid {
-		opts = append(opts, pet.WithPhoto(&sqlPet.Photo.String))
+		petBuilder = petBuilder.WithPhoto(&sqlPet.Photo.String)
 	}
 
-	if sqlPet.Breed.Valid && sqlPet.Breed.String != "" {
-		opts = append(opts, pet.WithBreed(&sqlPet.Breed.String))
+	if sqlPet.Breed.Valid {
+		petBuilder = petBuilder.WithBreed(&sqlPet.Breed.String)
 	}
 
 	if sqlPet.Age.Valid {
 		age := int(sqlPet.Age.Int16)
-		opts = append(opts, pet.WithAge(&age))
+		petBuilder = petBuilder.WithAge(&age)
 	}
 
 	if sqlPet.Gender.Valid && sqlPet.Gender.String != "" {
-		petGender := enum.PetGender(sqlPet.Gender.String)
-		opts = append(opts, pet.WithGender(&petGender))
+		petBuilder = petBuilder.WithGender(enum.PetGender(sqlPet.Gender.String))
 	}
 
 	if sqlPet.Color.Valid && sqlPet.Color.String != "" {
-		opts = append(opts, pet.WithColor(&sqlPet.Color.String))
+		petBuilder = petBuilder.WithColor(&sqlPet.Color.String)
 	}
 
 	if sqlPet.Microchip.Valid && sqlPet.Microchip.String != "" {
-		opts = append(opts, pet.WithMicrochip(&sqlPet.Microchip.String))
+		petBuilder = petBuilder.WithMicrochip(&sqlPet.Microchip.String)
 	}
 
 	if sqlPet.IsNeutered.Valid {
-		opts = append(opts, pet.WithIsNeutered(&sqlPet.IsNeutered.Bool))
+		petBuilder = petBuilder.WithIsNeutered(&sqlPet.IsNeutered.Bool)
 	}
 
-	petEntity, err := pet.NewPet(
-		petID,
-		customerID,
-		opts...,
-	)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create pet from SQL: %w", err)
-	}
-
-	return petEntity, nil
+	return *petBuilder.Build()
 }
 
-func sqlcRowsToEntities(rows []sqlc.Pet) ([]pet.Pet, error) {
+func sqlcRowsToEntities(rows []sqlc.Pet) []pet.Pet {
 	var pets []pet.Pet
 
-	if len(rows) == 0 {
-		return []pet.Pet{}, nil
+	for _, row := range rows {
+		petEntity := sqlcRowToEntity(row)
+		pets = append(pets, petEntity)
 	}
 
-	for _, row := range rows {
-		petEntity, err := sqlcRowToEntity(row)
-		if err != nil {
-			return nil, err
-		}
-		pets = append(pets, *petEntity)
-	}
-	return pets, nil
+	return pets
 }
 
 func ToSqlCreateParam(pet pet.Pet) *sqlc.CreatePetParams {
@@ -87,7 +67,7 @@ func ToSqlCreateParam(pet pet.Pet) *sqlc.CreatePetParams {
 		Species:    pet.Species().String(),
 		Breed:      toPgTypeText(pet.Breed()),
 		Age:        toPgTypeInt2(pet.Age()),
-		Gender:     toPgTypeText((*string)(pet.Gender())),
+		Gender:     pgtype.Text{String: pet.Gender().String(), Valid: true},
 		Color:      toPgTypeText(pet.Color()),
 		Microchip:  toPgTypeText(pet.Microchip()),
 		IsNeutered: toPgTypeBool(pet.IsNeutered()),
@@ -104,7 +84,7 @@ func ToSqlUpdateParam(pet *pet.Pet) *sqlc.UpdatePetParams {
 		Species:    pet.Species().String(),
 		Breed:      toPgTypeText(pet.Breed()),
 		Age:        toPgTypeInt2(pet.Age()),
-		Gender:     toPgTypeText((*string)(pet.Gender())),
+		Gender:     pgtype.Text{String: pet.Gender().String(), Valid: true},
 		Color:      toPgTypeText(pet.Color()),
 		Microchip:  toPgTypeText(pet.Microchip()),
 		IsNeutered: toPgTypeBool(pet.IsNeutered()),

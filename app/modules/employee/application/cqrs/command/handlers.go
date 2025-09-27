@@ -47,21 +47,14 @@ func NewDeleteEmployeeHandler(employeeRepo repository.EmployeeRepository, eventB
 }
 
 func (h *CreateEmployeeHandler) Handle(ctx context.Context, cmd CreateEmployeeCommand) cqrs.CommandResult {
-	employee, err := cmd.createEmployee(ctx)
-	if err != nil {
-		return *cqrs.FailureResult("an error occurred creating employee", err)
-	}
-
-	if err := h.employeeRepo.Save(ctx, employee); err != nil {
+	employee := cmd.ToEntity()
+	if err := h.employeeRepo.Save(ctx, &employee); err != nil {
 		return *cqrs.FailureResult("an error occurred saving employee", err)
 	}
 
-	/*
-		if err := h.eventBus.PublishEvents(ctx, employee.DomainEvents()); err != nil {
-			// Log error but don't fail the operation
-			// logger.Error("Failed to publish events", err)
-		}
-	*/
+	if err := employee.Validate(ctx); err != nil {
+		return *cqrs.FailureResult("validation error", err)
+	}
 
 	return *cqrs.SuccessResult(employee.ID().String(), "Employee created successfully")
 }
@@ -76,16 +69,9 @@ func (h *UpdateEmployeeHandler) Handle(ctx context.Context, cmd UpdateEmployeeCo
 		return *cqrs.FailureResult("an error occurred updating employee", err)
 	}
 
-	// Save updated employee
-	if err := h.employeeRepo.Update(ctx, &employee); err != nil {
+	if err := h.employeeRepo.Save(ctx, &employee); err != nil {
 		return *cqrs.FailureResult("an error occurred saving employee", err)
 	}
-
-	/*
-		if err := h.eventBus.PublishEvents(ctx, employee.DomainEvents()); err != nil {
-			// Log error but don't fail the operation
-		}
-	*/
 
 	return *cqrs.SuccessResult(employee.ID().String(), "Employee updated successfully")
 }
@@ -102,10 +88,6 @@ func (h *DeleteEmployeeHandler) Handle(ctx context.Context, cmd DeleteEmployeeCo
 	if err := h.employeeRepo.SoftDelete(ctx, cmd.EmployeeID); err != nil {
 		return *cqrs.FailureResult("failing deleting employee", err)
 	}
-
-	// Publish domain events (employee deleted event)
-	// events := []DomainEvent{NewEmployeeDeletedEvent(cmd.EmployeeID)}
-	// h.eventBus.PublishEvents(ctx, events)
 
 	return *cqrs.SuccessResult("", "Employee deleted successfully")
 }

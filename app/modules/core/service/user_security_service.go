@@ -35,6 +35,10 @@ func NewUserSecurityService(
 
 // ProcessUserPersistence handles hashing the user's password and saving the user to the repository.
 func (s *UserSecurityService) ProcessUserPersistence(ctx context.Context, user *u.User) error {
+	if err := user.ValidatePersistence(); err != nil {
+		return err
+	}
+
 	hashedPassword, err := s.passwordEncoder.HashPassword(user.HashedPassword())
 	if err != nil {
 		return err
@@ -72,7 +76,7 @@ func (s *UserSecurityService) authenticateWithPassword(user u.User, plainPasswor
 	return user, nil
 }
 
-func (s *UserSecurityService) ValidateUserCredentials(ctx context.Context, email valueobject.Email, phone valueobject.PhoneNumber, rawPassword string) error {
+func (s *UserSecurityService) ValidateUserCredentials(ctx context.Context, email valueobject.Email, phone *valueobject.PhoneNumber, rawPassword string) error {
 	var wg sync.WaitGroup
 	errorChannel := make(chan error, 3)
 	var validationErrors []error
@@ -88,7 +92,7 @@ func (s *UserSecurityService) ValidateUserCredentials(ctx context.Context, email
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		if err := s.ValidatePhoneNumber(ctx, &phone); err != nil {
+		if err := s.ValidatePhoneNumber(ctx, phone); err != nil {
 			errorChannel <- err
 		}
 	}()

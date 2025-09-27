@@ -12,6 +12,7 @@ const (
 	ErrInvalidPhone       = "invalid phone number"
 	ErrPhoneUnchanged     = "phone number unchanged"
 	ErrEmailUnchanged     = "email unchanged"
+	ErrInvalidUserData    = "invalid user data provided"
 )
 
 const (

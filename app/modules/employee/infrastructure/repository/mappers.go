@@ -42,20 +42,18 @@ func sqlcRowToEntity(sql sqlc.Employee) *employee.Employee {
 		userID = &userIDVal
 	}
 
-	opts := []employee.EmployeeOption{
-		employee.WithName(personName),
-		employee.WithPhoto(sql.Photo),
-		employee.WithLicenseNumber(sql.LicenseNumber),
-		employee.WithSpecialty(enum.VetSpecialty(string(sql.Speciality))),
-		employee.WithYearsExperience(int(sql.YearsOfExperience)),
-		employee.WithSchedule(schedule),
-		employee.WithIsActive(sql.IsActive),
-		employee.WithUserID(userID),
-		employee.WithTimestamps(sql.CreatedAt.Time, sql.UpdatedAt.Time),
-	}
-
-	employee := employee.NewEmployee(employeeID, opts...)
-	return employee
+	return employee.NewEmployeeBuilder().
+		WithID(employeeID).
+		WithName(personName).
+		WithPhoto(sql.Photo).
+		WithLicenseNumber(sql.LicenseNumber).
+		WithSpecialty(enum.VetSpecialty(string(sql.Speciality))).
+		WithYearsExperience(int(sql.YearsOfExperience)).
+		WithSchedule(schedule).
+		WithIsActive(sql.IsActive).
+		WithUserID(userID).
+		WithTimestamps(sql.CreatedAt.Time, sql.UpdatedAt.Time).
+		Build()
 }
 
 func sqlcRowsToEntities(rows []sqlc.Employee) []employee.Employee {
@@ -98,9 +96,11 @@ func parseScheduleFromPostgres(jsonData []byte) (*valueobject.Schedule, error) {
 	if pgSchedule.Monday != nil {
 		schedule.WorkDays = append(schedule.WorkDays, parseDaySchedule(time.Monday, pgSchedule.Monday))
 	}
+
 	if pgSchedule.Tuesday != nil {
 		schedule.WorkDays = append(schedule.WorkDays, parseDaySchedule(time.Tuesday, pgSchedule.Tuesday))
 	}
+
 	if pgSchedule.Wednesday != nil {
 		schedule.WorkDays = append(schedule.WorkDays, parseDaySchedule(time.Wednesday, pgSchedule.Wednesday))
 	}

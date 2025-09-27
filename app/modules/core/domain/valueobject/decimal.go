@@ -21,7 +21,7 @@ func NewDecimalFromString(s string) (Decimal, error) {
 
 	parts := strings.Split(s, ".")
 	if len(parts) > 2 {
-		return Decimal{}, domainerr.ValidationError(context.Background(), "Decimal", s, "invalid decimal format", "creating decimal")
+		return Decimal{}, domainerr.ValidationError(context.Background(), "INVALID_VALUE_OBJECT", "Decimal", s, "invalid decimal format", "creating decimal")
 	}
 
 	integerPart := parts[0]

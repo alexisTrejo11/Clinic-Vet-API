@@ -1,32 +1,35 @@
 package query
 
 import (
+	"clinic-vet-api/app/modules/core/domain/enum"
 	"clinic-vet-api/app/modules/core/domain/valueobject"
 	"time"
 )
 
 type MedSessionResult struct {
-	ID              valueobject.MedSessionID
+	ID               valueobject.MedSessionID
+	EmployeeID       valueobject.EmployeeID
+	VisitDate        time.Time
+	Diagnosis        string
+	VisitType        enum.VisitType
+	ClinicService    enum.ClinicService
+	Notes            *string
+	PetDetailsResult PetDetailsResult
+	CreatedAt        time.Time
+	UpdatedAt        time.Time
+}
+
+type PetDetailsResult struct {
 	PetID           valueobject.PetID
-	CustomerID      valueobject.CustomerID
-	EmployeeID      valueobject.EmployeeID
-	Date            time.Time
-	Diagnosis       string
-	VisitType       string
-	VisitReason     string
-	Notes           *string
-	Condition       string
-	Treatment       string
 	Weight          *valueobject.Decimal
-	Temperature     *valueobject.Decimal
 	HeartRate       *int
 	RespiratoryRate *int
-	Symptoms        []string
+	Temperature     *valueobject.Decimal
+	Condition       enum.PetCondition
 	Medications     []string
+	Symptoms        []string
+	Treatment       string
 	FollowUpDate    *time.Time
-	IsEmergency     bool
-	CreatedAt       time.Time
-	UpdatedAt       time.Time
 }
 
 type MedSessionDetailResult struct {

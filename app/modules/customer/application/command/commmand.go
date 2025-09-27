@@ -5,7 +5,6 @@ import (
 	"clinic-vet-api/app/modules/core/domain/entity/customer"
 	"clinic-vet-api/app/modules/core/domain/enum"
 	"clinic-vet-api/app/modules/core/domain/valueobject"
-	"context"
 	"time"
 )
 
@@ -15,23 +14,18 @@ type CreateCustomerCommand struct {
 	LastName    string
 	Gender      enum.PersonGender
 	DateOfBirth time.Time
-	CTX         context.Context
 }
 
-func (c *CreateCustomerCommand) ToEntity() (*customer.Customer, error) {
-	fullName := valueobject.PersonName{
-		FirstName: c.FirstName,
-		LastName:  c.LastName,
-	}
+func (c *CreateCustomerCommand) ToEntity() customer.Customer {
+	customer := customer.NewCustomerBuilder().
+		WithName(valueobject.NewPersonNameNoErr(c.FirstName, c.LastName)).
+		WithPhoto(c.Photo).
+		WithGender(c.Gender).
+		WithDateOfBirth(c.DateOfBirth).
+		WithIsActive(true).
+		Build()
 
-	return customer.CreateCustomer(
-		c.CTX,
-		customer.WithFullName(fullName),
-		customer.WithPhoto(c.Photo),
-		customer.WithGender(c.Gender),
-		customer.WithDateOfBirth(c.DateOfBirth),
-		customer.WithIsActive(true),
-	)
+	return *customer
 }
 
 type UpdateCustomerCommand struct {
@@ -44,15 +38,13 @@ type UpdateCustomerCommand struct {
 	Gender      *enum.PersonGender     `json:"gender" validate:"omitempty,oneof=male female not_specified"`
 	DateOfBirth *time.Time             `json:"date_of_birth" validate:"required"`
 	PhoneNumber *string                `json:"phone_number"`
-	CTX         context.Context
 }
 
-func (c *UpdateCustomerCommand) UpdateEntity(existingCustomer *customer.Customer) error {
+func (cmd *UpdateCustomerCommand) UpdateEntity(existingCustomer *customer.Customer) error {
 	return nil
 }
 
 type DeactivateCustomerCommand struct {
 	ID     valueobject.CustomerID
 	Reason string
-	CTX    context.Context
 }

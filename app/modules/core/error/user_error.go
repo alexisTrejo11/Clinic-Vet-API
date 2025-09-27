@@ -3,16 +3,16 @@ package domainerr
 import "context"
 
 func ErrInvalidUserRole(value string) error {
-	return ValidationError(context.Background(), "role", value, "Invalid user role", "user role validation")
+	return ValidationError(context.Background(), "INVALID_USER_ROLE", "role", value, "Invalid user role", "user role validation")
 }
 
 func ErrInvalidUserStatus(status string) error {
-	return ValidationError(context.Background(), "user_status", status, "Invalid user status", "user status validation")
+	return ValidationError(context.Background(), "INVALID_USER_STATUS", "user_status", status, "Invalid user status", "user status validation")
 }
 
 func ErrInvalidUserRoleType(roleType string) error {
 	return ValidationError(
-		context.Background(), "role_type", roleType, "Invalid user role type", "user role validation",
+		context.Background(), "INVALID_USER_ROLE", "role_type", roleType, "Invalid user role type", "user role validation",
 	)
 }
 

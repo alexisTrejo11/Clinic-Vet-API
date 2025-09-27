@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"clinic-vet-api/app/modules/appointment/application/command"
-	"clinic-vet-api/app/modules/core/domain/enum"
 )
 
 // CreateApptRequest represents the request to create an appointment
@@ -63,23 +62,14 @@ type RequestApptResponse struct {
 	Notes *string `json:"notes" example:"Patient has allergy to penicillin"`
 }
 
-func (r *CreateApptRequest) ToCommand(employeeID *uint) (*command.CreateApptCommand, error) {
-	clinicService, err := enum.ParseClinicService(r.Service)
-	if err != nil {
-		return nil, err
-	}
-	apptStatus, err := enum.ParseAppointmentStatus(r.Status)
-	if err != nil {
-		return nil, err
-	}
-
+func (r *CreateApptRequest) ToCommand(employeeID *uint) *command.CreateApptCommand {
 	return command.NewCreateApptCommand(
 		r.CustomerID,
 		r.PetID,
 		employeeID,
-		clinicService,
+		r.Service,
 		r.Datetime,
-		apptStatus,
+		r.Status,
 		r.Notes,
-	), nil
+	)
 }

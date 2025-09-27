@@ -57,19 +57,17 @@ type ScheduleData struct {
 	EndBreak      int
 }
 
-func (cmd *CreateEmployeeCommand) createEmployee(ctx context.Context) (*employee.Employee, error) {
-	opts := []employee.EmployeeOption{
-		employee.WithLicenseNumber(cmd.LicenseNumber),
-		employee.WithSpecialty(cmd.Specialty),
-		employee.WithYearsExperience(cmd.YearsExperience),
-		employee.WithIsActive(cmd.IsActive),
-	}
+func (cmd *CreateEmployeeCommand) ToEntity() employee.Employee {
+	employee := employee.NewEmployeeBuilder().
+		WithLicenseNumber(cmd.LicenseNumber).
+		WithSpecialty(cmd.Specialty).
+		WithYearsExperience(cmd.YearsExperience).
+		WithIsActive(cmd.IsActive).
+		WithPhoto(cmd.Photo).
+		WithIsActive(cmd.IsActive).
+		Build()
 
-	if cmd.Photo != "" {
-		opts = append(opts, employee.WithPhoto(cmd.Photo))
-	}
-
-	return employee.CreateEmployee(ctx, cmd.Name, cmd.Gender, cmd.DateOfBirth, opts...)
+	return *employee
 }
 
 func (cmd *UpdateEmployeeCommand) updateEmployee(ctx context.Context, emp *employee.Employee) error {

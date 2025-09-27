@@ -42,12 +42,7 @@ func (r *SqlcPaymentRepository) FindByID(ctx context.Context, id valueobject.Pay
 		return payment.Payment{}, r.dbError(OpSelect, ErrMsgGetPayment, err)
 	}
 
-	paymentEntity, err := sqlcRowToEntity(&sqlRow)
-	if err != nil {
-		return payment.Payment{}, r.wrapConversionError(err)
-	}
-
-	return *paymentEntity, nil
+	return *sqlcRowToEntity(sqlRow), nil
 }
 
 func (r *SqlcPaymentRepository) FindByTransactionID(ctx context.Context, transactionID string) (payment.Payment, error) {
@@ -59,12 +54,7 @@ func (r *SqlcPaymentRepository) FindByTransactionID(ctx context.Context, transac
 		return payment.Payment{}, r.dbError(OpSelect, ErrMsgGetPaymentByTransaction, err)
 	}
 
-	paymentEntity, err := sqlcRowToEntity(&sqlRow)
-	if err != nil {
-		return payment.Payment{}, r.wrapConversionError(err)
-	}
-
-	return *paymentEntity, nil
+	return *sqlcRowToEntity(sqlRow), nil
 }
 
 func (r *SqlcPaymentRepository) FindByIDAndCustomerID(ctx context.Context, id valueobject.PaymentID, customerID valueobject.CustomerID) (payment.Payment, error) {
@@ -79,12 +69,7 @@ func (r *SqlcPaymentRepository) FindByIDAndCustomerID(ctx context.Context, id va
 		return payment.Payment{}, fmt.Errorf("failed to find payment by ID and customer ID: %w", err)
 	}
 
-	paymentEntity, err := sqlcRowToEntity(&sqlRow)
-	if err != nil {
-		return payment.Payment{}, fmt.Errorf("failed to convert SQL row to payment: %w", err)
-	}
-
-	return *paymentEntity, nil
+	return *sqlcRowToEntity(sqlRow), nil
 }
 
 func (r *SqlcPaymentRepository) FindByCustomerID(ctx context.Context, customerID valueobject.CustomerID, pagination page.PaginationRequest) (page.Page[payment.Payment], error) {
@@ -290,12 +275,9 @@ func (r *SqlcPaymentRepository) TotalRevenueByDateRange(ctx context.Context, sta
 }
 
 func (r *SqlcPaymentRepository) create(ctx context.Context, paymentEntity *payment.Payment) error {
-	params, err := entityToCreateParams(paymentEntity)
-	if err != nil {
-		return r.wrapConversionError(err)
-	}
+	params := entityToCreateParams(*paymentEntity)
 
-	_, err = r.queries.CreatePayment(ctx, *params)
+	_, err := r.queries.CreatePayment(ctx, *params)
 	if err != nil {
 		return r.dbError(OpInsert, ErrMsgCreatePayment, err)
 	}
@@ -304,12 +286,9 @@ func (r *SqlcPaymentRepository) create(ctx context.Context, paymentEntity *payme
 }
 
 func (r *SqlcPaymentRepository) update(ctx context.Context, paymentEntity *payment.Payment) error {
-	params, err := entityToUpdateParams(paymentEntity)
-	if err != nil {
-		return r.wrapConversionError(err)
-	}
+	params := entityToUpdateParams(paymentEntity)
 
-	_, err = r.queries.UpdatePayment(ctx, *params)
+	_, err := r.queries.UpdatePayment(ctx, *params)
 	if err != nil {
 		return r.dbError(OpUpdate, ErrMsgUpdatePayment, err)
 	}

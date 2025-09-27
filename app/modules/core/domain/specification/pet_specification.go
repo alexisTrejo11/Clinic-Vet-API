@@ -63,10 +63,7 @@ func (s *PetSpecification) applyFilter(pet *pet.Pet, filter Filter) bool {
 		}
 		return *pet.Age() == filter.Value.(int)
 	case "gender":
-		if pet.Gender() == nil {
-			return false
-		}
-		return *pet.Gender() == filter.Value.(enum.PetGender)
+		return pet.Gender() == filter.Value.(enum.PetGender)
 	case "customer_id":
 		return pet.CustomerID().String() == filter.Value.(string)
 	case "is_active":

@@ -7,16 +7,15 @@ import (
 	"clinic-vet-api/app/shared/cqrs"
 	apperror "clinic-vet-api/app/shared/error/application"
 	"context"
-	"fmt"
 )
 
 type CreatePetCommand struct {
 	Name       string
 	Photo      *string
-	Species    string
+	Species    enum.PetSpecies
 	Breed      *string
 	Age        *int
-	Gender     *string
+	Gender     enum.PetGender
 	Color      *string
 	Microchip  *string
 	Tattoo     *string
@@ -26,20 +25,12 @@ type CreatePetCommand struct {
 	IsActive   bool
 }
 
-func CustomerNotFoundError(customerID valueobject.CustomerID) error {
-	return apperror.EntityNotFoundValidationError("customer", "id", customerID.String())
-}
-
 func (h *petCommandHandler) CreatePet(ctx context.Context, cmd CreatePetCommand) cqrs.CommandResult {
 	if err := h.validateCustomer(ctx, cmd.CustomerID); err != nil {
 		return *cqrs.FailureResult("Customer validation failed", err)
 	}
 
-	newPet, err := cmd.ToEntity(ctx)
-	if err != nil {
-		return *cqrs.FailureResult("Failed to create pet entity", err)
-	}
-
+	newPet := cmd.ToEntity()
 	petCreated, err := h.petRepository.Save(ctx, newPet)
 	if err != nil {
 		return *cqrs.FailureResult("Failed to save new pet", err)
@@ -64,57 +55,44 @@ func (h *petCommandHandler) getPet(ctx context.Context, petID valueobject.PetID,
 	return h.petRepository.FindByID(ctx, petID)
 }
 
-func (cmd *CreatePetCommand) ToEntity(ctx context.Context) (pet.Pet, error) {
-	opts := []pet.PetOption{
-		pet.WithName(cmd.Name),
-		pet.WithSpecies(cmd.Species),
-		pet.WithIsActive(cmd.IsActive),
+func (cmd *CreatePetCommand) ToEntity() pet.Pet {
+	return *pet.NewPetBuilder().
+		WithName(cmd.Name).
+		WithSpecies(cmd.Species).
+		WithIsActive(cmd.IsActive).
+		WithPhoto(cmd.Photo).
+		WithBreed(cmd.Breed).
+		WithAge(cmd.Age).
+		WithGender(cmd.Gender).
+		WithCustomerID(cmd.CustomerID).
+		WithTattoo(cmd.Tattoo).
+		WithBloodType(cmd.BloodType).
+		WithColor(cmd.Color).
+		WithMicrochip(cmd.Microchip).
+		WithIsNeutered(cmd.IsNeutered).
+		Build()
+}
+
+func (cmd *CreatePetCommand) Validate() error {
+	if cmd.Name == "" {
+		return apperror.ValidationError("pet name is required")
 	}
 
-	if cmd.Photo != nil {
-		opts = append(opts, pet.WithPhoto(cmd.Photo))
+	if cmd.CustomerID.IsZero() {
+		return apperror.ValidationError("customer_id is required")
 	}
 
-	if cmd.Breed != nil {
-		opts = append(opts, pet.WithBreed(cmd.Breed))
+	if err := cmd.Species.Validate(); err != nil {
+		return err
 	}
 
-	if cmd.Age != nil {
-		opts = append(opts, pet.WithAge(cmd.Age))
+	if err := cmd.Gender.Validate(); err != nil {
+		return err
 	}
 
-	if cmd.Gender != nil {
-		gender, err := enum.ParsePetGender(*cmd.Gender)
-		if err != nil {
-			return pet.Pet{}, fmt.Errorf("invalid gender: %w", err)
-		}
-		opts = append(opts, pet.WithGender(&gender))
-	}
+	return nil
+}
 
-	if cmd.Tattoo != nil {
-		opts = append(opts, pet.WithTattoo(cmd.Tattoo))
-	}
-
-	if cmd.BloodType != nil {
-		opts = append(opts, pet.WithBloodType(cmd.BloodType))
-	}
-
-	if cmd.Color != nil {
-		opts = append(opts, pet.WithColor(cmd.Color))
-	}
-
-	if cmd.Microchip != nil {
-		opts = append(opts, pet.WithMicrochip(cmd.Microchip))
-	}
-
-	if cmd.IsNeutered != nil {
-		opts = append(opts, pet.WithIsNeutered(cmd.IsNeutered))
-	}
-
-	petEntity, err := pet.CreatePet(ctx, cmd.CustomerID, opts...)
-	if err != nil {
-		return pet.Pet{}, err
-	}
-
-	return *petEntity, nil
+func CustomerNotFoundError(customerID valueobject.CustomerID) error {
+	return apperror.EntityNotFoundValidationError("customer", "id", customerID.String())
 }

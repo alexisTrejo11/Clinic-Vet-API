@@ -42,17 +42,13 @@ func NewUserAccountService(
 }
 
 func (s *userAccountService) CreateCustomer(ctx context.Context, userID valueobject.UserID, personalData commondto.PersonalData) (valueobject.CustomerID, error) {
-	cust, err := customer.CreateCustomer(
-		ctx,
-		customer.WithIsActive(true),
-		customer.WithUserID(&userID),
-		customer.WithDateOfBirth(personalData.DateOfBirth),
-		customer.WithFullName(personalData.Name),
-		customer.WithGender(personalData.Gender),
-	)
-	if err != nil {
-		return valueobject.CustomerID{}, err
-	}
+	cust := customer.NewCustomerBuilder().
+		WithIsActive(true).
+		WithUserID(&userID).
+		WithDateOfBirth(personalData.DateOfBirth).
+		WithName(personalData.Name).
+		WithGender(personalData.Gender).
+		Build()
 
 	if err := s.customerRepository.Save(ctx, cust); err != nil {
 		return valueobject.CustomerID{}, err

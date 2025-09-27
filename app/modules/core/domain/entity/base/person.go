@@ -24,8 +24,18 @@ type Person struct {
 	name        valueobject.PersonName
 	dateOfBirth time.Time
 	gender      enum.PersonGender
-	createdAt   time.Time
-	updatedAt   time.Time
+}
+
+func (p *Person) SetName(name valueobject.PersonName) {
+	p.name = name
+}
+
+func (p *Person) SetDateOfBirth(dob time.Time) {
+	p.dateOfBirth = dob
+}
+
+func (p *Person) SetGender(gender enum.PersonGender) {
+	p.gender = gender
 }
 
 func CreatePerson(ctx context.Context, name valueobject.PersonName, dateOfBirth time.Time, gender enum.PersonGender) (*Person, error) {
@@ -33,11 +43,9 @@ func CreatePerson(ctx context.Context, name valueobject.PersonName, dateOfBirth 
 		name:        name,
 		dateOfBirth: dateOfBirth,
 		gender:      gender,
-		createdAt:   time.Now(),
-		updatedAt:   time.Now(),
 	}
 
-	if err := person.Validate(ctx, "CREATE_PERSON"); err != nil {
+	if err := person.Validate(ctx); err != nil {
 		return nil, err
 	}
 
@@ -45,7 +53,8 @@ func CreatePerson(ctx context.Context, name valueobject.PersonName, dateOfBirth 
 }
 
 // TODO: SEPARATE VALIDATIONS FOR EACH FIELD AND ADD IT ON UPDATE METHODS
-func (p *Person) Validate(ctx context.Context, operation string) error {
+func (p *Person) Validate(ctx context.Context) error {
+	operation := "Validating Person"
 	if p.name.FullName() == "" {
 		return domainerr.PersonValidationError(ctx,
 			domainerr.PersonNameRequired, "full_name", "", string(operation))
@@ -82,7 +91,6 @@ func (p *Person) UpdateName(ctx context.Context, name valueobject.PersonName) er
 	}
 	p.name = name
 
-	p.updatedAt = time.Now()
 	return nil
 }
 
@@ -103,8 +111,6 @@ func (p *Person) UpdateDateOfBirth(ctx context.Context, dob time.Time) error {
 		return domainerr.PersonValidationError(ctx,
 			domainerr.PersonUnderage, "date_of_birth", dob.Format(time.RFC3339), "UPDATE_PERSON")
 	}
-
-	p.updatedAt = time.Now()
 	return nil
 }
 
@@ -116,7 +122,6 @@ func (p *Person) UpdateGender(ctx context.Context, gender enum.PersonGender) err
 
 	p.gender = gender
 
-	p.updatedAt = time.Now()
 	return nil
 }
 
@@ -136,14 +141,6 @@ func (p *Person) Gender() enum.PersonGender {
 	return p.gender
 }
 
-func (p *Person) CreatedAt() time.Time {
-	return p.createdAt
-}
-
-func (p *Person) UpdatedAt() time.Time {
-	return p.updatedAt
-}
-
 func (p *Person) Age() int {
 	now := time.Now()
 	age := now.Year() - p.dateOfBirth.Year()
@@ -156,11 +153,6 @@ func (p *Person) Age() int {
 
 func (p *Person) IsAdult() bool {
 	return p.Age() >= 18
-}
-
-func (p *Person) SetTimeStamps(createdAt, updatedAt time.Time) {
-	p.createdAt = createdAt
-	p.updatedAt = updatedAt
 }
 
 func (p *Person) SetID(id string) {

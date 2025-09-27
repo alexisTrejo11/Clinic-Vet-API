@@ -176,12 +176,7 @@ func (ctrl *ApptControllerOperations) CreateAppointment(c *gin.Context, employee
 		return
 	}
 
-	command, err := requestCreateData.ToCommand(employeeID)
-	if err != nil {
-		response.ApplicationError(c, err)
-		return
-	}
-
+	command := requestCreateData.ToCommand(employeeID)
 	result := ctrl.bus.CommandBus.CreateAppointment(c.Request.Context(), *command)
 	if !result.IsSuccess() {
 		response.ApplicationError(c, result.Error())
@@ -191,26 +186,21 @@ func (ctrl *ApptControllerOperations) CreateAppointment(c *gin.Context, employee
 	response.Created(c, result.ID(), "Appointment")
 }
 
-func (ctrl *ApptControllerOperations) UpdateAppointment(c *gin.Context) {
+func (ctrl *ApptControllerOperations) UpdateAppointment(c *gin.Context, apptID uint) {
 	var updateAppointData dto.UpdateApptRequest
 	if err := ginUtils.BindAndValidateBody(c, &updateAppointData, ctrl.validate); err != nil {
 		response.BadRequest(c, err)
 		return
 	}
 
-	updateCommand, err := updateAppointData.ToCommand()
-	if err != nil {
-		response.ApplicationError(c, err)
-		return
-	}
-
+	updateCommand := updateAppointData.ToCommand(apptID)
 	result := ctrl.bus.CommandBus.UpdateAppointment(c.Request.Context(), updateCommand)
 	if !result.IsSuccess() {
 		response.ApplicationError(c, result.Error())
 		return
 	}
 
-	response.Updated(c, result.ToMap(), "Appointment")
+	response.Updated(c, nil, "Appointment")
 }
 
 func (ctrl *ApptControllerOperations) DeleteAppointment(c *gin.Context) {
@@ -294,9 +284,8 @@ func (ctrl *ApptControllerOperations) CompleteAppointment(c *gin.Context, employ
 		response.BadRequest(c, httpError.RequestURLParamError(err, "id", c.Param("id")))
 		return
 	}
-	notes := c.Query("notes")
 
-	command := command.NewCompleteApptCommand(appointmentID, employeeID, notes)
+	command := command.NewCompleteApptCommand(appointmentID, employeeID)
 	result := ctrl.bus.CommandBus.CompleteAppointment(c.Request.Context(), *command)
 	if !result.IsSuccess() {
 		response.ApplicationError(c, result.Error())

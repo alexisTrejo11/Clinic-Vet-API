@@ -1,6 +1,7 @@
 package bus
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 
@@ -70,18 +71,18 @@ func NewMedicalSessionCommandBus(handlers command.MedicalSessionCommandHandlers)
 	}
 }
 
-func (mh *MedicalSessionCommandBus) CreateMedicalSession(cmd command.CreateMedSessionCommand) cqrs.CommandResult {
-	return mh.handlers.CreateMedicalSession(cmd)
+func (mh *MedicalSessionCommandBus) CreateMedicalSession(ctx context.Context, cmd command.CreateMedSessionCommand) cqrs.CommandResult {
+	return mh.handlers.CreateMedicalSession(ctx, cmd)
 }
 
-func (mh *MedicalSessionCommandBus) UpdateMedicalSession(cmd command.UpdateMedSessionCommand) cqrs.CommandResult {
-	return mh.handlers.UpdateMedicalSession(cmd)
+func (mh *MedicalSessionCommandBus) UpdateMedicalSession(ctx context.Context, cmd command.UpdateMedSessionCommand) cqrs.CommandResult {
+	return mh.handlers.UpdateMedicalSession(ctx, cmd)
 }
 
-func (mh *MedicalSessionCommandBus) SoftDeleteMedicalSession(cmd command.SoftDeleteMedSessionCommand) cqrs.CommandResult {
-	return mh.handlers.SoftDeleteMedicalSession(cmd)
+func (mh *MedicalSessionCommandBus) SoftDeleteMedicalSession(ctx context.Context, cmd command.SoftDeleteMedSessionCommand) cqrs.CommandResult {
+	return mh.handlers.SoftDeleteMedicalSession(ctx, cmd)
 }
 
-func (mh *MedicalSessionCommandBus) HardDeleteMedicalSession(cmd command.HardDeleteMedSessionCommand) cqrs.CommandResult {
-	return mh.handlers.HardDeleteMedicalSession(cmd)
+func (mh *MedicalSessionCommandBus) HardDeleteMedicalSession(ctx context.Context, cmd command.HardDeleteMedSessionCommand) cqrs.CommandResult {
+	return mh.handlers.HardDeleteMedicalSession(ctx, cmd)
 }

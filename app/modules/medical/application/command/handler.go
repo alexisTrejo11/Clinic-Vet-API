@@ -8,10 +8,10 @@ import (
 )
 
 type MedicalSessionCommandHandlers interface {
-	CreateMedicalSession(command CreateMedSessionCommand) cqrs.CommandResult
-	UpdateMedicalSession(command UpdateMedSessionCommand) cqrs.CommandResult
-	SoftDeleteMedicalSession(command SoftDeleteMedSessionCommand) cqrs.CommandResult
-	HardDeleteMedicalSession(command HardDeleteMedSessionCommand) cqrs.CommandResult
+	CreateMedicalSession(ctx context.Context, command CreateMedSessionCommand) cqrs.CommandResult
+	UpdateMedicalSession(ctx context.Context, command UpdateMedSessionCommand) cqrs.CommandResult
+	SoftDeleteMedicalSession(ctx context.Context, command SoftDeleteMedSessionCommand) cqrs.CommandResult
+	HardDeleteMedicalSession(ctx context.Context, command HardDeleteMedSessionCommand) cqrs.CommandResult
 }
 
 type medicalSessionCommandHandlers struct {
@@ -26,55 +26,47 @@ func NewMedicalSessionCommandHandlers(repo repository.MedicalSessionRepository) 
 
 // Validate Schedule??
 
-func (h *medicalSessionCommandHandlers) CreateMedicalSession(command CreateMedSessionCommand) cqrs.CommandResult {
-	entity, err := ToEntityFromCreate(&command)
-	if err != nil {
+func (h *medicalSessionCommandHandlers) CreateMedicalSession(ctx context.Context, command CreateMedSessionCommand) cqrs.CommandResult {
+	entity := command.ToEntity()
+	if err := h.repo.Save(ctx, &entity); err != nil {
 		return errorCreateResult(msgErrorProcessingData, err)
 	}
 
-	if err := h.repo.Save(command.CTX, entity); err != nil {
-		return errorCreateResult(msgErrorProcessingData, err)
-	}
-
-	return successCreateResult(*entity)
+	return successCreateResult(entity)
 }
 
-func (h *medicalSessionCommandHandlers) UpdateMedicalSession(command UpdateMedSessionCommand) cqrs.CommandResult {
-	existingEntity, err := h.repo.FindByID(command.CTX, command.ID)
+func (h *medicalSessionCommandHandlers) UpdateMedicalSession(ctx context.Context, command UpdateMedSessionCommand) cqrs.CommandResult {
+	existingEntity, err := h.repo.FindByID(ctx, command.ID)
 	if err != nil {
 		return errorUpdateResult(msgErrorProcessingData, err)
 	}
 
-	updatedEntity, err := ToEntityFromUpdate(&command, existingEntity)
-	if err != nil {
-		return errorUpdateResult(msgErrorProcessingData, err)
-	}
-
-	if err := h.repo.Save(command.CTX, updatedEntity); err != nil {
+	updatedEntity := applyCommandUpdates(command, *existingEntity)
+	if err := h.repo.Save(ctx, updatedEntity); err != nil {
 		return errorUpdateResult(msgErrorProcessingData, err)
 	}
 
 	return successUpdateResult(*updatedEntity)
 }
 
-func (h *medicalSessionCommandHandlers) SoftDeleteMedicalSession(command SoftDeleteMedSessionCommand) cqrs.CommandResult {
-	if err := h.valdiateExistingMedSession(command.CTX, command.ID); err != nil {
+func (h *medicalSessionCommandHandlers) SoftDeleteMedicalSession(ctx context.Context, command SoftDeleteMedSessionCommand) cqrs.CommandResult {
+	if err := h.valdiateExistingMedSession(ctx, command.ID); err != nil {
 		return errorDeleteResult(command.ID, msgMedicalSessionNotFound, err)
 	}
 
-	if err := h.repo.SoftDelete(command.CTX, command.ID); err != nil {
+	if err := h.repo.SoftDelete(ctx, command.ID); err != nil {
 		return errorDeleteResult(command.ID, msgErrorProcessingData, err)
 	}
 
 	return successDeleteResult(command.ID, msgMedicalSessionSoftDeleted)
 }
 
-func (h *medicalSessionCommandHandlers) HardDeleteMedicalSession(command HardDeleteMedSessionCommand) cqrs.CommandResult {
-	if err := h.valdiateExistingMedSession(command.CTX, command.ID); err != nil {
+func (h *medicalSessionCommandHandlers) HardDeleteMedicalSession(ctx context.Context, command HardDeleteMedSessionCommand) cqrs.CommandResult {
+	if err := h.valdiateExistingMedSession(ctx, command.ID); err != nil {
 		return errorDeleteResult(command.ID, msgMedicalSessionNotFound, err)
 	}
 
-	if err := h.repo.HardDelete(command.CTX, command.ID); err != nil {
+	if err := h.repo.HardDelete(ctx, command.ID); err != nil {
 		return errorDeleteResult(command.ID, msgErrorProcessingData, err)
 	}
 

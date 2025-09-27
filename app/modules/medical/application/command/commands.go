@@ -2,58 +2,65 @@
 package command
 
 import (
+	"clinic-vet-api/app/modules/core/domain/enum"
 	"clinic-vet-api/app/modules/core/domain/valueobject"
-	"context"
 	"errors"
 	"time"
 )
 
 type CreateMedSessionCommand struct {
-	PetID       valueobject.PetID
-	CustomerID  valueobject.CustomerID
-	EmployeeID  valueobject.EmployeeID
-	Date        time.Time
-	Diagnosis   string
-	VisitType   string
-	VisitReason string
-	Notes       *string
-	Condition   string
-	Treatment   string
-	CTX         context.Context
+	CustomerID valueobject.CustomerID
+	EmployeeID valueobject.EmployeeID
+	VisitDate  time.Time
+	VisitType  enum.VisitType
+	Diagnosis  string
+	Service    enum.ClinicService
+	Notes      *string
+	PetDetails PetSummary
+}
+
+type PetSummary struct {
+	PetID           valueobject.PetID
+	Weight          *valueobject.Decimal
+	HeartRate       *int
+	RespiratoryRate *int
+	Temperature     *valueobject.Decimal
+	Diagnosis       string
+	Treatment       string
+	Condition       enum.PetCondition
+	Medications     []string
+	FollowUpDate    *time.Time
+	Symptoms        []string
 }
 
 type UpdateMedSessionCommand struct {
-	ID          valueobject.MedSessionID
-	Diagnosis   *string
-	VisitType   *string
-	VisitReason *string
-	Notes       *string
-	Condition   *string
-	Treatment   *string
-	Date        *time.Time
-	CTX         context.Context
+	ID        valueobject.MedSessionID
+	Diagnosis *string
+	VisitType *enum.VisitType
+	Service   *enum.ClinicService
+	Notes     *string
+	Condition *enum.PetCondition
+	Treatment *string
+	Date      *time.Time
 }
 
 type SoftDeleteMedSessionCommand struct {
-	ID  valueobject.MedSessionID
-	CTX context.Context
+	ID valueobject.MedSessionID
 }
 
 type HardDeleteMedSessionCommand struct {
-	ID  valueobject.MedSessionID
-	CTX context.Context
+	ID valueobject.MedSessionID
 }
 
-// ValidateUpdateCommand valida los datos del comando de actualización
 func ValidateUpdateCommand(command UpdateMedSessionCommand) error {
 	if command.ID.IsZero() {
 		return errors.New("el ID del historial médico es requerido")
 	}
 
-	if command.Date == nil && command.VisitType == nil && command.VisitReason == nil &&
+	if command.Date == nil && command.VisitType == nil && command.Service == nil &&
 		command.Diagnosis == nil && command.Treatment == nil && command.Condition == nil &&
 		command.Notes == nil {
-		return errors.New("debe proporcionar al menos un campo para actualizar")
+		return errors.New("at least one field must be provided for update")
 	}
 
 	return nil

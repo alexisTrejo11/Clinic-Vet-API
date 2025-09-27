@@ -50,36 +50,31 @@ func entityToUpdateParams(customer customer.Customer) *sqlc.UpdateCustomerParams
 	}
 }
 
-func sqlRowToCustomer(row sqlc.Customer, pets []pet.Pet) (customer.Customer, error) {
-	fullName := valueobject.NewPersonNameNoErr(row.FirstName, row.LastName)
-	customerID := valueobject.NewCustomerID(uint(row.ID))
+func sqlRowToCustomer(row sqlc.Customer, pets []pet.Pet) customer.Customer {
 	userID := valueobject.NewUserID(uint(row.UserID.Int32))
+	customerEntity := customer.NewCustomerBuilder().
+		WithName(valueobject.NewPersonNameNoErr(row.FirstName, row.LastName)).
+		WithDateOfBirth(row.DateOfBirth.Time).
+		WithUserID(&userID).
+		WithGender(enum.PersonGender(string(row.Gender))).
+		WithIsActive(row.IsActive).
+		WithPets(pets).
+		WithPhoto(row.Photo).
+		WithID(valueobject.NewCustomerID(uint(row.ID))).
+		Build()
 
-	customerEntity := customer.NewCustomer(
-		customerID,
-		customer.WithFullName(fullName),
-		customer.WithDateOfBirth(row.DateOfBirth.Time),
-		customer.WithUserID(&userID),
-		customer.WithGender(enum.PersonGender(string(row.Gender))),
-		customer.WithIsActive(row.IsActive),
-		customer.WithPets(pets),
-	)
-
-	return *customerEntity, nil
+	return *customerEntity
 }
 
-func sqlRowsToCustomers(rows []sqlc.Customer) ([]customer.Customer, error) {
+func sqlRowsToCustomers(rows []sqlc.Customer) []customer.Customer {
 	if len(rows) == 0 {
-		return []customer.Customer{}, nil
+		return []customer.Customer{}
 	}
 
 	customers := make([]customer.Customer, 0, len(rows))
 	for i, row := range rows {
-		o, err := sqlRowToCustomer(row, []pet.Pet{})
-		if err != nil {
-			return []customer.Customer{}, err
-		}
+		o := sqlRowToCustomer(row, []pet.Pet{})
 		customers[i] = o
 	}
-	return customers, nil
+	return customers
 }

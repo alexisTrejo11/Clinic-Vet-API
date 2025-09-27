@@ -38,7 +38,6 @@ func (r *SQLCUserRepository) FindByOAuthProvider(ctx context.Context, provider s
 
 func (r *SQLCUserRepository) FindByID(ctx context.Context, id valueobject.UserID) (u.User, error) {
 	sqlRow, err := r.queries.FindUserByID(ctx, int32(id.Value()))
-
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return u.User{}, r.notFoundError("id", id.String())
@@ -46,11 +45,7 @@ func (r *SQLCUserRepository) FindByID(ctx context.Context, id valueobject.UserID
 		return u.User{}, r.dbError(OpSelect, fmt.Sprintf("%s with ID %d", ErrMsgFindUser, id.Value()), err)
 	}
 
-	user, err := sqlcRowWithJoinToEntity(sqlRow)
-	if err != nil {
-		return u.User{}, r.wrapConversionError(err)
-	}
-	return user, nil
+	return sqlcRowWithJoinToEntity(sqlRow), nil
 }
 
 func (r *SQLCUserRepository) FindByEmail(ctx context.Context, email string) (u.User, error) {
@@ -62,11 +57,7 @@ func (r *SQLCUserRepository) FindByEmail(ctx context.Context, email string) (u.U
 		return u.User{}, r.dbError(OpSelect, fmt.Sprintf("%s with email %s", ErrMsgFindUserByEmail, email), err)
 	}
 
-	user, err := sqlcRowWithJoinToEntity(sqlRow)
-	if err != nil {
-		return u.User{}, r.wrapConversionError(err)
-	}
-	return user, nil
+	return sqlcRowWithJoinToEntity(sqlRow), nil
 }
 
 func (r *SQLCUserRepository) FindByPhone(ctx context.Context, phone string) (u.User, error) {
@@ -78,11 +69,7 @@ func (r *SQLCUserRepository) FindByPhone(ctx context.Context, phone string) (u.U
 		return u.User{}, r.dbError(OpSelect, fmt.Sprintf("%s with phone %s", ErrMsgFindUserByPhone, phone), err)
 	}
 
-	user, err := sqlcRowWithJoinToEntity(sqlRow)
-	if err != nil {
-		return u.User{}, r.wrapConversionError(err)
-	}
-	return user, nil
+	return sqlcRowWithJoinToEntity(sqlRow), nil
 }
 
 func (r *SQLCUserRepository) FindByRole(ctx context.Context, role string, pagination page.PaginationRequest) (page.Page[u.User], error) {
@@ -161,12 +148,7 @@ func (r *SQLCUserRepository) FindByCustomerID(ctx context.Context, customerID va
 		return u.User{}, r.dbError("select", fmt.Sprintf("failed to find user by customer ID %d", customerID.Value()), err)
 	}
 
-	user, err := sqlcRowToEntity(userRow)
-	if err != nil {
-		return u.User{}, r.wrapConversionError(err)
-	}
-
-	return user, nil
+	return sqlcRowToEntity(userRow), nil
 }
 
 func (r *SQLCUserRepository) FindByEmployeeID(ctx context.Context, employeeID valueobject.EmployeeID) (u.User, error) {
@@ -178,12 +160,7 @@ func (r *SQLCUserRepository) FindByEmployeeID(ctx context.Context, employeeID va
 		return u.User{}, r.dbError("select", fmt.Sprintf("failed to find user by employee ID %d", employeeID.Value()), err)
 	}
 
-	user, err := sqlcRowToEntity(userRow)
-	if err != nil {
-		return u.User{}, r.wrapConversionError(err)
-	}
-
-	return user, nil
+	return sqlcRowToEntity(userRow), nil
 }
 
 func (r *SQLCUserRepository) FindInactive(ctx context.Context, pagination page.PaginationRequest) (page.Page[u.User], error) {

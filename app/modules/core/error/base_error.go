@@ -101,9 +101,9 @@ func BusinessRuleError(ctx context.Context, rule, entity, field, operation strin
 }
 
 // ValidationError creates a validation error with logging
-func ValidationError(ctx context.Context, field, value, message, operation string) error {
+func ValidationError(ctx context.Context, code string, field, value, message, operation string) error {
 	err := &BaseDomainError{
-		Code:    "VALIDATION_ERROR",
+		Code:    code,
 		Type:    "validation",
 		Message: message,
 		Details: map[string]string{
@@ -120,35 +120,35 @@ func ValidationError(ctx context.Context, field, value, message, operation strin
 
 // InvalidEnumValue creates an invalid enum value error
 func InvalidEnumValue(ctx context.Context, field, value, message, operation string) error {
-	return ValidationError(ctx, field, value,
+	return ValidationError(ctx, "INVALID_ENUM", field, value,
 		fmt.Sprintf("Invalid enum value for %s: %s. %s", field, value, message),
 		operation)
 }
 
 // MissingFieldError creates a missing field error
 func MissingFieldError(ctx context.Context, field, message, operation string) error {
-	return ValidationError(ctx, field, "",
+	return ValidationError(ctx, "MISSING_FIELD", field, "",
 		fmt.Sprintf("Missing required field: %s. %s", field, message),
 		operation)
 }
 
 // MissingEntity creates a missing entity error
 func MissingEntity(ctx context.Context, entity, message, operation string) error {
-	return ValidationError(ctx, entity, "",
+	return ValidationError(ctx, "MISSING_ENTITY", entity, "",
 		fmt.Sprintf("Missing required entity: %s. %s", entity, message),
 		operation)
 }
 
 // InvalidFieldFormat creates an invalid field format error
 func InvalidFieldFormat(ctx context.Context, field, value, message, operation string) error {
-	return ValidationError(ctx, field, value,
+	return ValidationError(ctx, "INVALID_FIELD_FORMAT", field, value,
 		fmt.Sprintf("Invalid format for field %s: %s. %s", field, value, message),
 		operation)
 }
 
 // InvalidFieldValue creates an invalid field value error
 func InvalidFieldValue(ctx context.Context, field, value, message, operation string) error {
-	return ValidationError(ctx, field, value,
+	return ValidationError(ctx, "INVALID_FIELD_VALUE", field, value,
 		fmt.Sprintf("Invalid value for field %s: %s. %s", field, value, message),
 		operation)
 }

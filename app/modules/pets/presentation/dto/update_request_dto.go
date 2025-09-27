@@ -1,6 +1,7 @@
 package dto
 
 import (
+	"clinic-vet-api/app/modules/core/domain/enum"
 	"clinic-vet-api/app/modules/core/domain/valueobject"
 	"clinic-vet-api/app/modules/pets/application/cqrs/command"
 )
@@ -64,9 +65,9 @@ type UpdatePetRequest struct {
 
 	// Gender of the pet
 	// Required: false
-	// Enum: Male, Female, Unknown
-	// Example: Male
-	Gender *string `json:"gender,omitempty" validate:"omitempty,oneof=Male Female Unknown"`
+	// Enum: male, female, unknown
+	// Example: male
+	Gender *string `json:"gender" validate:"min=2,oneof=male,female,unknown"`
 
 	// Color of the pet
 	// Required: false
@@ -108,29 +109,34 @@ func (r *UpdatePetRequest) ToCommand(petIDInt uint, customerIDUInt *uint, isActi
 		customerID = &cid
 	}
 
+	var petGender *enum.PetGender
+	if r.Gender != nil {
+		petGenderValue := enum.PetGender(*r.Gender)
+		petGender = &petGenderValue
+	}
+
+	var species *enum.PetSpecies
+	if r.Species != nil {
+		speciesValue := enum.PetSpecies(*r.Species)
+		species = &speciesValue
+	}
+
 	cmd := &command.UpdatePetCommand{
+		Name:       r.Name,
 		PetID:      valueobject.NewPetID(petIDInt),
 		Photo:      r.Photo,
 		CustomerID: customerID,
 		Breed:      r.Breed,
 		Age:        r.Age,
-		Gender:     r.Gender,
+		Gender:     petGender,
 		Color:      r.Color,
 		Microchip:  r.Microchip,
 		IsNeutered: r.IsNeutered,
 		Tattoo:     r.Tattoo,
 		BloodType:  r.BloodType,
+		Species:    species,
+		IsActive:   isActive,
 	}
-
-	if r.Name != nil {
-		cmd.Name = r.Name
-	}
-
-	if r.Species != nil {
-		cmd.Species = r.Species
-	}
-
-	cmd.IsActive = isActive
 
 	return *cmd
 }

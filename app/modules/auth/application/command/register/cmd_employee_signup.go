@@ -2,28 +2,26 @@ package register
 
 import (
 	"context"
-	"time"
+	"errors"
 
 	"clinic-vet-api/app/modules/auth/application/command/result"
 	"clinic-vet-api/app/modules/core/domain/entity/employee"
 	u "clinic-vet-api/app/modules/core/domain/entity/user"
 	"clinic-vet-api/app/modules/core/domain/enum"
 	event "clinic-vet-api/app/modules/core/domain/event/user_event"
-	"clinic-vet-api/app/modules/core/domain/valueobject"
+	vo "clinic-vet-api/app/modules/core/domain/valueobject"
 )
 
 type StaffRegisterCommand struct {
-	email       valueobject.Email
+	email       vo.Email
 	password    string
-	phoneNumber valueobject.PhoneNumber
-	employeeID  valueobject.EmployeeID
+	role        enum.UserRole
+	phoneNumber *vo.PhoneNumber
+	employeeID  vo.EmployeeID
 }
 
 func NewStaffRegisterCommand(
-	email valueobject.Email,
-	password string,
-	phoneNumber valueobject.PhoneNumber,
-	employeeID valueobject.EmployeeID,
+	email vo.Email, password string, phoneNumber *vo.PhoneNumber, employeeID vo.EmployeeID,
 ) *StaffRegisterCommand {
 	return &StaffRegisterCommand{
 		email:       email,
@@ -33,22 +31,21 @@ func NewStaffRegisterCommand(
 	}
 }
 
-func (h *registerCommandHandler) StaffRegister(ctx context.Context, command StaffRegisterCommand) result.AuthCommandResult {
-	if err := h.userAuthService.ValidateUserCredentials(
-		ctx, command.email, command.phoneNumber, command.password); err != nil {
+func (h *registerCommandHandler) StaffRegister(ctx context.Context, cmd StaffRegisterCommand) result.AuthCommandResult {
+	if err := cmd.Validate(); err != nil {
 		return result.AuthFailure(ErrValidationFailed, err)
 	}
 
-	employee, err := h.userAuthService.ValidateEmployeeAccount(ctx, command.employeeID)
+	if err := h.userAuthService.ValidateUserCredentials(ctx, cmd.email, cmd.phoneNumber, cmd.password); err != nil {
+		return result.AuthFailure(ErrValidationFailed, err)
+	}
+
+	employee, err := h.userAuthService.ValidateEmployeeAccount(ctx, cmd.employeeID)
 	if err != nil {
 		return result.AuthFailure(ErrValidationFailed, err)
 	}
 
-	user, err := command.toEntity()
-	if err != nil {
-		return result.AuthFailure(ErrUserCreationFailed, err)
-	}
-
+	user := cmd.toEntity()
 	if err := h.userAuthService.ProcessUserPersistence(ctx, user); err != nil {
 		return result.AuthFailure(ErrUserCreationFailed, err)
 	}
@@ -56,22 +53,6 @@ func (h *registerCommandHandler) StaffRegister(ctx context.Context, command Staf
 	go h.produceRegisterEvent(user, employee)
 
 	return result.AuthSuccess(nil, user.ID().String(), "user successfully created")
-}
-
-func (command *StaffRegisterCommand) toEntity() (*u.User, error) {
-	user, err := u.CreateUser(
-		enum.UserRoleVeterinarian,
-		enum.UserStatusPending,
-		u.WithEmail(command.email),
-		u.WithPassword(command.password),
-		u.WithPhoneNumber(command.phoneNumber),
-		u.WithEmployeeID(command.employeeID),
-		u.WithJoinedAt(time.Now()),
-	)
-	if err != nil {
-		return nil, err
-	}
-	return user, nil
 }
 
 func (h *registerCommandHandler) produceRegisterEvent(user *u.User, employee *employee.Employee) {
@@ -82,4 +63,38 @@ func (h *registerCommandHandler) produceRegisterEvent(user *u.User, employee *em
 		Employee: employee,
 	}
 	h.userEvent.Registered(*event)
+}
+
+func (cmd *StaffRegisterCommand) toEntity() *u.User {
+	user := u.NewUserBuilder().
+		WithRole(cmd.role).
+		WithEmail(cmd.email).
+		WithPassword(cmd.password).
+		WithPhoneNumber(cmd.phoneNumber).
+		WithEmployeeID(&cmd.employeeID).
+		Build()
+	return user
+}
+
+func (cmd *StaffRegisterCommand) Validate() error {
+	if !cmd.role.IsValid() {
+		return errors.New("invalid role")
+	}
+	if !cmd.role.IsStaff() {
+		return errors.New("role must be a staff role")
+	}
+
+	if cmd.employeeID.IsZero() {
+		return errors.New("employee ID cannot be empty")
+	}
+
+	if !cmd.email.IsValid() {
+		return errors.New("invalid email format")
+	}
+
+	if cmd.password == "" {
+		return errors.New("password cannot be empty")
+	}
+
+	return nil
 }

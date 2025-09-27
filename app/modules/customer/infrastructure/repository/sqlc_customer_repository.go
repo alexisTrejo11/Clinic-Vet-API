@@ -64,11 +64,7 @@ func (r *SqlcCustomerRepository) FindByID(ctx context.Context, id valueobject.Cu
 		return c.Customer{}, fmt.Errorf("failed to get pets for customer ID %d: %w", id.Value(), petsRes.err)
 	}
 
-	customerEntity, err := sqlRowToCustomer(customerRow, petsRes.pets)
-	if err != nil {
-		return c.Customer{}, r.wrapConversionError(err)
-	}
-
+	customerEntity := sqlRowToCustomer(customerRow, petsRes.pets)
 	return customerEntity, nil
 }
 
@@ -86,11 +82,7 @@ func (r *SqlcCustomerRepository) FindActive(ctx context.Context, pagination page
 		return page.Page[c.Customer]{}, r.dbError("select", "failed to count active customers", err)
 	}
 
-	customers, err := sqlRowsToCustomers(customerRows)
-	if err != nil {
-		return page.Page[c.Customer]{}, r.wrapConversionError(err)
-	}
-
+	customers := sqlRowsToCustomers(customerRows)
 	return page.NewPage(customers, int(total), pagination), nil
 }
 

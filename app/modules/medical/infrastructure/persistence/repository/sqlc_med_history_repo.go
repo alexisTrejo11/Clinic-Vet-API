@@ -45,15 +45,10 @@ func (r *SQLCMedSessionRepository) FindByIDAndCustomerID(ctx context.Context, me
 		return nil, r.dbError("select", fmt.Sprintf("failed to find medical history with ID %d for customer ID %d", medicalSessionID.Value(), customerID.Value()), err)
 	}
 
-	medSession, err := ToEntity(sqlcRow)
-	if err != nil {
-		return nil, r.wrapConversionError(err)
-	}
-
+	medSession := ToEntity(sqlcRow)
 	return &medSession, nil
 }
 
-// FindByIDAndEmployeeID implements repository.MedicalSessionRepository.
 func (r *SQLCMedSessionRepository) FindByIDAndEmployeeID(ctx context.Context, medicalSessionID valueobject.MedSessionID, employeeID valueobject.EmployeeID) (*med.MedicalSession, error) {
 	sqlcRow, err := r.queries.FindMedicalSessionByIDAndEmployeeID(ctx, sqlc.FindMedicalSessionByIDAndEmployeeIDParams{
 		ID:         int32(medicalSessionID.Value()),
@@ -66,15 +61,10 @@ func (r *SQLCMedSessionRepository) FindByIDAndEmployeeID(ctx context.Context, me
 		return nil, r.dbError("select", fmt.Sprintf("failed to find medical history with ID %d for employee ID %d", medicalSessionID.Value(), employeeID.Value()), err)
 	}
 
-	medSession, err := ToEntity(sqlcRow)
-	if err != nil {
-		return nil, r.wrapConversionError(err)
-	}
-
+	medSession := ToEntity(sqlcRow)
 	return &medSession, nil
 }
 
-// FindByIDAndPetID implements repository.MedicalSessionRepository.
 func (r *SQLCMedSessionRepository) FindByIDAndPetID(ctx context.Context, medicalSessionID valueobject.MedSessionID, petID valueobject.PetID) (*med.MedicalSession, error) {
 	sqlcRow, err := r.queries.FindMedicalSessionByIDAndPetID(ctx, sqlc.FindMedicalSessionByIDAndPetIDParams{
 		ID:    int32(medicalSessionID.Value()),
@@ -87,11 +77,7 @@ func (r *SQLCMedSessionRepository) FindByIDAndPetID(ctx context.Context, medical
 		return nil, r.dbError("select", fmt.Sprintf("failed to find medical history with ID %d for pet ID %d", medicalSessionID.Value(), petID.Value()), err)
 	}
 
-	medSession, err := ToEntity(sqlcRow)
-	if err != nil {
-		return nil, r.wrapConversionError(err)
-	}
-
+	medSession := ToEntity(sqlcRow)
 	return &medSession, nil
 }
 
@@ -104,11 +90,7 @@ func (r *SQLCMedSessionRepository) FindByID(ctx context.Context, medSessionID va
 		return nil, r.dbError("select", fmt.Sprintf("failed to find medical history with ID %d", medSessionID.Value()), err)
 	}
 
-	medSession, err := ToEntity(sqlcMedSession)
-	if err != nil {
-		return nil, r.wrapConversionError(err)
-	}
-
+	medSession := ToEntity(sqlcMedSession)
 	return &medSession, nil
 }
 
@@ -128,10 +110,6 @@ func (r *SQLCMedSessionRepository) FindByEmployeeID(ctx context.Context, employe
 	}
 
 	medicalSessions, err := ToEntities(medSessionRows)
-	if err != nil {
-		return p.Page[med.MedicalSession]{}, r.wrapConversionError(err)
-	}
-
 	return p.NewPage(medicalSessions, int(total), pagination), nil
 }
 

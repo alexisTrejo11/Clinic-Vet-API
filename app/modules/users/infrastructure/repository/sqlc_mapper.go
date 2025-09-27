@@ -1,7 +1,7 @@
 package repositoryimpl
 
 import (
-	"fmt"
+	"time"
 
 	"clinic-vet-api/app/modules/core/domain/entity/user"
 	"clinic-vet-api/app/modules/core/domain/enum"
@@ -12,7 +12,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-func sqlcUseWithJoin(row any) (user.User, error) {
+func sqlcUseWithJoin(row any) user.User {
 	switch v := row.(type) {
 	case sqlc.FindUserByEmailRow:
 		return sqlcRowWithJoinToEntity(v)
@@ -20,14 +20,14 @@ func sqlcUseWithJoin(row any) (user.User, error) {
 		return sqlcRowWithJoinToEntity(v)
 	case sqlc.FindUserByPhoneNumberRow:
 		return sqlcRowWithJoinToEntity(v)
-	case sqlc.User: // Para queries que solo devuelven user sin joins
+	case sqlc.User:
 		return sqlcRowToEntity(v)
 	default:
-		return user.User{}, fmt.Errorf("unsupported type: %T", v)
+		return user.User{}
 	}
 }
 
-func sqlcRowWithJoinToEntity(row any) (user.User, error) {
+func sqlcRowWithJoinToEntity(row any) user.User {
 	var (
 		id          int32
 		email       pgtype.Text
@@ -76,93 +76,67 @@ func sqlcRowWithJoinToEntity(row any) (user.User, error) {
 		customerID = v.CustomerID
 		employeeID = v.EmployeeID
 	default:
-		return user.User{}, fmt.Errorf("unsupported type for join row: %T", v)
+		return user.User{}
 	}
 
 	emailVO := valueobject.NewEmailNoErr(email.String)
-	opts := []user.UserOption{
-		user.WithEmail(emailVO),
-	}
+	userBuilder := user.NewUserBuilder()
 
 	if customerID.Valid {
 		customerIDVO := valueobject.NewCustomerID(uint(customerID.Int32))
-		opts = append(opts, user.WithCustomerID(customerIDVO))
+		userBuilder.WithCustomerID(&customerIDVO)
 	}
 
 	if employeeID.Valid {
 		employeeIDVO := valueobject.NewEmployeeID(uint(employeeID.Int32))
-		opts = append(opts, user.WithEmployeeID(employeeIDVO))
+		userBuilder.WithEmployeeID(&employeeIDVO)
 	}
 
 	if phoneNumber.Valid && phoneNumber.String != "" {
 		phoneNumberVO := valueobject.NewPhoneNumberNoErr(phoneNumber.String)
-		opts = append(opts, user.WithPhoneNumber(phoneNumberVO))
+		userBuilder.WithPhoneNumber(&phoneNumberVO)
 	}
 
-	if password.Valid && password.String != "" {
-		opts = append(opts, user.WithPassword(password.String))
-	}
+	userBuilder.WithPassword(password.String)
+	userBuilder.WithLastLoginAt(lastLogin.Time)
+	userBuilder.WithTimeStamps(createdAt.Time, time.Time{})
+	userBuilder.WithID(valueobject.NewUserID(uint(id)))
+	userBuilder.WithEmail(emailVO)
+	userBuilder.WithRole(enum.UserRole(string(role)))
+	userBuilder.WithStatus(enum.UserStatus(string(status)))
 
-	if lastLogin.Valid {
-		opts = append(opts, user.WithLastLoginAt(lastLogin.Time))
-	}
-
-	opts = append(opts, user.WithJoinedAt(createdAt.Time))
-
-	userID := valueobject.NewUserID(uint(id))
-	roleEnum := enum.UserRole(role)
-	statusEnum := enum.UserStatus(status)
-
-	userEntity, err := user.NewUser(userID, roleEnum, statusEnum, opts...)
-	if err != nil {
-		return user.User{}, fmt.Errorf("failed to create user entity: %w", err)
-	}
-
-	return userEntity, nil
+	userEntity := userBuilder.Build()
+	return *userEntity
 }
 
-func sqlcRowToEntity(sqlRow sqlc.User) (user.User, error) {
-	email := (valueobject.NewEmailNoErr(sqlRow.Email.String))
-	opts := []user.UserOption{
-		user.WithEmail(email),
-	}
+func sqlcRowToEntity(sqlRow sqlc.User) user.User {
+	userBuilder := user.NewUserBuilder()
 
 	if sqlRow.PhoneNumber.Valid && sqlRow.PhoneNumber.String != "" {
 		phoneNumber := valueobject.NewPhoneNumberNoErr(sqlRow.PhoneNumber.String)
-		opts = append(opts, user.WithPhoneNumber(phoneNumber))
+		userBuilder.WithPhoneNumber(&phoneNumber)
 	}
 
-	if sqlRow.Password.Valid && sqlRow.Password.String != "" {
-		opts = append(opts, user.WithPassword(sqlRow.Password.String))
+	if sqlRow.Password.Valid {
+		userBuilder.WithPassword(sqlRow.Password.String)
 	}
 
 	if sqlRow.LastLogin.Valid {
-		opts = append(opts, user.WithLastLoginAt(sqlRow.LastLogin.Time))
+		userBuilder.WithLastLoginAt(sqlRow.LastLogin.Time)
 	}
 
-	if sqlRow.CreatedAt.Valid {
-		opts = append(opts, user.WithJoinedAt(sqlRow.CreatedAt.Time))
-	}
+	userBuilder.WithID(valueobject.NewUserID(uint(sqlRow.ID)))
+	userBuilder.WithRole(enum.UserRole(string(sqlRow.Role)))
+	userBuilder.WithStatus(enum.UserStatus(string(sqlRow.Status)))
 
-	userID := valueobject.NewUserID(uint(sqlRow.ID))
-	role := enum.UserRole(string(sqlRow.Role))
-	status := enum.UserStatus(string(sqlRow.Status))
-	userEntity, err := user.NewUser(userID, role, status, opts...)
-	if err != nil {
-		return user.User{}, fmt.Errorf("failed to create user entity: %w", err)
-	}
-
-	return userEntity, nil
+	userEntity := userBuilder.Build()
+	return *userEntity
 }
 
 func sqlcRowsToEntities(sqlRows []sqlc.User) ([]user.User, error) {
 	users := make([]user.User, len(sqlRows))
 	for i, sqlRow := range sqlRows {
-		user, err := sqlcRowToEntity(sqlRow)
-		if err != nil {
-			return nil, err
-		}
-		users[i] = user
+		users[i] = sqlcRowToEntity(sqlRow)
 	}
 
 	return users, nil

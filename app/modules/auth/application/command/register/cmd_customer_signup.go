@@ -2,7 +2,6 @@ package register
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"clinic-vet-api/app/modules/auth/application/command/result"
@@ -15,7 +14,7 @@ import (
 
 type CustomerRegisterCommand struct {
 	Email       valueobject.Email
-	PhoneNumber valueobject.PhoneNumber
+	PhoneNumber *valueobject.PhoneNumber
 	Password    string
 	Role        enum.UserRole
 
@@ -31,34 +30,17 @@ func (h *registerCommandHandler) CustomerRegister(ctx context.Context, command C
 		return result.AuthFailure(ErrValidationFailed, err)
 	}
 
-	user, err := command.toDomain()
-	if err != nil {
-		return result.AuthFailure(ErrDataParsingFailed, err)
-	}
-
+	user := command.ToEntity()
 	if err := h.userAuthService.ProcessUserPersistence(ctx, user); err != nil {
 		return result.AuthFailure(ErrUserCreationFailed, err)
 	}
 
-	go h.ProduceEvent(user, command)
+	go h.produceEvent(user, command)
 
 	return result.AuthSuccess(nil, user.ID().String(), MsgUserCreatedSuccess)
 }
 
-func (command *CustomerRegisterCommand) toDomain() (*user.User, error) {
-	userEntity, err := user.CreateUser(command.Role, enum.UserStatusPending,
-		user.WithEmail(command.Email),
-		user.WithPhoneNumber(command.PhoneNumber),
-		user.WithPassword(command.Password),
-	)
-	if err != nil {
-		return nil, fmt.Errorf("failed to build user entity: %w", err)
-	}
-
-	return userEntity, nil
-}
-
-func (h *registerCommandHandler) ProduceEvent(user *user.User, cmd CustomerRegisterCommand) {
+func (h *registerCommandHandler) produceEvent(user *user.User, cmd CustomerRegisterCommand) {
 	name, _ := valueobject.NewPersonName(cmd.FirstName, cmd.LastName)
 	event := event.UserRegisteredEvent{
 		UserID: user.ID(),
@@ -72,4 +54,13 @@ func (h *registerCommandHandler) ProduceEvent(user *user.User, cmd CustomerRegis
 	}
 
 	h.userEvent.Registered(event)
+}
+
+func (cmd *CustomerRegisterCommand) ToEntity() *user.User {
+	return user.NewUserBuilder().
+		WithRole(cmd.Role).
+		WithEmail(cmd.Email).
+		WithPhoneNumber(cmd.PhoneNumber).
+		WithPassword(cmd.Password).
+		Build()
 }

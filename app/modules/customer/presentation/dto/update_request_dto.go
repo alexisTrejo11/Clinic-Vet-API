@@ -1,7 +1,6 @@
 package dto
 
 import (
-	"context"
 	"time"
 
 	"clinic-vet-api/app/modules/core/domain/enum"
@@ -49,7 +48,7 @@ type UpdateCustomerRequest struct {
 }
 
 // ToCommand converts UpdateCustomerRequest to UpdateCustomerCommand
-func (r *UpdateCustomerRequest) ToCommand(ctx context.Context, customerID uint) (*command.UpdateCustomerCommand, error) {
+func (r *UpdateCustomerRequest) ToCommand(customerID uint) (*command.UpdateCustomerCommand, error) {
 	return &command.UpdateCustomerCommand{
 		ID:          valueobject.NewCustomerID(customerID),
 		Photo:       r.Photo,
@@ -60,6 +59,5 @@ func (r *UpdateCustomerRequest) ToCommand(ctx context.Context, customerID uint) 
 		PhoneNumber: r.PhoneNumber,
 		Address:     r.Address,
 		Notes:       r.Notes,
-		CTX:         ctx,
 	}, nil
 }

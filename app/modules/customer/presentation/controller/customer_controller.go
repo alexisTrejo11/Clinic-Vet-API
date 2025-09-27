@@ -39,8 +39,8 @@ func (controller *CustomerController) SearchCustomers(c *gin.Context) {
 		return
 	}
 
-	query := searchParams.ToQuery(c.Request.Context())
-	customer, err := controller.bus.QueryBus.FindCustomerByCriteria(*query)
+	query := searchParams.ToQuery()
+	customer, err := controller.bus.QueryBus.FindCustomerByCriteria(c.Request.Context(), *query)
 	if err != nil {
 		response.ApplicationError(c, err)
 		return
@@ -55,9 +55,8 @@ func (controller *CustomerController) GetCustomerByID(c *gin.Context) {
 		return
 	}
 
-	query := query.NewFindCustomerByIDQuery(c.Request.Context(), id)
-
-	result, err := controller.bus.QueryBus.GetCustomerByID(*query)
+	query := query.NewFindCustomerByIDQuery(id)
+	result, err := controller.bus.QueryBus.GetCustomerByID(c.Request.Context(), *query)
 	if err != nil {
 		response.ApplicationError(c, err)
 		return
@@ -74,16 +73,13 @@ func (controller *CustomerController) CreateCustomer(c *gin.Context) {
 		return
 	}
 
-	createCommand, err := customerCreate.ToCommand(c.Request.Context())
-	if err != nil {
-		response.ApplicationError(c, err)
-		return
-	}
-	result := controller.bus.CommandBus.CreateCustomer(*createCommand)
+	command := customerCreate.ToCommand()
+	result := controller.bus.CommandBus.CreateCustomer(c.Request.Context(), *command)
 	if !result.IsSuccess() {
 		response.ApplicationError(c, result.Error())
 		return
 	}
+
 	response.Created(c, result.ID(), "Customer")
 }
 
@@ -105,13 +101,13 @@ func (controller *CustomerController) UpdateCustomer(c *gin.Context) {
 		return
 	}
 
-	updateCommand, err := requestData.ToCommand(c.Request.Context(), id)
+	command, err := requestData.ToCommand(id)
 	if err != nil {
 		response.ApplicationError(c, err)
 		return
 	}
 
-	result := controller.bus.CommandBus.UpdateCustomer(*updateCommand)
+	result := controller.bus.CommandBus.UpdateCustomer(c.Request.Context(), *command)
 	if !result.IsSuccess() {
 		response.ApplicationError(c, result.Error())
 		return
@@ -127,12 +123,8 @@ func (controller *CustomerController) DeactivateCustomer(c *gin.Context) {
 		return
 	}
 
-	deactivateCommand := command.DeactivateCustomerCommand{
-		CTX: c.Request.Context(),
-		ID:  valueobject.NewCustomerID(id),
-	}
-
-	result := controller.bus.CommandBus.DeactivateCustomer(deactivateCommand)
+	command := command.DeactivateCustomerCommand{ID: valueobject.NewCustomerID(id)}
+	result := controller.bus.CommandBus.DeactivateCustomer(c.Request.Context(), command)
 	if !result.IsSuccess() {
 		response.ApplicationError(c, result.Error())
 		return

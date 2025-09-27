@@ -139,10 +139,6 @@ func RegisterAppointmentSearchValidations(validate *validator.Validate) error {
 		return fmt.Errorf("failed to register appointment_status validation: %w", err)
 	}
 
-	if err := validate.RegisterValidation("visit_reason", validateVisitReason); err != nil {
-		return fmt.Errorf("failed to register visit_reason validation: %w", err)
-	}
-
 	return nil
 }
 
@@ -163,15 +159,5 @@ func validateAppointmentStatus(fl validator.FieldLevel) bool {
 	}
 
 	_, err := enum.ParseAppointmentStatus(statusStr)
-	return err == nil
-}
-
-func validateVisitReason(fl validator.FieldLevel) bool {
-	reasonStr := fl.Field().String()
-	if reasonStr == "" {
-		return true
-	}
-
-	_, err := enum.ParseVisitReason(reasonStr)
 	return err == nil
 }
