@@ -42,6 +42,8 @@ type (
 	UserID        struct{ baseID }
 	CustomerID    struct{ baseID }
 	MedSessionID  struct{ baseID }
+	VaccinationID struct{ baseID }
+	DewormID      struct{ baseID }
 )
 
 func NewPetID(value uint) PetID {
@@ -72,23 +74,10 @@ func NewAppointmentID(value uint) AppointmentID {
 	return AppointmentID{baseID{value}}
 }
 
-func NewIDFactory(value uint, entity string) (IntegerID, error) {
-	switch entity {
-	case "payment":
-		return NewPaymentID(value), nil
-	case "veterinarian", "employee", "vet":
-		return NewEmployeeID(value), nil
-	case "user":
-		return NewUserID(value), nil
-	case "owner", "customer":
-		return NewCustomerID(value), nil
-	case "medical_sessions", "medicalhistory":
-		return NewMedSessionID(value), nil
-	case "appointment":
-		return NewAppointmentID(value), nil
-	case "pet":
-		return NewPetID(value), nil
-	default:
-		return nil, fmt.Errorf("%w: %s", ErrEntityNotFound, entity)
-	}
+func NewVaccinationID(value uint) VaccinationID {
+	return VaccinationID{baseID{value}}
+}
+
+func NewDewormID(value uint) DewormID {
+	return DewormID{baseID{value}}
 }

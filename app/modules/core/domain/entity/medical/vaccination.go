@@ -6,7 +6,7 @@ import (
 )
 
 type PetVaccination struct {
-	id               uint
+	id               vo.VaccinationID
 	petID            vo.PetID
 	vaccineName      string
 	administeredDate time.Time
@@ -22,7 +22,7 @@ func NewPetVaccinationBuilder() *PetVaccinationBuilder {
 	return &PetVaccinationBuilder{petVaccination: &PetVaccination{}}
 }
 
-func (b *PetVaccinationBuilder) WithID(id uint) PetVaccinationBuilder {
+func (b *PetVaccinationBuilder) WithID(id vo.VaccinationID) PetVaccinationBuilder {
 	b.petVaccination.id = id
 	return *b
 }
@@ -62,7 +62,7 @@ func (b *PetVaccinationBuilder) WithCreatedAt(createdAt time.Time) PetVaccinatio
 	return *b
 }
 
-func (pv *PetVaccination) ID() uint                       { return pv.id }
+func (pv *PetVaccination) ID() vo.VaccinationID           { return pv.id }
 func (pv *PetVaccination) PetID() vo.PetID                { return pv.petID }
 func (pv *PetVaccination) VaccineName() string            { return pv.vaccineName }
 func (pv *PetVaccination) AdministeredDate() time.Time    { return pv.administeredDate }

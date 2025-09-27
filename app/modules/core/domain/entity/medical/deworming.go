@@ -6,12 +6,12 @@ import (
 )
 
 type PetDeworming struct {
-	id               uint
+	id               valueobject.DewormID
 	petID            valueobject.PetID
+	administeredBy   valueobject.EmployeeID
 	medicationName   string
 	administeredDate time.Time
 	nextDueDate      *time.Time
-	administeredBy   *int
 	notes            *string
 	createdAt        time.Time
 }
@@ -22,52 +22,52 @@ func NewPetDewormingBuilder() *PetDewormingBuilder {
 	return &PetDewormingBuilder{petDeworming: &PetDeworming{}}
 }
 
-func (b *PetDewormingBuilder) WithDewormingID(id uint) PetDewormingBuilder {
+func (b *PetDewormingBuilder) WithID(id valueobject.DewormID) *PetDewormingBuilder {
 	b.petDeworming.id = id
-	return *b
+	return b
 }
 
-func (b *PetDewormingBuilder) WithDewormingPetID(petID valueobject.PetID) PetDewormingBuilder {
+func (b *PetDewormingBuilder) WithPetID(petID valueobject.PetID) *PetDewormingBuilder {
 	b.petDeworming.petID = petID
-	return *b
+	return b
 
 }
 
-func (b *PetDewormingBuilder) WithMedicationName(medicationName string) PetDewormingBuilder {
+func (b *PetDewormingBuilder) WithMedicationName(medicationName string) *PetDewormingBuilder {
 	b.petDeworming.medicationName = medicationName
-	return *b
+	return b
 }
 
-func (b *PetDewormingBuilder) WithDewormingAdministeredDate(administeredDate time.Time) PetDewormingBuilder {
+func (b *PetDewormingBuilder) WithAdministeredDate(administeredDate time.Time) *PetDewormingBuilder {
 	b.petDeworming.administeredDate = administeredDate
-	return *b
+	return b
 }
 
-func (b *PetDewormingBuilder) WithDewormingNextDueDate(nextDueDate *time.Time) PetDewormingBuilder {
+func (b *PetDewormingBuilder) WithNextDueDate(nextDueDate *time.Time) *PetDewormingBuilder {
 	b.petDeworming.nextDueDate = nextDueDate
-	return *b
+	return b
 }
 
-func (b *PetDewormingBuilder) WithDewormingAdministeredBy(administeredBy *int) PetDewormingBuilder {
+func (b *PetDewormingBuilder) WithAdministeredBy(administeredBy valueobject.EmployeeID) *PetDewormingBuilder {
 	b.petDeworming.administeredBy = administeredBy
-	return *b
+	return b
 }
 
-func (b *PetDewormingBuilder) WithDewormingNotes(notes *string) PetDewormingBuilder {
+func (b *PetDewormingBuilder) WithNotes(notes *string) *PetDewormingBuilder {
 	b.petDeworming.notes = notes
-	return *b
+	return b
 }
 
-func (b *PetDewormingBuilder) WithDewormingCreatedAt(createdAt time.Time) PetDewormingBuilder {
+func (b *PetDewormingBuilder) WithCreatedAt(createdAt time.Time) *PetDewormingBuilder {
 	b.petDeworming.createdAt = createdAt
-	return *b
+	return b
 }
 
 func (b *PetDewormingBuilder) Build() *PetDeworming {
 	return b.petDeworming
 }
 
-func (pd *PetDeworming) ID() uint { return pd.id }
+func (pd *PetDeworming) ID() valueobject.DewormID { return pd.id }
 
 func (pd *PetDeworming) PetID() valueobject.PetID { return pd.petID }
 
@@ -77,7 +77,7 @@ func (pd *PetDeworming) AdministeredDate() time.Time { return pd.administeredDat
 
 func (pd *PetDeworming) NextDueDate() *time.Time { return pd.nextDueDate }
 
-func (pd *PetDeworming) AdministeredBy() *int { return pd.administeredBy }
+func (pd *PetDeworming) AdministeredBy() valueobject.EmployeeID { return pd.administeredBy }
 
 func (pd *PetDeworming) Notes() *string { return pd.notes }
 

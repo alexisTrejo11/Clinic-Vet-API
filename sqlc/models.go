@@ -158,16 +158,6 @@ type PetDeworming struct {
 	CreatedAt        pgtype.Timestamptz
 }
 
-type PetEmergencyContact struct {
-	ID           int32
-	PetID        int32
-	ContactName  string
-	Phone        string
-	Relationship pgtype.Text
-	IsPrimary    pgtype.Bool
-	CreatedAt    pgtype.Timestamptz
-}
-
 type PetFeedingInstruction struct {
 	ID                  int32
 	PetID               int32
@@ -189,17 +179,6 @@ type PetVaccination struct {
 	AdministeredBy   pgtype.Int4
 	Notes            pgtype.Text
 	CreatedAt        pgtype.Timestamptz
-}
-
-type PetVeterinaryContact struct {
-	ID         int32
-	PetID      int32
-	ClinicName string
-	Phone      pgtype.Text
-	Address    pgtype.Text
-	IsPrimary  pgtype.Bool
-	CreatedAt  pgtype.Timestamptz
-	UpdatedAt  pgtype.Timestamptz
 }
 
 type User struct {
