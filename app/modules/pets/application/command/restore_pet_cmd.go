@@ -26,5 +26,5 @@ func (h *petCommandHandler) RestorePet(ctx context.Context, cmd RestorePetComman
 		return *cqrs.FailureResult("Error Restoring Pet", err)
 	}
 
-	return *cqrs.SuccessResult(pet.ID().String(), "Pet Restored Successfully")
+	return *cqrs.SuccessResult("Pet Restored Successfully")
 }

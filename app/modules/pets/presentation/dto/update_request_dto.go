@@ -3,7 +3,7 @@ package dto
 import (
 	"clinic-vet-api/app/modules/core/domain/enum"
 	"clinic-vet-api/app/modules/core/domain/valueobject"
-	"clinic-vet-api/app/modules/pets/application/cqrs/command"
+	"clinic-vet-api/app/modules/pets/application/command"
 )
 
 // AdminUpdatePetRequest represents the payload for updating an existing pet's information by an admin

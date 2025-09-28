@@ -52,7 +52,7 @@ func (h *DewormCommandHandler) HandleCreate(ctx context.Context, cmd DewormCreat
 		return *cqrs.FailureResult("failed to create deworming record", err)
 	}
 
-	return *cqrs.SuccessResult(entity.ID().String(), "deworming record created successfully")
+	return *cqrs.SuccessCreateResult(entity.ID().String(), "deworming record created successfully")
 }
 
 func (h *DewormCommandHandler) validatePetEmployeeExistence(ctx context.Context, cmd DewormCreateCommand) error {

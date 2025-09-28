@@ -7,7 +7,6 @@ import (
 	"clinic-vet-api/app/modules/core/domain/valueobject"
 	"clinic-vet-api/app/modules/core/repository"
 
-	"clinic-vet-api/app/shared/page"
 	p "clinic-vet-api/app/shared/page"
 	"clinic-vet-api/sqlc"
 	"context"
@@ -80,16 +79,16 @@ func (r *SqlcAppointmentRepository) Find(ctx context.Context, spec specification
 		return p.Page[appt.Appointment]{}, err
 	}
 
-	pagination := page.PaginationRequest{
-		PageSize: int(params.Limit),
-		Page:     (int(params.Offset) / int(params.Limit)) + 1,
+	pagination := p.PaginationRequest{
+		PageSize: params.Limit,
+		Page:     ((params.Offset) / (params.Limit)) + 1,
 	}
 
-	return p.NewPage(appointments, int(total), pagination), nil
+	return p.NewPage(appointments, total, pagination), nil
 }
 
 func (r *SqlcAppointmentRepository) FindByID(ctx context.Context, id valueobject.AppointmentID) (appt.Appointment, error) {
-	sqlRow, err := r.queries.FindAppointmentByID(ctx, int32(id.Value()))
+	sqlRow, err := r.queries.FindAppointmentByID(ctx, id.Int32())
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return appt.Appointment{}, r.notFoundError("id", id.String())
@@ -101,7 +100,7 @@ func (r *SqlcAppointmentRepository) FindByID(ctx context.Context, id valueobject
 }
 
 func (r *SqlcAppointmentRepository) ExistsByID(ctx context.Context, id valueobject.AppointmentID) (bool, error) {
-	exists, err := r.queries.ExistsAppointmentID(ctx, int32(id.Value()))
+	exists, err := r.queries.ExistsAppointmentID(ctx, id.Int32())
 	if err != nil {
 		return false, r.dbError("select", "failed to check appointment existence by ID", err)
 	}
@@ -116,7 +115,7 @@ func (r *SqlcAppointmentRepository) Save(ctx context.Context, appointment *appt.
 }
 
 func (r *SqlcAppointmentRepository) Delete(ctx context.Context, id valueobject.AppointmentID, hard bool) error {
-	if err := r.queries.DeleteAppointment(ctx, int32(id.Value())); err != nil {
+	if err := r.queries.DeleteAppointment(ctx, id.Int32()); err != nil {
 		return r.dbError("delete", "failed to delete appointment", err)
 	}
 	return nil
@@ -144,7 +143,7 @@ func (r *SqlcAppointmentRepository) update(ctx context.Context, appointment *app
 	return nil
 }
 
-func (r *SqlcAppointmentRepository) Count(ctx context.Context, spec specification.ApptSearchSpecification) (int, error) {
+func (r *SqlcAppointmentRepository) Count(ctx context.Context, spec specification.ApptSearchSpecification) (int64, error) {
 	params := spec.ToSQLCParams()
 	var service string
 	if params.Service != nil {
@@ -169,7 +168,7 @@ func (r *SqlcAppointmentRepository) Count(ctx context.Context, spec specificatio
 	if err != nil {
 		return 0, r.dbError("count", "failed to count appointments", err)
 	}
-	return int(total), nil
+	return total, nil
 }
 
 func ParsePointerInt32(n *int32) int32 {

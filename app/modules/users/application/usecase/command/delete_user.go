@@ -13,15 +13,15 @@ type DeleteUserHandler struct {
 }
 
 type DeleteUserCommand struct {
-	userID     valueobject.UserID
-	softDelete bool
+	userID       valueobject.UserID
+	isHardDelete bool
 }
 
-func NewDeleteUserCommand(userID uint, softDelete bool) DeleteUserCommand {
+func NewDeleteUserCommand(userID uint, isHardDelete bool) DeleteUserCommand {
 	uid := valueobject.NewUserID(userID)
 	cmd := &DeleteUserCommand{
-		userID:     uid,
-		softDelete: softDelete,
+		userID:       uid,
+		isHardDelete: isHardDelete,
 	}
 	return *cmd
 }
@@ -37,17 +37,10 @@ func (d *DeleteUserHandler) Handle(ctx context.Context, command DeleteUserComman
 		return *cqrs.FailureResult("failed to find user", err)
 	}
 
-	if command.softDelete {
-		err := d.userRepository.SoftDelete(ctx, command.userID)
-		if err != nil {
-			return *cqrs.FailureResult("failed to delete user", err)
-		}
-	}
-
-	err := d.userRepository.HardDelete(ctx, command.userID)
+	err := d.userRepository.Delete(ctx, command.userID, command.isHardDelete)
 	if err != nil {
 		return *cqrs.FailureResult("failed to delete user", err)
 	}
 
-	return *cqrs.SuccessResult(command.userID.String(), "user deleted successfully")
+	return *cqrs.SuccessResult("user deleted successfully")
 }

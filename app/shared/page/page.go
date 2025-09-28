@@ -50,8 +50,8 @@ func (sd SortDirection) IsValid() bool {
 
 // PaginationRequest (better name than PaginationRequest) contains parameters for paginating and sorting query results.
 type PaginationRequest struct {
-	Page          int           `json:"page" form:"page" validate:"omitempty,gte=1"`
-	PageSize      int           `json:"page_size" form:"page_size" validate:"omitempty,gte=1,lte=100"`
+	Page          int32         `json:"page" form:"page" validate:"omitempty,gte=1"`
+	PageSize      int32         `json:"page_size" form:"page_size" validate:"omitempty,gte=1,lte=100"`
 	SortDirection SortDirection `json:"sort_direction" form:"sort_direction" validate:"omitempty,oneof=ASC DESC"`
 	OrderBy       string        `json:"order_by" form:"order_by" validate:"omitempty,max=50"`
 }
@@ -67,7 +67,7 @@ func NewPaginationRequest() PaginationRequest {
 }
 
 // Offset calculates the database offset based on page and page size
-func (p PaginationRequest) Offset() int {
+func (p PaginationRequest) Offset() int32 {
 	if p.Page <= 1 {
 		return 0
 	}
@@ -75,7 +75,7 @@ func (p PaginationRequest) Offset() int {
 }
 
 // Limit returns the page size (alias for better semantics)
-func (p PaginationRequest) Limit() int {
+func (p PaginationRequest) Limit() int32 {
 	return p.PageSize
 }
 
@@ -109,7 +109,7 @@ func FromSpecPagination(pagi specification.Pagination) PaginationRequest {
 	// Calculate page from offset and limit
 	page := DefaultPage
 	if pagi.Limit > 0 && pagi.Offset >= 0 {
-		page = (pagi.Offset / pagi.Limit) + 1
+		page = int((pagi.Offset / pagi.Limit) + 1)
 	}
 
 	sortDir := ASC
@@ -120,7 +120,7 @@ func FromSpecPagination(pagi specification.Pagination) PaginationRequest {
 	}
 
 	return PaginationRequest{
-		Page:          page,
+		Page:          int32(page),
 		PageSize:      pagi.Limit,
 		SortDirection: sortDir,
 		OrderBy:       pagi.OrderBy,
@@ -150,10 +150,10 @@ func (p PaginationRequest) WithDefaults() PaginationRequest {
 
 // PageMetadata contains comprehensive information about the pagination state.
 type PageMetadata struct {
-	TotalCount      int           `json:"total_count"`       // Total number of items across all pages
-	TotalPages      int           `json:"total_pages"`       // Total number of pages
-	CurrentPage     int           `json:"current_page"`      // Current page number
-	PageSize        int           `json:"page_size"`         // Number of items per page
+	TotalCount      int32         `json:"total_count"`       // Total number of items across all pages
+	TotalPages      int32         `json:"total_pages"`       // Total number of pages
+	CurrentPage     int32         `json:"current_page"`      // Current page number
+	PageSize        int32         `json:"page_size"`         // Number of items per page
 	SortDirection   SortDirection `json:"sort_direction"`    // Sorting direction applied
 	HasNextPage     bool          `json:"has_next_page"`     // True if another page exists after current
 	HasPreviousPage bool          `json:"has_previous_page"` // True if a page exists before current
@@ -166,8 +166,8 @@ type Page[T any] struct {
 }
 
 // NewPage creates a new Page instance with the provided items and metadata.
-func NewPage[T any](items []T, totalCount int, request PaginationRequest) Page[T] {
-	metadata := CalculateMetadata(totalCount, request)
+func NewPage[T any](items []T, totalCount int64, request PaginationRequest) Page[T] {
+	metadata := CalculateMetadata(int32(totalCount), request)
 
 	return Page[T]{
 		Items:    items,
@@ -187,7 +187,7 @@ func NewEmptyPage[T any](request PaginationRequest) Page[T] {
 }
 
 // CalculateMetadata calculates pagination metadata based on total items and pagination request.
-func CalculateMetadata(totalCount int, request PaginationRequest) PageMetadata {
+func CalculateMetadata(totalCount int32, request PaginationRequest) PageMetadata {
 	req := request.WithDefaults()
 
 	totalPages := 1
@@ -200,18 +200,18 @@ func CalculateMetadata(totalCount int, request PaginationRequest) PageMetadata {
 	}
 
 	return PageMetadata{
-		TotalCount:      totalCount,
-		TotalPages:      totalPages,
+		TotalCount:      int32(totalCount),
+		TotalPages:      int32(totalPages),
 		CurrentPage:     req.Page,
 		PageSize:        req.PageSize,
 		SortDirection:   req.SortDirection,
-		HasNextPage:     req.Page < totalPages,
+		HasNextPage:     req.Page < int32(totalPages),
 		HasPreviousPage: req.Page > 1,
 	}
 }
 
 // FirstPage returns a PaginationRequest for the first page
-func FirstPage(pageSize int) PaginationRequest {
+func FirstPage(pageSize int32) PaginationRequest {
 	if pageSize <= 0 {
 		pageSize = DefaultPageSize
 	}

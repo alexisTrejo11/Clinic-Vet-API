@@ -1,6 +1,6 @@
 package dto
 
-import "clinic-vet-api/app/modules/pets/application/cqrs/query"
+import "clinic-vet-api/app/modules/pets/application/query"
 
 // @Description Represents the response structure for a pet.
 type PetResponse struct {

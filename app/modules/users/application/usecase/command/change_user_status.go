@@ -66,5 +66,5 @@ func (h *ChangeUserStatusHandler) Handle(ctx context.Context, command ChangeUser
 		return *cqrs.FailureResult("error saving user", err)
 	}
 
-	return *cqrs.SuccessResult(user.ID().String(), "user status changed successfully")
+	return *cqrs.SuccessResult("user status changed successfully")
 }

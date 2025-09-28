@@ -2,8 +2,8 @@
 package service
 
 import (
-	"clinic-vet-api/app/modules/pets/application/cqrs"
-	"clinic-vet-api/app/modules/pets/application/cqrs/command"
+	"clinic-vet-api/app/modules/pets/application"
+	"clinic-vet-api/app/modules/pets/application/command"
 	"clinic-vet-api/app/modules/pets/presentation/dto"
 	httpError "clinic-vet-api/app/shared/error/infrastructure/http"
 	ginUtils "clinic-vet-api/app/shared/gin_utils"
@@ -14,11 +14,11 @@ import (
 )
 
 type PetControllerOperations struct {
-	bus       cqrs.PetServiceBus
+	bus       application.PetServiceBus
 	validator *validator.Validate
 }
 
-func NewPetControllerOperations(bus cqrs.PetServiceBus, validator *validator.Validate) *PetControllerOperations {
+func NewPetControllerOperations(bus application.PetServiceBus, validator *validator.Validate) *PetControllerOperations {
 	return &PetControllerOperations{bus: bus, validator: validator}
 }
 

@@ -32,5 +32,5 @@ func (h *paymentCommandHandler) RefundPayment(ctx context.Context, cmd RefundPay
 		return *cqrs.FailureResult(ErrFailedSaveRefundedPayment, err)
 	}
 
-	return *cqrs.SuccessResult(payment.ID().String(), MsgPaymentRefunded)
+	return *cqrs.SuccessResult(MsgPaymentRefunded)
 }

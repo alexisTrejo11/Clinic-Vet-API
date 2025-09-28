@@ -31,8 +31,7 @@ type PaymentRepository interface {
 	ExistsPendingByCustomerID(ctx context.Context, customerID vo.CustomerID) (bool, error)
 
 	Save(ctx context.Context, paymentEntity *p.Payment) error
-	SoftDelete(ctx context.Context, id vo.PaymentID) error
-	HardDelete(ctx context.Context, id vo.PaymentID) error
+	Delete(ctx context.Context, id vo.PaymentID, isHard bool) error
 
 	CountByStatus(ctx context.Context, status enum.PaymentStatus) (int64, error)
 	CountByCustomerID(ctx context.Context, customerID vo.CustomerID) (int64, error)

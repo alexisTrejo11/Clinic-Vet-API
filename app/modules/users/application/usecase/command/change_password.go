@@ -43,7 +43,7 @@ func (c *ChangePasswordHandler) Handle(ctx context.Context, command ChangePasswo
 		return *cqrs.FailureResult("failed to update user", err)
 	}
 
-	return *cqrs.SuccessResult(user.ID().String(), "password changed successfully")
+	return *cqrs.SuccessResult("password changed successfully")
 }
 
 func (c *ChangePasswordHandler) changePassword(ctx context.Context, user *user.User, command ChangePasswordCommand) error {

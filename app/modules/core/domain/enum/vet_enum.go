@@ -186,6 +186,14 @@ func (vs VetSpecialty) IsValid() bool {
 	return exists
 }
 
+func VetSpecialtyPtr(vs *string) *VetSpecialty {
+	if vs == nil {
+		return nil
+	}
+	v := VetSpecialty(*vs)
+	return &v
+}
+
 func ParseVetSpecialty(specialty string) (VetSpecialty, error) {
 	normalized := normalizeInput(specialty)
 	if val, exists := vetSpecialtyMap[normalized]; exists {

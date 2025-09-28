@@ -47,6 +47,5 @@ func (h *apptCommandHandler) RequestAppointmentByCustomer(ctx context.Context, c
 		return *cqrs.FailureResult("failed to save appointment", err)
 	}
 
-	// Event
-	return *cqrs.SuccessResult(appointment.ID().String(), "appointment created successfully")
+	return *cqrs.SuccessResult("appointment created successfully")
 }

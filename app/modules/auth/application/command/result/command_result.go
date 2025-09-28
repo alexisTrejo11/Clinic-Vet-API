@@ -30,7 +30,7 @@ func AuthFailure(message string, err error) AuthCommandResult {
 
 func AuthSuccess(session *SessionResponse, userid, message string) AuthCommandResult {
 	result := &AuthCommandResult{
-		CommandResult: *cqrs.SuccessResult(userid, message),
+		CommandResult: *cqrs.SuccessCreateResult(userid, message),
 		session:       session,
 	}
 	return *result

@@ -10,7 +10,7 @@ import (
 	authAPI "clinic-vet-api/app/modules/auth/presentation"
 	customerAPI "clinic-vet-api/app/modules/customer/presentation"
 	vetAPI "clinic-vet-api/app/modules/employee/presentation"
-	medSessionAPI "clinic-vet-api/app/modules/medical/presentation"
+	medSessionAPI "clinic-vet-api/app/modules/medical/session/presentation"
 	paymentAPI "clinic-vet-api/app/modules/payments/presentation"
 	petAPI "clinic-vet-api/app/modules/pets/presentation"
 	userAPI "clinic-vet-api/app/modules/users/presentation"

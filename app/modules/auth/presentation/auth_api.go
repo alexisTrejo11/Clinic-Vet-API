@@ -14,6 +14,7 @@ import (
 	"clinic-vet-api/app/modules/core/repository"
 	"clinic-vet-api/app/modules/core/service"
 	userPersistence "clinic-vet-api/app/modules/users/infrastructure/repository"
+	"clinic-vet-api/app/shared/mapper"
 	"clinic-vet-api/app/shared/password"
 	"clinic-vet-api/sqlc"
 
@@ -33,7 +34,7 @@ func SetupAuthModule(
 	secretKet string,
 	authMiddle *middleware.AuthMiddleware,
 ) {
-	userRepo := userPersistence.NewSQLCUserRepository(queries)
+	userRepo := userPersistence.NewSqlcUserRepository(queries, mapper.NewSqlcFieldMapper())
 	jwtService := jwt.NewJWTService(secretKet)
 	passwordEncoder := password.NewPasswordEncoder()
 	emailService := service.NewEmailService()

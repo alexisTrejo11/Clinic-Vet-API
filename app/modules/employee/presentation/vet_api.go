@@ -9,6 +9,7 @@ import (
 	repositoryimpl "clinic-vet-api/app/modules/employee/infrastructure/repository"
 	"clinic-vet-api/app/modules/employee/presentation/controller"
 	"clinic-vet-api/app/modules/employee/presentation/routes"
+	"clinic-vet-api/app/shared/mapper"
 	"clinic-vet-api/sqlc"
 	"errors"
 	"fmt"
@@ -55,7 +56,7 @@ func (f *EmployeeModule) Bootstrap() error {
 	}
 
 	f.components = &EmployeeAPIComponents{}
-	vetRepo := repositoryimpl.NewSqlcEmployeeRepository(f.config.Queries, f.config.DB)
+	vetRepo := repositoryimpl.NewSqlcEmployeeRepository(f.config.Queries, mapper.NewSqlcFieldMapper())
 
 	employeeCommandBus := command.NewEmployeeCommandBus(vetRepo)
 	employeeQueryBus := query.NewEmployeeQueryBus(vetRepo)

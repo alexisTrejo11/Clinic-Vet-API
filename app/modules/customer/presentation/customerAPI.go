@@ -13,6 +13,7 @@ import (
 
 	petRepo "clinic-vet-api/app/modules/pets/infrastructure/repository"
 	appError "clinic-vet-api/app/shared/error/application"
+	"clinic-vet-api/app/shared/mapper"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -54,7 +55,7 @@ func (f *CustomerAPIModule) Bootstrap() error {
 	}
 
 	// Create repository
-	petRepo := petRepo.NewSqlcPetRepository(f.config.Queries)
+	petRepo := petRepo.NewSqlcPetRepository(f.config.Queries, mapper.NewSqlcFieldMapper())
 	customerRepo := customerRepo.NewSqlcCustomerRepository(f.config.Queries, petRepo)
 
 	// Create use cases

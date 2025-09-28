@@ -3,10 +3,11 @@ package api
 import (
 	"clinic-vet-api/app/middleware"
 	"clinic-vet-api/app/modules/core/repository"
-	"clinic-vet-api/app/modules/pets/application/cqrs"
+	"clinic-vet-api/app/modules/pets/application"
 	"clinic-vet-api/app/modules/pets/presentation/controller"
 	"clinic-vet-api/app/modules/pets/presentation/routes"
 	"clinic-vet-api/app/modules/pets/presentation/service"
+	"clinic-vet-api/app/shared/mapper"
 	"clinic-vet-api/sqlc"
 	"fmt"
 
@@ -26,7 +27,7 @@ type PetModuleConfig struct {
 
 type PetModuleComponents struct {
 	Repository            repository.PetRepository
-	PetServiceBus         cqrs.PetServiceBus
+	PetServiceBus         application.PetServiceBus
 	PetCtrlOperations     service.PetControllerOperations
 	PetController         controller.PetController
 	CustomerPetController controller.CustomerPetController
@@ -77,15 +78,15 @@ func (m *PetModule) Bootstrap() error {
 }
 
 func (m *PetModule) createRepository() repository.PetRepository {
-	return petRepo.NewSqlcPetRepository(m.config.Queries)
+	return petRepo.NewSqlcPetRepository(m.config.Queries, mapper.NewSqlcFieldMapper())
 }
 
-func (m *PetModule) createServiceBus(petRepo repository.PetRepository, customerRepo repository.CustomerRepository) cqrs.PetServiceBus {
-	bus := cqrs.NewPetServiceBus(petRepo, customerRepo)
+func (m *PetModule) createServiceBus(petRepo repository.PetRepository, customerRepo repository.CustomerRepository) application.PetServiceBus {
+	bus := application.NewPetServiceBus(petRepo, customerRepo)
 	return bus
 }
 
-func (m *PetModule) createControllerOperations(serviceBus cqrs.PetServiceBus, validator *validator.Validate) *service.PetControllerOperations {
+func (m *PetModule) createControllerOperations(serviceBus application.PetServiceBus, validator *validator.Validate) *service.PetControllerOperations {
 	return service.NewPetControllerOperations(serviceBus, validator)
 }
 
@@ -146,7 +147,7 @@ func (m *PetModule) GetRepository() (repository.PetRepository, error) {
 	return components.Repository, nil
 }
 
-func (m *PetModule) GetServiceBus() (cqrs.PetServiceBus, error) {
+func (m *PetModule) GetServiceBus() (application.PetServiceBus, error) {
 	components, err := m.GetComponents()
 	if err != nil {
 		return nil, err

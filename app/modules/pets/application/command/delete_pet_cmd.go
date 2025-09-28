@@ -36,5 +36,5 @@ func (h *petCommandHandler) DeletePet(ctx context.Context, cmd DeletePetCommand)
 		return *cqrs.FailureResult("Error Deleting Pet", err)
 	}
 
-	return *cqrs.SuccessResult(pet.ID().String(), "Pet Deleted Successfully")
+	return *cqrs.SuccessResult("Pet Deleted Successfully")
 }

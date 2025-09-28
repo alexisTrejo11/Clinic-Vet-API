@@ -4,7 +4,7 @@ import (
 	"clinic-vet-api/app/modules/core/domain/enum"
 	"clinic-vet-api/app/modules/core/domain/specification"
 	"clinic-vet-api/app/modules/core/domain/valueobject"
-	"clinic-vet-api/app/modules/pets/application/cqrs/query"
+	"clinic-vet-api/app/modules/pets/application/query"
 	"clinic-vet-api/app/shared/page"
 )
 

@@ -3,8 +3,9 @@ package controller
 import (
 	"clinic-vet-api/app/modules/core/domain/valueobject"
 
-	command "clinic-vet-api/app/modules/medical/session/application/command/session"
-	query "clinic-vet-api/app/modules/medical/session/application/query/session"
+	command "clinic-vet-api/app/modules/medical/session/application/command"
+	facade "clinic-vet-api/app/modules/medical/session/application/facade_service"
+	query "clinic-vet-api/app/modules/medical/session/application/query"
 	"clinic-vet-api/app/modules/medical/session/presentation/dto"
 	httpError "clinic-vet-api/app/shared/error/infrastructure/http"
 	ginUtils "clinic-vet-api/app/shared/gin_utils"
@@ -17,14 +18,14 @@ import (
 )
 
 type MedSessionControllerOperations struct {
-	medSessionBus *bus.MedicalSessionBus
-	validator     *validator.Validate
+	facade.MedicalApplicationService
+	validator *validator.Validate
 }
 
-func NewMedSessionControllerOperations(medSessionBus *bus.MedicalSessionBus, validator *validator.Validate) *MedSessionControllerOperations {
+func NewMedSessionControllerOperations(bus facade.MedicalApplicationService, validator *validator.Validate) *MedSessionControllerOperations {
 	return &MedSessionControllerOperations{
-		medSessionBus: medSessionBus,
-		validator:     validator,
+		MedicalApplicationService: bus,
+		validator:                 validator,
 	}
 }
 
@@ -55,7 +56,7 @@ func (co *MedSessionControllerOperations) GetMedSessionsByID(c *gin.Context, get
 		}
 	}
 
-	result, err := co.medSessionBus.QueryBus.FindMedSessionByID(c.Request.Context(), *getByIDQuery)
+	result, err := co.QueryBus().FindMedSessionByID(c.Request.Context(), *getByIDQuery)
 	if err != nil {
 		response.ApplicationError(c, err)
 		return
@@ -73,7 +74,7 @@ func (co *MedSessionControllerOperations) GetMedSessionsByPetID(c *gin.Context, 
 	}
 
 	query := query.NewFindMedSessionByPetIDQuery(petID, customerID, pagination)
-	resultPage, err := co.medSessionBus.QueryBus.FindMedSessionByPetID(c.Request.Context(), *query)
+	resultPage, err := co.QueryBus().FindMedSessionByPetID(c.Request.Context(), *query)
 	if err != nil {
 		response.ApplicationError(c, err)
 		return
@@ -95,7 +96,7 @@ func (co *MedSessionControllerOperations) GetMedSessionsByEmployeeID(c *gin.Cont
 		PaginationRequest: pagination,
 	}
 
-	resultPage, err := co.medSessionBus.QueryBus.FindMedSessionByEmployeeID(c.Request.Context(), *query)
+	resultPage, err := co.QueryBus().FindMedSessionByEmployeeID(c.Request.Context(), *query)
 	if err != nil {
 		response.ApplicationError(c, err)
 		return
@@ -113,7 +114,7 @@ func (co *MedSessionControllerOperations) GetMedSessionsByDateRange(c *gin.Conte
 	}
 
 	query := &query.FindMedSessionByDateRangeQuery{StartDate: startDate, EndDate: endDate, PaginationRequest: pagination}
-	resultPage, err := co.medSessionBus.QueryBus.FindMedSessionByDateRange(c.Request.Context(), *query)
+	resultPage, err := co.QueryBus().FindMedSessionByDateRange(c.Request.Context(), *query)
 	if err != nil {
 		response.ApplicationError(c, err)
 		return
@@ -131,7 +132,7 @@ func (co MedSessionControllerOperations) GetMedicalSessionByCustomerID(c *gin.Co
 	}
 
 	query := &query.FindMedSessionByCustomerIDQuery{CustomerID: valueobject.NewCustomerID(customerID), PaginationRequest: pagination}
-	resultPage, err := co.medSessionBus.QueryBus.FindMedSessionByCustomerID(c.Request.Context(), *query)
+	resultPage, err := co.QueryBus().FindMedSessionByCustomerID(c.Request.Context(), *query)
 	if err != nil {
 		response.ApplicationError(c, err)
 		return
@@ -149,7 +150,7 @@ func (co *MedSessionControllerOperations) CreateMedicalSession(c *gin.Context, e
 	}
 
 	command := requestData.ToCommand()
-	result := co.medSessionBus.CommandBus.CreateMedicalSession(c.Request.Context(), *command)
+	result := co.CommandBus().CreateMedicalSession(c.Request.Context(), *command)
 	if !result.IsSuccess() {
 		response.ApplicationError(c, result.Error())
 		return
@@ -166,7 +167,7 @@ func (co *MedSessionControllerOperations) FindMedSessionsByDateRange(c *gin.Cont
 	}
 
 	query := &query.FindMedSessionByDateRangeQuery{StartDate: startDate, EndDate: endDate, PaginationRequest: pagination}
-	resultPage, err := co.medSessionBus.QueryBus.FindMedSessionByDateRange(c.Request.Context(), *query)
+	resultPage, err := co.QueryBus().FindMedSessionByDateRange(c.Request.Context(), *query)
 	if err != nil {
 		response.ApplicationError(c, err)
 		return
@@ -184,11 +185,11 @@ func (co *MedSessionControllerOperations) DeleteMedicalSession(c *gin.Context) {
 	}
 
 	command := &command.DeleteMedSessionCommand{ID: valueobject.NewMedSessionID(idUint)}
-	result := co.medSessionBus.CommandBus.DeleteMedicalSession(c.Request.Context(), *command)
+	result := co.CommandBus().DeleteMedSessionCommand(c.Request.Context(), *command)
 	if !result.IsSuccess() {
 		response.ApplicationError(c, result.Error())
 		return
 	}
 
-	response.Created(c, result.ID(), result.Message())
+	response.Success(c, nil, result.Message())
 }

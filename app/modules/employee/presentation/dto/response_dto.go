@@ -13,7 +13,7 @@ type EmployeeResponse struct {
 	Photo           string `json:"photo" example:"https://example.com/photo.jpg"`
 	LicenseNumber   string `json:"license_number" example:"VET123456"`
 	UserID          *uint  `json:"user_id,omitempty" example:"42"`
-	YearsExperience int    `json:"years_experience" example:"5"`
+	YearsExperience int32  `json:"years_experience" example:"5"`
 	IsActive        bool   `json:"is_active" example:"true"`
 	Specialty       string `json:"specialty" example:"CARDIOLOGY"`
 	// LaboralSchedule []ScheduleResponse `json:"laboral_schedule"`

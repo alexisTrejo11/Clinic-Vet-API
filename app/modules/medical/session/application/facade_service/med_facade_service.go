@@ -1,8 +1,8 @@
 package facade
 
 import (
-	c "clinic-vet-api/app/modules/medical/application/command/session"
-	q "clinic-vet-api/app/modules/medical/application/query/session"
+	c "clinic-vet-api/app/modules/medical/session/application/command"
+	q "clinic-vet-api/app/modules/medical/session/application/query"
 	"clinic-vet-api/app/shared/cqrs"
 	p "clinic-vet-api/app/shared/page"
 	"context"

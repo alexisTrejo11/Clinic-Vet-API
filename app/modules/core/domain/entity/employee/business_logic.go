@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 
-	"clinic-vet-api/app/modules/core/domain/enum"
 	"clinic-vet-api/app/modules/core/domain/valueobject"
 	vo "clinic-vet-api/app/modules/core/domain/valueobject"
 	domainErr "clinic-vet-api/app/modules/core/error"
@@ -17,60 +16,6 @@ const (
 	MaxLicenseLength   = 20
 	MaxExperienceYears = 60
 )
-
-func (v *Employee) UpdatePhoto(newPhoto string) error {
-	if newPhoto != "" && len(newPhoto) > 500 {
-		return errors.New("photo URL too long")
-	}
-
-	v.photo = newPhoto
-	v.IncrementVersion()
-	return nil
-}
-
-func (v *Employee) UpdateName(ctx context.Context, newName valueobject.PersonName) error {
-	if err := v.Person.UpdateName(ctx, newName); err != nil {
-		return err
-	}
-	v.IncrementVersion()
-	return nil
-}
-
-func (v *Employee) UpdateLicenseNumber(newLicense string) error {
-	if err := validateLicenseNumber(newLicense); err != nil {
-		return err
-	}
-	v.licenseNumber = newLicense
-	v.IncrementVersion()
-	return nil
-}
-
-func (v *Employee) UpdateSpecialty(newSpecialty enum.VetSpecialty) error {
-	if !newSpecialty.IsValid() {
-		return errors.New("invalid specialty")
-	}
-	v.specialty = newSpecialty
-	v.IncrementVersion()
-	return nil
-}
-
-func (v *Employee) UpdateYearsExperience(newYears int) error {
-	if err := validateYearsExperience(newYears); err != nil {
-		return err
-	}
-	v.yearsExperience = newYears
-	v.IncrementVersion()
-	return nil
-}
-
-func (v *Employee) UpdateConsultationFee(newFee *valueobject.Money) error {
-	if newFee != nil && newFee.Amount().IsNegative() {
-		return errors.New("consultation fee cannot be negative")
-	}
-	v.consultationFee = newFee
-	v.IncrementVersion()
-	return nil
-}
 
 func (v *Employee) Activate() error {
 	if v.isActive {
@@ -86,17 +31,6 @@ func (v *Employee) Deactivate() error {
 		return nil // Already inactive
 	}
 	v.isActive = false
-	v.IncrementVersion()
-	return nil
-}
-
-func (v *Employee) UpdateSchedule(ctx context.Context, newSchedule *valueobject.Schedule) error {
-	if newSchedule != nil {
-		if err := newSchedule.ValidateBuissnessLogic(ctx); err != nil {
-			return fmt.Errorf("invalid schedule: %w", err)
-		}
-	}
-	v.schedule = newSchedule
 	v.IncrementVersion()
 	return nil
 }
@@ -129,7 +63,7 @@ func validateLicenseNumber(licenseNumber string) error {
 	return nil
 }
 
-func validateYearsExperience(years int) error {
+func validateYearsExperience(years int32) error {
 	if years < 0 {
 		return errors.New("years of experience cannot be negative")
 	}

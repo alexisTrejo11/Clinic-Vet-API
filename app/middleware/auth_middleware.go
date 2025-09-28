@@ -8,6 +8,7 @@ import (
 	"clinic-vet-api/app/modules/core/domain/valueobject"
 	"clinic-vet-api/app/modules/core/repository"
 	repositoryimpl "clinic-vet-api/app/modules/users/infrastructure/repository"
+	"clinic-vet-api/app/shared/mapper"
 	"clinic-vet-api/app/shared/response"
 	"clinic-vet-api/sqlc"
 	"context"
@@ -51,7 +52,7 @@ type AuthMiddleware struct {
 
 func NewAuthMiddleware(jwtSecret string, queries *sqlc.Queries) *AuthMiddleware {
 	jwtService := jwtImpl.NewJWTService(jwtSecret)
-	userRepo := repositoryimpl.NewSQLCUserRepository(queries)
+	userRepo := repositoryimpl.NewSqlcUserRepository(queries, mapper.NewSqlcFieldMapper())
 	return &AuthMiddleware{
 		jwtService: jwtService,
 		userRepo:   userRepo,

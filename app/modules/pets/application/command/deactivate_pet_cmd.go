@@ -38,5 +38,5 @@ func (h *petCommandHandler) DeactivatePet(ctx context.Context, cmd DeactivatePet
 		return *cqrs.FailureResult("Error Updating Pet", err)
 	}
 
-	return *cqrs.SuccessResult(pet.ID().String(), "Pet Deactivated Successfully")
+	return *cqrs.SuccessResult("Pet Deactivated Successfully")
 }

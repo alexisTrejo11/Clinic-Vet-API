@@ -272,8 +272,8 @@ func (s *UserSpecification) WithTwoFactor(hasTwoFactor bool) *UserSpecification 
 
 func (s *UserSpecification) WithPagination(page, pageSize int, orderBy, sortDir string) *UserSpecification {
 	s.Pagination = Pagination{
-		Offset:  page,
-		Limit:   pageSize,
+		Offset:  int32(page),
+		Limit:   int32(pageSize),
 		OrderBy: orderBy,
 		SortDir: sortDir,
 	}

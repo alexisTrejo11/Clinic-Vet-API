@@ -62,7 +62,7 @@ func (uc *CreateUserHandler) Handle(ctx context.Context, command CreateUserComma
 		return *cqrs.FailureResult(ErrFailedProcessingUser, err)
 	}
 
-	return *cqrs.SuccessResult(user.ID().String(), ErrUserCreationSuccess)
+	return *cqrs.SuccessCreateResult(user.ID().String(), ErrUserCreationSuccess)
 }
 
 func (cmd CreateUserCommand) ToEntity() *u.User {

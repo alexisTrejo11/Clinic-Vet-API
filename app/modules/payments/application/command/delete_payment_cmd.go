@@ -22,12 +22,10 @@ func (h *paymentCommandHandler) DeletePayment(ctx context.Context, cmd DeletePay
 		return *cqrs.FailureResult(ErrFetchingPayment, err)
 	}
 
-	if err := h.paymentRepository.SoftDelete(ctx, payment.ID()); err != nil {
+	isHardDelete := false
+	if err := h.paymentRepository.Delete(ctx, payment.ID(), isHardDelete); err != nil {
 		return *cqrs.FailureResult(ErrDeletingPayment, err)
 	}
 
-	return *cqrs.SuccessResult(
-		cmd.paymentID.String(),
-		MsgPaymentDeleted,
-	)
+	return *cqrs.SuccessResult(MsgPaymentDeleted)
 }

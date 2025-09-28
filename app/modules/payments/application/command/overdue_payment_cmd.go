@@ -49,7 +49,7 @@ func (h *paymentCommandHandler) MarkOverduePayments(ctx context.Context, cmd Mar
 		}
 	}
 
-	return *cqrs.SuccessResult("", fmt.Sprintf(MsgOverduePayments, updatedCount))
+	return *cqrs.SuccessResult(fmt.Sprintf(MsgOverduePayments, updatedCount))
 }
 
 func (h *paymentCommandHandler) UpdatePaymentOverdued(ctx context.Context, payment *payment.Payment) error {
@@ -71,7 +71,7 @@ func (h *paymentCommandHandler) UpdatePaymentOverdued(ctx context.Context, payme
 //
 // Returns:
 //   - bool: True if current page is the last page
-func (h *paymentCommandHandler) IsLastPage(pagination page.PaginationRequest, totalPages int) bool {
+func (h *paymentCommandHandler) IsLastPage(pagination page.PaginationRequest, totalPages int32) bool {
 	return pagination.Page >= totalPages
 }
 

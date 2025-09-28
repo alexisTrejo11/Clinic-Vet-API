@@ -28,5 +28,5 @@ func (h *paymentCommandHandler) ProcessPayment(ctx context.Context, cmd ProcessP
 		return *cqrs.FailureResult(ErrFailedProcessPayment, err)
 	}
 
-	return *cqrs.SuccessResult(payment.ID().String(), MsgPaymentProcessed)
+	return *cqrs.SuccessResult(MsgPaymentProcessed)
 }

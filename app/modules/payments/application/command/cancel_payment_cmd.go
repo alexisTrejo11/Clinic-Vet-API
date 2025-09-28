@@ -32,5 +32,5 @@ func (h *paymentCommandHandler) CancelPayment(ctx context.Context, cmd CancelPay
 		return *cqrs.FailureResult(ErrFailedSaveCanceledPayment, err)
 	}
 
-	return *cqrs.SuccessResult(payment.ID().String(), MsgPaymentCanceled)
+	return *cqrs.SuccessResult(MsgPaymentCanceled)
 }

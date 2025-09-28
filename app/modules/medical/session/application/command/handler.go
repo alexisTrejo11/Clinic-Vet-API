@@ -15,8 +15,8 @@ func NewMedicalSessionCommandHandlers(repo repository.MedicalSessionRepository) 
 	return &MedicalSessionCommandHandlers{repo: repo}
 }
 
-func (h *MedicalSessionCommandHandlers) CreateMedicalSession(ctx context.Context, command CreateMedSessionCommand) cqrs.CommandResult {
-	entity := command.ToEntity()
+func (h *MedicalSessionCommandHandlers) CreateMedicalSession(ctx context.Context, cmd CreateMedSessionCommand) cqrs.CommandResult {
+	entity := cmd.ToEntity()
 	if err := h.repo.Save(ctx, &entity); err != nil {
 		return errorCreateResult(msgErrorProcessingData, err)
 	}
@@ -24,13 +24,13 @@ func (h *MedicalSessionCommandHandlers) CreateMedicalSession(ctx context.Context
 	return successCreateResult(entity)
 }
 
-func (h *MedicalSessionCommandHandlers) UpdateMedicalSession(ctx context.Context, command UpdateMedSessionCommand) cqrs.CommandResult {
-	existingEntity, err := h.repo.FindByID(ctx, command.ID)
+func (h *MedicalSessionCommandHandlers) UpdateMedicalSession(ctx context.Context, cmd UpdateMedSessionCommand) cqrs.CommandResult {
+	existingEntity, err := h.repo.FindByID(ctx, cmd.ID)
 	if err != nil {
 		return errorUpdateResult(msgErrorProcessingData, err)
 	}
 
-	updatedEntity := applyCommandUpdates(command, *existingEntity)
+	updatedEntity := applyCommandUpdates(cmd, *existingEntity)
 	if err := h.repo.Save(ctx, updatedEntity); err != nil {
 		return errorUpdateResult(msgErrorProcessingData, err)
 	}
@@ -38,16 +38,16 @@ func (h *MedicalSessionCommandHandlers) UpdateMedicalSession(ctx context.Context
 	return successUpdateResult(*updatedEntity)
 }
 
-func (h *MedicalSessionCommandHandlers) SoftDeleteMedicalSession(ctx context.Context, command DeleteMedSessionCommand) cqrs.CommandResult {
-	if err := h.valdiateExistingMedSession(ctx, command.ID); err != nil {
-		return errorDeleteResult(command.ID, msgMedicalSessionNotFound, err)
+func (h *MedicalSessionCommandHandlers) DeleteMedSessionCommand(ctx context.Context, cmd DeleteMedSessionCommand) cqrs.CommandResult {
+	if err := h.valdiateExistingMedSession(ctx, cmd.ID); err != nil {
+		return errorDeleteResult(cmd.ID, msgMedicalSessionNotFound, err)
 	}
 
-	if err := h.repo.Delete(ctx, command.ID, command.IsHardDelete); err != nil {
-		return errorDeleteResult(command.ID, msgErrorProcessingData, err)
+	if err := h.repo.Delete(ctx, cmd.ID, cmd.IsHardDelete); err != nil {
+		return errorDeleteResult(cmd.ID, msgErrorProcessingData, err)
 	}
 
-	return successDeleteResult(command.ID, msgMedicalSessionSoftDeleted)
+	return successDeleteResult(cmd.ID, msgMedicalSessionSoftDeleted)
 }
 func (h *MedicalSessionCommandHandlers) valdiateExistingMedSession(ctx context.Context, medHistID valueobject.MedSessionID) error {
 	exists, err := h.repo.ExistsByID(ctx, medHistID)

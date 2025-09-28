@@ -6,6 +6,7 @@ import (
 	"clinic-vet-api/app/modules/core/domain/valueobject"
 	"clinic-vet-api/app/shared/cqrs"
 	apperror "clinic-vet-api/app/shared/error/application"
+	"clinic-vet-api/app/shared/mapper"
 	"context"
 	"errors"
 )
@@ -16,14 +17,10 @@ type CompleteApptCommand struct {
 }
 
 func NewCompleteApptCommand(id uint, employeeID *uint) *CompleteApptCommand {
-	var employeeIDObj *valueobject.EmployeeID
-	if employeeID != nil {
-		employeeID := valueobject.NewEmployeeID(*employeeID)
-		employeeIDObj = &employeeID
+	return &CompleteApptCommand{
+		id:         valueobject.NewAppointmentID(id),
+		employeeID: mapper.PtrToEmployeeIDPtr(employeeID),
 	}
-
-	cmd := &CompleteApptCommand{id: valueobject.NewAppointmentID(id), employeeID: employeeIDObj}
-	return cmd
 }
 
 func (h *apptCommandHandler) CompleteAppointment(ctx context.Context, cmd CompleteApptCommand) cqrs.CommandResult {
@@ -44,7 +41,7 @@ func (h *apptCommandHandler) CompleteAppointment(ctx context.Context, cmd Comple
 		return *cqrs.FailureResult("failed to save completed appointment", err)
 	}
 
-	return *cqrs.SuccessResult(appointment.ID().String(), "appointment completed successfully")
+	return *cqrs.SuccessResult("appointment completed successfully")
 }
 
 func (c *CompleteApptCommand) Validate() error {

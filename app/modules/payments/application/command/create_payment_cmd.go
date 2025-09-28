@@ -32,7 +32,7 @@ func (h *paymentCommandHandler) CreatePayment(ctx context.Context, cmd CreatePay
 		return *cqrs.FailureResult(ErrFailedCreatePayment, err)
 	}
 
-	return *cqrs.SuccessResult(payment.ID().String(), MsgPaymentCreated)
+	return *cqrs.SuccessCreateResult(payment.ID().String(), MsgPaymentCreated)
 }
 
 func (cmd *CreatePaymentCommand) ToEntity() payment.Payment {

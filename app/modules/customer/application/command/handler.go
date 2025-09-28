@@ -33,7 +33,7 @@ func (h *customerCommandHandler) Create(ctx context.Context, cmd CreateCustomerC
 		return *cqrs.FailureResult("an error ocurred saving customer", err)
 	}
 
-	return *cqrs.SuccessResult(customer.ID().String(), "customer successfully created")
+	return *cqrs.SuccessCreateResult(customer.ID().String(), "customer successfully created")
 }
 
 func (h *customerCommandHandler) Update(ctx context.Context, cmd UpdateCustomerCommand) cqrs.CommandResult {
@@ -52,7 +52,7 @@ func (h *customerCommandHandler) Update(ctx context.Context, cmd UpdateCustomerC
 		return *cqrs.FailureResult("an error ocurred updating customer", err)
 	}
 
-	return *cqrs.SuccessResult(customer.ID().String(), "customer successfully updated")
+	return *cqrs.SuccessResult("customer successfully updated")
 }
 
 func (h *customerCommandHandler) Deactivate(ctx context.Context, cmd DeactivateCustomerCommand) cqrs.CommandResult {
@@ -71,5 +71,5 @@ func (h *customerCommandHandler) Deactivate(ctx context.Context, cmd DeactivateC
 		return *cqrs.FailureResult("an error ocurred saving customer", err)
 	}
 
-	return *cqrs.SuccessResult(customer.ID().String(), "customer successfully deactivated")
+	return *cqrs.SuccessResult("customer successfully deactivated")
 }

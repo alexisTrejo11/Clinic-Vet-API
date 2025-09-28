@@ -3,11 +3,12 @@ package medSessionAPI
 import (
 	"clinic-vet-api/app/middleware"
 	"clinic-vet-api/app/modules/core/repository"
-	"clinic-vet-api/app/modules/medical/application/query"
-	"clinic-vet-api/app/modules/medical/infrastructure/bus"
-	repositoryimpl "clinic-vet-api/app/modules/medical/infrastructure/persistence/repository"
-	controller "clinic-vet-api/app/modules/medical/presentation/controller/med_session"
-	"clinic-vet-api/app/modules/medical/presentation/routes"
+	command "clinic-vet-api/app/modules/medical/session/application/command"
+	facade "clinic-vet-api/app/modules/medical/session/application/facade_service"
+	query "clinic-vet-api/app/modules/medical/session/application/query"
+	repositoryimpl "clinic-vet-api/app/modules/medical/session/infrastructure/persistence/repository"
+	controller "clinic-vet-api/app/modules/medical/session/presentation/controller"
+	"clinic-vet-api/app/modules/medical/session/presentation/routes"
 	"clinic-vet-api/sqlc"
 	"fmt"
 
@@ -33,7 +34,7 @@ type MedicalSessionControllers struct {
 
 type MedicalSessionModuleComponents struct {
 	Repository repository.MedicalSessionRepository
-	Bus        *bus.MedicalSessionBus
+	Bus        facade.MedicalApplicationService
 	Controller *MedicalSessionControllers
 }
 
@@ -78,14 +79,16 @@ func (m *MedicalSessionModule) createRepository() repository.MedicalSessionRepos
 	return repositoryimpl.NewSQLCMedSessionRepository(m.config.Queries)
 }
 
-func (m *MedicalSessionModule) createBus(repository repository.MedicalSessionRepository) *bus.MedicalSessionBus {
-	return bus.NewMedicalSessionBus(
-		medSessionCommand.NewMedicalSessionCommandHandlers(repository),
-		query.NewMedicalSessionQueryHandlers(repository),
+func (m *MedicalSessionModule) createBus(repository repository.MedicalSessionRepository) facade.MedicalApplicationService {
+	commandHandlers := command.NewMedicalSessionCommandHandlers(repository)
+	queryHandlers := query.NewMedicalSessionQueryHandler(repository)
+	return facade.NewMedicalApplicationService(
+		commandHandlers,
+		queryHandlers,
 	)
 }
 
-func (m *MedicalSessionModule) createController(medSessionBus *bus.MedicalSessionBus) *MedicalSessionControllers {
+func (m *MedicalSessionModule) createController(medSessionBus facade.MedicalApplicationService) *MedicalSessionControllers {
 	controllerOperations := controller.NewMedSessionControllerOperations(medSessionBus, m.config.Validator)
 	adminController := controller.NewAdminMedicalSessionController(controllerOperations)
 	customerController := controller.NewCustomerMedicalSessionController(controllerOperations)
@@ -151,7 +154,7 @@ func (m *MedicalSessionModule) GetRepository() (repository.MedicalSessionReposit
 	return components.Repository, nil
 }
 
-func (m *MedicalSessionModule) GetBus() (*bus.MedicalSessionBus, error) {
+func (m *MedicalSessionModule) GetBus() (facade.MedicalApplicationService, error) {
 	components, err := m.GetComponents()
 	if err != nil {
 		return nil, err

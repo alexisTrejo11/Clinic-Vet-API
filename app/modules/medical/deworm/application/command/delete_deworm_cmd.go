@@ -32,7 +32,7 @@ func (h *DewormCommandHandler) HandleDelete(ctx context.Context, cmd DewormDelet
 		return *cqrs.FailureResult("failed to delete deworming record", err)
 	}
 
-	return *cqrs.SuccessResult(cmd.ID.String(), "deworming record deleted successfully")
+	return *cqrs.SuccessResult("deworming record deleted successfully")
 }
 
 func (cmd *DewormDeleteCommand) validate() error {

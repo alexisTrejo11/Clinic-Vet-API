@@ -3,6 +3,7 @@ package command
 import (
 	"clinic-vet-api/app/modules/core/domain/valueobject"
 	"clinic-vet-api/app/shared/cqrs"
+	"clinic-vet-api/app/shared/mapper"
 	"context"
 	"time"
 )
@@ -14,14 +15,9 @@ type RescheduleApptCommand struct {
 }
 
 func NewRescheduleApptCommand(appointIDInt uint, vetID *uint, dateTime time.Time, reason *string) *RescheduleApptCommand {
-	var veterinarianID *valueobject.EmployeeID
-	if vetID != nil {
-		vetIDVal := valueobject.NewEmployeeID(*vetID)
-		veterinarianID = &vetIDVal
-	}
 	return &RescheduleApptCommand{
 		appointmentID:  valueobject.NewAppointmentID(appointIDInt),
-		veterinarianID: veterinarianID,
+		veterinarianID: mapper.PtrToEmployeeIDPtr(vetID),
 		datetime:       dateTime,
 	}
 }
@@ -40,5 +36,5 @@ func (h *apptCommandHandler) RescheduleAppointment(ctx context.Context, cmd Resc
 		return *cqrs.FailureResult("failed to save rescheduled appointment", err)
 	}
 
-	return *cqrs.SuccessResult(appointment.ID().String(), "appointment rescheduled successfully")
+	return *cqrs.SuccessResult("appointment rescheduled successfully")
 }

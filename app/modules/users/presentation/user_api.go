@@ -10,6 +10,7 @@ import (
 	"clinic-vet-api/app/modules/users/infrastructure/bus"
 	"clinic-vet-api/app/modules/users/presentation/controller"
 	"clinic-vet-api/app/modules/users/presentation/routes"
+	"clinic-vet-api/app/shared/mapper"
 	"clinic-vet-api/app/shared/password"
 	"clinic-vet-api/sqlc"
 	"fmt"
@@ -59,9 +60,9 @@ func (u *UserAPIModule) Bootstrap() error {
 		return err
 	}
 
-	userRepo := persistence.NewSQLCUserRepository(u.config.Queries)
+	userRepo := persistence.NewSqlcUserRepository(u.config.Queries, mapper.NewSqlcFieldMapper())
 	profileRepo := persistence.NewSQLCProfileRepository(u.config.Queries)
-	employeeRepo := employeeRepo.NewSqlcEmployeeRepository(u.config.Queries, u.config.DB)
+	employeeRepo := employeeRepo.NewSqlcEmployeeRepository(u.config.Queries, mapper.NewSqlcFieldMapper())
 	passwordEncoder := password.NewPasswordEncoder()
 
 	service := service.NewUserSecurityService(userRepo, employeeRepo, passwordEncoder)

@@ -7,19 +7,19 @@ type Specification interface {
 }
 
 type Pagination struct {
-	Offset  int
-	Limit   int
+	Offset  int32
+	Limit   int32
 	OrderBy string
 	SortDir string // "ASC" or "DESC"
 }
 
-func (p Pagination) GetOffset() int {
+func (p Pagination) GetOffset() int32 {
 	if p.Offset <= 0 {
 		return 0
 	}
 	return (p.Offset - 1) * p.Limit
 }
 
-func (p Pagination) GetLimit() int {
+func (p Pagination) GetLimit() int32 {
 	return p.Limit
 }

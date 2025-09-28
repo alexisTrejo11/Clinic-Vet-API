@@ -3,7 +3,7 @@ package routes
 
 import (
 	"clinic-vet-api/app/middleware"
-	"clinic-vet-api/app/modules/medical/presentation/controller"
+	"clinic-vet-api/app/modules/medical/session/presentation/controller"
 
 	"github.com/gin-gonic/gin"
 )

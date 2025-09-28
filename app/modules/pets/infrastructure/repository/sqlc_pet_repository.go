@@ -7,6 +7,7 @@ import (
 	"clinic-vet-api/app/modules/core/domain/specification"
 	"clinic-vet-api/app/modules/core/domain/valueobject"
 	"clinic-vet-api/app/modules/core/repository"
+	"clinic-vet-api/app/shared/mapper"
 	"clinic-vet-api/app/shared/page"
 	"clinic-vet-api/sqlc"
 	"context"
@@ -19,11 +20,13 @@ import (
 
 type SqlcPetRepository struct {
 	queries *sqlc.Queries
+	pgMap   mapper.SqlcFieldMapper
 }
 
-func NewSqlcPetRepository(queries *sqlc.Queries) repository.PetRepository {
+func NewSqlcPetRepository(queries *sqlc.Queries, pgMap mapper.SqlcFieldMapper) repository.PetRepository {
 	return &SqlcPetRepository{
 		queries: queries,
+		pgMap:   pgMap,
 	}
 }
 
@@ -34,8 +37,8 @@ func (r *SqlcPetRepository) FindBySpecification(ctx context.Context, spec specif
 func (r *SqlcPetRepository) FindBySpecies(ctx context.Context, petSpecies enum.PetSpecies, pagination page.PaginationRequest) (page.Page[pet.Pet], error) {
 	petRows, err := r.queries.FindPetsBySpecies(ctx, sqlc.FindPetsBySpeciesParams{
 		Species: petSpecies.String(),
-		Limit:   int32(pagination.Limit()),
-		Offset:  int32(pagination.Offset()),
+		Limit:   pagination.Limit(),
+		Offset:  pagination.Offset(),
 	})
 
 	if err != nil {
@@ -47,13 +50,13 @@ func (r *SqlcPetRepository) FindBySpecies(ctx context.Context, petSpecies enum.P
 		return page.Page[pet.Pet]{}, r.dbError("select", fmt.Sprintf("failed to count pets for species %s", petSpecies.String()), err)
 	}
 
-	pets := sqlcRowsToEntities(petRows)
-	return page.NewPage(pets, int(total), pagination), nil
+	pets := r.toEntities(petRows)
+	return page.NewPage(pets, total, pagination), nil
 }
 
 func (r *SqlcPetRepository) FindAllByCustomerID(ctx context.Context, customerID valueobject.CustomerID) ([]pet.Pet, error) {
 	petRows, err := r.queries.FindPetsByCustomerID(ctx, sqlc.FindPetsByCustomerIDParams{
-		CustomerID: int32(customerID.Value()),
+		CustomerID: customerID.Int32(),
 		Limit:      1000, // Large limit to get all pets
 		Offset:     0,
 	})
@@ -61,14 +64,13 @@ func (r *SqlcPetRepository) FindAllByCustomerID(ctx context.Context, customerID 
 		return nil, r.dbError("select", fmt.Sprintf("failed to find all pets for customer ID %d", customerID.Value()), err)
 	}
 
-	pets := sqlcRowsToEntities(petRows)
-	return pets, nil
+	return r.toEntities(petRows), nil
 }
 
 func (r *SqlcPetRepository) FindByCustomerID(ctx context.Context, customerID valueobject.CustomerID, pagination page.PaginationRequest) (page.Page[pet.Pet], error) {
 	offset := (pagination.Offset()) * pagination.Limit()
 	petRows, err := r.queries.FindPetsByCustomerID(ctx, sqlc.FindPetsByCustomerIDParams{
-		CustomerID: int32(customerID.Value()),
+		CustomerID: int32(customerID.Int32()),
 		Limit:      int32(pagination.Limit()),
 		Offset:     int32(offset),
 	})
@@ -76,17 +78,17 @@ func (r *SqlcPetRepository) FindByCustomerID(ctx context.Context, customerID val
 		return page.Page[pet.Pet]{}, r.dbError("select", fmt.Sprintf("failed to find pets for customer ID %d", customerID.Value()), err)
 	}
 
-	total, err := r.queries.CountPetsByCustomerID(ctx, int32(customerID.Value()))
+	total, err := r.queries.CountPetsByCustomerID(ctx, customerID.Int32())
 	if err != nil {
 		return page.Page[pet.Pet]{}, r.dbError("select", fmt.Sprintf("failed to count pets for customer ID %d", customerID.Value()), err)
 	}
 
-	pets := sqlcRowsToEntities(petRows)
-	return page.NewPage(pets, int(total), pagination), nil
+	pets := r.toEntities(petRows)
+	return page.NewPage(pets, total, pagination), nil
 }
 
 func (r *SqlcPetRepository) FindByID(ctx context.Context, petID valueobject.PetID) (pet.Pet, error) {
-	sqlPet, err := r.queries.FindPetByID(ctx, int32(petID.Value()))
+	sqlPet, err := r.queries.FindPetByID(ctx, petID.Int32())
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return pet.Pet{}, r.notFoundError("id", petID.String())
@@ -94,13 +96,13 @@ func (r *SqlcPetRepository) FindByID(ctx context.Context, petID valueobject.PetI
 		return pet.Pet{}, r.dbError("select", fmt.Sprintf("failed to find pet with ID %d", petID.Value()), err)
 	}
 
-	return sqlcRowToEntity(sqlPet), nil
+	return r.toEntity(sqlPet), nil
 }
 
 func (r *SqlcPetRepository) FindByIDAndCustomerID(ctx context.Context, id valueobject.PetID, customerID valueobject.CustomerID) (pet.Pet, error) {
 	sqlPet, err := r.queries.FindPetByIDAndCustomerID(ctx, sqlc.FindPetByIDAndCustomerIDParams{
-		ID:         int32(id.Value()),
-		CustomerID: int32(customerID.Value()),
+		ID:         id.Int32(),
+		CustomerID: customerID.Int32(),
 	})
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -109,11 +111,11 @@ func (r *SqlcPetRepository) FindByIDAndCustomerID(ctx context.Context, id valueo
 		return pet.Pet{}, r.dbError("select", fmt.Sprintf("failed to find pet with ID %d and customer ID %d", id.Value(), customerID.Value()), err)
 	}
 
-	return sqlcRowToEntity(sqlPet), nil
+	return r.toEntity(sqlPet), nil
 }
 
 func (r *SqlcPetRepository) ExistsByID(ctx context.Context, petID valueobject.PetID) (bool, error) {
-	exists, err := r.queries.ExistsPetByID(ctx, int32(petID.Value()))
+	exists, err := r.queries.ExistsPetByID(ctx, petID.Int32())
 	if err != nil {
 		return false, r.dbError("select", fmt.Sprintf("failed to check pet existence by ID %d", petID.Value()), err)
 	}
@@ -143,52 +145,50 @@ func (r *SqlcPetRepository) Delete(ctx context.Context, petID valueobject.PetID,
 }
 
 func (r *SqlcPetRepository) CountByCustomerID(ctx context.Context, customerID valueobject.CustomerID) (int64, error) {
-	count, err := r.queries.CountPetsByCustomerID(ctx, int32(customerID.Value()))
+	count, err := r.queries.CountPetsByCustomerID(ctx, int32(customerID.Int32()))
 	if err != nil {
 		return 0, r.dbError("select", fmt.Sprintf("failed to count pets for customer ID %d", customerID.Value()), err)
 	}
 	return count, nil
 }
 
-// create inserts a new pet
 func (r *SqlcPetRepository) create(ctx context.Context, entity pet.Pet) (pet.Pet, error) {
-	params := ToSqlCreateParam(entity)
-
+	params := r.toCreateParams(entity)
 	petCreated, err := r.queries.CreatePet(ctx, *params)
 	if err != nil {
 		return pet.Pet{}, r.dbError("insert", "failed to create pet", err)
 	}
 
-	return sqlcRowToEntity(petCreated), nil
+	return r.toEntity(petCreated), nil
 }
 
 func (r *SqlcPetRepository) update(ctx context.Context, entity pet.Pet) (pet.Pet, error) {
-	params := ToSqlUpdateParam(&entity)
+	params := r.toUpdateParams(&entity)
 
 	petUpdated, err := r.queries.UpdatePet(ctx, *params)
 	if err != nil {
 		return pet.Pet{}, r.dbError("update", fmt.Sprintf("failed to update pet with ID %d", entity.ID().Value()), err)
 	}
 
-	return sqlcRowToEntity(petUpdated), nil
+	return r.toEntity(petUpdated), nil
 }
 
 func (r *SqlcPetRepository) Restore(ctx context.Context, petID valueobject.PetID) error {
-	if err := r.queries.RestorePet(ctx, int32(petID.Value())); err != nil {
+	if err := r.queries.RestorePet(ctx, petID.Int32()); err != nil {
 		return r.dbError("update", fmt.Sprintf("failed to restore pet with ID %d", petID.Value()), err)
 	}
 	return nil
 }
 
 func (r *SqlcPetRepository) softDelete(ctx context.Context, petID valueobject.PetID) error {
-	if err := r.queries.SoftDeletePet(ctx, int32(petID.Value())); err != nil {
+	if err := r.queries.SoftDeletePet(ctx, petID.Int32()); err != nil {
 		return r.dbError("delete", fmt.Sprintf("failed to soft delete pet with ID %d", petID.Value()), err)
 	}
 	return nil
 }
 
 func (r *SqlcPetRepository) hardDelete(ctx context.Context, petID valueobject.PetID) error {
-	if err := r.queries.HardDeletePet(ctx, int32(petID.Value())); err != nil {
+	if err := r.queries.HardDeletePet(ctx, petID.Int32()); err != nil {
 		return r.dbError("delete", fmt.Sprintf("failed to hard delete pet with ID %d", petID.Value()), err)
 	}
 	return nil

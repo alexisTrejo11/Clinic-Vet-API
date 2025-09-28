@@ -9,41 +9,26 @@ import (
 
 type CreateEmployeeHandler struct {
 	employeeRepo repository.EmployeeRepository
-	eventBus     EventBus
 }
 
-// TODO: EventBus implementation
 func NewCreateEmployeeHandler(employeeRepo repository.EmployeeRepository) *CreateEmployeeHandler {
-	return &CreateEmployeeHandler{
-		employeeRepo: employeeRepo,
-		eventBus:     nil,
-	}
+	return &CreateEmployeeHandler{employeeRepo: employeeRepo}
 }
 
 type UpdateEmployeeHandler struct {
 	employeeRepo repository.EmployeeRepository
-	eventBus     EventBus
 }
 
-func NewUpdateEmployeeHandler(employeeRepo repository.EmployeeRepository, eventBus EventBus) *UpdateEmployeeHandler {
-	return &UpdateEmployeeHandler{
-		employeeRepo: employeeRepo,
-		eventBus:     eventBus,
-	}
+func NewUpdateEmployeeHandler(employeeRepo repository.EmployeeRepository) *UpdateEmployeeHandler {
+	return &UpdateEmployeeHandler{employeeRepo: employeeRepo}
 }
-
-type EventBus interface{}
 
 type DeleteEmployeeHandler struct {
 	employeeRepo repository.EmployeeRepository
-	eventBus     EventBus
 }
 
-func NewDeleteEmployeeHandler(employeeRepo repository.EmployeeRepository, eventBus EventBus) *DeleteEmployeeHandler {
-	return &DeleteEmployeeHandler{
-		employeeRepo: employeeRepo,
-		eventBus:     eventBus,
-	}
+func NewDeleteEmployeeHandler(employeeRepo repository.EmployeeRepository) *DeleteEmployeeHandler {
+	return &DeleteEmployeeHandler{employeeRepo: employeeRepo}
 }
 
 func (h *CreateEmployeeHandler) Handle(ctx context.Context, cmd CreateEmployeeCommand) cqrs.CommandResult {
@@ -56,38 +41,33 @@ func (h *CreateEmployeeHandler) Handle(ctx context.Context, cmd CreateEmployeeCo
 		return *cqrs.FailureResult("validation error", err)
 	}
 
-	return *cqrs.SuccessResult(employee.ID().String(), "Employee created successfully")
+	return *cqrs.SuccessCreateResult(employee.ID().String(), "Employee created successfully")
 }
 
 func (h *UpdateEmployeeHandler) Handle(ctx context.Context, cmd UpdateEmployeeCommand) cqrs.CommandResult {
-	employee, err := h.employeeRepo.FindByID(ctx, cmd.EmployeeID)
+	existingEmployee, err := h.employeeRepo.FindByID(ctx, cmd.EmployeeID)
 	if err != nil {
 		return *cqrs.FailureResult("an error occurred finding employee", err)
 	}
 
-	if err := cmd.updateEmployee(ctx, &employee); err != nil {
-		return *cqrs.FailureResult("an error occurred updating employee", err)
-	}
-
-	if err := h.employeeRepo.Save(ctx, &employee); err != nil {
+	employeeUpdated := cmd.updateEmployee(existingEmployee)
+	if err := h.employeeRepo.Save(ctx, &employeeUpdated); err != nil {
 		return *cqrs.FailureResult("an error occurred saving employee", err)
 	}
 
-	return *cqrs.SuccessResult(employee.ID().String(), "Employee updated successfully")
+	return *cqrs.SuccessResult("Employee updated successfully")
 }
 
 func (h *DeleteEmployeeHandler) Handle(ctx context.Context, cmd DeleteEmployeeCommand) cqrs.CommandResult {
-	exists, err := h.employeeRepo.ExistsByID(ctx, cmd.EmployeeID)
-	if err != nil {
+	if exists, err := h.employeeRepo.ExistsByID(ctx, cmd.EmployeeID); err != nil {
 		return *cqrs.FailureResult("failing finding employee", err)
-	}
-	if !exists {
+	} else if !exists {
 		return *cqrs.FailureResult("employee not found", apperror.EntityNotFoundValidationError("Employee", "id", cmd.EmployeeID.String()))
 	}
 
-	if err := h.employeeRepo.SoftDelete(ctx, cmd.EmployeeID); err != nil {
+	if err := h.employeeRepo.Delete(ctx, cmd.EmployeeID, false); err != nil {
 		return *cqrs.FailureResult("failing deleting employee", err)
 	}
 
-	return *cqrs.SuccessResult("", "Employee deleted successfully")
+	return *cqrs.SuccessResult("Employee deleted successfully")
 }

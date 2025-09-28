@@ -36,7 +36,7 @@ func (h *petCommandHandler) CreatePet(ctx context.Context, cmd CreatePetCommand)
 		return *cqrs.FailureResult("Failed to save new pet", err)
 	}
 
-	return *cqrs.SuccessResult(petCreated.ID().String(), "Pet created successfully")
+	return *cqrs.SuccessCreateResult(petCreated.ID().String(), "Pet created successfully")
 }
 
 func (h *petCommandHandler) validateCustomer(ctx context.Context, customerID valueobject.CustomerID) error {

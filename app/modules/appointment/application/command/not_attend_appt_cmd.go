@@ -3,25 +3,19 @@ package command
 import (
 	"clinic-vet-api/app/modules/core/domain/valueobject"
 	"clinic-vet-api/app/shared/cqrs"
+	"clinic-vet-api/app/shared/mapper"
 	"context"
 )
 
 type NotAttendApptCommand struct {
 	appointmentID valueobject.AppointmentID
-	vetID         *valueobject.EmployeeID
+	employeeID    *valueobject.EmployeeID
 }
 
-func NewNotAttendApptCommand(id uint, vetIDUint *uint) *NotAttendApptCommand {
-	var vetID *valueobject.EmployeeID
-	if vetIDUint != nil {
-		vetIDVal := valueobject.NewEmployeeID(*vetIDUint)
-		vetID = &vetIDVal
-	}
-
+func NewNotAttendApptCommand(id uint, employeeIDUint *uint) *NotAttendApptCommand {
 	return &NotAttendApptCommand{
-
 		appointmentID: valueobject.NewAppointmentID(id),
-		vetID:         vetID,
+		employeeID:    mapper.PtrToEmployeeIDPtr(employeeIDUint),
 	}
 }
 
@@ -39,5 +33,5 @@ func (h *apptCommandHandler) MarkAppointmentAsNotAttend(ctx context.Context, cmd
 		return *cqrs.FailureResult(ErrSaveApptFailed, err)
 	}
 
-	return *cqrs.SuccessResult(appointment.ID().String(), SuccessMarkedAsNotPresented)
+	return *cqrs.SuccessResult(SuccessMarkedAsNotPresented)
 }

@@ -26,6 +26,10 @@ func (c *DeleteApptCommand) Validate() error {
 }
 
 func (h *apptCommandHandler) DeleteAppointment(ctx context.Context, cmd DeleteApptCommand) cqrs.CommandResult {
+	if err := cmd.Validate(); err != nil {
+		return *cqrs.FailureResult(ErrInvalidCommand, err)
+	}
+
 	if exists, err := h.apptRepository.ExistsByID(ctx, cmd.appointmentID); err != nil {
 		return *cqrs.FailureResult(ErrFailedToCheckExistence, err)
 	} else if !exists {
@@ -36,5 +40,5 @@ func (h *apptCommandHandler) DeleteAppointment(ctx context.Context, cmd DeleteAp
 		return *cqrs.FailureResult(ErrFailedToDelete, err)
 	}
 
-	return *cqrs.SuccessResult(cmd.appointmentID.String(), SuccessApptDeleted)
+	return *cqrs.SuccessResult(SuccessApptDeleted)
 }

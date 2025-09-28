@@ -31,14 +31,15 @@ type PaymentResult struct {
 	IsRefundable   bool
 }
 
-func entityToResult(payment payment.Payment) PaymentResult {
+func (r *paymentQueryHandler) entityToResult(payment payment.Payment) PaymentResult {
+
 	result := &PaymentResult{
 		ID:             payment.ID().Value(),
 		MedSessionID:   payment.MedSessionID().Value(),
 		Amount:         payment.Amount().Amount().Float64(),
 		Currency:       payment.Currency(),
 		Method:         payment.Method().DisplayName(),
-		Status:         string(payment.Status()),
+		Status:         payment.Status().DisplayName(),
 		TransactionID:  payment.TransactionID(),
 		Description:    payment.Description(),
 		DueDate:        payment.DueDate(),
@@ -49,23 +50,11 @@ func entityToResult(payment payment.Payment) PaymentResult {
 		IsRefundable:   payment.IsRefundable(),
 		PaidByCustomer: payment.PaidByCustomer().Value(),
 		PaidToEmployee: payment.PaidToEmployee().Value(),
-		InvoiceID: func() *string {
-			if payment.InvoiceID() != nil {
-				invoiceID := payment.InvoiceID()
-				return invoiceID
-			}
-			return nil
-		}(),
-		RefundAmount: func() *float64 {
-			if payment.RefundAmount() != nil {
-				refundAmount := payment.RefundAmount().Amount().Float64()
-				return &refundAmount
-			}
-			return nil
-		}(),
-		FailureReason: payment.FailureReason(),
-		CreatedAt:     payment.CreatedAt(),
-		UpdatedAt:     payment.UpdatedAt(),
+		InvoiceID:      payment.InvoiceID(),
+		RefundAmount:   r.vaueObjMap.MoneyPtrToFloat64Ptr(payment.RefundAmount()),
+		FailureReason:  payment.FailureReason(),
+		CreatedAt:      payment.CreatedAt(),
+		UpdatedAt:      payment.UpdatedAt(),
 	}
 
 	return *result

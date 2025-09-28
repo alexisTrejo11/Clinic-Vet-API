@@ -33,7 +33,7 @@ func (h *apptCommandHandler) ConfirmAppointment(ctx context.Context, cmd Confirm
 		return *cqrs.FailureResult("failed to save confirmed appointment", err)
 	}
 
-	return *cqrs.SuccessResult(appointment.ID().String(), "appointment confirmed successfully")
+	return *cqrs.SuccessResult("appointment confirmed successfully")
 }
 
 func (c *ConfirmApptCommand) Validate() error {

@@ -15,7 +15,7 @@ type Employee struct {
 	photo           string
 	licenseNumber   string
 	specialty       enum.VetSpecialty
-	yearsExperience int
+	yearsExperience int32
 	consultationFee *vo.Money
 	isActive        bool
 	userID          *vo.UserID
@@ -56,7 +56,7 @@ func (b *EmployeeBuilder) WithSpecialty(specialty enum.VetSpecialty) *EmployeeBu
 	return b
 }
 
-func (b *EmployeeBuilder) WithYearsExperience(years int) *EmployeeBuilder {
+func (b *EmployeeBuilder) WithYearsExperience(years int32) *EmployeeBuilder {
 	b.emp.yearsExperience = years
 	return b
 }
@@ -90,7 +90,7 @@ func (v *Employee) Name() vo.PersonName                            { return v.Pe
 func (v *Employee) Photo() string                                  { return v.photo }
 func (v *Employee) LicenseNumber() string                          { return v.licenseNumber }
 func (v *Employee) Specialty() enum.VetSpecialty                   { return v.specialty }
-func (v *Employee) YearsExperience() int                           { return v.yearsExperience }
+func (v *Employee) YearsExperience() int32                         { return v.yearsExperience }
 func (v *Employee) ConsultationFee() *vo.Money                     { return v.consultationFee }
 func (v *Employee) IsActive() bool                                 { return v.isActive }
 func (v *Employee) IsWithinWorkdayBreak(start, end time.Time) bool { return false }

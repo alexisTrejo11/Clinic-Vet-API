@@ -5,6 +5,7 @@ import (
 	"clinic-vet-api/app/modules/core/domain/enum"
 	"clinic-vet-api/app/modules/core/domain/valueobject"
 	"clinic-vet-api/app/shared/cqrs"
+	"clinic-vet-api/app/shared/mapper"
 	"context"
 	"errors"
 	"time"
@@ -13,27 +14,21 @@ import (
 type CreateApptCommand struct {
 	customerID valueobject.CustomerID
 	petID      valueobject.PetID
-	vetID      *valueobject.EmployeeID
 	service    enum.ClinicService
 	datetime   time.Time
 	status     enum.AppointmentStatus
+	employeeID *valueobject.EmployeeID
 	notes      *string
 }
 
 func NewCreateApptCommand(
-	customerID, petID uint, vetID *uint, service string,
+	customerID, petID uint, employeeID *uint, service string,
 	dateTime time.Time, status string, notes *string,
 ) *CreateApptCommand {
-	var vetIDObj *valueobject.EmployeeID
-	if vetID != nil {
-		vetID := valueobject.NewEmployeeID(*vetID)
-		vetIDObj = &vetID
-	}
-
 	return &CreateApptCommand{
 		customerID: valueobject.NewCustomerID(customerID),
 		petID:      valueobject.NewPetID(petID),
-		vetID:      vetIDObj,
+		employeeID: mapper.PtrToEmployeeIDPtr(employeeID),
 		datetime:   dateTime,
 		notes:      notes,
 		status:     enum.AppointmentStatus(status),
@@ -55,7 +50,7 @@ func (h *apptCommandHandler) CreateAppointment(ctx context.Context, cmd CreateAp
 		return *cqrs.FailureResult("failed to save appointment", err)
 	}
 
-	return *cqrs.SuccessResult(appointment.ID().String(), "appointment created successfully")
+	return *cqrs.SuccessCreateResult(appointment.ID().String(), "appointment created successfully")
 }
 
 func (c *CreateApptCommand) validate() error {
@@ -88,7 +83,7 @@ func commandToEntity(command CreateApptCommand) appointment.Appointment {
 	appointment := appointment.NewAppointmentBuilder().
 		WithPetID(command.petID).
 		WithCustomerID(command.customerID).
-		WithEmployeeID(command.vetID).
+		WithEmployeeID(command.employeeID).
 		WithService(command.service).
 		WithScheduledDate(command.datetime).
 		WithNotes(command.notes).

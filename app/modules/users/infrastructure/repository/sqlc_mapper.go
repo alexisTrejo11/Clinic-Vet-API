@@ -12,22 +12,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-func sqlcUseWithJoin(row any) user.User {
-	switch v := row.(type) {
-	case sqlc.FindUserByEmailRow:
-		return sqlcRowWithJoinToEntity(v)
-	case sqlc.FindUserByIDRow:
-		return sqlcRowWithJoinToEntity(v)
-	case sqlc.FindUserByPhoneNumberRow:
-		return sqlcRowWithJoinToEntity(v)
-	case sqlc.User:
-		return sqlcRowToEntity(v)
-	default:
-		return user.User{}
-	}
-}
-
-func sqlcRowWithJoinToEntity(row any) user.User {
+func (r *SqlcUserRepository) WithJoinToEntity(row any) user.User {
 	var (
 		id          int32
 		email       pgtype.Text
@@ -79,85 +64,61 @@ func sqlcRowWithJoinToEntity(row any) user.User {
 		return user.User{}
 	}
 
-	emailVO := valueobject.NewEmailNoErr(email.String)
-	userBuilder := user.NewUserBuilder()
-
-	if customerID.Valid {
-		customerIDVO := valueobject.NewCustomerID(uint(customerID.Int32))
-		userBuilder.WithCustomerID(&customerIDVO)
-	}
-
-	if employeeID.Valid {
-		employeeIDVO := valueobject.NewEmployeeID(uint(employeeID.Int32))
-		userBuilder.WithEmployeeID(&employeeIDVO)
-	}
-
-	if phoneNumber.Valid && phoneNumber.String != "" {
-		phoneNumberVO := valueobject.NewPhoneNumberNoErr(phoneNumber.String)
-		userBuilder.WithPhoneNumber(&phoneNumberVO)
-	}
-
-	userBuilder.WithPassword(password.String)
-	userBuilder.WithLastLoginAt(lastLogin.Time)
-	userBuilder.WithTimeStamps(createdAt.Time, time.Time{})
-	userBuilder.WithID(valueobject.NewUserID(uint(id)))
-	userBuilder.WithEmail(emailVO)
-	userBuilder.WithRole(enum.UserRole(string(role)))
-	userBuilder.WithStatus(enum.UserStatus(string(status)))
-
-	userEntity := userBuilder.Build()
-	return *userEntity
+	return *user.NewUserBuilder().
+		WithEmail(valueobject.NewEmailNoErr(email.String)).
+		WithCustomerID(r.pgMap.PgInt4.ToCustomerIDPtr(customerID)).
+		WithEmployeeID(r.pgMap.PgInt4.ToEmployeeIDPtr(employeeID)).
+		WithPhoneNumber(r.pgMap.PgText.ToPhoneNumberPtr(phoneNumber)).
+		WithPassword(password.String).
+		WithLastLoginAt(lastLogin.Time).
+		WithTimeStamps(createdAt.Time, time.Time{}).
+		WithID(valueobject.NewUserID(uint(id))).
+		WithRole(enum.UserRole(string(role))).
+		WithStatus(enum.UserStatus(string(status))).
+		Build()
 }
 
-func sqlcRowToEntity(sqlRow sqlc.User) user.User {
-	userBuilder := user.NewUserBuilder()
+func (r *SqlcUserRepository) ToEntity(sqlRow sqlc.User) user.User {
+	id := valueobject.NewUserID(uint(sqlRow.ID))
+	role := enum.UserRole(string(sqlRow.Role))
+	phoneNumber := r.pgMap.PgText.ToPhoneNumberPtr(sqlRow.PhoneNumber)
+	userStatus := enum.UserStatus(string(sqlRow.Status))
 
-	if sqlRow.PhoneNumber.Valid && sqlRow.PhoneNumber.String != "" {
-		phoneNumber := valueobject.NewPhoneNumberNoErr(sqlRow.PhoneNumber.String)
-		userBuilder.WithPhoneNumber(&phoneNumber)
-	}
-
-	if sqlRow.Password.Valid {
-		userBuilder.WithPassword(sqlRow.Password.String)
-	}
-
-	if sqlRow.LastLogin.Valid {
-		userBuilder.WithLastLoginAt(sqlRow.LastLogin.Time)
-	}
-
-	userBuilder.WithID(valueobject.NewUserID(uint(sqlRow.ID)))
-	userBuilder.WithRole(enum.UserRole(string(sqlRow.Role)))
-	userBuilder.WithStatus(enum.UserStatus(string(sqlRow.Status)))
-
-	userEntity := userBuilder.Build()
-	return *userEntity
+	return *user.NewUserBuilder().
+		WithID(id).
+		WithPhoneNumber(phoneNumber).
+		WithPassword(sqlRow.Password.String).
+		WithLastLoginAt(sqlRow.LastLogin.Time).
+		WithRole(role).
+		WithStatus(userStatus).
+		Build()
 }
 
-func sqlcRowsToEntities(sqlRows []sqlc.User) ([]user.User, error) {
+func (r *SqlcUserRepository) ToEntities(sqlRows []sqlc.User) []user.User {
 	users := make([]user.User, len(sqlRows))
 	for i, sqlRow := range sqlRows {
-		users[i] = sqlcRowToEntity(sqlRow)
+		users[i] = r.ToEntity(sqlRow)
 	}
 
-	return users, nil
+	return users
 }
 
-func entityToCreateParams(user *user.User) *sqlc.CreateUserParams {
+func (r *SqlcUserRepository) toCreateParams(user *user.User) *sqlc.CreateUserParams {
 	return &sqlc.CreateUserParams{
-		Email:       pgtype.Text{String: user.Email().String(), Valid: user.Email().String() != ""},
-		PhoneNumber: pgtype.Text{String: user.PhoneNumber().String(), Valid: user.PhoneNumber().String() != ""},
-		Password:    pgtype.Text{String: user.HashedPassword(), Valid: user.HashedPassword() != ""},
+		Email:       r.pgMap.PgText.FromString(user.Email().String()),
+		PhoneNumber: r.pgMap.PgText.FromString(user.PhoneNumber().String()),
+		Password:    r.pgMap.PgText.FromString(user.HashedPassword()),
 		Role:        models.UserRole(user.Role().String()),
 		Status:      models.UserStatus(user.Status().String()),
 	}
 }
 
-func entityToUpdateParams(user *user.User) *sqlc.UpdateUserParams {
+func (r *SqlcUserRepository) toUpdateParams(user *user.User) *sqlc.UpdateUserParams {
 	return &sqlc.UpdateUserParams{
 		ID:          int32(user.ID().Value()),
-		Email:       pgtype.Text{String: user.Email().String(), Valid: true},
-		PhoneNumber: pgtype.Text{String: user.PhoneNumber().String(), Valid: true},
-		Password:    pgtype.Text{String: user.HashedPassword(), Valid: true},
+		Email:       r.pgMap.PgText.FromString(user.Email().String()),
+		PhoneNumber: r.pgMap.PgText.FromString(user.PhoneNumber().String()),
+		Password:    r.pgMap.PgText.FromString(user.HashedPassword()),
 		Status:      models.UserStatus(user.Status().String()),
 		Role:        models.UserRole(user.Role()),
 	}

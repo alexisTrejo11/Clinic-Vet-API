@@ -28,46 +28,6 @@ func NewEmployeeController(
 	}
 }
 
-// This package contains wrapper functions that hold the Swagger annotations.
-// They then delegate the actual work to the controller to keep it clean.
-
-// @Summary List all employee
-// @Description Retrieves a list of all employee with optional filtering and pagination.
-// @Tags Employees
-// @Produce json
-// @Param page query int false "Page number for pagination"
-// @Param limit query int false "Number of items per page"
-// @Param specialty query string false "Filter by specialty"
-// @Success 200 {array} dto.VetResponse "List of employee"
-// @Failure 500 {object} response.APIResponse "Internal server error"
-// @Router /employee [get]
-func (ctrl *EmployeeController) SearchEmployees(c *gin.Context) {
-	var requestParams dto.EmployeeSearchRequest
-
-	if err := ginUtils.BindAndValidateQuery(c, &requestParams, ctrl.validator); err != nil {
-		response.BadRequest(c, httpError.InvalidDataError(err))
-		return
-	}
-
-	requestParams.ProcessBooleanParams(c)
-
-	query, err := requestParams.ToQuery()
-	if err != nil {
-		response.BadRequest(c, httpError.InvalidDataError(err))
-		return
-	}
-
-	employeesPage, err := ctrl.bus.QueryBus.SearchEmployees(c.Request.Context(), *query)
-	if err != nil {
-		response.ApplicationError(c, err)
-		return
-	}
-
-	employeeResponse := dto.ToEmployeeResponseList(employeesPage.Items)
-	responseMetadata := gin.H{"pagination": employeesPage.Metadata, "requestParams": c.Request.URL.Query()}
-	response.SuccessWithMeta(c, employeeResponse, "Employees retrieved successfully", responseMetadata)
-}
-
 // @Summary Get a employee by ID
 // @Description Retrieves a single employee by their unique ID.
 // @Tags Employees

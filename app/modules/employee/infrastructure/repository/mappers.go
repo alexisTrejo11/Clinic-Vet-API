@@ -6,68 +6,11 @@ import (
 	"clinic-vet-api/app/modules/core/domain/valueobject"
 	"clinic-vet-api/db/models"
 	"clinic-vet-api/sqlc"
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"log"
 	"time"
-
-	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgtype"
 )
-
-func sqlcRowToEntity(sql sqlc.Employee) *employee.Employee {
-	employeeID := valueobject.NewEmployeeID(uint(sql.ID))
-
-	personName := valueobject.PersonName{
-		FirstName: sql.FirstName,
-		LastName:  sql.LastName,
-	}
-
-	var schedule *valueobject.Schedule
-	var err error
-	if sql.ScheduleJson != nil {
-		schedule, err = UnmarshalEmployeeSchedule(sql.ScheduleJson)
-		if err != nil {
-			log.Printf("Warning: Failed to unmarshal schedule: %v", err)
-			schedule = &valueobject.Schedule{}
-		}
-	} else {
-		schedule = &valueobject.Schedule{}
-	}
-
-	var userID *valueobject.UserID
-	if sql.UserID.Valid {
-		userIDVal := valueobject.NewUserID(uint(sql.UserID.Int32))
-		userID = &userIDVal
-	}
-
-	return employee.NewEmployeeBuilder().
-		WithID(employeeID).
-		WithName(personName).
-		WithPhoto(sql.Photo).
-		WithLicenseNumber(sql.LicenseNumber).
-		WithSpecialty(enum.VetSpecialty(string(sql.Speciality))).
-		WithYearsExperience(int(sql.YearsOfExperience)).
-		WithSchedule(schedule).
-		WithIsActive(sql.IsActive).
-		WithUserID(userID).
-		WithTimestamps(sql.CreatedAt.Time, sql.UpdatedAt.Time).
-		Build()
-}
-
-func sqlcRowsToEntities(rows []sqlc.Employee) []employee.Employee {
-	if len(rows) == 0 {
-		return []employee.Employee{}
-	}
-
-	employees := make([]employee.Employee, len(rows))
-	for _, row := range rows {
-		emp := sqlcRowToEntity(row)
-		employees = append(employees, *emp)
-	}
-	return employees
-}
 
 type postgresSchedule struct {
 	Monday    *postgresDaySchedule `json:"monday,omitempty"`
@@ -83,6 +26,49 @@ type postgresDaySchedule struct {
 	Start string `json:"start"`
 	End   string `json:"end"`
 	Break string `json:"break,omitempty"`
+}
+
+func (r *SqlcEmployeeRepository) toEntity(sql sqlc.Employee) *employee.Employee {
+	var schedule *valueobject.Schedule
+	var err error
+	if sql.ScheduleJson != nil {
+		schedule, err = UnmarshalEmployeeSchedule(sql.ScheduleJson)
+		if err != nil {
+			log.Printf("Warning: Failed to unmarshal schedule: %v", err)
+			schedule = &valueobject.Schedule{}
+		}
+	} else {
+		schedule = &valueobject.Schedule{}
+	}
+
+	employeeID := valueobject.NewEmployeeID(uint(sql.ID))
+	personName := valueobject.PersonName{FirstName: sql.FirstName, LastName: sql.LastName}
+	userID := r.pgMap.PgInt4.ToUserIDPtr(sql.UserID)
+	return employee.NewEmployeeBuilder().
+		WithID(employeeID).
+		WithName(personName).
+		WithPhoto(sql.Photo).
+		WithLicenseNumber(sql.LicenseNumber).
+		WithSpecialty(enum.VetSpecialty(string(sql.Speciality))).
+		WithYearsExperience(sql.YearsOfExperience).
+		WithSchedule(schedule).
+		WithIsActive(sql.IsActive).
+		WithUserID(userID).
+		WithTimestamps(sql.CreatedAt.Time, sql.UpdatedAt.Time).
+		Build()
+}
+
+func (r *SqlcEmployeeRepository) toEntities(rows []sqlc.Employee) []employee.Employee {
+	if len(rows) == 0 {
+		return []employee.Employee{}
+	}
+
+	employees := make([]employee.Employee, len(rows))
+	for _, row := range rows {
+		emp := r.toEntity(row)
+		employees = append(employees, *emp)
+	}
+	return employees
 }
 
 func parseScheduleFromPostgres(jsonData []byte) (*valueobject.Schedule, error) {
@@ -166,74 +152,29 @@ func UnmarshalEmployeeSchedule(sqlJSON []byte) (*valueobject.Schedule, error) {
 	return parseScheduleFromPostgres(sqlJSON)
 }
 
-func (r *SqlcEmployeeRepository) scanEmployeeFromRow(row pgx.Row, employee *employee.Employee) error {
-	var (
-		id              int32
-		firstName       string
-		lastName        string
-		licenseNumber   string
-		photo           sql.NullString
-		specialty       string
-		yearsExperience int32
-		consultationFee sql.NullFloat64
-		isActive        bool
-		userID          sql.NullInt32
-		scheduleJSON    sql.NullString
-		createdAt       sql.NullTime
-		updatedAt       sql.NullTime
-	)
-
-	err := row.Scan(
-		&id, &firstName, &lastName, &licenseNumber, &photo,
-		&specialty, &yearsExperience, &consultationFee, &isActive,
-		&userID, &scheduleJSON, &createdAt, &updatedAt,
-	)
-	if err != nil {
-		return err
-	}
-
-	// TODO:
-	// Aquí construirías la entidad Employee con los valores escaneados
-	// Esto es solo un ejemplo - debes adaptarlo a tu implementación real
-
-	return nil
-}
-
-func entityToUpdateParams(employee *employee.Employee) *sqlc.UpdateEmployeeParams {
-	updateParams := &sqlc.UpdateEmployeeParams{
-		ID:                int32(employee.ID().Value()),
+func (r *SqlcEmployeeRepository) toUpdateParams(employee *employee.Employee) *sqlc.UpdateEmployeeParams {
+	return &sqlc.UpdateEmployeeParams{
+		ID:                employee.ID().Int32(),
 		FirstName:         employee.Name().FirstName,
 		LastName:          employee.Name().LastName,
 		LicenseNumber:     employee.LicenseNumber(),
 		Photo:             employee.Photo(),
 		Speciality:        models.VeterinarianSpeciality(employee.Specialty().String()),
-		YearsOfExperience: int32(employee.YearsExperience()),
+		YearsOfExperience: employee.YearsExperience(),
 		IsActive:          employee.IsActive(),
+		UserID:            r.pgMap.PgInt4.FromUserIDPtr(employee.UserID()),
 	}
-
-	if employee.UserID() != nil {
-		updateParams.UserID = pgtype.Int4{Int32: int32(employee.UserID().Value()), Valid: true}
-	}
-
-	return updateParams
 }
 
-func entityToCreateParams(employee *employee.Employee) *sqlc.CreateEmployeeParams {
-	var userID pgtype.Int4
-	if employee.UserID() != nil {
-		userID = pgtype.Int4{Int32: int32(employee.UserID().Value()), Valid: true}
-	} else {
-		userID = pgtype.Int4{Valid: false}
-	}
-
+func (r *SqlcEmployeeRepository) toCreateParams(employee *employee.Employee) *sqlc.CreateEmployeeParams {
 	return &sqlc.CreateEmployeeParams{
 		FirstName:         employee.Name().FirstName,
 		LastName:          employee.Name().LastName,
 		LicenseNumber:     employee.LicenseNumber(),
 		Photo:             employee.Photo(),
 		Speciality:        models.VeterinarianSpeciality(employee.Specialty().String()),
-		YearsOfExperience: int32(employee.YearsExperience()),
+		YearsOfExperience: employee.YearsExperience(),
 		IsActive:          employee.IsActive(),
-		UserID:            userID,
+		UserID:            r.pgMap.PgInt4.FromUserIDPtr(employee.UserID()),
 	}
 }

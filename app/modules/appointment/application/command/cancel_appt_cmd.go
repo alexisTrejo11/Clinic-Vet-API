@@ -3,26 +3,21 @@ package command
 import (
 	"clinic-vet-api/app/modules/core/domain/valueobject"
 	"clinic-vet-api/app/shared/cqrs"
+	"clinic-vet-api/app/shared/mapper"
 	"context"
 	"errors"
 )
 
 type CancelApptCommand struct {
 	appointmentID valueobject.AppointmentID
-	vetID         *valueobject.EmployeeID
+	employeeID    *valueobject.EmployeeID
 	reason        string
 }
 
-func NewCancelApptCommand(id uint, vetID *uint, reason string) *CancelApptCommand {
-	var vetIDObj *valueobject.EmployeeID
-	if vetID != nil {
-		vetIDVal := valueobject.NewEmployeeID(*vetID)
-		vetIDObj = &vetIDVal
-	}
-
+func NewCancelApptCommand(id uint, employeeID *uint, reason string) *CancelApptCommand {
 	return &CancelApptCommand{
 		appointmentID: valueobject.NewAppointmentID(id),
-		vetID:         vetIDObj,
+		employeeID:    mapper.PtrToEmployeeIDPtr(employeeID),
 		reason:        reason,
 	}
 }
@@ -32,7 +27,7 @@ func (h *apptCommandHandler) CancelAppointment(ctx context.Context, cmd CancelAp
 		return *cqrs.FailureResult(ErrInvalidCommand, err)
 	}
 
-	appointment, err := h.getAppByIDAndEmployeeID(ctx, cmd.appointmentID, cmd.vetID)
+	appointment, err := h.getAppByIDAndEmployeeID(ctx, cmd.appointmentID, cmd.employeeID)
 	if err != nil {
 		return *cqrs.FailureResult(ErrApptNotFound, err)
 	}
@@ -45,7 +40,7 @@ func (h *apptCommandHandler) CancelAppointment(ctx context.Context, cmd CancelAp
 		return *cqrs.FailureResult(ErrUpdateApptFailed, err)
 	}
 
-	return *cqrs.SuccessResult(appointment.ID().String(), SuccessApptUpdated)
+	return *cqrs.SuccessResult(SuccessApptUpdated)
 }
 
 func (c *CancelApptCommand) Validate() error {

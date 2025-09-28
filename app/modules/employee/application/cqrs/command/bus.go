@@ -14,8 +14,8 @@ type EmployeeCommandBus struct {
 
 func NewEmployeeCommandBus(employeeRepo repository.EmployeeRepository) *EmployeeCommandBus {
 	createHandler := NewCreateEmployeeHandler(employeeRepo)
-	updateHandler := NewUpdateEmployeeHandler(employeeRepo, nil)
-	deleteHandler := NewDeleteEmployeeHandler(employeeRepo, nil)
+	updateHandler := NewUpdateEmployeeHandler(employeeRepo)
+	deleteHandler := NewDeleteEmployeeHandler(employeeRepo)
 
 	return &EmployeeCommandBus{
 		createHandler: createHandler,

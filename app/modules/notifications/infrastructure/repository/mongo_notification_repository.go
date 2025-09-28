@@ -76,7 +76,7 @@ func (r *MongoNotificationRepository) ListByUser(ctx context.Context, userID val
 		return p.Page[noti.Notification]{}, err
 	}
 
-	return p.NewPage(notifications, int(totalItems), pagination), nil
+	return p.NewPage(notifications, totalItems, pagination), nil
 }
 
 func (r *MongoNotificationRepository) ListBySpecies(ctx context.Context, notificationType string, pagination p.PaginationRequest) (p.Page[noti.Notification], error) {
@@ -93,7 +93,7 @@ func (r *MongoNotificationRepository) ListBySpecies(ctx context.Context, notific
 		return p.Page[noti.Notification]{}, err
 	}
 
-	return p.NewPage(notifications, int(totalItems), pagination), nil
+	return p.NewPage(notifications, totalItems, pagination), nil
 }
 
 func (r *MongoNotificationRepository) ListByChannel(ctx context.Context, channel string, pagination p.PaginationRequest) (p.Page[noti.Notification], error) {
@@ -110,7 +110,7 @@ func (r *MongoNotificationRepository) ListByChannel(ctx context.Context, channel
 		return p.Page[noti.Notification]{}, err
 	}
 
-	return p.NewPage(notifications, int(totalItems), pagination), nil
+	return p.NewPage(notifications, totalItems, pagination), nil
 }
 
 func (r *MongoNotificationRepository) paginateSearch(pagination p.PaginationRequest) *options.FindOptionsBuilder {

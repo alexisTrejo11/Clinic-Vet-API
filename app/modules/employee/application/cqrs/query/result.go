@@ -11,7 +11,7 @@ type EmployeeResult struct {
 	LastName        string
 	Photo           string
 	LicenseNumber   string
-	YearsExperience int
+	YearsExperience int32
 	Specialty       string
 	IsActive        bool
 	LaboralSchedule *[]ScheduleData

@@ -29,14 +29,14 @@ const (
 	OpCount   = "COUNT"
 )
 
-func (r *SQLCUserRepository) dbError(operation, message string, err error) error {
+func (r *SqlcUserRepository) dbError(operation, message string, err error) error {
 	return dberr.DatabaseOperationError(operation, TableUsers, DriverSQL, fmt.Errorf("%s: %v", message, err))
 }
 
-func (r *SQLCUserRepository) notFoundError(parameterName, parameterValue string) error {
+func (r *SqlcUserRepository) notFoundError(parameterName, parameterValue string) error {
 	return dberr.EntityNotFoundError(parameterName, parameterValue, OpSelect, TableUsers, DriverSQL)
 }
 
-func (r *SQLCUserRepository) wrapConversionError(err error) error {
+func (r *SqlcUserRepository) wrapConversionError(err error) error {
 	return fmt.Errorf("%s: %w", ErrMsgConvertUserToDomain, err)
 }

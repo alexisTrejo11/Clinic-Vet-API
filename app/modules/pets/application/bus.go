@@ -1,9 +1,9 @@
-package cqrs
+package application
 
 import (
 	"clinic-vet-api/app/modules/core/repository"
-	"clinic-vet-api/app/modules/pets/application/cqrs/command"
-	"clinic-vet-api/app/modules/pets/application/cqrs/query"
+	"clinic-vet-api/app/modules/pets/application/command"
+	"clinic-vet-api/app/modules/pets/application/query"
 )
 
 type PetServiceBus interface {

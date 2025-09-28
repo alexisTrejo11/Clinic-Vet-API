@@ -42,7 +42,7 @@ type CreateEmployeeRequest struct {
 
 	// Years of professional experience
 	// Required: false
-	YearsExperience int `json:"years_experience" example:"5"`
+	YearsExperience int32 `json:"years_experience" example:"5"`
 
 	// Indicates if the employee is currently active
 	// Required: false
@@ -51,10 +51,6 @@ type CreateEmployeeRequest struct {
 	// Veterinary specialty
 	// Required: false
 	Specialty string `json:"specialty" example:"CARDIOLOGY"`
-
-	// Consultation fee information
-	// Required: false
-	ConsultationFee *valueobject.Money `json:"consultation_fee"`
 
 	// Weekly work schedule
 	// Required: false
@@ -106,7 +102,7 @@ type UpdateEmployeeRequest struct {
 
 	// Veterinary specialty
 	// Required: false
-	Specialty *enum.VetSpecialty `json:"specialty" example:"DERMATOLOGY"`
+	Specialty *string `json:"specialty" example:"DERMATOLOGY"`
 
 	// Indicates if the employee is currently active
 	// Required: false
@@ -118,7 +114,7 @@ type UpdateEmployeeRequest struct {
 
 	// Years of professional experience
 	// Required: false
-	YearsExperience *int `json:"years_experience" example:"7"`
+	YearsExperience *int32 `json:"years_experience" example:"7"`
 
 	// Weekly work schedule
 	// Required: false
@@ -188,7 +184,6 @@ func (r *CreateEmployeeRequest) ToCommand() (command.CreateEmployeeCommand, erro
 		LicenseNumber:   r.LicenseNumber,
 		YearsExperience: r.YearsExperience,
 		IsActive:        r.IsActive,
-		ConsultationFee: r.ConsultationFee,
 		DateOfBirth:     r.DateOfBirth,
 	}
 
@@ -231,21 +226,14 @@ func (r *CreateEmployeeRequest) ToCommand() (command.CreateEmployeeCommand, erro
 }
 
 func (r *UpdateEmployeeRequest) ToCommand(employeeIDUint uint) *command.UpdateEmployeeCommand {
+
 	return &command.UpdateEmployeeCommand{
-		EmployeeID:      valueobject.NewEmployeeID(employeeIDUint),
-		FirstName:       r.FirstName,
-		LastName:        r.LastName,
+		EmployeeID: valueobject.NewEmployeeID(employeeIDUint),
+
 		Photo:           r.Photo,
 		LicenseNumber:   r.LicenseNumber,
 		YearsExperience: r.YearsExperience,
-		Specialty: func() *string {
-			if r.Specialty != nil {
-				s := string(*r.Specialty)
-				return &s
-			}
-			return nil
-		}(),
-		IsActive: r.IsActive,
-		//ConsultationFee: r.ConsultationFee,
+		Specialty:       enum.VetSpecialtyPtr(r.Specialty),
+		IsActive:        r.IsActive,
 	}
 }

@@ -6,6 +6,7 @@ import (
 
 	"clinic-vet-api/app/modules/core/repository"
 	apperror "clinic-vet-api/app/shared/error/application"
+	"clinic-vet-api/app/shared/mapper"
 	"clinic-vet-api/app/shared/page"
 )
 
@@ -20,11 +21,13 @@ type PaymentQueryHandler interface {
 
 type paymentQueryHandler struct {
 	paymentRepository repository.PaymentRepository
+	vaueObjMap        mapper.ValueObjectMapper
 }
 
 func NewPaymentQueryHandler(paymentRepository repository.PaymentRepository) PaymentQueryHandler {
 	return &paymentQueryHandler{
 		paymentRepository: paymentRepository,
+		vaueObjMap:        mapper.ValueObjectMapper{},
 	}
 }
 
@@ -34,7 +37,7 @@ func (h *paymentQueryHandler) FindByID(ctx context.Context, query FindPaymentByI
 		return PaymentResult{}, err
 	}
 
-	return entityToResult(payment), nil
+	return h.entityToResult(payment), nil
 }
 
 func (h *paymentQueryHandler) FindOverdues(ctx context.Context, query FindOverduePaymentsQuery) (page.Page[PaymentResult], error) {
@@ -43,7 +46,7 @@ func (h *paymentQueryHandler) FindOverdues(ctx context.Context, query FindOverdu
 		return page.Page[PaymentResult]{}, err
 	}
 
-	return page.MapItems(paymentsPage, entityToResult), nil
+	return page.MapItems(paymentsPage, h.entityToResult), nil
 }
 
 func (h *paymentQueryHandler) FindByStatus(ctx context.Context, query FindPaymentsByStatusQuery) (page.Page[PaymentResult], error) {
@@ -52,7 +55,7 @@ func (h *paymentQueryHandler) FindByStatus(ctx context.Context, query FindPaymen
 		return page.Page[PaymentResult]{}, err
 	}
 
-	return page.MapItems(paymentPage, entityToResult), nil
+	return page.MapItems(paymentPage, h.entityToResult), nil
 }
 
 func (h *paymentQueryHandler) FindByCustomer(ctx context.Context, query FindPaymentsByCustomerQuery) (page.Page[PaymentResult], error) {
@@ -61,7 +64,7 @@ func (h *paymentQueryHandler) FindByCustomer(ctx context.Context, query FindPaym
 		return page.Page[PaymentResult]{}, err
 	}
 
-	return page.MapItems(paymentsPage, entityToResult), nil
+	return page.MapItems(paymentsPage, h.entityToResult), nil
 }
 
 func (h *paymentQueryHandler) FindByDateRange(ctx context.Context, query FindPaymentsByDateRangeQuery) (page.Page[PaymentResult], error) {
@@ -74,7 +77,7 @@ func (h *paymentQueryHandler) FindByDateRange(ctx context.Context, query FindPay
 		return page.Page[PaymentResult]{}, err
 	}
 
-	return page.MapItems(paymentsPage, entityToResult), nil
+	return page.MapItems(paymentsPage, h.entityToResult), nil
 }
 
 func (h *paymentQueryHandler) FindBySpecification(ctx context.Context, query FindPaymentsBySpecification) (page.Page[PaymentResult], error) {
@@ -83,7 +86,7 @@ func (h *paymentQueryHandler) FindBySpecification(ctx context.Context, query Fin
 		return page.Page[PaymentResult]{}, err
 	}
 
-	return page.MapItems(paymentsPage, entityToResult), nil
+	return page.MapItems(paymentsPage, h.entityToResult), nil
 }
 
 func PaymentRangeDateErr(startDate, endDate time.Time) error {

@@ -12,7 +12,6 @@ func EmployeeRoutes(appGroup *gin.RouterGroup, employeeController *controller.Em
 
 	// Public routes
 	employeeGroup.GET("/:id", employeeController.GetEmployeeByID)
-	employeeGroup.GET("/", employeeController.SearchEmployees)
 
 	//employeeGroup.Use(authMiddleware.Authenticate())
 	//employeeGroup.Use(authMiddleware.RequireAnyRole("admin", "manager"))

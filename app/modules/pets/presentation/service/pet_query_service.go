@@ -1,7 +1,7 @@
 package service
 
 import (
-	"clinic-vet-api/app/modules/pets/application/cqrs/query"
+	"clinic-vet-api/app/modules/pets/application/query"
 	"clinic-vet-api/app/modules/pets/presentation/dto"
 	httpError "clinic-vet-api/app/shared/error/infrastructure/http"
 	ginutils "clinic-vet-api/app/shared/gin_utils"

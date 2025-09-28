@@ -35,7 +35,7 @@ func (h *DewormCommandHandler) HandleUpdate(ctx context.Context, cmd DewormUpdat
 		return *cqrs.FailureResult("Failed to update deworm record", err)
 	}
 
-	return *cqrs.SuccessResult(updatedDeworm.ID().String(), "deworm record updated successfully")
+	return *cqrs.SuccessResult("deworm record updated successfully")
 }
 
 func updateDewormFields(cmd DewormUpdateCommand, deworm med.PetDeworming) med.PetDeworming {

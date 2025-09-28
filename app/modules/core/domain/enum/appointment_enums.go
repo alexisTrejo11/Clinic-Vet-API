@@ -57,6 +57,14 @@ var (
 	}
 )
 
+func AppointmentStatusPtr(status *string) *AppointmentStatus {
+	if status == nil {
+		return nil
+	}
+	parsed := AppointmentStatus(*status)
+	return &parsed
+}
+
 func (as AppointmentStatus) IsValid() bool {
 	_, exists := appointmentStatusMap[string(as)]
 	return exists
@@ -199,6 +207,17 @@ var (
 func (cs ClinicService) IsValid() bool {
 	_, exists := clinicServiceMap[string(cs)]
 	return exists
+}
+
+func ClinicServicePtr(service *string) *ClinicService {
+	if service == nil {
+		return nil
+	}
+	parsed, err := ParseClinicService(*service)
+	if err != nil {
+		return nil
+	}
+	return &parsed
 }
 
 func ParseClinicService(service string) (ClinicService, error) {

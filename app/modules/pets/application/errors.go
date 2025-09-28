@@ -1,5 +1,5 @@
 // Package petApplicationError defines application errors for the pets module.
-package petApplicationError
+package application
 
 import (
 	"strconv"

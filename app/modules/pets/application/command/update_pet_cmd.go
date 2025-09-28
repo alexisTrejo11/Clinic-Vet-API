@@ -36,7 +36,7 @@ func (h *petCommandHandler) UpdatePet(ctx context.Context, cmd UpdatePetCommand)
 		return *cqrs.FailureResult("Error saving pet", err)
 	}
 
-	return *cqrs.SuccessResult(pet.ID().String(), "Pet updated successfully")
+	return *cqrs.SuccessResult("Pet updated successfully")
 }
 
 func updatePet(p pet.Pet, cmd UpdatePetCommand) pet.Pet {

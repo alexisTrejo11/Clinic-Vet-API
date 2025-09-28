@@ -57,35 +57,3 @@ func (ctrl *CustomerMedicalSessionController) GetMyPetSessionsByPetID(c *gin.Con
 
 	ctrl.operation.GetMedicalSessionByCustomerID(c, userCTX.CustomerID, &petID)
 }
-
-func (ctrl *CustomerMedicalSessionController) GetMyPetDewormingHistory(c *gin.Context) {
-	userCTX, exists := middleware.GetUserFromContext(c)
-	if !exists {
-		response.Unauthorized(c, autherror.UnauthorizedCTXError())
-		return
-	}
-
-	petID, err := ginUtils.ParseParamToUInt(c, "pet_id")
-	if err != nil {
-		response.BadRequest(c, http.RequestURLParamError(err, "pet", c.Param("pet_id")))
-		return
-	}
-
-	ctrl.operation.GetDewormingHistoryByCustomerID(c, userCTX.CustomerID, petID)
-}
-
-func (ctrl *CustomerMedicalSessionController) GetMyPetVaccinationHistory(c *gin.Context) {
-	userCTX, exists := middleware.GetUserFromContext(c)
-	if !exists {
-		response.Unauthorized(c, autherror.UnauthorizedCTXError())
-		return
-	}
-
-	petID, err := ginUtils.ParseParamToUInt(c, "pet_id")
-	if err != nil {
-		response.BadRequest(c, http.RequestURLParamError(err, "pet", c.Param("pet_id")))
-		return
-	}
-
-	ctrl.operation.GetVaccinationHistoryByCustomerID(c, userCTX.CustomerID, petID)
-}

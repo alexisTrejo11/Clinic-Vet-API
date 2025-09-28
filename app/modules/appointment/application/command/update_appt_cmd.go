@@ -15,25 +15,11 @@ type UpdateApptCommand struct {
 	service       *enum.ClinicService
 }
 
-func NewUpdateApptCommand(
-	appointIDInt uint, status *string, notes *string, service *string,
-) *UpdateApptCommand {
-	var statusEnum *enum.AppointmentStatus
-	if status != nil {
-		parsedStatus := enum.AppointmentStatus(*status)
-		statusEnum = &parsedStatus
-	}
-
-	var serviceEnum *enum.ClinicService
-	if service != nil {
-		parsedService := enum.ClinicService(*service)
-		serviceEnum = &parsedService
-	}
-
+func NewUpdateApptCommand(appointIDInt uint, status *string, notes *string, service *string) *UpdateApptCommand {
 	return &UpdateApptCommand{
 		appointmentID: valueobject.NewAppointmentID(appointIDInt),
-		service:       serviceEnum,
-		status:        statusEnum,
+		service:       enum.ClinicServicePtr(service),
+		status:        enum.AppointmentStatusPtr(status),
 		notes:         notes,
 	}
 }
@@ -56,7 +42,7 @@ func (h *apptCommandHandler) UpdateAppointment(ctx context.Context, cmd UpdateAp
 		return *cqrs.FailureResult(ErrSaveApptFailed, err)
 	}
 
-	return *cqrs.SuccessResult(appointment.ID().String(), SuccessApptUpdated)
+	return *cqrs.SuccessResult(SuccessApptUpdated)
 }
 
 func (c *UpdateApptCommand) Validate() error {

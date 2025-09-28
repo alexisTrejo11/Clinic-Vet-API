@@ -34,17 +34,11 @@ type UserRepository interface {
 	ExistsByCustomerID(ctx context.Context, customerID valueobject.CustomerID) (bool, error)
 
 	Save(ctx context.Context, user *user.User) error
-	SoftDelete(ctx context.Context, id valueobject.UserID) error
-	HardDelete(ctx context.Context, id valueobject.UserID) error
+	Delete(ctx context.Context, id valueobject.UserID, isHardDelete bool) error
 
 	UpdateLastLogin(ctx context.Context, id valueobject.UserID) error
 	UpdatePassword(ctx context.Context, id valueobject.UserID, hashedPassword string) error
 	UpdateStatus(ctx context.Context, id valueobject.UserID, status enum.UserStatus) error
-
-	CountAll(ctx context.Context) (int64, error)
-	CountByRole(ctx context.Context, role string) (int64, error)
-	CountByStatus(ctx context.Context, status enum.UserStatus) (int64, error)
-	CountActive(ctx context.Context) (int64, error)
 }
 
 type ProfileRepository interface {

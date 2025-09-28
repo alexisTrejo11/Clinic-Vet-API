@@ -327,7 +327,7 @@ func (s *MedicalSessionSpecification) WithSearchTerm(term string) *MedicalSessio
 	return s
 }
 
-func (s *MedicalSessionSpecification) WithPagination(page, pageSize int, orderBy, sortDir string) *MedicalSessionSpecification {
+func (s *MedicalSessionSpecification) WithPagination(page, pageSize int32, orderBy, sortDir string) *MedicalSessionSpecification {
 	s.Pagination = Pagination{
 		Offset:  page,
 		Limit:   pageSize,

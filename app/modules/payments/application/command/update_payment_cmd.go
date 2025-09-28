@@ -51,5 +51,5 @@ func (h *paymentCommandHandler) UpdatePayment(ctx context.Context, cmd UpdatePay
 		return *cqrs.FailureResult(ErrSavingPayment, err)
 	}
 
-	return *cqrs.SuccessResult(payment.ID().String(), MsgPaymentUpdated)
+	return *cqrs.SuccessResult(MsgPaymentUpdated)
 }

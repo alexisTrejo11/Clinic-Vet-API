@@ -29,15 +29,15 @@ func (c *CreateCustomerCommand) ToEntity() customer.Customer {
 }
 
 type UpdateCustomerCommand struct {
-	ID          valueobject.CustomerID `json:"id" validate:"required,uuid"`
-	Photo       *string                `json:"photo"`
-	FirstName   *string                `json:"first_name"`
-	LastName    *string                `json:"last_name"`
-	Address     *string                `json:"address"`
-	Notes       *string                `json:"notes"`
-	Gender      *enum.PersonGender     `json:"gender" validate:"omitempty,oneof=male female not_specified"`
-	DateOfBirth *time.Time             `json:"date_of_birth" validate:"required"`
-	PhoneNumber *string                `json:"phone_number"`
+	ID          valueobject.CustomerID
+	Photo       *string
+	FirstName   *string
+	LastName    *string
+	Address     *string
+	Notes       *string
+	Gender      *enum.PersonGender
+	DateOfBirth *time.Time
+	PhoneNumber *string
 }
 
 func (cmd *UpdateCustomerCommand) UpdateEntity(existingCustomer *customer.Customer) error {

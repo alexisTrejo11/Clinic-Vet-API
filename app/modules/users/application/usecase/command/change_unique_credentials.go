@@ -95,7 +95,7 @@ func (h ChangePhoneHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
 		return *cqrs.FailureResult(ErrFailedUpdateUser, err)
 	}
 
-	return *cqrs.SuccessResult(user.ID().String(), "phone changed successfully")
+	return *cqrs.SuccessResult("phone changed successfully")
 }
 
 func (h ChangeEmailHandler) Handle(ctx context.Context, command ChangeEmailCommand) cqrs.CommandResult {
@@ -114,7 +114,7 @@ func (h ChangeEmailHandler) Handle(ctx context.Context, command ChangeEmailComma
 		return *cqrs.FailureResult(ErrFailedUpdateUser, err)
 	}
 
-	return *cqrs.SuccessResult(user.ID().String(), "email changed successfully")
+	return *cqrs.SuccessResult("email changed successfully")
 }
 
 func (h ChangeEmailHandler) validate(command ChangeEmailCommand, user user.User) error {

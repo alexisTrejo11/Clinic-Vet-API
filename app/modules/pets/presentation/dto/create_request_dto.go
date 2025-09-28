@@ -4,7 +4,7 @@ package dto
 import (
 	"clinic-vet-api/app/modules/core/domain/enum"
 	"clinic-vet-api/app/modules/core/domain/valueobject"
-	"clinic-vet-api/app/modules/pets/application/cqrs/command"
+	"clinic-vet-api/app/modules/pets/application/command"
 )
 
 // AdminCreatePetRequest represents the request payload for creating a new pet by an admin user

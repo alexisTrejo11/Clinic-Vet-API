@@ -65,10 +65,18 @@ func FailureResult(message string, err error) *CommandResult {
 	}
 }
 
-func SuccessResult(id, message string) *CommandResult {
+func SuccessCreateResult(id string, message string) *CommandResult {
 	return &CommandResult{
 		isSuccess: true,
 		id:        id,
+		message:   message,
+		error:     nil,
+	}
+}
+
+func SuccessResult(message string) *CommandResult {
+	return &CommandResult{
+		isSuccess: true,
 		message:   message,
 		error:     nil,
 	}

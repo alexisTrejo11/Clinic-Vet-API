@@ -17,5 +17,5 @@ type AppointmentRepository interface {
 	ExistsByID(ctx context.Context, id vo.AppointmentID) (bool, error)
 
 	Find(ctx context.Context, spec specification.ApptSearchSpecification) (p.Page[appoint.Appointment], error)
-	Count(ctx context.Context, spec specification.ApptSearchSpecification) (int, error)
+	Count(ctx context.Context, spec specification.ApptSearchSpecification) (int64, error)
 }

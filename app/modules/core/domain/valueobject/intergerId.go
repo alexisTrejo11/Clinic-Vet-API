@@ -22,6 +22,10 @@ func (id baseID) Value() uint {
 	return id.value
 }
 
+func (id baseID) Int32() int32 {
+	return int32(id.value)
+}
+
 func (id baseID) Equals(number uint) bool {
 	return id.value == number
 }

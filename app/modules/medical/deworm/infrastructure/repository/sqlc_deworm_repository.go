@@ -35,7 +35,7 @@ func (r *SqlcPetDeworming) Save(ctx context.Context, deworming medical.PetDeworm
 }
 
 func (r *SqlcPetDeworming) GetByID(ctx context.Context, id valueobject.DewormID) (*medical.PetDeworming, error) {
-	result, err := r.queries.GetPetDewormingByID(ctx, int32(id.Value()))
+	result, err := r.queries.GetPetDewormingByID(ctx, id.Int32()
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, ErrPetDewormingNotFound
@@ -83,11 +83,11 @@ func (r *SqlcPetDeworming) FindBySpecification(ctx context.Context, spec specifi
 		PageSize: int(*spec.Limit),
 		Page:     int(*spec.Offset)/int(*spec.Limit) + 1,
 	}
-	return page.NewPage(dewormings, int(total), pagination), nil
+	return page.NewPage(dewormings, total, pagination), nil
 }
 
 func (r *SqlcPetDeworming) Delete(ctx context.Context, id valueobject.DewormID) error {
-	err := r.queries.DeletePetDeworming(ctx, int32(id.Value()))
+	err := r.queries.DeletePetDeworming(ctx, id.Int32()
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return ErrPetDewormingNotFound

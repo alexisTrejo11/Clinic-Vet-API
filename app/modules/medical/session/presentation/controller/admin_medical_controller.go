@@ -72,5 +72,5 @@ func (ctrl AdminMedicalSessionController) CreateMedicalSession(c *gin.Context) {
 }
 
 func (ctrl AdminMedicalSessionController) SoftDeleteMedicalSession(c *gin.Context) {
-	ctrl.operations.SoftDeleteMedicalSession(c)
+	ctrl.operations.DeleteMedicalSession(c)
 }

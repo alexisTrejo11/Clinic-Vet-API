@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"clinic-vet-api/app/modules/core/domain/valueobject"
-	"clinic-vet-api/app/modules/medical/application/query"
+	"clinic-vet-api/app/modules/medical/session/application/query"
 	commondto "clinic-vet-api/app/shared/dto"
 )
 
