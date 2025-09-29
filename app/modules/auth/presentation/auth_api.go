@@ -2,10 +2,8 @@ package api
 
 import (
 	"clinic-vet-api/app/middleware"
-	"clinic-vet-api/app/modules/auth/application/command"
-	"clinic-vet-api/app/modules/auth/application/command/authentication"
-	"clinic-vet-api/app/modules/auth/application/command/register"
-	sesionCmd "clinic-vet-api/app/modules/auth/application/command/session"
+	"clinic-vet-api/app/modules/auth/application/handler"
+	"clinic-vet-api/app/modules/auth/infrastructure/bus"
 	"clinic-vet-api/app/modules/auth/infrastructure/jwt"
 	repositoryimpl "clinic-vet-api/app/modules/auth/infrastructure/repository"
 	"clinic-vet-api/app/modules/auth/presentation/controller"
@@ -46,11 +44,16 @@ func SetupAuthModule(
 	eventService := service.NewUserAccountService(userRepo, profileRepo, customerRepo, employeeRepo, emailService)
 	userEventProducer := event.NewUserEventHandler(eventService)
 
-	registerHandler := register.NewRegisterCommandHandler(userRepo, passwordEncoder, userEventProducer, *security_service)
-	loginHandler := authentication.NewLoginCommandHandler(userRepo, *security_service, session, jwtService)
-	sessionHandler := sesionCmd.NewSessionCommandHandler(userRepo, session, jwtService)
+	authHandler := handler.NewAuthCommandHandler(
+		userRepo,
+		*security_service,
+		session,
+		jwtService,
+		passwordEncoder,
+		userEventProducer,
+	)
 
-	cmdBus := command.NewAuthCommandBus(loginHandler, registerHandler, sessionHandler)
+	cmdBus := bus.NewAuthCommandBus(*authHandler)
 	authController := controller.NewAuthController(validator, cmdBus)
 	tokenController := controller.NewTokenController(validator, cmdBus)
 

@@ -34,8 +34,8 @@ func (r *SqlcPetDeworming) Save(ctx context.Context, deworming medical.PetDeworm
 	return r.update(ctx, deworming)
 }
 
-func (r *SqlcPetDeworming) GetByID(ctx context.Context, id valueobject.DewormID) (*medical.PetDeworming, error) {
-	result, err := r.queries.GetPetDewormingByID(ctx, id.Int32()
+func (r *SqlcPetDeworming) FindByID(ctx context.Context, id valueobject.DewormID) (*medical.PetDeworming, error) {
+	result, err := r.queries.GetPetDewormingByID(ctx, id.Int32())
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, ErrPetDewormingNotFound
@@ -46,20 +46,10 @@ func (r *SqlcPetDeworming) GetByID(ctx context.Context, id valueobject.DewormID)
 	return r.mapRowToDomain(result), nil
 }
 
-func (r *SqlcPetDeworming) GetByPetID(ctx context.Context, petID valueobject.PetID) ([]medical.PetDeworming, error) {
+func (r *SqlcPetDeworming) FindByPetID(ctx context.Context, petID valueobject.PetID) ([]medical.PetDeworming, error) {
 	results, err := r.queries.GetPetDewormingsByPetID(ctx, int32(petID.Value()))
 	if err != nil {
 		return nil, fmt.Errorf("failed to get pet dewormings by pet ID: %w", err)
-	}
-
-	dewormings := r.mapRowsToDomains(results)
-	return dewormings, nil
-}
-
-func (r *SqlcPetDeworming) GetUpcomingDewormings(ctx context.Context, beforeDate time.Time) ([]medical.PetDeworming, error) {
-	results, err := r.queries.GetUpcomingDewormings(ctx, r.mapper.TimeToPgDate(beforeDate))
-	if err != nil {
-		return nil, fmt.Errorf("failed to get upcoming dewormings: %w", err)
 	}
 
 	dewormings := r.mapRowsToDomains(results)
@@ -80,14 +70,14 @@ func (r *SqlcPetDeworming) FindBySpecification(ctx context.Context, spec specifi
 
 	dewormings := r.mapRowsToDomains(results)
 	pagination := page.PaginationRequest{
-		PageSize: int(*spec.Limit),
-		Page:     int(*spec.Offset)/int(*spec.Limit) + 1,
+		PageSize: *spec.Limit,
+		Page:     *spec.Offset / *spec.Limit + 1,
 	}
 	return page.NewPage(dewormings, total, pagination), nil
 }
 
-func (r *SqlcPetDeworming) Delete(ctx context.Context, id valueobject.DewormID) error {
-	err := r.queries.DeletePetDeworming(ctx, id.Int32()
+func (r *SqlcPetDeworming) Delete(ctx context.Context, id valueobject.DewormID, isHard bool) error {
+	err := r.queries.DeletePetDeworming(ctx, id.Int32())
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return ErrPetDewormingNotFound
@@ -127,4 +117,95 @@ func (r *SqlcPetDeworming) update(ctx context.Context, deworming medical.PetDewo
 	}
 
 	return *r.mapRowToDomain(result), nil
+}
+
+func (r *SqlcPetDeworming) FindByIDAndPetID(ctx context.Context, dewormationID vo.DewormID, petID vo.PetID) (*med.PetDeworming, error) {
+	result, err := r.queries.GetPetDewormingByIDAndPetID(ctx, sqlc.GetPetDewormingByIDAndPetIDParams{
+		ID:    dewormationID.Int32(),
+		PetID: int32(petID.Value()),
+	})
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, ErrPetDewormingNotFound
+		}
+		return nil, fmt.Errorf("failed to get pet deworming by ID and pet ID: %w", err)
+	}
+
+	return r.mapRowToDomain(result), nil
+}
+
+func (r *SqlcPetDeworming) FindByIDAndEmployeeID(ctx context.Context, dewormationID vo.DewormID, employeeID vo.EmployeeID) (*med.PetDeworming, error) {
+	result, err := r.queries.GetPetDewormingByIDAndEmployeeID(ctx, sqlc.GetPetDewormingByIDAndEmployeeIDParams{
+		ID:         dewormationID.Int32(),
+		EmployeeID: int32(employeeID.Value()),
+	})
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, ErrPetDewormingNotFound
+		}
+		return nil, fmt.Errorf("failed to get pet deworming by ID and employee ID: %w", err)
+	}
+
+	return r.mapRowToDomain(result), nil
+}
+
+func (r *SqlcPetDeworming) FindByEmployeeID(ctx context.Context, employeeID vo.EmployeeID, pagination page.PaginationRequest) (page.Page[med.PetDeworming], error) {
+	results, err := r.queries.GetPetDewormingsByEmployeeID(ctx, sqlc.GetPetDewormingsByEmployeeIDParams{
+		EmployeeID: int32(employeeID.Value()),
+		Limit:      int32(pagination.PageSize),
+		Offset:     int32((pagination.Page - 1) * pagination.PageSize),
+	})
+	if err != nil {
+		return page.Page[med.PetDeworming]{}, fmt.Errorf("failed to get pet dewormings by employee ID: %w", err)
+	}
+
+	total, err := r.queries.CountPetDewormingsByEmployeeID(ctx, int32(employeeID.Value()))
+	if err != nil {
+		return page.Page[med.PetDeworming]{}, fmt.Errorf("failed to count pet dewormings by employee ID: %w", err)
+	}
+
+	dewormings := r.mapRowsToDomains(results)
+	return page.NewPage(dewormings, total, pagination), nil
+}
+func (r *SqlcPetDeworming) FindByPetID(ctx context.Context, petID vo.PetID, pagination page.PaginationRequest) (page.Page[med.PetDeworming], error) {
+	results, err := r.queries.GetPetDewormingsByPetIDWithPagination(ctx, sqlc.GetPetDewormingsByPetIDWithPaginationParams{
+		PetID:  int32(petID.Value()),
+		Limit:  int32(pagination.PageSize),
+		Offset: int32((pagination.Page - 1) * pagination.PageSize),
+	})
+	if err != nil {
+		return page.Page[med.PetDeworming]{}, fmt.Errorf("failed to get pet dewormings by pet ID: %w", err)
+	}
+
+	total, err := r.queries.CountPetDewormingsByPetID(ctx, int32(petID.Value()))
+	if err != nil {
+		return page.Page[med.PetDeworming]{}, fmt.Errorf("failed to count pet dewormings by pet ID: %w", err)
+	}
+
+	dewormings := r.mapRowsToDomains(results)
+	return page.NewPage(dewormings, total, pagination), nil
+}
+
+func (r *SqlcPetDeworming) FindByDateRange(ctx context.Context, startDate, endDate time.Time, pagination page.PaginationRequest) (page.Page[med.PetDeworming], error) {
+	results, err := r.queries.GetPetDewormingsByDateRange(ctx, sqlc.GetPetDewormingsByDateRangeParams{
+		StartDate: r.mapper.TimeToPgDate(startDate),
+		EndDate:   r.mapper.TimeToPgDate(endDate),
+		Limit:     int32(pagination.PageSize),
+		Offset:    int32((pagination.Page - 1) * pagination.PageSize),
+	})
+	if err != nil {
+		return page.Page[med.PetDeworming]{}, fmt.Errorf("failed to get pet dewormings by date range: %w", err)
+	}
+
+	total, err := r.queries.CountPetDewormingsByDateRange(ctx,
+		sqlc.CountPetDewormingsByDateRangeParams{
+			StartDate: r.mapper.TimeToPgDate(startDate),
+			EndDate:   r.mapper.TimeToPgDate(endDate),
+		})
+	if err != nil {
+		return page.Page[med.PetDeworming]{}, fmt.Errorf("failed to count pet dewormings by date range: %w", err)
+	}
+
+	dewormings := r.mapRowsToDomains(results)
+	return page.NewPage(dewormings, total, pagination), nil
 }

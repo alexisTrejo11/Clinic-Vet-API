@@ -51,11 +51,13 @@ type VaccinationRepository interface {
 	FindByID(ctx context.Context, vaccinationID vo.VaccinationID) (*med.PetVaccination, error)
 	FindByIDAndPetID(ctx context.Context, vaccinationID vo.VaccinationID, petID vo.PetID) (*med.PetVaccination, error)
 	FindByIDAndEmployeeID(ctx context.Context, vaccinationID vo.VaccinationID, employeeID vo.EmployeeID) (*med.PetVaccination, error)
-
 	FindByPetID(ctx context.Context, petID vo.PetID, pagination p.PaginationRequest) (p.Page[med.PetVaccination], error)
 	FindByEmployeeID(ctx context.Context, employeeID vo.EmployeeID, pagination p.PaginationRequest) (p.Page[med.PetVaccination], error)
 	FindByDateRange(ctx context.Context, startDate, endDate time.Time, pagination p.PaginationRequest) (p.Page[med.PetVaccination], error)
 
-	Save(ctx context.Context, vaccination *med.PetVaccination) error
+	FindRecentByPetID(ctx context.Context, petID vo.PetID, days int) ([]med.PetVaccination, error)
+	FindAllByPetID(ctx context.Context, petID vo.PetID) ([]med.PetVaccination, error)
+
+	Save(ctx context.Context, vaccination med.PetVaccination) (med.PetVaccination, error)
 	Delete(ctx context.Context, vaccinationID vo.VaccinationID, isHard bool) error
 }

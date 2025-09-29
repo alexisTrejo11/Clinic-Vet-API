@@ -10,8 +10,10 @@ type PetVaccination struct {
 	petID            vo.PetID
 	vaccineName      string
 	administeredDate time.Time
+	vacineType       string
+	administeredBy   vo.EmployeeID
+	batchNumber      string
 	nextDueDate      *time.Time
-	administeredBy   *vo.EmployeeID
 	notes            *string
 	createdAt        time.Time
 }
@@ -22,51 +24,98 @@ func NewPetVaccinationBuilder() *PetVaccinationBuilder {
 	return &PetVaccinationBuilder{petVaccination: &PetVaccination{}}
 }
 
-func (b *PetVaccinationBuilder) WithID(id vo.VaccinationID) PetVaccinationBuilder {
+func (b *PetVaccinationBuilder) WithID(id vo.VaccinationID) *PetVaccinationBuilder {
 	b.petVaccination.id = id
-	return *b
+	return b
 }
 
-func (b *PetVaccinationBuilder) WithPetID(petID vo.PetID) PetVaccinationBuilder {
+func (b *PetVaccinationBuilder) WithPetID(petID vo.PetID) *PetVaccinationBuilder {
 	b.petVaccination.petID = petID
-	return *b
+	return b
 }
 
-func (b *PetVaccinationBuilder) WithVaccineName(vaccineName string) PetVaccinationBuilder {
+func (b *PetVaccinationBuilder) WithVaccineName(vaccineName string) *PetVaccinationBuilder {
 	b.petVaccination.vaccineName = vaccineName
-	return *b
+	return b
 }
 
-func (b *PetVaccinationBuilder) WithAdministeredDate(administeredDate time.Time) PetVaccinationBuilder {
+func (b *PetVaccinationBuilder) WithAdministeredDate(administeredDate time.Time) *PetVaccinationBuilder {
 	b.petVaccination.administeredDate = administeredDate
-	return *b
+	return b
 }
 
-func (b *PetVaccinationBuilder) WithNextDueDate(nextDueDate *time.Time) PetVaccinationBuilder {
+func (b *PetVaccinationBuilder) WithNextDueDate(nextDueDate *time.Time) *PetVaccinationBuilder {
 	b.petVaccination.nextDueDate = nextDueDate
-	return *b
+	return b
 }
 
-func (b *PetVaccinationBuilder) WithAdministeredBy(administeredBy *vo.EmployeeID) PetVaccinationBuilder {
+func (b *PetVaccinationBuilder) WithBatchNumber(batchNumber string) *PetVaccinationBuilder {
+	b.petVaccination.batchNumber = batchNumber
+	return b
+}
+
+func (b *PetVaccinationBuilder) WithVaccineType(vaccineType string) *PetVaccinationBuilder {
+	b.petVaccination.vacineType = vaccineType
+	return b
+}
+func (b *PetVaccinationBuilder) WithAdministeredBy(administeredBy vo.EmployeeID) *PetVaccinationBuilder {
 	b.petVaccination.administeredBy = administeredBy
-	return *b
+	return b
 }
 
-func (b *PetVaccinationBuilder) WithNotes(notes *string) PetVaccinationBuilder {
+func (b *PetVaccinationBuilder) WithNotes(notes *string) *PetVaccinationBuilder {
 	b.petVaccination.notes = notes
-	return *b
+	return b
 }
 
-func (b *PetVaccinationBuilder) WithCreatedAt(createdAt time.Time) PetVaccinationBuilder {
+func (b *PetVaccinationBuilder) WithCreatedAt(createdAt time.Time) *PetVaccinationBuilder {
 	b.petVaccination.createdAt = createdAt
-	return *b
+	return b
 }
 
-func (pv *PetVaccination) ID() vo.VaccinationID           { return pv.id }
-func (pv *PetVaccination) PetID() vo.PetID                { return pv.petID }
-func (pv *PetVaccination) VaccineName() string            { return pv.vaccineName }
-func (pv *PetVaccination) AdministeredDate() time.Time    { return pv.administeredDate }
-func (pv *PetVaccination) NextDueDate() *time.Time        { return pv.nextDueDate }
-func (pv *PetVaccination) AdministeredBy() *vo.EmployeeID { return pv.administeredBy }
-func (pv *PetVaccination) Notes() *string                 { return pv.notes }
-func (pv *PetVaccination) CreatedAt() time.Time           { return pv.createdAt }
+func (b *PetVaccinationBuilder) Build() *PetVaccination {
+	return b.petVaccination
+}
+
+func (pv *PetVaccination) ID() vo.VaccinationID          { return pv.id }
+func (pv *PetVaccination) PetID() vo.PetID               { return pv.petID }
+func (pv *PetVaccination) VaccineName() string           { return pv.vaccineName }
+func (pv *PetVaccination) AdministeredDate() time.Time   { return pv.administeredDate }
+func (pv *PetVaccination) NextDueDate() *time.Time       { return pv.nextDueDate }
+func (pv *PetVaccination) AdministeredBy() vo.EmployeeID { return pv.administeredBy }
+func (pv *PetVaccination) Notes() *string                { return pv.notes }
+func (pv *PetVaccination) CreatedAt() time.Time          { return pv.createdAt }
+func (pv *PetVaccination) VaccineType() string           { return pv.vacineType }
+func (pv *PetVaccination) BatchNumber() string           { return pv.batchNumber }
+
+type VaccinationStatus struct {
+	PetID            vo.PetID
+	IsUpToDate       bool
+	MissingVaccines  []string
+	OverdueVaccines  []VaccineStatus
+	UpcomingVaccines []VaccineStatus
+}
+
+type VaccineStatus struct {
+	VaccineName      string
+	LastAdministered time.Time
+	NextDueDate      time.Time
+	DosesReceived    int
+	DaysOverdue      int
+	DaysUntilDue     int
+}
+
+type VaccinationPlan struct {
+	PetID           vo.PetID
+	GeneratedAt     time.Time
+	PlannedVaccines []PlannedVaccine
+}
+
+type PlannedVaccine struct {
+	VaccineName   string
+	ScheduledDate time.Time
+	DoseNumber    int
+	VaccineType   vo.VaccineType
+	ProtectsFrom  []string
+	IsBooster     bool
+}

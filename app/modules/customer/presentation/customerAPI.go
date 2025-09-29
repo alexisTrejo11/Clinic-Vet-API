@@ -3,8 +3,7 @@ package customerAPI
 import (
 	"clinic-vet-api/app/middleware"
 	"clinic-vet-api/app/modules/core/repository"
-	"clinic-vet-api/app/modules/customer/application/command"
-	"clinic-vet-api/app/modules/customer/application/query"
+	"clinic-vet-api/app/modules/customer/application/handler"
 	"clinic-vet-api/app/modules/customer/infrastructure/bus"
 	customerRepo "clinic-vet-api/app/modules/customer/infrastructure/repository"
 	"clinic-vet-api/app/modules/customer/presentation/controller"
@@ -62,7 +61,7 @@ func (f *CustomerAPIModule) Bootstrap() error {
 	customerBus := f.createBus(customerRepo)
 
 	// Create controller
-	controller := controller.NewCustomerController(f.config.Validator, &customerBus)
+	controller := controller.NewCustomerController(f.config.Validator, customerBus)
 
 	// Register routes
 	routes.CustomerRoutes(f.config.Router, controller, f.config.AuthMiddleware)
@@ -80,13 +79,10 @@ func (f *CustomerAPIModule) Bootstrap() error {
 
 // createUseCases creates and wires all use cases
 func (f *CustomerAPIModule) createBus(repo repository.CustomerRepository) bus.CustomerBus {
-	customerCommandHandler := command.NewCustomerCommandHandler(repo)
-	customerQueryHandler := query.NewCustomerQueryHandler(repo)
+	customerCommandHandler := handler.NewCustomerCommandHandler(repo)
+	customerQueryHandler := handler.NewCustomerQueryHandler(repo)
 
-	customerCommandBus := bus.NewCustomerCommandBus(customerCommandHandler)
-	customerQueryBus := bus.NewCustomerQueryBus(customerQueryHandler)
-
-	return *bus.NewCustomerModuleBus(customerCommandBus, customerQueryBus)
+	return bus.NewCustomerBus(*customerCommandHandler, *customerQueryHandler)
 }
 
 // validateConfig validates the Module configuration

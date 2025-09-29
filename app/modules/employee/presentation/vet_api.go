@@ -3,8 +3,7 @@ package api
 import (
 	"clinic-vet-api/app/middleware"
 	"clinic-vet-api/app/modules/core/repository"
-	"clinic-vet-api/app/modules/employee/application/cqrs/command"
-	"clinic-vet-api/app/modules/employee/application/cqrs/query"
+	"clinic-vet-api/app/modules/employee/application/handler"
 	"clinic-vet-api/app/modules/employee/infrastructure/bus"
 	repositoryimpl "clinic-vet-api/app/modules/employee/infrastructure/repository"
 	"clinic-vet-api/app/modules/employee/presentation/controller"
@@ -28,7 +27,7 @@ type EmployeeAPIConfig struct {
 }
 
 type EmployeeAPIComponents struct {
-	bus        *bus.EmployeeBus
+	bus        *bus.EmployeeCqrsBus
 	controller *controller.EmployeeController
 	repository repository.EmployeeRepository
 }
@@ -58,15 +57,16 @@ func (f *EmployeeModule) Bootstrap() error {
 	f.components = &EmployeeAPIComponents{}
 	vetRepo := repositoryimpl.NewSqlcEmployeeRepository(f.config.Queries, mapper.NewSqlcFieldMapper())
 
-	employeeCommandBus := command.NewEmployeeCommandBus(vetRepo)
-	employeeQueryBus := query.NewEmployeeQueryBus(vetRepo)
-	vetServiceBus := bus.NewEmployeeBus(*employeeCommandBus, employeeQueryBus)
-	vetControllers := controller.NewEmployeeController(f.config.DataValidator, vetServiceBus)
+	employeeQueryHandler := handler.NewEmployeeQueryHandler(vetRepo)
+	employeeCommandHandler := handler.NewEmployeeCommandHandler(vetRepo)
+
+	vetCqrsBus := bus.NewEmployeeCqrsBus(*employeeQueryHandler, *employeeCommandHandler)
+	vetControllers := controller.NewEmployeeController(f.config.DataValidator, vetCqrsBus)
 
 	routes.EmployeeRoutes(f.config.Router, vetControllers, f.config.AuthMiddleware)
 
 	f.components.controller = vetControllers
-	f.components.bus = &vetServiceBus
+	f.components.bus = &vetCqrsBus
 	f.components.repository = vetRepo
 	f.isBuilt = true
 

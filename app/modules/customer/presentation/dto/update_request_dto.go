@@ -3,8 +3,6 @@ package dto
 import (
 	"time"
 
-	"clinic-vet-api/app/modules/core/domain/enum"
-	"clinic-vet-api/app/modules/core/domain/valueobject"
 	"clinic-vet-api/app/modules/customer/application/command"
 )
 
@@ -24,7 +22,7 @@ type UpdateCustomerRequest struct {
 	// Customer's gender
 	// Required: false
 	// Enum: male, female, not_specified
-	Gender *enum.PersonGender `json:"gender,omitempty" binding:"omitempty,oneof=male female not_specified" example:"male"`
+	Gender *string `json:"gender,omitempty" binding:"omitempty,oneof=male female not_specified" example:"male"`
 
 	// Customer's date of birth
 	// Required: false
@@ -33,31 +31,17 @@ type UpdateCustomerRequest struct {
 	// URL to customer's photo
 	// Required: false
 	Photo *string `json:"photo,omitempty" example:"https://example.com/photo.jpg"`
-
-	// Customer's phone number in E.164 format
-	// Required: false
-	PhoneNumber *string `json:"phone_number,omitempty" binding:"omitempty,e164" example:"+1234567890"`
-
-	// Customer's address
-	// Required: false
-	Address *string `json:"address,omitempty" example:"123 Main St, City, State"`
-
-	// Additional notes about the customer
-	// Required: false
-	Notes *string `json:"notes,omitempty" example:"Allergic to penicillin"`
 }
 
 // ToCommand converts UpdateCustomerRequest to UpdateCustomerCommand
-func (r *UpdateCustomerRequest) ToCommand(customerID uint) (*command.UpdateCustomerCommand, error) {
-	return &command.UpdateCustomerCommand{
-		ID:          valueobject.NewCustomerID(customerID),
-		Photo:       r.Photo,
-		FirstName:   r.FirstName,
-		LastName:    r.LastName,
-		Gender:      r.Gender,
-		DateOfBirth: r.DateOfBirth,
-		PhoneNumber: r.PhoneNumber,
-		Address:     r.Address,
-		Notes:       r.Notes,
-	}, nil
+func (r *UpdateCustomerRequest) ToCommand(customerID uint) (command.UpdateCustomerCommand, error) {
+	return command.NewUpdateCustomerCommand(
+		customerID,
+		r.Photo,
+		r.FirstName,
+		r.LastName,
+		r.Gender,
+		r.DateOfBirth,
+	)
+
 }

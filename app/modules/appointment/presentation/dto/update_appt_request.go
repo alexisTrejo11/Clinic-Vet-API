@@ -45,21 +45,19 @@ func (a *RescheduleAppointData) Clean() {
 	a.Reason = strings.TrimSpace(a.Reason)
 }
 
-func (a *RescheduleAppointData) ToCommand(appointmentID uint) command.RescheduleApptCommand {
-	return *command.NewRescheduleApptCommand(appointmentID, nil, a.NewDateTime, &a.Reason)
+func (a *RescheduleAppointData) ToCommand(appointmentID uint) (command.RescheduleApptCommand, error) {
+	return command.NewRescheduleApptCommand(appointmentID, nil, a.NewDateTime, &a.Reason)
 }
 
-func (r *RequestApptmentData) ToCommand(customerID uint) (*command.RequestApptByCustomerCommand, error) {
+func (r *RequestApptmentData) ToCommand(customerID uint) (command.RequestApptByCustomerCommand, error) {
 	return command.NewRequestApptByCustomerCommand(uint(r.PetID), customerID, r.Datetime, r.Service, r.Notes)
 }
 
-func (r *UpdateApptRequest) ToCommand(appointmentID uint) command.UpdateApptCommand {
-	updateCommand := command.NewUpdateApptCommand(
+func (r *UpdateApptRequest) ToCommand(appointmentID uint) (command.UpdateApptCommand, error) {
+	return command.NewUpdateApptCommand(
 		appointmentID,
 		r.Status,
 		r.Notes,
 		r.Service,
 	)
-
-	return *updateCommand
 }

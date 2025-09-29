@@ -2,8 +2,7 @@ package api
 
 import (
 	"clinic-vet-api/app/middleware"
-	"clinic-vet-api/app/modules/appointment/application/command"
-	"clinic-vet-api/app/modules/appointment/application/query"
+	"clinic-vet-api/app/modules/appointment/application/handler"
 	"clinic-vet-api/app/modules/appointment/infrastructure/bus"
 	"clinic-vet-api/app/modules/appointment/presentation/controller"
 	"clinic-vet-api/app/modules/appointment/presentation/routes"
@@ -70,12 +69,13 @@ func (f *AppointmentAPIBuilder) Build() error {
 	// Create repository (single instance)
 	repository := apptRepo.NewSqlcAppointmentRepository(f.config.Queries)
 
-	// Create buses
-	commandHandler := command.NewAppointmentCommandHandler(repository)
-	queryHandler := query.NewAppointmentQueryHandler(repository, f.config.CustomerRepo, f.config.EmployeeRepo)
+	// Create handlers
+	commandHandler := handler.NewAppointmentCommandHandler(repository)
+	queryHandler := handler.NewAppointmentQueryHandler(repository, f.config.CustomerRepo, f.config.EmployeeRepo)
 
-	commandBus := bus.NewAppointmentCommandBus(commandHandler)
-	queryBus := bus.NewAppointmentQueryBus(queryHandler)
+	// Create buses
+	commandBus := bus.NewApptCmdBus(*commandHandler)
+	queryBus := bus.NewApptQueryBus(*queryHandler)
 	apptBus := bus.NewAppointmentBus(*commandBus, *queryBus)
 
 	// Create controllers

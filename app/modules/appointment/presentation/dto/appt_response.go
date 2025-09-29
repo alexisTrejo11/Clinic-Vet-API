@@ -3,8 +3,9 @@ package dto
 import (
 	"time"
 
-	"clinic-vet-api/app/modules/appointment/application/query"
+	"clinic-vet-api/app/modules/appointment/application/handler"
 	"clinic-vet-api/app/modules/core/domain/enum"
+	"clinic-vet-api/app/modules/core/domain/valueobject"
 	"clinic-vet-api/app/shared/page"
 )
 
@@ -81,18 +82,12 @@ func NewResponseMapper() *ResponseMapper {
 	return &ResponseMapper{}
 }
 
-func (m *ResponseMapper) FromResult(result query.ApptResult) *AppointmentResponse {
-	var empID *uint
-	if result.EmployeeID != nil {
-		empIDValue := result.EmployeeID.Value()
-		empID = &empIDValue
-	}
-
+func (m *ResponseMapper) FromResult(result handler.ApptResult) *AppointmentResponse {
 	return &AppointmentResponse{
 		ID:         result.ID.Value(),
 		PetID:      result.PetID.Value(),
 		CustomerID: result.CustomerID.Value(),
-		EmployeeID: empID,
+		EmployeeID: valueobject.OptEmployeeIDToUint(result.EmployeeID),
 		Service:    result.Service.DisplayName(),
 		Datetime:   result.ScheduledDate.Format(time.RFC822),
 		Notes:      result.Notes,
@@ -102,7 +97,7 @@ func (m *ResponseMapper) FromResult(result query.ApptResult) *AppointmentRespons
 	}
 }
 
-func (m *ResponseMapper) FromResults(results []query.ApptResult) []AppointmentResponse {
+func (m *ResponseMapper) FromResults(results []handler.ApptResult) []AppointmentResponse {
 	if results == nil {
 		return []AppointmentResponse{}
 	}

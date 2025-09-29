@@ -1,41 +1,42 @@
 package bus
 
 import (
-	"clinic-vet-api/app/modules/appointment/application/query"
+	h "clinic-vet-api/app/modules/appointment/application/handler"
+	q "clinic-vet-api/app/modules/appointment/application/query"
 	p "clinic-vet-api/app/shared/page"
 	"context"
 )
 
-type AppointmentQueryBus struct {
-	handler query.AppointmentQueryHandler
+type ApptQueryBus struct {
+	queryHandler h.ApptQueryHandler
 }
 
-func NewAppointmentQueryBus(handler query.AppointmentQueryHandler) *AppointmentQueryBus {
-	return &AppointmentQueryBus{
-		handler: handler,
+func NewApptQueryBus(queryHandler h.ApptQueryHandler) *ApptQueryBus {
+	return &ApptQueryBus{
+		queryHandler: queryHandler,
 	}
 }
 
-func (bus *AppointmentQueryBus) FindBySpecification(ctx context.Context, qry query.FindApptsBySpecQuery) (p.Page[query.ApptResult], error) {
-	return bus.handler.FindBySpecification(ctx, qry)
+func (b *ApptQueryBus) FindBySpecification(ctx context.Context, qry q.FindApptsBySpecQuery) (p.Page[h.ApptResult], error) {
+	return b.queryHandler.HandleBySpecification(ctx, qry)
 }
 
-func (bus *AppointmentQueryBus) FindByID(ctx context.Context, qry query.FindApptByIDQuery) (query.ApptResult, error) {
-	return bus.handler.FindByID(ctx, qry)
+func (b *ApptQueryBus) FindByID(ctx context.Context, qry q.FindApptByIDQuery) (h.ApptResult, error) {
+	return b.queryHandler.HandleByID(ctx, qry)
 }
 
-func (bus *AppointmentQueryBus) FindByDateRange(ctx context.Context, qry query.FindApptsByDateRangeQuery) (p.Page[query.ApptResult], error) {
-	return bus.handler.FindByDateRange(ctx, qry)
+func (b *ApptQueryBus) FindByDateRange(ctx context.Context, qry q.FindApptsByDateRangeQuery) (p.Page[h.ApptResult], error) {
+	return b.queryHandler.HandleByDateRange(ctx, qry)
 }
 
-func (bus *AppointmentQueryBus) FindByCustomerID(ctx context.Context, qry query.FindApptsByCustomerIDQuery) (p.Page[query.ApptResult], error) {
-	return bus.handler.FindByCustomerID(ctx, qry)
+func (b *ApptQueryBus) FindByCustomerID(ctx context.Context, qry q.FindApptsByCustomerIDQuery) (p.Page[h.ApptResult], error) {
+	return b.queryHandler.HandleByCustomerID(ctx, qry)
 }
 
-func (bus *AppointmentQueryBus) FindByEmployeeID(ctx context.Context, qry query.FindApptsByEmployeeIDQuery) (p.Page[query.ApptResult], error) {
-	return bus.handler.FindByEmployee(ctx, qry)
+func (b *ApptQueryBus) FindByEmployeeID(ctx context.Context, qry q.FindApptsByEmployeeIDQuery) (p.Page[h.ApptResult], error) {
+	return b.queryHandler.HandleByEmployeeID(ctx, qry)
 }
 
-func (bus *AppointmentQueryBus) FindByPetID(ctx context.Context, qry query.FindApptsByPetQuery) (p.Page[query.ApptResult], error) {
-	return bus.handler.FindByPetID(ctx, qry)
+func (b *ApptQueryBus) FindByPetID(ctx context.Context, qry q.FindApptsByPetQuery) (p.Page[h.ApptResult], error) {
+	return b.queryHandler.HandleByPetID(ctx, qry)
 }

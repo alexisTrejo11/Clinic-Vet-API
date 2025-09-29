@@ -2,61 +2,53 @@
 package bus
 
 import (
-	"clinic-vet-api/app/modules/customer/application/command"
-	"clinic-vet-api/app/modules/customer/application/query"
+	c "clinic-vet-api/app/modules/customer/application/command"
+	h "clinic-vet-api/app/modules/customer/application/handler"
+	q "clinic-vet-api/app/modules/customer/application/query"
 	"clinic-vet-api/app/shared/cqrs"
-	"clinic-vet-api/app/shared/page"
+	p "clinic-vet-api/app/shared/page"
 	"context"
 )
 
-type CustomerBus struct {
-	CommandBus *CustomerCommandBus
-	QueryBus   *CustomerQueryBus
+type CustomerBus interface {
+	// Command
+	CreateCustomer(ctx context.Context, cmd c.CreateCustomerCommand) cqrs.CommandResult
+	UpdateCustomer(ctx context.Context, cmd c.UpdateCustomerCommand) cqrs.CommandResult
+	DeactivateCustomer(ctx context.Context, cmd c.DeactivateCustomerCommand) cqrs.CommandResult
+
+	// Query
+	FindCustomerByID(ctx context.Context, query q.FindCustomerByIDQuery) (h.CustomerResult, error)
+	FindCustomerByCriteria(ctx context.Context, query q.FindCustomerBySpecificationQuery) (p.Page[h.CustomerResult], error)
 }
 
-func NewCustomerModuleBus(commandBus *CustomerCommandBus, queryBus *CustomerQueryBus) *CustomerBus {
-	return &CustomerBus{
-		CommandBus: commandBus,
-		QueryBus:   queryBus,
+type customerBus struct {
+	CommandHandler h.CustomerCommandHandler
+	QueryHandler   h.CustomerQueryHandler
+}
+
+func NewCustomerBus(commandHandler h.CustomerCommandHandler, queryHandler h.CustomerQueryHandler) CustomerBus {
+	return &customerBus{
+		CommandHandler: commandHandler,
+		QueryHandler:   queryHandler,
 	}
 }
 
-type CustomerCommandBus struct {
-	CommandBus command.CustomerCommandHandler
+func (bus *customerBus) CreateCustomer(ctx context.Context, cmd c.CreateCustomerCommand) cqrs.CommandResult {
+	return bus.CommandHandler.HandleCreate(ctx, cmd)
 }
 
-func NewCustomerCommandBus(commandBus command.CustomerCommandHandler) *CustomerCommandBus {
-	return &CustomerCommandBus{
-		CommandBus: commandBus,
-	}
+func (bus *customerBus) UpdateCustomer(ctx context.Context, cmd c.UpdateCustomerCommand) cqrs.CommandResult {
+	return bus.CommandHandler.HandleUpdate(ctx, cmd)
 }
 
-func (bus *CustomerCommandBus) CreateCustomer(ctx context.Context, cmd command.CreateCustomerCommand) cqrs.CommandResult {
-	return bus.CommandBus.Create(ctx, cmd)
+func (bus *customerBus) DeactivateCustomer(ctx context.Context, cmd c.DeactivateCustomerCommand) cqrs.CommandResult {
+	return bus.CommandHandler.HandleDeactivate(ctx, cmd)
 }
 
-func (bus *CustomerCommandBus) UpdateCustomer(ctx context.Context, cmd command.UpdateCustomerCommand) cqrs.CommandResult {
-	return bus.CommandBus.Update(ctx, cmd)
+func (bus *customerBus) FindCustomerByID(ctx context.Context, query q.FindCustomerByIDQuery) (h.CustomerResult, error) {
+	return bus.QueryHandler.HandleFindByID(ctx, query)
 }
 
-func (bus *CustomerCommandBus) DeactivateCustomer(ctx context.Context, cmd command.DeactivateCustomerCommand) cqrs.CommandResult {
-	return bus.CommandBus.Deactivate(ctx, cmd)
-}
-
-type CustomerQueryBus struct {
-	QueryBus query.CustomerQueryHandler
-}
-
-func NewCustomerQueryBus(queryBus query.CustomerQueryHandler) *CustomerQueryBus {
-	return &CustomerQueryBus{
-		QueryBus: queryBus,
-	}
-}
-
-func (bus *CustomerQueryBus) GetCustomerByID(ctx context.Context, cmd query.FindCustomerByIDQuery) (query.CustomerResult, error) {
-	return bus.QueryBus.FindByID(ctx, cmd)
-}
-
-func (bus *CustomerQueryBus) FindCustomerByCriteria(ctx context.Context, cmd query.FindCustomerBySpecificationQuery) (page.Page[query.CustomerResult], error) {
-	return bus.QueryBus.FindBySpecification(ctx, cmd)
+func (bus *customerBus) FindCustomerByCriteria(ctx context.Context, query q.FindCustomerBySpecificationQuery) (p.Page[h.CustomerResult], error) {
+	return bus.QueryHandler.HandleFindBySpecification(ctx, query)
 }

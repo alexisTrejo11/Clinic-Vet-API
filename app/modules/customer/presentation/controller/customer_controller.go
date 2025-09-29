@@ -2,7 +2,6 @@
 package controller
 
 import (
-	"clinic-vet-api/app/modules/core/domain/valueobject"
 	"clinic-vet-api/app/modules/customer/application/command"
 	"clinic-vet-api/app/modules/customer/application/query"
 	"clinic-vet-api/app/modules/customer/infrastructure/bus"
@@ -17,30 +16,35 @@ import (
 
 type CustomerController struct {
 	validator *validator.Validate
-	bus       *bus.CustomerBus
+	bus       bus.CustomerBus
 }
 
-func NewCustomerController(validator *validator.Validate, bus *bus.CustomerBus) *CustomerController {
+func NewCustomerController(validator *validator.Validate, bus bus.CustomerBus) *CustomerController {
 	return &CustomerController{
 		validator: validator,
 		bus:       bus,
 	}
 }
 
-func (controller *CustomerController) SearchCustomers(c *gin.Context) {
+func (ctrl *CustomerController) SearchCustomers(c *gin.Context) {
 	var searchParams *dto.CustomerSearchQuery
 	if err := c.ShouldBindQuery(&searchParams); err != nil {
 		response.BadRequest(c, httpError.RequestURLQueryError(err, c.Request.URL.RawQuery))
 		return
 	}
 
-	if err := controller.validator.Struct(searchParams); err != nil {
+	if err := ctrl.validator.Struct(searchParams); err != nil {
 		response.BadRequest(c, httpError.InvalidDataError(err))
 		return
 	}
 
-	query := searchParams.ToQuery()
-	customer, err := controller.bus.QueryBus.FindCustomerByCriteria(c.Request.Context(), *query)
+	query, err := searchParams.ToQuery()
+	if err != nil {
+		response.ApplicationError(c, err)
+		return
+	}
+
+	customer, err := ctrl.bus.FindCustomerByCriteria(c.Request.Context(), query)
 	if err != nil {
 		response.ApplicationError(c, err)
 		return
@@ -48,15 +52,20 @@ func (controller *CustomerController) SearchCustomers(c *gin.Context) {
 	response.Found(c, customer, "Customer")
 }
 
-func (controller *CustomerController) GetCustomerByID(c *gin.Context) {
+func (ctrl *CustomerController) GetCustomerByID(c *gin.Context) {
 	id, err := ginUtils.ParseParamToUInt(c, "id")
 	if err != nil {
 		response.BadRequest(c, httpError.RequestURLParamError(err, "customer_id", c.Param("id")))
 		return
 	}
 
-	query := query.NewFindCustomerByIDQuery(id)
-	result, err := controller.bus.QueryBus.GetCustomerByID(c.Request.Context(), *query)
+	query, err := query.NewFindCustomerByIDQuery(id)
+	if err != nil {
+		response.ApplicationError(c, err)
+		return
+	}
+
+	result, err := ctrl.bus.FindCustomerByID(c.Request.Context(), query)
 	if err != nil {
 		response.ApplicationError(c, err)
 		return
@@ -66,15 +75,20 @@ func (controller *CustomerController) GetCustomerByID(c *gin.Context) {
 	response.Found(c, customerResponse, "Customer")
 }
 
-func (controller *CustomerController) CreateCustomer(c *gin.Context) {
+func (ctrl *CustomerController) CreateCustomer(c *gin.Context) {
 	var customerCreate dto.CreateCustomerRequest
-	if err := ginUtils.BindAndValidateBody(c, &customerCreate, controller.validator); err != nil {
+	if err := ginUtils.BindAndValidateBody(c, &customerCreate, ctrl.validator); err != nil {
 		response.BadRequest(c, err)
 		return
 	}
 
-	command := customerCreate.ToCommand()
-	result := controller.bus.CommandBus.CreateCustomer(c.Request.Context(), *command)
+	command, err := customerCreate.ToCommand()
+	if err != nil {
+		response.ApplicationError(c, err)
+		return
+	}
+
+	result := ctrl.bus.CreateCustomer(c.Request.Context(), command)
 	if !result.IsSuccess() {
 		response.ApplicationError(c, result.Error())
 		return
@@ -83,7 +97,7 @@ func (controller *CustomerController) CreateCustomer(c *gin.Context) {
 	response.Created(c, result.ID(), "Customer")
 }
 
-func (controller *CustomerController) UpdateCustomer(c *gin.Context) {
+func (ctrl *CustomerController) UpdateCustomer(c *gin.Context) {
 	id, err := ginUtils.ParseParamToUInt(c, "id")
 	if err != nil {
 		response.BadRequest(c, httpError.RequestURLParamError(err, "customer_id", c.Param("id")))
@@ -96,7 +110,7 @@ func (controller *CustomerController) UpdateCustomer(c *gin.Context) {
 		return
 	}
 
-	if err := controller.validator.Struct(&requestData); err != nil {
+	if err := ctrl.validator.Struct(&requestData); err != nil {
 		response.ApplicationError(c, err)
 		return
 	}
@@ -107,7 +121,7 @@ func (controller *CustomerController) UpdateCustomer(c *gin.Context) {
 		return
 	}
 
-	result := controller.bus.CommandBus.UpdateCustomer(c.Request.Context(), *command)
+	result := ctrl.bus.UpdateCustomer(c.Request.Context(), command)
 	if !result.IsSuccess() {
 		response.ApplicationError(c, result.Error())
 		return
@@ -116,15 +130,20 @@ func (controller *CustomerController) UpdateCustomer(c *gin.Context) {
 	response.Success(c, nil, result.Message())
 }
 
-func (controller *CustomerController) DeactivateCustomer(c *gin.Context) {
+func (ctrl *CustomerController) DeactivateCustomer(c *gin.Context) {
 	id, err := ginUtils.ParseParamToUInt(c, "id")
 	if err != nil {
 		response.BadRequest(c, httpError.RequestURLParamError(err, "customer_id", c.Param("id")))
 		return
 	}
 
-	command := command.DeactivateCustomerCommand{ID: valueobject.NewCustomerID(id)}
-	result := controller.bus.CommandBus.DeactivateCustomer(c.Request.Context(), command)
+	command, err := command.NewDeactivateCustomerCommand(id)
+	if err != nil {
+		response.ApplicationError(c, err)
+		return
+	}
+
+	result := ctrl.bus.DeactivateCustomer(c.Request.Context(), command)
 	if !result.IsSuccess() {
 		response.ApplicationError(c, result.Error())
 		return

@@ -3,8 +3,8 @@ package controller
 
 import (
 	"clinic-vet-api/app/middleware"
-	cmdBus "clinic-vet-api/app/modules/auth/application/command"
-	sessionCmd "clinic-vet-api/app/modules/auth/application/command/session"
+	cmd "clinic-vet-api/app/modules/auth/application/command"
+	cmdBus "clinic-vet-api/app/modules/auth/infrastructure/bus"
 	"clinic-vet-api/app/modules/auth/presentation/dto"
 	autherror "clinic-vet-api/app/shared/error/auth"
 	ginutils "clinic-vet-api/app/shared/gin_utils"
@@ -39,7 +39,7 @@ func (ctrl *AuthController) CustomerSignup(c *gin.Context) {
 		return
 	}
 
-	result := ctrl.bus.CustomerRegister(c.Request.Context(), command)
+	result := ctrl.bus.RegisterCustomer(c.Request.Context(), command)
 	if !result.IsSuccess() {
 		response.ApplicationError(c, result.Error())
 		return
@@ -61,7 +61,7 @@ func (ctrl *AuthController) EmployeeSignup(c *gin.Context) {
 		return
 	}
 
-	createResult := ctrl.bus.StaffRegister(c.Request.Context(), command)
+	createResult := ctrl.bus.RegisterEmployee(c.Request.Context(), command)
 	if !createResult.IsSuccess() {
 		response.ApplicationError(c, createResult.Error())
 		return
@@ -77,8 +77,14 @@ func (ctrl *AuthController) Login(c *gin.Context) {
 		return
 	}
 
-	loginCommand := requestlogin.ToCommand()
-	result := ctrl.bus.Login(c.Request.Context(), *loginCommand)
+	loginMetadata := ginutils.NewLoginMetadata(c)
+	loginCommand, err := requestlogin.ToCommand(loginMetadata)
+	if err != nil {
+		response.ApplicationError(c, err)
+		return
+	}
+
+	result := ctrl.bus.Login(c.Request.Context(), loginCommand)
 	if !result.IsSuccess() {
 		response.ApplicationError(c, result.Error())
 		return
@@ -106,7 +112,7 @@ func (ctrl *AuthController) Logout(c *gin.Context) {
 		return
 	}
 
-	result := ctrl.bus.RevokeUserSession(c.Request.Context(), command)
+	result := ctrl.bus.RevokeSession(c.Request.Context(), command)
 	if !result.IsSuccess() {
 		response.ApplicationError(c, result.Error())
 		return
@@ -122,7 +128,7 @@ func (ctrl *AuthController) LogoutAll(c *gin.Context) {
 		return
 	}
 
-	command := sessionCmd.NewRevokeAllUserSessionsCommand(userID.Value())
+	command := cmd.NewRevokeAllUserSessionsCommand(userID.Value())
 	result := ctrl.bus.RevokeAllUserSessions(c.Request.Context(), *command)
 	if !result.IsSuccess() {
 		response.ApplicationError(c, result.Error())

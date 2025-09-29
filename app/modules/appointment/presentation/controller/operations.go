@@ -3,6 +3,7 @@ package controller
 
 import (
 	"clinic-vet-api/app/modules/appointment/application/command"
+	"clinic-vet-api/app/modules/appointment/application/handler"
 	"clinic-vet-api/app/modules/appointment/application/query"
 	"clinic-vet-api/app/modules/appointment/infrastructure/bus"
 	"clinic-vet-api/app/modules/appointment/presentation/dto"
@@ -161,7 +162,7 @@ func (ctrl *ApptControllerOperations) GetAppointmentStats(c *gin.Context) {
 	// TODO: Implement appointment stats logic or remove this function if not needed
 }
 
-func (ctrl *ApptControllerOperations) HandlePaginatedResult(c *gin.Context, pageResponse page.Page[query.ApptResult], queryParams map[string]any) {
+func (ctrl *ApptControllerOperations) HandlePaginatedResult(c *gin.Context, pageResponse page.Page[handler.ApptResult], queryParams map[string]any) {
 	appointmentsResponse := ctrl.mapper.FromResults(pageResponse.Items)
 	metadata := gin.H{"page_meta": pageResponse.Metadata, "request_params": queryParams}
 	response.SuccessWithMeta(c, appointmentsResponse, "Appointment ", metadata)
@@ -176,8 +177,13 @@ func (ctrl *ApptControllerOperations) CreateAppointment(c *gin.Context, employee
 		return
 	}
 
-	command := requestCreateData.ToCommand(employeeID)
-	result := ctrl.bus.CommandBus.CreateAppointment(c.Request.Context(), *command)
+	command, err := requestCreateData.ToCommand(employeeID)
+	if err != nil {
+		response.ApplicationError(c, err)
+		return
+	}
+
+	result := ctrl.bus.CommandBus.CreateAppointment(c.Request.Context(), command)
 	if !result.IsSuccess() {
 		response.ApplicationError(c, result.Error())
 		return
@@ -193,7 +199,12 @@ func (ctrl *ApptControllerOperations) UpdateAppointment(c *gin.Context, apptID u
 		return
 	}
 
-	updateCommand := updateAppointData.ToCommand(apptID)
+	updateCommand, err := updateAppointData.ToCommand(apptID)
+	if err != nil {
+		response.ApplicationError(c, err)
+		return
+	}
+
 	result := ctrl.bus.CommandBus.UpdateAppointment(c.Request.Context(), updateCommand)
 	if !result.IsSuccess() {
 		response.ApplicationError(c, result.Error())
@@ -210,8 +221,13 @@ func (ctrl *ApptControllerOperations) DeleteAppointment(c *gin.Context) {
 		return
 	}
 
-	command := command.NewDeleteApptCommand(entityID)
-	result := ctrl.bus.CommandBus.DeleteAppointment(c.Request.Context(), *command)
+	command, err := command.NewDeleteApptCommand(entityID)
+	if err != nil {
+		response.ApplicationError(c, err)
+		return
+	}
+
+	result := ctrl.bus.CommandBus.DeleteAppointment(c.Request.Context(), command)
 	if !result.IsSuccess() {
 		response.ApplicationError(c, result.Error())
 		return
@@ -233,7 +249,12 @@ func (ctrl *ApptControllerOperations) RescheduleAppointment(c *gin.Context, empl
 		return
 	}
 
-	command := requestApptData.ToCommand(appointmentID)
+	command, err := requestApptData.ToCommand(appointmentID)
+	if err != nil {
+		response.ApplicationError(c, err)
+		return
+	}
+
 	result := ctrl.bus.CommandBus.RescheduleAppointment(c.Request.Context(), command)
 	if !result.IsSuccess() {
 		response.ApplicationError(c, result.Error())
@@ -250,8 +271,13 @@ func (ctrl *ApptControllerOperations) NotAttend(c *gin.Context, employeeID *uint
 		return
 	}
 
-	command := command.NewNotAttendApptCommand(appointmentID, employeeID)
-	result := ctrl.bus.CommandBus.MarkAppointmentAsNotAttend(c.Request.Context(), *command)
+	command, err := command.NewNotAttendApptCommand(appointmentID, employeeID)
+	if err != nil {
+		response.ApplicationError(c, err)
+		return
+	}
+
+	result := ctrl.bus.CommandBus.MarkAppointmentAsNotAttend(c.Request.Context(), command)
 	if !result.IsSuccess() {
 		response.ApplicationError(c, result.Error())
 		return
@@ -267,9 +293,13 @@ func (ctrl *ApptControllerOperations) ConfirmAppointment(c *gin.Context, employe
 		return
 	}
 
-	command := command.NewConfirmAppointmentCommand(appointmentID, employeeID)
+	command, err := command.NewConfirmAppointmentCommand(appointmentID, employeeID)
+	if err != nil {
+		response.ApplicationError(c, err)
+		return
+	}
 
-	result := ctrl.bus.CommandBus.ConfirmAppointment(c.Request.Context(), *command)
+	result := ctrl.bus.CommandBus.ConfirmAppointment(c.Request.Context(), command)
 	if !result.IsSuccess() {
 		response.ApplicationError(c, result.Error())
 		return
@@ -285,8 +315,13 @@ func (ctrl *ApptControllerOperations) CompleteAppointment(c *gin.Context, employ
 		return
 	}
 
-	command := command.NewCompleteApptCommand(appointmentID, employeeID)
-	result := ctrl.bus.CommandBus.CompleteAppointment(c.Request.Context(), *command)
+	command, err := command.NewCompleteApptCommand(appointmentID, employeeID)
+	if err != nil {
+		response.ApplicationError(c, err)
+		return
+	}
+
+	result := ctrl.bus.CommandBus.CompleteAppointment(c.Request.Context(), command)
 	if !result.IsSuccess() {
 		response.ApplicationError(c, result.Error())
 		return
@@ -303,7 +338,12 @@ func (ctrl *ApptControllerOperations) CancelAppointment(c *gin.Context, employee
 	}
 	reason := c.Query("reason")
 
-	command := command.NewCancelApptCommand(appointmentID, employeeID, reason)
+	command, err := command.NewCancelApptCommand(appointmentID, employeeID, reason)
+	if err != nil {
+		response.ApplicationError(c, err)
+		return
+	}
+
 	result := ctrl.bus.CommandBus.CancelAppointment(c.Request.Context(), *command)
 	if !result.IsSuccess() {
 		response.ApplicationError(c, result.Error())

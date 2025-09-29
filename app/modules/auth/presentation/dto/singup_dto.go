@@ -3,8 +3,7 @@ package dto
 import (
 	"time"
 
-	registerCmd "clinic-vet-api/app/modules/auth/application/command/register"
-	"clinic-vet-api/app/modules/core/domain/enum"
+	registerCmd "clinic-vet-api/app/modules/auth/application/command"
 	"clinic-vet-api/app/modules/core/domain/valueobject"
 
 	apperror "clinic-vet-api/app/shared/error/application"
@@ -63,13 +62,9 @@ type CustomerRequestSingup struct {
 	// Required: true
 	// Format: date
 	DateOfBirth time.Time `json:"date_of_birth" binding:"required" example:"1990-01-15T00:00:00Z"`
-
-	// Customer's location or address
-	// Required: false
-	Location string `json:"location" example:"123 Main St, City, State"`
 }
 
-func (r *EmployeeRequestRegister) ToCommand() (registerCmd.StaffRegisterCommand, error) {
+func (r *EmployeeRequestRegister) ToCommand() (registerCmd.RegisterEmployeeCommand, error) {
 	errorMessages := make([]string, 0)
 	emailVo, err := valueobject.NewEmail(r.Email)
 	if err != nil {
@@ -86,52 +81,27 @@ func (r *EmployeeRequestRegister) ToCommand() (registerCmd.StaffRegisterCommand,
 	}
 
 	if len(errorMessages) > 0 {
-		return registerCmd.StaffRegisterCommand{}, apperror.MappingError(errorMessages, "request", "SignupRequest", "userSingup")
+		return registerCmd.RegisterEmployeeCommand{}, apperror.MappingError(errorMessages, "request", "SignupRequest", "userSingup")
 	}
 
-	cmd := registerCmd.NewStaffRegisterCommand(emailVo, r.Password, phone, valueobject.NewEmployeeID(r.EmployeeID))
+	cmd := registerCmd.NewRegisterEmployeeCommand(
+		emailVo,
+		r.Password,
+		phone,
+		valueobject.NewEmployeeID(r.EmployeeID),
+	)
 	return *cmd, nil
 }
 
-func (r *CustomerRequestSingup) ToCommand() (registerCmd.CustomerRegisterCommand, error) {
-	errorMessages := make([]string, 0)
-	gender, err := enum.ParseGender(r.Gender)
-	if err != nil {
-		errorMessages = append(errorMessages, err.Error())
-	}
+func (r *CustomerRequestSingup) ToCommand() (registerCmd.RegisterCustomerCommand, error) {
+	return registerCmd.NewRegisterCustomerCommand(
+		r.Email,
+		&r.PhoneNumber,
+		r.Password,
+		r.FirstName,
+		r.LastName,
+		r.Gender,
+		r.DateOfBirth,
+	)
 
-	if r.DateOfBirth.After(time.Now()) {
-		errorMessages = append(errorMessages, "date_of_birth cannot be in the future")
-	}
-
-	emailVo, err := valueobject.NewEmail(r.Email)
-	if err != nil {
-		errorMessages = append(errorMessages, "email: "+err.Error())
-	}
-
-	var phoneNumber *valueobject.PhoneNumber
-	if r.PhoneNumber != "" {
-		phoneVo, err := valueobject.NewPhoneNumber(r.PhoneNumber)
-		if err != nil {
-			errorMessages = append(errorMessages, "phone: "+err.Error())
-		}
-
-		phoneNumber = &phoneVo
-	}
-
-	if len(errorMessages) > 0 {
-		return registerCmd.CustomerRegisterCommand{}, apperror.MappingError(errorMessages, "request", "SignupRequest", "userSingup")
-	}
-
-	cmd := &registerCmd.CustomerRegisterCommand{
-		Email:       emailVo,
-		Password:    r.Password,
-		PhoneNumber: phoneNumber,
-		FirstName:   r.FirstName,
-		LastName:    r.LastName,
-		Gender:      gender,
-		DateOfBirth: r.DateOfBirth,
-		Role:        enum.UserRoleCustomer,
-	}
-	return *cmd, nil
 }

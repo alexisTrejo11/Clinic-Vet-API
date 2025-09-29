@@ -186,7 +186,7 @@ func (vs VetSpecialty) IsValid() bool {
 	return exists
 }
 
-func VetSpecialtyPtr(vs *string) *VetSpecialty {
+func OptVetSpecialty(vs *string) *VetSpecialty {
 	if vs == nil {
 		return nil
 	}

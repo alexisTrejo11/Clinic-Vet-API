@@ -212,6 +212,28 @@ func ParseGender(gender string) (PersonGender, error) {
 	return GenderNotSpecified, fmt.Errorf("invalid gender: %s", gender)
 }
 
+func NewPersonGender(gender string) PersonGender {
+	normalized := normalizeGenderInput(gender)
+	if val, exists := personGenderMap[normalized]; exists {
+		return val
+	}
+	return GenderNotSpecified
+
+}
+func NullableGender(gender *string) *PersonGender {
+	if gender == nil {
+		return nil
+	}
+
+	normalized := normalizeGenderInput(*gender)
+	if val, exists := personGenderMap[normalized]; exists {
+		return &val
+	}
+
+	undefined := GenderNotSpecified
+	return &undefined
+}
+
 func MustParseGender(gender string) PersonGender {
 	parsed, err := ParseGender(gender)
 	if err != nil {

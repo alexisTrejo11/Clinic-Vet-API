@@ -1,8 +1,8 @@
 package controller
 
 import (
-	cmdBus "clinic-vet-api/app/modules/auth/application/command"
-	sessionCmd "clinic-vet-api/app/modules/auth/application/command/session"
+	cmd "clinic-vet-api/app/modules/auth/application/command"
+	cmdBus "clinic-vet-api/app/modules/auth/infrastructure/bus"
 	autherror "clinic-vet-api/app/shared/error/auth"
 	"clinic-vet-api/app/shared/response"
 
@@ -29,8 +29,8 @@ func (ctrl *TokenController) RefreshSession(c *gin.Context) {
 		return
 	}
 
-	command := sessionCmd.NewRefreshUserSessionCommand(refreshToken.(string))
-	result := ctrl.bus.RefreshUserSession(c.Request.Context(), command)
+	command := cmd.NewRefreshSessionCommand(refreshToken.(string))
+	result := ctrl.bus.RefreshSession(c.Request.Context(), command)
 	if !result.IsSuccess() {
 		response.ApplicationError(c, result.Error())
 		return

@@ -2,11 +2,11 @@
 package bus
 
 type AppointmentBus struct {
-	CommandBus AppointmentCommandBus
-	QueryBus   AppointmentQueryBus
+	CommandBus ApptCmdBus
+	QueryBus   ApptQueryBus
 }
 
-func NewAppointmentBus(commandBus AppointmentCommandBus, queryBus AppointmentQueryBus) *AppointmentBus {
+func NewAppointmentBus(commandBus ApptCmdBus, queryBus ApptQueryBus) *AppointmentBus {
 	return &AppointmentBus{
 		CommandBus: commandBus,
 		QueryBus:   queryBus,

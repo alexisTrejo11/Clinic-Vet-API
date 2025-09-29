@@ -2,7 +2,6 @@
 package dto
 
 import (
-	"clinic-vet-api/app/modules/core/domain/enum"
 	"clinic-vet-api/app/modules/customer/application/command"
 	"time"
 )
@@ -35,12 +34,12 @@ type CreateCustomerRequest struct {
 }
 
 // ToCommand converts CreateCustomerRequest to CreateCustomerCommand
-func (r *CreateCustomerRequest) ToCommand() *command.CreateCustomerCommand {
-	return &command.CreateCustomerCommand{
-		Photo:       r.Photo,
-		FirstName:   r.FirstName,
-		LastName:    r.LastName,
-		Gender:      enum.PersonGender(r.Gender),
-		DateOfBirth: r.DateOfBirth,
-	}
+func (r *CreateCustomerRequest) ToCommand() (command.CreateCustomerCommand, error) {
+	return command.NewCreateCustomerCommand(
+		r.Photo,
+		r.FirstName,
+		r.LastName,
+		r.Gender,
+		r.DateOfBirth,
+	)
 }

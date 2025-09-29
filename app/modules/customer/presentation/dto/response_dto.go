@@ -3,7 +3,7 @@ package dto
 import (
 	"time"
 
-	"clinic-vet-api/app/modules/customer/application/query"
+	"clinic-vet-api/app/modules/customer/application/handler"
 )
 
 // CustomerResponse represents the customer response
@@ -36,7 +36,7 @@ type CustomerResponse struct {
 	UpdatedAt string `json:"updated_at" example:"2024-01-15T14:30:00Z"`
 }
 
-func FromResult(result query.CustomerResult) *CustomerResponse {
+func FromResult(result handler.CustomerResult) *CustomerResponse {
 	return &CustomerResponse{
 		ID:          result.ID.Value(),
 		FirstName:   result.FirstName,
@@ -50,7 +50,7 @@ func FromResult(result query.CustomerResult) *CustomerResponse {
 	}
 }
 
-func FromResultList(results []query.CustomerResult) []CustomerResponse {
+func FromResultList(results []handler.CustomerResult) []CustomerResponse {
 	if len(results) == 0 {
 		return []CustomerResponse{}
 	}

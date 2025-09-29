@@ -20,8 +20,8 @@ func (r *SqlcPetDeworming) mapRowToDomain(row sqlc.PetDeworming) *medical.PetDew
 		WithAdministeredDate(row.AdministeredDate.Time).
 		WithCreatedAt(row.CreatedAt.Time).
 		WithAdministeredBy(valueobject.NewEmployeeID(uint(row.AdministeredBy.Int32))).
-		WithNextDueDate(r.mapper.PgDateToPtr(row.NextDueDate)).
-		WithNotes(r.mapper.PgTextToPtr(row.Notes)).
+		WithNextDueDate(r.mapper.PgDate.ToTimePtr(row.NextDueDate)).
+		WithNotes(r.mapper.PgText.ToStringPtr(row.Notes)).
 		Build()
 }
 
@@ -63,8 +63,8 @@ func (r *SqlcPetDeworming) domainToUpdateParams(deworming medical.PetDeworming) 
 
 func (r *SqlcPetDeworming) specToSqlc(spec specification.PetDewormSpecification) sqlc.FindPetDewormingsBySpecParams {
 	params := &sqlc.FindPetDewormingsBySpecParams{
-		LimitVal:              r.mapper.Int32PtrToInt32(spec.Limit),
-		OffsetVal:             r.mapper.Int32PtrToInt32(spec.Offset),
+		LimitVal:              r.mapper.Primitive.Int32PtrToInt32(spec.Limit),
+		OffsetVal:             r.mapper.Primitive.Int32PtrToInt32(spec.Offset),
 		PetID:                 r.mapper.PetIDPtrToInt32(spec.PetID),
 		AdministeredBy:        r.mapper.EmployeeIDPtrToInt32(spec.AdministeredBy),
 		MedicationName:        r.mapper.StringPtrToString(spec.MedicationName),

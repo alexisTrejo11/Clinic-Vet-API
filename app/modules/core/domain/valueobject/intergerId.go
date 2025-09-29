@@ -85,3 +85,128 @@ func NewVaccinationID(value uint) VaccinationID {
 func NewDewormID(value uint) DewormID {
 	return DewormID{baseID{value}}
 }
+
+func NewOptEmployeeID(value *uint) *EmployeeID {
+	if value == nil {
+		return nil
+	}
+	id := NewEmployeeID(*value)
+	return &id
+}
+
+func NewOptCustomerID(value *uint) *CustomerID {
+	if value == nil {
+		return nil
+	}
+	id := NewCustomerID(*value)
+	return &id
+}
+
+func NewOptPetID(value *uint) *PetID {
+	if value == nil {
+		return nil
+	}
+	id := NewPetID(*value)
+	return &id
+}
+
+func NewOptAppointmentID(value *uint) *AppointmentID {
+	if value == nil {
+		return nil
+	}
+	id := NewAppointmentID(*value)
+	return &id
+}
+
+func NewOptUserID(value *uint) *UserID {
+	if value == nil {
+		return nil
+	}
+	id := NewUserID(*value)
+	return &id
+}
+func NewOptPaymentID(value *uint) *PaymentID {
+	if value == nil {
+		return nil
+	}
+	id := NewPaymentID(*value)
+	return &id
+}
+func NewOptMedSessionID(value *uint) *MedSessionID {
+	if value == nil {
+		return nil
+	}
+	id := NewMedSessionID(*value)
+	return &id
+}
+func NewOptVaccinationID(value *uint) *VaccinationID {
+	if value == nil {
+		return nil
+	}
+	id := NewVaccinationID(*value)
+	return &id
+}
+
+func NewOptDewormID(value *uint) *DewormID {
+	if value == nil {
+		return nil
+	}
+	id := NewDewormID(*value)
+	return &id
+}
+
+func OptEmployeeIDToUint(id *EmployeeID) *uint {
+	if id == nil {
+		return nil
+	}
+	value := id.Value()
+	return &value
+}
+
+func OptCustomerIDToUint(id *CustomerID) *uint {
+	if id == nil {
+		return nil
+	}
+	value := id.Value()
+	return &value
+}
+
+func OptPetIDToUint(id *PetID) *uint {
+	if id == nil {
+		return nil
+	}
+	value := id.Value()
+	return &value
+}
+
+func OptAppointmentIDToUint(id *AppointmentID) *uint {
+	if id == nil {
+		return nil
+	}
+	value := id.Value()
+	return &value
+}
+
+func OptUserIDToUint(id *UserID) *uint {
+	if id == nil {
+		return nil
+	}
+	value := id.Value()
+	return &value
+}
+
+func OptPaymentIDToUint(id *PaymentID) *uint {
+	if id == nil {
+		return nil
+	}
+	value := id.Value()
+	return &value
+}
+
+func OptMedSessionIDToUint(id *MedSessionID) *uint {
+	if id == nil {
+		return nil
+	}
+	value := id.Value()
+	return &value
+}

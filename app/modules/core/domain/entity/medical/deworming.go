@@ -67,18 +67,11 @@ func (b *PetDewormingBuilder) Build() *PetDeworming {
 	return b.petDeworming
 }
 
-func (pd *PetDeworming) ID() valueobject.DewormID { return pd.id }
-
-func (pd *PetDeworming) PetID() valueobject.PetID { return pd.petID }
-
-func (pd *PetDeworming) MedicationName() string { return pd.medicationName }
-
-func (pd *PetDeworming) AdministeredDate() time.Time { return pd.administeredDate }
-
-func (pd *PetDeworming) NextDueDate() *time.Time { return pd.nextDueDate }
-
+func (pd *PetDeworming) ID() valueobject.DewormID               { return pd.id }
+func (pd *PetDeworming) PetID() valueobject.PetID               { return pd.petID }
+func (pd *PetDeworming) MedicationName() string                 { return pd.medicationName }
+func (pd *PetDeworming) AdministeredDate() time.Time            { return pd.administeredDate }
+func (pd *PetDeworming) NextDueDate() *time.Time                { return pd.nextDueDate }
 func (pd *PetDeworming) AdministeredBy() valueobject.EmployeeID { return pd.administeredBy }
-
-func (pd *PetDeworming) Notes() *string { return pd.notes }
-
-func (pd *PetDeworming) CreatedAt() time.Time { return pd.createdAt }
+func (pd *PetDeworming) Notes() *string                         { return pd.notes }
+func (pd *PetDeworming) CreatedAt() time.Time                   { return pd.createdAt }

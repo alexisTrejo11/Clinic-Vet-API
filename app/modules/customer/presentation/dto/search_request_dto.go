@@ -89,7 +89,7 @@ func (q *CustomerSearchQuery) ToSpecification() specification.CustomerSpecificat
 	return *spec
 }
 
-func (q *CustomerSearchQuery) ToQuery() *query.FindCustomerBySpecificationQuery {
+func (q *CustomerSearchQuery) ToQuery() (query.FindCustomerBySpecificationQuery, error) {
 	spec := q.ToSpecification()
 	return query.NewFindCustomerBySpecificationQuery(spec)
 }

@@ -1,12 +1,13 @@
 package valueobject
 
 import (
-	domainerr "clinic-vet-api/app/modules/core/error"
 	"context"
 	"errors"
 	"fmt"
 	"regexp"
 	"strings"
+
+	domainerr "clinic-vet-api/app/modules/core/error"
 )
 
 type (
@@ -128,6 +129,14 @@ func NewPhoneNumberNoErr(phone string) PhoneNumber {
 	return p
 }
 
+func NewOptPhoneNumber(phone *string) *PhoneNumber {
+	if phone == nil {
+		return nil
+	}
+
+	return &PhoneNumber{Value: *phone}
+}
+
 func (p PhoneNumber) String() string {
 	return p.Value
 }
@@ -166,4 +175,16 @@ func (n PersonName) IsValid() bool {
 
 func (n PersonName) FullName() string {
 	return fmt.Sprintf("%s %s", n.FirstName, n.LastName)
+}
+
+func NewOptPersonName(firstName, lastName *string) *PersonName {
+	if firstName == nil && lastName == nil {
+		return nil
+	}
+
+	name := PersonName{
+		FirstName: *firstName,
+		LastName:  *lastName,
+	}
+	return &name
 }

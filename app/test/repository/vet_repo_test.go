@@ -86,7 +86,7 @@ func (s *SqlcVetRepositoryTestSuite) TestList_WithFiltersAndSorting() {
 		Filters: vetDtos.VetFilters{
 			Name:      StringPtr("John"),
 			IsActive:  BoolPtr(true),
-			Specialty: VetSpecialtyPtr(vetDomain.GeneralPracticeSpecialty),
+			Specialty: OptVetSpecialty(vetDomain.GeneralPracticeSpecialty),
 			YearsExperience: &struct {
 				Min *int `json:"min"`
 				Max *int `json:"max"`
@@ -441,6 +441,6 @@ func intPtr(u int) *int {
 	return &u
 }
 
-func VetSpecialtyPtr(s vetDomain.VetSpecialty) *vetDomain.VetSpecialty {
+func OptVetSpecialty(s vetDomain.VetSpecialty) *vetDomain.VetSpecialty {
 	return &s
 }

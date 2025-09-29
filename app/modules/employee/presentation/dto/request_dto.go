@@ -2,9 +2,7 @@
 package dto
 
 import (
-	"clinic-vet-api/app/modules/core/domain/enum"
-	"clinic-vet-api/app/modules/core/domain/valueobject"
-	"clinic-vet-api/app/modules/employee/application/cqrs/command"
+	"clinic-vet-api/app/modules/employee/application/command"
 	"clinic-vet-api/app/shared/page"
 	"time"
 )
@@ -108,10 +106,6 @@ type UpdateEmployeeRequest struct {
 	// Required: false
 	IsActive *bool `json:"is_active" example:"true"`
 
-	// Consultation fee information
-	// Required: false
-	ConsultationFee map[string]string `json:"consultation_fee"`
-
 	// Years of professional experience
 	// Required: false
 	YearsExperience *int32 `json:"years_experience" example:"7"`
@@ -179,61 +173,47 @@ const (
 )
 
 func (r *CreateEmployeeRequest) ToCommand() (command.CreateEmployeeCommand, error) {
-	cmd := &command.CreateEmployeeCommand{
-		Photo:           r.Photo,
-		LicenseNumber:   r.LicenseNumber,
-		YearsExperience: r.YearsExperience,
-		IsActive:        r.IsActive,
-		DateOfBirth:     r.DateOfBirth,
-	}
+	/*
+		if len(r.LaboralSchedule) > 0 {
+			var scheduleData []command.ScheduleData
+			for _, s := range r.LaboralSchedule {
+				scheduleData = append(scheduleData, command.ScheduleData{
+					Day:           s.Day,
+					EntryTime:     s.EntryTime,
+					DepartureTime: s.DepartureTime,
+					StartBreak:    s.StartBreak,
+					EndBreak:      s.EndBreak,
+				})
+			}
 
-	personName, err := valueobject.NewPersonName(r.FirstName, r.LastName)
-	if err != nil {
-		return command.CreateEmployeeCommand{}, err
-	}
-	cmd.Name = personName
-
-	gender, err := enum.ParseGender(r.Gender)
-	if err != nil {
-		return command.CreateEmployeeCommand{}, err
-	}
-	cmd.Gender = gender
-
-	if r.Specialty != "" {
-		specialty, err := enum.ParseVetSpecialty(string(r.Specialty))
-		if err != nil {
-			return command.CreateEmployeeCommand{}, err
+			cmd.LaboralSchedule = scheduleData
 		}
-		cmd.Specialty = specialty
-	}
+	*/
+	return command.NewCreateEmployeeCommand(
+		r.FirstName,
+		r.LastName,
+		r.Gender,
+		r.Photo,
+		r.LicenseNumber,
+		r.Specialty,
+		r.DateOfBirth,
+		r.YearsExperience,
+		r.IsActive,
+		nil,
+	)
 
-	if len(r.LaboralSchedule) > 0 {
-		var scheduleData []command.ScheduleData
-		for _, s := range r.LaboralSchedule {
-			scheduleData = append(scheduleData, command.ScheduleData{
-				Day:           s.Day,
-				EntryTime:     s.EntryTime,
-				DepartureTime: s.DepartureTime,
-				StartBreak:    s.StartBreak,
-				EndBreak:      s.EndBreak,
-			})
-		}
-
-		cmd.LaboralSchedule = scheduleData
-	}
-
-	return *cmd, nil
 }
 
-func (r *UpdateEmployeeRequest) ToCommand(employeeIDUint uint) *command.UpdateEmployeeCommand {
-
-	return &command.UpdateEmployeeCommand{
-		EmployeeID: valueobject.NewEmployeeID(employeeIDUint),
-
-		Photo:           r.Photo,
-		LicenseNumber:   r.LicenseNumber,
-		YearsExperience: r.YearsExperience,
-		Specialty:       enum.VetSpecialtyPtr(r.Specialty),
-		IsActive:        r.IsActive,
-	}
+func (r *UpdateEmployeeRequest) ToCommand(employeeIDUint uint) (command.UpdateEmployeeCommand, error) {
+	return command.NewUpdateEmployeeCommand(
+		employeeIDUint,
+		r.FirstName,
+		r.LastName,
+		r.Photo,
+		r.LicenseNumber,
+		r.Specialty,
+		r.YearsExperience,
+		r.IsActive,
+		nil,
+	)
 }

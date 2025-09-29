@@ -62,7 +62,7 @@ type RequestApptResponse struct {
 	Notes *string `json:"notes" example:"Patient has allergy to penicillin"`
 }
 
-func (r *CreateApptRequest) ToCommand(employeeID *uint) *command.CreateApptCommand {
+func (r *CreateApptRequest) ToCommand(employeeID *uint) (command.CreateApptCommand, error) {
 	return command.NewCreateApptCommand(
 		r.CustomerID,
 		r.PetID,

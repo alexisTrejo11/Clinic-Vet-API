@@ -1,7 +1,7 @@
 package dto
 
 import (
-	"clinic-vet-api/app/modules/employee/application/cqrs/query"
+	"clinic-vet-api/app/modules/employee/application/handler"
 	"strconv"
 	"time"
 )
@@ -21,7 +21,7 @@ type EmployeeResponse struct {
 	UpdatedAt string `json:"updated_at" example:"2023-10-10T15:30:00Z"`
 }
 
-func (r *EmployeeResponse) FromResult(result query.EmployeeResult) {
+func (r *EmployeeResponse) FromResult(result handler.EmployeeResult) {
 	r.ID = strconv.FormatUint(uint64(result.ID), 10)
 	r.FirstName = result.FirstName
 	r.LastName = result.LastName
@@ -44,13 +44,13 @@ func (r *EmployeeResponse) FromResult(result query.EmployeeResult) {
 	r.UpdatedAt = result.UpdatedAt.Format(time.RFC3339)
 }
 
-func ToEmployeeResponse(result query.EmployeeResult) EmployeeResponse {
+func ToEmployeeResponse(result handler.EmployeeResult) EmployeeResponse {
 	var resp EmployeeResponse
 	resp.FromResult(result)
 	return resp
 }
 
-func ToEmployeeResponseList(results []query.EmployeeResult) []EmployeeResponse {
+func ToEmployeeResponseList(results []handler.EmployeeResult) []EmployeeResponse {
 	responses := make([]EmployeeResponse, len(results))
 	for i, result := range results {
 		responses[i] = ToEmployeeResponse(result)

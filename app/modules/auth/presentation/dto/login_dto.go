@@ -2,7 +2,8 @@
 package dto
 
 import (
-	authCmd "clinic-vet-api/app/modules/auth/application/command/authentication"
+	authCmd "clinic-vet-api/app/modules/auth/application/command"
+	ginutils "clinic-vet-api/app/shared/gin_utils"
 )
 
 type RequestLogin struct {
@@ -10,9 +11,7 @@ type RequestLogin struct {
 	Password   string `json:"password" binding:"required,min=8"`
 }
 
-func (r *RequestLogin) ToCommand() *authCmd.LoginCommand {
-	return &authCmd.LoginCommand{
-		Identifier: r.Identifier,
-		Password:   r.Password,
-	}
+func (r *RequestLogin) ToCommand(metadata *ginutils.LoginMetadata) (authCmd.LoginCommand, error) {
+	loginMetadata := authCmd.NewLoginMetadata(metadata.IP, metadata.UserAgent, metadata.DeviceInfo)
+	return authCmd.NewLoginCommand(r.Identifier, r.Password, *loginMetadata)
 }
