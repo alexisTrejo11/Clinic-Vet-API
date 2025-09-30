@@ -12,7 +12,7 @@ type VaccinationResult struct {
 	VaccineName      string
 	AdministeredDate time.Time
 	NextDueDate      *time.Time
-	AdministeredBy   *vo.EmployeeID
+	AdministeredBy   vo.EmployeeID
 	Notes            *string
 	CreatedAt        time.Time
 }

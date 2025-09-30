@@ -76,8 +76,8 @@ func (cmd *RegisterCustomerCommand) validate() error {
 	if !cmd.name.IsValid() {
 		return CustomerRegisterCmdErr("name", "invalid format")
 	}
-	if !cmd.dateOfBirth.IsZero() {
-		return CustomerRegisterCmdErr("date of birth", "invalid format")
+	if cmd.dateOfBirth.IsZero() {
+		return CustomerRegisterCmdErr("date of birth", "cannot have hour, minute, second or nanosecond component")
 	}
 	if !cmd.gender.IsValid() {
 		return CustomerRegisterCmdErr("gender", "invalid format")

@@ -20,7 +20,6 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
-	"github.com/jackc/pgx/v5/pgxpool"
 	swaggerfiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
@@ -110,7 +109,7 @@ func initializeApplication() (*Application, error) {
 	router := setupRouter(settings)
 
 	// Setup modules
-	if err := setupModules(router, settings, queries, pxpool, dataValidator); err != nil {
+	if err := setupModules(router, settings, queries, dataValidator); err != nil {
 		return nil, fmt.Errorf("failed to setup modules: %w", err)
 	}
 
@@ -198,16 +197,16 @@ func setupCORS(settings *config.AppSettings) gin.HandlerFunc {
 }
 
 // setupModules initializes and registers all application modules
-func setupModules(router *gin.Engine, settings *config.AppSettings, queries *sqlc.Queries, pxpool *pgxpool.Pool, validator *validator.Validate) error {
+func setupModules(router *gin.Engine, settings *config.AppSettings, queries *sqlc.Queries, validator *validator.Validate) error {
 	// Initialize MongoDB for notification module
 	mongoClient := config.InitMongoDB(settings.Services.Mongo)
 
 	// Setup notification module
 	routerGroup := router.Group("/api/v2")
-	notiAPI.SetupNotificationModule(routerGroup, mongoClient, settings.Services.Email, config.GetTwilioClient())
+	notificationService := notiAPI.SetupNotificationModule(routerGroup, mongoClient, settings.Services.Email, config.GetTwilioClient())
 
 	// Bootstrap other API modules
-	if err := config.BootstrapAPIModules(routerGroup, queries, pxpool, validator, config.RedisClient, settings.Auth.JWTSecret); err != nil {
+	if err := config.BootstrapAPIModules(routerGroup, queries, notificationService, validator, config.RedisClient, settings.Auth.JWTSecret); err != nil {
 		return fmt.Errorf("failed to bootstrap API modules: %w", err)
 	}
 

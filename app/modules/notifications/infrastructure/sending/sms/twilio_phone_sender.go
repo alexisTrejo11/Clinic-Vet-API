@@ -17,14 +17,14 @@ type TwilioPhoneSender struct {
 	twilioPhoneNumber string
 }
 
-func NewTwilioPhoneSender(client *twilio.RestClient, twilioPhoneNumber string) service.Sender {
+func NewTwilioPhoneSender(client *twilio.RestClient, twilioPhoneNumber string) service.SMSender {
 	return &TwilioPhoneSender{client: client, twilioPhoneNumber: twilioPhoneNumber}
 }
 
 func (s *TwilioPhoneSender) Send(ctx context.Context, notification *notification.Notification) error {
 	params := &twilioApi.CreateMessageParams{}
 
-	if notification.UserPhone == "" {
+	if notification.Phone() == "" {
 		return fmt.Errorf("user phone number is required")
 	}
 
@@ -32,7 +32,7 @@ func (s *TwilioPhoneSender) Send(ctx context.Context, notification *notification
 		return fmt.Errorf("twilio phone number is required")
 	}
 
-	params.SetTo(notification.UserPhone)
+	params.SetTo(notification.Phone())
 	params.SetFrom(s.twilioPhoneNumber)
 	params.SetBody(s.GenerateBody(notification))
 

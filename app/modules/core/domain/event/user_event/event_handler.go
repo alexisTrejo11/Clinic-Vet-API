@@ -73,7 +73,12 @@ func (h *userEventHandler) handleCustomerRegistration(ctx context.Context, event
 	h.eventLog.LogOperationSuccess(ctx, "Customer profile created",
 		zap.String("customer_id", customerID.String()))
 
-	if err := h.service.SendActivationEmail(ctx, event.Email, event.PersonalData.Name.FirstName); err != nil {
+	if err := h.service.SendActivationEmail(
+		ctx,
+		event.UserID.String(),
+		event.Email.String(),
+		event.PersonalData.Name.FirstName,
+	); err != nil {
 		h.eventLog.LogOperationWarning(ctx, "Send activation email failed",
 			zap.String("email", event.Email.String()),
 			zap.Error(err))
@@ -101,7 +106,7 @@ func (h *userEventHandler) handleEmployeeRegistration(ctx context.Context, event
 
 	defer h.logProcessingTime(ctx, time.Now())
 
-	if err := h.service.SendWelcomeEmail(ctx, event.Email, event.PersonalData.Name.FirstName); err != nil {
+	if err := h.service.SendWelcomeEmail(ctx, event.Email.String(), event.PersonalData.Name.FirstName); err != nil {
 		h.eventLog.LogOperationWarning(ctx, "Send welcome email failed",
 			zap.String("email", event.Email.String()),
 			zap.Error(err))

@@ -22,17 +22,17 @@ type NotificationResponse struct {
 
 func fromDomain(notification notification.Notification) NotificationResponse {
 	response := &NotificationResponse{
-		ID:        notification.ID,
-		UserID:    notification.UserID,
-		UserEmail: notification.UserEmail,
-		UserPhone: notification.UserPhone,
-		Title:     notification.Title,
-		Subject:   notification.Subject,
-		Message:   notification.Message,
-		Token:     notification.Token,
-		CreatedAt: notification.CreatedAt.Format(time.RFC3339),
-		NType:     notification.NType.String(),
-		Channel:   notification.Channel.String(),
+		ID:        notification.ID(),
+		UserID:    notification.UserID(),
+		UserEmail: notification.Email(),
+		UserPhone: notification.Phone(),
+		Title:     notification.Title(),
+		Subject:   notification.Subject(),
+		Message:   notification.Message(),
+		Token:     notification.Token(),
+		CreatedAt: notification.CreatedAt().Format(time.RFC3339),
+		NType:     notification.NType().String(),
+		Channel:   notification.Channel().String(),
 	}
 	return *response
 }

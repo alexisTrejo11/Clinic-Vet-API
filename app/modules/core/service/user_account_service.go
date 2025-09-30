@@ -1,47 +1,42 @@
 package service
 
 import (
+	"clinic-vet-api/app/modules/auth/infrastructure/token"
 	"clinic-vet-api/app/modules/core/domain/entity/customer"
 	"clinic-vet-api/app/modules/core/domain/entity/employee"
+	"clinic-vet-api/app/modules/core/domain/entity/notification"
 	"clinic-vet-api/app/modules/core/domain/valueobject"
 	"clinic-vet-api/app/modules/core/repository"
+	service "clinic-vet-api/app/modules/notifications/application"
 	commondto "clinic-vet-api/app/shared/dto"
 	"context"
-	"fmt"
 )
 
-type UserAccountService interface {
-	CreateCustomer(ctx context.Context, userID valueobject.UserID, personalData commondto.PersonalData) (valueobject.CustomerID, error)
-	AttachEmployeeToUser(ctx context.Context, userID valueobject.UserID, employee employee.Employee) error
-	SendActivationEmail(ctx context.Context, email valueobject.Email, name string) error
-	SendWelcomeEmail(ctx context.Context, email valueobject.Email, name string) error
-}
-
-type userAccountService struct {
-	userRepository     repository.UserRepository
-	profileRepository  repository.ProfileRepository
-	customerRepository repository.CustomerRepository
-	employeeRepository repository.EmployeeRepository
-	emailService       EmailService
+type UserAccountService struct {
+	userRepository      repository.UserRepository
+	customerRepository  repository.CustomerRepository
+	employeeRepository  repository.EmployeeRepository
+	notificationService service.NotificationService
+	tokenManager        token.TokenManager
 }
 
 func NewUserAccountService(
 	userRepo repository.UserRepository,
-	profileRepo repository.ProfileRepository,
 	customerRepo repository.CustomerRepository,
 	employeeRepo repository.EmployeeRepository,
-	emailSvc EmailService,
-) UserAccountService {
-	return &userAccountService{
-		userRepository:     userRepo,
-		profileRepository:  profileRepo,
-		customerRepository: customerRepo,
-		employeeRepository: employeeRepo,
-		emailService:       emailSvc,
+	tokenManager token.TokenManager,
+	notificationSvc service.NotificationService,
+) *UserAccountService {
+	return &UserAccountService{
+		userRepository:      userRepo,
+		customerRepository:  customerRepo,
+		employeeRepository:  employeeRepo,
+		notificationService: notificationSvc,
+		tokenManager:        tokenManager,
 	}
 }
 
-func (s *userAccountService) CreateCustomer(ctx context.Context, userID valueobject.UserID, personalData commondto.PersonalData) (valueobject.CustomerID, error) {
+func (s *UserAccountService) CreateCustomer(ctx context.Context, userID valueobject.UserID, personalData commondto.PersonalData) (valueobject.CustomerID, error) {
 	cust := customer.NewCustomerBuilder().
 		WithIsActive(true).
 		WithUserID(&userID).
@@ -57,7 +52,7 @@ func (s *userAccountService) CreateCustomer(ctx context.Context, userID valueobj
 	return cust.ID(), nil
 }
 
-func (s *userAccountService) AttachEmployeeToUser(ctx context.Context, userID valueobject.UserID, employee employee.Employee) error {
+func (s *UserAccountService) AttachEmployeeToUser(ctx context.Context, userID valueobject.UserID, employee employee.Employee) error {
 	if err := employee.AssignUser(ctx, userID); err != nil {
 		return err
 	}
@@ -69,10 +64,19 @@ func (s *userAccountService) AttachEmployeeToUser(ctx context.Context, userID va
 	return nil
 }
 
-func (s *userAccountService) SendActivationEmail(ctx context.Context, email valueobject.Email, name string) error {
-	return s.emailService.SendEmail(email.String(), "Activate Your Account", fmt.Sprintf("Hello %s,\n\nPlease activate your account by clicking the link below.\n\nBest regards,\nClinic Vet Team", name))
+func (s *UserAccountService) SendActivationEmail(ctx context.Context, userID, email, name string) error {
+	token, err := s.tokenManager.GenerateToken(token.ActivationToken, token.TokenConfig{
+		UserID: userID,
+	})
+	if err != nil {
+		return err
+	}
+
+	notif := notification.NewActivationEmail(userID, email, name, token)
+	return s.notificationService.Send(ctx, notif)
 }
 
-func (s *userAccountService) SendWelcomeEmail(ctx context.Context, email valueobject.Email, name string) error {
-	return s.emailService.SendEmail(email.String(), "Welcome to Clinic Vet", fmt.Sprintf("Hello %s,\n\nWelcome to Clinic Vet! We're excited to have you on board.\n\nBest regards,\nClinic Vet Team", name))
+func (s *UserAccountService) SendWelcomeEmail(ctx context.Context, email, name string) error {
+	notif := notification.NewWelcomeEmail(email, name)
+	return s.notificationService.Send(ctx, notif)
 }

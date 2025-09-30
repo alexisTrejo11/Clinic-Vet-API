@@ -14,11 +14,6 @@ import (
 )
 
 func ToEntity(sqlRow sqlc.MedicalSession) medical.MedicalSession {
-	var condition enum.PetCondition
-	if sqlRow.Condition.Valid {
-		condition = enum.PetCondition(sqlRow.Condition.String)
-	}
-
 	var notes *string
 	if sqlRow.Notes.Valid {
 		notes = &sqlRow.Notes.String
@@ -81,7 +76,7 @@ func ToEntity(sqlRow sqlc.MedicalSession) medical.MedicalSession {
 		WithRespiratoryRate(respiratoryRate).
 		WithDiagnosis(sqlRow.Diagnosis.String).
 		WithTreatment(sqlRow.Treatment.String).
-		WithCondition(condition).
+		WithCondition(enum.PetCondition(sqlRow.Condition.String)).
 		WithMedications(medications).
 		WithFollowUpDate(followUpDate).
 		WithSymptoms(symptoms).
@@ -95,6 +90,7 @@ func ToEntity(sqlRow sqlc.MedicalSession) medical.MedicalSession {
 		WithVisitDate(visitDate).
 		WithNotes(notes).
 		WithPetDetails(*petDetails).
+		WithTimeStamps(sqlRow.CreatedAt.Time, sqlRow.UpdatedAt.Time).
 		Build()
 }
 

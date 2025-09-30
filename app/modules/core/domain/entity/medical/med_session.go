@@ -96,9 +96,16 @@ func (b *MedicalSessionBuilder) WithPetDetails(petDetails PetSessionSummary) *Me
 	return b
 }
 
+func (b *MedicalSessionBuilder) WithTimeStamps(createdAt, updatedAt time.Time) *MedicalSessionBuilder {
+	b.medSession.SetTimeStamps(createdAt, updatedAt)
+	return b
+}
+
 func (b *MedicalSessionBuilder) Build() *MedicalSession {
 	return b.medSession
 }
+
+// PetSessionSummary Builder methods
 
 func (b *PetSessionSummaryBuilder) WithPetID(petID vo.PetID) *PetSessionSummaryBuilder {
 	b.petSession.petID = petID

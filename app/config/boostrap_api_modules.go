@@ -11,20 +11,20 @@ import (
 	customerAPI "clinic-vet-api/app/modules/customer/presentation"
 	vetAPI "clinic-vet-api/app/modules/employee/presentation"
 	medSessionAPI "clinic-vet-api/app/modules/medical/session/presentation"
+	noticService "clinic-vet-api/app/modules/notifications/application"
 	paymentAPI "clinic-vet-api/app/modules/payments/presentation"
 	petAPI "clinic-vet-api/app/modules/pets/presentation"
 	userAPI "clinic-vet-api/app/modules/users/presentation"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/redis/go-redis/v9"
 )
 
 func BootstrapAPIModules(
 	routerGroup *gin.RouterGroup,
 	queries *sqlc.Queries,
-	db *pgxpool.Pool,
+	notificationService noticService.NotificationService,
 	validator *validator.Validate,
 	redis *redis.Client,
 	jwtSecret string,
@@ -33,7 +33,6 @@ func BootstrapAPIModules(
 		Router:        routerGroup,
 		Queries:       queries,
 		DataValidator: validator,
-		DB:            db,
 	})
 
 	authMiddleware := middleware.NewAuthMiddleware(jwtSecret, queries)
@@ -46,7 +45,6 @@ func BootstrapAPIModules(
 	// Bootstrap Employee Module
 	vetModule := vetAPI.NewEmployeeModule(&vetAPI.EmployeeAPIConfig{
 		Router:         routerGroup,
-		DB:             db,
 		Queries:        queries,
 		DataValidator:  validator,
 		AuthMiddleware: authMiddleware,
@@ -122,7 +120,7 @@ func BootstrapAPIModules(
 	}
 
 	// Bootstrap Auth Module
-	authAPI.SetupAuthModule(routerGroup, validator, vetRepo, customerRepo, redis, queries, jwtSecret, authMiddleware)
+	authAPI.SetupAuthModule(routerGroup, validator, vetRepo, customerRepo, redis, queries, jwtSecret, authMiddleware, notificationService)
 
 	// Bootstrap Payment Module
 	paymentModule := paymentAPI.NewPaymentAPIBuilder(&paymentAPI.PaymentAPIConfig{

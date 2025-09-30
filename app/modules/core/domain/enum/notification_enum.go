@@ -24,6 +24,7 @@ const (
 	NotificationTypeSecurity           NotificationType = "security"
 	NotificationTypePromotional        NotificationType = "promotional"
 	NotificationTypeUnknown            NotificationType = "unknown"
+	NotificationTypeMFA                NotificationType = "mfa" // Multi-Factor Authentication
 )
 
 // NotificationType constants and methods

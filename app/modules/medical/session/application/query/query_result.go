@@ -10,7 +10,6 @@ type MedSessionResult struct {
 	ID               valueobject.MedSessionID
 	EmployeeID       valueobject.EmployeeID
 	VisitDate        time.Time
-	Diagnosis        string
 	VisitType        enum.VisitType
 	ClinicService    enum.ClinicService
 	Notes            *string
@@ -26,6 +25,7 @@ type PetDetailsResult struct {
 	RespiratoryRate *int
 	Temperature     *valueobject.Decimal
 	Condition       enum.PetCondition
+	Diagnosis       string
 	Medications     []string
 	Symptoms        []string
 	Treatment       string

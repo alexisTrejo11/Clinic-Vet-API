@@ -3,6 +3,7 @@ package jwt
 
 import (
 	"clinic-vet-api/app/modules/auth/application/jwt"
+	"clinic-vet-api/app/modules/auth/infrastructure/token"
 	"errors"
 	"fmt"
 	"strings"
@@ -16,6 +17,7 @@ type jwtService struct {
 	accessTokenDuration  time.Duration
 	refreshTokenDuration time.Duration
 	issuer               string
+	tokenFactory         *token.TokenFactory
 }
 
 const (
@@ -31,6 +33,7 @@ func NewJWTService(secretKey string) jwt.JWTService {
 		accessTokenDuration:  DefaultAccessTokenDuration,
 		refreshTokenDuration: DefaultRefreshTokenDuration,
 		issuer:               DefaultIssuer,
+		tokenFactory:         token.NewTokenFactory([]byte(secretKey)),
 	}
 }
 
@@ -48,26 +51,22 @@ func (s *jwtService) GenerateAccessToken(userID string) (string, error) {
 		return "", errors.New("user ID cannot be empty")
 	}
 
-	now := time.Now()
-	claims := &jwt.Claims{
-		UserID: userID,
-		Type:   "access",
-		RegisteredClaims: jwtLib.RegisteredClaims{
-			ExpiresAt: jwtLib.NewNumericDate(now.Add(s.accessTokenDuration)),
-			IssuedAt:  jwtLib.NewNumericDate(now),
-			NotBefore: jwtLib.NewNumericDate(now),
-			Issuer:    s.issuer,
-			Subject:   userID,
-		},
-	}
+	accessTokenFactory, err := s.tokenFactory.CreateToken(token.JWTAccessToken, token.TokenConfig{
+		UserID:    userID,
+		ExpiresIn: s.accessTokenDuration,
+		Purpose:   "access",
+	})
 
-	token := jwtLib.NewWithClaims(jwtLib.SigningMethodHS256, claims)
-	tokenString, err := token.SignedString([]byte(s.secretKey))
 	if err != nil {
-		return "", fmt.Errorf("error signing token: %w", err)
+		return "", fmt.Errorf("could not create access token: %w", err)
 	}
 
-	return tokenString, nil
+	accessToken, err := accessTokenFactory.Generate()
+	if err != nil {
+		return "", err
+	}
+
+	return accessToken, nil
 }
 
 func (s *jwtService) GenerateRefreshToken(userID string) (string, error) {
@@ -75,26 +74,22 @@ func (s *jwtService) GenerateRefreshToken(userID string) (string, error) {
 		return "", errors.New("user ID cannot be empty")
 	}
 
-	now := time.Now()
-	claims := &jwt.Claims{
-		UserID: userID,
-		Type:   "refresh",
-		RegisteredClaims: jwtLib.RegisteredClaims{
-			ExpiresAt: jwtLib.NewNumericDate(now.Add(s.refreshTokenDuration)),
-			IssuedAt:  jwtLib.NewNumericDate(now),
-			NotBefore: jwtLib.NewNumericDate(now),
-			Issuer:    s.issuer,
-			Subject:   userID,
-		},
-	}
+	refreshTokenFactory, err := s.tokenFactory.CreateToken(token.JWTRefreshToken, token.TokenConfig{
+		UserID:    userID,
+		ExpiresIn: s.refreshTokenDuration,
+		Purpose:   "refresh",
+	})
 
-	token := jwtLib.NewWithClaims(jwtLib.SigningMethodHS256, claims)
-	tokenString, err := token.SignedString([]byte(s.secretKey))
 	if err != nil {
-		return "", fmt.Errorf("error signing refresh token: %w", err)
+		return "", fmt.Errorf("could not create refresh token: %w", err)
 	}
 
-	return tokenString, nil
+	refreshToken, err := refreshTokenFactory.Generate()
+	if err != nil {
+		return "", err
+	}
+
+	return refreshToken, nil
 }
 
 func (s *jwtService) ExtractToken(authHeader string) (string, error) {

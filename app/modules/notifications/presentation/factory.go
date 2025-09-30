@@ -16,16 +16,16 @@ import (
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
-func SetupNotificationModule(app *gin.RouterGroup, mongoClient *mongo.Client, emailConfig config.EmailConfig, twilioClient *twilio.RestClient) {
+func SetupNotificationModule(app *gin.RouterGroup, mongoClient *mongo.Client, emailConfig config.EmailConfig, twilioClient *twilio.RestClient) service.NotificationService {
 	notificationRepo := repositoryimpl.NewMongoNotificationRepository(mongoClient)
 	emailSender := email.NewEmailSender(emailConfig)
 	smsSender := sms.NewTwilioPhoneSender(twilioClient, os.Getenv("TWILIO_PHONE_NUMBER"))
 
-	notificationService := service.NewNotificationService(notificationRepo, map[string]service.Sender{
-		"email": emailSender,
-		"sms":   smsSender,
-	})
+	notificationService := service.NewNotificationService(emailSender, smsSender, notificationRepo)
+	service.NewNotificationQueryService(notificationRepo)
 
 	controller := controller.NewNotificationAdminController(notificationService)
 	routes.SetupNotificationRoutes(app, controller)
+
+	return notificationService
 }

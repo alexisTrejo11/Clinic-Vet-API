@@ -30,6 +30,8 @@ func (tm *TokenManager) GenerateToken(tokenType TokenType, config TokenConfig) (
 		return "", infraerr.TokenGenerationError(string(tokenType), err)
 	}
 
+	fmt.Println("Generated token:", tokenString) // Debugging line
+
 	key := fmt.Sprintf("%s_%s_%s", config.UserID, tokenType, strconv.FormatInt(time.Now().Unix(), 10))
 	tm.tokens[key] = token
 

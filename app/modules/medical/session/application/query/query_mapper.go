@@ -18,6 +18,7 @@ func toResult(entity medical.MedicalSession) MedSessionResult {
 			PetID:           entity.PetDetails().PetID(),
 			FollowUpDate:    entity.PetDetails().FollowUpDate(),
 			Weight:          entity.PetDetails().Weight(),
+			Diagnosis:       entity.PetDetails().Diagnosis(),
 			Temperature:     entity.PetDetails().Temperature(),
 			HeartRate:       entity.PetDetails().HeartRate(),
 			RespiratoryRate: entity.PetDetails().RespiratoryRate(),

@@ -2,6 +2,9 @@
 package dto
 
 import (
+	"clinic-vet-api/app/modules/core/domain/enum"
+	"clinic-vet-api/app/modules/core/domain/valueobject"
+	"clinic-vet-api/app/modules/medical/session/application/command"
 	"time"
 )
 
@@ -22,12 +25,7 @@ type CreateMedSessionRequest struct {
 	// The date of the medical visit
 	// Required: true
 	// Example: 2023-10-15T14:30:00Z
-	VisitDate time.Time `json:"date" validate:"required"`
-
-	// The diagnosis made during the visit
-	// Required: true
-	// Example: Otitis externa
-	Diagnosis string `json:"diagnosis" validate:"required,max=500"`
+	VisitDate time.Time `json:"visit_date" validate:"required"`
 
 	// The type of medical visit
 	// Required: true
@@ -38,6 +36,11 @@ type CreateMedSessionRequest struct {
 	// Required: true
 	// Example: Routine checkup
 	ClinicService string `json:"clinic_service" validate:"required,max=200"`
+
+	// The diagnosis made during the visit
+	// Required: true
+	// Example: Otitis externa
+	Diagnosis string `json:"diagnosis" validate:"required,max=500"`
 
 	// Additional notes about the visit
 	// Required: false
@@ -60,6 +63,11 @@ type PetSummaryRequest struct {
 	// Required: true
 	// Example: Antibiotics for 7 days
 	Treatment string `json:"treatment" validate:"required,max=500"`
+
+	// The diagnosis made during the visit
+	// Required: true
+	// Example: Otitis externa
+	Diagnosis string `json:"diagnosis" validate:"required,max=500"`
 
 	// The symptoms observed
 	// Required: false
@@ -134,4 +142,67 @@ type UpdateMedSessionRequest struct {
 	// Required: false
 	// Example: Antibiotics for 7 days
 	Treatment *string `json:"treatment,omitempty" validate:"omitempty,max=500"`
+}
+
+func (req *AdminCreateMedSessionRequest) ToCommand() *command.CreateMedSessionCommand {
+	return &command.CreateMedSessionCommand{
+		CustomerID: valueobject.NewCustomerID(req.CustomerID),
+		EmployeeID: valueobject.NewEmployeeID(req.EmployeeID),
+		VisitDate:  req.VisitDate,
+		VisitType:  enum.VisitType(req.VisitType),
+		Service:    enum.ClinicService(req.ClinicService),
+		Notes:      req.Notes,
+		PetDetails: command.PetSummary{
+			PetID:           valueobject.NewPetID(req.PetID),
+			Diagnosis:       req.PetDetails.Diagnosis,
+			Treatment:       req.PetDetails.Treatment,
+			Weight:          float64PtrToDecimalPtr(req.PetDetails.Weight),
+			HeartRate:       req.PetDetails.HeartRate,
+			RespiratoryRate: req.PetDetails.RespiratoryRate,
+			Temperature:     float64PtrToDecimalPtr(req.PetDetails.Temperature),
+			Condition:       enum.PetCondition(req.PetDetails.Condition),
+			Medications:     req.PetDetails.Medications,
+			FollowUpDate:    req.PetDetails.FollowUpDate,
+			Symptoms:        req.PetDetails.Symptoms,
+		},
+	}
+}
+
+func float64PtrToDecimalPtr(f *float64) *valueobject.Decimal {
+	if f == nil {
+		return nil
+	}
+	d := valueobject.NewDecimalFromFloat(*f)
+	return &d
+}
+
+func (req *UpdateMedSessionRequest) ToUpdateCommand(medSessionID uint) *command.UpdateMedSessionCommand {
+	var service *enum.ClinicService
+	if req.ClinicService != nil {
+		s := enum.ClinicService(*req.ClinicService)
+		service = &s
+	}
+
+	var visitType *enum.VisitType
+	if req.VisitType != nil {
+		vt := enum.VisitType(*req.VisitType)
+		visitType = &vt
+	}
+
+	var petCondition *enum.PetCondition
+	if req.Condition != nil {
+		pc := enum.PetCondition(*req.Condition)
+		petCondition = &pc
+	}
+
+	return &command.UpdateMedSessionCommand{
+		ID:        valueobject.NewMedSessionID(medSessionID),
+		Diagnosis: req.Diagnosis,
+		VisitType: visitType,
+		Service:   service,
+		Notes:     req.Notes,
+		Condition: petCondition,
+		Treatment: req.Treatment,
+		Date:      req.Date,
+	}
 }

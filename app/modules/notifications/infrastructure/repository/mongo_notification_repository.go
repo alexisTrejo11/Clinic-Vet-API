@@ -35,7 +35,7 @@ func (r *MongoNotificationRepository) Create(ctx context.Context, notification *
 	}
 
 	if oid, ok := result.InsertedID.(bson.ObjectID); ok {
-		notification.ID = oid.Hex()
+		notification.SetID(oid.Hex())
 	} else {
 		return r.mongoError(OpInsertMongo, "failed to get inserted notification ID", errors.New("invalid inserted ID type"))
 	}

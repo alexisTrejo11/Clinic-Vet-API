@@ -1,6 +1,7 @@
 package dto
 
 import (
+	"fmt"
 	"time"
 
 	registerCmd "clinic-vet-api/app/modules/auth/application/command"
@@ -94,6 +95,7 @@ func (r *EmployeeRequestRegister) ToCommand() (registerCmd.RegisterEmployeeComma
 }
 
 func (r *CustomerRequestSingup) ToCommand() (registerCmd.RegisterCustomerCommand, error) {
+	fmt.Println("date of birth:", r.DateOfBirth)
 	return registerCmd.NewRegisterCustomerCommand(
 		r.Email,
 		&r.PhoneNumber,

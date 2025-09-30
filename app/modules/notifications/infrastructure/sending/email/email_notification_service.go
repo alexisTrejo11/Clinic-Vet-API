@@ -11,9 +11,6 @@ import (
 	"clinic-vet-api/app/config"
 )
 
-type EmailSender interface {
-	Send(ctx context.Context, notification *notification.Notification) error
-}
 type EmailTemplateData struct {
 	ProjectName string
 	LogoURL     string
@@ -31,7 +28,7 @@ type emailSenderImpl struct {
 	templates map[string]*template.Template
 }
 
-func NewEmailSender(config config.EmailConfig) service.Sender {
+func NewEmailSender(config config.EmailConfig) service.EmailSender {
 	sender := &emailSenderImpl{
 		config:    config,
 		templates: make(map[string]*template.Template),
@@ -40,19 +37,23 @@ func NewEmailSender(config config.EmailConfig) service.Sender {
 	return sender
 }
 
-func (s *emailSenderImpl) Send(ctx context.Context, notification *notification.Notification) error {
-	tmpl, err := s.assignTemplate(notification)
+func (s *emailSenderImpl) Send(ctx context.Context, notif *notification.Notification) error {
+	fmt.Println("Config:", s.config)
+	tmpl, err := s.getTemplate(notif.NType())
 	if err != nil {
-		return fmt.Errorf("error assigning template: %w", err)
+		return fmt.Errorf("failed to get template: %w", err)
 	}
 
-	data := s.prepareTemplateData(notification)
+	templateData := s.prepareTemplateData(notif)
 
-	body, err := s.renderTemplate(tmpl, data)
+	htmlBody, err := s.renderTemplate(tmpl, templateData)
 	if err != nil {
-		return fmt.Errorf("error rendering template: %w", err)
+		return fmt.Errorf("failed to render template: %w", err)
 	}
 
-	// Enviar el email
-	return s.sendEmail(notification.UserEmail, notification.Subject, body.String())
+	if err := s.sendEmail(notif.Email(), notif.Subject(), htmlBody.String()); err != nil {
+		return fmt.Errorf("failed to send email: %w", err)
+	}
+
+	return nil
 }

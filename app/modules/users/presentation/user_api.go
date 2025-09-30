@@ -19,7 +19,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type UserAPIComponents struct {
@@ -33,7 +32,6 @@ type UserAPIConfig struct {
 	Queries        *sqlc.Queries
 	Router         *gin.RouterGroup
 	DataValidator  *validator.Validate
-	DB             *pgxpool.Pool
 	AuthMiddleware *middleware.AuthMiddleware
 }
 
@@ -110,9 +108,6 @@ func (u *UserAPIModule) validateConfig() error {
 	}
 	if u.config.DataValidator == nil {
 		return fmt.Errorf("data validator cannot be nil")
-	}
-	if u.config.DB == nil {
-		return fmt.Errorf("database connection cannot be nil")
 	}
 
 	if u.config.AuthMiddleware == nil {

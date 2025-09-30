@@ -16,11 +16,6 @@ type MedSessionResponse struct {
 	// Example: 1
 	ID uint `json:"id"`
 
-	// The ID of the pet associated with this session
-	// Required: true
-	// Example: 5
-	PetID uint `json:"pet_id"`
-
 	// The ID of the veterinarian who attended the session
 	// Required: true
 	// Example: 3
@@ -31,12 +26,6 @@ type MedSessionResponse struct {
 	// Format: date-time
 	// Example: 2023-10-15T14:30:00Z
 	Date time.Time `json:"date"`
-
-	// The diagnosis made during the visit
-	// Required: true
-	// Max length: 1000
-	// Example: Otitis externa
-	Diagnosis string `json:"diagnosis"`
 
 	// The type of medical visit
 	// Required: true
@@ -103,6 +92,12 @@ type PetSessionSummaryResponse struct {
 	// Example: 38.2
 	Temperature *float64 `json:"temperature,omitempty"`
 
+	// The diagnosis made during the visit
+	// Required: true
+	// Max length: 500
+	// Example: Otitis externa
+	Diagnosis string `json:"diagnosis"`
+
 	// The heart rate of the pet in beats per minute
 	// Required: false
 	// Minimum: 20
@@ -139,19 +134,19 @@ func FromResult(res *query.MedSessionResult) *MedSessionResponse {
 		ID:              res.ID.Value(),
 		EmployeeID:      res.EmployeeID.Value(),
 		Date:            res.VisitDate,
-		Diagnosis:       res.Diagnosis,
-		VisitType:       res.VisitType.DisplayName(),
-		ServiceProvided: res.ClinicService.DisplayName(),
+		VisitType:       res.VisitType.String(),
+		ServiceProvided: res.ClinicService.String(),
 		Notes:           res.Notes,
 		CreatedAt:       res.CreatedAt,
 		UpdatedAt:       res.UpdatedAt,
 		PetSessionSummaryResponse: &PetSessionSummaryResponse{
 			PetID:           res.PetDetailsResult.PetID.Value(),
-			Condition:       res.PetDetailsResult.Condition.DisplayName(),
+			Condition:       res.PetDetailsResult.Condition.String(),
 			Treatment:       res.PetDetailsResult.Treatment,
 			Weight:          decimalToFloat64Ptr(res.PetDetailsResult.Weight),
 			Temperature:     decimalToFloat64Ptr(res.PetDetailsResult.Temperature),
 			HeartRate:       res.PetDetailsResult.HeartRate,
+			Diagnosis:       res.PetDetailsResult.Diagnosis,
 			RespiratoryRate: res.PetDetailsResult.RespiratoryRate,
 			Symptoms:        res.PetDetailsResult.Symptoms,
 			Medications:     res.PetDetailsResult.Medications,

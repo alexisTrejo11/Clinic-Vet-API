@@ -6,11 +6,13 @@ import (
 	"clinic-vet-api/app/modules/auth/infrastructure/bus"
 	"clinic-vet-api/app/modules/auth/infrastructure/jwt"
 	repositoryimpl "clinic-vet-api/app/modules/auth/infrastructure/repository"
+	"clinic-vet-api/app/modules/auth/infrastructure/token"
 	"clinic-vet-api/app/modules/auth/presentation/controller"
 	"clinic-vet-api/app/modules/auth/presentation/routes"
 	event "clinic-vet-api/app/modules/core/domain/event/user_event"
 	"clinic-vet-api/app/modules/core/repository"
 	"clinic-vet-api/app/modules/core/service"
+	noticService "clinic-vet-api/app/modules/notifications/application"
 	userPersistence "clinic-vet-api/app/modules/users/infrastructure/repository"
 	"clinic-vet-api/app/shared/mapper"
 	"clinic-vet-api/app/shared/password"
@@ -31,18 +33,18 @@ func SetupAuthModule(
 	queries *sqlc.Queries,
 	secretKet string,
 	authMiddle *middleware.AuthMiddleware,
+	notificationService noticService.NotificationService,
 ) {
 	userRepo := userPersistence.NewSqlcUserRepository(queries, mapper.NewSqlcFieldMapper())
 	jwtService := jwt.NewJWTService(secretKet)
 	passwordEncoder := password.NewPasswordEncoder()
-	emailService := service.NewEmailService()
 
 	session := repositoryimpl.NewRedisSessionRepository(client)
 	security_service := service.NewUserSecurityService(userRepo, employeeRepo, passwordEncoder)
-	profileRepo := userPersistence.NewSQLCProfileRepository(queries)
+	tokenManager := token.NewTokenManager([]byte(secretKet))
 
-	eventService := service.NewUserAccountService(userRepo, profileRepo, customerRepo, employeeRepo, emailService)
-	userEventProducer := event.NewUserEventHandler(eventService)
+	eventService := service.NewUserAccountService(userRepo, customerRepo, employeeRepo, *tokenManager, notificationService)
+	userEventProducer := event.NewUserEventHandler(*eventService)
 
 	authHandler := handler.NewAuthCommandHandler(
 		userRepo,

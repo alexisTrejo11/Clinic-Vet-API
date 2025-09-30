@@ -139,9 +139,6 @@ func (u *User) ValidatePersistence() error {
 	if !u.role.IsValid() {
 		return errors.New("invalid user role")
 	}
-	if !u.status.IsValid() {
-		return errors.New("invalid user status")
-	}
 
 	return nil
 }
