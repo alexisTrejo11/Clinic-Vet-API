@@ -37,8 +37,8 @@ func (r *SqlcPetDeworming) mapRowsToDomains(rows []sqlc.PetDeworming) []medical.
 	return dewormings
 }
 
-func (r *SqlcPetDeworming) domainToCreateParams(deworming medical.PetDeworming) sqlc.CreatePetDewormingParams {
-	params := &sqlc.CreatePetDewormingParams{
+func (r *SqlcPetDeworming) domainToCreateParams(deworming medical.PetDeworming) sqlc.CreateDewormingParams {
+	params := &sqlc.CreateDewormingParams{
 		PetID:            int32(deworming.PetID().Value()),
 		MedicationName:   deworming.MedicationName(),
 		AdministeredDate: r.mapper.TimeToPgDate(deworming.AdministeredDate()),
@@ -49,8 +49,8 @@ func (r *SqlcPetDeworming) domainToCreateParams(deworming medical.PetDeworming) 
 	return *params
 }
 
-func (r *SqlcPetDeworming) domainToUpdateParams(deworming medical.PetDeworming) sqlc.UpdatePetDewormingParams {
-	params := &sqlc.UpdatePetDewormingParams{
+func (r *SqlcPetDeworming) domainToUpdateParams(deworming medical.PetDeworming) sqlc.UpdateDewormingParams {
+	params := &sqlc.UpdateDewormingParams{
 		ID:               int32(deworming.ID().Value()),
 		MedicationName:   deworming.MedicationName(),
 		AdministeredDate: r.mapper.TimeToPgDate(deworming.AdministeredDate()),
@@ -61,8 +61,8 @@ func (r *SqlcPetDeworming) domainToUpdateParams(deworming medical.PetDeworming) 
 	return *params
 }
 
-func (r *SqlcPetDeworming) specToSqlc(spec specification.PetDewormSpecification) sqlc.FindPetDewormingsBySpecParams {
-	params := &sqlc.FindPetDewormingsBySpecParams{
+func (r *SqlcPetDeworming) specToSqlc(spec specification.PetDewormSpecification) sqlc.FindDewormingsBySpecParams {
+	params := &sqlc.FindDewormingsBySpecParams{
 		LimitVal:              r.mapper.Primitive.Int32PtrToInt32(spec.Limit),
 		OffsetVal:             r.mapper.Primitive.Int32PtrToInt32(spec.Offset),
 		PetID:                 r.mapper.PetIDPtrToInt32(spec.PetID),
@@ -81,8 +81,8 @@ func (r *SqlcPetDeworming) specToSqlc(spec specification.PetDewormSpecification)
 	return *params
 }
 
-func (r *SqlcPetDeworming) ToCountSQLParams(spec specification.PetDewormSpecification) sqlc.CountPetDewormingsBySpecParams {
-	params := &sqlc.CountPetDewormingsBySpecParams{
+func (r *SqlcPetDeworming) ToCountSQLParams(spec specification.PetDewormSpecification) sqlc.CountDewormingsBySpecParams {
+	params := &sqlc.CountDewormingsBySpecParams{
 		PetID:                 r.mapper.PetIDPtrToInt32(spec.PetID),
 		AdministeredBy:        r.mapper.EmployeeIDPtrToInt32(spec.AdministeredBy),
 		MedicationName:        r.mapper.StringPtrToString(spec.MedicationName),

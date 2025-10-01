@@ -1,50 +1,103 @@
--- name: CreatePetDeworming :one
-INSERT INTO pet_deworming (
-    pet_id, medication_name, administered_date, next_due_date, 
-    administered_by, notes
-) VALUES (
-    $1, $2, $3, $4, $5, $6
-) RETURNING id, pet_id, medication_name, administered_date, next_due_date, 
-           administered_by, notes, created_at;
-
--- name: GetPetDewormingByID :one
-SELECT id, pet_id, medication_name, administered_date, next_due_date, 
-       administered_by, notes, created_at
+-- name: FindDewormingByID :one
+SELECT 
+    id, pet_id, medication_name, administered_date, next_due_date,
+    administered_by, notes, created_at
 FROM pet_deworming 
 WHERE id = $1;
 
--- name: UpdatePetDeworming :one
-UPDATE pet_deworming 
-SET 
-    medication_name = COALESCE($2, medication_name),
-    administered_date = COALESCE($3, administered_date),
-    next_due_date = COALESCE($4, next_due_date),
-    administered_by = COALESCE($5, administered_by),
-    notes = COALESCE($6, notes)
-WHERE id = $1
-RETURNING id, pet_id, medication_name, administered_date, next_due_date, 
-          administered_by, notes, created_at;
+-- name: FindDewormingByIDAndPetID :one
+SELECT 
+    id, pet_id, medication_name, administered_date, next_due_date,
+    administered_by, notes, created_at
+FROM pet_deworming 
+WHERE id = $1 AND pet_id = $2;
 
--- name: DeletePetDeworming :exec
-DELETE FROM pet_deworming WHERE id = $1;
+-- name: FindDewormingByIDAndEmployeeID :one
+SELECT 
+    id, pet_id, medication_name, administered_date, next_due_date,
+    administered_by, notes, created_at
+FROM pet_deworming 
+WHERE id = $1 AND administered_by = $2;
 
--- name: GetPetDewormingsByPetID :many
-SELECT id, pet_id, medication_name, administered_date, next_due_date, 
-       administered_by, notes, created_at
+-- name: FindDewormingsByPetID :many
+SELECT 
+    id, pet_id, medication_name, administered_date, next_due_date,
+    administered_by, notes, created_at
 FROM pet_deworming 
 WHERE pet_id = $1
-ORDER BY administered_date DESC;
+ORDER BY administered_date DESC
+LIMIT $2 OFFSET $3;
 
--- name: GetUpcomingDewormings :many
-SELECT id, pet_id, medication_name, administered_date, next_due_date, 
-       administered_by, notes, created_at
+-- name: CountDewormingsByPetID :one
+SELECT COUNT(*) FROM pet_deworming WHERE pet_id = $1;
+
+-- name: FindDewormingsByPetIDs :many
+SELECT 
+    id, pet_id, medication_name, administered_date, next_due_date,
+    administered_by, notes, created_at
 FROM pet_deworming 
-WHERE next_due_date IS NOT NULL 
-  AND next_due_date <= $1
-ORDER BY next_due_date ASC;
+WHERE pet_id = ANY($1::int[])
+ORDER BY pet_id, administered_date DESC
+LIMIT $2 OFFSET $3;
 
+-- name: CountDewormingsByPetIDs :one
+SELECT COUNT(*) FROM pet_deworming WHERE pet_id = ANY($1::int[]);
 
--- name: FindPetDewormingsBySpec :many
+-- name: FindDewormingsByEmployeeID :many
+SELECT 
+    id, pet_id, medication_name, administered_date, next_due_date,
+    administered_by, notes, created_at
+FROM pet_deworming 
+WHERE administered_by = $1
+ORDER BY administered_date DESC
+LIMIT $2 OFFSET $3;
+
+-- name: CountDewormingsByEmployeeID :one
+SELECT COUNT(*) FROM pet_deworming WHERE administered_by = $1;
+
+-- name: FindDewormingsByDateRange :many
+SELECT 
+    id, pet_id, medication_name, administered_date, next_due_date,
+    administered_by, notes, created_at
+FROM pet_deworming 
+WHERE administered_date BETWEEN $1 AND $2
+ORDER BY administered_date DESC
+LIMIT $3 OFFSET $4;
+
+-- name: CountDewormingsByDateRange :one
+SELECT COUNT(*) FROM pet_deworming 
+WHERE administered_date BETWEEN $1 AND $2;
+
+-- name: CreateDeworming :one
+INSERT INTO pet_deworming (
+    pet_id, medication_name, administered_date, next_due_date,
+    administered_by, notes
+) VALUES (
+    $1, $2, $3, $4, $5, $6
+)
+RETURNING *;
+
+-- name: UpdateDeworming :one
+UPDATE pet_deworming 
+SET 
+    medication_name = $2,
+    administered_date = $3,
+    next_due_date = $4,
+    administered_by = $5,
+    notes = $6
+WHERE id = $1
+RETURNING *;
+
+-- name: SoftDeleteDeworming :exec
+UPDATE pet_deworming 
+SET deleted_at = CURRENT_TIMESTAMP
+WHERE id = $1;
+
+-- name: HardDeleteDeworming :exec
+DELETE FROM pet_deworming 
+WHERE id = $1;
+
+-- name: FindDewormingsBySpec :many
 SELECT 
     id, pet_id, medication_name, administered_date, next_due_date,
     administered_by, notes, created_at
@@ -72,7 +125,7 @@ ORDER BY
     administered_date DESC -- default ordering
 LIMIT @limit_val OFFSET @offset_val;
 
--- name: CountPetDewormingsBySpec :one
+-- name: CountDewormingsBySpec :one
 SELECT COUNT(*)
 FROM pet_deworming 
 WHERE 

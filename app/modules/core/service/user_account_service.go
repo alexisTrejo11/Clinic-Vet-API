@@ -64,9 +64,9 @@ func (s *UserAccountService) AttachEmployeeToUser(ctx context.Context, userID va
 	return nil
 }
 
-func (s *UserAccountService) SendActivationEmail(ctx context.Context, userID, email, name string) error {
-	token, err := s.tokenManager.GenerateToken(token.ActivationToken, token.TokenConfig{
-		UserID: userID,
+func (s *UserAccountService) SendActivationEmail(ctx context.Context, userID valueobject.UserID, email, name string) error {
+	token, err := s.tokenManager.GenerateToken(ctx, token.ActivationToken, token.TokenConfig{
+		UserID: userID.String(),
 	})
 	if err != nil {
 		return err

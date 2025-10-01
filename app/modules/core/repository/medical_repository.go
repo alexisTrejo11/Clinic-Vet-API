@@ -40,10 +40,11 @@ type DewormRepository interface {
 	FindByIDAndEmployeeID(ctx context.Context, dewormationID vo.DewormID, employeeID vo.EmployeeID) (*med.PetDeworming, error)
 
 	FindByPetID(ctx context.Context, petID vo.PetID, pagination p.PaginationRequest) (p.Page[med.PetDeworming], error)
+	FindByPetIDs(ctx context.Context, petIDs []vo.PetID, pagination p.PaginationRequest) (p.Page[med.PetDeworming], error)
 	FindByEmployeeID(ctx context.Context, employeeID vo.EmployeeID, pagination p.PaginationRequest) (p.Page[med.PetDeworming], error)
 	FindByDateRange(ctx context.Context, startDate, endDate time.Time, pagination p.PaginationRequest) (p.Page[med.PetDeworming], error)
 
-	Save(ctx context.Context, dewormation *med.PetDeworming) error
+	Save(ctx context.Context, dewormation med.PetDeworming) (med.PetDeworming, error)
 	Delete(ctx context.Context, dewormationID vo.DewormID, isHard bool) error
 }
 

@@ -2,13 +2,14 @@ package notification
 
 import (
 	"clinic-vet-api/app/modules/core/domain/enum"
+	"clinic-vet-api/app/modules/core/domain/valueobject"
 	"fmt"
 	"time"
 )
 
 type Notification struct {
 	id        string                   `bson:"_id,omitempty"`
-	userID    string                   `bson:"user_id"`
+	userID    valueobject.UserID       `bson:"user_id"`
 	email     string                   `bson:"email"`
 	phone     string                   `bson:"phone"`
 	title     string                   `bson:"title"`
@@ -21,7 +22,7 @@ type Notification struct {
 }
 
 func (n *Notification) ID() string                        { return n.id }
-func (n *Notification) UserID() string                    { return n.userID }
+func (n *Notification) UserID() valueobject.UserID        { return n.userID }
 func (n *Notification) Email() string                     { return n.email }
 func (n *Notification) Phone() string                     { return n.phone }
 func (n *Notification) Title() string                     { return n.title }
@@ -45,7 +46,7 @@ func (b *NotificationBuilder) WithID(id string) *NotificationBuilder {
 	return b
 }
 
-func (b *NotificationBuilder) WithUserID(userID string) *NotificationBuilder {
+func (b *NotificationBuilder) WithUserID(userID valueobject.UserID) *NotificationBuilder {
 	b.notification.userID = userID
 	return b
 }
@@ -102,7 +103,7 @@ func (b *NotificationBuilder) Build() *Notification {
 	return b.notification
 }
 
-func NewActivationEmail(userID, email, name, token string) *Notification {
+func NewActivationEmail(userID valueobject.UserID, email, name, token string) *Notification {
 	notif := NewNotificationBuilder().
 		WithUserID(userID).
 		WithEmail(email).
@@ -123,6 +124,42 @@ func NewWelcomeEmail(email, name string) *Notification {
 		WithChannel(enum.NotificationChannelEmail).
 		WithSubject("Bienvenido a Clinic Vet").
 		WithMessage(fmt.Sprintf("Hola %s, bienvenido a Clinic Vet.", name)).
+		Build()
+
+	return notif
+}
+
+func NewEnable2FANotificationEmail(userID valueobject.UserID, email valueobject.Email, token string) *Notification {
+	title := "Habilitación de 2FA - Método: Email"
+	message := fmt.Sprintf("Has solicitado habilitar la autenticación de dos factores (2FA) usando %s. Usa el siguiente token para completar la configuración: %s", "Email", token)
+
+	notif := NewNotificationBuilder().
+		WithUserID(userID).
+		WithEmail(email.String()).
+		WithNType(enum.NotificationTypeVerificationToken).
+		WithChannel(enum.NotificationChannelEmail).
+		WithTitle(title).
+		WithSubject("Habilitación de 2FA").
+		WithMessage(message).
+		WithToken(token).
+		Build()
+
+	return notif
+}
+
+func NewEnable2FANotificationSMS(userID valueobject.UserID, phone valueobject.PhoneNumber, token string) *Notification {
+	title := "Habilitación de 2FA - Método: SMS"
+	message := fmt.Sprintf("Has solicitado habilitar la autenticación de dos factores (2FA) usando %s. Usa el siguiente token para completar la configuración: %s", "SMS", token)
+
+	notif := NewNotificationBuilder().
+		WithUserID(userID).
+		WithPhone(phone.Value).
+		WithNType(enum.NotificationTypeVerificationToken).
+		WithChannel(enum.NotificationChannelSMS).
+		WithTitle(title).
+		WithSubject("Habilitación de 2FA").
+		WithMessage(message).
+		WithToken(token).
 		Build()
 
 	return notif

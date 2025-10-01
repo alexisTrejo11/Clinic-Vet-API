@@ -31,7 +31,7 @@ func (h *DewormCommandHandler) HandleUpdate(ctx context.Context, cmd DewormUpdat
 	}
 
 	updatedDeworm := updateDewormFields(cmd, *existingDeworm)
-	if err := h.dewormRepo.Save(ctx, &updatedDeworm); err != nil {
+	if _, err := h.dewormRepo.Save(ctx, updatedDeworm); err != nil {
 		return *cqrs.FailureResult("Failed to update deworm record", err)
 	}
 

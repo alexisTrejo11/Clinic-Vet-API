@@ -95,6 +95,7 @@ INSERT INTO medical_sessions (
     visit_date,
     visit_type,
     diagnosis, 
+    clinic_service
     treatment,
     notes,
     condition,
@@ -123,6 +124,7 @@ SET
     temperature = $12,
     heart_rate = $13,
     respiratory_rate = $14,
+    clinic_service = $15,
     updated_at = CURRENT_TIMESTAMP
 WHERE id = $1 AND deleted_at IS NULL
 RETURNING *;

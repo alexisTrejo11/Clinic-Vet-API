@@ -23,7 +23,7 @@ type NotificationResponse struct {
 func fromDomain(notification notification.Notification) NotificationResponse {
 	response := &NotificationResponse{
 		ID:        notification.ID(),
-		UserID:    notification.UserID(),
+		UserID:    notification.UserID().String(),
 		UserEmail: notification.Email(),
 		UserPhone: notification.Phone(),
 		Title:     notification.Title(),

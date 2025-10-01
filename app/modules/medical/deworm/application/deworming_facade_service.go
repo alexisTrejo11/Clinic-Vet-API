@@ -10,12 +10,13 @@ import (
 )
 
 type DewormingFacadeService interface {
-	CreateDeworm(ctx context.Context, cmd command.DewormCreateCommand) cqrs.CommandResult
+	RegisterDeworm(ctx context.Context, cmd command.DewormCreateCommand) cqrs.CommandResult
 	UpdateDeworm(ctx context.Context, cmd command.DewormUpdateCommand) cqrs.CommandResult
 	DeleteDeworm(ctx context.Context, cmd command.DewormDeleteCommand) cqrs.CommandResult
 
 	FindDewormByID(ctx context.Context, qry query.FindDewormByIDQuery) (query.DewormResult, error)
 	FindDewormsByPet(ctx context.Context, qry query.FindDewormsByPetQuery) (p.Page[query.DewormResult], error)
+	FindDewormsByCustomer(ctx context.Context, qry query.FindDewormsByCustomerQuery) (p.Page[query.DewormResult], error)
 	FindDewormsByEmployee(ctx context.Context, qry query.FindDewormsByEmployeeQuery) (p.Page[query.DewormResult], error)
 	FindDewormsByDateRange(ctx context.Context, qry query.FindDewormsByDateRangeQuery) (p.Page[query.DewormResult], error)
 }
@@ -37,7 +38,7 @@ func NewDewormingFacadeService(
 
 // Command
 
-func (d *dewormingFacadeService) CreateDeworm(ctx context.Context, cmd command.DewormCreateCommand) cqrs.CommandResult {
+func (d *dewormingFacadeService) RegisterDeworm(ctx context.Context, cmd command.DewormCreateCommand) cqrs.CommandResult {
 	return d.commandHandler.HandleCreate(ctx, cmd)
 }
 
@@ -65,4 +66,8 @@ func (d *dewormingFacadeService) FindDewormsByEmployee(ctx context.Context, qry 
 
 func (d *dewormingFacadeService) FindDewormsByPet(ctx context.Context, qry query.FindDewormsByPetQuery) (p.Page[query.DewormResult], error) {
 	return d.queryHandler.HandleByPetQuery(ctx, qry)
+}
+
+func (d *dewormingFacadeService) FindDewormsByCustomer(ctx context.Context, qry query.FindDewormsByCustomerQuery) (p.Page[query.DewormResult], error) {
+	return d.queryHandler.HandleByCustomerQuery(ctx, qry)
 }

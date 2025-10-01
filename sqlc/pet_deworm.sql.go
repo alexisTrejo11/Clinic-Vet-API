@@ -11,7 +11,57 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-const countPetDewormingsBySpec = `-- name: CountPetDewormingsBySpec :one
+const countDewormingsByDateRange = `-- name: CountDewormingsByDateRange :one
+SELECT COUNT(*) FROM pet_deworming 
+WHERE administered_date BETWEEN $1 AND $2
+`
+
+type CountDewormingsByDateRangeParams struct {
+	AdministeredDate   pgtype.Date
+	AdministeredDate_2 pgtype.Date
+}
+
+func (q *Queries) CountDewormingsByDateRange(ctx context.Context, arg CountDewormingsByDateRangeParams) (int64, error) {
+	row := q.db.QueryRow(ctx, countDewormingsByDateRange, arg.AdministeredDate, arg.AdministeredDate_2)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
+const countDewormingsByEmployeeID = `-- name: CountDewormingsByEmployeeID :one
+SELECT COUNT(*) FROM pet_deworming WHERE administered_by = $1
+`
+
+func (q *Queries) CountDewormingsByEmployeeID(ctx context.Context, administeredBy pgtype.Int4) (int64, error) {
+	row := q.db.QueryRow(ctx, countDewormingsByEmployeeID, administeredBy)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
+const countDewormingsByPetID = `-- name: CountDewormingsByPetID :one
+SELECT COUNT(*) FROM pet_deworming WHERE pet_id = $1
+`
+
+func (q *Queries) CountDewormingsByPetID(ctx context.Context, petID int32) (int64, error) {
+	row := q.db.QueryRow(ctx, countDewormingsByPetID, petID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
+const countDewormingsByPetIDs = `-- name: CountDewormingsByPetIDs :one
+SELECT COUNT(*) FROM pet_deworming WHERE pet_id = ANY($1::int[])
+`
+
+func (q *Queries) CountDewormingsByPetIDs(ctx context.Context, dollar_1 []int32) (int64, error) {
+	row := q.db.QueryRow(ctx, countDewormingsByPetIDs, dollar_1)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
+const countDewormingsBySpec = `-- name: CountDewormingsBySpec :one
 SELECT COUNT(*)
 FROM pet_deworming 
 WHERE 
@@ -29,7 +79,7 @@ WHERE
     AND ($12::TIMESTAMPTZ IS NULL OR created_at <= $12)
 `
 
-type CountPetDewormingsBySpecParams struct {
+type CountDewormingsBySpecParams struct {
 	ID                    int32
 	PetID                 int32
 	AdministeredBy        int32
@@ -44,8 +94,8 @@ type CountPetDewormingsBySpecParams struct {
 	CreatedAtTo           pgtype.Timestamptz
 }
 
-func (q *Queries) CountPetDewormingsBySpec(ctx context.Context, arg CountPetDewormingsBySpecParams) (int64, error) {
-	row := q.db.QueryRow(ctx, countPetDewormingsBySpec,
+func (q *Queries) CountDewormingsBySpec(ctx context.Context, arg CountDewormingsBySpecParams) (int64, error) {
+	row := q.db.QueryRow(ctx, countDewormingsBySpec,
 		arg.ID,
 		arg.PetID,
 		arg.AdministeredBy,
@@ -64,17 +114,17 @@ func (q *Queries) CountPetDewormingsBySpec(ctx context.Context, arg CountPetDewo
 	return count, err
 }
 
-const createPetDeworming = `-- name: CreatePetDeworming :one
+const createDeworming = `-- name: CreateDeworming :one
 INSERT INTO pet_deworming (
-    pet_id, medication_name, administered_date, next_due_date, 
+    pet_id, medication_name, administered_date, next_due_date,
     administered_by, notes
 ) VALUES (
     $1, $2, $3, $4, $5, $6
-) RETURNING id, pet_id, medication_name, administered_date, next_due_date, 
-           administered_by, notes, created_at
+)
+RETURNING id, pet_id, medication_name, administered_date, next_due_date, administered_by, notes, created_at
 `
 
-type CreatePetDewormingParams struct {
+type CreateDewormingParams struct {
 	PetID            int32
 	MedicationName   string
 	AdministeredDate pgtype.Date
@@ -83,8 +133,8 @@ type CreatePetDewormingParams struct {
 	Notes            pgtype.Text
 }
 
-func (q *Queries) CreatePetDeworming(ctx context.Context, arg CreatePetDewormingParams) (PetDeworming, error) {
-	row := q.db.QueryRow(ctx, createPetDeworming,
+func (q *Queries) CreateDeworming(ctx context.Context, arg CreateDewormingParams) (PetDeworming, error) {
+	row := q.db.QueryRow(ctx, createDeworming,
 		arg.PetID,
 		arg.MedicationName,
 		arg.AdministeredDate,
@@ -106,16 +156,275 @@ func (q *Queries) CreatePetDeworming(ctx context.Context, arg CreatePetDeworming
 	return i, err
 }
 
-const deletePetDeworming = `-- name: DeletePetDeworming :exec
-DELETE FROM pet_deworming WHERE id = $1
+const findDewormingByID = `-- name: FindDewormingByID :one
+SELECT 
+    id, pet_id, medication_name, administered_date, next_due_date,
+    administered_by, notes, created_at
+FROM pet_deworming 
+WHERE id = $1
 `
 
-func (q *Queries) DeletePetDeworming(ctx context.Context, id int32) error {
-	_, err := q.db.Exec(ctx, deletePetDeworming, id)
-	return err
+func (q *Queries) FindDewormingByID(ctx context.Context, id int32) (PetDeworming, error) {
+	row := q.db.QueryRow(ctx, findDewormingByID, id)
+	var i PetDeworming
+	err := row.Scan(
+		&i.ID,
+		&i.PetID,
+		&i.MedicationName,
+		&i.AdministeredDate,
+		&i.NextDueDate,
+		&i.AdministeredBy,
+		&i.Notes,
+		&i.CreatedAt,
+	)
+	return i, err
 }
 
-const findPetDewormingsBySpec = `-- name: FindPetDewormingsBySpec :many
+const findDewormingByIDAndEmployeeID = `-- name: FindDewormingByIDAndEmployeeID :one
+SELECT 
+    id, pet_id, medication_name, administered_date, next_due_date,
+    administered_by, notes, created_at
+FROM pet_deworming 
+WHERE id = $1 AND administered_by = $2
+`
+
+type FindDewormingByIDAndEmployeeIDParams struct {
+	ID             int32
+	AdministeredBy pgtype.Int4
+}
+
+func (q *Queries) FindDewormingByIDAndEmployeeID(ctx context.Context, arg FindDewormingByIDAndEmployeeIDParams) (PetDeworming, error) {
+	row := q.db.QueryRow(ctx, findDewormingByIDAndEmployeeID, arg.ID, arg.AdministeredBy)
+	var i PetDeworming
+	err := row.Scan(
+		&i.ID,
+		&i.PetID,
+		&i.MedicationName,
+		&i.AdministeredDate,
+		&i.NextDueDate,
+		&i.AdministeredBy,
+		&i.Notes,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const findDewormingByIDAndPetID = `-- name: FindDewormingByIDAndPetID :one
+SELECT 
+    id, pet_id, medication_name, administered_date, next_due_date,
+    administered_by, notes, created_at
+FROM pet_deworming 
+WHERE id = $1 AND pet_id = $2
+`
+
+type FindDewormingByIDAndPetIDParams struct {
+	ID    int32
+	PetID int32
+}
+
+func (q *Queries) FindDewormingByIDAndPetID(ctx context.Context, arg FindDewormingByIDAndPetIDParams) (PetDeworming, error) {
+	row := q.db.QueryRow(ctx, findDewormingByIDAndPetID, arg.ID, arg.PetID)
+	var i PetDeworming
+	err := row.Scan(
+		&i.ID,
+		&i.PetID,
+		&i.MedicationName,
+		&i.AdministeredDate,
+		&i.NextDueDate,
+		&i.AdministeredBy,
+		&i.Notes,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const findDewormingsByDateRange = `-- name: FindDewormingsByDateRange :many
+SELECT 
+    id, pet_id, medication_name, administered_date, next_due_date,
+    administered_by, notes, created_at
+FROM pet_deworming 
+WHERE administered_date BETWEEN $1 AND $2
+ORDER BY administered_date DESC
+LIMIT $3 OFFSET $4
+`
+
+type FindDewormingsByDateRangeParams struct {
+	AdministeredDate   pgtype.Date
+	AdministeredDate_2 pgtype.Date
+	Limit              int32
+	Offset             int32
+}
+
+func (q *Queries) FindDewormingsByDateRange(ctx context.Context, arg FindDewormingsByDateRangeParams) ([]PetDeworming, error) {
+	rows, err := q.db.Query(ctx, findDewormingsByDateRange,
+		arg.AdministeredDate,
+		arg.AdministeredDate_2,
+		arg.Limit,
+		arg.Offset,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []PetDeworming
+	for rows.Next() {
+		var i PetDeworming
+		if err := rows.Scan(
+			&i.ID,
+			&i.PetID,
+			&i.MedicationName,
+			&i.AdministeredDate,
+			&i.NextDueDate,
+			&i.AdministeredBy,
+			&i.Notes,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const findDewormingsByEmployeeID = `-- name: FindDewormingsByEmployeeID :many
+SELECT 
+    id, pet_id, medication_name, administered_date, next_due_date,
+    administered_by, notes, created_at
+FROM pet_deworming 
+WHERE administered_by = $1
+ORDER BY administered_date DESC
+LIMIT $2 OFFSET $3
+`
+
+type FindDewormingsByEmployeeIDParams struct {
+	AdministeredBy pgtype.Int4
+	Limit          int32
+	Offset         int32
+}
+
+func (q *Queries) FindDewormingsByEmployeeID(ctx context.Context, arg FindDewormingsByEmployeeIDParams) ([]PetDeworming, error) {
+	rows, err := q.db.Query(ctx, findDewormingsByEmployeeID, arg.AdministeredBy, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []PetDeworming
+	for rows.Next() {
+		var i PetDeworming
+		if err := rows.Scan(
+			&i.ID,
+			&i.PetID,
+			&i.MedicationName,
+			&i.AdministeredDate,
+			&i.NextDueDate,
+			&i.AdministeredBy,
+			&i.Notes,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const findDewormingsByPetID = `-- name: FindDewormingsByPetID :many
+SELECT 
+    id, pet_id, medication_name, administered_date, next_due_date,
+    administered_by, notes, created_at
+FROM pet_deworming 
+WHERE pet_id = $1
+ORDER BY administered_date DESC
+LIMIT $2 OFFSET $3
+`
+
+type FindDewormingsByPetIDParams struct {
+	PetID  int32
+	Limit  int32
+	Offset int32
+}
+
+func (q *Queries) FindDewormingsByPetID(ctx context.Context, arg FindDewormingsByPetIDParams) ([]PetDeworming, error) {
+	rows, err := q.db.Query(ctx, findDewormingsByPetID, arg.PetID, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []PetDeworming
+	for rows.Next() {
+		var i PetDeworming
+		if err := rows.Scan(
+			&i.ID,
+			&i.PetID,
+			&i.MedicationName,
+			&i.AdministeredDate,
+			&i.NextDueDate,
+			&i.AdministeredBy,
+			&i.Notes,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const findDewormingsByPetIDs = `-- name: FindDewormingsByPetIDs :many
+SELECT 
+    id, pet_id, medication_name, administered_date, next_due_date,
+    administered_by, notes, created_at
+FROM pet_deworming 
+WHERE pet_id = ANY($1::int[])
+ORDER BY pet_id, administered_date DESC
+LIMIT $2 OFFSET $3
+`
+
+type FindDewormingsByPetIDsParams struct {
+	Column1 []int32
+	Limit   int32
+	Offset  int32
+}
+
+func (q *Queries) FindDewormingsByPetIDs(ctx context.Context, arg FindDewormingsByPetIDsParams) ([]PetDeworming, error) {
+	rows, err := q.db.Query(ctx, findDewormingsByPetIDs, arg.Column1, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []PetDeworming
+	for rows.Next() {
+		var i PetDeworming
+		if err := rows.Scan(
+			&i.ID,
+			&i.PetID,
+			&i.MedicationName,
+			&i.AdministeredDate,
+			&i.NextDueDate,
+			&i.AdministeredBy,
+			&i.Notes,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const findDewormingsBySpec = `-- name: FindDewormingsBySpec :many
 SELECT 
     id, pet_id, medication_name, administered_date, next_due_date,
     administered_by, notes, created_at
@@ -144,7 +453,7 @@ ORDER BY
 LIMIT $15 OFFSET $14
 `
 
-type FindPetDewormingsBySpecParams struct {
+type FindDewormingsBySpecParams struct {
 	ID                    int32
 	PetID                 int32
 	AdministeredBy        int32
@@ -162,8 +471,8 @@ type FindPetDewormingsBySpecParams struct {
 	LimitVal              int32
 }
 
-func (q *Queries) FindPetDewormingsBySpec(ctx context.Context, arg FindPetDewormingsBySpecParams) ([]PetDeworming, error) {
-	rows, err := q.db.Query(ctx, findPetDewormingsBySpec,
+func (q *Queries) FindDewormingsBySpec(ctx context.Context, arg FindDewormingsBySpecParams) ([]PetDeworming, error) {
+	rows, err := q.db.Query(ctx, findDewormingsBySpec,
 		arg.ID,
 		arg.PetID,
 		arg.AdministeredBy,
@@ -207,118 +516,40 @@ func (q *Queries) FindPetDewormingsBySpec(ctx context.Context, arg FindPetDeworm
 	return items, nil
 }
 
-const getPetDewormingByID = `-- name: GetPetDewormingByID :one
-SELECT id, pet_id, medication_name, administered_date, next_due_date, 
-       administered_by, notes, created_at
-FROM pet_deworming 
+const hardDeleteDeworming = `-- name: HardDeleteDeworming :exec
+DELETE FROM pet_deworming 
 WHERE id = $1
 `
 
-func (q *Queries) GetPetDewormingByID(ctx context.Context, id int32) (PetDeworming, error) {
-	row := q.db.QueryRow(ctx, getPetDewormingByID, id)
-	var i PetDeworming
-	err := row.Scan(
-		&i.ID,
-		&i.PetID,
-		&i.MedicationName,
-		&i.AdministeredDate,
-		&i.NextDueDate,
-		&i.AdministeredBy,
-		&i.Notes,
-		&i.CreatedAt,
-	)
-	return i, err
+func (q *Queries) HardDeleteDeworming(ctx context.Context, id int32) error {
+	_, err := q.db.Exec(ctx, hardDeleteDeworming, id)
+	return err
 }
 
-const getPetDewormingsByPetID = `-- name: GetPetDewormingsByPetID :many
-SELECT id, pet_id, medication_name, administered_date, next_due_date, 
-       administered_by, notes, created_at
-FROM pet_deworming 
-WHERE pet_id = $1
-ORDER BY administered_date DESC
+const softDeleteDeworming = `-- name: SoftDeleteDeworming :exec
+UPDATE pet_deworming 
+SET deleted_at = CURRENT_TIMESTAMP
+WHERE id = $1
 `
 
-func (q *Queries) GetPetDewormingsByPetID(ctx context.Context, petID int32) ([]PetDeworming, error) {
-	rows, err := q.db.Query(ctx, getPetDewormingsByPetID, petID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []PetDeworming
-	for rows.Next() {
-		var i PetDeworming
-		if err := rows.Scan(
-			&i.ID,
-			&i.PetID,
-			&i.MedicationName,
-			&i.AdministeredDate,
-			&i.NextDueDate,
-			&i.AdministeredBy,
-			&i.Notes,
-			&i.CreatedAt,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
+func (q *Queries) SoftDeleteDeworming(ctx context.Context, id int32) error {
+	_, err := q.db.Exec(ctx, softDeleteDeworming, id)
+	return err
 }
 
-const getUpcomingDewormings = `-- name: GetUpcomingDewormings :many
-SELECT id, pet_id, medication_name, administered_date, next_due_date, 
-       administered_by, notes, created_at
-FROM pet_deworming 
-WHERE next_due_date IS NOT NULL 
-  AND next_due_date <= $1
-ORDER BY next_due_date ASC
-`
-
-func (q *Queries) GetUpcomingDewormings(ctx context.Context, nextDueDate pgtype.Date) ([]PetDeworming, error) {
-	rows, err := q.db.Query(ctx, getUpcomingDewormings, nextDueDate)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []PetDeworming
-	for rows.Next() {
-		var i PetDeworming
-		if err := rows.Scan(
-			&i.ID,
-			&i.PetID,
-			&i.MedicationName,
-			&i.AdministeredDate,
-			&i.NextDueDate,
-			&i.AdministeredBy,
-			&i.Notes,
-			&i.CreatedAt,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const updatePetDeworming = `-- name: UpdatePetDeworming :one
+const updateDeworming = `-- name: UpdateDeworming :one
 UPDATE pet_deworming 
 SET 
-    medication_name = COALESCE($2, medication_name),
-    administered_date = COALESCE($3, administered_date),
-    next_due_date = COALESCE($4, next_due_date),
-    administered_by = COALESCE($5, administered_by),
-    notes = COALESCE($6, notes)
+    medication_name = $2,
+    administered_date = $3,
+    next_due_date = $4,
+    administered_by = $5,
+    notes = $6
 WHERE id = $1
-RETURNING id, pet_id, medication_name, administered_date, next_due_date, 
-          administered_by, notes, created_at
+RETURNING id, pet_id, medication_name, administered_date, next_due_date, administered_by, notes, created_at
 `
 
-type UpdatePetDewormingParams struct {
+type UpdateDewormingParams struct {
 	ID               int32
 	MedicationName   string
 	AdministeredDate pgtype.Date
@@ -327,8 +558,8 @@ type UpdatePetDewormingParams struct {
 	Notes            pgtype.Text
 }
 
-func (q *Queries) UpdatePetDeworming(ctx context.Context, arg UpdatePetDewormingParams) (PetDeworming, error) {
-	row := q.db.QueryRow(ctx, updatePetDeworming,
+func (q *Queries) UpdateDeworming(ctx context.Context, arg UpdateDewormingParams) (PetDeworming, error) {
+	row := q.db.QueryRow(ctx, updateDeworming,
 		arg.ID,
 		arg.MedicationName,
 		arg.AdministeredDate,

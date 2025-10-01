@@ -9,13 +9,12 @@ import (
 type TokenType string
 
 const (
-	JWTAccessToken     TokenType = "jwt_access"
-	JWTRefreshToken    TokenType = "jwt_refresh"
-	JWTRefresToken     TokenType = "2fa"
-	TwoFAToken         TokenType = "2fa"
-	OAuth2SecretToken  TokenType = "oauth2_secret"
-	ActivationToken    TokenType = "activation_token"
-	ResetPasswordToken TokenType = "reset_password"
+	JWTAccessToken    TokenType = "jwt_access"
+	JWTRefreshToken   TokenType = "jwt_refresh"
+	TwoFAToken        TokenType = "2fa"
+	OAuth2SecretToken TokenType = "oauth2_secret"
+	ActivationToken   TokenType = "activation_token"
+	VerificationToken TokenType = "verification_token"
 )
 
 type Token interface {

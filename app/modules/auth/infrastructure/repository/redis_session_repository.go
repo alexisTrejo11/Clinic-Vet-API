@@ -1,4 +1,3 @@
-// package repositoryimpl contains the implementation of repositories using Redis as the storage backend.
 package repositoryimpl
 
 import (

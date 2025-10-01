@@ -29,3 +29,9 @@ type FindDewormsByDateRangeQuery struct {
 	EndDate    time.Time
 	Pagination page.PaginationRequest
 }
+
+type FindDewormsByCustomerQuery struct {
+	CustomerID valueobject.CustomerID
+	OptPetID   *valueobject.PetID
+	Pagination page.PaginationRequest
+}

@@ -142,3 +142,62 @@ func (u *User) ValidatePersistence() error {
 
 	return nil
 }
+
+func (u *User) Validate2FAEnable(method auth.TwoFactorMethod) error {
+	if u.twoFactorAuth.Enabled() {
+		return errors.New("two-factor authentication is already enabled")
+	}
+
+	if err := u.validate2FAMethod(method); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (u *User) validate2FAMethod(method auth.TwoFactorMethod) error {
+	if method != auth.TwoFactorMethodSMS && method != auth.TwoFactorMethodEmail {
+		return errors.New("invalid two-factor authentication method. Only 'sms' and 'email' are supported")
+	}
+
+	if method == auth.TwoFactorMethodSMS && u.phoneNumber == nil {
+		return errors.New("phone number is required for SMS two-factor authentication")
+	}
+
+	return nil
+}
+
+func (u *User) Disable2FA() error {
+	if !u.twoFactorAuth.Enabled() {
+		return errors.New("two-factor authentication is not enabled")
+	}
+
+	u.twoFactorAuth = auth.NewDisabledTwoFactorAuth()
+	u.IncrementVersion()
+	return nil
+}
+
+func (u *User) Enable2FA(method auth.TwoFactorMethod) error {
+	if u.twoFactorAuth.Enabled() {
+		return errors.New("two-factor authentication is already enabled")
+	}
+
+	if err := u.validate2FAMethod(method); err != nil {
+		return err
+	}
+
+	now := time.Now()
+
+	twoFAMethod := auth.TwoFactorMethod(method)
+
+	twoFA := auth.NewTwoFactorAuth(true,
+		twoFAMethod,
+		"", // TODO: IS neccesary????
+		[]string{},
+		&now,
+		&now,
+	)
+	u.twoFactorAuth = twoFA
+	u.IncrementVersion()
+	return nil
+}

@@ -75,7 +75,7 @@ func (h *userEventHandler) handleCustomerRegistration(ctx context.Context, event
 
 	if err := h.service.SendActivationEmail(
 		ctx,
-		event.UserID.String(),
+		event.UserID,
 		event.Email.String(),
 		event.PersonalData.Name.FirstName,
 	); err != nil {

@@ -218,6 +218,7 @@ CREATE TABLE IF NOT EXISTS medical_sessions (
     customer_id INT NOT NULL,
     employee_id INT NOT NULL,
     appointment_id INT,
+    clinic_service clinic_service NOT NULL,
     visit_date TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     visit_type VARCHAR(50) NOT NULL DEFAULT '',
     diagnosis TEXT,

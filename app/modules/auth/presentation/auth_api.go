@@ -41,7 +41,7 @@ func SetupAuthModule(
 
 	session := repositoryimpl.NewRedisSessionRepository(client)
 	security_service := service.NewUserSecurityService(userRepo, employeeRepo, passwordEncoder)
-	tokenManager := token.NewTokenManager([]byte(secretKet))
+	tokenManager := token.NewTokenManager([]byte(secretKet), client)
 
 	eventService := service.NewUserAccountService(userRepo, customerRepo, employeeRepo, *tokenManager, notificationService)
 	userEventProducer := event.NewUserEventHandler(*eventService)

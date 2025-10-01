@@ -4,6 +4,7 @@ import (
 	"context"
 
 	med "clinic-vet-api/app/modules/core/domain/entity/medical"
+	"clinic-vet-api/app/modules/core/domain/valueobject"
 	"clinic-vet-api/app/modules/core/repository"
 	p "clinic-vet-api/app/shared/page"
 )
@@ -74,5 +75,49 @@ func (h *DewormQueryHandler) HandleByDateRangeQuery(ctx context.Context, qry Fin
 		return p.Page[DewormResult]{}, err
 	}
 
+	return p.MapItems(dewormPage, toDewormResult), nil
+}
+
+func (h *DewormQueryHandler) HandleByCustomerQuery(ctx context.Context, qry FindDewormsByCustomerQuery) (p.Page[DewormResult], error) {
+	pets, err := h.petRepo.FindAllByCustomerID(ctx, qry.CustomerID)
+	if err != nil {
+		return p.Page[DewormResult]{}, err
+	}
+
+	if len(pets) == 0 {
+		return p.Page[DewormResult]{}, nil
+	}
+
+	if qry.OptPetID != nil {
+		found := false
+		for _, pet := range pets {
+			if pet.ID().Equals(qry.OptPetID.Value()) {
+				found = true
+				break
+			}
+		}
+
+		// Invalid Ownership request, return empty result
+		if !found {
+			return p.Page[DewormResult]{}, nil
+		}
+
+		dewormPage, err := h.dewormRepo.FindByPetID(ctx, *qry.OptPetID, qry.Pagination)
+		if err != nil {
+			return p.Page[DewormResult]{}, err
+		}
+
+		return p.MapItems(dewormPage, toDewormResult), nil
+	}
+
+	petIDs := make([]valueobject.PetID, len(pets))
+	for i, pet := range pets {
+		petIDs[i] = pet.ID()
+	}
+
+	dewormPage, err := h.dewormRepo.FindByPetIDs(ctx, petIDs, qry.Pagination)
+	if err != nil {
+		return p.Page[DewormResult]{}, err
+	}
 	return p.MapItems(dewormPage, toDewormResult), nil
 }
