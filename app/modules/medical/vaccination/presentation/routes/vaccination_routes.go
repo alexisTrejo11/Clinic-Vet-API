@@ -7,7 +7,19 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func RegisterEmployeePetVaccinationRoutes(group *gin.RouterGroup, middleware *middleware.AuthMiddleware, controller *controller.EmployeePetVaccinationController) {
+type VaccinationRoutes struct {
+	clientController   *controller.CustomerPetVaccinationController
+	employeeController *controller.EmployeePetVaccinationController
+}
+
+func NewVaccinationRoutes(clientController *controller.CustomerPetVaccinationController, employeeController *controller.EmployeePetVaccinationController) *VaccinationRoutes {
+	return &VaccinationRoutes{
+		clientController:   clientController,
+		employeeController: employeeController,
+	}
+}
+
+func (r *VaccinationRoutes) RegisterEmployeeRoutes(group *gin.RouterGroup, middleware *middleware.AuthMiddleware, controller *controller.EmployeePetVaccinationController) {
 	employeeGroup := group.Group("employees/vaccinations")
 	employeeGroup.Use(middleware.Authenticate())
 	employeeGroup.Use(middleware.RequireAnyRole("employee, recepcionist, manager, veterinarian"))
@@ -20,7 +32,7 @@ func RegisterEmployeePetVaccinationRoutes(group *gin.RouterGroup, middleware *mi
 	}
 }
 
-func RegisterCustomerPetVaccinationRoutes(group *gin.RouterGroup, middleware *middleware.AuthMiddleware, controller *controller.CustomerPetVaccinationController) {
+func (r *VaccinationRoutes) RegisterCustomerRoutes(group *gin.RouterGroup, middleware *middleware.AuthMiddleware, controller *controller.CustomerPetVaccinationController) {
 	customerGroup := group.Group("customers/pets")
 	customerGroup.Use(middleware.Authenticate())
 	customerGroup.Use(middleware.RequireAnyRole("customer"))

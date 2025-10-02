@@ -27,8 +27,8 @@ func NewDewormRoutes(
 
 func (r *DewormRoutes) RegisterAdminRoutes(group *gin.RouterGroup, middleware *middleware.AuthMiddleware) {
 	adminGroup := group.Group("pets/deworms")
-	adminGroup.Use(middleware.Authenticate())
-	adminGroup.Use(middleware.RequireAnyRole("admin"))
+	//adminGroup.Use(middleware.Authenticate())
+	//adminGroup.Use(middleware.RequireAnyRole("admin"))
 	{
 		adminGroup.GET("/:id", r.adminController.GetDewormByID)
 		adminGroup.GET("", r.adminController.SearhDeworms)

@@ -10,7 +10,7 @@ import (
 	"clinic-vet-api/app/modules/customer/presentation/routes"
 	"clinic-vet-api/sqlc"
 
-	petRepo "clinic-vet-api/app/modules/pets/infrastructure/repository"
+	petRepo "clinic-vet-api/app/modules/pet/infrastructure/repository"
 	appError "clinic-vet-api/app/shared/error/application"
 	"clinic-vet-api/app/shared/mapper"
 

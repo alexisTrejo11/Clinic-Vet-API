@@ -2,12 +2,13 @@
 package middleware
 
 import (
-	"clinic-vet-api/app/modules/auth/application/jwt"
-	jwtImpl "clinic-vet-api/app/modules/auth/infrastructure/jwt"
+	"clinic-vet-api/app/modules/account/auth/token/service"
+	repositoryimpl "clinic-vet-api/app/modules/account/user/infrastructure/repository"
 	"clinic-vet-api/app/modules/core/domain/entity/user"
 	"clinic-vet-api/app/modules/core/domain/valueobject"
 	"clinic-vet-api/app/modules/core/repository"
-	repositoryimpl "clinic-vet-api/app/modules/users/infrastructure/repository"
+	s "clinic-vet-api/app/modules/core/service"
+
 	"clinic-vet-api/app/shared/mapper"
 	"clinic-vet-api/app/shared/response"
 	"clinic-vet-api/sqlc"
@@ -46,12 +47,12 @@ func UserToUserContext(user user.User) *UserContext {
 }
 
 type AuthMiddleware struct {
-	jwtService jwt.JWTService
+	jwtService s.JWTService
 	userRepo   repository.UserRepository
 }
 
 func NewAuthMiddleware(jwtSecret string, queries *sqlc.Queries) *AuthMiddleware {
-	jwtService := jwtImpl.NewJWTService(jwtSecret)
+	jwtService := service.NewJWTService(jwtSecret)
 	userRepo := repositoryimpl.NewSqlcUserRepository(queries, mapper.NewSqlcFieldMapper())
 	return &AuthMiddleware{
 		jwtService: jwtService,

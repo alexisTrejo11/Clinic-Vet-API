@@ -11,7 +11,7 @@ import (
 
 	"clinic-vet-api/app/config"
 	"clinic-vet-api/app/middleware"
-	notiAPI "clinic-vet-api/app/modules/notifications/presentation"
+	notiAPI "clinic-vet-api/app/modules/notification/presentation"
 	"clinic-vet-api/app/shared/log"
 	"clinic-vet-api/sqlc"
 

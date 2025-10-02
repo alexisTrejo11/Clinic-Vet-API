@@ -30,6 +30,8 @@ type VaccinationConfig struct {
 type VaccinationComponents struct {
 	Repository repository.VaccinationRepository
 	Service    *application.VaccinationFacadeService
+	Controller *VaccinationController
+	Routes     *routes.VaccinationRoutes
 }
 
 type VaccinationController struct {
@@ -38,8 +40,9 @@ type VaccinationController struct {
 }
 
 type VaccinationAPIModule struct {
-	config  *VaccinationConfig
-	isBuilt bool
+	config     *VaccinationConfig
+	isBuilt    bool
+	Components VaccinationComponents
 }
 
 func NewVaccinationAPIModule(config *VaccinationConfig) *VaccinationAPIModule {
@@ -70,8 +73,17 @@ func (b *VaccinationAPIModule) Bootstrap() error {
 		Employee: controller.NewEmployeePetVaccinationController(service, b.config.Validator),
 	}
 
-	routes.RegisterCustomerPetVaccinationRoutes(b.config.Router, b.config.AuthMiddleware, controllers.Client)
-	routes.RegisterEmployeePetVaccinationRoutes(b.config.Router, b.config.AuthMiddleware, controllers.Employee)
+	dRoutes := routes.NewVaccinationRoutes(controllers.Client, controllers.Employee)
+	dRoutes.RegisterCustomerRoutes(b.config.Router, b.config.AuthMiddleware, controllers.Client)
+	dRoutes.RegisterEmployeeRoutes(b.config.Router, b.config.AuthMiddleware, controllers.Employee)
+
+	b.Components = VaccinationComponents{
+		Repository: repo,
+		Service:    &service,
+		Controller: controllers,
+		Routes:     dRoutes,
+	}
+	b.isBuilt = true
 
 	return nil
 }

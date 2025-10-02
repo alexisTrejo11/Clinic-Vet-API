@@ -20,7 +20,7 @@ type AdminCreateMedSessionRequest struct {
 type CreateMedSessionRequest struct {
 	// The summary of the pet's medical condition during the visit
 	// Required: true
-	PetDetails PetSummaryRequest `json:"pet_details" validate:"required,dive"`
+	PetDetails PetSummaryRequest `json:"pet_details" validate:"required"`
 
 	// The date of the medical visit
 	// Required: true

@@ -1,13 +1,12 @@
 package service
 
 import (
-	"clinic-vet-api/app/modules/auth/infrastructure/token"
+	token "clinic-vet-api/app/modules/account/auth/token/factory"
 	"clinic-vet-api/app/modules/core/domain/entity/customer"
 	"clinic-vet-api/app/modules/core/domain/entity/employee"
 	"clinic-vet-api/app/modules/core/domain/entity/notification"
 	"clinic-vet-api/app/modules/core/domain/valueobject"
 	"clinic-vet-api/app/modules/core/repository"
-	service "clinic-vet-api/app/modules/notifications/application"
 	commondto "clinic-vet-api/app/shared/dto"
 	"context"
 )
@@ -16,16 +15,16 @@ type UserAccountService struct {
 	userRepository      repository.UserRepository
 	customerRepository  repository.CustomerRepository
 	employeeRepository  repository.EmployeeRepository
-	notificationService service.NotificationService
-	tokenManager        token.TokenManager
+	notificationService NotificationService
+	tokenManager        repository.TokenRepository
 }
 
 func NewUserAccountService(
 	userRepo repository.UserRepository,
 	customerRepo repository.CustomerRepository,
 	employeeRepo repository.EmployeeRepository,
-	tokenManager token.TokenManager,
-	notificationSvc service.NotificationService,
+	tokenManager repository.TokenRepository,
+	notificationSvc NotificationService,
 ) *UserAccountService {
 	return &UserAccountService{
 		userRepository:      userRepo,
@@ -65,7 +64,7 @@ func (s *UserAccountService) AttachEmployeeToUser(ctx context.Context, userID va
 }
 
 func (s *UserAccountService) SendActivationEmail(ctx context.Context, userID valueobject.UserID, email, name string) error {
-	token, err := s.tokenManager.GenerateToken(ctx, token.ActivationToken, token.TokenConfig{
+	token, err := s.tokenManager.GenerateToken(ctx, valueobject.ActivationToken, token.TokenConfig{
 		UserID: userID.String(),
 	})
 	if err != nil {

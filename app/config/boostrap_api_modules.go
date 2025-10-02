@@ -6,16 +6,17 @@ import (
 	"fmt"
 	"log"
 
+	authAPI "clinic-vet-api/app/modules/account/auth"
+	userAPI "clinic-vet-api/app/modules/account/user/presentation"
 	apptApi "clinic-vet-api/app/modules/appointment/presentation"
-	authAPI "clinic-vet-api/app/modules/auth/presentation"
+	"clinic-vet-api/app/modules/core/service"
 	customerAPI "clinic-vet-api/app/modules/customer/presentation"
 	vetAPI "clinic-vet-api/app/modules/employee/presentation"
 	dewormApi "clinic-vet-api/app/modules/medical/deworm/presentation"
 	medSessionAPI "clinic-vet-api/app/modules/medical/session/presentation"
-	noticService "clinic-vet-api/app/modules/notifications/application"
-	paymentAPI "clinic-vet-api/app/modules/payments/presentation"
-	petAPI "clinic-vet-api/app/modules/pets/presentation"
-	userAPI "clinic-vet-api/app/modules/users/presentation"
+	api "clinic-vet-api/app/modules/medical/vaccination/presentation"
+	paymentAPI "clinic-vet-api/app/modules/payment/presentation"
+	petAPI "clinic-vet-api/app/modules/pet/presentation"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -25,7 +26,7 @@ import (
 func BootstrapAPIModules(
 	routerGroup *gin.RouterGroup,
 	queries *sqlc.Queries,
-	notificationService noticService.NotificationService,
+	notificationService service.NotificationService,
 	validator *validator.Validate,
 	redis *redis.Client,
 	jwtSecret string,
@@ -121,7 +122,21 @@ func BootstrapAPIModules(
 	}
 
 	// Bootstrap Auth Module
-	authAPI.SetupAuthModule(routerGroup, validator, vetRepo, customerRepo, redis, queries, jwtSecret, authMiddleware, notificationService)
+	authModule := authAPI.NewAuthAPI(&authAPI.AuthModuleConfig{
+		RouterGroup:         routerGroup,
+		Validator:           validator,
+		Queries:             queries,
+		AuthMiddleware:      authMiddleware,
+		EmployeeRepo:        vetRepo,
+		CustomerRepo:        customerRepo,
+		Client:              redis,
+		SecretKey:           jwtSecret,
+		NotificationService: notificationService,
+	})
+
+	if err := authModule.Boostrap(); err != nil {
+		return fmt.Errorf("failed to bootstrap auth API module: %w", err)
+	}
 
 	// Bootstrap Payment Module
 	paymentModule := paymentAPI.NewPaymentAPIBuilder(&paymentAPI.PaymentAPIConfig{
@@ -165,6 +180,20 @@ func BootstrapAPIModules(
 
 	if err := dewormModule.Bootstrap(); err != nil {
 		return fmt.Errorf("failed to bootstrap deworm API module: %w", err)
+	}
+
+	vaccinationModule := api.NewVaccinationAPIModule(&api.VaccinationConfig{
+		Router:         routerGroup,
+		Queries:        queries,
+		Validator:      validator,
+		AuthMiddleware: authMiddleware,
+		PetRepo:        petRepository,
+		EmployeeRepo:   vetRepo,
+		CustomerRepo:   customerRepo,
+	})
+
+	if err := vaccinationModule.Bootstrap(); err != nil {
+		return fmt.Errorf("failed to bootstrap vaccination API module: %w", err)
 	}
 
 	log.Println("modules bootstrapped successfully")
