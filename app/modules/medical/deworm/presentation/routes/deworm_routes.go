@@ -25,7 +25,7 @@ func NewDewormRoutes(
 	}
 }
 
-func (r *DewormRoutes) RegisterAdminRoutes(group gin.RouterGroup, middleware middleware.AuthMiddleware) {
+func (r *DewormRoutes) RegisterAdminRoutes(group *gin.RouterGroup, middleware *middleware.AuthMiddleware) {
 	adminGroup := group.Group("pets/deworms")
 	adminGroup.Use(middleware.Authenticate())
 	adminGroup.Use(middleware.RequireAnyRole("admin"))
@@ -38,7 +38,7 @@ func (r *DewormRoutes) RegisterAdminRoutes(group gin.RouterGroup, middleware mid
 	}
 }
 
-func (r *DewormRoutes) RegisterEmployees(group gin.RouterGroup, middleware middleware.AuthMiddleware) {
+func (r *DewormRoutes) RegisterEmployees(group *gin.RouterGroup, middleware *middleware.AuthMiddleware) {
 	employeeGroup := group.Group("employees/deworms")
 	employeeGroup.Use(middleware.Authenticate())
 	employeeGroup.Use(middleware.RequireAnyRole("employee, recepcionist, manager, veterinarian"))
@@ -50,7 +50,7 @@ func (r *DewormRoutes) RegisterEmployees(group gin.RouterGroup, middleware middl
 	}
 }
 
-func (r *DewormRoutes) RegisterCustomerRoutes(group gin.RouterGroup, middleware middleware.AuthMiddleware) {
+func (r *DewormRoutes) RegisterCustomerRoutes(group *gin.RouterGroup, middleware *middleware.AuthMiddleware) {
 	customerGroup := group.Group("customers/pets")
 	customerGroup.Use(middleware.Authenticate())
 	customerGroup.Use(middleware.RequireAnyRole("customer"))

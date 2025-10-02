@@ -1,11 +1,22 @@
 package controller
 
-import "github.com/gin-gonic/gin"
+import (
+	"clinic-vet-api/app/modules/medical/deworm/application"
 
-type AdminDewormController struct{}
+	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
+)
 
-func NewAdminDewormController() *AdminDewormController {
-	return &AdminDewormController{}
+type AdminDewormController struct {
+	service   application.DewormingFacadeService
+	validator *validator.Validate
+}
+
+func NewAdminDewormController(service application.DewormingFacadeService, validator *validator.Validate) *AdminDewormController {
+	return &AdminDewormController{
+		service:   service,
+		validator: validator,
+	}
 }
 
 func (ctrl *AdminDewormController) GetDewormByID(c *gin.Context) {

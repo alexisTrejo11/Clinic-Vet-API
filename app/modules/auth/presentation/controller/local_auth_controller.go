@@ -28,7 +28,7 @@ func NewAuthController(validator *validator.Validate, bus cmdBus.AuthCommandBus)
 
 func (ctrl *AuthController) CustomerSignup(c *gin.Context) {
 	var reuqestBodyData dto.CustomerRequestSingup
-	if err := ginutils.BindAndValidateBody(c, &reuqestBodyData, ctrl.validator); err != nil {
+	if err := ginutils.ShouldBindAndValidateBody(c, &reuqestBodyData, ctrl.validator); err != nil {
 		response.BadRequest(c, err)
 		return
 	}
@@ -50,7 +50,7 @@ func (ctrl *AuthController) CustomerSignup(c *gin.Context) {
 
 func (ctrl *AuthController) EmployeeSignup(c *gin.Context) {
 	var requestBodyData dto.EmployeeRequestRegister
-	if err := ginutils.BindAndValidateBody(c, &requestBodyData, ctrl.validator); err != nil {
+	if err := ginutils.ShouldBindAndValidateBody(c, &requestBodyData, ctrl.validator); err != nil {
 		response.BadRequest(c, err)
 		return
 	}
@@ -72,7 +72,7 @@ func (ctrl *AuthController) EmployeeSignup(c *gin.Context) {
 
 func (ctrl *AuthController) Login(c *gin.Context) {
 	var requestlogin dto.RequestLogin
-	if err := ginutils.BindAndValidateBody(c, &requestlogin, ctrl.validator); err != nil {
+	if err := ginutils.ShouldBindAndValidateBody(c, &requestlogin, ctrl.validator); err != nil {
 		response.BadRequest(c, err)
 		return
 	}
@@ -101,7 +101,7 @@ func (ctrl *AuthController) Logout(c *gin.Context) {
 	}
 
 	var requestLogout dto.RequestLogout
-	if err := ginutils.BindAndValidateBody(c, &requestLogout, ctrl.validator); err != nil {
+	if err := ginutils.ShouldBindAndValidateBody(c, &requestLogout, ctrl.validator); err != nil {
 		response.BadRequest(c, err)
 		return
 	}

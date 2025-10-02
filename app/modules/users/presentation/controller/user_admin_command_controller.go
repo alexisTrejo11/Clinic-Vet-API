@@ -44,7 +44,7 @@ func NewUserAdminController(validator *validator.Validate, bus *bus.UserBus) *Us
 // @Router /v1/admin/users [post]
 func (ctrl *UserAdminController) CreateUser(c *gin.Context) {
 	var requestData dto.AdminCreateUserRequest
-	if err := ginUtils.BindAndValidateBody(c, &requestData, ctrl.validator); err != nil {
+	if err := ginUtils.ShouldBindAndValidateBody(c, &requestData, ctrl.validator); err != nil {
 		response.BadRequest(c, httpError.InvalidDataError(err))
 		return
 	}
@@ -55,7 +55,7 @@ func (ctrl *UserAdminController) CreateUser(c *gin.Context) {
 		return
 	}
 
-	result := ctrl.bus.CommandBus.CreateUser(c.Request.Context(), createUserCommand)
+	result := ctrl.bus.CreateUser(c.Request.Context(), createUserCommand)
 	if !result.IsSuccess() {
 		response.ApplicationError(c, result.Error())
 		return
@@ -90,7 +90,7 @@ func (ctrl *UserAdminController) BanUser(c *gin.Context) {
 		return
 	}
 
-	result := ctrl.bus.CommandBus.ChangeUserStatus(c.Request.Context(), command)
+	result := ctrl.bus.ChangeUserStatus(c.Request.Context(), command)
 	if !result.IsSuccess() {
 		response.ApplicationError(c, result.Error())
 		return
@@ -125,7 +125,7 @@ func (ctrl *UserAdminController) UnbanUser(c *gin.Context) {
 		return
 	}
 
-	result := ctrl.bus.CommandBus.ChangeUserStatus(c.Request.Context(), command)
+	result := ctrl.bus.ChangeUserStatus(c.Request.Context(), command)
 	if !result.IsSuccess() {
 		response.ApplicationError(c, result.Error())
 		return
@@ -155,7 +155,7 @@ func (ctrl *UserAdminController) DeleteUser(c *gin.Context) {
 	}
 
 	deleteUserCommand := command.NewDeleteUserCommand(userID, true)
-	result := ctrl.bus.CommandBus.DeleteUser(c.Request.Context(), deleteUserCommand)
+	result := ctrl.bus.DeleteUser(c.Request.Context(), deleteUserCommand)
 	if !result.IsSuccess() {
 		response.ApplicationError(c, result.Error())
 		return

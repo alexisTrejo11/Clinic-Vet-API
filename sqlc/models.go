@@ -59,6 +59,7 @@ type MedicalSession struct {
 	CustomerID      int32
 	EmployeeID      int32
 	AppointmentID   pgtype.Int4
+	ClinicService   models.ClinicService
 	VisitDate       pgtype.Timestamptz
 	VisitType       string
 	Diagnosis       pgtype.Text
@@ -177,8 +178,11 @@ type PetVaccination struct {
 	AdministeredDate pgtype.Date
 	NextDueDate      pgtype.Date
 	AdministeredBy   pgtype.Int4
+	BatchNumber      pgtype.Text
+	VaccineType      string
 	Notes            pgtype.Text
 	CreatedAt        pgtype.Timestamptz
+	UpdatedAt        pgtype.Timestamptz
 }
 
 type User struct {

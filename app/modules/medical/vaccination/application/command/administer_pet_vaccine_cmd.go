@@ -27,7 +27,7 @@ func (cmd *RegisterVaccinationCommand) ToEntity(nextDueDate *time.Time) medical.
 		WithBatchNumber(cmd.BatchNumber).
 		WithNextDueDate(nextDueDate).
 		WithNotes(cmd.Notes).
-		WithCreatedAt(time.Now()).
+		WithTimeStamps(time.Now(), time.Now()).
 		Build()
 	return *vaccination
 }

@@ -11,15 +11,18 @@ import (
 )
 
 type UserCommandBus interface {
-	ChangePassword(ctx context.Context, c command.ChangePasswordCommand) cqrs.CommandResult
+	ResetPassword(ctx context.Context, c command.ResetPasswordCommand) cqrs.CommandResult
+	RequestResetPassword(ctx context.Context, c command.RequestResetPasswordCommand) cqrs.CommandResult
+	UpdatePassword(ctx context.Context, c command.UpdatePasswordCommand) cqrs.CommandResult
 	ChangeEmail(ctx context.Context, c command.ChangeEmailCommand) cqrs.CommandResult
 	ChangeUserStatus(ctx context.Context, c command.ChangeUserStatusCommand) cqrs.CommandResult
+
 	DeleteUser(ctx context.Context, c command.DeleteUserCommand) cqrs.CommandResult
 	CreateUser(ctx context.Context, c command.CreateUserCommand) cqrs.CommandResult
 }
 
 type userCommandBus struct {
-	changePasswordHandler   command.ChangePasswordHandler
+	changePasswordHandler   command.UpdatePasswordHandler
 	changeEmailHandler      command.ChangeEmailHandler
 	changeUserStatusHandler command.ChangeUserStatusHandler
 	deleteUserHandler       command.DeleteUserHandler
@@ -30,7 +33,7 @@ func NewUserCommandBus(userRepo repository.UserRepository, service *service.User
 	passwordEncoder := password.NewPasswordEncoder()
 
 	changeUserStatusHandler := command.NewChangeUserStatusHandler(userRepo)
-	changePasswordHandler := command.NewChangePasswordHandler(userRepo, passwordEncoder)
+	changePasswordHandler := command.NewUpdatePasswordHandler(userRepo, passwordEncoder)
 	changeEmailHandler := command.NewChangeEmailHandler(userRepo)
 	deleteUserHandler := command.NewDeleteUserHandler(userRepo)
 	createUserHandler := command.NewCreateUserHandler(userRepo, *service)
@@ -46,7 +49,17 @@ func NewUserCommandBus(userRepo repository.UserRepository, service *service.User
 	return bus
 }
 
-func (b *userCommandBus) ChangePassword(ctx context.Context, c command.ChangePasswordCommand) cqrs.CommandResult {
+func (b *userCommandBus) ResetPassword(ctx context.Context, c command.ResetPasswordCommand) cqrs.CommandResult {
+	// Not implemented yet
+	return cqrs.CommandResult{}
+}
+
+func (b *userCommandBus) RequestResetPassword(ctx context.Context, c command.RequestResetPasswordCommand) cqrs.CommandResult {
+	// Not implemented yet
+	return cqrs.CommandResult{}
+}
+
+func (b *userCommandBus) UpdatePassword(ctx context.Context, c command.UpdatePasswordCommand) cqrs.CommandResult {
 	return b.changePasswordHandler.Handle(ctx, c)
 }
 

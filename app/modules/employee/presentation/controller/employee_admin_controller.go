@@ -73,7 +73,7 @@ func (ctrl *EmployeeController) GetEmployeeByID(c *gin.Context) {
 // @Router /employee [post]
 func (ctrl *EmployeeController) CreateEmployee(c *gin.Context) {
 	var requestData dto.CreateEmployeeRequest
-	if err := ginUtils.BindAndValidateBody(c, &requestData, ctrl.validator); err != nil {
+	if err := ginUtils.ShouldBindAndValidateBody(c, &requestData, ctrl.validator); err != nil {
 		response.BadRequest(c, err)
 		return
 	}
@@ -113,7 +113,7 @@ func (ctrl *EmployeeController) UpdateEmployee(c *gin.Context) {
 	}
 
 	var requestData dto.UpdateEmployeeRequest
-	if err := ginUtils.BindAndValidateBody(c, &requestData, ctrl.validator); err != nil {
+	if err := ginUtils.ShouldBindAndValidateBody(c, &requestData, ctrl.validator); err != nil {
 		response.BadRequest(c, httpError.InvalidDataError(err))
 		return
 	}

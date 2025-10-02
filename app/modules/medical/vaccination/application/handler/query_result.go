@@ -1,4 +1,4 @@
-package vaccinequery
+package handler
 
 import (
 	med "clinic-vet-api/app/modules/core/domain/entity/medical"

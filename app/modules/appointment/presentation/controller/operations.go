@@ -172,7 +172,7 @@ func (ctrl *ApptControllerOperations) HandlePaginatedResult(c *gin.Context, page
 
 func (ctrl *ApptControllerOperations) CreateAppointment(c *gin.Context, employeeID *uint) {
 	var requestCreateData dto.CreateApptRequest
-	if err := ginUtils.BindAndValidateBody(c, &requestCreateData, ctrl.validate); err != nil {
+	if err := ginUtils.ShouldBindAndValidateBody(c, &requestCreateData, ctrl.validate); err != nil {
 		response.BadRequest(c, err)
 		return
 	}
@@ -194,7 +194,7 @@ func (ctrl *ApptControllerOperations) CreateAppointment(c *gin.Context, employee
 
 func (ctrl *ApptControllerOperations) UpdateAppointment(c *gin.Context, apptID uint) {
 	var updateAppointData dto.UpdateApptRequest
-	if err := ginUtils.BindAndValidateBody(c, &updateAppointData, ctrl.validate); err != nil {
+	if err := ginUtils.ShouldBindAndValidateBody(c, &updateAppointData, ctrl.validate); err != nil {
 		response.BadRequest(c, err)
 		return
 	}

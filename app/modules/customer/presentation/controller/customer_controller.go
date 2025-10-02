@@ -77,7 +77,7 @@ func (ctrl *CustomerController) GetCustomerByID(c *gin.Context) {
 
 func (ctrl *CustomerController) CreateCustomer(c *gin.Context) {
 	var customerCreate dto.CreateCustomerRequest
-	if err := ginUtils.BindAndValidateBody(c, &customerCreate, ctrl.validator); err != nil {
+	if err := ginUtils.ShouldBindAndValidateBody(c, &customerCreate, ctrl.validator); err != nil {
 		response.BadRequest(c, err)
 		return
 	}

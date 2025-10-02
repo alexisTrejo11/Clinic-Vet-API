@@ -144,7 +144,7 @@ func (co MedSessionControllerOperations) GetMedicalSessionByCustomerID(c *gin.Co
 
 func (co *MedSessionControllerOperations) CreateMedicalSession(c *gin.Context, employeeID *uint) {
 	var requestData dto.AdminCreateMedSessionRequest
-	if err := ginUtils.BindAndValidateBody(c, &requestData, co.validator); err != nil {
+	if err := ginUtils.ShouldBindAndValidateBody(c, &requestData, co.validator); err != nil {
 		response.BadRequest(c, err)
 		return
 	}

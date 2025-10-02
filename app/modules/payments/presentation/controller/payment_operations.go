@@ -30,7 +30,7 @@ func NewPaymentControllerOperations(validator *validator.Validate, bus *bus.Paym
 
 func (ctrl *PaymentControllerOperations) SearchPayments(c *gin.Context) {
 	var searchRequestData *dto.PaymentSearchRequest
-	if err := ginUtils.BindAndValidateQuery(c, &searchRequestData, ctrl.validator); err != nil {
+	if err := ginUtils.ShouldBindAndValidateQuery(c, &searchRequestData, ctrl.validator); err != nil {
 		response.BadRequest(c, httpError.RequestURLQueryError(err, c.Request.URL.RawQuery))
 		return
 	}
@@ -100,7 +100,7 @@ func (ctrl *PaymentControllerOperations) GetPaymentsByStatus(c *gin.Context) {
 
 func (ctrl *PaymentControllerOperations) GetPaymentsByDateRange(c *gin.Context) {
 	var requestData dto.PaymentsByDateRangeRequest
-	if err := ginUtils.BindAndValidateQuery(c, &requestData, ctrl.validator); err != nil {
+	if err := ginUtils.ShouldBindAndValidateQuery(c, &requestData, ctrl.validator); err != nil {
 		response.BadRequest(c, httpError.RequestURLQueryError(err, c.Request.URL.RawQuery))
 		return
 	}
@@ -175,7 +175,7 @@ func (ctrl *PaymentControllerOperations) HandlePaginationResult(c *gin.Context, 
 // CreatePayment creates a new payment
 func (ctrl *PaymentControllerOperations) CreatePayment(c *gin.Context) {
 	var req dto.CreatePaymentRequest
-	if err := ginUtils.BindAndValidateBody(c, &req, ctrl.validator); err != nil {
+	if err := ginUtils.ShouldBindAndValidateBody(c, &req, ctrl.validator); err != nil {
 		response.BadRequest(c, httpError.RequestBodyDataError(err))
 		return
 	}
@@ -199,7 +199,7 @@ func (ctrl *PaymentControllerOperations) UpdatePayment(c *gin.Context) {
 	}
 
 	var req dto.UpdatePaymentRequest
-	if err := ginUtils.BindAndValidateBody(c, &req, ctrl.validator); err != nil {
+	if err := ginUtils.ShouldBindAndValidateBody(c, &req, ctrl.validator); err != nil {
 		response.BadRequest(c, httpError.RequestBodyDataError(err))
 		return
 	}
@@ -239,7 +239,7 @@ func (ctrl *PaymentControllerOperations) ProcessPayment(c *gin.Context) {
 	}
 
 	var req dto.ProcessPaymentRequest
-	if err := ginUtils.BindAndValidateBody(c, &req, ctrl.validator); err != nil {
+	if err := ginUtils.ShouldBindAndValidateBody(c, &req, ctrl.validator); err != nil {
 		response.BadRequest(c, httpError.RequestBodyDataError(err))
 		return
 	}

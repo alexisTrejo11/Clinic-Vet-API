@@ -30,7 +30,7 @@ func (ctrl *UserAdminController) GetUserByID(c *gin.Context) {
 	}
 
 	getUserByIDQuery := query.NewFindUserByIDQuery(userID, false)
-	userResult, err := ctrl.bus.QueryBus.FindUserByID(c.Request.Context(), *getUserByIDQuery)
+	userResult, err := ctrl.bus.FindUserByID(c.Request.Context(), *getUserByIDQuery)
 	if err != nil {
 		response.ApplicationError(c, err)
 		return
@@ -51,7 +51,7 @@ func (ctrl *UserAdminController) GetUserByEmail(c *gin.Context) {
 	}
 
 	getUserByEmailQuery := query.NewFindUserByEmailQuery(email, false)
-	userResult, err := ctrl.bus.QueryBus.FindUserByEmail(c.Request.Context(), *getUserByEmailQuery)
+	userResult, err := ctrl.bus.FindUserByEmail(c.Request.Context(), *getUserByEmailQuery)
 	if err != nil {
 		response.ApplicationError(c, err)
 		return
@@ -74,7 +74,7 @@ func (c *UserAdminController) GetUserByPhone(ctx *gin.Context) {
 		return
 	}
 
-	userResult, err := c.bus.QueryBus.FindUserByPhone(ctx.Request.Context(), *getUserByPhoneQuery)
+	userResult, err := c.bus.FindUserByPhone(ctx.Request.Context(), *getUserByPhoneQuery)
 	if err != nil {
 		response.ApplicationError(ctx, err)
 		return
@@ -98,7 +98,7 @@ func (ctrl *UserAdminController) FindByRole(ctx *gin.Context) {
 	}
 
 	findUsersByRoleQuery := query.NewFindUsersByRoleQuery(role, pagination)
-	userResults, err := ctrl.bus.QueryBus.FindUsersByRole(ctx.Request.Context(), *findUsersByRoleQuery)
+	userResults, err := ctrl.bus.FindUsersByRole(ctx.Request.Context(), *findUsersByRoleQuery)
 	if err != nil {
 		response.ApplicationError(ctx, err)
 		return

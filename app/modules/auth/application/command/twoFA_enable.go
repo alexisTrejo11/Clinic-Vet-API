@@ -11,7 +11,7 @@ type Enable2FACommand struct {
 	method auth.TwoFactorMethod
 }
 
-func NewAuthCommandHandler(userID uint, method string) (Enable2FACommand, error) {
+func NewEnable2FACommand(userID uint, method string) (Enable2FACommand, error) {
 	cmd := &Enable2FACommand{
 		userID: valueobject.NewUserID(userID),
 		method: auth.TwoFactorMethod(method),

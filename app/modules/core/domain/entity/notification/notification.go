@@ -1,6 +1,7 @@
 package notification
 
 import (
+	"clinic-vet-api/app/modules/core/domain/entity/auth"
 	"clinic-vet-api/app/modules/core/domain/enum"
 	"clinic-vet-api/app/modules/core/domain/valueobject"
 	"fmt"
@@ -158,6 +159,55 @@ func NewEnable2FANotificationSMS(userID valueobject.UserID, phone valueobject.Ph
 		WithChannel(enum.NotificationChannelSMS).
 		WithTitle(title).
 		WithSubject("Habilitación de 2FA").
+		WithMessage(message).
+		WithToken(token).
+		Build()
+
+	return notif
+}
+
+func NewSend2FAToken(method auth.TwoFactorMethod, token string, userID valueobject.UserID, email valueobject.Email, phone *valueobject.PhoneNumber) *Notification {
+	if method == auth.TwoFactorMethodEmail {
+		return NewSend2FATokenEmail(userID, email, token)
+	}
+	if method == auth.TwoFactorMethodSMS {
+		if phone == nil {
+			return nil
+		}
+		return NewSend2FATokenSMS(userID, *phone, token)
+	}
+	return nil
+}
+
+func NewSend2FATokenEmail(userID valueobject.UserID, email valueobject.Email, token string) *Notification {
+	title := "Token de Autenticación de Dos Factores (2FA) - Método: Email"
+	message := fmt.Sprintf("Has solicitado iniciar sesión usando la autenticación de dos factores (2FA) con %s. Usa el siguiente token para completar el inicio de sesión: %s", "Email", token)
+
+	notif := NewNotificationBuilder().
+		WithUserID(userID).
+		WithEmail(email.String()).
+		WithNType(enum.NotificationTypeMFA).
+		WithChannel(enum.NotificationChannelEmail).
+		WithTitle(title).
+		WithSubject("Token de 2FA").
+		WithMessage(message).
+		WithToken(token).
+		Build()
+
+	return notif
+}
+
+func NewSend2FATokenSMS(userID valueobject.UserID, phone valueobject.PhoneNumber, token string) *Notification {
+	title := "Token de Autenticación de Dos Factores (2FA) - Método: SMS"
+	message := fmt.Sprintf("Has solicitado iniciar sesión usando la autenticación de dos factores (2FA) con %s. Usa el siguiente token para completar el inicio de sesión: %s", "SMS", token)
+
+	notif := NewNotificationBuilder().
+		WithUserID(userID).
+		WithPhone(phone.Value).
+		WithNType(enum.NotificationTypeMFA).
+		WithChannel(enum.NotificationChannelSMS).
+		WithTitle(title).
+		WithSubject("Token de 2FA").
 		WithMessage(message).
 		WithToken(token).
 		Build()

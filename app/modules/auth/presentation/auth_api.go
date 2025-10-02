@@ -55,11 +55,20 @@ func SetupAuthModule(
 		userEventProducer,
 	)
 
+	twoFAHandler := handler.NewTwoFACommandHandler(
+		userRepo,
+		*tokenManager,
+		notificationService,
+	)
+
 	cmdBus := bus.NewAuthCommandBus(*authHandler)
+	twoFACommandBus := bus.NewTwoFAAuthCommandBus(*twoFAHandler, *authHandler)
+
 	authController := controller.NewAuthController(validator, cmdBus)
 	tokenController := controller.NewTokenController(validator, cmdBus)
+	twoFaController := controller.NewTwoFAAuthController(twoFACommandBus, cmdBus)
 
-	authRoutes := routes.NewAuthRoutes(authController, tokenController)
+	authRoutes := routes.NewAuthRoutes(authController, tokenController, twoFaController)
 	authRoutes.RegisterRegistAndLoginRoutes(r, authMiddle)
 	authRoutes.RegisterSessionRoutes(r, authMiddle)
 }

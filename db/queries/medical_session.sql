@@ -95,7 +95,7 @@ INSERT INTO medical_sessions (
     visit_date,
     visit_type,
     diagnosis, 
-    clinic_service
+    clinic_service,
     treatment,
     notes,
     condition,
@@ -104,7 +104,7 @@ INSERT INTO medical_sessions (
     heart_rate,
     respiratory_rate
 ) VALUES (
-    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13
+    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14
 )
 RETURNING *;
 

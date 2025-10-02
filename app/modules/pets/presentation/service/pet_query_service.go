@@ -49,7 +49,7 @@ func (s *PetControllerOperations) FindPetsByCustomerID(c *gin.Context, customerI
 
 func (s *PetControllerOperations) FindPetsBySpecification(c *gin.Context) {
 	var requestURLParams dto.PetSearchRequest
-	if err := ginutils.BindAndValidateQuery(c, &requestURLParams, s.validator); err != nil {
+	if err := ginutils.ShouldBindAndValidateQuery(c, &requestURLParams, s.validator); err != nil {
 		response.BadRequest(c, httpError.RequestURLQueryError(err, c.Request.URL.RawQuery))
 		return
 	}

@@ -6,9 +6,23 @@ import (
 	"clinic-vet-api/app/modules/core/repository"
 	"clinic-vet-api/app/modules/core/service"
 	c "clinic-vet-api/app/modules/medical/vaccination/application/command"
+	"clinic-vet-api/app/shared/cqrs"
 	"context"
 	"errors"
 	"time"
+)
+
+var (
+	FailFindingVaccinationMsg     = "failed to find vaccination"
+	FailSavingVaccinationMsg      = "failed to save vaccination"
+	FailDeletingVaccinationMsg    = "failed to delete vaccination"
+	FailCalculatingNextDueDateMsg = "failed to calculate next due date"
+	FailVaccineConflictMsg        = "vaccine conflict detected"
+	FailVaccineValidationMsg      = "vaccine validation failed"
+
+	SuccesRegisteringVaccinationMsg = "vaccination registered successfully"
+	SuccesUpdatingVaccinationMsg    = "vaccination updated successfully"
+	SuccesDeletingVaccinationMsg    = "vaccination deleted successfully"
 )
 
 type PetVaccineCmdHandler struct {
@@ -29,25 +43,25 @@ func NewPetVaccineCmdHandler(
 	}
 }
 
-func (h *PetVaccineCmdHandler) HandleRegister(ctx context.Context, cmd c.RegisterVaccinationCommand) (vo.VaccinationID, error) {
+func (h *PetVaccineCmdHandler) HandleRegister(ctx context.Context, cmd c.RegisterVaccinationCommand) cqrs.CommandResult {
 	pet, err := h.petRepo.FindByID(ctx, cmd.PetID)
 	if err != nil {
-		return vo.VaccinationID{}, err
+		return *cqrs.FailureResult(FailFindingVaccinationMsg, err)
 	} else if !pet.IsActive() {
-		return vo.VaccinationID{}, errors.New("pet is not active")
+		return *cqrs.FailureResult("Inactive Pet", errors.New("pet is not active"))
 	}
 
 	if err := h.vaccinationService.ValidateVaccination(&pet, cmd.VaccineName, cmd.AdministeredDate); err != nil {
-		return vo.VaccinationID{}, err
+		return *cqrs.FailureResult(FailVaccineValidationMsg, err)
 	}
 
 	recentVaccinations, err := h.vaccinationRepo.FindRecentByPetID(ctx, cmd.PetID, 30)
 	if err != nil {
-		return vo.VaccinationID{}, err
+		return *cqrs.FailureResult(FailFindingVaccinationMsg, err)
 	}
 
 	if err := h.vaccinationService.CheckVaccinationConflicts(cmd.VaccineName, cmd.AdministeredDate, recentVaccinations); err != nil {
-		return vo.VaccinationID{}, err
+		return *cqrs.FailureResult(FailVaccineConflictMsg, err)
 	}
 
 	var nextDueDate *time.Time
@@ -56,42 +70,45 @@ func (h *PetVaccineCmdHandler) HandleRegister(ctx context.Context, cmd c.Registe
 	} else {
 		nextDueDate, err = h.calculateNextDueDate(ctx, cmd)
 		if err != nil {
-			return vo.VaccinationID{}, err
+			return *cqrs.FailureResult(FailCalculatingNextDueDateMsg, err)
 		}
 	}
 
 	vaccination := cmd.ToEntity(nextDueDate)
 	vaccineCreated, err := h.vaccinationRepo.Save(ctx, vaccination)
 	if err != nil {
-		return vo.VaccinationID{}, err
+		return *cqrs.FailureResult(FailSavingVaccinationMsg, err)
 	}
 
-	return vaccineCreated.ID(), nil
+	return *cqrs.SuccessCreateResult(vaccineCreated.ID().String(), SuccesRegisteringVaccinationMsg)
 }
 
-func (h *PetVaccineCmdHandler) HandleUpdate(ctx context.Context, cmd c.UpdateVaccinationCommand) (vo.VaccinationID, error) {
+func (h *PetVaccineCmdHandler) HandleUpdate(ctx context.Context, cmd c.UpdateVaccinationCommand) cqrs.CommandResult {
 	vaccination, err := h.vaccinationRepo.FindByID(ctx, cmd.VaccinationID)
 	if err != nil {
-		return vo.VaccinationID{}, err
+		return *cqrs.FailureResult(FailFindingVaccinationMsg, err)
 	}
 
 	updatedVaccination := cmd.ToUpdateEntity(vaccination)
 	_, err = h.vaccinationRepo.Save(ctx, *updatedVaccination)
 	if err != nil {
-		return vo.VaccinationID{}, err
+		return *cqrs.FailureResult(FailSavingVaccinationMsg, err)
 	}
 
-	return updatedVaccination.ID(), nil
+	return *cqrs.SuccessResult(SuccesUpdatingVaccinationMsg)
 }
 
-func (h *PetVaccineCmdHandler) HandleDelete(ctx context.Context, vaccinationID vo.VaccinationID) error {
+func (h *PetVaccineCmdHandler) HandleDelete(ctx context.Context, vaccinationID vo.VaccinationID) cqrs.CommandResult {
 	_, err := h.vaccinationRepo.FindByID(ctx, vaccinationID)
 	if err != nil {
-		return err
+		return *cqrs.FailureResult(FailFindingVaccinationMsg, err)
 	}
 
-	isNotHardDelete := false
-	return h.vaccinationRepo.Delete(ctx, vaccinationID, isNotHardDelete)
+	if err := h.vaccinationRepo.Delete(ctx, vaccinationID); err != nil {
+		return *cqrs.FailureResult(FailDeletingVaccinationMsg, err)
+	}
+
+	return *cqrs.SuccessResult(SuccesDeletingVaccinationMsg)
 }
 
 func (h *PetVaccineCmdHandler) calculateNextDueDate(ctx context.Context, cmd c.RegisterVaccinationCommand) (*time.Time, error) {

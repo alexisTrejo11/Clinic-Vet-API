@@ -22,13 +22,13 @@ type DewormingFacadeService interface {
 }
 
 type dewormingFacadeService struct {
-	queryHandler   query.DewormQueryHandler
-	commandHandler command.DewormCommandHandler
+	queryHandler   *query.DewormQueryHandler
+	commandHandler *command.DewormCommandHandler
 }
 
 func NewDewormingFacadeService(
-	queryHandler query.DewormQueryHandler,
-	commandHandler command.DewormCommandHandler,
+	queryHandler *query.DewormQueryHandler,
+	commandHandler *command.DewormCommandHandler,
 ) DewormingFacadeService {
 	return &dewormingFacadeService{
 		queryHandler:   queryHandler,

@@ -11,6 +11,7 @@ type UpdateVaccinationCommand struct {
 	VaccineName      *string
 	VaccineType      *string
 	AdministeredDate *time.Time
+	AdministeredBy   *valueobject.EmployeeID
 	BatchNumber      *string
 	Notes            *string
 	NextDueDate      *time.Time

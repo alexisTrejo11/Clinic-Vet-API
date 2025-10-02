@@ -8,6 +8,7 @@ package sqlc
 import (
 	"context"
 
+	"clinic-vet-api/db/models"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -122,7 +123,7 @@ func (q *Queries) ExistsMedicalSessionByPetAndDate(ctx context.Context, arg Exis
 }
 
 const findAllMedicalSession = `-- name: FindAllMedicalSession :many
-SELECT id, pet_id, customer_id, employee_id, appointment_id, visit_date, visit_type, diagnosis, notes, treatment, condition, weight, temperature, heart_rate, respiratory_rate, symptoms, medications, follow_up_date, is_emergency, created_at, updated_at, deleted_at FROM medical_sessions
+SELECT id, pet_id, customer_id, employee_id, appointment_id, clinic_service, visit_date, visit_type, diagnosis, notes, treatment, condition, weight, temperature, heart_rate, respiratory_rate, symptoms, medications, follow_up_date, is_emergency, created_at, updated_at, deleted_at FROM medical_sessions
 WHERE deleted_at IS NULL
 ORDER BY visit_date DESC
 LIMIT $1 OFFSET $2
@@ -148,6 +149,7 @@ func (q *Queries) FindAllMedicalSession(ctx context.Context, arg FindAllMedicalS
 			&i.CustomerID,
 			&i.EmployeeID,
 			&i.AppointmentID,
+			&i.ClinicService,
 			&i.VisitDate,
 			&i.VisitType,
 			&i.Diagnosis,
@@ -177,7 +179,7 @@ func (q *Queries) FindAllMedicalSession(ctx context.Context, arg FindAllMedicalS
 }
 
 const findMedicalSessionByCustomerID = `-- name: FindMedicalSessionByCustomerID :many
-SELECT id, pet_id, customer_id, employee_id, appointment_id, visit_date, visit_type, diagnosis, notes, treatment, condition, weight, temperature, heart_rate, respiratory_rate, symptoms, medications, follow_up_date, is_emergency, created_at, updated_at, deleted_at FROM medical_sessions
+SELECT id, pet_id, customer_id, employee_id, appointment_id, clinic_service, visit_date, visit_type, diagnosis, notes, treatment, condition, weight, temperature, heart_rate, respiratory_rate, symptoms, medications, follow_up_date, is_emergency, created_at, updated_at, deleted_at FROM medical_sessions
 WHERE customer_id = $1 AND deleted_at IS NULL
 ORDER BY visit_date DESC
 LIMIT $2 OFFSET $3
@@ -204,6 +206,7 @@ func (q *Queries) FindMedicalSessionByCustomerID(ctx context.Context, arg FindMe
 			&i.CustomerID,
 			&i.EmployeeID,
 			&i.AppointmentID,
+			&i.ClinicService,
 			&i.VisitDate,
 			&i.VisitType,
 			&i.Diagnosis,
@@ -233,7 +236,7 @@ func (q *Queries) FindMedicalSessionByCustomerID(ctx context.Context, arg FindMe
 }
 
 const findMedicalSessionByDateRange = `-- name: FindMedicalSessionByDateRange :many
-SELECT id, pet_id, customer_id, employee_id, appointment_id, visit_date, visit_type, diagnosis, notes, treatment, condition, weight, temperature, heart_rate, respiratory_rate, symptoms, medications, follow_up_date, is_emergency, created_at, updated_at, deleted_at FROM medical_sessions
+SELECT id, pet_id, customer_id, employee_id, appointment_id, clinic_service, visit_date, visit_type, diagnosis, notes, treatment, condition, weight, temperature, heart_rate, respiratory_rate, symptoms, medications, follow_up_date, is_emergency, created_at, updated_at, deleted_at FROM medical_sessions
 WHERE visit_date BETWEEN $1 AND $2
 AND deleted_at IS NULL
 ORDER BY visit_date DESC
@@ -267,6 +270,7 @@ func (q *Queries) FindMedicalSessionByDateRange(ctx context.Context, arg FindMed
 			&i.CustomerID,
 			&i.EmployeeID,
 			&i.AppointmentID,
+			&i.ClinicService,
 			&i.VisitDate,
 			&i.VisitType,
 			&i.Diagnosis,
@@ -296,7 +300,7 @@ func (q *Queries) FindMedicalSessionByDateRange(ctx context.Context, arg FindMed
 }
 
 const findMedicalSessionByDiagnosis = `-- name: FindMedicalSessionByDiagnosis :many
-SELECT id, pet_id, customer_id, employee_id, appointment_id, visit_date, visit_type, diagnosis, notes, treatment, condition, weight, temperature, heart_rate, respiratory_rate, symptoms, medications, follow_up_date, is_emergency, created_at, updated_at, deleted_at FROM medical_sessions
+SELECT id, pet_id, customer_id, employee_id, appointment_id, clinic_service, visit_date, visit_type, diagnosis, notes, treatment, condition, weight, temperature, heart_rate, respiratory_rate, symptoms, medications, follow_up_date, is_emergency, created_at, updated_at, deleted_at FROM medical_sessions
 WHERE diagnosis ILIKE '%' || $1 || '%'
 AND deleted_at IS NULL
 ORDER BY visit_date DESC
@@ -324,6 +328,7 @@ func (q *Queries) FindMedicalSessionByDiagnosis(ctx context.Context, arg FindMed
 			&i.CustomerID,
 			&i.EmployeeID,
 			&i.AppointmentID,
+			&i.ClinicService,
 			&i.VisitDate,
 			&i.VisitType,
 			&i.Diagnosis,
@@ -353,7 +358,7 @@ func (q *Queries) FindMedicalSessionByDiagnosis(ctx context.Context, arg FindMed
 }
 
 const findMedicalSessionByEmployeeID = `-- name: FindMedicalSessionByEmployeeID :many
-SELECT id, pet_id, customer_id, employee_id, appointment_id, visit_date, visit_type, diagnosis, notes, treatment, condition, weight, temperature, heart_rate, respiratory_rate, symptoms, medications, follow_up_date, is_emergency, created_at, updated_at, deleted_at FROM medical_sessions
+SELECT id, pet_id, customer_id, employee_id, appointment_id, clinic_service, visit_date, visit_type, diagnosis, notes, treatment, condition, weight, temperature, heart_rate, respiratory_rate, symptoms, medications, follow_up_date, is_emergency, created_at, updated_at, deleted_at FROM medical_sessions
 WHERE employee_id = $1 AND deleted_at IS NULL
 ORDER BY visit_date DESC
 LIMIT $2 OFFSET $3
@@ -380,6 +385,7 @@ func (q *Queries) FindMedicalSessionByEmployeeID(ctx context.Context, arg FindMe
 			&i.CustomerID,
 			&i.EmployeeID,
 			&i.AppointmentID,
+			&i.ClinicService,
 			&i.VisitDate,
 			&i.VisitType,
 			&i.Diagnosis,
@@ -409,7 +415,7 @@ func (q *Queries) FindMedicalSessionByEmployeeID(ctx context.Context, arg FindMe
 }
 
 const findMedicalSessionByID = `-- name: FindMedicalSessionByID :one
-SELECT id, pet_id, customer_id, employee_id, appointment_id, visit_date, visit_type, diagnosis, notes, treatment, condition, weight, temperature, heart_rate, respiratory_rate, symptoms, medications, follow_up_date, is_emergency, created_at, updated_at, deleted_at FROM medical_sessions
+SELECT id, pet_id, customer_id, employee_id, appointment_id, clinic_service, visit_date, visit_type, diagnosis, notes, treatment, condition, weight, temperature, heart_rate, respiratory_rate, symptoms, medications, follow_up_date, is_emergency, created_at, updated_at, deleted_at FROM medical_sessions
 WHERE id = $1 AND deleted_at IS NULL
 `
 
@@ -422,6 +428,7 @@ func (q *Queries) FindMedicalSessionByID(ctx context.Context, id int32) (Medical
 		&i.CustomerID,
 		&i.EmployeeID,
 		&i.AppointmentID,
+		&i.ClinicService,
 		&i.VisitDate,
 		&i.VisitType,
 		&i.Diagnosis,
@@ -444,7 +451,7 @@ func (q *Queries) FindMedicalSessionByID(ctx context.Context, id int32) (Medical
 }
 
 const findMedicalSessionByIDAndCustomerID = `-- name: FindMedicalSessionByIDAndCustomerID :one
-SELECT id, pet_id, customer_id, employee_id, appointment_id, visit_date, visit_type, diagnosis, notes, treatment, condition, weight, temperature, heart_rate, respiratory_rate, symptoms, medications, follow_up_date, is_emergency, created_at, updated_at, deleted_at FROM medical_sessions
+SELECT id, pet_id, customer_id, employee_id, appointment_id, clinic_service, visit_date, visit_type, diagnosis, notes, treatment, condition, weight, temperature, heart_rate, respiratory_rate, symptoms, medications, follow_up_date, is_emergency, created_at, updated_at, deleted_at FROM medical_sessions
 WHERE id = $1 AND customer_id = $2 AND deleted_at IS NULL
 `
 
@@ -462,6 +469,7 @@ func (q *Queries) FindMedicalSessionByIDAndCustomerID(ctx context.Context, arg F
 		&i.CustomerID,
 		&i.EmployeeID,
 		&i.AppointmentID,
+		&i.ClinicService,
 		&i.VisitDate,
 		&i.VisitType,
 		&i.Diagnosis,
@@ -484,7 +492,7 @@ func (q *Queries) FindMedicalSessionByIDAndCustomerID(ctx context.Context, arg F
 }
 
 const findMedicalSessionByIDAndEmployeeID = `-- name: FindMedicalSessionByIDAndEmployeeID :one
-SELECT id, pet_id, customer_id, employee_id, appointment_id, visit_date, visit_type, diagnosis, notes, treatment, condition, weight, temperature, heart_rate, respiratory_rate, symptoms, medications, follow_up_date, is_emergency, created_at, updated_at, deleted_at FROM medical_sessions
+SELECT id, pet_id, customer_id, employee_id, appointment_id, clinic_service, visit_date, visit_type, diagnosis, notes, treatment, condition, weight, temperature, heart_rate, respiratory_rate, symptoms, medications, follow_up_date, is_emergency, created_at, updated_at, deleted_at FROM medical_sessions
 WHERE id = $1 AND employee_id = $2 AND deleted_at IS NULL
 `
 
@@ -502,6 +510,7 @@ func (q *Queries) FindMedicalSessionByIDAndEmployeeID(ctx context.Context, arg F
 		&i.CustomerID,
 		&i.EmployeeID,
 		&i.AppointmentID,
+		&i.ClinicService,
 		&i.VisitDate,
 		&i.VisitType,
 		&i.Diagnosis,
@@ -524,7 +533,7 @@ func (q *Queries) FindMedicalSessionByIDAndEmployeeID(ctx context.Context, arg F
 }
 
 const findMedicalSessionByIDAndPetID = `-- name: FindMedicalSessionByIDAndPetID :one
-SELECT id, pet_id, customer_id, employee_id, appointment_id, visit_date, visit_type, diagnosis, notes, treatment, condition, weight, temperature, heart_rate, respiratory_rate, symptoms, medications, follow_up_date, is_emergency, created_at, updated_at, deleted_at FROM medical_sessions
+SELECT id, pet_id, customer_id, employee_id, appointment_id, clinic_service, visit_date, visit_type, diagnosis, notes, treatment, condition, weight, temperature, heart_rate, respiratory_rate, symptoms, medications, follow_up_date, is_emergency, created_at, updated_at, deleted_at FROM medical_sessions
 WHERE id = $1 AND pet_id = $2 AND deleted_at IS NULL
 `
 
@@ -542,6 +551,7 @@ func (q *Queries) FindMedicalSessionByIDAndPetID(ctx context.Context, arg FindMe
 		&i.CustomerID,
 		&i.EmployeeID,
 		&i.AppointmentID,
+		&i.ClinicService,
 		&i.VisitDate,
 		&i.VisitType,
 		&i.Diagnosis,
@@ -564,7 +574,7 @@ func (q *Queries) FindMedicalSessionByIDAndPetID(ctx context.Context, arg FindMe
 }
 
 const findMedicalSessionByPetAndDateRange = `-- name: FindMedicalSessionByPetAndDateRange :many
-SELECT id, pet_id, customer_id, employee_id, appointment_id, visit_date, visit_type, diagnosis, notes, treatment, condition, weight, temperature, heart_rate, respiratory_rate, symptoms, medications, follow_up_date, is_emergency, created_at, updated_at, deleted_at FROM medical_sessions
+SELECT id, pet_id, customer_id, employee_id, appointment_id, clinic_service, visit_date, visit_type, diagnosis, notes, treatment, condition, weight, temperature, heart_rate, respiratory_rate, symptoms, medications, follow_up_date, is_emergency, created_at, updated_at, deleted_at FROM medical_sessions
 WHERE pet_id = $1
 AND visit_date BETWEEN $2 AND $3
 AND deleted_at IS NULL
@@ -592,6 +602,7 @@ func (q *Queries) FindMedicalSessionByPetAndDateRange(ctx context.Context, arg F
 			&i.CustomerID,
 			&i.EmployeeID,
 			&i.AppointmentID,
+			&i.ClinicService,
 			&i.VisitDate,
 			&i.VisitType,
 			&i.Diagnosis,
@@ -621,7 +632,7 @@ func (q *Queries) FindMedicalSessionByPetAndDateRange(ctx context.Context, arg F
 }
 
 const findMedicalSessionByPetID = `-- name: FindMedicalSessionByPetID :many
-SELECT id, pet_id, customer_id, employee_id, appointment_id, visit_date, visit_type, diagnosis, notes, treatment, condition, weight, temperature, heart_rate, respiratory_rate, symptoms, medications, follow_up_date, is_emergency, created_at, updated_at, deleted_at FROM medical_sessions
+SELECT id, pet_id, customer_id, employee_id, appointment_id, clinic_service, visit_date, visit_type, diagnosis, notes, treatment, condition, weight, temperature, heart_rate, respiratory_rate, symptoms, medications, follow_up_date, is_emergency, created_at, updated_at, deleted_at FROM medical_sessions
 WHERE pet_id = $1 AND deleted_at IS NULL
 ORDER BY visit_date DESC
 LIMIT $2 OFFSET $3
@@ -648,6 +659,7 @@ func (q *Queries) FindMedicalSessionByPetID(ctx context.Context, arg FindMedical
 			&i.CustomerID,
 			&i.EmployeeID,
 			&i.AppointmentID,
+			&i.ClinicService,
 			&i.VisitDate,
 			&i.VisitType,
 			&i.Diagnosis,
@@ -677,7 +689,7 @@ func (q *Queries) FindMedicalSessionByPetID(ctx context.Context, arg FindMedical
 }
 
 const findRecentMedicalSessionByPetID = `-- name: FindRecentMedicalSessionByPetID :many
-SELECT id, pet_id, customer_id, employee_id, appointment_id, visit_date, visit_type, diagnosis, notes, treatment, condition, weight, temperature, heart_rate, respiratory_rate, symptoms, medications, follow_up_date, is_emergency, created_at, updated_at, deleted_at FROM medical_sessions
+SELECT id, pet_id, customer_id, employee_id, appointment_id, clinic_service, visit_date, visit_type, diagnosis, notes, treatment, condition, weight, temperature, heart_rate, respiratory_rate, symptoms, medications, follow_up_date, is_emergency, created_at, updated_at, deleted_at FROM medical_sessions
 WHERE pet_id = $1 AND deleted_at IS NULL
 ORDER BY visit_date DESC
 LIMIT $2
@@ -703,6 +715,7 @@ func (q *Queries) FindRecentMedicalSessionByPetID(ctx context.Context, arg FindR
 			&i.CustomerID,
 			&i.EmployeeID,
 			&i.AppointmentID,
+			&i.ClinicService,
 			&i.VisitDate,
 			&i.VisitType,
 			&i.Diagnosis,
@@ -749,6 +762,7 @@ INSERT INTO medical_sessions (
     visit_date,
     visit_type,
     diagnosis, 
+    clinic_service,
     treatment,
     notes,
     condition,
@@ -757,9 +771,9 @@ INSERT INTO medical_sessions (
     heart_rate,
     respiratory_rate
 ) VALUES (
-    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13
+    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14
 )
-RETURNING id, pet_id, customer_id, employee_id, appointment_id, visit_date, visit_type, diagnosis, notes, treatment, condition, weight, temperature, heart_rate, respiratory_rate, symptoms, medications, follow_up_date, is_emergency, created_at, updated_at, deleted_at
+RETURNING id, pet_id, customer_id, employee_id, appointment_id, clinic_service, visit_date, visit_type, diagnosis, notes, treatment, condition, weight, temperature, heart_rate, respiratory_rate, symptoms, medications, follow_up_date, is_emergency, created_at, updated_at, deleted_at
 `
 
 type SaveMedicalSessionParams struct {
@@ -769,6 +783,7 @@ type SaveMedicalSessionParams struct {
 	VisitDate       pgtype.Timestamptz
 	VisitType       string
 	Diagnosis       pgtype.Text
+	ClinicService   models.ClinicService
 	Treatment       pgtype.Text
 	Notes           pgtype.Text
 	Condition       pgtype.Text
@@ -786,6 +801,7 @@ func (q *Queries) SaveMedicalSession(ctx context.Context, arg SaveMedicalSession
 		arg.VisitDate,
 		arg.VisitType,
 		arg.Diagnosis,
+		arg.ClinicService,
 		arg.Treatment,
 		arg.Notes,
 		arg.Condition,
@@ -801,6 +817,7 @@ func (q *Queries) SaveMedicalSession(ctx context.Context, arg SaveMedicalSession
 		&i.CustomerID,
 		&i.EmployeeID,
 		&i.AppointmentID,
+		&i.ClinicService,
 		&i.VisitDate,
 		&i.VisitType,
 		&i.Diagnosis,
@@ -851,9 +868,10 @@ SET
     temperature = $12,
     heart_rate = $13,
     respiratory_rate = $14,
+    clinic_service = $15,
     updated_at = CURRENT_TIMESTAMP
 WHERE id = $1 AND deleted_at IS NULL
-RETURNING id, pet_id, customer_id, employee_id, appointment_id, visit_date, visit_type, diagnosis, notes, treatment, condition, weight, temperature, heart_rate, respiratory_rate, symptoms, medications, follow_up_date, is_emergency, created_at, updated_at, deleted_at
+RETURNING id, pet_id, customer_id, employee_id, appointment_id, clinic_service, visit_date, visit_type, diagnosis, notes, treatment, condition, weight, temperature, heart_rate, respiratory_rate, symptoms, medications, follow_up_date, is_emergency, created_at, updated_at, deleted_at
 `
 
 type UpdateMedicalSessionParams struct {
@@ -871,6 +889,7 @@ type UpdateMedicalSessionParams struct {
 	Temperature     pgtype.Numeric
 	HeartRate       pgtype.Int4
 	RespiratoryRate pgtype.Int4
+	ClinicService   models.ClinicService
 }
 
 func (q *Queries) UpdateMedicalSession(ctx context.Context, arg UpdateMedicalSessionParams) (MedicalSession, error) {
@@ -889,6 +908,7 @@ func (q *Queries) UpdateMedicalSession(ctx context.Context, arg UpdateMedicalSes
 		arg.Temperature,
 		arg.HeartRate,
 		arg.RespiratoryRate,
+		arg.ClinicService,
 	)
 	var i MedicalSession
 	err := row.Scan(
@@ -897,6 +917,7 @@ func (q *Queries) UpdateMedicalSession(ctx context.Context, arg UpdateMedicalSes
 		&i.CustomerID,
 		&i.EmployeeID,
 		&i.AppointmentID,
+		&i.ClinicService,
 		&i.VisitDate,
 		&i.VisitType,
 		&i.Diagnosis,

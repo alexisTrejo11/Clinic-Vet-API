@@ -190,11 +190,39 @@ func (m *PgInt4Mapper) ToEmployeeIDPtr(pgType pgtype.Int4) *valueobject.Employee
 	return nil
 }
 
+func (m *PgInt4Mapper) ToEmployeeID(pgType pgtype.Int4) valueobject.EmployeeID {
+	if pgType.Valid {
+		return valueobject.NewEmployeeID(uint(pgType.Int32))
+	}
+	return valueobject.EmployeeID{}
+}
+
+func (m *PgInt4Mapper) ToPetID(pgType pgtype.Int4) valueobject.PetID {
+	if pgType.Valid {
+		return valueobject.NewPetID(uint(pgType.Int32))
+	}
+	return valueobject.PetID{}
+}
+
 func (m *PgDateMapper) ToTimePtr(pgType pgtype.Date) *time.Time {
 	if pgType.Valid {
 		return &pgType.Time
 	}
 	return nil
+}
+
+func (m *PgDateMapper) ToTime(pgType pgtype.Date) time.Time {
+	if pgType.Valid {
+		return pgType.Time
+	}
+	return time.Time{}
+}
+
+func (m *PgDateMapper) FromTimePtr(t *time.Time) pgtype.Date {
+	if t != nil && *t != (time.Time{}) {
+		return pgtype.Date{Time: *t, Valid: true}
+	}
+	return pgtype.Date{Valid: false}
 }
 
 func (m *SqlcFieldMapper) DewormIDPtrToPgInt4(id *valueobject.DewormID) pgtype.Int4 {

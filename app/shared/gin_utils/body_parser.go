@@ -7,8 +7,8 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-// BindAndValidate binds the request body to the provided object and validates it using the provided validation function.
-func BindAndValidateBody(c *gin.Context, obj any, validate *validator.Validate) error {
+// ShouldBindAndValidate binds the request body to the provided object and validates it using the provided validation function.
+func ShouldBindAndValidateBody(c *gin.Context, obj any, validate *validator.Validate) error {
 	if err := c.ShouldBindBodyWithJSON(obj); err != nil {
 		return httpError.RequestBodyDataError(err)
 	}
@@ -25,7 +25,7 @@ func BindAndValidateBody(c *gin.Context, obj any, validate *validator.Validate) 
 	return nil
 }
 
-func BindAndValidateQuery(c *gin.Context, obj any, validate *validator.Validate) error {
+func ShouldBindAndValidateQuery(c *gin.Context, obj any, validate *validator.Validate) error {
 	if err := c.ShouldBindQuery(obj); err != nil {
 		return httpError.InvalidDataError(err)
 	}

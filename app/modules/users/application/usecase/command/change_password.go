@@ -11,42 +11,42 @@ import (
 	"clinic-vet-api/app/shared/password"
 )
 
-type ChangePasswordCommand struct {
+type UpdatePasswordCommand struct {
 	UserID          valueobject.UserID
 	CurrentPassword string
 	NewPassword     string
 }
 
-type ChangePasswordHandler struct {
+type UpdatePasswordHandler struct {
 	userRepository  repository.UserRepository
 	passwordEncoder password.PasswordEncoder
 }
 
-func NewChangePasswordHandler(userRepo repository.UserRepository, passwordEncoder password.PasswordEncoder) *ChangePasswordHandler {
-	return &ChangePasswordHandler{
+func NewUpdatePasswordHandler(userRepo repository.UserRepository, passwordEncoder password.PasswordEncoder) *UpdatePasswordHandler {
+	return &UpdatePasswordHandler{
 		userRepository:  userRepo,
 		passwordEncoder: passwordEncoder,
 	}
 }
 
-func (c *ChangePasswordHandler) Handle(ctx context.Context, command ChangePasswordCommand) cqrs.CommandResult {
+func (c *UpdatePasswordHandler) Handle(ctx context.Context, command UpdatePasswordCommand) cqrs.CommandResult {
 	user, err := c.userRepository.FindByID(ctx, command.UserID)
 	if err != nil {
 		return *cqrs.FailureResult("failed to find user", err)
 	}
 
-	if err := c.changePassword(ctx, &user, command); err != nil {
-		return *cqrs.FailureResult("failed to change password", err)
+	if err := c.UpdatePassword(ctx, &user, command); err != nil {
+		return *cqrs.FailureResult("failed to Update password", err)
 	}
 
 	if err := c.userRepository.Save(ctx, &user); err != nil {
 		return *cqrs.FailureResult("failed to update user", err)
 	}
 
-	return *cqrs.SuccessResult("password changed successfully")
+	return *cqrs.SuccessResult("password Updated successfully")
 }
 
-func (c *ChangePasswordHandler) changePassword(ctx context.Context, user *user.User, command ChangePasswordCommand) error {
+func (c *UpdatePasswordHandler) UpdatePassword(ctx context.Context, user *user.User, command UpdatePasswordCommand) error {
 	valid := c.passwordEncoder.CheckPassword(user.HashedPassword(), command.CurrentPassword)
 	if !valid {
 		return apperror.ValidationError("Current password is incorrect")

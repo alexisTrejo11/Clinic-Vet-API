@@ -65,7 +65,7 @@ func (ctrl *PetController) FindPetByID(c *gin.Context) {
 // @Router /pets [post]
 func (ctrl *PetController) CreatePet(c *gin.Context) {
 	var requestData dto.AdminPetCreateExtraFields
-	if err := ginUtils.BindAndValidateBody(c, &requestData, ctrl.validator); err != nil {
+	if err := ginUtils.ShouldBindAndValidateBody(c, &requestData, ctrl.validator); err != nil {
 		response.BadRequest(c, err)
 		return
 	}
@@ -87,7 +87,7 @@ func (ctrl *PetController) CreatePet(c *gin.Context) {
 // @Router /pets/{id} [put]
 func (ctrl *PetController) UpdatePet(c *gin.Context) {
 	var extraFields dto.AdminUpdatePetExtraFields
-	if err := ginUtils.BindAndValidateBody(c, &extraFields, ctrl.validator); err != nil {
+	if err := ginUtils.ShouldBindAndValidateBody(c, &extraFields, ctrl.validator); err != nil {
 		response.BadRequest(c, err)
 		return
 	}

@@ -29,21 +29,10 @@ func sqlcToEntity(row sqlc.Appointment) *appt.Appointment {
 		WithEmployeeID(employeeID).
 		WithStatus(enum.AppointmentStatus(string(row.Status))).
 		WithScheduledDate(row.ScheduledDate.Time).
+		WithService(enum.ClinicService(row.ClinicService)).
 		WithNotes(notes).
 		WithTimestamps(row.CreatedAt.Time, row.UpdatedAt.Time).
 		Build()
-}
-
-func sqlcRowsToEntities(rows []sqlc.Appointment) []appt.Appointment {
-	var appointments []appt.Appointment
-	if len(rows) == 0 {
-		return []appt.Appointment{}
-	}
-
-	for _, row := range rows {
-		appointments = append(appointments, *sqlcToEntity(row))
-	}
-	return appointments
 }
 
 func appointmentToCreateParams(appointment *appt.Appointment) sqlc.CreateAppointmentParams {

@@ -44,6 +44,3 @@ func (ctrl *TokenController) RevokeToken(c *gin.Context) {
 
 func (ctrl *TokenController) RevokeAllTokens(c *gin.Context) {
 }
-
-func (ctrl *TokenController) Send2FAToken(c *gin.Context) {
-}

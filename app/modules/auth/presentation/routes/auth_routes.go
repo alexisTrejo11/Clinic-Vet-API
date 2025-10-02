@@ -11,12 +11,14 @@ import (
 type AuthRoutes struct {
 	AuthController  *controller.AuthController
 	TokenController *controller.TokenController
+	TwoFAController *controller.TwoFAAuthController
 }
 
-func NewAuthRoutes(authController *controller.AuthController, tokenController *controller.TokenController) *AuthRoutes {
+func NewAuthRoutes(authController *controller.AuthController, tokenController *controller.TokenController, twoFAController *controller.TwoFAAuthController) *AuthRoutes {
 	return &AuthRoutes{
 		AuthController:  authController,
 		TokenController: tokenController,
+		TwoFAController: twoFAController,
 	}
 }
 
@@ -43,4 +45,14 @@ func (r *AuthRoutes) RegisterSessionRoutes(app *gin.RouterGroup, authMiddleware 
 	//authGroup.POST("/reset-password", r.AuthControler.ResetPassword)
 	//authGroup.POST("/verify-email", r.AuthControler.VerifyEmail)
 	//authGroup.POST("/resend-verification", r.AuthControler.ResendVerification)
+}
+
+func (r *AuthRoutes) RegisterTwoFARoutes(app *gin.RouterGroup, authMiddleware *middleware.AuthMiddleware) {
+	twoFaGroup := app.Group("/2fa")
+	twoFaGroup.Use(authMiddleware.Authenticate())
+
+	twoFaGroup.POST("/send-token", r.TwoFAController.Send2FAToken)
+	twoFaGroup.POST("/login", r.TwoFAController.TwoFaLogin)
+	twoFaGroup.POST("/disable", r.TwoFAController.Disable2FA)
+	twoFaGroup.POST("/enable", r.TwoFAController.Enable2FA)
 }

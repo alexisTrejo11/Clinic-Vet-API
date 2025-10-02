@@ -16,6 +16,7 @@ type PetVaccination struct {
 	nextDueDate      *time.Time
 	notes            *string
 	createdAt        time.Time
+	updatedAt        time.Time
 }
 
 type PetVaccinationBuilder struct{ petVaccination *PetVaccination }
@@ -68,8 +69,9 @@ func (b *PetVaccinationBuilder) WithNotes(notes *string) *PetVaccinationBuilder 
 	return b
 }
 
-func (b *PetVaccinationBuilder) WithCreatedAt(createdAt time.Time) *PetVaccinationBuilder {
+func (b *PetVaccinationBuilder) WithTimeStamps(createdAt time.Time, updatedAt time.Time) *PetVaccinationBuilder {
 	b.petVaccination.createdAt = createdAt
+	b.petVaccination.updatedAt = updatedAt
 	return b
 }
 

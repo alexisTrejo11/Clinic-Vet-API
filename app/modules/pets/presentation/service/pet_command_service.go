@@ -24,7 +24,7 @@ func NewPetControllerOperations(bus application.PetServiceBus, validator *valida
 
 func (s *PetControllerOperations) CreatePet(c *gin.Context, customerID *uint, isActive bool) {
 	var requestBodyData dto.PetRequestData
-	if err := ginUtils.BindAndValidateBody(c, &requestBodyData, s.validator); err != nil {
+	if err := ginUtils.ShouldBindAndValidateBody(c, &requestBodyData, s.validator); err != nil {
 		response.BadRequest(c, err)
 		return
 	}
@@ -47,7 +47,7 @@ func (s *PetControllerOperations) UpdatePet(c *gin.Context, customerID *uint, is
 	}
 
 	var requestBodyData dto.UpdatePetRequest
-	if err := ginUtils.BindAndValidateBody(c, &requestBodyData, s.validator); err != nil {
+	if err := ginUtils.ShouldBindAndValidateBody(c, &requestBodyData, s.validator); err != nil {
 		response.BadRequest(c, err)
 		return
 	}

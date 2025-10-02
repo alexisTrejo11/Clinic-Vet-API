@@ -1,14 +1,13 @@
 package bus
 
 type UserBus struct {
-	QueryBus   UserQueryBus
-	CommandBus UserCommandBus
+	UserQueryBus
+	UserCommandBus
 }
 
 func NewUserBus(queryBus UserQueryBus, commandBus UserCommandBus) *UserBus {
-
 	return &UserBus{
-		QueryBus:   queryBus,
-		CommandBus: commandBus,
+		UserQueryBus:   queryBus,
+		UserCommandBus: commandBus,
 	}
 }

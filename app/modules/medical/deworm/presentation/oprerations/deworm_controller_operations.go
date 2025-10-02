@@ -131,7 +131,7 @@ func (d *DewormControllerOperations) FindDewormsByEmployeeID(c *gin.Context, emp
 
 func (d *DewormControllerOperations) FindDewormsByDateRange(c *gin.Context) {
 	var req dto.FindDewormsByDateRangeRequest
-	if err := ginutils.BindAndValidateQuery(c, &req, d.validate); err != nil {
+	if err := ginutils.ShouldBindAndValidateQuery(c, &req, d.validate); err != nil {
 		response.BadRequest(c, err)
 		return
 	}
@@ -151,7 +151,7 @@ func (d *DewormControllerOperations) FindDewormsByDateRange(c *gin.Context) {
 
 func (d *DewormControllerOperations) RegisterDeworm(c *gin.Context) {
 	var req dto.CreateDewormRequest
-	if err := ginutils.BindAndValidateBody(c, &req, d.validate); err != nil {
+	if err := ginutils.ShouldBindAndValidateBody(c, &req, d.validate); err != nil {
 		response.BadRequest(c, err)
 		return
 	}
@@ -174,7 +174,7 @@ func (d *DewormControllerOperations) UpdateDeworm(c *gin.Context) {
 	}
 
 	var req dto.UpdateDewormRequest
-	if err := ginutils.BindAndValidateBody(c, &req, d.validate); err != nil {
+	if err := ginutils.ShouldBindAndValidateBody(c, &req, d.validate); err != nil {
 		response.BadRequest(c, err)
 		return
 	}

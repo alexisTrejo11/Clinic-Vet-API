@@ -6,10 +6,11 @@ import (
 	"fmt"
 	"log"
 
-	api "clinic-vet-api/app/modules/appointment/presentation"
+	apptApi "clinic-vet-api/app/modules/appointment/presentation"
 	authAPI "clinic-vet-api/app/modules/auth/presentation"
 	customerAPI "clinic-vet-api/app/modules/customer/presentation"
 	vetAPI "clinic-vet-api/app/modules/employee/presentation"
+	dewormApi "clinic-vet-api/app/modules/medical/deworm/presentation"
 	medSessionAPI "clinic-vet-api/app/modules/medical/session/presentation"
 	noticService "clinic-vet-api/app/modules/notifications/application"
 	paymentAPI "clinic-vet-api/app/modules/payments/presentation"
@@ -139,7 +140,7 @@ func BootstrapAPIModules(
 		return fmt.Errorf("failed to get employee repository: %w", err)
 	}
 
-	apptModule := api.NewAppointmentAPIBuilder(&api.AppointmentAPIConfig{
+	apptModule := apptApi.NewAppointmentAPIBuilder(&apptApi.AppointmentAPIConfig{
 		Router:         routerGroup,
 		Validator:      validator,
 		Queries:        queries,
@@ -150,6 +151,20 @@ func BootstrapAPIModules(
 
 	if err := apptModule.Build(); err != nil {
 		return fmt.Errorf("failed to bootstrap appointment API module: %w", err)
+	}
+
+	dewormModule := dewormApi.NewDewormAPIModule(&dewormApi.DewormAPIConfig{
+		RouterGroup:    routerGroup,
+		Queries:        queries,
+		Validator:      validator,
+		AuthMiddleware: authMiddleware,
+		PetRepo:        petRepository,
+		EmployeeRepo:   vetRepo,
+		CustomerRepo:   customerRepo,
+	})
+
+	if err := dewormModule.Bootstrap(); err != nil {
+		return fmt.Errorf("failed to bootstrap deworm API module: %w", err)
 	}
 
 	log.Println("modules bootstrapped successfully")

@@ -160,8 +160,11 @@ CREATE TABLE IF NOT EXISTS pet_vaccinations (
     administered_date DATE NOT NULL,
     next_due_date DATE,
     administered_by INT, -- employee_id
+    batch_number VARCHAR(100),
+    vaccine_type VARCHAR(100) NOT NULL DEFAULT 'core', -- core, non-core, optional
     notes TEXT,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (pet_id) REFERENCES pets(id) ON DELETE CASCADE,
     FOREIGN KEY (administered_by) REFERENCES employees(id) ON DELETE SET NULL
 );
