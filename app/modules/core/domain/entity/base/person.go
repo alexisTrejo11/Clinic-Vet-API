@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"clinic-vet-api/app/modules/core/domain/enum"
-	"clinic-vet-api/app/modules/core/domain/valueobject"
 	domainerr "clinic-vet-api/app/modules/core/error"
 )
 
@@ -21,13 +20,23 @@ const (
 
 type Person struct {
 	id          string
-	name        valueobject.PersonName
+	firstName   string
+	lastName    string
 	dateOfBirth time.Time
 	gender      enum.PersonGender
 }
 
-func (p *Person) SetName(name valueobject.PersonName) {
-	p.name = name
+func (p *Person) SetName(firstName, lastName string) {
+	p.firstName = firstName
+	p.lastName = lastName
+}
+
+func (p *Person) SetFirstName(firstName string) {
+	p.firstName = firstName
+}
+
+func (p *Person) SetLastName(lastName string) {
+	p.lastName = lastName
 }
 
 func (p *Person) SetDateOfBirth(dob time.Time) {
@@ -38,9 +47,10 @@ func (p *Person) SetGender(gender enum.PersonGender) {
 	p.gender = gender
 }
 
-func CreatePerson(ctx context.Context, name valueobject.PersonName, dateOfBirth time.Time, gender enum.PersonGender) (*Person, error) {
+func CreatePerson(ctx context.Context, firstName, lastName string, dateOfBirth time.Time, gender enum.PersonGender) (*Person, error) {
 	person := &Person{
-		name:        name,
+		firstName:   firstName,
+		lastName:    lastName,
 		dateOfBirth: dateOfBirth,
 		gender:      gender,
 	}
@@ -55,9 +65,14 @@ func CreatePerson(ctx context.Context, name valueobject.PersonName, dateOfBirth 
 // TODO: SEPARATE VALIDATIONS FOR EACH FIELD AND ADD IT ON UPDATE METHODS
 func (p *Person) Validate(ctx context.Context) error {
 	operation := "Validating Person"
-	if p.name.FullName() == "" {
+	if p.firstName == "" {
 		return domainerr.PersonValidationError(ctx,
-			domainerr.PersonNameRequired, "full_name", "", string(operation))
+			domainerr.PersonNameRequired, "first_name", "", string(operation))
+	}
+
+	if p.lastName == "" {
+		return domainerr.PersonValidationError(ctx,
+			domainerr.PersonNameRequired, "last_name", "", string(operation))
 	}
 
 	if p.dateOfBirth.IsZero() {
@@ -84,12 +99,18 @@ func (p *Person) Validate(ctx context.Context) error {
 	return nil
 }
 
-func (p *Person) UpdateName(ctx context.Context, name valueobject.PersonName) error {
-	if !name.IsValid() {
+func (p *Person) UpdateName(ctx context.Context, firstName, lastName string) error {
+	if firstName == "" {
 		return domainerr.PersonValidationError(ctx,
-			domainerr.PersonNameInvalid, "full_name", string(name.FullName()), "UPDATE_PERSON")
+			domainerr.PersonNameRequired, "first_name", "", "UPDATE_PERSON")
 	}
-	p.name = name
+
+	if lastName == "" {
+		return domainerr.PersonValidationError(ctx,
+			domainerr.PersonNameRequired, "last_name", "", "UPDATE_PERSON")
+	}
+	p.firstName = firstName
+	p.lastName = lastName
 
 	return nil
 }
@@ -129,8 +150,16 @@ func (p *Person) ID() string {
 	return p.id
 }
 
-func (p *Person) Name() valueobject.PersonName {
-	return p.name
+func (p *Person) FirstName() string {
+	return p.firstName
+}
+
+func (p *Person) LastName() string {
+	return p.lastName
+}
+
+func (p *Person) FullName() string {
+	return p.firstName + " " + p.lastName
 }
 
 func (p *Person) DateOfBirth() time.Time {

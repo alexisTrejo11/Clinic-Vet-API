@@ -51,11 +51,11 @@ func (q *Queries) CountEmployeesBySpeciality(ctx context.Context, speciality mod
 const createEmployee = `-- name: CreateEmployee :one
 INSERT INTO employees (
     first_name, last_name, photo, license_number, speciality,
-    years_of_experience, is_active, user_id, schedule_json
+    years_of_experience, is_active, user_id, schedule_json, gender, date_of_birth
 ) VALUES (
-    $1, $2, $3, $4, $5, $6, $7, $8, $9::jsonb
+    $1, $2, $3, $4, $5, $6, $7, $8, $9::jsonb, $10, $11
 )
-RETURNING id, first_name, last_name, photo, license_number, speciality, years_of_experience, is_active, user_id, schedule_json, created_at, updated_at, deleted_at
+RETURNING id, first_name, last_name, gender, date_of_birth, photo, license_number, speciality, years_of_experience, is_active, user_id, schedule_json, created_at, updated_at, deleted_at
 `
 
 type CreateEmployeeParams struct {
@@ -68,6 +68,8 @@ type CreateEmployeeParams struct {
 	IsActive          bool
 	UserID            pgtype.Int4
 	Column9           []byte
+	Gender            models.PersonGender
+	DateOfBirth       pgtype.Date
 }
 
 func (q *Queries) CreateEmployee(ctx context.Context, arg CreateEmployeeParams) (Employee, error) {
@@ -81,12 +83,16 @@ func (q *Queries) CreateEmployee(ctx context.Context, arg CreateEmployeeParams) 
 		arg.IsActive,
 		arg.UserID,
 		arg.Column9,
+		arg.Gender,
+		arg.DateOfBirth,
 	)
 	var i Employee
 	err := row.Scan(
 		&i.ID,
 		&i.FirstName,
 		&i.LastName,
+		&i.Gender,
+		&i.DateOfBirth,
 		&i.Photo,
 		&i.LicenseNumber,
 		&i.Speciality,
@@ -126,7 +132,7 @@ func (q *Queries) ExistsEmployeeByUserID(ctx context.Context, userID pgtype.Int4
 }
 
 const findActiveEmployees = `-- name: FindActiveEmployees :many
-SELECT id, first_name, last_name, photo, license_number, speciality, years_of_experience, is_active, user_id, schedule_json, created_at, updated_at, deleted_at FROM employees
+SELECT id, first_name, last_name, gender, date_of_birth, photo, license_number, speciality, years_of_experience, is_active, user_id, schedule_json, created_at, updated_at, deleted_at FROM employees
 WHERE is_active = TRUE AND deleted_at IS NULL
 ORDER BY created_at DESC
 LIMIT $1 OFFSET $2
@@ -150,6 +156,8 @@ func (q *Queries) FindActiveEmployees(ctx context.Context, arg FindActiveEmploye
 			&i.ID,
 			&i.FirstName,
 			&i.LastName,
+			&i.Gender,
+			&i.DateOfBirth,
 			&i.Photo,
 			&i.LicenseNumber,
 			&i.Speciality,
@@ -172,7 +180,7 @@ func (q *Queries) FindActiveEmployees(ctx context.Context, arg FindActiveEmploye
 }
 
 const findEmployeeByID = `-- name: FindEmployeeByID :one
-SELECT id, first_name, last_name, photo, license_number, speciality, years_of_experience, is_active, user_id, schedule_json, created_at, updated_at, deleted_at FROM employees
+SELECT id, first_name, last_name, gender, date_of_birth, photo, license_number, speciality, years_of_experience, is_active, user_id, schedule_json, created_at, updated_at, deleted_at FROM employees
 WHERE id = $1 AND deleted_at IS NULL
 `
 
@@ -183,6 +191,8 @@ func (q *Queries) FindEmployeeByID(ctx context.Context, id int32) (Employee, err
 		&i.ID,
 		&i.FirstName,
 		&i.LastName,
+		&i.Gender,
+		&i.DateOfBirth,
 		&i.Photo,
 		&i.LicenseNumber,
 		&i.Speciality,
@@ -198,7 +208,7 @@ func (q *Queries) FindEmployeeByID(ctx context.Context, id int32) (Employee, err
 }
 
 const findEmployeeByUserID = `-- name: FindEmployeeByUserID :one
-SELECT id, first_name, last_name, photo, license_number, speciality, years_of_experience, is_active, user_id, schedule_json, created_at, updated_at, deleted_at FROM employees
+SELECT id, first_name, last_name, gender, date_of_birth, photo, license_number, speciality, years_of_experience, is_active, user_id, schedule_json, created_at, updated_at, deleted_at FROM employees
 WHERE user_id = $1 AND deleted_at IS NULL
 `
 
@@ -209,6 +219,8 @@ func (q *Queries) FindEmployeeByUserID(ctx context.Context, userID pgtype.Int4) 
 		&i.ID,
 		&i.FirstName,
 		&i.LastName,
+		&i.Gender,
+		&i.DateOfBirth,
 		&i.Photo,
 		&i.LicenseNumber,
 		&i.Speciality,
@@ -224,7 +236,7 @@ func (q *Queries) FindEmployeeByUserID(ctx context.Context, userID pgtype.Int4) 
 }
 
 const findEmployees = `-- name: FindEmployees :many
-SELECT id, first_name, last_name, photo, license_number, speciality, years_of_experience, is_active, user_id, schedule_json, created_at, updated_at, deleted_at FROM employees
+SELECT id, first_name, last_name, gender, date_of_birth, photo, license_number, speciality, years_of_experience, is_active, user_id, schedule_json, created_at, updated_at, deleted_at FROM employees
 WHERE deleted_at IS NULL
 ORDER BY created_at DESC
 LIMIT $1 OFFSET $2
@@ -248,6 +260,8 @@ func (q *Queries) FindEmployees(ctx context.Context, arg FindEmployeesParams) ([
 			&i.ID,
 			&i.FirstName,
 			&i.LastName,
+			&i.Gender,
+			&i.DateOfBirth,
 			&i.Photo,
 			&i.LicenseNumber,
 			&i.Speciality,
@@ -270,7 +284,7 @@ func (q *Queries) FindEmployees(ctx context.Context, arg FindEmployeesParams) ([
 }
 
 const findEmployeesBySpeciality = `-- name: FindEmployeesBySpeciality :many
-SELECT id, first_name, last_name, photo, license_number, speciality, years_of_experience, is_active, user_id, schedule_json, created_at, updated_at, deleted_at FROM employees
+SELECT id, first_name, last_name, gender, date_of_birth, photo, license_number, speciality, years_of_experience, is_active, user_id, schedule_json, created_at, updated_at, deleted_at FROM employees
 WHERE speciality = $1 AND deleted_at IS NULL
 ORDER BY created_at DESC
 LIMIT $2 OFFSET $3
@@ -295,6 +309,8 @@ func (q *Queries) FindEmployeesBySpeciality(ctx context.Context, arg FindEmploye
 			&i.ID,
 			&i.FirstName,
 			&i.LastName,
+			&i.Gender,
+			&i.DateOfBirth,
 			&i.Photo,
 			&i.LicenseNumber,
 			&i.Speciality,
@@ -351,9 +367,11 @@ SET
     is_active = COALESCE($8, is_active),
     user_id = COALESCE($9, user_id),
     schedule_json = COALESCE($10::jsonb, schedule_json),
+    gender = COALESCE($11, gender),
+    date_of_birth = COALESCE($12, date_of_birth),
     updated_at = CURRENT_TIMESTAMP
 WHERE id = $1 AND deleted_at IS NULL
-RETURNING id, first_name, last_name, photo, license_number, speciality, years_of_experience, is_active, user_id, schedule_json, created_at, updated_at, deleted_at
+RETURNING id, first_name, last_name, gender, date_of_birth, photo, license_number, speciality, years_of_experience, is_active, user_id, schedule_json, created_at, updated_at, deleted_at
 `
 
 type UpdateEmployeeParams struct {
@@ -367,6 +385,8 @@ type UpdateEmployeeParams struct {
 	IsActive          bool
 	UserID            pgtype.Int4
 	Column10          []byte
+	Gender            models.PersonGender
+	DateOfBirth       pgtype.Date
 }
 
 func (q *Queries) UpdateEmployee(ctx context.Context, arg UpdateEmployeeParams) (Employee, error) {
@@ -381,12 +401,16 @@ func (q *Queries) UpdateEmployee(ctx context.Context, arg UpdateEmployeeParams) 
 		arg.IsActive,
 		arg.UserID,
 		arg.Column10,
+		arg.Gender,
+		arg.DateOfBirth,
 	)
 	var i Employee
 	err := row.Scan(
 		&i.ID,
 		&i.FirstName,
 		&i.LastName,
+		&i.Gender,
+		&i.DateOfBirth,
 		&i.Photo,
 		&i.LicenseNumber,
 		&i.Speciality,

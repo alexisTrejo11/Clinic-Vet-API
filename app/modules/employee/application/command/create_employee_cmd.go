@@ -4,14 +4,14 @@ package command
 import (
 	"clinic-vet-api/app/modules/core/domain/entity/employee"
 	"clinic-vet-api/app/modules/core/domain/enum"
-	"clinic-vet-api/app/modules/core/domain/valueobject"
 	apperror "clinic-vet-api/app/shared/error/application"
 	"time"
 )
 
 type CreateEmployeeCommand struct {
 	// Personal details
-	name        valueobject.PersonName
+	firstName   string
+	lastName    string
 	gender      enum.PersonGender
 	dateOfBirth time.Time
 
@@ -36,7 +36,8 @@ func NewCreateEmployeeCommand(
 	laboralSchedule []ScheduleData,
 ) (CreateEmployeeCommand, error) {
 	cmd := CreateEmployeeCommand{
-		name:            valueobject.NewPersonNameNoErr(firstName, lastName),
+		firstName:       firstName,
+		lastName:        lastName,
 		gender:          enum.NewPersonGender(gender),
 		dateOfBirth:     dateOfBirth,
 		photo:           photo,
@@ -54,7 +55,8 @@ func NewCreateEmployeeCommand(
 	return cmd, nil
 }
 
-func (cmd *CreateEmployeeCommand) Name() valueobject.PersonName    { return cmd.name }
+func (cmd *CreateEmployeeCommand) FirstName() string               { return cmd.firstName }
+func (cmd *CreateEmployeeCommand) LastName() string                { return cmd.lastName }
 func (cmd *CreateEmployeeCommand) Gender() enum.PersonGender       { return cmd.gender }
 func (cmd *CreateEmployeeCommand) DateOfBirth() time.Time          { return cmd.dateOfBirth }
 func (cmd *CreateEmployeeCommand) Photo() string                   { return cmd.photo }
@@ -65,8 +67,12 @@ func (cmd *CreateEmployeeCommand) Specialty() enum.VetSpecialty    { return cmd.
 func (cmd *CreateEmployeeCommand) LaboralSchedule() []ScheduleData { return cmd.laboralSchedule }
 
 func (cmd *CreateEmployeeCommand) validate() error {
-	if !cmd.name.IsValid() {
-		return createEmployeeCmdErr("name", "cannot be empty")
+	if cmd.firstName == "" {
+		return createEmployeeCmdErr("firstName", "cannot be empty")
+	}
+
+	if cmd.lastName == "" {
+		return createEmployeeCmdErr("lastName", "cannot be empty")
 	}
 
 	if !cmd.gender.IsValid() {
@@ -98,6 +104,10 @@ func createEmployeeCmdErr(field, issue string) error {
 
 func (cmd *CreateEmployeeCommand) ToEntity() employee.Employee {
 	return *employee.NewEmployeeBuilder().
+		WithGender(cmd.gender).
+		WithDateOfBirth(cmd.dateOfBirth).
+		WithFirstName(cmd.firstName).
+		WithLastName(cmd.lastName).
 		WithLicenseNumber(cmd.licenseNumber).
 		WithSpecialty(cmd.specialty).
 		WithYearsExperience(cmd.yearsExperience).

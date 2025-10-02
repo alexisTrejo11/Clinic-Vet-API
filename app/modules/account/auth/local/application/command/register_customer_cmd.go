@@ -15,7 +15,8 @@ type RegisterCustomerCommand struct {
 	password    string
 	role        enum.UserRole
 
-	name        valueobject.PersonName
+	firstName   string
+	lastName    string
 	gender      enum.PersonGender
 	dateOfBirth time.Time
 }
@@ -43,7 +44,8 @@ func NewRegisterCustomerCommand(
 		phoneNumber: valueobject.NewOptPhoneNumber(phoneNumber),
 		password:    password,
 		role:        enum.UserRoleCustomer,
-		name:        valueobject.NewPersonNameNoErr(firstName, lastName),
+		firstName:   firstName,
+		lastName:    lastName,
 		gender:      enum.PersonGender(gender),
 		dateOfBirth: dateOfBirth,
 	}
@@ -59,7 +61,8 @@ func (cmd *RegisterCustomerCommand) Email() valueobject.Email              { ret
 func (cmd *RegisterCustomerCommand) PhoneNumber() *valueobject.PhoneNumber { return cmd.phoneNumber }
 func (cmd *RegisterCustomerCommand) Password() string                      { return cmd.password }
 func (cmd *RegisterCustomerCommand) Role() enum.UserRole                   { return cmd.role }
-func (cmd *RegisterCustomerCommand) Name() valueobject.PersonName          { return cmd.name }
+func (cmd *RegisterCustomerCommand) FirstName() string                     { return cmd.firstName }
+func (cmd *RegisterCustomerCommand) LastName() string                      { return cmd.lastName }
 func (cmd *RegisterCustomerCommand) DateOfBirth() time.Time                { return cmd.dateOfBirth }
 func (cmd *RegisterCustomerCommand) Gender() enum.PersonGender             { return cmd.gender }
 
@@ -73,8 +76,11 @@ func (cmd *RegisterCustomerCommand) validate() error {
 	if cmd.password == "" {
 		return CustomerRegisterCmdErr("password", "is required")
 	}
-	if !cmd.name.IsValid() {
-		return CustomerRegisterCmdErr("name", "invalid format")
+	if cmd.firstName == "" {
+		return CustomerRegisterCmdErr("first name", "is required")
+	}
+	if cmd.lastName == "" {
+		return CustomerRegisterCmdErr("last name", "is required")
 	}
 	if cmd.dateOfBirth.IsZero() {
 		return CustomerRegisterCmdErr("date of birth", "cannot have hour, minute, second or nanosecond component")

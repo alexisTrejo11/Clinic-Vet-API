@@ -714,7 +714,7 @@ func (q *Queries) GetUserCustomerProfile(ctx context.Context, id int32) (GetUser
 }
 
 const getUserEmployeeProfile = `-- name: GetUserEmployeeProfile :one
-SELECT u.id, u.email, u.phone_number, u.password, u.status, u.role, u.last_login, u.created_at, u.updated_at, u.deleted_at, e.id, e.first_name, e.last_name, e.photo, e.license_number, e.speciality, e.years_of_experience, e.is_active, e.user_id, e.schedule_json, e.created_at, e.updated_at, e.deleted_at
+SELECT u.id, u.email, u.phone_number, u.password, u.status, u.role, u.last_login, u.created_at, u.updated_at, u.deleted_at, e.id, e.first_name, e.last_name, e.gender, e.date_of_birth, e.photo, e.license_number, e.speciality, e.years_of_experience, e.is_active, e.user_id, e.schedule_json, e.created_at, e.updated_at, e.deleted_at
 FROM users u
 JOIN employees e ON u.id = e.user_id
 WHERE u.id = $1
@@ -735,6 +735,8 @@ type GetUserEmployeeProfileRow struct {
 	ID_2              int32
 	FirstName         string
 	LastName          string
+	Gender            models.PersonGender
+	DateOfBirth       pgtype.Date
 	Photo             string
 	LicenseNumber     string
 	Speciality        models.VeterinarianSpeciality
@@ -764,6 +766,8 @@ func (q *Queries) GetUserEmployeeProfile(ctx context.Context, id int32) (GetUser
 		&i.ID_2,
 		&i.FirstName,
 		&i.LastName,
+		&i.Gender,
+		&i.DateOfBirth,
 		&i.Photo,
 		&i.LicenseNumber,
 		&i.Speciality,

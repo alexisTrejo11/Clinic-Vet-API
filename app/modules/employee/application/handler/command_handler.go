@@ -29,12 +29,13 @@ func NewEmployeeCommandHandler(employeeRepo repository.EmployeeRepository) *Empl
 
 func (h *EmployeeCommandHandler) HandleCreate(ctx context.Context, cmd c.CreateEmployeeCommand) cqrs.CommandResult {
 	employee := cmd.ToEntity()
-	if err := h.employeeRepo.Save(ctx, &employee); err != nil {
-		return *cqrs.FailureResult(FailSaveEmployeeMsg, err)
-	}
 
 	if err := employee.Validate(ctx); err != nil {
 		return *cqrs.FailureResult(FailBuissnessLogicMsg, err)
+	}
+
+	if err := h.employeeRepo.Save(ctx, &employee); err != nil {
+		return *cqrs.FailureResult(FailSaveEmployeeMsg, err)
 	}
 
 	return *cqrs.SuccessCreateResult(employee.ID().String(), SuccessEmployeeCreatedMsg)
@@ -46,7 +47,7 @@ func (h *EmployeeCommandHandler) HandleUpdate(ctx context.Context, cmd c.UpdateE
 		return *cqrs.FailureResult(FailFindEmployeeMsg, err)
 	}
 
-	employeeUpdated := cmd.ToUpdateEmployee(existingEmployee)
+	employeeUpdated := cmd.UpdateEmployee(existingEmployee)
 	if err := h.employeeRepo.Save(ctx, &employeeUpdated); err != nil {
 		return *cqrs.FailureResult(FailSaveEmployeeMsg, err)
 	}

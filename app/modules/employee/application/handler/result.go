@@ -9,6 +9,8 @@ type EmployeeResult struct {
 	ID              uint
 	FirstName       string
 	LastName        string
+	Gender          string
+	DateOfBirth     time.Time
 	Photo           string
 	LicenseNumber   string
 	YearsExperience int32
@@ -54,8 +56,10 @@ func employeeToResult(employee employee.Employee) EmployeeResult {
 
 	return EmployeeResult{
 		ID:              employee.ID().Value(),
-		FirstName:       employee.Name().FirstName,
-		LastName:        employee.Name().LastName,
+		FirstName:       employee.FirstName(),
+		LastName:        employee.LastName(),
+		Gender:          employee.Gender().DisplayName(),
+		DateOfBirth:     employee.DateOfBirth(),
 		Photo:           employee.Photo(),
 		LicenseNumber:   employee.LicenseNumber(),
 		Specialty:       employee.Specialty().String(),

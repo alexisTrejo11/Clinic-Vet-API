@@ -31,13 +31,13 @@ func (b *EmployeeBuilder) WithID(id vo.EmployeeID) *EmployeeBuilder {
 	return b
 }
 
-func (b *EmployeeBuilder) WithPersonalData(person base.Person) *EmployeeBuilder {
-	b.emp.Person = person
+func (b *EmployeeBuilder) WithFirstName(firstName string) *EmployeeBuilder {
+	b.emp.SetFirstName(firstName)
 	return b
 }
 
-func (b *EmployeeBuilder) WithName(name valueobject.PersonName) *EmployeeBuilder {
-	b.emp.SetName(name)
+func (b *EmployeeBuilder) WithLastName(lastName string) *EmployeeBuilder {
+	b.emp.SetLastName(lastName)
 	return b
 }
 
@@ -81,12 +81,21 @@ func (b *EmployeeBuilder) WithTimestamps(createdAt, updatedAt time.Time) *Employ
 	return b
 }
 
+func (b *EmployeeBuilder) WithGender(g enum.PersonGender) *EmployeeBuilder {
+	b.emp.SetGender(g)
+	return b
+}
+
+func (b *EmployeeBuilder) WithDateOfBirth(dob time.Time) *EmployeeBuilder {
+	b.emp.SetDateOfBirth(dob)
+	return b
+}
+
 func (b *EmployeeBuilder) Build() *Employee {
 	return b.emp
 }
 
 func (v *Employee) ID() vo.EmployeeID                              { return v.Entity.ID() }
-func (v *Employee) Name() vo.PersonName                            { return v.Person.Name() }
 func (v *Employee) Photo() string                                  { return v.photo }
 func (v *Employee) LicenseNumber() string                          { return v.licenseNumber }
 func (v *Employee) Specialty() enum.VetSpecialty                   { return v.specialty }

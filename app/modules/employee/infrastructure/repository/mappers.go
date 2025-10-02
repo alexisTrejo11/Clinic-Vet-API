@@ -42,11 +42,13 @@ func (r *SqlcEmployeeRepository) toEntity(sql sqlc.Employee) *employee.Employee 
 	}
 
 	employeeID := valueobject.NewEmployeeID(uint(sql.ID))
-	personName := valueobject.PersonName{FirstName: sql.FirstName, LastName: sql.LastName}
 	userID := r.pgMap.PgInt4.ToUserIDPtr(sql.UserID)
 	return employee.NewEmployeeBuilder().
 		WithID(employeeID).
-		WithName(personName).
+		WithFirstName(sql.FirstName).
+		WithLastName(sql.LastName).
+		WithDateOfBirth(r.pgMap.PgDate.ToTime(sql.DateOfBirth)).
+		WithGender(enum.NewPersonGender(string(sql.Gender))).
 		WithPhoto(sql.Photo).
 		WithLicenseNumber(sql.LicenseNumber).
 		WithSpecialty(enum.VetSpecialty(string(sql.Speciality))).
@@ -153,10 +155,13 @@ func UnmarshalEmployeeSchedule(sqlJSON []byte) (*valueobject.Schedule, error) {
 }
 
 func (r *SqlcEmployeeRepository) toUpdateParams(employee *employee.Employee) *sqlc.UpdateEmployeeParams {
+	fmt.Println("Mapping employee to update params:", &employee)
 	return &sqlc.UpdateEmployeeParams{
 		ID:                employee.ID().Int32(),
-		FirstName:         employee.Name().FirstName,
-		LastName:          employee.Name().LastName,
+		FirstName:         employee.FirstName(),
+		LastName:          employee.LastName(),
+		DateOfBirth:       r.pgMap.PgDate.FromTime(employee.DateOfBirth()),
+		Gender:            models.PersonGender(employee.Gender().String()),
 		LicenseNumber:     employee.LicenseNumber(),
 		Photo:             employee.Photo(),
 		Speciality:        models.VeterinarianSpeciality(employee.Specialty().String()),
@@ -168,9 +173,11 @@ func (r *SqlcEmployeeRepository) toUpdateParams(employee *employee.Employee) *sq
 
 func (r *SqlcEmployeeRepository) toCreateParams(employee *employee.Employee) *sqlc.CreateEmployeeParams {
 	return &sqlc.CreateEmployeeParams{
-		FirstName:         employee.Name().FirstName,
-		LastName:          employee.Name().LastName,
+		FirstName:         employee.FirstName(),
+		LastName:          employee.LastName(),
+		DateOfBirth:       r.pgMap.PgDate.FromTime(employee.DateOfBirth()),
 		LicenseNumber:     employee.LicenseNumber(),
+		Gender:            models.PersonGender(employee.Gender().String()),
 		Photo:             employee.Photo(),
 		Speciality:        models.VeterinarianSpeciality(employee.Specialty().String()),
 		YearsOfExperience: employee.YearsExperience(),

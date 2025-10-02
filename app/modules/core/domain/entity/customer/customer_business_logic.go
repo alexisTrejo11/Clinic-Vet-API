@@ -24,7 +24,7 @@ func (o *Customer) UpdatePhoto(ctx context.Context, newPhoto string) error {
 func (o *Customer) UpdateFullName(ctx context.Context, newName valueobject.PersonName) error {
 	const operation = "update_full_name"
 
-	if err := o.UpdateName(ctx, newName); err != nil {
+	if err := o.UpdateName(ctx, newName.FirstName(), newName.LastName()); err != nil {
 		return domainerr.WrapError(ctx, err, "Failed to update name", "customer", "name", operation)
 	}
 
@@ -68,8 +68,6 @@ func (o *Customer) RemoveUserAssociation(ctx context.Context) error {
 }
 
 func (o *Customer) Activate(ctx context.Context) error {
-	const operation = "activate_customer"
-
 	if o.isActive {
 		return nil // Already active
 	}

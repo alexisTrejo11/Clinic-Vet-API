@@ -142,49 +142,42 @@ func (p PhoneNumber) String() string {
 }
 
 type PersonName struct {
-	FirstName string
-	LastName  string
+	firstName string
+	lastName  string
 }
 
-func NewPersonName(firstName, lastName string) (PersonName, error) {
+func NewPersonName(firstName, lastName string) PersonName {
 	firstName = strings.TrimSpace(firstName)
 	lastName = strings.TrimSpace(lastName)
-
-	if firstName == "" {
-		return PersonName{}, domainerr.InvalidFieldValue(context.Background(), "first_name", "empty", "first name cannot be empty", "create name")
-	}
-
-	if lastName == "" {
-		return PersonName{}, domainerr.InvalidFieldValue(context.Background(), "last_name", "empty", "last name cannot be empty", "create name")
-	}
-
 	return PersonName{
-		FirstName: firstName,
-		LastName:  lastName,
-	}, nil
-}
-
-func NewPersonNameNoErr(firstName, lastName string) PersonName {
-	n, _ := NewPersonName(firstName, lastName)
-	return n
+		firstName: firstName,
+		lastName:  lastName,
+	}
 }
 
 func (n PersonName) IsValid() bool {
-	return n.FirstName != "" && n.LastName != ""
+	return n.firstName != "" && n.lastName != ""
 }
 
 func (n PersonName) FullName() string {
-	return fmt.Sprintf("%s %s", n.FirstName, n.LastName)
+	return fmt.Sprintf("%s %s", n.firstName, n.lastName)
+}
+
+func (n PersonName) FirstName() string {
+	return n.firstName
+}
+
+func (n PersonName) LastName() string {
+	return n.lastName
 }
 
 func NewOptPersonName(firstName, lastName *string) *PersonName {
-	if firstName == nil && lastName == nil {
-		return nil
+	name := &PersonName{}
+	if firstName != nil {
+		name.firstName = *firstName
 	}
-
-	name := PersonName{
-		FirstName: *firstName,
-		LastName:  *lastName,
+	if lastName != nil {
+		name.lastName = *lastName
 	}
-	return &name
+	return name
 }

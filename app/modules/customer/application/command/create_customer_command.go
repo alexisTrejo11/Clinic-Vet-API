@@ -19,7 +19,7 @@ type CreateCustomerCommand struct {
 func NewCreateCustomerCommand(photo string, firstName string, lastName string, gender string, dateOfBirth time.Time) (CreateCustomerCommand, error) {
 	cmd := &CreateCustomerCommand{
 		photo:       photo,
-		name:        valueobject.NewPersonNameNoErr(firstName, lastName),
+		name:        valueobject.NewPersonName(firstName, lastName),
 		gender:      enum.NewPersonGender(gender),
 		dateOfBirth: dateOfBirth,
 	}

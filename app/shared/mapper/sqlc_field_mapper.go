@@ -225,6 +225,13 @@ func (m *PgDateMapper) FromTimePtr(t *time.Time) pgtype.Date {
 	return pgtype.Date{Valid: false}
 }
 
+func (m *PgDateMapper) FromTime(t time.Time) pgtype.Date {
+	if t != (time.Time{}) {
+		return pgtype.Date{Time: t, Valid: true}
+	}
+	return pgtype.Date{Valid: false}
+}
+
 func (m *SqlcFieldMapper) DewormIDPtrToPgInt4(id *valueobject.DewormID) pgtype.Int4 {
 	if id != nil {
 		return pgtype.Int4{Int32: int32(id.Value()), Valid: true}

@@ -2,7 +2,6 @@
 package customer
 
 import (
-	"context"
 	"time"
 
 	"clinic-vet-api/app/modules/core/domain/entity/base"
@@ -37,17 +36,17 @@ func (cb *CustomerBuilder) WithPhoto(photo string) *CustomerBuilder {
 }
 
 func (cb *CustomerBuilder) WithName(fullName valueobject.PersonName) *CustomerBuilder {
-	cb.customer.Person.UpdateName(context.Background(), fullName)
+	cb.customer.Person.SetName(fullName.FirstName(), fullName.LastName())
 	return cb
 }
 
 func (cb *CustomerBuilder) WithGender(gender enum.PersonGender) *CustomerBuilder {
-	cb.customer.Person.UpdateGender(context.Background(), gender)
+	cb.customer.Person.SetGender(gender)
 	return cb
 }
 
 func (cb *CustomerBuilder) WithDateOfBirth(dob time.Time) *CustomerBuilder {
-	cb.customer.Person.UpdateDateOfBirth(context.Background(), dob)
+	cb.customer.Person.SetDateOfBirth(dob)
 	return cb
 }
 

@@ -41,6 +41,8 @@ type Employee struct {
 	ID                int32
 	FirstName         string
 	LastName          string
+	Gender            models.PersonGender
+	DateOfBirth       pgtype.Date
 	Photo             string
 	LicenseNumber     string
 	Speciality        models.VeterinarianSpeciality

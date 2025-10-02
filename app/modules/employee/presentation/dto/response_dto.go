@@ -10,10 +10,12 @@ type EmployeeResponse struct {
 	ID              string `json:"id" example:"123e4567-e89b-12d3-a456-426614174000"`
 	FirstName       string `json:"first_name" example:"John"`
 	LastName        string `json:"last_name" example:"Doe"`
+	Gender          string `json:"gender" example:"male"`
+	DateOfBirth     string `json:"date_of_birth" example:"1990-01-01"`
 	Photo           string `json:"photo" example:"https://example.com/photo.jpg"`
 	LicenseNumber   string `json:"license_number" example:"VET123456"`
 	UserID          *uint  `json:"user_id,omitempty" example:"42"`
-	YearsExperience int32  `json:"years_experience" example:"5"`
+	YearsExperience int32  `json:"years_experience,omitempty" example:"5"`
 	IsActive        bool   `json:"is_active" example:"true"`
 	Specialty       string `json:"specialty" example:"CARDIOLOGY"`
 	// LaboralSchedule []ScheduleResponse `json:"laboral_schedule"`
@@ -25,6 +27,8 @@ func (r *EmployeeResponse) FromResult(result handler.EmployeeResult) {
 	r.ID = strconv.FormatUint(uint64(result.ID), 10)
 	r.FirstName = result.FirstName
 	r.LastName = result.LastName
+	r.Gender = result.Gender
+	r.DateOfBirth = result.DateOfBirth.Format("2006-01-02")
 	r.Photo = result.Photo
 	r.LicenseNumber = result.LicenseNumber
 	r.YearsExperience = result.YearsExperience

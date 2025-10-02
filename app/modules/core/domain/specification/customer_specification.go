@@ -63,11 +63,11 @@ func (s *CustomerSpecification) IsSatisfiedBy(entity any) bool {
 	}
 
 	// Aplicar todos los filtros
-	if s.Name != nil && !strings.Contains(strings.ToLower(customer.Name().FirstName), strings.ToLower(*s.Name)) {
+	if s.Name != nil && !strings.Contains(strings.ToLower(customer.FirstName()), strings.ToLower(*s.Name)) {
 		return false
 	}
 
-	if s.LastName != nil && !strings.Contains(strings.ToLower(customer.Name().LastName), strings.ToLower(*s.LastName)) {
+	if s.LastName != nil && !strings.Contains(strings.ToLower(customer.LastName()), strings.ToLower(*s.LastName)) {
 		return false
 	}
 

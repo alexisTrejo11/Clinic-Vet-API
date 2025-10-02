@@ -14,8 +14,8 @@ func (r *SqlcCustomerRepository) toCreateParams(customer customer.Customer) *sql
 		Photo:       customer.Photo(),
 		DateOfBirth: r.mapper.TimeToPgDate(customer.DateOfBirth()),
 		Gender:      models.PersonGender(customer.Gender().String()),
-		FirstName:   customer.Name().FirstName,
-		LastName:    customer.Name().LastName,
+		FirstName:   customer.FirstName(),
+		LastName:    customer.LastName(),
 		IsActive:    customer.IsActive(),
 		UserID:      r.mapper.UserIDPtrToInt32(customer.UserID()),
 	}
@@ -27,8 +27,8 @@ func (r *SqlcCustomerRepository) ToUpdateParams(customer customer.Customer) *sql
 		Photo:       customer.Photo(),
 		Gender:      models.PersonGender(customer.Gender()),
 		DateOfBirth: r.mapper.TimeToPgDate(customer.DateOfBirth()),
-		FirstName:   customer.Name().FirstName,
-		LastName:    customer.Name().LastName,
+		FirstName:   customer.FirstName(),
+		LastName:    customer.LastName(),
 		IsActive:    customer.IsActive(),
 		UserID:      r.mapper.UserIDPtrToInt32(customer.UserID()),
 	}
@@ -36,7 +36,7 @@ func (r *SqlcCustomerRepository) ToUpdateParams(customer customer.Customer) *sql
 
 func (r *SqlcCustomerRepository) sqlcRowToEntityWithPets(row sqlc.Customer, pets []pet.Pet) customer.Customer {
 	return *customer.NewCustomerBuilder().
-		WithName(valueobject.NewPersonNameNoErr(row.FirstName, row.LastName)).
+		WithName(valueobject.NewPersonName(row.FirstName, row.LastName)).
 		WithDateOfBirth(row.DateOfBirth.Time).
 		WithUserID(r.mapper.Int32ToUserIDPtr(row.UserID.Int32)).
 		WithGender(enum.PersonGender(string(row.Gender))).

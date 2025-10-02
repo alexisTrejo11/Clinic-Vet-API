@@ -27,9 +27,9 @@ LIMIT $2 OFFSET $3;
 -- name: CreateEmployee :one
 INSERT INTO employees (
     first_name, last_name, photo, license_number, speciality,
-    years_of_experience, is_active, user_id, schedule_json
+    years_of_experience, is_active, user_id, schedule_json, gender, date_of_birth
 ) VALUES (
-    $1, $2, $3, $4, $5, $6, $7, $8, $9::jsonb
+    $1, $2, $3, $4, $5, $6, $7, $8, $9::jsonb, $10, $11
 )
 RETURNING *;
 
@@ -45,6 +45,8 @@ SET
     is_active = COALESCE($8, is_active),
     user_id = COALESCE($9, user_id),
     schedule_json = COALESCE($10::jsonb, schedule_json),
+    gender = COALESCE($11, gender),
+    date_of_birth = COALESCE($12, date_of_birth),
     updated_at = CURRENT_TIMESTAMP
 WHERE id = $1 AND deleted_at IS NULL
 RETURNING *;

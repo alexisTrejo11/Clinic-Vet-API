@@ -90,6 +90,14 @@ type UpdateEmployeeRequest struct {
 	// Required: false
 	LastName *string `json:"last_name" example:"Smith"`
 
+	// Date of birth of the employee
+	// Required: false
+	DateOfBirth *time.Time `json:"date_of_birth" example:"1985-05-20T00:00:00Z"`
+
+	// Gender of the employee
+	// Required: false
+	Gender *string `json:"gender" example:"female"`
+
 	// URL or path to employee's photo
 	// Required: false
 	Photo *string `json:"photo" example:"https://example.com/new-photo.jpg"`
@@ -209,6 +217,8 @@ func (r *UpdateEmployeeRequest) ToCommand(employeeIDUint uint) (command.UpdateEm
 		employeeIDUint,
 		r.FirstName,
 		r.LastName,
+		r.Gender,
+		r.DateOfBirth,
 		r.Photo,
 		r.LicenseNumber,
 		r.Specialty,

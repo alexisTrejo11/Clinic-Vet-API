@@ -44,9 +44,9 @@ type PasswordChangedEvent struct {
 }
 
 type UserRegisteredEvent struct {
-	UserID       valueobject.UserID     `json:"user_id"`
-	Email        valueobject.Email      `json:"email"`
-	Role         enum.UserRole          `json:"role"` // "customer" or "employee"
-	Employee     *employee.Employee     `json:"employee,omitempty"`
-	PersonalData commondto.PersonalData `json:"personal_data"`
+	UserID                 valueobject.UserID `json:"user_id"`
+	Email                  valueobject.Email  `json:"email"`
+	Role                   enum.UserRole      `json:"role"` // "customer" or "employee"
+	Employee               *employee.Employee `json:"employee,omitempty"`
+	commondto.PersonalData `json:"personal_data"`
 }

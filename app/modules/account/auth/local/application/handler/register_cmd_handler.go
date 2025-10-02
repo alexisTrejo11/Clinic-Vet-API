@@ -63,13 +63,12 @@ func (h *AuthCommandHandler) produceRegisterEvent(user *u.User, employee *e.Empl
 }
 
 func (h *AuthCommandHandler) produceEvent(user *u.User, cmd c.RegisterCustomerCommand) {
-	name, _ := valueobject.NewPersonName(cmd.Name().FirstName, cmd.Name().LastName)
 	event := event.UserRegisteredEvent{
 		UserID: user.ID(),
 		Role:   user.Role(),
 		Email:  user.Email(),
 		PersonalData: commondto.PersonalData{
-			Name:        name,
+			Name:        valueobject.NewPersonName(cmd.FirstName(), cmd.LastName()),
 			Gender:      cmd.Gender(),
 			DateOfBirth: cmd.DateOfBirth(),
 		},

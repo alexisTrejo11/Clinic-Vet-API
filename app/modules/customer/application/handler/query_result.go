@@ -32,8 +32,8 @@ func customerToResult(customer customer.Customer) CustomerResult {
 		UpdatedAt:   customer.UpdatedAt(),
 		UserID:      customer.UserID(),
 		Photo:       customer.Photo(),
-		FirstName:   customer.Name().FirstName,
-		LastName:    customer.Name().LastName,
+		FirstName:   customer.FirstName(),
+		LastName:    customer.LastName(),
 		DateOfBirth: customer.DateOfBirth(),
 	}
 	return *result
