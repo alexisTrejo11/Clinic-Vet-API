@@ -18,15 +18,15 @@ func (j *JWTAccessTokenImpl) Generate() (string, error) {
 	j.expiresAt = now.Add(j.config.ExpiresIn)
 
 	claims := TokenClaims{
-		UserID:    j.config.UserID,
-		TokenType: vo.JWTAccessToken,
-		IssuedAt:  now,
-		ExpiresAt: j.expiresAt,
-		Purpose:   j.config.Purpose,
+		UserID:     j.config.UserID,
+		TokenType:  vo.JWTAccessToken,
+		CreatedAt:  now,
+		ValidUntil: j.expiresAt,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(j.expiresAt),
 			IssuedAt:  jwt.NewNumericDate(now),
 			Subject:   j.config.UserID,
+			Issuer:    j.config.Issuer,
 		},
 	}
 
@@ -64,15 +64,15 @@ func (r *JWTRefreshTokenImpl) Generate() (string, error) {
 	r.expiresAt = now.Add(r.config.ExpiresIn)
 
 	claims := TokenClaims{
-		UserID:    r.config.UserID,
-		TokenType: vo.JWTRefreshToken,
-		IssuedAt:  now,
-		ExpiresAt: r.expiresAt,
-		Purpose:   "refresh",
+		UserID:     r.config.UserID,
+		TokenType:  vo.JWTRefreshToken,
+		CreatedAt:  now,
+		ValidUntil: r.expiresAt,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(r.expiresAt),
 			IssuedAt:  jwt.NewNumericDate(now),
 			Subject:   r.config.UserID,
+			Issuer:    r.config.Issuer,
 		},
 	}
 

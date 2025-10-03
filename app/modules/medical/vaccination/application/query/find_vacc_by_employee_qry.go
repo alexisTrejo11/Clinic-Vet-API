@@ -20,6 +20,6 @@ func NewFindVaccinationsByEmployeeQuery(employeeID uint, pagination p.Pagination
 func (q FindVaccinationsByEmployeeQuery) EmployeeID() valueobject.EmployeeID { return q.employeeID }
 func (q FindVaccinationsByEmployeeQuery) Pagination() p.PaginationRequest    { return q.pagination }
 
-func (q *FindVaccinationsByEmployeeQuery) Validate() error {
+func (q FindVaccinationsByEmployeeQuery) Validate() error {
 	return nil
 }

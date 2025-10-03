@@ -11,7 +11,7 @@ type FindVaccinationByIDQuery struct {
 }
 
 func NewFindVaccinationByIDQuery(id uint, optPetID *uint, optEmployeeID *uint) (FindVaccinationByIDQuery, error) {
-	cmd := &FindVaccinationByIDQuery{
+	cmd := FindVaccinationByIDQuery{
 		id:            valueobject.NewVaccinationID(id),
 		optPetID:      valueobject.NewOptPetID(optPetID),
 		optEmployeeID: valueobject.NewOptEmployeeID(optEmployeeID),
@@ -21,10 +21,10 @@ func NewFindVaccinationByIDQuery(id uint, optPetID *uint, optEmployeeID *uint) (
 		return FindVaccinationByIDQuery{}, nil
 	}
 
-	return *cmd, nil
+	return cmd, nil
 }
 
-func (q *FindVaccinationByIDQuery) Validate() error {
+func (q FindVaccinationByIDQuery) Validate() error {
 	return nil
 }
 

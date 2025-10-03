@@ -27,16 +27,16 @@ type CreatePetCommand struct {
 
 func (h *petCommandHandler) CreatePet(ctx context.Context, cmd CreatePetCommand) cqrs.CommandResult {
 	if err := h.validateCustomer(ctx, cmd.CustomerID); err != nil {
-		return *cqrs.FailureResult("Customer validation failed", err)
+		return cqrs.FailureResult("Customer validation failed", err)
 	}
 
 	newPet := cmd.ToEntity()
 	petCreated, err := h.petRepository.Save(ctx, newPet)
 	if err != nil {
-		return *cqrs.FailureResult("Failed to save new pet", err)
+		return cqrs.FailureResult("Failed to save new pet", err)
 	}
 
-	return *cqrs.SuccessCreateResult(petCreated.ID().String(), "Pet created successfully")
+	return cqrs.SuccessCreateResult(petCreated.ID().String(), "Pet created successfully")
 }
 
 func (h *petCommandHandler) validateCustomer(ctx context.Context, customerID valueobject.CustomerID) error {

@@ -29,7 +29,7 @@ func (r *SessionRoutes) RegisterRoutes() {
 	authGroup := r.RouterGroup.Group("/auth")
 
 	refresh := authGroup.Use(r.AuthMiddleware.OptionalAuth())
-	refresh.POST("/refresh-token", r.Controller.RefreshSession)
+	refresh.POST("/refresh-session", r.Controller.RefreshSession)
 
 	logoutGroup := authGroup.Group("/logout")
 	logoutGroup.Use(r.AuthMiddleware.Authenticate())

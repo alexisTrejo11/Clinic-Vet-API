@@ -73,8 +73,8 @@ func (r *SqlcUserRepository) hardDelete(ctx context.Context, id valueobject.User
 }
 
 func (r *SqlcUserRepository) create(ctx context.Context, user *u.User) error {
-	params := r.toCreateParams(user)
-	userCreated, err := r.queries.CreateUser(ctx, *params)
+	params := r.toCreateParams(*user)
+	userCreated, err := r.queries.CreateUser(ctx, params)
 	if err != nil {
 		return r.dbError(OpInsert, ErrMsgCreateUser, err)
 	}
@@ -85,9 +85,9 @@ func (r *SqlcUserRepository) create(ctx context.Context, user *u.User) error {
 }
 
 func (r *SqlcUserRepository) update(ctx context.Context, user *u.User) error {
-	params := r.toUpdateParams(user)
+	params := r.toUpdateParams(*user)
 
-	_, err := r.queries.UpdateUser(ctx, *params)
+	_, err := r.queries.UpdateUser(ctx, params)
 	if err != nil {
 		return r.dbError(OpUpdate, fmt.Sprintf("%s with ID %d", ErrMsgUpdateUser, user.ID().Value()), err)
 	}

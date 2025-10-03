@@ -14,10 +14,10 @@ type FindUsersByRoleQuery struct {
 	pagination p.PaginationRequest
 }
 
-func NewFindUsersByRoleQuery(role string, pagination p.PaginationRequest) *FindUsersByRoleQuery {
+func NewFindUsersByRoleQuery(role string, pagination p.PaginationRequest) FindUsersByRoleQuery {
 	roleEnum := enum.UserRole(role)
 
-	return &FindUsersByRoleQuery{
+	return FindUsersByRoleQuery{
 		role:       roleEnum,
 		pagination: pagination,
 	}
@@ -27,13 +27,13 @@ type FindUsersByRoleHandler struct {
 	userRepository repository.UserRepository
 }
 
-func NewFindUsersByRoleHandler(userRepository repository.UserRepository) *FindUsersByRoleHandler {
-	return &FindUsersByRoleHandler{
+func NewFindUsersByRoleHandler(userRepository repository.UserRepository) FindUsersByRoleHandler {
+	return FindUsersByRoleHandler{
 		userRepository: userRepository,
 	}
 }
 
-func (h *FindUsersByRoleHandler) Handle(ctx context.Context, query FindUsersByRoleQuery) (p.Page[UserResult], error) {
+func (h FindUsersByRoleHandler) Handle(ctx context.Context, query FindUsersByRoleQuery) (p.Page[UserResult], error) {
 	if !query.role.IsValid() {
 		return p.Page[UserResult]{}, apperror.FieldValidationError("role", query.role.String(), "invalid role")
 	}

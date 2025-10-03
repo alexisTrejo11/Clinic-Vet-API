@@ -39,7 +39,7 @@ func NewRegisterCustomerCommand(
 	gender string,
 	dateOfBirth time.Time,
 ) (RegisterCustomerCommand, error) {
-	cmd := &RegisterCustomerCommand{
+	cmd := RegisterCustomerCommand{
 		email:       valueobject.NewEmailNoErr(email),
 		phoneNumber: valueobject.NewOptPhoneNumber(phoneNumber),
 		password:    password,
@@ -54,7 +54,7 @@ func NewRegisterCustomerCommand(
 		return RegisterCustomerCommand{}, err
 	}
 
-	return *cmd, nil
+	return cmd, nil
 }
 
 func (cmd *RegisterCustomerCommand) Email() valueobject.Email              { return cmd.email }

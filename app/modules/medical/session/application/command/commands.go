@@ -22,8 +22,8 @@ type CreateMedSessionCommand struct {
 type PetSummary struct {
 	PetID           valueobject.PetID
 	Weight          *valueobject.Decimal
-	HeartRate       *int
-	RespiratoryRate *int
+	HeartRate       *int32
+	RespiratoryRate *int32
 	Temperature     *valueobject.Decimal
 	Diagnosis       string
 	Treatment       string

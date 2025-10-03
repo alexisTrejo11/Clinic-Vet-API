@@ -13,7 +13,7 @@ type UpdateApptCommand struct {
 }
 
 func NewUpdateApptCommand(appointIDInt uint, status *string, notes *string, service *string) (UpdateApptCommand, error) {
-	cmd := &UpdateApptCommand{
+	cmd := UpdateApptCommand{
 		appointmentID: valueobject.NewAppointmentID(appointIDInt),
 		service:       enum.ClinicServicePtr(service),
 		status:        enum.AppointmentStatusPtr(status),
@@ -24,7 +24,7 @@ func NewUpdateApptCommand(appointIDInt uint, status *string, notes *string, serv
 		return UpdateApptCommand{}, err
 	}
 
-	return *cmd, nil
+	return cmd, nil
 
 }
 

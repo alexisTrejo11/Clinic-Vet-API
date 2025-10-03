@@ -24,10 +24,10 @@ import (
 
 type SqlcUserRepository struct {
 	queries *sqlc.Queries
-	pgMap   mapper.SqlcFieldMapper
+	pgMap   *mapper.SqlcFieldMapper
 }
 
-func NewSqlcUserRepository(queries *sqlc.Queries, pgMap mapper.SqlcFieldMapper) repository.UserRepository {
+func NewSqlcUserRepository(queries *sqlc.Queries, pgMap *mapper.SqlcFieldMapper) repository.UserRepository {
 	return &SqlcUserRepository{
 		queries: queries,
 		pgMap:   pgMap,

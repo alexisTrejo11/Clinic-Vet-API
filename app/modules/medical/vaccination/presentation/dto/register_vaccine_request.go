@@ -7,6 +7,7 @@ import (
 )
 
 type RegisterVaccineRequest struct {
+	PetID            uint       `json:"pet_id" binding:"required"`
 	VaccineName      string     `json:"vaccine_name" binding:"required"`
 	VaccineType      string     `json:"vaccine_type" binding:"required"`
 	AdministeredDate time.Time  `json:"administered_date" binding:"required"`
@@ -15,9 +16,9 @@ type RegisterVaccineRequest struct {
 	NextDueDate      *time.Time `json:"next_due_date,omitempty"`
 }
 
-func (r *RegisterVaccineRequest) ToCommand(petID uint, administeredBy uint) (command.RegisterVaccinationCommand, error) {
+func (r *RegisterVaccineRequest) ToCommand(administeredBy uint) (command.RegisterVaccinationCommand, error) {
 	return command.RegisterVaccinationCommand{
-		PetID:            valueobject.NewPetID(petID),
+		PetID:            valueobject.NewPetID(r.PetID),
 		VaccineName:      r.VaccineName,
 		VaccineType:      r.VaccineType,
 		AdministeredDate: r.AdministeredDate,

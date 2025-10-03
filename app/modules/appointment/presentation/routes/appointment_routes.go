@@ -11,25 +11,35 @@ import (
 type AppointmentRoutes struct {
 	customerController *controller.CustomerAppointmetController
 	employeeController *controller.EmployeeAppointmentController
+	adminController    *controller.AdminApptController
 }
 
 func NewAppointmentRoutes(
 	customerController *controller.CustomerAppointmetController,
 	employeeController *controller.EmployeeAppointmentController,
+	adminController *controller.AdminApptController,
 ) *AppointmentRoutes {
 	return &AppointmentRoutes{
 		customerController: customerController,
 		employeeController: employeeController,
+		adminController:    adminController,
 	}
 }
 
-func (r *AppointmentRoutes) RegisterAdminRoutes(Router *gin.RouterGroup) {
+func (r *AppointmentRoutes) RegisterAdminRoutes(router *gin.RouterGroup, middleware *middleware.AuthMiddleware) {
 	// Admin/General appointment routes
-	// appointmentGroup := router.Group("/api/v2/appointments")
+	appointmentGroup := router.Group("/appointments")
+	//middleware.Authenticate()
+	//middleware.RequireAnyRole("admin")
 	{
 		// Command operations (admin access)
+		appointmentGroup.POST("/", r.adminController.CreateAppointment)
+		appointmentGroup.PUT("/:id", r.adminController.UpdateAppointment)
+		appointmentGroup.DELETE("/:id", r.adminController.DeleteAppointment)
+		//Query operations (admin access)
+		appointmentGroup.GET("/:id", r.adminController.GetAppointmentByID)
+		appointmentGroup.GET("/", r.adminController.GetBySpecfificationAppointments)
 
-		// Query operations (admin access)
 	}
 }
 
@@ -53,11 +63,11 @@ func (r *AppointmentRoutes) RegisterEmployeeRoutes(router *gin.RouterGroup, auth
 	employeeRoutes.Use(authMiddleware.Authenticate())
 	employeeRoutes.Use(authMiddleware.RequireAnyRole("veterinarian", "receptionist"))
 
-	employeeRoutes.GET("/", r.employeeController.GetMyAppointments)
+	employeeRoutes.GET("", r.employeeController.GetMyAppointments)
 	employeeRoutes.GET("/stats", r.employeeController.GetAppointmentStats)
 	employeeRoutes.PUT("/:id/confirm", r.employeeController.ConfirmAppointment)
 	employeeRoutes.PUT("/:id/complete", r.employeeController.CompleteAppointment)
 	employeeRoutes.PUT("/:id/reschedule", r.employeeController.RescheduleAppointment)
 	employeeRoutes.PUT("/:id/no-show", r.employeeController.MarkAsNoShow)
-	employeeRoutes.DELETE("/:id", r.employeeController.CancelAppointment)
+	employeeRoutes.PUT("/:id/cancel", r.employeeController.CancelAppointment)
 }

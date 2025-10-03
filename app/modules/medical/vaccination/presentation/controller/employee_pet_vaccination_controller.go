@@ -36,19 +36,13 @@ func (ctrl *EmployeePetVaccinationController) RegisterNewVaccination(c *gin.Cont
 		return
 	}
 
-	petID, err := ginutils.ParseParamToUInt(c, "id")
-	if err != nil {
-		response.BadRequest(c, err)
-		return
-	}
-
 	var req dto.RegisterVaccineRequest
 	if err := ginutils.ShouldBindAndValidateBody(c, &req, ctrl.validator); err != nil {
 		response.BadRequest(c, err)
 		return
 	}
 
-	cmd, err := req.ToCommand(petID, user.EmployeeID)
+	cmd, err := req.ToCommand(user.EmployeeID)
 	if err != nil {
 		response.ApplicationError(c, err)
 		return
@@ -105,19 +99,13 @@ func (ctrl *EmployeePetVaccinationController) GetMyVaccinationAppliedDetail(c *g
 		return
 	}
 
-	petID, err := ginutils.ParseParamToUInt(c, "id")
+	vaccinationID, err := ginutils.ParseParamToUInt(c, "id")
 	if err != nil {
 		response.BadRequest(c, err)
 		return
 	}
 
-	vaccinationID, err := ginutils.ParseParamToUInt(c, "vaccination_id")
-	if err != nil {
-		response.BadRequest(c, err)
-		return
-	}
-
-	query, err := query.NewFindVaccinationByIDQuery(vaccinationID, &petID, &user.EmployeeID)
+	query, err := query.NewFindVaccinationByIDQuery(vaccinationID, nil, &user.EmployeeID)
 	if err != nil {
 		response.BadRequest(c, err)
 		return

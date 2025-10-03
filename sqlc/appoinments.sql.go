@@ -20,8 +20,16 @@ WHERE
     AND ($2::INT IS NULL OR customer_id = $2)
     AND ($3::INT IS NULL OR employee_id = $3)
     AND ($4::INT IS NULL OR pet_id = $4)
-    AND ($5::VARCHAR IS NULL OR clinic_service = $5)
-    AND ($6::VARCHAR IS NULL OR status = $6)
+    AND (
+        $5::TEXT IS NULL OR 
+        $5::TEXT = '' OR 
+        clinic_service = $5::clinic_service
+    )
+    AND (
+        $6::TEXT IS NULL OR 
+        $6::TEXT = '' OR 
+        status = $6::appointment_status    
+    )
     AND ($7::timestamp IS NULL OR scheduled_date >= $7)
     AND ($8::timestamp IS NULL OR scheduled_date <= $8)
     AND ($9::timestamp IS NULL OR scheduled_date = $9)
@@ -248,8 +256,16 @@ WHERE
     AND ($2::INT IS NULL OR customer_id = $2)
     AND ($3::INT IS NULL OR employee_id = $3)
     AND ($4::INT IS NULL OR pet_id = $4)
-    AND ($5::VARCHAR IS NULL OR clinic_service = $5)
-    AND ($6::VARCHAR IS NULL OR status = $6)
+    AND (
+        $5::TEXT IS NULL OR 
+        $5::TEXT = '' OR 
+        clinic_service = $5::clinic_service  
+    )
+    AND (
+        $6::TEXT IS NULL OR 
+        $6::TEXT = '' OR 
+        status = $6::appointment_status      
+    )
     AND ($7::timestamp IS NULL OR scheduled_date >= $7)
     AND ($8::timestamp IS NULL OR scheduled_date <= $8)
     AND ($9::timestamp IS NULL OR scheduled_date = $9)

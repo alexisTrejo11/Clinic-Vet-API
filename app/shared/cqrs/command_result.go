@@ -57,16 +57,16 @@ func (c CommandResult) getErrorString() string {
 	return ""
 }
 
-func FailureResult(message string, err error) *CommandResult {
-	return &CommandResult{
+func FailureResult(message string, err error) CommandResult {
+	return CommandResult{
 		isSuccess: false,
 		message:   message,
 		error:     err,
 	}
 }
 
-func SuccessCreateResult(id string, message string) *CommandResult {
-	return &CommandResult{
+func SuccessCreateResult(id string, message string) CommandResult {
+	return CommandResult{
 		isSuccess: true,
 		id:        id,
 		message:   message,
@@ -74,8 +74,8 @@ func SuccessCreateResult(id string, message string) *CommandResult {
 	}
 }
 
-func SuccessResult(message string) *CommandResult {
-	return &CommandResult{
+func SuccessResult(message string) CommandResult {
+	return CommandResult{
 		isSuccess: true,
 		message:   message,
 		error:     nil,

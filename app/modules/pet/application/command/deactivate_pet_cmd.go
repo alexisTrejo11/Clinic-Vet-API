@@ -27,16 +27,16 @@ func NewDeactivatePetCommand(petID uint, optCustomerID *uint) *DeactivatePetComm
 func (h *petCommandHandler) DeactivatePet(ctx context.Context, cmd DeactivatePetCommand) cqrs.CommandResult {
 	pet, err := h.getPet(ctx, cmd.petID, cmd.customerID)
 	if err != nil {
-		return *cqrs.FailureResult("Error Getting Pet", err)
+		return cqrs.FailureResult("Error Getting Pet", err)
 	}
 
 	if err := pet.Deactivate(); err != nil {
-		return *cqrs.FailureResult("Error Deactivating Pet", err)
+		return cqrs.FailureResult("Error Deactivating Pet", err)
 	}
 
 	if _, err := h.petRepository.Save(ctx, pet); err != nil {
-		return *cqrs.FailureResult("Error Updating Pet", err)
+		return cqrs.FailureResult("Error Updating Pet", err)
 	}
 
-	return *cqrs.SuccessResult("Pet Deactivated Successfully")
+	return cqrs.SuccessResult("Pet Deactivated Successfully")
 }

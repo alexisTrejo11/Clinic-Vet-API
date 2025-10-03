@@ -9,10 +9,10 @@ type FindCustomerBySpecificationQuery struct {
 }
 
 func NewFindCustomerBySpecificationQuery(spec specification.CustomerSpecification) (FindCustomerBySpecificationQuery, error) {
-	cmd := &FindCustomerBySpecificationQuery{querySpect: spec}
-	return *cmd, nil
+	cmd := FindCustomerBySpecificationQuery{querySpect: spec}
+	return cmd, nil
 }
 
-func (q *FindCustomerBySpecificationQuery) QuerySpecification() specification.CustomerSpecification {
+func (q FindCustomerBySpecificationQuery) QuerySpecification() specification.CustomerSpecification {
 	return q.querySpect
 }

@@ -5,7 +5,7 @@ import (
 )
 
 func toResult(entity medical.MedicalSession) MedSessionResult {
-	result := MedSessionResult{
+	return MedSessionResult{
 		ID:            entity.ID(),
 		EmployeeID:    entity.EmployeeID(),
 		VisitDate:     entity.VisitDate(),
@@ -28,8 +28,6 @@ func toResult(entity medical.MedicalSession) MedSessionResult {
 			Medications:     entity.PetDetails().Medications(),
 		},
 	}
-
-	return result
 }
 
 func toResultList(entities []medical.MedicalSession) []MedSessionResult {

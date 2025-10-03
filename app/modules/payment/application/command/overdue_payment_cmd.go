@@ -26,7 +26,7 @@ func (h *paymentCommandHandler) MarkOverduePayments(ctx context.Context, cmd Mar
 	for {
 		paymentsPage, err := h.paymentRepository.FindByStatus(ctx, enum.PaymentStatusOverdue, pagination)
 		if err != nil {
-			return *cqrs.FailureResult(ErrFailedSearchPayments, err)
+			return cqrs.FailureResult(ErrFailedSearchPayments, err)
 		}
 
 		payments := paymentsPage.Items
@@ -49,7 +49,7 @@ func (h *paymentCommandHandler) MarkOverduePayments(ctx context.Context, cmd Mar
 		}
 	}
 
-	return *cqrs.SuccessResult(fmt.Sprintf(MsgOverduePayments, updatedCount))
+	return cqrs.SuccessResult(fmt.Sprintf(MsgOverduePayments, updatedCount))
 }
 
 func (h *paymentCommandHandler) UpdatePaymentOverdued(ctx context.Context, payment *payment.Payment) error {

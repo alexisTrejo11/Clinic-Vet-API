@@ -27,14 +27,14 @@ func customerToResult(customer customer.Customer) CustomerResult {
 		ID:          customer.ID(),
 		PetsCount:   len(customer.Pets()),
 		IsActive:    customer.IsActive(),
-		CreatedAt:   customer.CreatedAt(),
 		Gender:      customer.Gender(),
-		UpdatedAt:   customer.UpdatedAt(),
 		UserID:      customer.UserID(),
 		Photo:       customer.Photo(),
 		FirstName:   customer.FirstName(),
 		LastName:    customer.LastName(),
 		DateOfBirth: customer.DateOfBirth(),
+		UpdatedAt:   customer.UpdatedAt(),
+		CreatedAt:   customer.CreatedAt(),
 	}
 	return *result
 }

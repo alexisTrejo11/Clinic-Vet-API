@@ -40,20 +40,20 @@ func NewDewormCreateCommand(
 // PetDewormingService??????
 func (h *DewormCommandHandler) HandleCreate(ctx context.Context, cmd DewormCreateCommand) cqrs.CommandResult {
 	if err := cmd.Validate(); err != nil {
-		return *cqrs.FailureResult("command validtion error", err)
+		return cqrs.FailureResult("command validtion error", err)
 	}
 
 	if err := h.validatePetEmployeeExistence(ctx, cmd); err != nil {
-		return *cqrs.FailureResult("entity validation error", err)
+		return cqrs.FailureResult("entity validation error", err)
 	}
 
 	entity := cmd.toEntity()
 	dewormCreated, err := h.dewormRepo.Save(ctx, *entity)
 	if err != nil {
-		return *cqrs.FailureResult("failed to create deworming record", err)
+		return cqrs.FailureResult("failed to create deworming record", err)
 	}
 
-	return *cqrs.SuccessCreateResult(dewormCreated.ID().String(), "deworming record created successfully")
+	return cqrs.SuccessCreateResult(dewormCreated.ID().String(), "deworming record created successfully")
 }
 
 func (h *DewormCommandHandler) validatePetEmployeeExistence(ctx context.Context, cmd DewormCreateCommand) error {

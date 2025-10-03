@@ -25,8 +25,8 @@ type MedicalSession struct {
 type PetSessionSummary struct {
 	petID           vo.PetID
 	weight          *vo.Decimal
-	heartRate       *int
-	respiratoryRate *int
+	heartRate       *int32
+	respiratoryRate *int32
 	temperature     *vo.Decimal
 	diagnosis       string
 	treatment       string
@@ -122,12 +122,12 @@ func (b *PetSessionSummaryBuilder) WithTemperature(temperature *vo.Decimal) *Pet
 	return b
 }
 
-func (b *PetSessionSummaryBuilder) WithHeartRate(heartRate *int) *PetSessionSummaryBuilder {
+func (b *PetSessionSummaryBuilder) WithHeartRate(heartRate *int32) *PetSessionSummaryBuilder {
 	b.petSession.heartRate = heartRate
 	return b
 }
 
-func (b *PetSessionSummaryBuilder) WithRespiratoryRate(respiratoryRate *int) *PetSessionSummaryBuilder {
+func (b *PetSessionSummaryBuilder) WithRespiratoryRate(respiratoryRate *int32) *PetSessionSummaryBuilder {
 	b.petSession.respiratoryRate = respiratoryRate
 	return b
 }
@@ -182,8 +182,8 @@ func (mh *MedicalSession) UpdatedAt() time.Time          { return mh.Entity.Upda
 func (ps PetSessionSummary) PetID() vo.PetID              { return ps.petID }
 func (ps PetSessionSummary) Weight() *vo.Decimal          { return ps.weight }
 func (ps PetSessionSummary) Temperature() *vo.Decimal     { return ps.temperature }
-func (ps PetSessionSummary) HeartRate() *int              { return ps.heartRate }
-func (ps PetSessionSummary) RespiratoryRate() *int        { return ps.respiratoryRate }
+func (ps PetSessionSummary) HeartRate() *int32            { return ps.heartRate }
+func (ps PetSessionSummary) RespiratoryRate() *int32      { return ps.respiratoryRate }
 func (ps PetSessionSummary) Diagnosis() string            { return ps.diagnosis }
 func (ps PetSessionSummary) Treatment() string            { return ps.treatment }
 func (ps PetSessionSummary) Condition() enum.PetCondition { return ps.condition }

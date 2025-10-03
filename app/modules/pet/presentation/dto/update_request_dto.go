@@ -27,7 +27,7 @@ type CustomerUpdatePetRequest struct {
 	UpdatePetRequest
 }
 
-// UpdatePetRequest represents the payload for updating an existing pet's information
+// / UpdatePetRequest represents the payload for updating an existing pet's information
 // swagger:model UpdatePetRequest
 type UpdatePetRequest struct {
 	// Pet's name
@@ -67,7 +67,7 @@ type UpdatePetRequest struct {
 	// Required: false
 	// Enum: male, female, unknown
 	// Example: male
-	Gender *string `json:"gender" validate:"min=2,oneof=male,female,unknown"`
+	Gender *string `json:"gender,omitempty" validate:"omitempty,oneof=male female unknown"`
 
 	// Color of the pet
 	// Required: false
@@ -92,14 +92,14 @@ type UpdatePetRequest struct {
 	// Minimum length: 2
 	// Maximum length: 20
 	// Example: A12345
-	Tattoo *string `json:"tattoo,omitempty"`
+	Tattoo *string `json:"tattoo,omitempty" validate:"omitempty,min=2,max=20"`
 
 	// Blood type of the pet (if known)
 	// Required: false
 	// Minimum length: 1
 	// Maximum length: 3
 	// Example: A+
-	BloodType *string `json:"blood_type,omitempty"`
+	BloodType *string `json:"blood_type,omitempty" validate:"omitempty,min=1,max=3"`
 }
 
 func (r *UpdatePetRequest) ToCommand(petIDInt uint, customerIDUInt *uint, isActive *bool) command.UpdatePetCommand {
@@ -121,7 +121,7 @@ func (r *UpdatePetRequest) ToCommand(petIDInt uint, customerIDUInt *uint, isActi
 		species = &speciesValue
 	}
 
-	cmd := &command.UpdatePetCommand{
+	cmd := command.UpdatePetCommand{
 		Name:       r.Name,
 		PetID:      valueobject.NewPetID(petIDInt),
 		Photo:      r.Photo,
@@ -138,5 +138,5 @@ func (r *UpdatePetRequest) ToCommand(petIDInt uint, customerIDUInt *uint, isActi
 		IsActive:   isActive,
 	}
 
-	return *cmd
+	return cmd
 }

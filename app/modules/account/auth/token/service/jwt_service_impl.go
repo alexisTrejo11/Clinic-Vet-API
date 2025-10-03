@@ -43,6 +43,7 @@ func NewJWTServiceWithConfig(secretKey, issuer string, accessDuration, refreshDu
 		accessTokenDuration:  accessDuration,
 		refreshTokenDuration: refreshDuration,
 		issuer:               issuer,
+		tokenFactory:         token.NewTokenFactory([]byte(secretKey)),
 	}
 }
 
@@ -54,7 +55,8 @@ func (s *jwtService) GenerateAccessToken(userID string) (string, error) {
 	accessTokenFactory, err := s.tokenFactory.CreateToken(valueobject.JWTAccessToken, token.TokenConfig{
 		UserID:    userID,
 		ExpiresIn: s.accessTokenDuration,
-		Purpose:   "access",
+		Issuer:    s.issuer,
+		Secret:    []byte(s.secretKey),
 	})
 
 	if err != nil {
@@ -77,7 +79,7 @@ func (s *jwtService) GenerateRefreshToken(userID string) (string, error) {
 	refreshTokenFactory, err := s.tokenFactory.CreateToken(valueobject.JWTRefreshToken, token.TokenConfig{
 		UserID:    userID,
 		ExpiresIn: s.refreshTokenDuration,
-		Purpose:   "refresh",
+		Issuer:    s.issuer,
 	})
 
 	if err != nil {
@@ -112,14 +114,15 @@ func (s *jwtService) ExtractToken(authHeader string) (string, error) {
 	}
 
 	return token, nil
+
 }
 
-func (s *jwtService) ValidateToken(tokenString string) (*service.Claims, error) {
+func (s *jwtService) ValidateToken(tokenString string) (*token.TokenClaims, error) {
 	if tokenString == "" {
 		return nil, errors.New("token string cannot be empty")
 	}
 
-	token, err := jwtLib.ParseWithClaims(tokenString, service.Claims{}, func(token *jwtLib.Token) (any, error) {
+	jwtToken, err := jwtLib.ParseWithClaims(tokenString, &token.TokenClaims{}, func(token *jwtLib.Token) (any, error) {
 		// Verificar que el método de firma sea HMAC
 		if _, ok := token.Method.(*jwtLib.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected token signing method: %v", token.Header["alg"])
@@ -127,30 +130,14 @@ func (s *jwtService) ValidateToken(tokenString string) (*service.Claims, error) 
 		return []byte(s.secretKey), nil
 	})
 	if err != nil {
-		/*
-			if ve, ok := err.(*jwtLib.ValidationErrior); ok {
-				switch {
-				case ve.Errors&jwtLib.ValidationErrorMalformed != 0:
-					return nil, errors.New("malformed token")
-				case ve.Errors&jwtLib.ValidationErrorExpired != 0:
-					return nil, errors.New("token has expired")
-				case ve.Errors&jwtLib.ValidationErrorNotValidYet != 0:
-					return nil, errors.New("token not valid yet")
-				case ve.Errors&jwtLib.ValidationErrorSignatureInvalid != 0:
-					return nil, errors.New("invalid token signature")
-				default:
-					return nil, fmt.Errorf("token validation error: %w", err)
-				}
-			}
-		*/
 		return nil, fmt.Errorf("could not parse token: %w", err)
 	}
 
-	if !token.Valid {
+	if !jwtToken.Valid {
 		return nil, errors.New("invalid token")
 	}
 
-	claims, ok := token.Claims.(*service.Claims)
+	claims, ok := jwtToken.Claims.(*token.TokenClaims)
 	if !ok {
 		return nil, errors.New("invalid token claims")
 	}
@@ -159,13 +146,15 @@ func (s *jwtService) ValidateToken(tokenString string) (*service.Claims, error) 
 		return nil, errors.New("token missing user ID")
 	}
 
-	if claims.Type != "access" && claims.Type != "refresh" {
+	if claims.TokenType != valueobject.JWTAccessToken && claims.TokenType != valueobject.JWTRefreshToken {
 		return nil, errors.New("invalid token type")
 	}
 
-	if s.issuer != "" && claims.Issuer != s.issuer {
-		return nil, errors.New("invalid token issuer")
-	}
+	/*
+		if s.issuer != "" && claims.Issuer != s.issuer {
+			return nil, errors.New("invalid token issuer")
+		}
+	*/
 
 	return claims, nil
 }
@@ -189,7 +178,7 @@ func (s *jwtService) RefreshAccessToken(refreshToken string) (string, error) {
 		return "", fmt.Errorf("invalid refresh token: %w", err)
 	}
 
-	if claims.Type != "refresh" {
+	if claims.TokenType != "refresh" {
 		return "", errors.New("provided token is not a refresh token")
 	}
 
@@ -220,26 +209,26 @@ func (s *jwtService) GetTokenRemainingTime(tokenString string) (time.Duration, e
 	return remaining, nil
 }
 
-func (s *jwtService) ValidateAccessToken(tokenString string) (*service.Claims, error) {
+func (s *jwtService) ValidateAccessToken(tokenString string) (*token.TokenClaims, error) {
 	claims, err := s.ValidateToken(tokenString)
 	if err != nil {
 		return nil, err
 	}
 
-	if claims.Type != "access" {
+	if claims.TokenType != "access" {
 		return nil, errors.New("token is not an access token")
 	}
 
 	return claims, nil
 }
 
-func (s *jwtService) ValidateRefreshToken(tokenString string) (*service.Claims, error) {
+func (s *jwtService) ValidateRefreshToken(tokenString string) (*token.TokenClaims, error) {
 	claims, err := s.ValidateToken(tokenString)
 	if err != nil {
 		return nil, err
 	}
 
-	if claims.Type != "refresh" {
+	if claims.TokenType != "refresh" {
 		return nil, errors.New("token is not a refresh token")
 	}
 

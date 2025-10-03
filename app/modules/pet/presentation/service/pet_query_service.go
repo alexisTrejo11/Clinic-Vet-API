@@ -19,7 +19,7 @@ func (s *PetControllerOperations) FindPetByID(c *gin.Context, customerID *uint) 
 	}
 
 	query := query.NewFindPetByIDQuery(petID, customerID)
-	result, err := s.bus.FindPetByID(c.Request.Context(), *query)
+	result, err := s.bus.FindPetByID(c.Request.Context(), query)
 	if err != nil {
 		response.ApplicationError(c, err)
 		return
@@ -37,7 +37,7 @@ func (s *PetControllerOperations) FindPetsByCustomerID(c *gin.Context, customerI
 	}
 
 	query := query.NewFindPetsByCustomerIDQuery(customerID, paginatioRequest)
-	resultPage, err := s.bus.FindPetsByCustomerID(c.Request.Context(), *query)
+	resultPage, err := s.bus.FindPetsByCustomerID(c.Request.Context(), query)
 	if err != nil {
 		response.ApplicationError(c, err)
 		return
@@ -79,7 +79,7 @@ func (s *PetControllerOperations) FindPetsBySpecies(c *gin.Context) {
 	}
 
 	query := query.NewFindPetsBySpeciesQuery(petSpecies, pagination)
-	resultPage, err := s.bus.FindPetsBySpecies(c.Request.Context(), *query)
+	resultPage, err := s.bus.FindPetsBySpecies(c.Request.Context(), query)
 	if err != nil {
 		response.ApplicationError(c, err)
 		return

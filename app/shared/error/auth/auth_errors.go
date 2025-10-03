@@ -23,7 +23,7 @@ func UnauthorizedError(message string) error {
 		}...,
 	)
 
-	return &apperror.BaseApplicationError{
+	return apperror.BaseApplicationError{
 		Code:       "AUTHENTICATION_FAILED",
 		Type:       "authentication",
 		Message:    message,
@@ -44,7 +44,7 @@ func ForbiddenError(requiredRole, userRole string) error {
 		}...,
 	)
 
-	return &apperror.BaseApplicationError{
+	return apperror.BaseApplicationError{
 		Code:       "AUTHORIZATION_FAILED",
 		Type:       "authorization",
 		Message:    "Insufficient permissions to perform this action",
@@ -81,7 +81,7 @@ func MissingRefreshTokenError() error {
 		}...,
 	)
 
-	return &apperror.BaseApplicationError{
+	return apperror.BaseApplicationError{
 		Code:       "MISSING_REFRESH_TOKEN",
 		Type:       "authentication",
 		Message:    "missing refresh token in request headers",
@@ -104,7 +104,7 @@ func InvalidCredentialsError(err error, identifier string) error {
 		}...,
 	)
 
-	return &apperror.BaseApplicationError{
+	return apperror.BaseApplicationError{
 		Code:       "INVALID_CREDENTIALS",
 		Type:       "authentication",
 		Message:    "invalid email/phone or password",
@@ -128,7 +128,7 @@ func TokenExpiredError(tokenType string) error {
 		}...,
 	)
 
-	return &apperror.BaseApplicationError{
+	return apperror.BaseApplicationError{
 		Code:       "TOKEN_EXPIRED",
 		Type:       "authentication",
 		Message:    fmt.Sprintf("%s token has expired", tokenType),
@@ -153,7 +153,7 @@ func InvalidTokenError(tokenType string, reason string) error {
 		}...,
 	)
 
-	return &apperror.BaseApplicationError{
+	return apperror.BaseApplicationError{
 		Code:       "INVALID_TOKEN",
 		Type:       "authentication",
 		Message:    "invalid authentication token",
@@ -179,7 +179,7 @@ func AccountLockedError(userID, reason string) error {
 		}...,
 	)
 
-	return &apperror.BaseApplicationError{
+	return apperror.BaseApplicationError{
 		Code:       "ACCOUNT_LOCKED",
 		Type:       "authentication",
 		Message:    "account is temporarily locked",
@@ -205,7 +205,7 @@ func TooManyAttemptsError(identifier string, remainingTime string) error {
 		}...,
 	)
 
-	return &apperror.BaseApplicationError{
+	return apperror.BaseApplicationError{
 		Code:       "TOO_MANY_ATTEMPTS",
 		Type:       "rate_limiting",
 		Message:    fmt.Sprintf("too many authentication attempts, try again in %s", remainingTime),
@@ -230,7 +230,7 @@ func SessionExpiredError(sessionID string) error {
 		}...,
 	)
 
-	return &apperror.BaseApplicationError{
+	return apperror.BaseApplicationError{
 		Code:       "SESSION_EXPIRED",
 		Type:       "session",
 		Message:    "user session has expired",
@@ -256,7 +256,7 @@ func PermissionDeniedError(userID, resource, action string) error {
 		}...,
 	)
 
-	return &apperror.BaseApplicationError{
+	return apperror.BaseApplicationError{
 		Code:       "PERMISSION_DENIED",
 		Type:       "authorization",
 		Message:    fmt.Sprintf("access denied to %s resource for %s action", resource, action),

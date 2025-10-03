@@ -42,11 +42,9 @@ func (co *MedSessionControllerOperations) GetMedSessionsByID(c *gin.Context, get
 		return
 	}
 
-	var getByIDQuery *query.FindMedSessionByIDQuery
+	var getByIDQuery query.FindMedSessionByIDQuery
 
-	if getByIDExtraArgs == nil {
-		getByIDQuery = query.NewFindMedSessionByIDQuery(idUint)
-	} else {
+	if getByIDExtraArgs != nil {
 		if getByIDExtraArgs.CustomerID != nil {
 			getByIDQuery = query.FindMedSessionByIDQueryWithCustomerID(idUint, *getByIDExtraArgs.CustomerID)
 		} else if getByIDExtraArgs.PetID != nil {
@@ -54,9 +52,11 @@ func (co *MedSessionControllerOperations) GetMedSessionsByID(c *gin.Context, get
 		} else if getByIDExtraArgs.EmployeeID != nil {
 			getByIDQuery = query.FindMedSessionByIDQueryWithEmployeeID(idUint, *getByIDExtraArgs.EmployeeID)
 		}
+	} else {
+		getByIDQuery = query.NewFindMedSessionByIDQuery(idUint)
 	}
 
-	result, err := co.QueryBus().FindMedSessionByID(c.Request.Context(), *getByIDQuery)
+	result, err := co.QueryBus().FindMedSessionByID(c.Request.Context(), getByIDQuery)
 	if err != nil {
 		response.ApplicationError(c, err)
 		return
@@ -74,7 +74,7 @@ func (co *MedSessionControllerOperations) GetMedSessionsByPetID(c *gin.Context, 
 	}
 
 	query := query.NewFindMedSessionByPetIDQuery(petID, customerID, pagination)
-	resultPage, err := co.QueryBus().FindMedSessionByPetID(c.Request.Context(), *query)
+	resultPage, err := co.QueryBus().FindMedSessionByPetID(c.Request.Context(), query)
 	if err != nil {
 		response.ApplicationError(c, err)
 		return

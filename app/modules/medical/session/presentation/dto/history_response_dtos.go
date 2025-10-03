@@ -103,14 +103,14 @@ type PetSessionSummaryResponse struct {
 	// Minimum: 20
 	// Maximum: 300
 	// Example: 120
-	HeartRate *int `json:"heart_rate,omitempty"`
+	HeartRate *int32 `json:"heart_rate,omitempty"`
 
 	// The respiratory rate of the pet in breaths per minute
 	// Required: false
 	// Minimum: 10
 	// Maximum: 200
 	// Example: 30
-	RespiratoryRate *int `json:"respiratory_rate,omitempty"`
+	RespiratoryRate *int32 `json:"respiratory_rate,omitempty"`
 
 	// List of symptoms observed
 	// Required: false

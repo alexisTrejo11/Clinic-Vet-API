@@ -5,8 +5,8 @@ import (
 	"net/http"
 )
 
-func NotRegistredCommandErr(commandName, entityBus string) *BaseInfrastructureError {
-	return &BaseInfrastructureError{
+func NotRegistredCommandErr(commandName, entityBus string) error {
+	return BaseInfrastructureError{
 		Message:    fmt.Sprintf("%v not registres on bus", commandName),
 		Code:       "NOT_REGISTRED_COMMAND",
 		StatusCode: http.StatusInternalServerError,
@@ -18,8 +18,8 @@ func NotRegistredCommandErr(commandName, entityBus string) *BaseInfrastructureEr
 	}
 }
 
-func InvalidCommandErr(message, commandName, entityBus string) *BaseInfrastructureError {
-	return &BaseInfrastructureError{
+func InvalidCommandErr(message, commandName, entityBus string) error {
+	return BaseInfrastructureError{
 		Message: message,
 		Code:    "INVALID_COMMAND", StatusCode: http.StatusInternalServerError,
 		Details: map[string]string{
@@ -30,8 +30,8 @@ func InvalidCommandErr(message, commandName, entityBus string) *BaseInfrastructu
 	}
 }
 
-func NotRegistredQueryErr(queryName, entityBus string) *BaseInfrastructureError {
-	return &BaseInfrastructureError{
+func NotRegistredQueryErr(queryName, entityBus string) error {
+	return BaseInfrastructureError{
 		Message:    fmt.Sprintf("query with name %v not registres on bus", queryName),
 		Code:       "NOT_REGISTRED_COMMAND",
 		StatusCode: http.StatusInternalServerError,
@@ -43,8 +43,8 @@ func NotRegistredQueryErr(queryName, entityBus string) *BaseInfrastructureError 
 	}
 }
 
-func InvalidQuerryErr(message, commandName, entityBus string) *BaseInfrastructureError {
-	return &BaseInfrastructureError{
+func InvalidQuerryErr(message, commandName, entityBus string) error {
+	return BaseInfrastructureError{
 		Message: message,
 		Code:    "INVALID_COMMAND", StatusCode: http.StatusInternalServerError,
 		Details: map[string]string{

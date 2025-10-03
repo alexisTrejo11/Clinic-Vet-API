@@ -14,8 +14,8 @@ func NewFindEmployeeByIDQuery(id uint) (FindEmployeeByIDQuery, error) {
 		return FindEmployeeByIDQuery{}, apperror.FieldValidationError("id", "0", "id is required for FindEmployeeByIDQuery")
 	}
 
-	cmd := &FindEmployeeByIDQuery{id: valueobject.NewEmployeeID(id)}
-	return *cmd, nil
+	cmd := FindEmployeeByIDQuery{id: valueobject.NewEmployeeID(id)}
+	return cmd, nil
 }
 
 func (q FindEmployeeByIDQuery) ID() valueobject.EmployeeID {

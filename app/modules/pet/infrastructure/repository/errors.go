@@ -36,7 +36,3 @@ func (r *SqlcPetRepository) dbError(operation, message string, err error) error 
 func (r *SqlcPetRepository) notFoundError(parameterName, parameterValue string) error {
 	return dberr.EntityNotFoundError(parameterName, parameterValue, OpSelect, TablePets, DriverSQL)
 }
-
-func (r *SqlcPetRepository) wrapConversionError(err error) error {
-	return fmt.Errorf("%s: %w", ErrMsgConvertPetToDomain, err)
-}

@@ -17,7 +17,7 @@ type CreateCustomerCommand struct {
 }
 
 func NewCreateCustomerCommand(photo string, firstName string, lastName string, gender string, dateOfBirth time.Time) (CreateCustomerCommand, error) {
-	cmd := &CreateCustomerCommand{
+	cmd := CreateCustomerCommand{
 		photo:       photo,
 		name:        valueobject.NewPersonName(firstName, lastName),
 		gender:      enum.NewPersonGender(gender),
@@ -28,7 +28,7 @@ func NewCreateCustomerCommand(photo string, firstName string, lastName string, g
 		return CreateCustomerCommand{}, err
 	}
 
-	return *cmd, nil
+	return cmd, nil
 }
 
 func (c *CreateCustomerCommand) Validate() error {
@@ -39,7 +39,7 @@ func (c *CreateCustomerCommand) Validate() error {
 		return createCustomerCmdErr("name", "name cannot be empty")
 	}
 
-	if c.photo != "" {
+	if c.photo == "" {
 		return createCustomerCmdErr("photo", "photo URL is not valid")
 	}
 

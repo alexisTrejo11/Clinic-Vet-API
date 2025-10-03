@@ -20,10 +20,10 @@ import (
 
 type SqlcPetRepository struct {
 	queries *sqlc.Queries
-	pgMap   mapper.SqlcFieldMapper
+	pgMap   *mapper.SqlcFieldMapper
 }
 
-func NewSqlcPetRepository(queries *sqlc.Queries, pgMap mapper.SqlcFieldMapper) repository.PetRepository {
+func NewSqlcPetRepository(queries *sqlc.Queries, pgMap *mapper.SqlcFieldMapper) repository.PetRepository {
 	return &SqlcPetRepository{
 		queries: queries,
 		pgMap:   pgMap,
@@ -154,7 +154,7 @@ func (r *SqlcPetRepository) CountByCustomerID(ctx context.Context, customerID va
 
 func (r *SqlcPetRepository) create(ctx context.Context, entity pet.Pet) (pet.Pet, error) {
 	params := r.toCreateParams(entity)
-	petCreated, err := r.queries.CreatePet(ctx, *params)
+	petCreated, err := r.queries.CreatePet(ctx, params)
 	if err != nil {
 		return pet.Pet{}, r.dbError("insert", "failed to create pet", err)
 	}
@@ -165,7 +165,7 @@ func (r *SqlcPetRepository) create(ctx context.Context, entity pet.Pet) (pet.Pet
 func (r *SqlcPetRepository) update(ctx context.Context, entity pet.Pet) (pet.Pet, error) {
 	params := r.toUpdateParams(&entity)
 
-	petUpdated, err := r.queries.UpdatePet(ctx, *params)
+	petUpdated, err := r.queries.UpdatePet(ctx, params)
 	if err != nil {
 		return pet.Pet{}, r.dbError("update", fmt.Sprintf("failed to update pet with ID %d", entity.ID().Value()), err)
 	}

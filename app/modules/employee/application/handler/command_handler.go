@@ -31,37 +31,37 @@ func (h *EmployeeCommandHandler) HandleCreate(ctx context.Context, cmd c.CreateE
 	employee := cmd.ToEntity()
 
 	if err := employee.Validate(ctx); err != nil {
-		return *cqrs.FailureResult(FailBuissnessLogicMsg, err)
+		return cqrs.FailureResult(FailBuissnessLogicMsg, err)
 	}
 
 	if err := h.employeeRepo.Save(ctx, &employee); err != nil {
-		return *cqrs.FailureResult(FailSaveEmployeeMsg, err)
+		return cqrs.FailureResult(FailSaveEmployeeMsg, err)
 	}
 
-	return *cqrs.SuccessCreateResult(employee.ID().String(), SuccessEmployeeCreatedMsg)
+	return cqrs.SuccessCreateResult(employee.ID().String(), SuccessEmployeeCreatedMsg)
 }
 
 func (h *EmployeeCommandHandler) HandleUpdate(ctx context.Context, cmd c.UpdateEmployeeCommand) cqrs.CommandResult {
 	existingEmployee, err := h.employeeRepo.FindByID(ctx, cmd.EmployeeID())
 	if err != nil {
-		return *cqrs.FailureResult(FailFindEmployeeMsg, err)
+		return cqrs.FailureResult(FailFindEmployeeMsg, err)
 	}
 
 	employeeUpdated := cmd.UpdateEmployee(existingEmployee)
 	if err := h.employeeRepo.Save(ctx, &employeeUpdated); err != nil {
-		return *cqrs.FailureResult(FailSaveEmployeeMsg, err)
+		return cqrs.FailureResult(FailSaveEmployeeMsg, err)
 	}
 
-	return *cqrs.SuccessResult(SuccessEmployeeUpdatedMsg)
+	return cqrs.SuccessResult(SuccessEmployeeUpdatedMsg)
 }
 
 func (h *EmployeeCommandHandler) HandleDelete(ctx context.Context, cmd c.DeleteEmployeeCommand) cqrs.CommandResult {
 	if _, err := h.employeeRepo.FindByID(ctx, cmd.ID()); err != nil {
-		return *cqrs.FailureResult(FailFindEmployeeMsg, err)
+		return cqrs.FailureResult(FailFindEmployeeMsg, err)
 	}
 	if err := h.employeeRepo.Delete(ctx, cmd.ID(), false); err != nil {
-		return *cqrs.FailureResult(FailDeleteEmployeeMsg, err)
+		return cqrs.FailureResult(FailDeleteEmployeeMsg, err)
 	}
 
-	return *cqrs.SuccessResult(SuccessEmployeeDeletedMsg)
+	return cqrs.SuccessResult(SuccessEmployeeDeletedMsg)
 }

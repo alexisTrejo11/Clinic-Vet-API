@@ -17,7 +17,7 @@ type RequestApptByCustomerCommand struct {
 func NewRequestApptByCustomerCommand(
 	petID uint, customerID uint, requestedDate time.Time, service string, notes *string,
 ) (RequestApptByCustomerCommand, error) {
-	cmd := &RequestApptByCustomerCommand{
+	cmd := RequestApptByCustomerCommand{
 		petID:         valueobject.NewPetID(petID),
 		requestedDate: requestedDate,
 		customerID:    valueobject.NewCustomerID(customerID),
@@ -29,7 +29,7 @@ func NewRequestApptByCustomerCommand(
 		return RequestApptByCustomerCommand{}, err
 	}
 
-	return *cmd, nil
+	return cmd, nil
 }
 
 func (c *RequestApptByCustomerCommand) validate() error {

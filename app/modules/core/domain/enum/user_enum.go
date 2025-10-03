@@ -293,3 +293,7 @@ func (r UserRole) IsAdministrative() bool {
 func (r UserRole) IsStaff() bool {
 	return r == UserRoleAdmin || r == UserRoleVeterinarian || r == UserRoleReceptionist
 }
+
+func (r UserRole) IsEmployee() bool {
+	return r == UserRoleVeterinarian || r == UserRoleReceptionist
+}

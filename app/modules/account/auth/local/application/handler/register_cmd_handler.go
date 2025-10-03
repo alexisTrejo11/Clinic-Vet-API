@@ -43,7 +43,7 @@ func (h *AuthCommandHandler) HandleRegisterEmployee(ctx context.Context, cmd c.R
 	}
 
 	user := cmd.ToEntity()
-	if err := h.userAuthService.ProcessUserPersistence(ctx, user); err != nil {
+	if err := h.userAuthService.ProcessUserPersistence(ctx, &user); err != nil {
 		return auth.AuthFailure(ErrUserCreationFailed, err)
 	}
 
@@ -52,14 +52,14 @@ func (h *AuthCommandHandler) HandleRegisterEmployee(ctx context.Context, cmd c.R
 	return auth.AuthSuccess("user successfully created")
 }
 
-func (h *AuthCommandHandler) produceRegisterEvent(user *u.User, employee *e.Employee) {
-	event := &event.UserRegisteredEvent{
+func (h *AuthCommandHandler) produceRegisterEvent(user u.User, employee e.Employee) {
+	event := event.UserRegisteredEvent{
 		UserID:   user.ID(),
 		Email:    user.Email(),
 		Role:     user.Role(),
-		Employee: employee,
+		Employee: &employee,
 	}
-	h.userEvent.Registered(*event)
+	h.userEvent.Registered(event)
 }
 
 func (h *AuthCommandHandler) produceEvent(user *u.User, cmd c.RegisterCustomerCommand) {

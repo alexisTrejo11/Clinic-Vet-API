@@ -11,14 +11,14 @@ type NotAttendApptCommand struct {
 }
 
 func NewNotAttendApptCommand(id uint, employeeIDUint *uint) (NotAttendApptCommand, error) {
-	cmd := &NotAttendApptCommand{
+	cmd := NotAttendApptCommand{
 		appointmentID: valueobject.NewAppointmentID(id),
 		employeeID:    mapper.PtrToEmployeeIDPtr(employeeIDUint),
 	}
 	if err := cmd.Validate(); err != nil {
 		return NotAttendApptCommand{}, err
 	}
-	return *cmd, nil
+	return cmd, nil
 }
 
 func (c *NotAttendApptCommand) Validate() error {
@@ -39,14 +39,14 @@ type CompleteApptCommand struct {
 }
 
 func NewCompleteApptCommand(id uint, employeeID *uint) (CompleteApptCommand, error) {
-	cmd := &CompleteApptCommand{
+	cmd := CompleteApptCommand{
 		id:         valueobject.NewAppointmentID(id),
 		employeeID: mapper.PtrToEmployeeIDPtr(employeeID),
 	}
 	if err := cmd.validate(); err != nil {
 		return CompleteApptCommand{}, err
 	}
-	return *cmd, nil
+	return cmd, nil
 }
 
 func (c *CompleteApptCommand) validate() error {
@@ -67,7 +67,7 @@ type ConfirmApptCommand struct {
 }
 
 func NewConfirmAppointmentCommand(appointIDInt, vetIDInt uint) (ConfirmApptCommand, error) {
-	cmd := &ConfirmApptCommand{
+	cmd := ConfirmApptCommand{
 		id:         valueobject.NewAppointmentID(appointIDInt),
 		employeeID: valueobject.NewEmployeeID(vetIDInt),
 	}
@@ -76,7 +76,7 @@ func NewConfirmAppointmentCommand(appointIDInt, vetIDInt uint) (ConfirmApptComma
 		return ConfirmApptCommand{}, err
 	}
 
-	return *cmd, nil
+	return cmd, nil
 }
 
 func (c *ConfirmApptCommand) validate() error {

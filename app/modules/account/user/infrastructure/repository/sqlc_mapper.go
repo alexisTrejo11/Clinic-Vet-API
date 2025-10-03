@@ -103,8 +103,8 @@ func (r *SqlcUserRepository) ToEntities(sqlRows []sqlc.User) []user.User {
 	return users
 }
 
-func (r *SqlcUserRepository) toCreateParams(user *user.User) *sqlc.CreateUserParams {
-	return &sqlc.CreateUserParams{
+func (r *SqlcUserRepository) toCreateParams(user user.User) sqlc.CreateUserParams {
+	return sqlc.CreateUserParams{
 		Email:       r.pgMap.PgText.FromString(user.Email().String()),
 		PhoneNumber: r.pgMap.PgText.FromString(user.PhoneNumber().String()),
 		Password:    r.pgMap.PgText.FromString(user.HashedPassword()),
@@ -113,8 +113,8 @@ func (r *SqlcUserRepository) toCreateParams(user *user.User) *sqlc.CreateUserPar
 	}
 }
 
-func (r *SqlcUserRepository) toUpdateParams(user *user.User) *sqlc.UpdateUserParams {
-	return &sqlc.UpdateUserParams{
+func (r *SqlcUserRepository) toUpdateParams(user user.User) sqlc.UpdateUserParams {
+	return sqlc.UpdateUserParams{
 		ID:          int32(user.ID().Value()),
 		Email:       r.pgMap.PgText.FromString(user.Email().String()),
 		PhoneNumber: r.pgMap.PgText.FromString(user.PhoneNumber().String()),

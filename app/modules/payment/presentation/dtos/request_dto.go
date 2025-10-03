@@ -13,11 +13,6 @@ import (
 // CreatePaymentRequest represents the request to create a payment
 // @Description Request body for creating a new payment
 type CreatePaymentRequest struct {
-	// Appointment ID associated with the payment
-	// Required: true
-	// Minimum: 1
-	MedSessionID int `json:"med_session_id" validate:"min=1" example:"123"`
-
 	// Payment amount
 	// Required: true
 	// Minimum: 0.01
@@ -33,17 +28,25 @@ type CreatePaymentRequest struct {
 	// Enum: cash,credit_card,debit_card,bank_transfer,digital_wallet
 	PaymentMethod string `json:"payment_method" validate:"required,oneof=cash credit_card debit_card bank_transfer digital_wallet" example:"credit_card"`
 
+	// Optional payment description
+	// Max length: 500
+	// Required: true
+	// Example: "Veterinary consultation payment"
+	Description string `json:"description" validate:"required,max=500" example:"Veterinary consultation payment"`
+
 	// Payment status
 	// Enum: pending,paid,failed,refunded,cancelled
 	Status string `json:"status,omitempty" validate:"omitempty,oneof=pending paid failed refunded cancelled" example:"pending"`
 
 	// Customer ID making the payment
-	// Required: true
+	// Required: false
 	// Minimum: 1
-	CustomerID *int `json:"customer_id" validate:"required,min=1" example:"456"`
+	CustomerID *uint `json:"customer_id,omitempty" validate:"omitempty,min=1" example:"456"`
 
-	// Optional payment description
-	Description *string `json:"description,omitempty" example:"Veterinary consultation payment"`
+	// Appointment ID associated with the payment
+	// Required: false
+	// Minimum: 1
+	MedSessionID *uint `json:"med_session_id,omitempty" validate:"omitempty,min=1" example:"123"`
 
 	// Optional due date for payment
 	DueDate *time.Time `json:"due_date,omitempty" example:"2024-12-31T23:59:59Z"`
@@ -110,7 +113,7 @@ type PaymentsByDateRangeRequest struct {
 	Pagination page.PaginationRequest
 }
 
-func (r *PaymentsByDateRangeRequest) ToQuery() *query.FindPaymentsByDateRangeQuery {
+func (r *PaymentsByDateRangeRequest) ToQuery() query.FindPaymentsByDateRangeQuery {
 	return query.NewFindPaymentsByDateRangeQuery(r.StartDate, r.EndDate, r.Pagination)
 }
 
@@ -149,6 +152,6 @@ type PaymentSearchRequest struct {
 }
 
 // TODO: IMPLEMENT
-func (r *PaymentSearchRequest) ToQuery() *query.FindPaymentsBySpecification {
+func (r *PaymentSearchRequest) ToQuery() query.FindPaymentsBySpecification {
 	return query.NewFindPaymentsBySpecification(specification.PaymentSpecification{})
 }

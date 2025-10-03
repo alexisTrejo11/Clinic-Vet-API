@@ -3,7 +3,7 @@ package infraerr
 import "net/http"
 
 func TokenExpiredError(tokenType string) error {
-	return &BaseInfrastructureError{
+	return BaseInfrastructureError{
 		Message:    "token expired",
 		Code:       "TOKEN_EXPIRED",
 		StatusCode: http.StatusUnauthorized,
@@ -15,7 +15,7 @@ func TokenExpiredError(tokenType string) error {
 	}
 }
 func InvalidTokenError(tokenType string) error {
-	return &BaseInfrastructureError{
+	return BaseInfrastructureError{
 		Message:    "invalid token",
 		Code:       "INVALID_TOKEN",
 		StatusCode: http.StatusUnauthorized,
@@ -28,7 +28,7 @@ func InvalidTokenError(tokenType string) error {
 }
 
 func TokenGenerationError(tokenType string, err error) error {
-	return &BaseInfrastructureError{
+	return BaseInfrastructureError{
 		Message:    "error generating token: " + err.Error(),
 		Code:       "TOKEN_GENERATION_ERROR",
 		StatusCode: http.StatusInternalServerError,
@@ -41,7 +41,7 @@ func TokenGenerationError(tokenType string, err error) error {
 }
 
 func TokeNotFoundError(tokenType string) error {
-	return &BaseInfrastructureError{
+	return BaseInfrastructureError{
 		Message:    "token not found",
 		Code:       "TOKEN_NOT_FOUND",
 		StatusCode: http.StatusNotFound,

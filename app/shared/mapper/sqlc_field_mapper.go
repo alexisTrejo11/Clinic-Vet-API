@@ -27,8 +27,8 @@ type PgDateMapper struct{}
 
 type NumericMapper struct{}
 
-func NewSqlcFieldMapper() SqlcFieldMapper {
-	return SqlcFieldMapper{
+func NewSqlcFieldMapper() *SqlcFieldMapper {
+	return &SqlcFieldMapper{
 		Primitive:     PrimitiveMapper{},
 		PgText:        PgTextMapper{},
 		PgInt4:        PgInt4Mapper{},
@@ -159,6 +159,20 @@ func (m *PgInt4Mapper) ToUint(pgType pgtype.Int4) uint {
 	return 0
 }
 
+func (m *PgInt4Mapper) FromInt32Ptr(i *int32) pgtype.Int4 {
+	if i != nil {
+		return pgtype.Int4{Int32: *i, Valid: true}
+	}
+	return pgtype.Int4{Valid: false}
+}
+
+func (m *PgInt4Mapper) FromInt32(i int32) pgtype.Int4 {
+	if i != 0 {
+		return pgtype.Int4{Int32: i, Valid: true}
+	}
+	return pgtype.Int4{Valid: false}
+}
+
 func (m *PgInt4Mapper) ToUserIDPtr(pgType pgtype.Int4) *valueobject.UserID {
 	if pgType.Valid {
 		id := valueobject.NewUserID(uint(pgType.Int32))
@@ -195,6 +209,28 @@ func (m *PgInt4Mapper) ToEmployeeID(pgType pgtype.Int4) valueobject.EmployeeID {
 		return valueobject.NewEmployeeID(uint(pgType.Int32))
 	}
 	return valueobject.EmployeeID{}
+}
+
+func (m *PgInt4Mapper) ToMedSessionIDPtr(pgType pgtype.Int4) *valueobject.MedSessionID {
+	if pgType.Valid {
+		id := valueobject.NewMedSessionID(uint(pgType.Int32))
+		return &id
+	}
+	return nil
+}
+
+func (m *PgInt4Mapper) FromMedSessionIDPtr(id *valueobject.MedSessionID) pgtype.Int4 {
+	if id != nil {
+		return pgtype.Int4{Int32: int32(id.Value()), Valid: true}
+	}
+	return pgtype.Int4{Valid: false}
+}
+
+func (m *PgInt4Mapper) FromCustomerIDPtr(id *valueobject.CustomerID) pgtype.Int4 {
+	if id != nil {
+		return pgtype.Int4{Int32: int32(id.Value()), Valid: true}
+	}
+	return pgtype.Int4{Valid: false}
 }
 
 func (m *PgInt4Mapper) ToPetID(pgType pgtype.Int4) valueobject.PetID {
@@ -358,17 +394,55 @@ func (r *PgTimestamptzMapper) ToTimePtr(t pgtype.Timestamptz) *time.Time {
 	return nil
 }
 
-func (r *NumericMapper) ToMoney(num pgtype.Numeric, currency string) (valueobject.Money, error) {
+// TODO: Check if this is correct
+func (r *NumericMapper) ToMoney(num pgtype.Numeric, currency string) valueobject.Money {
 	if !num.Valid {
-		return valueobject.Money{}, fmt.Errorf("numeric value is null")
+		return valueobject.Money{}
 	}
 
-	var amount float64
-	if err := num.Scan(&amount); err != nil {
-		return valueobject.Money{}, fmt.Errorf("failed to convert numeric to amount: %w", err)
+	floatValue, err := r.numericToFloat64(num)
+	if err != nil {
+		return valueobject.Money{}
 	}
 
-	return valueobject.NewMoney(valueobject.NewDecimalFromFloat(amount), currency), nil
+	decimal := valueobject.NewDecimalFromFloat(floatValue)
+	return valueobject.NewMoney(decimal, currency)
+}
+
+func (r *NumericMapper) numericToFloat64(num pgtype.Numeric) (float64, error) {
+	if !num.Valid {
+		return 0, nil
+	}
+
+	float8, err := num.Float64Value()
+	if err != nil {
+		return 0, fmt.Errorf("error converting numeric to float64: %w", err)
+	}
+
+	if !float8.Valid {
+		return 0, nil
+	}
+
+	return float8.Float64, nil
+}
+
+func (r *NumericMapper) ToMoneyPtr(num pgtype.Numeric, currency string) (*valueobject.Money, error) {
+	if !num.Valid {
+		return nil, nil
+	}
+
+	floatValue, err := r.numericToFloat64(num)
+	if err != nil {
+		return nil, err
+	}
+
+	if floatValue == 0 {
+		return nil, nil
+	}
+
+	decimal := valueobject.NewDecimalFromFloat(floatValue)
+	money := valueobject.NewMoney(decimal, currency)
+	return &money, nil
 }
 
 func (r *NumericMapper) FromMoneyPtr(money *valueobject.Money) pgtype.Numeric {
@@ -394,6 +468,43 @@ func (r *NumericMapper) ToNumeric(money valueobject.Money) pgtype.Numeric {
 	amount := money.Amount()
 	return pgtype.Numeric{
 		Int:   big.NewInt(int64(amount.Float64())),
+		Valid: true,
+	}
+}
+
+func (r *NumericMapper) ToDecimalPtr(num pgtype.Numeric) *valueobject.Decimal {
+	if num.Valid {
+		var amount float64
+		if err := num.Scan(&amount); err == nil {
+			dec := valueobject.NewDecimalFromFloat(amount)
+			return &dec
+		}
+	}
+	return nil
+}
+func (r *NumericMapper) ToDecimal(num pgtype.Numeric) valueobject.Decimal {
+	if num.Valid {
+		var amount float64
+		if err := num.Scan(&amount); err == nil {
+			return valueobject.NewDecimalFromFloat(amount)
+		}
+	}
+	return valueobject.Decimal{}
+}
+
+func (r *NumericMapper) FromDecimalPtr(dec *valueobject.Decimal) pgtype.Numeric {
+	if dec != nil {
+		return pgtype.Numeric{
+			Int:   big.NewInt(int64(dec.Float64())),
+			Valid: true,
+		}
+	}
+	return pgtype.Numeric{Valid: false}
+}
+
+func (r *NumericMapper) FromDecimal(dec valueobject.Decimal) pgtype.Numeric {
+	return pgtype.Numeric{
+		Int:   big.NewInt(int64(dec.Float64())),
 		Valid: true,
 	}
 }

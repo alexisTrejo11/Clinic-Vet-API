@@ -11,11 +11,11 @@ import (
 
 func (r *SqlcCustomerRepository) toCreateParams(customer customer.Customer) *sqlc.CreateCustomerParams {
 	return &sqlc.CreateCustomerParams{
+		FirstName:   customer.FirstName(),
+		LastName:    customer.LastName(),
 		Photo:       customer.Photo(),
 		DateOfBirth: r.mapper.TimeToPgDate(customer.DateOfBirth()),
 		Gender:      models.PersonGender(customer.Gender().String()),
-		FirstName:   customer.FirstName(),
-		LastName:    customer.LastName(),
 		IsActive:    customer.IsActive(),
 		UserID:      r.mapper.UserIDPtrToInt32(customer.UserID()),
 	}
@@ -24,11 +24,11 @@ func (r *SqlcCustomerRepository) toCreateParams(customer customer.Customer) *sql
 func (r *SqlcCustomerRepository) ToUpdateParams(customer customer.Customer) *sqlc.UpdateCustomerParams {
 	return &sqlc.UpdateCustomerParams{
 		ID:          customer.ID().Int32(),
+		FirstName:   customer.FirstName(),
+		LastName:    customer.LastName(),
 		Photo:       customer.Photo(),
 		Gender:      models.PersonGender(customer.Gender()),
 		DateOfBirth: r.mapper.TimeToPgDate(customer.DateOfBirth()),
-		FirstName:   customer.FirstName(),
-		LastName:    customer.LastName(),
 		IsActive:    customer.IsActive(),
 		UserID:      r.mapper.UserIDPtrToInt32(customer.UserID()),
 	}
@@ -36,14 +36,15 @@ func (r *SqlcCustomerRepository) ToUpdateParams(customer customer.Customer) *sql
 
 func (r *SqlcCustomerRepository) sqlcRowToEntityWithPets(row sqlc.Customer, pets []pet.Pet) customer.Customer {
 	return *customer.NewCustomerBuilder().
+		WithID(valueobject.NewCustomerID(uint(row.ID))).
 		WithName(valueobject.NewPersonName(row.FirstName, row.LastName)).
+		WithPhoto(row.Photo).
 		WithDateOfBirth(row.DateOfBirth.Time).
-		WithUserID(r.mapper.Int32ToUserIDPtr(row.UserID.Int32)).
 		WithGender(enum.PersonGender(string(row.Gender))).
 		WithIsActive(row.IsActive).
+		WithUserID(r.mapper.Int32ToUserIDPtr(row.UserID.Int32)).
 		WithPets(pets).
-		WithPhoto(row.Photo).
-		WithID(valueobject.NewCustomerID(uint(row.ID))).
+		WithTimestamp(row.CreatedAt.Time, row.UpdatedAt.Time).
 		Build()
 }
 

@@ -36,7 +36,7 @@ func (ctrl *PaymentControllerOperations) SearchPayments(c *gin.Context) {
 	}
 
 	query := searchRequestData.ToQuery()
-	paymentsPage, err := ctrl.bus.QueryBus.FindBySpecification(c.Request.Context(), *query)
+	paymentsPage, err := ctrl.bus.QueryBus.FindBySpecification(c.Request.Context(), query)
 	if err != nil {
 		response.ApplicationError(c, err)
 		return
@@ -53,7 +53,7 @@ func (ctrl *PaymentControllerOperations) GetPaymentByID(c *gin.Context, customer
 	}
 
 	query := query.NewFindPaymentByIDQuery(paymentID, customerID)
-	payment, err := ctrl.bus.QueryBus.FindByID(c.Request.Context(), *query)
+	payment, err := ctrl.bus.QueryBus.FindByID(c.Request.Context(), query)
 	if err != nil {
 		response.ApplicationError(c, err)
 		return
@@ -89,7 +89,7 @@ func (ctrl *PaymentControllerOperations) GetPaymentsByStatus(c *gin.Context) {
 	}
 
 	query := query.NewFindPaymentsByStatusQuery(statusStr, pagination)
-	paymentPage, err := ctrl.bus.QueryBus.FindByStatus(c.Request.Context(), *query)
+	paymentPage, err := ctrl.bus.QueryBus.FindByStatus(c.Request.Context(), query)
 	if err != nil {
 		response.ApplicationError(c, err)
 		return
@@ -106,7 +106,7 @@ func (ctrl *PaymentControllerOperations) GetPaymentsByDateRange(c *gin.Context) 
 	}
 
 	query := requestData.ToQuery()
-	paymentPage, err := ctrl.bus.QueryBus.FindByDateRange(c.Request.Context(), *query)
+	paymentPage, err := ctrl.bus.QueryBus.FindByDateRange(c.Request.Context(), query)
 	if err != nil {
 		response.ApplicationError(c, err)
 		return
@@ -222,7 +222,7 @@ func (ctrl *PaymentControllerOperations) DeletePayment(c *gin.Context) {
 	}
 
 	command := command.NewDeletePaymentCommand(id)
-	commandResult := ctrl.bus.CommandBus.DeletePayment(c.Request.Context(), *command)
+	commandResult := ctrl.bus.CommandBus.DeletePayment(c.Request.Context(), command)
 	if !commandResult.IsSuccess() {
 		response.ApplicationError(c, commandResult.Error())
 		return
@@ -245,7 +245,7 @@ func (ctrl *PaymentControllerOperations) ProcessPayment(c *gin.Context) {
 	}
 
 	command := command.NewProcessPaymentCommand(id, req.TransactionID)
-	commandResult := ctrl.bus.CommandBus.ProcessPayment(c.Request.Context(), *command)
+	commandResult := ctrl.bus.CommandBus.ProcessPayment(c.Request.Context(), command)
 	if !commandResult.IsSuccess() {
 		response.ApplicationError(c, commandResult.Error())
 		return
@@ -273,7 +273,7 @@ func (ctrl *PaymentControllerOperations) RefundPayment(c *gin.Context) {
 	}
 
 	command := command.NewRefundPaymentCommand(id, req.Reason)
-	commandResult := ctrl.bus.CommandBus.RefundPayment(c.Request.Context(), *command)
+	commandResult := ctrl.bus.CommandBus.RefundPayment(c.Request.Context(), command)
 	if !commandResult.IsSuccess() {
 		response.ApplicationError(c, commandResult.Error())
 		return
@@ -301,7 +301,7 @@ func (ctrl *PaymentControllerOperations) CancelPayment(c *gin.Context) {
 	}
 
 	command := command.NewCancelPaymentCommand(id, req.Reason)
-	commandResult := ctrl.bus.CommandBus.CancelPayment(c.Request.Context(), *command)
+	commandResult := ctrl.bus.CommandBus.CancelPayment(c.Request.Context(), command)
 	if !commandResult.IsSuccess() {
 		response.ApplicationError(c, commandResult.Error())
 		return

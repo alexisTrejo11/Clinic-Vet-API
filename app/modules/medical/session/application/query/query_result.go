@@ -21,8 +21,8 @@ type MedSessionResult struct {
 type PetDetailsResult struct {
 	PetID           valueobject.PetID
 	Weight          *valueobject.Decimal
-	HeartRate       *int
-	RespiratoryRate *int
+	HeartRate       *int32
+	RespiratoryRate *int32
 	Temperature     *valueobject.Decimal
 	Condition       enum.PetCondition
 	Diagnosis       string

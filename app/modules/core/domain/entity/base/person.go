@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"clinic-vet-api/app/modules/core/domain/enum"
+	"clinic-vet-api/app/modules/core/domain/valueobject"
 	domainerr "clinic-vet-api/app/modules/core/error"
 )
 
@@ -158,8 +159,8 @@ func (p *Person) LastName() string {
 	return p.lastName
 }
 
-func (p *Person) FullName() string {
-	return p.firstName + " " + p.lastName
+func (p *Person) FullName() valueobject.PersonName {
+	return valueobject.NewPersonName(p.firstName, p.lastName)
 }
 
 func (p *Person) DateOfBirth() time.Time {

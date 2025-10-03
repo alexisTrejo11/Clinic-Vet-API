@@ -31,11 +31,11 @@ func NewUserQueryBus(repository repository.UserRepository) UserQueryBus {
 	findBySpecHandler := query.NewFindUserBySpecificationHandler(repository)
 
 	return &userQueryBus{
-		findByIDHandler:            *findByIDHandler,
-		findByEmailHandler:         *findByEmailHandler,
-		findByPhoneHandler:         *findByPhoneHandler,
-		findByRoleHandler:          *findByRoleHandler,
-		findBySpecificationHandler: *findBySpecHandler,
+		findByIDHandler:            findByIDHandler,
+		findByEmailHandler:         findByEmailHandler,
+		findByPhoneHandler:         findByPhoneHandler,
+		findByRoleHandler:          findByRoleHandler,
+		findBySpecificationHandler: findBySpecHandler,
 	}
 }
 

@@ -317,7 +317,8 @@ func (ps *PaymentSpecification) evaluateCondition(payment *payment.Payment, cond
 	case "transaction_id":
 		return ps.comparePointerValues(payment.TransactionID(), condition.Value, condition.Operator)
 	case "description":
-		return ps.comparePointerValues(payment.Description(), condition.Value, condition.Operator)
+		desc := payment.Description()
+		return ps.comparePointerValues(&desc, condition.Value, condition.Operator)
 	case "due_date":
 		return ps.compareTimePointerValues(payment.DueDate(), condition.Value, condition.Operator)
 	case "paid_at":

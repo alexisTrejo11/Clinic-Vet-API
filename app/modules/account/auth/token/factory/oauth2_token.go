@@ -34,11 +34,10 @@ func (o *OAuth2SecretTokenImpl) Validate(token string) (any, error) {
 
 	// TODO: Validate on db
 	return &TokenClaims{
-		UserID:    o.config.UserID,
-		TokenType: vo.OAuth2SecretToken,
-		IssuedAt:  time.Now().Add(-o.config.ExpiresIn),
-		ExpiresAt: o.expiresAt,
-		Purpose:   o.config.Purpose,
+		UserID:     o.config.UserID,
+		TokenType:  vo.OAuth2SecretToken,
+		CreatedAt:  time.Now().Add(-o.config.ExpiresIn),
+		ValidUntil: o.expiresAt,
 	}, nil
 }
 

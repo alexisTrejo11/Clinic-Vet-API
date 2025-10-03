@@ -116,7 +116,7 @@ func (ctrl *CustomerAppointmetController) GetMyAppointmentByID(c *gin.Context) {
 	}
 
 	args := GetByIDExtraArgs{employeeID: nil, customerID: &userCtx.CustomerID}
-	ctrl.operations.GetAppointmentDetailByID(c, args)
+	ctrl.operations.FindAppointmentByID(c, args)
 }
 
 // GetApptsByPet godoc

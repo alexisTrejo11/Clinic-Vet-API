@@ -8,15 +8,12 @@ import (
 )
 
 type FindUserByEmailQuery struct {
-	email          valueobject.Email
-	includeProfile bool
+	email valueobject.Email
 }
 
-func NewFindUserByEmailQuery(email string, includeProfile bool) *FindUserByEmailQuery {
-	emailVO := valueobject.NewEmailNoErr(email)
-	return &FindUserByEmailQuery{
-		email:          emailVO,
-		includeProfile: includeProfile,
+func NewFindUserByEmailQuery(email string) FindUserByEmailQuery {
+	return FindUserByEmailQuery{
+		email: valueobject.NewEmailNoErr(email),
 	}
 }
 
@@ -24,13 +21,13 @@ type FindUserByEmailHandler struct {
 	userRepository repository.UserRepository
 }
 
-func NewFindUserByEmailHandler(userRepository repository.UserRepository) *FindUserByEmailHandler {
-	return &FindUserByEmailHandler{
+func NewFindUserByEmailHandler(userRepository repository.UserRepository) FindUserByEmailHandler {
+	return FindUserByEmailHandler{
 		userRepository: userRepository,
 	}
 }
 
-func (h *FindUserByEmailHandler) Handle(ctx context.Context, query FindUserByEmailQuery) (UserResult, error) {
+func (h FindUserByEmailHandler) Handle(ctx context.Context, query FindUserByEmailQuery) (UserResult, error) {
 	user, err := h.userRepository.FindByEmail(ctx, query.email.Value())
 	if err != nil {
 		return UserResult{}, err

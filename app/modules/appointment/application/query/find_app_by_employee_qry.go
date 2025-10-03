@@ -11,17 +11,17 @@ type FindApptsByEmployeeIDQuery struct {
 	pagination specification.Pagination
 }
 
-func NewFindApptsByEmployeeIDQuery(employeeID uint, pagination page.PaginationRequest) *FindApptsByEmployeeIDQuery {
-	return &FindApptsByEmployeeIDQuery{
+func NewFindApptsByEmployeeIDQuery(employeeID uint, pagination page.PaginationRequest) FindApptsByEmployeeIDQuery {
+	return FindApptsByEmployeeIDQuery{
 		employeeID: valueobject.NewEmployeeID(employeeID),
 		pagination: pagination.ToSpecPagination(),
 	}
 }
 
-func (q *FindApptsByEmployeeIDQuery) EmployeeID() valueobject.EmployeeID {
+func (q FindApptsByEmployeeIDQuery) EmployeeID() valueobject.EmployeeID {
 	return q.employeeID
 }
 
-func (q *FindApptsByEmployeeIDQuery) Pagination() specification.Pagination {
+func (q FindApptsByEmployeeIDQuery) Pagination() specification.Pagination {
 	return q.pagination
 }

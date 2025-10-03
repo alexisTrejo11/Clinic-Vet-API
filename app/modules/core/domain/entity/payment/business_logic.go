@@ -79,8 +79,6 @@ func (p *Payment) SoftDelete(ctx context.Context) {
 		zap.String("operation", operation))
 
 	p.isActive = false
-	deletedAt := time.Now()
-	p.deletedAt = &deletedAt
 	p.updatedAt = time.Now()
 	p.IncrementVersion()
 }
@@ -93,7 +91,6 @@ func (p *Payment) Restore(ctx context.Context) {
 		zap.String("operation", operation))
 
 	p.isActive = true
-	p.deletedAt = nil
 	p.updatedAt = time.Now()
 	p.IncrementVersion()
 }
@@ -241,7 +238,7 @@ func (p *Payment) Update(ctx context.Context, amount *valueobject.Money, payment
 		if len(*description) > 500 {
 			return DescriptionTooLongError(ctx, len(*description), operation)
 		}
-		p.description = description
+		p.description = *description
 	}
 
 	if dueDate != nil {

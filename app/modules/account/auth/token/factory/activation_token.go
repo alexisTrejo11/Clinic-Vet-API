@@ -38,11 +38,10 @@ func (a *ActivationTokenImpl) Validate(token string) (any, error) {
 	}
 
 	return &TokenClaims{
-		UserID:    a.config.UserID,
-		TokenType: vo.ActivationToken,
-		IssuedAt:  time.Now().Add(-a.config.ExpiresIn),
-		ExpiresAt: a.expiresAt,
-		Purpose:   a.config.Purpose,
+		UserID:     a.config.UserID,
+		TokenType:  vo.ActivationToken,
+		CreatedAt:  time.Now().Add(-a.config.ExpiresIn),
+		ValidUntil: a.expiresAt,
 	}, nil
 }
 

@@ -30,46 +30,46 @@ func NewCustomerCommandHandler(customerRepo repo.CustomerRepository) *CustomerCo
 func (h *CustomerCommandHandler) HandleCreate(ctx context.Context, cmd c.CreateCustomerCommand) cqrs.CommandResult {
 	customer := cmd.ToEntity()
 	if err := customer.Validate(ctx); err != nil {
-		return *cqrs.FailureResult(FailBuisnessValidationMsg, err)
+		return cqrs.FailureResult(FailBuisnessValidationMsg, err)
 	}
 
 	if err := h.customerRepo.Save(ctx, &customer); err != nil {
-		return *cqrs.FailureResult(FailToSaveCustomerMsg, err)
+		return cqrs.FailureResult(FailToSaveCustomerMsg, err)
 	}
 
-	return *cqrs.SuccessCreateResult(customer.ID().String(), SuccessCustomerCreatedMsg)
+	return cqrs.SuccessCreateResult(customer.ID().String(), SuccessCustomerCreatedMsg)
 }
 
 func (h *CustomerCommandHandler) HandleUpdate(ctx context.Context, cmd c.UpdateCustomerCommand) cqrs.CommandResult {
 	customer, err := h.customerRepo.FindByID(ctx, cmd.ID())
 	if err != nil {
-		return *cqrs.FailureResult(FailToCheckCustomerExistenceMsg, err)
+		return cqrs.FailureResult(FailToCheckCustomerExistenceMsg, err)
 	}
 
 	customerUpdated := cmd.UpdateEntity(customer)
 	err = h.customerRepo.Save(ctx, &customerUpdated)
 	if err != nil {
-		return *cqrs.FailureResult(FailSavingCustomerMsg, err)
+		return cqrs.FailureResult(FailSavingCustomerMsg, err)
 	}
 
-	return *cqrs.SuccessResult(SuccessCustomerUpdatedMsg)
+	return cqrs.SuccessResult(SuccessCustomerUpdatedMsg)
 }
 
 func (h *CustomerCommandHandler) HandleDeactivate(ctx context.Context, cmd c.DeactivateCustomerCommand) cqrs.CommandResult {
 	customer, err := h.customerRepo.FindByID(ctx, cmd.ID())
 	if err != nil {
-		return *cqrs.FailureResult(FailToCheckCustomerExistenceMsg, err)
+		return cqrs.FailureResult(FailToCheckCustomerExistenceMsg, err)
 	}
 
 	err = customer.Deactivate(ctx)
 	if err != nil {
-		return *cqrs.FailureResult(FailToDeactivateCustomerMsg, err)
+		return cqrs.FailureResult(FailToDeactivateCustomerMsg, err)
 	}
 
 	err = h.customerRepo.Save(ctx, &customer)
 	if err != nil {
-		return *cqrs.FailureResult(FailSavingCustomerMsg, err)
+		return cqrs.FailureResult(FailSavingCustomerMsg, err)
 	}
 
-	return *cqrs.SuccessResult(SuccessCustomerDeactivatedMsg)
+	return cqrs.SuccessResult(SuccessCustomerDeactivatedMsg)
 }

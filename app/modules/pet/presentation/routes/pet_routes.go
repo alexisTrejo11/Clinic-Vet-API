@@ -9,8 +9,8 @@ import (
 
 func PetsRoutes(appGroup *gin.RouterGroup, controller *controller.PetController, authMiddleware *middleware.AuthMiddleware) {
 	petGroup := appGroup.Group("/pets")
-	petGroup.Use(authMiddleware.Authenticate())
-	petGroup.Use(authMiddleware.RequireAnyRole("admin"))
+	//petGroup.Use(authMiddleware.Authenticate())
+	//petGroup.Use(authMiddleware.RequireAnyRole("admin"))
 
 	petGroup.GET("/", controller.SearchPets)
 	petGroup.GET("/:id", controller.FindPetByID)

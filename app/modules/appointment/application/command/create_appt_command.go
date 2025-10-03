@@ -26,7 +26,7 @@ func NewCreateApptCommand(
 	status string,
 	notes *string,
 ) (CreateApptCommand, error) {
-	cmd := &CreateApptCommand{
+	cmd := CreateApptCommand{
 		customerID: valueobject.NewCustomerID(customerID),
 		petID:      valueobject.NewPetID(petID),
 		employeeID: mapper.PtrToEmployeeIDPtr(employeeID),
@@ -40,7 +40,7 @@ func NewCreateApptCommand(
 		return CreateApptCommand{}, err
 	}
 
-	return *cmd, nil
+	return cmd, nil
 }
 
 func (c *CreateApptCommand) Validate() error {

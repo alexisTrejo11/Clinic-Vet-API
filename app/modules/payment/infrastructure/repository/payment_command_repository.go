@@ -12,13 +12,11 @@ import (
 	"context"
 	"fmt"
 	"time"
-
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type SqlcPaymentRepository struct {
 	queries *sqlc.Queries
-	pgMap   mapper.SqlcFieldMapper
+	pgMap   *mapper.SqlcFieldMapper
 }
 
 func NewSqlcPaymentRepository(queries *sqlc.Queries) repository.PaymentRepository {
@@ -44,7 +42,7 @@ func (r *SqlcPaymentRepository) CountByStatus(ctx context.Context, status enum.P
 }
 
 func (r *SqlcPaymentRepository) CountByCustomerID(ctx context.Context, customerID vo.CustomerID) (int64, error) {
-	count, err := r.queries.CountPaymentsByCustomerID(ctx, pgtype.Int4{Int32: int32(customerID.Int32()), Valid: true})
+	count, err := r.queries.CountPaymentsByCustomerID(ctx, r.pgMap.PgInt4.FromInt32(customerID.Int32()))
 	if err != nil {
 		return 0, r.dbError(OpCount, ErrMsgCountPayments, err)
 	}
@@ -62,12 +60,10 @@ func (r *SqlcPaymentRepository) CountOverdue(ctx context.Context) (int64, error)
 func (r *SqlcPaymentRepository) TotalRevenueByDateRange(
 	ctx context.Context, startDate, endDate time.Time,
 ) (float64, error) {
-	params := sqlc.TotalRevenueByDateRangeParams{
+	total, err := r.queries.TotalRevenueByDateRange(ctx, sqlc.TotalRevenueByDateRangeParams{
 		PaidAt:   r.pgMap.PgTimestamptz.FromTime(startDate),
 		PaidAt_2: r.pgMap.PgTimestamptz.FromTime(endDate),
-	}
-
-	total, err := r.queries.TotalRevenueByDateRange(ctx, params)
+	})
 	if err != nil {
 		return 0, r.dbError(OpSelect, ErrMsgListPaymentsByDateRange, err)
 	}
@@ -86,21 +82,18 @@ func (r *SqlcPaymentRepository) Delete(ctx context.Context, id vo.PaymentID, isH
 	return r.softDelete(ctx, id)
 }
 
-func (r *SqlcPaymentRepository) create(ctx context.Context, paymentEntity *p.Payment) error {
-	createParams := r.ToCreateParams(*paymentEntity)
-
-	_, err := r.queries.CreatePayment(ctx, createParams)
+func (r *SqlcPaymentRepository) create(ctx context.Context, payment *p.Payment) error {
+	paymentCreated, err := r.queries.CreatePayment(ctx, r.ToCreateParams(*payment))
 	if err != nil {
 		return r.dbError(OpInsert, ErrMsgCreatePayment, err)
 	}
 
+	payment.SetID(vo.NewPaymentID(uint(paymentCreated.ID)))
 	return nil
 }
 
 func (r *SqlcPaymentRepository) update(ctx context.Context, payment *p.Payment) error {
-	updateParams := r.ToUpdateParams(payment)
-
-	_, err := r.queries.UpdatePayment(ctx, updateParams)
+	_, err := r.queries.UpdatePayment(ctx, r.ToUpdateParams(payment))
 	if err != nil {
 		return r.dbError(OpUpdate, ErrMsgUpdatePayment, err)
 	}

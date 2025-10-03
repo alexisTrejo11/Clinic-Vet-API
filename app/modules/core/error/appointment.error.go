@@ -37,7 +37,7 @@ func AppointmentScheduleDateRuleErr(ctx context.Context, ruleViolated string) er
 }
 
 func AppointmentStatusTransitionErr(fromStatus, toStatus string, message string) error {
-	return &BaseDomainError{
+	return BaseDomainError{
 		Code:    "BUSINESS_RULE_VIOLATION",
 		Type:    "domain",
 		Message: message,

@@ -6,10 +6,8 @@ type ResendActivationCmd struct {
 	email valueobject.Email
 }
 
-func NewResendActivationCmd(email valueobject.Email) *ResendActivationCmd {
-	return &ResendActivationCmd{
-		email: email,
-	}
+func NewResendActivationCmd(email valueobject.Email) ResendActivationCmd {
+	return ResendActivationCmd{email: email}
 }
 
 func (c *ResendActivationCmd) Email() valueobject.Email {

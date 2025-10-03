@@ -84,5 +84,5 @@ func (params *PetSearchRequest) ToSpecification() *specification.PetSpecificatio
 func (params *PetSearchRequest) ToQuery() query.FindPetBySpecificationQuery {
 	spec := params.ToSpecification()
 	qry := query.NewFindPetBySpecificationQuery(*spec)
-	return *qry
+	return qry
 }

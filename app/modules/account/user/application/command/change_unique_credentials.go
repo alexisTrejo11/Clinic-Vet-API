@@ -29,13 +29,13 @@ func NewChangeEmailCommand(ctx context.Context, userIDInt uint, emailStr string)
 		return ChangeEmailCommand{}, errors.New(ErrInvalidEmail)
 	}
 
-	cmd := &ChangeEmailCommand{
+	cmd := ChangeEmailCommand{
 		ctx:    ctx,
 		userID: userID,
 		email:  email,
 	}
 
-	return *cmd, nil
+	return cmd, nil
 }
 
 func NewChangePhoneCommand(ctx context.Context, userIDInt uint, phoneStr string) (ChangePhoneCommand, error) {
@@ -45,13 +45,13 @@ func NewChangePhoneCommand(ctx context.Context, userIDInt uint, phoneStr string)
 		return ChangePhoneCommand{}, errors.New(ErrInvalidPhone)
 	}
 
-	cmd := &ChangePhoneCommand{
+	cmd := ChangePhoneCommand{
 		userID: userID,
 		phone:  phone,
 		ctx:    ctx,
 	}
 
-	return *cmd, nil
+	return cmd, nil
 }
 
 type ChangeEmailHandler struct {
@@ -77,44 +77,44 @@ func NewChangeEmailHandler(userRepository repository.UserRepository) ChangeEmail
 func (h ChangePhoneHandler) Handle(cmd cqrs.Command) cqrs.CommandResult {
 	command, ok := cmd.(ChangePhoneCommand)
 	if !ok {
-		return *cqrs.FailureResult(ErrFailedChangePhone, errors.New("invalid command type"))
+		return cqrs.FailureResult(ErrFailedChangePhone, errors.New("invalid command type"))
 	}
 
 	user, err := h.userRepository.FindByID(command.ctx, command.userID)
 	if err != nil {
-		return *cqrs.FailureResult(ErrFailedFindUser, err)
+		return cqrs.FailureResult(ErrFailedFindUser, err)
 	}
 
 	if err := h.validate(command, user); err != nil {
-		return *cqrs.FailureResult(ErrFailedChangePhone, err)
+		return cqrs.FailureResult(ErrFailedChangePhone, err)
 	}
 
 	user.UpdatePhoneNumber(command.phone)
 
 	if err := h.userRepository.Save(command.ctx, &user); err != nil {
-		return *cqrs.FailureResult(ErrFailedUpdateUser, err)
+		return cqrs.FailureResult(ErrFailedUpdateUser, err)
 	}
 
-	return *cqrs.SuccessResult("phone changed successfully")
+	return cqrs.SuccessResult("phone changed successfully")
 }
 
 func (h ChangeEmailHandler) Handle(ctx context.Context, command ChangeEmailCommand) cqrs.CommandResult {
 	user, err := h.userRepository.FindByID(ctx, command.userID)
 	if err != nil {
-		return *cqrs.FailureResult(ErrFailedFindUser, err)
+		return cqrs.FailureResult(ErrFailedFindUser, err)
 	}
 
 	if err := h.validate(command, user); err != nil {
-		return *cqrs.FailureResult(ErrFailedChangeEmail, err)
+		return cqrs.FailureResult(ErrFailedChangeEmail, err)
 	}
 
 	user.UpdateEmail(command.email)
 
 	if err := h.userRepository.Save(ctx, &user); err != nil {
-		return *cqrs.FailureResult(ErrFailedUpdateUser, err)
+		return cqrs.FailureResult(ErrFailedUpdateUser, err)
 	}
 
-	return *cqrs.SuccessResult("email changed successfully")
+	return cqrs.SuccessResult("email changed successfully")
 }
 
 func (h ChangeEmailHandler) validate(command ChangeEmailCommand, user user.User) error {

@@ -22,14 +22,15 @@ func (r *SqlcPetRepository) toEntity(sqlPet sqlc.Pet) pet.Pet {
 		WithCustomerID(customerID).
 		WithName(sqlPet.Name).
 		WithSpecies(enum.PetSpecies(sqlPet.Species)).
-		WithIsActive(sqlPet.IsActive).
 		WithPhoto(photo).
 		WithBreed(breed).
 		WithAge(age).
 		WithGender(enum.PetGender(sqlPet.Gender.String)).
 		WithColor(color).
 		WithMicrochip(microchip).
+		WithIsActive(sqlPet.IsActive).
 		WithIsNeutered(isNeutered).
+		WithTimeStamps(sqlPet.CreatedAt.Time, sqlPet.UpdatedAt.Time).
 		Build()
 }
 
@@ -44,8 +45,8 @@ func (r *SqlcPetRepository) toEntities(rows []sqlc.Pet) []pet.Pet {
 	return pets
 }
 
-func (r *SqlcPetRepository) toCreateParams(pet pet.Pet) *sqlc.CreatePetParams {
-	return &sqlc.CreatePetParams{
+func (r *SqlcPetRepository) toCreateParams(pet pet.Pet) sqlc.CreatePetParams {
+	return sqlc.CreatePetParams{
 		Name:       pet.Name(),
 		Photo:      r.pgMap.PgText.FromStringPtr(pet.Photo()),
 		Species:    pet.Species().String(),
@@ -60,8 +61,8 @@ func (r *SqlcPetRepository) toCreateParams(pet pet.Pet) *sqlc.CreatePetParams {
 	}
 }
 
-func (r *SqlcPetRepository) toUpdateParams(pet *pet.Pet) *sqlc.UpdatePetParams {
-	return &sqlc.UpdatePetParams{
+func (r *SqlcPetRepository) toUpdateParams(pet *pet.Pet) sqlc.UpdatePetParams {
+	return sqlc.UpdatePetParams{
 		ID:         pet.ID().Int32(),
 		Name:       pet.Name(),
 		Photo:      r.pgMap.PgText.FromStringPtr(pet.Photo()),

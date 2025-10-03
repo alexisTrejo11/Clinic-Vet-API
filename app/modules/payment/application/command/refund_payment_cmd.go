@@ -11,8 +11,8 @@ type RefundPaymentCommand struct {
 	reason    string
 }
 
-func NewRefundPaymentCommand(paymentID uint, reason string) *RefundPaymentCommand {
-	return &RefundPaymentCommand{
+func NewRefundPaymentCommand(paymentID uint, reason string) RefundPaymentCommand {
+	return RefundPaymentCommand{
 		paymentID: valueobject.NewPaymentID(paymentID),
 		reason:    reason,
 	}
@@ -21,16 +21,16 @@ func NewRefundPaymentCommand(paymentID uint, reason string) *RefundPaymentComman
 func (h *paymentCommandHandler) RefundPayment(ctx context.Context, cmd RefundPaymentCommand) cqrs.CommandResult {
 	payment, err := h.paymentRepository.FindByID(ctx, cmd.paymentID)
 	if err != nil {
-		return *cqrs.FailureResult(ErrFailedRetrievePayment, err)
+		return cqrs.FailureResult(ErrFailedRetrievePayment, err)
 	}
 
 	if err := payment.Refund(ctx); err != nil {
-		return *cqrs.FailureResult(ErrFailedRefundPayment, err)
+		return cqrs.FailureResult(ErrFailedRefundPayment, err)
 	}
 
 	if err := h.paymentRepository.Save(ctx, &payment); err != nil {
-		return *cqrs.FailureResult(ErrFailedSaveRefundedPayment, err)
+		return cqrs.FailureResult(ErrFailedSaveRefundedPayment, err)
 	}
 
-	return *cqrs.SuccessResult(MsgPaymentRefunded)
+	return cqrs.SuccessResult(MsgPaymentRefunded)
 }

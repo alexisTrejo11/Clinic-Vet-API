@@ -56,7 +56,7 @@ type FindDewormsByDateRangeRequest struct {
 	Pagination page.PaginationRequest
 }
 
-func (r *FindDewormsByDateRangeRequest) ToQuery() *query.FindDewormsByDateRangeQuery {
+func (r FindDewormsByDateRangeRequest) ToQuery() *query.FindDewormsByDateRangeQuery {
 	query := &query.FindDewormsByDateRangeQuery{
 		StartDate:  r.StartDate,
 		EndDate:    r.EndDate,

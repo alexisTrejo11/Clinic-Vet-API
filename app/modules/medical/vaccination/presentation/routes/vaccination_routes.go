@@ -2,6 +2,7 @@ package routes
 
 import (
 	"clinic-vet-api/app/middleware"
+	"clinic-vet-api/app/modules/core/domain/enum"
 	"clinic-vet-api/app/modules/medical/vaccination/presentation/controller"
 
 	"github.com/gin-gonic/gin"
@@ -22,11 +23,11 @@ func NewVaccinationRoutes(clientController *controller.CustomerPetVaccinationCon
 func (r *VaccinationRoutes) RegisterEmployeeRoutes(group *gin.RouterGroup, middleware *middleware.AuthMiddleware, controller *controller.EmployeePetVaccinationController) {
 	employeeGroup := group.Group("employees/vaccinations")
 	employeeGroup.Use(middleware.Authenticate())
-	employeeGroup.Use(middleware.RequireAnyRole("employee, recepcionist, manager, veterinarian"))
+	employeeGroup.Use(middleware.RequireAnyRole(enum.UserRoleVeterinarian.String(), enum.UserRoleAdmin.String()))
 	{
 		employeeGroup.GET("/:id", controller.GetMyVaccinationAppliedDetail)
 		employeeGroup.GET("", controller.GetMyVaccinationHistory)
-		employeeGroup.GET("/pets/:petId", controller.GetMyVaccinationsHistoryByPet)
+		employeeGroup.GET("/pets/:id", controller.GetMyVaccinationsHistoryByPet)
 		employeeGroup.POST("", controller.RegisterNewVaccination)
 		employeeGroup.PUT("/:id", controller.UpdateMyVaccinationApplied)
 	}

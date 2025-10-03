@@ -28,7 +28,7 @@ func (q FindVaccinationsByDateRangeQuery) StartDate() time.Time            { ret
 func (q FindVaccinationsByDateRangeQuery) EndDate() time.Time              { return q.endDate }
 func (q FindVaccinationsByDateRangeQuery) Pagination() p.PaginationRequest { return q.pagination }
 
-func (q *FindVaccinationsByDateRangeQuery) Validate() error {
+func (q FindVaccinationsByDateRangeQuery) Validate() error {
 	if q.startDate.IsZero() {
 		return FindVaccineByDateRangeErr("startDate", "is required")
 	}

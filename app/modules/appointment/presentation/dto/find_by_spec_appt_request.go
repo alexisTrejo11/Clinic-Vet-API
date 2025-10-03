@@ -52,10 +52,10 @@ func (r *AppointmentSearchRequest) processBooleanParams(c *gin.Context) {
 	}
 }
 
-func (r *AppointmentSearchRequest) ToQuery() (*query.FindApptsBySpecQuery, error) {
+func (r *AppointmentSearchRequest) ToQuery() (query.FindApptsBySpecQuery, error) {
 	spec, err := r.ToSpecification()
 	if err != nil {
-		return nil, fmt.Errorf("failed to create specification: %w", err)
+		return query.FindApptsBySpecQuery{}, fmt.Errorf("failed to create specification: %w", err)
 	}
 	return query.NewFindApptsBySpecQuery(spec), nil
 }

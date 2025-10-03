@@ -19,7 +19,7 @@ type UpdateCustomerCommand struct {
 }
 
 func NewUpdateCustomerCommand(id uint, photo, firstName *string, lastName, gender *string, dateOfBirth *time.Time) (UpdateCustomerCommand, error) {
-	cmd := &UpdateCustomerCommand{
+	cmd := UpdateCustomerCommand{
 		id:          valueobject.NewCustomerID(id),
 		name:        valueobject.NewOptPersonName(firstName, lastName),
 		photo:       photo,
@@ -31,27 +31,34 @@ func NewUpdateCustomerCommand(id uint, photo, firstName *string, lastName, gende
 		return UpdateCustomerCommand{}, err
 	}
 
-	return *cmd, nil
+	return cmd, nil
 }
 
 func (cmd *UpdateCustomerCommand) UpdateEntity(existingCustomer c.Customer) c.Customer {
-	builder := c.NewCustomerBuilder().
-		WithID(cmd.id)
+	builder := c.NewCustomerBuilder().WithID(cmd.id)
 
 	if cmd.photo != nil {
 		builder.WithPhoto(*cmd.photo)
+	} else {
+		builder.WithPhoto(existingCustomer.Photo())
 	}
 
 	if cmd.gender != nil {
 		builder.WithGender(*cmd.gender)
+	} else {
+		builder.WithGender(existingCustomer.Gender())
 	}
 
 	if cmd.name != nil {
 		builder.WithName(*cmd.name)
+	} else {
+		builder.WithName(existingCustomer.FullName())
 	}
 
 	if cmd.dateOfBirth != nil {
 		builder.WithDateOfBirth(*cmd.dateOfBirth)
+	} else {
+		builder.WithDateOfBirth(existingCustomer.DateOfBirth())
 	}
 
 	return *builder.Build()
@@ -68,8 +75,10 @@ func (cmd *UpdateCustomerCommand) validate() error {
 		}
 	}
 
-	if cmd.photo == nil && *cmd.photo == "" {
-		return UpdateCustomerCmdErr("photo", "Photo cannot be empty if provided")
+	if cmd.photo != nil {
+		if *cmd.photo == "" {
+			return UpdateCustomerCmdErr("photo", "Photo cannot be empty if provided")
+		}
 	}
 
 	if cmd.dateOfBirth != nil {
@@ -96,13 +105,13 @@ type DeactivateCustomerCommand struct {
 }
 
 func NewDeactivateCustomerCommand(id uint) (DeactivateCustomerCommand, error) {
-	cmd := &DeactivateCustomerCommand{id: valueobject.NewCustomerID(id)}
+	cmd := DeactivateCustomerCommand{id: valueobject.NewCustomerID(id)}
 
 	if err := cmd.validate(); err != nil {
 		return DeactivateCustomerCommand{}, err
 	}
 
-	return *cmd, nil
+	return cmd, nil
 }
 
 func (cmd *DeactivateCustomerCommand) validate() error {

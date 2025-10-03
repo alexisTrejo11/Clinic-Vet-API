@@ -35,7 +35,7 @@ type GetByIDExtraArgs struct {
 	customerID *uint
 }
 
-func (ctrl *ApptControllerOperations) GetAppointmentDetailByID(c *gin.Context, args GetByIDExtraArgs) {
+func (ctrl *ApptControllerOperations) FindAppointmentByID(c *gin.Context, args GetByIDExtraArgs) {
 	appointmentID, err := ginUtils.ParseParamToUInt(c, "id")
 	if err != nil {
 		response.BadRequest(c, httpError.RequestURLParamError(err, "id", c.Param("id")))
@@ -43,7 +43,7 @@ func (ctrl *ApptControllerOperations) GetAppointmentDetailByID(c *gin.Context, a
 	}
 
 	appointmentQuery := query.NewFindApptByIDQuery(appointmentID, args.employeeID, args.customerID)
-	result, err := ctrl.bus.QueryBus.FindByID(c.Request.Context(), *appointmentQuery)
+	result, err := ctrl.bus.QueryBus.FindByID(c.Request.Context(), appointmentQuery)
 	if err != nil {
 		response.ApplicationError(c, err)
 		return
@@ -71,7 +71,7 @@ func (ctrl *ApptControllerOperations) FindAppointmentsBySpecification(c *gin.Con
 		return
 	}
 
-	appointmentPage, err := ctrl.bus.QueryBus.FindBySpecification(c.Request.Context(), *searchQuery)
+	appointmentPage, err := ctrl.bus.QueryBus.FindBySpecification(c.Request.Context(), searchQuery)
 	if err != nil {
 		response.ApplicationError(c, err)
 		return
@@ -115,7 +115,7 @@ func (ctrl *ApptControllerOperations) FindAppointmentsByCustomer(c *gin.Context,
 	}
 
 	query := query.NewFindApptsByCustomerIDQuery(pageParams, customerID, extraArgs.PetID, extraArgs.Status)
-	appointPage, err := ctrl.bus.QueryBus.FindByCustomerID(c.Request.Context(), *query)
+	appointPage, err := ctrl.bus.QueryBus.FindByCustomerID(c.Request.Context(), query)
 	if err != nil {
 		response.ApplicationError(c, err)
 		return
@@ -132,7 +132,7 @@ func (ctrl *ApptControllerOperations) GetAppointmentsByEmployee(c *gin.Context, 
 	}
 
 	query := query.NewFindApptsByEmployeeIDQuery(employeeID, pageParams)
-	appointmentPage, err := ctrl.bus.QueryBus.FindByEmployeeID(c.Request.Context(), *query)
+	appointmentPage, err := ctrl.bus.QueryBus.FindByEmployeeID(c.Request.Context(), query)
 	if err != nil {
 		response.ApplicationError(c, err)
 		return
@@ -149,7 +149,7 @@ func (ctrl *ApptControllerOperations) GetAppointmentsByPet(c *gin.Context, petID
 	}
 
 	query := query.NewFindApptsByPetQuery(petID, pageParams)
-	appointmentPage, err := ctrl.bus.QueryBus.FindByPetID(c.Request.Context(), *query)
+	appointmentPage, err := ctrl.bus.QueryBus.FindByPetID(c.Request.Context(), query)
 	if err != nil {
 		response.ApplicationError(c, err)
 		return

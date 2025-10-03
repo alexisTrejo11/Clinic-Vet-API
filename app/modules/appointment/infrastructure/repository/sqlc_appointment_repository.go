@@ -7,6 +7,7 @@ import (
 	"clinic-vet-api/app/modules/core/domain/valueobject"
 	"clinic-vet-api/app/modules/core/repository"
 
+	"clinic-vet-api/app/shared/mapper"
 	p "clinic-vet-api/app/shared/page"
 	"clinic-vet-api/sqlc"
 	"context"
@@ -19,11 +20,13 @@ import (
 
 type SqlcAppointmentRepository struct {
 	queries *sqlc.Queries
+	pgMap   *mapper.SqlcFieldMapper
 }
 
 func NewSqlcAppointmentRepository(queries *sqlc.Queries) repository.AppointmentRepository {
 	return &SqlcAppointmentRepository{
 		queries: queries,
+		pgMap:   mapper.NewSqlcFieldMapper(),
 	}
 }
 
@@ -39,17 +42,16 @@ func (r *SqlcAppointmentRepository) Find(ctx context.Context, spec specification
 		status = *params.Status
 	}
 
-	// TODO: NIL FIX
 	sqlcParams := sqlc.FindAppointmentsBySpecParams{
-		Column1: ParsePointerInt32(params.ApptID),                                                  // ID
-		Column2: ParsePointerInt32(params.CustomerID),                                              // CustomerID
-		Column3: ParsePointerInt32(params.EmployeeID),                                              // EmployeeID
-		Column4: ParsePointerInt32(params.PetID),                                                   // PetID
-		Column5: service,                                                                           // Service
-		Column6: status,                                                                            // Status
-		Column7: pgtype.Timestamp{Time: *params.StartDate, Valid: params.StartDate != nil},         // StartDate
-		Column8: pgtype.Timestamp{Time: *params.EndDate, Valid: params.EndDate != nil},             // EndDate
-		Column9: pgtype.Timestamp{Time: *params.ScheduledDate, Valid: params.ScheduledDate != nil}, // ScheduledDate
+		Column1: r.pgMap.Primitive.Int32PtrToInt32(params.ApptID),                          // ID
+		Column2: r.pgMap.Primitive.Int32PtrToInt32(params.CustomerID),                      // CustomerID
+		Column3: r.pgMap.Primitive.Int32PtrToInt32(params.EmployeeID),                      // EmployeeID
+		Column4: r.pgMap.Primitive.Int32PtrToInt32(params.PetID),                           // PetID
+		Column5: service,                                                                   // Service
+		Column6: status,                                                                    // Status
+		Column7: pgtype.Timestamp(r.pgMap.PgTimestamptz.FromTimePtr(params.StartDate)),     // StartDate
+		Column8: pgtype.Timestamp(r.pgMap.PgTimestamptz.FromTimePtr(params.EndDate)),       // EndDate
+		Column9: pgtype.Timestamp(r.pgMap.PgTimestamptz.FromTimePtr(params.ScheduledDate)), // ScheduledDate
 		Limit:   params.Limit,
 		Offset:  params.Offset,
 	}
@@ -59,7 +61,6 @@ func (r *SqlcAppointmentRepository) Find(ctx context.Context, spec specification
 		return p.Page[appt.Appointment]{}, err
 	}
 
-	// Convert rows to domain entities
 	countParams := sqlc.CountAppointmentsBySpecParams{
 		Column1: sqlcParams.Column1, // ID
 		Column2: sqlcParams.Column2, // CustomerID
@@ -79,9 +80,10 @@ func (r *SqlcAppointmentRepository) Find(ctx context.Context, spec specification
 		return p.Page[appt.Appointment]{}, err
 	}
 
+	// Fix pagination to have default values if not set
 	pagination := p.PaginationRequest{
-		PageSize: params.Limit,
-		Page:     ((params.Offset) / (params.Limit)) + 1,
+		PageSize: 10,
+		Page:     1,
 	}
 
 	return p.NewPage(appointments, total, pagination), nil
@@ -154,26 +156,19 @@ func (r *SqlcAppointmentRepository) Count(ctx context.Context, spec specificatio
 		status = *params.Status
 	}
 	sqlcParams := sqlc.CountAppointmentsBySpecParams{
-		Column1: ParsePointerInt32(params.ApptID),                                                  // ID
-		Column2: ParsePointerInt32(params.CustomerID),                                              // CustomerID
-		Column3: ParsePointerInt32(params.EmployeeID),                                              // EmployeeID
-		Column4: ParsePointerInt32(params.PetID),                                                   // PetID
-		Column5: service,                                                                           // Service
-		Column6: status,                                                                            // Status
-		Column7: pgtype.Timestamp{Time: *params.StartDate, Valid: params.StartDate != nil},         // StartDate
-		Column8: pgtype.Timestamp{Time: *params.EndDate, Valid: params.EndDate != nil},             // EndDate
-		Column9: pgtype.Timestamp{Time: *params.ScheduledDate, Valid: params.ScheduledDate != nil}, // ScheduledDate
+		Column1: r.pgMap.Primitive.Int32PtrToInt32(params.ApptID),                          // ID
+		Column2: r.pgMap.Primitive.Int32PtrToInt32(params.CustomerID),                      // CustomerID
+		Column3: r.pgMap.Primitive.Int32PtrToInt32(params.EmployeeID),                      // EmployeeID
+		Column4: r.pgMap.Primitive.Int32PtrToInt32(params.PetID),                           // PetID
+		Column5: service,                                                                   // Service
+		Column6: status,                                                                    // Status
+		Column7: pgtype.Timestamp(r.pgMap.PgTimestamptz.FromTimePtr(params.StartDate)),     // StartDate
+		Column8: pgtype.Timestamp(r.pgMap.PgTimestamptz.FromTimePtr(params.EndDate)),       // EndDate
+		Column9: pgtype.Timestamp(r.pgMap.PgTimestamptz.FromTimePtr(params.ScheduledDate)), // ScheduledDate
 	}
 	total, err := r.queries.CountAppointmentsBySpec(ctx, sqlcParams)
 	if err != nil {
 		return 0, r.dbError("count", "failed to count appointments", err)
 	}
 	return total, nil
-}
-
-func ParsePointerInt32(n *int32) int32 {
-	if n == nil {
-		return 0
-	}
-	return *n
 }

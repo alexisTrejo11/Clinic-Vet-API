@@ -72,6 +72,7 @@ func (am *AuthMiddleware) Authenticate() gin.HandlerFunc {
 		token, err := am.jwtService.ExtractToken(authHeader)
 		if err != nil {
 			response.Unauthorized(c, autherror.UnauthorizedError(err.Error()))
+			c.Abort()
 			return
 		}
 

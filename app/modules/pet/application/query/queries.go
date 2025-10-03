@@ -13,7 +13,7 @@ type FindPetsByCustomerIDQuery struct {
 	pagination page.PaginationRequest
 }
 
-func (q *FindPetsByCustomerIDQuery) Validate() error {
+func (q FindPetsByCustomerIDQuery) Validate() error {
 	if q.customerID.IsZero() {
 		return apperror.ValidationError("customer ID cannot be zero")
 	}
@@ -25,8 +25,8 @@ func (q *FindPetsByCustomerIDQuery) Validate() error {
 	return nil
 }
 
-func NewFindPetsByCustomerIDQuery(customerID uint, pagination page.PaginationRequest) *FindPetsByCustomerIDQuery {
-	return &FindPetsByCustomerIDQuery{
+func NewFindPetsByCustomerIDQuery(customerID uint, pagination page.PaginationRequest) FindPetsByCustomerIDQuery {
+	return FindPetsByCustomerIDQuery{
 		customerID: valueobject.NewCustomerID(customerID),
 		pagination: pagination,
 	}
@@ -37,13 +37,13 @@ type FindPetByIDQuery struct {
 	customerID *valueobject.CustomerID
 }
 
-func NewFindPetByIDQuery(petID uint, customerID *uint) *FindPetByIDQuery {
+func NewFindPetByIDQuery(petID uint, customerID *uint) FindPetByIDQuery {
 	var custID *valueobject.CustomerID
 	if customerID != nil {
 		c := valueobject.NewCustomerID(*customerID)
 		custID = &c
 	}
-	return &FindPetByIDQuery{
+	return FindPetByIDQuery{
 		petID:      valueobject.NewPetID(petID),
 		customerID: custID,
 	}
@@ -54,8 +54,8 @@ type FindPetBySpecificationQuery struct {
 	pagination    page.PaginationRequest
 }
 
-func NewFindPetBySpecificationQuery(spec specification.PetSpecification) *FindPetBySpecificationQuery {
-	return &FindPetBySpecificationQuery{
+func NewFindPetBySpecificationQuery(spec specification.PetSpecification) FindPetBySpecificationQuery {
+	return FindPetBySpecificationQuery{
 		specification: spec,
 		pagination:    page.NewPaginationRequest(),
 	}
@@ -66,8 +66,8 @@ type FindPetsBySpeciesQuery struct {
 	pagination page.PaginationRequest
 }
 
-func NewFindPetsBySpeciesQuery(petSpecies string, pagination page.PaginationRequest) *FindPetsBySpeciesQuery {
-	return &FindPetsBySpeciesQuery{
+func NewFindPetsBySpeciesQuery(petSpecies string, pagination page.PaginationRequest) FindPetsBySpeciesQuery {
+	return FindPetsBySpeciesQuery{
 		PetSpecies: enum.PetSpecies(petSpecies),
 		pagination: pagination,
 	}

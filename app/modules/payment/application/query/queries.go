@@ -20,7 +20,7 @@ type FindPaymentsByDateRangeQuery struct {
 	page.PaginationRequest
 }
 
-func NewFindPaymentByIDQuery(idInt uint, optCustomerID *uint) *FindPaymentByIDQuery {
+func NewFindPaymentByIDQuery(idInt uint, optCustomerID *uint) FindPaymentByIDQuery {
 	paymentID := valueobject.NewPaymentID(idInt)
 
 	var customerID *valueobject.CustomerID
@@ -29,11 +29,11 @@ func NewFindPaymentByIDQuery(idInt uint, optCustomerID *uint) *FindPaymentByIDQu
 		customerID = &customerIDObj
 	}
 
-	return &FindPaymentByIDQuery{id: paymentID, optCustomerID: customerID}
+	return FindPaymentByIDQuery{id: paymentID, optCustomerID: customerID}
 }
 
-func NewFindPaymentsByDateRangeQuery(startDate, endDate time.Time, pageData page.PaginationRequest) *FindPaymentsByDateRangeQuery {
-	return &FindPaymentsByDateRangeQuery{
+func NewFindPaymentsByDateRangeQuery(startDate, endDate time.Time, pageData page.PaginationRequest) FindPaymentsByDateRangeQuery {
+	return FindPaymentsByDateRangeQuery{
 		startDate:         startDate,
 		endDate:           endDate,
 		PaginationRequest: pageData,
@@ -45,8 +45,8 @@ type FindPaymentsByStatusQuery struct {
 	pagination page.PaginationRequest
 }
 
-func NewFindPaymentsByStatusQuery(status string, pagination page.PaginationRequest) *FindPaymentsByStatusQuery {
-	return &FindPaymentsByStatusQuery{
+func NewFindPaymentsByStatusQuery(status string, pagination page.PaginationRequest) FindPaymentsByStatusQuery {
+	return FindPaymentsByStatusQuery{
 		status:     enum.PaymentStatus(status),
 		pagination: pagination,
 	}
@@ -79,8 +79,8 @@ type FindPaymentsBySpecification struct {
 	spec specification.PaymentSpecification
 }
 
-func NewFindPaymentsBySpecification(spec specification.PaymentSpecification) *FindPaymentsBySpecification {
-	return &FindPaymentsBySpecification{
+func NewFindPaymentsBySpecification(spec specification.PaymentSpecification) FindPaymentsBySpecification {
+	return FindPaymentsBySpecification{
 		spec: spec,
 	}
 }

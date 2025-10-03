@@ -12,11 +12,11 @@ type OAuthLoginCommand struct {
 }
 
 func NewOAuthLoginCommand(provider, token string, metadata auth.LoginMetadata) (OAuthLoginCommand, error) {
-	cmd := &OAuthLoginCommand{provider: provider, token: token, metadata: metadata}
+	cmd := OAuthLoginCommand{provider: provider, token: token, metadata: metadata}
 	if err := cmd.validate(); err != nil {
 		return OAuthLoginCommand{}, err
 	}
-	return *cmd, nil
+	return cmd, nil
 }
 
 func (c *OAuthLoginCommand) validate() error {

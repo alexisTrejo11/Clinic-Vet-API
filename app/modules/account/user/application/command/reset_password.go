@@ -12,7 +12,7 @@ type ResetPasswordCommand struct {
 }
 
 func NewResetPasswordCommand(email string, token string, newPassword string) (ResetPasswordCommand, error) {
-	cmd := &ResetPasswordCommand{
+	cmd := ResetPasswordCommand{
 		email:       valueobject.NewEmailNoErr(email),
 		token:       token,
 		newPassword: newPassword,
@@ -22,7 +22,7 @@ func NewResetPasswordCommand(email string, token string, newPassword string) (Re
 		return ResetPasswordCommand{}, err
 	}
 
-	return *cmd, nil
+	return cmd, nil
 }
 
 func (cmd *ResetPasswordCommand) Email() valueobject.Email { return cmd.email }

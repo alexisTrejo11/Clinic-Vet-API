@@ -32,7 +32,7 @@ type ProfileResult struct {
 }
 
 func userToResult(user user.User) UserResult {
-	userResult := &UserResult{
+	userResult := UserResult{
 		ID:          user.ID().Value(),
 		Email:       user.Email().String(),
 		PhoneNumber: user.PhoneNumber().String(),
@@ -52,7 +52,7 @@ func userToResult(user user.User) UserResult {
 		userResult.EmployeeID = &val
 	}
 
-	return *userResult
+	return userResult
 }
 
 func toResultPage(userPage page.Page[user.User]) page.Page[UserResult] {

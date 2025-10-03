@@ -12,7 +12,7 @@ type Enable2FACommand struct {
 }
 
 func NewEnable2FACommand(userID uint, method string) (Enable2FACommand, error) {
-	cmd := &Enable2FACommand{
+	cmd := Enable2FACommand{
 		userID: valueobject.NewUserID(userID),
 		method: auth.TwoFactorMethod(method),
 	}
@@ -21,7 +21,7 @@ func NewEnable2FACommand(userID uint, method string) (Enable2FACommand, error) {
 		return Enable2FACommand{}, err
 	}
 
-	return *cmd, nil
+	return cmd, nil
 }
 
 func (c *Enable2FACommand) UserID() valueobject.UserID   { return c.userID }

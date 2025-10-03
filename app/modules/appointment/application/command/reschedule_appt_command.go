@@ -15,7 +15,7 @@ type RescheduleApptCommand struct {
 func NewRescheduleApptCommand(
 	appointIDInt uint, employeeID *uint, dateTime time.Time, reason *string,
 ) (RescheduleApptCommand, error) {
-	cmd := &RescheduleApptCommand{
+	cmd := RescheduleApptCommand{
 		appointmentID: valueobject.NewAppointmentID(appointIDInt),
 		employeeID:    mapper.PtrToEmployeeIDPtr(employeeID),
 		datetime:      dateTime,
@@ -25,7 +25,7 @@ func NewRescheduleApptCommand(
 		return RescheduleApptCommand{}, err
 	}
 
-	return *cmd, nil
+	return cmd, nil
 }
 
 func (c *RescheduleApptCommand) validate() error {

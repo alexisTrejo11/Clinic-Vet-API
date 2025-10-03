@@ -2,7 +2,7 @@
 package service
 
 import (
-	"clinic-vet-api/app/modules/core/domain/entity/employee"
+	e "clinic-vet-api/app/modules/core/domain/entity/employee"
 	u "clinic-vet-api/app/modules/core/domain/entity/user"
 	"clinic-vet-api/app/modules/core/domain/valueobject"
 	"clinic-vet-api/app/modules/core/repository"
@@ -123,17 +123,17 @@ func (s *UserSecurityService) ValidateUserCredentials(ctx context.Context, email
 	return nil
 }
 
-func (s *UserSecurityService) ValidateEmployeeAccount(ctx context.Context, employeeID valueobject.EmployeeID) (*employee.Employee, error) {
+func (s *UserSecurityService) ValidateEmployeeAccount(ctx context.Context, employeeID valueobject.EmployeeID) (e.Employee, error) {
 	employee, err := s.employeeRepo.FindByID(ctx, employeeID)
 	if err != nil {
-		return nil, err
+		return e.Employee{}, err
 	}
 
 	if employee.UserID() != nil {
-		return nil, apperror.ConflictError("employee", "employee already has an associated user account")
+		return e.Employee{}, apperror.ConflictError("employee", "employee already has an associated user account")
 	}
 
-	return &employee, nil
+	return employee, nil
 
 }
 

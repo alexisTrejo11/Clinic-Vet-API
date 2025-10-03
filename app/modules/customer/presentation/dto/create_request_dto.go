@@ -29,8 +29,9 @@ type CreateCustomerRequest struct {
 	DateOfBirth time.Time `json:"date_of_birth" binding:"required" example:"1990-01-15T00:00:00Z"`
 
 	// URL to customer's photo
-	// Required: false
-	Photo string `json:"photo,omitempty" example:"https://example.com/photo.jpg"`
+	// Required: true
+	// Example: https://example.com/photo.jpg
+	Photo string `json:"photo,omitempty" binding:"required" example:"https://example.com/photo.jpg"`
 }
 
 // ToCommand converts CreateCustomerRequest to CreateCustomerCommand

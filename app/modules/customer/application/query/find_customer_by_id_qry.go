@@ -10,20 +10,20 @@ type FindCustomerByIDQuery struct {
 }
 
 func NewFindCustomerByIDQuery(customerID uint) (FindCustomerByIDQuery, error) {
-	cmd := &FindCustomerByIDQuery{id: valueobject.NewCustomerID(customerID)}
+	cmd := FindCustomerByIDQuery{id: valueobject.NewCustomerID(customerID)}
 
 	if err := cmd.Validate(); err != nil {
 		return FindCustomerByIDQuery{}, err
 	}
 
-	return *cmd, nil
+	return cmd, nil
 }
 
-func (q *FindCustomerByIDQuery) Validate() error {
+func (q FindCustomerByIDQuery) Validate() error {
 	if q.id.IsZero() {
 		return apperror.EntityNotFoundValidationError("FindCustomerByIDQuery", "ID", q.id.String())
 	}
 	return nil
 }
 
-func (q *FindCustomerByIDQuery) ID() valueobject.CustomerID { return q.id }
+func (q FindCustomerByIDQuery) ID() valueobject.CustomerID { return q.id }

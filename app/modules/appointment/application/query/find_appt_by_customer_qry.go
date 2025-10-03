@@ -12,20 +12,20 @@ type FindApptsByCustomerIDQuery struct {
 	pagination specification.Pagination
 }
 
-func NewFindApptsByCustomerIDQuery(pagination page.PaginationRequest, customerId uint, petID *uint, status *string) *FindApptsByCustomerIDQuery {
+func NewFindApptsByCustomerIDQuery(pagination page.PaginationRequest, customerId uint, petID *uint, status *string) FindApptsByCustomerIDQuery {
 	var petIDvo *valueobject.PetID
 	if petID != nil {
 		val := valueobject.NewPetID(*petID)
 		petIDvo = &val
 	}
 
-	return &FindApptsByCustomerIDQuery{
+	return FindApptsByCustomerIDQuery{
 		customerID: valueobject.NewCustomerID(customerId),
 		pagination: pagination.ToSpecPagination(),
 		petID:      petIDvo,
 	}
 }
 
-func (q *FindApptsByCustomerIDQuery) CustomerID() valueobject.CustomerID   { return q.customerID }
-func (q *FindApptsByCustomerIDQuery) PetID() *valueobject.PetID            { return q.petID }
-func (q *FindApptsByCustomerIDQuery) Pagination() specification.Pagination { return q.pagination }
+func (q FindApptsByCustomerIDQuery) CustomerID() valueobject.CustomerID   { return q.customerID }
+func (q FindApptsByCustomerIDQuery) PetID() *valueobject.PetID            { return q.petID }
+func (q FindApptsByCustomerIDQuery) Pagination() specification.Pagination { return q.pagination }

@@ -8,29 +8,24 @@ import (
 )
 
 type FindUserByIDQuery struct {
-	id             valueobject.UserID
-	includeProfile bool
+	id valueobject.UserID
 }
 
-func NewFindUserByIDQuery(id uint, includeProfile bool) *FindUserByIDQuery {
-	userID := valueobject.NewUserID(id)
-	return &FindUserByIDQuery{
-		id:             userID,
-		includeProfile: includeProfile,
-	}
+func NewFindUserByIDQuery(id uint) FindUserByIDQuery {
+	return FindUserByIDQuery{id: valueobject.NewUserID(id)}
 }
 
 type FindUserByIDHandler struct {
 	userRepository repository.UserRepository
 }
 
-func NewFindUserByIDHandler(userRepository repository.UserRepository) *FindUserByIDHandler {
-	return &FindUserByIDHandler{
+func NewFindUserByIDHandler(userRepository repository.UserRepository) FindUserByIDHandler {
+	return FindUserByIDHandler{
 		userRepository: userRepository,
 	}
 }
 
-func (h *FindUserByIDHandler) Handle(ctx context.Context, query FindUserByIDQuery) (UserResult, error) {
+func (h FindUserByIDHandler) Handle(ctx context.Context, query FindUserByIDQuery) (UserResult, error) {
 	user, err := h.userRepository.FindByID(ctx, query.id)
 	if err != nil {
 		return UserResult{}, err

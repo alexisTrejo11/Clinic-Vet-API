@@ -2,6 +2,7 @@ package routes
 
 import (
 	"clinic-vet-api/app/middleware"
+	"clinic-vet-api/app/modules/core/domain/enum"
 	"clinic-vet-api/app/modules/medical/deworm/presentation/controller"
 
 	"github.com/gin-gonic/gin"
@@ -41,7 +42,7 @@ func (r *DewormRoutes) RegisterAdminRoutes(group *gin.RouterGroup, middleware *m
 func (r *DewormRoutes) RegisterEmployees(group *gin.RouterGroup, middleware *middleware.AuthMiddleware) {
 	employeeGroup := group.Group("employees/deworms")
 	employeeGroup.Use(middleware.Authenticate())
-	employeeGroup.Use(middleware.RequireAnyRole("employee, recepcionist, manager, veterinarian"))
+	employeeGroup.Use(middleware.RequireAnyRole(enum.UserRoleVeterinarian.String(), enum.UserRoleReceptionist.String()))
 	{
 		employeeGroup.GET("/:id", r.employeeController.GetMyDewormAppliedByID)
 		employeeGroup.GET("", r.employeeController.GetMyDewormsApplied)

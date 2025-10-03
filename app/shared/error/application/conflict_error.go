@@ -3,7 +3,7 @@ package apperror
 import "net/http"
 
 func ConflictError(resource, message string) error {
-	return &BaseApplicationError{
+	return BaseApplicationError{
 		Code:       "RESOURCE_CONFLICT",
 		Type:       "application",
 		Message:    message,

@@ -12,7 +12,7 @@ type LoginCommand struct {
 }
 
 func NewLoginCommand(identifier, password string, metadata auth.LoginMetadata) (LoginCommand, error) {
-	cmd := &LoginCommand{
+	cmd := LoginCommand{
 		identifier: identifier,
 		password:   password,
 		metadata:   metadata,
@@ -22,7 +22,7 @@ func NewLoginCommand(identifier, password string, metadata auth.LoginMetadata) (
 		return LoginCommand{}, err
 	}
 
-	return *cmd, nil
+	return cmd, nil
 }
 
 func (c *LoginCommand) validate() error {

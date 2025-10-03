@@ -23,23 +23,23 @@ func MedicalNotFoundErr(id valueobject.MedSessionID) error {
 }
 
 func successCreateResult(entity medical.MedicalSession) cqrs.CommandResult {
-	return *cqrs.SuccessCreateResult(entity.ID().String(), msgMedicalSessionCreated)
+	return cqrs.SuccessCreateResult(entity.ID().String(), msgMedicalSessionCreated)
 }
 
 func errorCreateResult(message string, err error) cqrs.CommandResult {
-	return *cqrs.FailureResult(message, err)
+	return cqrs.FailureResult(message, err)
 }
 
 func successUpdateResult(entity medical.MedicalSession) cqrs.CommandResult {
-	return *cqrs.SuccessResult(msgMedicalSessionUpdated)
+	return cqrs.SuccessResult(msgMedicalSessionUpdated)
 }
 
 func errorUpdateResult(message string, err error) cqrs.CommandResult {
-	return *cqrs.FailureResult(message, err)
+	return cqrs.FailureResult(message, err)
 }
 func successDeleteResult(id valueobject.MedSessionID, message string) cqrs.CommandResult {
-	return *cqrs.SuccessResult(message)
+	return cqrs.SuccessResult(message)
 }
 func errorDeleteResult(id valueobject.MedSessionID, message string, err error) cqrs.CommandResult {
-	return *cqrs.FailureResult(message, err)
+	return cqrs.FailureResult(message, err)
 }

@@ -24,3 +24,6 @@ go.work.sum
 .env
 
 ./docs/api/
+
+/certs
+/logs

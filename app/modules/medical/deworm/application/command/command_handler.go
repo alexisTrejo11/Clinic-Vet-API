@@ -32,7 +32,6 @@ func (h *DewormCommandHandler) validateDewormExistence(ctx context.Context, id v
 			return err
 		}
 	}
-
 	_, err := h.dewormRepo.FindByID(ctx, id)
 	return err
 }

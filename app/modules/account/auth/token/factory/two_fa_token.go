@@ -38,11 +38,10 @@ func (t *TwoFATokenImpl) Validate(token string) (any, error) {
 	}
 
 	return &TokenClaims{
-		UserID:    t.config.UserID,
-		TokenType: vo.TwoFAToken,
-		IssuedAt:  time.Now().Add(-t.config.ExpiresIn),
-		ExpiresAt: t.expiresAt,
-		Purpose:   t.config.Purpose,
+		UserID:     t.config.UserID,
+		TokenType:  vo.TwoFAToken,
+		CreatedAt:  time.Now().Add(-t.config.ExpiresIn),
+		ValidUntil: t.expiresAt,
 	}, nil
 }
 

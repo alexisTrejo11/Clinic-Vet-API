@@ -32,7 +32,3 @@ func (r *SqlcEmployeeRepository) dbError(operation, message string, err error) e
 func (r *SqlcEmployeeRepository) notFoundError(parameterName, parameterValue string) error {
 	return dberr.EntityNotFoundError(parameterName, parameterValue, OpSelect, TableEmployees, DriverSQL)
 }
-
-func (r *SqlcEmployeeRepository) wrapConversionError(err error) error {
-	return fmt.Errorf("%s: %w", ErrMsgConvertEmployeeToDomain, err)
-}

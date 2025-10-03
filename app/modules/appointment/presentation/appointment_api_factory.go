@@ -38,6 +38,7 @@ type AppointmentAPIComponents struct {
 type AppointmentControllers struct {
 	Customer   *controller.CustomerAppointmetController
 	Employee   *controller.EmployeeAppointmentController
+	Admin      *controller.AdminApptController
 	Operations *controller.ApptControllerOperations
 }
 
@@ -101,15 +102,17 @@ func (f *AppointmentAPIBuilder) createControllers(apptBus bus.AppointmentBus) *A
 	ctrlOperations := controller.NewApptControllerOperations(apptBus, f.config.Validator)
 
 	return &AppointmentControllers{
-		Customer: controller.NewCustomerApptControleer(&apptBus, f.config.Validator, ctrlOperations),
-		Employee: controller.NewEmployeeController(ctrlOperations, f.config.Validator),
+		Customer:   controller.NewCustomerApptControleer(&apptBus, f.config.Validator, ctrlOperations),
+		Employee:   controller.NewEmployeeController(ctrlOperations, f.config.Validator),
+		Admin:      controller.NewAdminApptController(&apptBus, f.config.Validator, ctrlOperations),
+		Operations: ctrlOperations,
 	}
 }
 
 // createRoutes creates routes and registers them
 func (f *AppointmentAPIBuilder) createRoutes(controllers *AppointmentControllers) *routes.AppointmentRoutes {
-	routes := routes.NewAppointmentRoutes(controllers.Customer, controllers.Employee)
-	routes.RegisterAdminRoutes(f.config.Router)
+	routes := routes.NewAppointmentRoutes(controllers.Customer, controllers.Employee, controllers.Admin)
+	routes.RegisterAdminRoutes(f.config.Router, f.config.AuthMiddleware)
 	routes.RegisterCustomerRoutes(f.config.Router, f.config.AuthMiddleware)
 	routes.RegisterEmployeeRoutes(f.config.Router, f.config.AuthMiddleware)
 	return routes

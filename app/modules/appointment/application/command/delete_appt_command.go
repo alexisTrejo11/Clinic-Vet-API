@@ -7,7 +7,7 @@ type DeleteApptCommand struct {
 }
 
 func NewDeleteApptCommand(id uint) (DeleteApptCommand, error) {
-	cmd := &DeleteApptCommand{
+	cmd := DeleteApptCommand{
 		appointmentID: valueobject.NewAppointmentID(id),
 	}
 
@@ -15,7 +15,7 @@ func NewDeleteApptCommand(id uint) (DeleteApptCommand, error) {
 		return DeleteApptCommand{}, err
 	}
 
-	return *cmd, nil
+	return cmd, nil
 }
 
 func (c *DeleteApptCommand) validate() error {

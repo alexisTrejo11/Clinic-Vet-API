@@ -33,7 +33,7 @@ func NewUpdateEmployeeCommand(
 	isActive *bool,
 	laboralSchedule *[]ScheduleData,
 ) (UpdateEmployeeCommand, error) {
-	cmd := &UpdateEmployeeCommand{
+	cmd := UpdateEmployeeCommand{
 		employeeID:      valueobject.NewEmployeeID(id),
 		firstName:       firstName,
 		lastName:        lastName,
@@ -51,7 +51,7 @@ func NewUpdateEmployeeCommand(
 		return UpdateEmployeeCommand{}, err
 	}
 
-	return *cmd, nil
+	return cmd, nil
 }
 
 func (cmd *UpdateEmployeeCommand) validate() error {

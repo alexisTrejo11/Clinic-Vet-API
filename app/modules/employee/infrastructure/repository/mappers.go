@@ -154,8 +154,7 @@ func UnmarshalEmployeeSchedule(sqlJSON []byte) (*valueobject.Schedule, error) {
 	return parseScheduleFromPostgres(sqlJSON)
 }
 
-func (r *SqlcEmployeeRepository) toUpdateParams(employee *employee.Employee) *sqlc.UpdateEmployeeParams {
-	fmt.Println("Mapping employee to update params:", &employee)
+func (r *SqlcEmployeeRepository) toUpdateParams(employee employee.Employee) *sqlc.UpdateEmployeeParams {
 	return &sqlc.UpdateEmployeeParams{
 		ID:                employee.ID().Int32(),
 		FirstName:         employee.FirstName(),
@@ -171,8 +170,8 @@ func (r *SqlcEmployeeRepository) toUpdateParams(employee *employee.Employee) *sq
 	}
 }
 
-func (r *SqlcEmployeeRepository) toCreateParams(employee *employee.Employee) *sqlc.CreateEmployeeParams {
-	return &sqlc.CreateEmployeeParams{
+func (r *SqlcEmployeeRepository) toCreateParams(employee employee.Employee) sqlc.CreateEmployeeParams {
+	return sqlc.CreateEmployeeParams{
 		FirstName:         employee.FirstName(),
 		LastName:          employee.LastName(),
 		DateOfBirth:       r.pgMap.PgDate.FromTime(employee.DateOfBirth()),

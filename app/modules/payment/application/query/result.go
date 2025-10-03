@@ -5,57 +5,53 @@ import (
 	"time"
 
 	"clinic-vet-api/app/modules/core/domain/entity/payment"
+	"clinic-vet-api/app/modules/core/domain/enum"
+	"clinic-vet-api/app/modules/core/domain/valueobject"
 )
 
 type PaymentResult struct {
 	ID             uint
-	Amount         float64
-	Currency       string
-	Status         string
-	Method         string
+	Amount         valueobject.Money
+	Status         enum.PaymentStatus
+	Method         enum.PaymentMethod
+	Description    string
 	TransactionID  *string
-	Description    *string
 	DueDate        *time.Time
 	PaidAt         *time.Time
 	RefundedAt     *time.Time
-	IsActive       bool
-	PaidByCustomer uint
-	PaidToEmployee uint
-	MedSessionID   uint
+	PaidByCustomer *valueobject.CustomerID
+	MedSessionID   *valueobject.MedSessionID
 	InvoiceID      *string
-	RefundAmount   *float64
+	RefundAmount   *valueobject.Money
 	FailureReason  *string
-	CreatedAt      time.Time
-	UpdatedAt      time.Time
 	IsOverdue      bool
 	IsRefundable   bool
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
+	IsActive       bool
 }
 
 func (r *paymentQueryHandler) entityToResult(payment payment.Payment) PaymentResult {
+	return PaymentResult{
+		ID:            payment.ID().Value(),
+		MedSessionID:  payment.MedSessionID(),
+		Amount:        payment.Amount(),
+		Method:        payment.Method(),
+		Status:        payment.Status(),
+		TransactionID: payment.TransactionID(),
+		Description:   payment.Description(),
+		DueDate:       payment.DueDate(),
+		PaidAt:        payment.PaidAt(),
+		IsActive:      payment.IsActive(),
+		RefundedAt:    payment.RefundedAt(),
+		IsOverdue:     payment.IsOverdue(),
+		IsRefundable:  payment.IsRefundable(),
 
-	result := &PaymentResult{
-		ID:             payment.ID().Value(),
-		MedSessionID:   payment.MedSessionID().Value(),
-		Amount:         payment.Amount().Amount().Float64(),
-		Currency:       payment.Currency(),
-		Method:         payment.Method().DisplayName(),
-		Status:         payment.Status().DisplayName(),
-		TransactionID:  payment.TransactionID(),
-		Description:    payment.Description(),
-		DueDate:        payment.DueDate(),
-		PaidAt:         payment.PaidAt(),
-		IsActive:       payment.IsActive(),
-		RefundedAt:     payment.RefundedAt(),
-		IsOverdue:      payment.IsOverdue(),
-		IsRefundable:   payment.IsRefundable(),
-		PaidByCustomer: payment.PaidByCustomer().Value(),
-		PaidToEmployee: payment.PaidToEmployee().Value(),
+		PaidByCustomer: payment.PaidByCustomer(),
 		InvoiceID:      payment.InvoiceID(),
-		RefundAmount:   r.vaueObjMap.MoneyPtrToFloat64Ptr(payment.RefundAmount()),
+		RefundAmount:   payment.RefundAmount(),
 		FailureReason:  payment.FailureReason(),
 		CreatedAt:      payment.CreatedAt(),
 		UpdatedAt:      payment.UpdatedAt(),
 	}
-
-	return *result
 }

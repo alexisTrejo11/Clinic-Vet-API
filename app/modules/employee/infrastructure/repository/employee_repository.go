@@ -20,10 +20,10 @@ import (
 
 type SqlcEmployeeRepository struct {
 	queries *sqlc.Queries
-	pgMap   mapper.SqlcFieldMapper
+	pgMap   *mapper.SqlcFieldMapper
 }
 
-func NewSqlcEmployeeRepository(queries *sqlc.Queries, pgMap mapper.SqlcFieldMapper) repository.EmployeeRepository {
+func NewSqlcEmployeeRepository(queries *sqlc.Queries, pgMap *mapper.SqlcFieldMapper) repository.EmployeeRepository {
 	return &SqlcEmployeeRepository{queries: queries, pgMap: pgMap}
 }
 
@@ -158,9 +158,8 @@ func (r *SqlcEmployeeRepository) CountActive(ctx context.Context) (int64, error)
 }
 
 func (r *SqlcEmployeeRepository) create(ctx context.Context, employee *e.Employee) error {
-	params := r.toCreateParams(employee)
-
-	employeeCreated, err := r.queries.CreateEmployee(ctx, *params)
+	createParams := r.toCreateParams(*employee)
+	employeeCreated, err := r.queries.CreateEmployee(ctx, createParams)
 	if err != nil {
 		return r.dbError(OpInsert, "failed to create employee", err)
 	}
@@ -170,9 +169,8 @@ func (r *SqlcEmployeeRepository) create(ctx context.Context, employee *e.Employe
 }
 
 func (r *SqlcEmployeeRepository) update(ctx context.Context, employee *e.Employee) error {
-	params := r.toUpdateParams(employee)
-
-	_, err := r.queries.UpdateEmployee(ctx, *params)
+	updateParams := r.toUpdateParams(*employee)
+	_, err := r.queries.UpdateEmployee(ctx, *updateParams)
 	if err != nil {
 		return r.dbError(OpUpdate, fmt.Sprintf("failed to update employee with ID %d", employee.ID().Value()), err)
 	}

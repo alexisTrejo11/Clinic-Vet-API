@@ -17,7 +17,7 @@ func NewTwoFactorLoginCommand(
 	token string,
 	metadata shared.LoginMetadata,
 ) (TwoFactorLoginCommand, error) {
-	cmd := &TwoFactorLoginCommand{
+	cmd := TwoFactorLoginCommand{
 		userID:   userID,
 		token:    token,
 		metadata: metadata,
@@ -27,7 +27,7 @@ func NewTwoFactorLoginCommand(
 		return TwoFactorLoginCommand{}, err
 	}
 
-	return *cmd, nil
+	return cmd, nil
 }
 
 func (c *TwoFactorLoginCommand) Validate() error {

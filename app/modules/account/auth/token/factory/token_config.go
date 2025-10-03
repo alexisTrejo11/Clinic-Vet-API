@@ -8,17 +8,16 @@ import (
 )
 
 type TokenClaims struct {
-	UserID    string       `json:"user_id"`
-	TokenType vo.TokenType `json:"token_type"`
-	IssuedAt  time.Time    `json:"iat"`
-	ExpiresAt time.Time    `json:"exp"`
-	Purpose   string       `json:"purpose,omitempty"`
+	UserID     string       `json:"user_id"`
+	TokenType  vo.TokenType `json:"token_type"`
+	CreatedAt  time.Time    `json:"created_at"`
+	ValidUntil time.Time    `json:"valid_until"`
 	jwt.RegisteredClaims
 }
 
 type TokenConfig struct {
 	UserID    string
-	Purpose   string
+	Issuer    string
 	ExpiresIn time.Duration
 	Secret    []byte
 }

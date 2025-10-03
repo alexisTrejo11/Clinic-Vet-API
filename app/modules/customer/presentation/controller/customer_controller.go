@@ -27,13 +27,13 @@ func NewCustomerController(validator *validator.Validate, bus bus.CustomerBus) *
 }
 
 func (ctrl *CustomerController) SearchCustomers(c *gin.Context) {
-	var searchParams *dto.CustomerSearchQuery
+	var searchParams dto.CustomerSearchQuery
 	if err := c.ShouldBindQuery(&searchParams); err != nil {
 		response.BadRequest(c, httpError.RequestURLQueryError(err, c.Request.URL.RawQuery))
 		return
 	}
 
-	if err := ctrl.validator.Struct(searchParams); err != nil {
+	if err := ctrl.validator.Struct(&searchParams); err != nil {
 		response.BadRequest(c, httpError.InvalidDataError(err))
 		return
 	}
@@ -105,13 +105,8 @@ func (ctrl *CustomerController) UpdateCustomer(c *gin.Context) {
 	}
 
 	var requestData dto.UpdateCustomerRequest
-	if err := c.ShouldBindBodyWithJSON(&requestData); err != nil {
-		response.BadRequest(c, httpError.RequestBodyDataError(err))
-		return
-	}
-
-	if err := ctrl.validator.Struct(&requestData); err != nil {
-		response.ApplicationError(c, err)
+	if err := ginUtils.ShouldBindAndValidateBody(c, &requestData, ctrl.validator); err != nil {
+		response.BadRequest(c, err)
 		return
 	}
 

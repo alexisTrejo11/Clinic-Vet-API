@@ -49,20 +49,20 @@ func NewCreateUserHandler(repo repository.UserRepository, securityService servic
 
 func (uc *CreateUserHandler) Handle(ctx context.Context, command CreateUserCommand) cqrs.CommandResult {
 	if err := command.Validate(); err != nil {
-		return *cqrs.FailureResult(ErrInvalidUserData, err)
+		return cqrs.FailureResult(ErrInvalidUserData, err)
 	}
 
 	user := command.ToEntity()
 	err := uc.securityService.ValidateUserCredentials(ctx, command.email, command.phoneNumber, command.password)
 	if err != nil {
-		return *cqrs.FailureResult(ErrFailedValidatingUser, err)
+		return cqrs.FailureResult(ErrFailedValidatingUser, err)
 	}
 
 	if err := uc.securityService.ProcessUserPersistence(ctx, user); err != nil {
-		return *cqrs.FailureResult(ErrFailedProcessingUser, err)
+		return cqrs.FailureResult(ErrFailedProcessingUser, err)
 	}
 
-	return *cqrs.SuccessCreateResult(user.ID().String(), ErrUserCreationSuccess)
+	return cqrs.SuccessCreateResult(user.ID().String(), ErrUserCreationSuccess)
 }
 
 func (cmd CreateUserCommand) ToEntity() *u.User {

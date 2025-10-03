@@ -43,6 +43,9 @@ type ServerConfig struct {
 	ReadTimeout  time.Duration `json:"read_timeout"`
 	WriteTimeout time.Duration `json:"write_timeout"`
 	Environment  string        `json:"environment"`
+	EnableHTTPS  bool          `json:"enable_https"`
+	CertFile     string        `json:"cert_file"`
+	KeyFile      string        `json:"key_file"`
 }
 
 type ServicesConfig struct {
@@ -113,6 +116,11 @@ func loadServerConfig(config *ServerConfig) error {
 		return fmt.Errorf("invalid SERVER_WRITE_TIMEOUT: %w", err)
 	}
 	config.WriteTimeout = writeTimeout
+
+	// HTTPS Configuration
+	config.EnableHTTPS = getEnvAsBool("ENABLE_HTTPS", false)
+	config.CertFile = getEnvWithDefault("CERT_FILE", "./certs/cert.pem")
+	config.KeyFile = getEnvWithDefault("KEY_FILE", "./certs/key.pem")
 
 	return nil
 }

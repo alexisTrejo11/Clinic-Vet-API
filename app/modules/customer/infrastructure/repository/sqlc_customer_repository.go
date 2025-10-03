@@ -19,7 +19,7 @@ import (
 type SqlcCustomerRepository struct {
 	queries       *sqlc.Queries
 	petRepository repository.PetRepository
-	mapper        mapper.SqlcFieldMapper
+	mapper        *mapper.SqlcFieldMapper
 }
 
 func NewSqlcCustomerRepository(queries *sqlc.Queries, petRepository repository.PetRepository) repository.CustomerRepository {

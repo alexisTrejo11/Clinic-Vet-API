@@ -3,6 +3,7 @@ package routes
 
 import (
 	"clinic-vet-api/app/middleware"
+	"clinic-vet-api/app/modules/core/domain/enum"
 	"clinic-vet-api/app/modules/medical/session/presentation/controller"
 
 	"github.com/gin-gonic/gin"
@@ -49,7 +50,7 @@ func (r *MedicalSessionRoutes) RegisterCustomerRoutes(routerGroup *gin.RouterGro
 func (r *MedicalSessionRoutes) RegisterEmployeeRoutes(routerGroup *gin.RouterGroup, authMiddleware *middleware.AuthMiddleware) {
 	routes := routerGroup.Group("/employee/medical-sessions")
 	routes.Use(authMiddleware.Authenticate())
-	routes.Use(authMiddleware.RequireAnyRole("employee", "admin", "superadmin"))
+	routes.Use(authMiddleware.RequireAnyRole(enum.UserRoleVeterinarian.String(), enum.UserRoleReceptionist.String()))
 
 	routes.GET("/", r.EmployeeController.GetMyMedicalSessions)
 	routes.GET("/:id", r.EmployeeController.GetMyMedicalSessionByID)

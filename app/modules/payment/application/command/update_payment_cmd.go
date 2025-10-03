@@ -38,18 +38,18 @@ func NewUpdatePaymentCommand(id uint, amount *valueobject.Money, paymentMethod *
 func (h *paymentCommandHandler) UpdatePayment(ctx context.Context, cmd UpdatePaymentCommand) cqrs.CommandResult {
 	payment, err := h.paymentRepository.FindByID(ctx, cmd.paymentID)
 	if err != nil {
-		return *cqrs.FailureResult(ErrFetchingPayment, err)
+		return cqrs.FailureResult(ErrFetchingPayment, err)
 	}
 
 	err = payment.Update(ctx, cmd.amount, cmd.paymentMethod, cmd.description, cmd.dueDate)
 	if err != nil {
-		return *cqrs.FailureResult(ErrUpdatingPayment, err)
+		return cqrs.FailureResult(ErrUpdatingPayment, err)
 	}
 
 	err = h.paymentRepository.Save(ctx, &payment)
 	if err != nil {
-		return *cqrs.FailureResult(ErrSavingPayment, err)
+		return cqrs.FailureResult(ErrSavingPayment, err)
 	}
 
-	return *cqrs.SuccessResult(MsgPaymentUpdated)
+	return cqrs.SuccessResult(MsgPaymentUpdated)
 }

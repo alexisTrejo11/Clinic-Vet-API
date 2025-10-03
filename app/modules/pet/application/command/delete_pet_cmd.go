@@ -29,12 +29,12 @@ func NewDeletePetCommand(petIDUint uint, customerIDUint *uint, isSoftDelete bool
 func (h *petCommandHandler) DeletePet(ctx context.Context, cmd DeletePetCommand) cqrs.CommandResult {
 	pet, err := h.getPet(ctx, cmd.petID, cmd.customer)
 	if err != nil {
-		return *cqrs.FailureResult("Error Getting Pet", err)
+		return cqrs.FailureResult("Error Getting Pet", err)
 	}
 
 	if err := h.petRepository.Delete(ctx, pet.ID(), false); err != nil {
-		return *cqrs.FailureResult("Error Deleting Pet", err)
+		return cqrs.FailureResult("Error Deleting Pet", err)
 	}
 
-	return *cqrs.SuccessResult("Pet Deleted Successfully")
+	return cqrs.SuccessResult("Pet Deleted Successfully")
 }

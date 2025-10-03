@@ -19,12 +19,12 @@ func NewRestorePetCommand(petID uint) *RestorePetCommand {
 func (h *petCommandHandler) RestorePet(ctx context.Context, cmd RestorePetCommand) cqrs.CommandResult {
 	pet, err := h.getPet(ctx, cmd.petID, nil)
 	if err != nil {
-		return *cqrs.FailureResult("Error Getting Pet", err)
+		return cqrs.FailureResult("Error Getting Pet", err)
 	}
 
 	if err := h.petRepository.Restore(ctx, pet.ID()); err != nil {
-		return *cqrs.FailureResult("Error Restoring Pet", err)
+		return cqrs.FailureResult("Error Restoring Pet", err)
 	}
 
-	return *cqrs.SuccessResult("Pet Restored Successfully")
+	return cqrs.SuccessResult("Pet Restored Successfully")
 }

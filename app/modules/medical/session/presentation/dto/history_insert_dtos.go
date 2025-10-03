@@ -92,12 +92,12 @@ type PetSummaryRequest struct {
 	// The heart rate of the pet during the visit (in bpm)
 	// Required: false
 	// Example: 90
-	HeartRate *int `json:"heart_rate,omitempty" validate:"omitempty,gt=0"`
+	HeartRate *int32 `json:"heart_rate,omitempty" validate:"omitempty,gt=0"`
 
 	// The respiratory rate of the pet during the visit (in breaths per minute)
 	// Required: false
 	// Example: 20
-	RespiratoryRate *int `json:"respiratory_rate,omitempty" validate:"omitempty,gt=0"`
+	RespiratoryRate *int32 `json:"respiratory_rate,omitempty" validate:"omitempty,gt=0"`
 
 	// The body temperature of the pet during the visit (in °C)
 	// Required: false

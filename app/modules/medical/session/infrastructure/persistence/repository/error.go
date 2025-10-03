@@ -4,8 +4,6 @@ import (
 	"fmt"
 
 	dberr "clinic-vet-api/app/shared/error/infrastructure/database"
-
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 // Database operation constants
@@ -36,21 +34,10 @@ const (
 	ErrMsgCountMedicalSession  = "failed to count medical history records"
 )
 
-func (r *SQLCMedSessionRepository) buildNotesParam(notes *string) pgtype.Text {
-	if notes != nil {
-		return pgtype.Text{String: *notes, Valid: true}
-	}
-	return pgtype.Text{Valid: false}
-}
-
 func (r *SQLCMedSessionRepository) dbError(operation, message string, err error) error {
 	return dberr.DatabaseOperationError(operation, TableMedicalSession, DriverSQL, fmt.Errorf("%s: %v", message, err))
 }
 
 func (r *SQLCMedSessionRepository) notFoundError(parameterName, parameterValue string) error {
 	return dberr.EntityNotFoundError(parameterName, parameterValue, OpSelect, TableMedicalSession, DriverSQL)
-}
-
-func (r *SQLCMedSessionRepository) wrapConversionError(err error) error {
-	return fmt.Errorf("%s: %w", ErrMsgConvertToDomain, err)
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"net/http"
 	"os"
@@ -62,7 +63,6 @@ func main() {
 		}
 	}()
 
-	log.App.Info(fmt.Sprintf("Server started on %s", app.Settings.GetServerAddr()))
 	log.App.Info(fmt.Sprintf("Environment: %s", app.Settings.Server.Environment))
 	log.App.Info(fmt.Sprintf("Debug mode: %t", app.Settings.App.Debug))
 
@@ -213,9 +213,8 @@ func setupModules(router *gin.Engine, settings *config.AppSettings, queries *sql
 	return nil
 }
 
-// createHTTPServer creates and configures the HTTP server
 func createHTTPServer(handler http.Handler, settings *config.AppSettings) *http.Server {
-	return &http.Server{
+	server := &http.Server{
 		Addr:           settings.GetServerAddr(),
 		Handler:        handler,
 		ReadTimeout:    settings.Server.ReadTimeout,
@@ -223,11 +222,47 @@ func createHTTPServer(handler http.Handler, settings *config.AppSettings) *http.
 		IdleTimeout:    120 * time.Second,
 		MaxHeaderBytes: 1 << 20, // 1 MB
 	}
+
+	// Add TLS configuration for HTTPS if enabled
+	if settings.Server.EnableHTTPS {
+		server.TLSConfig = &tls.Config{
+			MinVersion:               tls.VersionTLS12,
+			CurvePreferences:         []tls.CurveID{tls.CurveP521, tls.CurveP384, tls.CurveP256},
+			PreferServerCipherSuites: true,
+			CipherSuites: []uint16{
+				tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+				tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+				tls.TLS_RSA_WITH_AES_256_GCM_SHA384,
+				tls.TLS_RSA_WITH_AES_256_CBC_SHA,
+			},
+		}
+	}
+
+	return server
 }
 
-// startServer starts the HTTP server
+// startServer starts the HTTP or HTTPS server based on configuration
 func (app *Application) startServer() error {
 	log.App.Info(fmt.Sprintf("Starting server on %s", app.Settings.GetServerAddr()))
+
+	// Check if HTTPS is enabled
+	if app.Settings.Server.EnableHTTPS {
+		certFile := app.Settings.Server.CertFile
+		keyFile := app.Settings.Server.KeyFile
+
+		// Validate certificate files exist
+		if certFile == "" || keyFile == "" {
+			return fmt.Errorf("HTTPS enabled but certificate files not specified")
+		}
+
+		log.App.Info("Starting HTTPS server...")
+		log.App.Info(fmt.Sprintf("Using certificate: %s", certFile))
+
+		return app.Server.ListenAndServeTLS(certFile, keyFile)
+	}
+
+	// Start HTTP server
+	log.App.Info("Starting HTTP server...")
 	return app.Server.ListenAndServe()
 }
 

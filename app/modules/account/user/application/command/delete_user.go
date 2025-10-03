@@ -19,11 +19,11 @@ type DeleteUserCommand struct {
 
 func NewDeleteUserCommand(userID uint, isHardDelete bool) DeleteUserCommand {
 	uid := valueobject.NewUserID(userID)
-	cmd := &DeleteUserCommand{
+	cmd := DeleteUserCommand{
 		userID:       uid,
 		isHardDelete: isHardDelete,
 	}
-	return *cmd
+	return cmd
 }
 
 func NewDeleteUserHandler(userRepo repository.UserRepository) *DeleteUserHandler {
@@ -34,13 +34,13 @@ func NewDeleteUserHandler(userRepo repository.UserRepository) *DeleteUserHandler
 
 func (d *DeleteUserHandler) Handle(ctx context.Context, command DeleteUserCommand) cqrs.CommandResult {
 	if _, err := d.userRepository.FindByID(ctx, command.userID); err != nil {
-		return *cqrs.FailureResult("failed to find user", err)
+		return cqrs.FailureResult("failed to find user", err)
 	}
 
 	err := d.userRepository.Delete(ctx, command.userID, command.isHardDelete)
 	if err != nil {
-		return *cqrs.FailureResult("failed to delete user", err)
+		return cqrs.FailureResult("failed to delete user", err)
 	}
 
-	return *cqrs.SuccessResult("user deleted successfully")
+	return cqrs.SuccessResult("user deleted successfully")
 }

@@ -17,31 +17,31 @@ type FindMedSessionByIDQuery struct {
 	optEmployeeID *valueobject.EmployeeID
 }
 
-func NewFindMedSessionByIDQuery(id uint) *FindMedSessionByIDQuery {
-	return &FindMedSessionByIDQuery{
+func NewFindMedSessionByIDQuery(id uint) FindMedSessionByIDQuery {
+	return FindMedSessionByIDQuery{
 		ID: valueobject.NewMedSessionID(id),
 	}
 }
 
-func FindMedSessionByIDQueryWithCustomerID(id uint, customerID uint) *FindMedSessionByIDQuery {
+func FindMedSessionByIDQueryWithCustomerID(id uint, customerID uint) FindMedSessionByIDQuery {
 	custID := valueobject.NewCustomerID(customerID)
 
-	return &FindMedSessionByIDQuery{
+	return FindMedSessionByIDQuery{
 		ID: valueobject.NewMedSessionID(id), optCustomerID: &custID,
 	}
 }
 
-func FindMedSessionByIDQueryWithPetID(id uint, petID uint) *FindMedSessionByIDQuery {
+func FindMedSessionByIDQueryWithPetID(id uint, petID uint) FindMedSessionByIDQuery {
 	pID := valueobject.NewPetID(petID)
-	return &FindMedSessionByIDQuery{
+	return FindMedSessionByIDQuery{
 		ID:       valueobject.NewMedSessionID(id),
 		optPetID: &pID,
 	}
 }
 
-func FindMedSessionByIDQueryWithEmployeeID(id uint, employeeID uint) *FindMedSessionByIDQuery {
+func FindMedSessionByIDQueryWithEmployeeID(id uint, employeeID uint) FindMedSessionByIDQuery {
 	empID := valueobject.NewEmployeeID(employeeID)
-	return &FindMedSessionByIDQuery{
+	return FindMedSessionByIDQuery{
 		ID:            valueobject.NewMedSessionID(id),
 		optEmployeeID: &empID,
 	}
@@ -66,14 +66,14 @@ type FindMedSessionByPetIDQuery struct {
 	PaginationRequest p.PaginationRequest
 }
 
-func NewFindMedSessionByPetIDQuery(petID uint, optCustomerID *uint, PaginationRequest p.PaginationRequest) *FindMedSessionByPetIDQuery {
+func NewFindMedSessionByPetIDQuery(petID uint, optCustomerID *uint, PaginationRequest p.PaginationRequest) FindMedSessionByPetIDQuery {
 	var optCustID *valueobject.CustomerID
 	if optCustomerID != nil {
 		val := valueobject.NewCustomerID(*optCustomerID)
 		optCustID = &val
 	}
 
-	return &FindMedSessionByPetIDQuery{
+	return FindMedSessionByPetIDQuery{
 		petID:             valueobject.NewPetID(petID),
 		optCustomerID:     optCustID,
 		PaginationRequest: PaginationRequest,

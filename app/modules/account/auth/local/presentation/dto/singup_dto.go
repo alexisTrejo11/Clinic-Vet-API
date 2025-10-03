@@ -34,6 +34,11 @@ type UserCredentials struct {
 type EmployeeRequestRegister struct {
 	UserCredentials
 
+	// Employee's role in the system
+	// Required: true
+	// Minimum length: 2, Maximum length: 100
+	Role string `json:"role" binding:"min=2,max=100" example:"vet"`
+
 	// Employee identification number
 	// Required: true
 	EmployeeID uint `json:"employee_id" binding:"required" example:"1001"`
@@ -90,8 +95,9 @@ func (r *EmployeeRequestRegister) ToCommand() (registerCmd.RegisterEmployeeComma
 		r.Password,
 		phone,
 		valueobject.NewEmployeeID(r.EmployeeID),
+		r.Role,
 	)
-	return *cmd, nil
+	return cmd, nil
 }
 
 func (r *CustomerRequestSingup) ToCommand() (registerCmd.RegisterCustomerCommand, error) {

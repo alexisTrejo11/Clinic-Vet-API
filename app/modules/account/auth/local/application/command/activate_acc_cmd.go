@@ -11,7 +11,7 @@ type ActivateAccountCommand struct {
 }
 
 func NewActivateAccountCommand(token string, userID uint) (ActivateAccountCommand, error) {
-	cmd := &ActivateAccountCommand{
+	cmd := ActivateAccountCommand{
 		token:  token,
 		userID: valueobject.NewUserID(userID),
 	}
@@ -20,7 +20,7 @@ func NewActivateAccountCommand(token string, userID uint) (ActivateAccountComman
 		return ActivateAccountCommand{}, err
 	}
 
-	return *cmd, nil
+	return cmd, nil
 }
 
 func (cmd *ActivateAccountCommand) Token() string              { return cmd.token }

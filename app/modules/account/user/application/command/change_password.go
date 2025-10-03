@@ -32,18 +32,18 @@ func NewUpdatePasswordHandler(userRepo repository.UserRepository, passwordEncode
 func (c *UpdatePasswordHandler) Handle(ctx context.Context, command UpdatePasswordCommand) cqrs.CommandResult {
 	user, err := c.userRepository.FindByID(ctx, command.UserID)
 	if err != nil {
-		return *cqrs.FailureResult("failed to find user", err)
+		return cqrs.FailureResult("failed to find user", err)
 	}
 
 	if err := c.UpdatePassword(ctx, &user, command); err != nil {
-		return *cqrs.FailureResult("failed to Update password", err)
+		return cqrs.FailureResult("failed to Update password", err)
 	}
 
 	if err := c.userRepository.Save(ctx, &user); err != nil {
-		return *cqrs.FailureResult("failed to update user", err)
+		return cqrs.FailureResult("failed to update user", err)
 	}
 
-	return *cqrs.SuccessResult("password Updated successfully")
+	return cqrs.SuccessResult("password Updated successfully")
 }
 
 func (c *UpdatePasswordHandler) UpdatePassword(ctx context.Context, user *user.User, command UpdatePasswordCommand) error {

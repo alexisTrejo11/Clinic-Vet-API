@@ -100,7 +100,7 @@ type PetRequestData struct {
 }
 
 func (r *PetRequestData) ToCommand(customerID uint, isActive bool) command.CreatePetCommand {
-	cmd := &command.CreatePetCommand{
+	cmd := command.CreatePetCommand{
 		Name:       r.Name,
 		CustomerID: valueobject.NewCustomerID(customerID),
 		Species:    enum.PetSpecies(r.Species),
@@ -113,5 +113,5 @@ func (r *PetRequestData) ToCommand(customerID uint, isActive bool) command.Creat
 		Microchip:  r.Microchip,
 		IsActive:   isActive,
 	}
-	return *cmd
+	return cmd
 }

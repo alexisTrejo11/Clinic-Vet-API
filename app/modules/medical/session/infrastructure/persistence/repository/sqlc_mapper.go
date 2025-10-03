@@ -3,7 +3,6 @@ package repositoryimpl
 import (
 	"encoding/json"
 	"math/big"
-	"time"
 
 	"clinic-vet-api/app/modules/core/domain/entity/medical"
 	"clinic-vet-api/app/modules/core/domain/enum"
@@ -13,49 +12,10 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-func ToEntity(sqlRow sqlc.MedicalSession) medical.MedicalSession {
-	var notes *string
-	if sqlRow.Notes.Valid {
-		notes = &sqlRow.Notes.String
-	}
-
-	var visitDate time.Time
-	if sqlRow.VisitDate.Valid {
-		visitDate = sqlRow.VisitDate.Time
-	} else {
-		visitDate = time.Now()
-	}
-
-	var weight *valueobject.Decimal
-	if sqlRow.Weight.Valid {
-		weightVal := valueobject.NewDecimalFromInt(sqlRow.Weight.Int.Int64())
-		weight = &weightVal
-	}
-
-	var temperature *valueobject.Decimal
-	if sqlRow.Temperature.Valid {
-		if sqlRow.Temperature.Int != nil {
-			tempVal := valueobject.NewDecimalFromInt(sqlRow.Temperature.Int.Int64())
-			temperature = &tempVal
-		}
-	}
-
-	var heartRate *int
-	if sqlRow.HeartRate.Valid {
-		hr := int(sqlRow.HeartRate.Int32)
-		heartRate = &hr
-	}
-
-	var respiratoryRate *int
-	if sqlRow.RespiratoryRate.Valid {
-		rr := int(sqlRow.RespiratoryRate.Int32)
-		respiratoryRate = &rr
-	}
-
+func (r *SQLCMedSessionRepository) sqlcRowToEntity(sqlRow sqlc.MedicalSession) medical.MedicalSession {
 	var symptoms []string
 	if sqlRow.Symptoms.Valid {
 		json.Unmarshal([]byte(sqlRow.Symptoms.String), &symptoms)
-
 	}
 
 	var medications []string
@@ -63,22 +23,17 @@ func ToEntity(sqlRow sqlc.MedicalSession) medical.MedicalSession {
 		json.Unmarshal([]byte(sqlRow.Medications.String), &medications)
 	}
 
-	var followUpDate *time.Time
-	if sqlRow.FollowUpDate.Valid {
-		followUpDate = &sqlRow.FollowUpDate.Time
-	}
-
 	petDetails := medical.NewPetSessionSummaryBuilder().
 		WithPetID(valueobject.NewPetID(uint(sqlRow.PetID))).
-		WithWeight(weight).
-		WithTemperature(temperature).
-		WithHeartRate(heartRate).
-		WithRespiratoryRate(respiratoryRate).
+		WithWeight(r.pgMap.PgNumeric.ToDecimalPtr(sqlRow.Weight)).
+		WithTemperature(r.pgMap.PgNumeric.ToDecimalPtr(sqlRow.Temperature)).
+		WithHeartRate(r.pgMap.PgInt4.ToInt32Ptr(sqlRow.HeartRate)).
+		WithRespiratoryRate(r.pgMap.PgInt4.ToInt32Ptr(sqlRow.RespiratoryRate)).
 		WithDiagnosis(sqlRow.Diagnosis.String).
 		WithTreatment(sqlRow.Treatment.String).
 		WithCondition(enum.PetCondition(sqlRow.Condition.String)).
 		WithMedications(medications).
-		WithFollowUpDate(followUpDate).
+		WithFollowUpDate(r.pgMap.PgTimestamptz.ToTimePtr(sqlRow.FollowUpDate)).
 		WithSymptoms(symptoms).
 		Build()
 
@@ -87,29 +42,27 @@ func ToEntity(sqlRow sqlc.MedicalSession) medical.MedicalSession {
 		WithEmployeeID(valueobject.NewEmployeeID(uint(sqlRow.EmployeeID))).
 		WithCustomerID(valueobject.NewCustomerID(uint(sqlRow.CustomerID))).
 		WithVisitType(enum.VisitType(sqlRow.VisitType)).
-		WithVisitDate(visitDate).
-		WithNotes(notes).
+		WithVisitDate(r.pgMap.PgTimestamptz.ToTime(sqlRow.VisitDate)).
+		WithNotes(r.pgMap.PgText.ToStringPtr(sqlRow.Notes)).
 		WithPetDetails(*petDetails).
 		WithTimeStamps(sqlRow.CreatedAt.Time, sqlRow.UpdatedAt.Time).
 		Build()
 }
 
-func ToEntities(medSessionList []sqlc.MedicalSession) []medical.MedicalSession {
+func (r *SQLCMedSessionRepository) ToEntities(medSessionList []sqlc.MedicalSession) []medical.MedicalSession {
 	domainList := make([]medical.MedicalSession, len(medSessionList))
-
 	for i, sqlRow := range medSessionList {
-		domainList[i] = ToEntity(sqlRow)
+		domainList[i] = r.sqlcRowToEntity(sqlRow)
 	}
-
 	return domainList
 }
 
-func ToUpdateParams(medSession medical.MedicalSession) sqlc.UpdateMedicalSessionParams {
+func (r *SQLCMedSessionRepository) toUpdateParams(medSession medical.MedicalSession) sqlc.UpdateMedicalSessionParams {
 	params := sqlc.UpdateMedicalSessionParams{
-		ID:         int32(medSession.ID().Value()),
-		PetID:      int32(medSession.PetDetails().PetID().Value()),
-		CustomerID: int32(medSession.CustomerID().Value()),
-		EmployeeID: int32(medSession.EmployeeID().Value()),
+		ID:         medSession.ID().Int32(),
+		PetID:      medSession.PetDetails().PetID().Int32(),
+		CustomerID: medSession.CustomerID().Int32(),
+		EmployeeID: medSession.EmployeeID().Int32(),
 		VisitDate:  pgtype.Timestamptz{Time: medSession.VisitDate(), Valid: true},
 		VisitType:  medSession.VisitType().String(),
 		Condition:  pgtype.Text{String: medSession.PetDetails().Condition().DisplayName(), Valid: true},
@@ -142,11 +95,11 @@ func ToUpdateParams(medSession medical.MedicalSession) sqlc.UpdateMedicalSession
 	}
 
 	if medSession.PetDetails().HeartRate() != nil {
-		params.HeartRate = pgtype.Int4{Int32: int32(*medSession.PetDetails().HeartRate()), Valid: true}
+		params.HeartRate = pgtype.Int4{Int32: *medSession.PetDetails().HeartRate(), Valid: true}
 	}
 
 	if medSession.PetDetails().RespiratoryRate() != nil {
-		params.RespiratoryRate = pgtype.Int4{Int32: int32(*medSession.PetDetails().RespiratoryRate()), Valid: true}
+		params.RespiratoryRate = pgtype.Int4{Int32: *medSession.PetDetails().RespiratoryRate(), Valid: true}
 	}
 
 	/*
@@ -184,62 +137,7 @@ func ToUpdateParams(medSession medical.MedicalSession) sqlc.UpdateMedicalSession
 	return params
 }
 
-func ToCreateParams(medSession medical.MedicalSession) sqlc.SaveMedicalSessionParams {
-	params := sqlc.SaveMedicalSessionParams{
-		PetID:      int32(medSession.PetDetails().PetID().Value()),
-		CustomerID: int32(medSession.CustomerID().Value()),
-		EmployeeID: int32(medSession.EmployeeID().Value()),
-		VisitType:  medSession.VisitType().DisplayName(),
-		VisitDate:  pgtype.Timestamptz{Time: medSession.VisitDate(), Valid: true},
-	}
-
-	if medSession.PetDetails().Diagnosis() != "" {
-		params.Diagnosis = pgtype.Text{String: medSession.PetDetails().Diagnosis(), Valid: true}
-	} else {
-		params.Diagnosis = pgtype.Text{Valid: false}
-	}
-
-	if medSession.PetDetails().Treatment() != "" {
-		params.Treatment = pgtype.Text{String: medSession.PetDetails().Treatment(), Valid: true}
-	} else {
-		params.Treatment = pgtype.Text{Valid: false}
-	}
-
-	if medSession.PetDetails().Condition().IsValid() {
-		params.Condition = pgtype.Text{String: medSession.PetDetails().Condition().String(), Valid: true}
-	}
-	// Notes
-
-	if medSession.Notes() != nil && *medSession.Notes() != "" {
-		params.Notes = pgtype.Text{String: *medSession.Notes(), Valid: true}
-	} else {
-		params.Notes = pgtype.Text{Valid: false}
-	}
-
-	if medSession.PetDetails().Weight() != nil {
-		params.Weight = pgtype.Numeric{Int: big.NewInt(medSession.PetDetails().Weight().Int()), Valid: true}
-	} else {
-		params.Weight = pgtype.Numeric{Valid: false}
-	}
-
-	if medSession.PetDetails().Temperature() != nil {
-		params.Temperature = pgtype.Numeric{Int: big.NewInt(medSession.PetDetails().Temperature().Int()), Valid: true}
-	} else {
-		params.Temperature = pgtype.Numeric{Valid: false}
-	}
-
-	if medSession.PetDetails().HeartRate() != nil {
-		params.HeartRate = pgtype.Int4{Int32: int32(*medSession.PetDetails().HeartRate()), Valid: true}
-	} else {
-		params.HeartRate = pgtype.Int4{Valid: false}
-	}
-
-	if medSession.PetDetails().RespiratoryRate() != nil {
-		params.RespiratoryRate = pgtype.Int4{Int32: int32(*medSession.PetDetails().RespiratoryRate()), Valid: true}
-	} else {
-		params.RespiratoryRate = pgtype.Int4{Valid: false}
-	}
-
+func (r *SQLCMedSessionRepository) toCreateParams(medSession medical.MedicalSession) sqlc.SaveMedicalSessionParams {
 	/*
 		// Arrays (JSON)
 		if len(medSession.Symptoms()) > 0 {
@@ -268,5 +166,19 @@ func ToCreateParams(medSession medical.MedicalSession) sqlc.SaveMedicalSessionPa
 		isEmergency := medSession.VisitReason() == enum.VisitReasonEmergency
 		params.IsEmergency = pgtype.Bool{Bool: isEmergency, Valid: true}
 	*/
-	return params
+	return sqlc.SaveMedicalSessionParams{
+		PetID:           medSession.PetDetails().PetID().Int32(),
+		CustomerID:      medSession.CustomerID().Int32(),
+		EmployeeID:      medSession.EmployeeID().Int32(),
+		VisitType:       medSession.VisitType().DisplayName(),
+		VisitDate:       r.pgMap.PgTimestamptz.FromTime(medSession.VisitDate()),
+		Diagnosis:       r.pgMap.PgText.FromString(medSession.PetDetails().Diagnosis()),
+		Treatment:       r.pgMap.PgText.FromString(medSession.PetDetails().Treatment()),
+		Condition:       r.pgMap.PgText.FromString(medSession.PetDetails().Condition().String()),
+		Notes:           r.pgMap.PgText.FromStringPtr(medSession.Notes()),
+		Weight:          r.pgMap.PgNumeric.FromDecimalPtr(medSession.PetDetails().Weight()),
+		Temperature:     r.pgMap.PgNumeric.FromDecimalPtr(medSession.PetDetails().Temperature()),
+		HeartRate:       r.pgMap.PgInt4.FromInt32Ptr(medSession.PetDetails().HeartRate()),
+		RespiratoryRate: r.pgMap.PgInt4.FromInt32Ptr(medSession.PetDetails().RespiratoryRate()),
+	}
 }

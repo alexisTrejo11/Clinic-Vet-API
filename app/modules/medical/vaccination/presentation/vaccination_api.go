@@ -61,7 +61,7 @@ func (b *VaccinationAPIModule) Bootstrap() error {
 		return err
 	}
 
-	repo := sqlcRepo.NewSqlcPetVaccinationRepository(b.config.Queries, mapper.SqlcFieldMapper{})
+	repo := sqlcRepo.NewSqlcPetVaccinationRepository(b.config.Queries, mapper.NewSqlcFieldMapper())
 	vaccinationScheduleService := service.NewVaccinationScheduleService(nil)
 
 	petVaccineCmdHandler := handler.NewPetVaccineCmdHandler(b.config.PetRepo, repo, vaccinationScheduleService)

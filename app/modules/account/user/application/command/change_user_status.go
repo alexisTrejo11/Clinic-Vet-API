@@ -21,11 +21,11 @@ func NewChangeUserStatusCommand(userID uint, status string) (ChangeUserStatusCom
 		return ChangeUserStatusCommand{}, err
 	}
 
-	cmd := &ChangeUserStatusCommand{
+	cmd := ChangeUserStatusCommand{
 		userID: uid,
 		status: userStatus,
 	}
-	return *cmd, nil
+	return cmd, nil
 }
 
 type ChangeUserStatusHandler struct {
@@ -41,30 +41,30 @@ func NewChangeUserStatusHandler(userRepository repository.UserRepository) *Chang
 func (h *ChangeUserStatusHandler) Handle(ctx context.Context, command ChangeUserStatusCommand) cqrs.CommandResult {
 	user, err := h.userRepository.FindByID(ctx, command.userID)
 	if err != nil {
-		return *cqrs.FailureResult("error finding user", err)
+		return cqrs.FailureResult("error finding user", err)
 	}
 
 	switch command.status {
 	case enum.UserStatusActive:
 		if err := user.Activate(); err != nil {
-			return *cqrs.FailureResult("error activating user", err)
+			return cqrs.FailureResult("error activating user", err)
 		}
 	case enum.UserStatusInactive:
 		if err := user.Deactivate(); err != nil {
-			return *cqrs.FailureResult("error deactivating user", err)
+			return cqrs.FailureResult("error deactivating user", err)
 		}
 	case enum.UserStatusBanned:
 		if err := user.Ban(); err != nil {
-			return *cqrs.FailureResult("error banning user", err)
+			return cqrs.FailureResult("error banning user", err)
 		}
 	default:
-		return *cqrs.FailureResult("invalid user status", nil)
+		return cqrs.FailureResult("invalid user status", nil)
 	}
 
 	err = h.userRepository.Save(ctx, &user)
 	if err != nil {
-		return *cqrs.FailureResult("error saving user", err)
+		return cqrs.FailureResult("error saving user", err)
 	}
 
-	return *cqrs.SuccessResult("user status changed successfully")
+	return cqrs.SuccessResult("user status changed successfully")
 }

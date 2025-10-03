@@ -25,7 +25,7 @@ func RequestURLParamError(err error, field string, value string) error {
 		}...,
 	)
 
-	return &apperror.BaseApplicationError{
+	return apperror.BaseApplicationError{
 		Code:    "INVALID_URL_PARAM",
 		Type:    "routing",
 		Message: fmt.Sprintf("invalid URL parameter '%s' with value '%s': %s", field, value, err.Error()),
@@ -50,7 +50,7 @@ func InternalServerError(err error) error {
 		}...,
 	)
 
-	return &apperror.BaseApplicationError{
+	return apperror.BaseApplicationError{
 		Code:    "INTERNAL_SERVER_ERROR",
 		Type:    "server",
 		Message: "an internal server error occurred",
@@ -74,7 +74,7 @@ func RequestURLQueryError(err error, queryURL string) error {
 		}...,
 	)
 
-	return &apperror.BaseApplicationError{
+	return apperror.BaseApplicationError{
 		Code:    "INVALID_URL_PARAMS",
 		Type:    "routing",
 		Message: "invalid query parameters",
@@ -99,7 +99,7 @@ func RequestBodyDataError(err error) error {
 		}...,
 	)
 
-	return &apperror.BaseApplicationError{
+	return apperror.BaseApplicationError{
 		Code:    "REQUEST_BODY_ERROR",
 		Type:    "body_format",
 		Message: fmt.Sprintf("invalid request body format: %s", err.Error()),
@@ -122,7 +122,7 @@ func InvalidDataError(err error) error {
 		}...,
 	)
 
-	return &apperror.BaseApplicationError{
+	return apperror.BaseApplicationError{
 		Code:    "INVALID_DATA_VALUES",
 		Type:    "data_validation",
 		Message: err.Error(),
@@ -148,7 +148,7 @@ func ValidationError(field, value, reason string) error {
 		}...,
 	)
 
-	return &apperror.BaseApplicationError{
+	return apperror.BaseApplicationError{
 		Code:    "FIELD_VALIDATION_ERROR",
 		Type:    "validation",
 		Message: fmt.Sprintf("validation failed for field '%s': %s", field, reason),
@@ -174,7 +174,7 @@ func MissingRequiredFieldError(field string) error {
 		}...,
 	)
 
-	return &apperror.BaseApplicationError{
+	return apperror.BaseApplicationError{
 		Code:    "MISSING_REQUIRED_FIELD",
 		Type:    "validation",
 		Message: fmt.Sprintf("required field '%s' is missing", field),
@@ -199,7 +199,7 @@ func RequestTooLargeError(maxSize, actualSize int64) error {
 		}...,
 	)
 
-	return &apperror.BaseApplicationError{
+	return apperror.BaseApplicationError{
 		Code:    "REQUEST_TOO_LARGE",
 		Type:    "request_size",
 		Message: fmt.Sprintf("request size %d bytes exceeds maximum allowed size %d bytes", actualSize, maxSize),
@@ -225,7 +225,7 @@ func UnsupportedMediaTypeError(contentType string, supportedTypes []string) erro
 		}...,
 	)
 
-	return &apperror.BaseApplicationError{
+	return apperror.BaseApplicationError{
 		Code:    "UNSUPPORTED_MEDIA_TYPE",
 		Type:    "media_type",
 		Message: fmt.Sprintf("unsupported media type '%s'", contentType),
@@ -252,7 +252,7 @@ func MethodNotAllowedError(method, endpoint string, allowedMethods []string) err
 		}...,
 	)
 
-	return &apperror.BaseApplicationError{
+	return apperror.BaseApplicationError{
 		Code:    "METHOD_NOT_ALLOWED",
 		Type:    "http_method",
 		Message: fmt.Sprintf("method '%s' not allowed for endpoint '%s'", method, endpoint),
@@ -278,7 +278,7 @@ func NotFoundError(resource string) error {
 		}...,
 	)
 
-	return &apperror.BaseApplicationError{
+	return apperror.BaseApplicationError{
 		Code:    "RESOURCE_NOT_FOUND",
 		Type:    "routing",
 		Message: fmt.Sprintf("resource '%s' not found", resource),
@@ -304,7 +304,7 @@ func RateLimitExceededError(clientIP string, limit int, windowSeconds int) error
 		}...,
 	)
 
-	return &apperror.BaseApplicationError{
+	return apperror.BaseApplicationError{
 		Code:    "RATE_LIMIT_EXCEEDED",
 		Type:    "rate_limiting",
 		Message: fmt.Sprintf("rate limit exceeded: %d requests per %d seconds", limit, windowSeconds),
@@ -330,7 +330,7 @@ func RequestTimeoutError(timeoutSeconds int) error {
 		}...,
 	)
 
-	return &apperror.BaseApplicationError{
+	return apperror.BaseApplicationError{
 		Code:    "REQUEST_TIMEOUT",
 		Type:    "timeout",
 		Message: fmt.Sprintf("request timeout after %d seconds", timeoutSeconds),
@@ -355,7 +355,7 @@ func ConflictError(resource, reason string) error {
 		}...,
 	)
 
-	return &apperror.BaseApplicationError{
+	return apperror.BaseApplicationError{
 		Code:    "RESOURCE_CONFLICT",
 		Type:    "conflict",
 		Message: fmt.Sprintf("conflict with resource '%s': %s", resource, reason),
@@ -382,7 +382,7 @@ func ServiceUnavailableError(service string, retryAfterSeconds int) error {
 		}...,
 	)
 
-	return &apperror.BaseApplicationError{
+	return apperror.BaseApplicationError{
 		Code:    "SERVICE_UNAVAILABLE",
 		Type:    "service",
 		Message: fmt.Sprintf("service '%s' is temporarily unavailable", service),

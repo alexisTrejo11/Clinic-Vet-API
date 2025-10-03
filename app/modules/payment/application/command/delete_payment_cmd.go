@@ -10,8 +10,8 @@ type DeletePaymentCommand struct {
 	paymentID valueobject.PaymentID
 }
 
-func NewDeletePaymentCommand(idInt uint) *DeletePaymentCommand {
-	return &DeletePaymentCommand{
+func NewDeletePaymentCommand(idInt uint) DeletePaymentCommand {
+	return DeletePaymentCommand{
 		paymentID: valueobject.NewPaymentID(idInt),
 	}
 }
@@ -19,13 +19,13 @@ func NewDeletePaymentCommand(idInt uint) *DeletePaymentCommand {
 func (h *paymentCommandHandler) DeletePayment(ctx context.Context, cmd DeletePaymentCommand) cqrs.CommandResult {
 	payment, err := h.paymentRepository.FindByID(ctx, cmd.paymentID)
 	if err != nil {
-		return *cqrs.FailureResult(ErrFetchingPayment, err)
+		return cqrs.FailureResult(ErrFetchingPayment, err)
 	}
 
 	isHardDelete := false
 	if err := h.paymentRepository.Delete(ctx, payment.ID(), isHardDelete); err != nil {
-		return *cqrs.FailureResult(ErrDeletingPayment, err)
+		return cqrs.FailureResult(ErrDeletingPayment, err)
 	}
 
-	return *cqrs.SuccessResult(MsgPaymentDeleted)
+	return cqrs.SuccessResult(MsgPaymentDeleted)
 }

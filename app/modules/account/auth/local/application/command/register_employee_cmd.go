@@ -17,33 +17,34 @@ type RegisterEmployeeCommand struct {
 }
 
 func NewRegisterEmployeeCommand(
-	email vo.Email, password string, phoneNumber *vo.PhoneNumber, employeeID vo.EmployeeID,
-) *RegisterEmployeeCommand {
-	return &RegisterEmployeeCommand{
+	email vo.Email, password string, phoneNumber *vo.PhoneNumber, employeeID vo.EmployeeID, role string,
+) RegisterEmployeeCommand {
+	return RegisterEmployeeCommand{
 		email:       email,
 		password:    password,
+		role:        enum.UserRole(role),
 		phoneNumber: phoneNumber,
 		employeeID:  employeeID,
 	}
 }
 
-func (cmd *RegisterEmployeeCommand) ToEntity() *u.User {
-	user := u.NewUserBuilder().
+func (cmd *RegisterEmployeeCommand) ToEntity() u.User {
+	return *u.NewUserBuilder().
 		WithRole(cmd.role).
 		WithEmail(cmd.email).
 		WithPassword(cmd.password).
 		WithPhoneNumber(cmd.phoneNumber).
 		WithEmployeeID(&cmd.employeeID).
 		Build()
-	return user
+
 }
 
 func (cmd *RegisterEmployeeCommand) Validate() error {
 	if !cmd.role.IsValid() {
 		return errors.New("invalid role")
 	}
-	if !cmd.role.IsStaff() {
-		return errors.New("role must be a staff role")
+	if !cmd.role.IsEmployee() {
+		return errors.New("role must be an employee role")
 	}
 
 	if cmd.employeeID.IsZero() {

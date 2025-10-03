@@ -22,20 +22,20 @@ type DewormUpdateCommand struct {
 
 func (h *DewormCommandHandler) HandleUpdate(ctx context.Context, cmd DewormUpdateCommand) cqrs.CommandResult {
 	if err := cmd.Validate(); err != nil {
-		return *cqrs.FailureResult("command validation failed", err)
+		return cqrs.FailureResult("command validation failed", err)
 	}
 
 	existingDeworm, err := h.dewormRepo.FindByID(ctx, cmd.ID)
 	if err != nil {
-		return *cqrs.FailureResult("failed to retrieve existing deworm record", err)
+		return cqrs.FailureResult("failed to retrieve existing deworm record", err)
 	}
 
 	updatedDeworm := updateDewormFields(cmd, *existingDeworm)
 	if _, err := h.dewormRepo.Save(ctx, updatedDeworm); err != nil {
-		return *cqrs.FailureResult("Failed to update deworm record", err)
+		return cqrs.FailureResult("Failed to update deworm record", err)
 	}
 
-	return *cqrs.SuccessResult("deworm record updated successfully")
+	return cqrs.SuccessResult("deworm record updated successfully")
 }
 
 func updateDewormFields(cmd DewormUpdateCommand, deworm med.PetDeworming) med.PetDeworming {

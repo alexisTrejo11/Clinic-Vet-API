@@ -16,7 +16,7 @@ func NewFindVaccinationsByPetQuery(
 	optEmployeeID *uint,
 	pagination p.PaginationRequest,
 ) (FindVaccinationsByPetQuery, error) {
-	cmd := &FindVaccinationsByPetQuery{
+	cmd := FindVaccinationsByPetQuery{
 		petID:         valueobject.NewPetID(petID),
 		optEmployeeID: valueobject.NewOptEmployeeID(optEmployeeID),
 		pagination:    pagination,
@@ -26,10 +26,10 @@ func NewFindVaccinationsByPetQuery(
 		return FindVaccinationsByPetQuery{}, err
 	}
 
-	return *cmd, nil
+	return cmd, nil
 }
 
-func (q *FindVaccinationsByPetQuery) Validate() error {
+func (q FindVaccinationsByPetQuery) Validate() error {
 	return nil
 }
 

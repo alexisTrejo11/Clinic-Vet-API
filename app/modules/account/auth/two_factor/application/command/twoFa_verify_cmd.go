@@ -13,7 +13,7 @@ type Verify2FACommand struct {
 }
 
 func NewVerify2FACommand(userID uint, code string, method auth.TwoFactorMethod) (Verify2FACommand, error) {
-	cmd := &Verify2FACommand{
+	cmd := Verify2FACommand{
 		userID: valueobject.NewUserID(userID),
 		code:   code,
 		method: method,
@@ -23,7 +23,7 @@ func NewVerify2FACommand(userID uint, code string, method auth.TwoFactorMethod) 
 		return Verify2FACommand{}, err
 	}
 
-	return *cmd, nil
+	return cmd, nil
 }
 
 func (c *Verify2FACommand) UserID() valueobject.UserID   { return c.userID }

@@ -25,14 +25,14 @@ func NewDewormDeleteCommand(id uint, petID *uint) DewormDeleteCommand {
 
 func (h *DewormCommandHandler) HandleDelete(ctx context.Context, cmd DewormDeleteCommand) cqrs.CommandResult {
 	if err := h.validateDewormExistence(ctx, cmd.ID, cmd.PetID); err != nil {
-		return *cqrs.FailureResult("entity validation error", err)
+		return cqrs.FailureResult("entity validation error", err)
 	}
 
 	if err := h.dewormRepo.Delete(ctx, cmd.ID, true); err != nil {
-		return *cqrs.FailureResult("failed to delete deworming record", err)
+		return cqrs.FailureResult("failed to delete deworming record", err)
 	}
 
-	return *cqrs.SuccessResult("deworming record deleted successfully")
+	return cqrs.SuccessResult("deworming record deleted successfully")
 }
 
 func (cmd *DewormDeleteCommand) validate() error {

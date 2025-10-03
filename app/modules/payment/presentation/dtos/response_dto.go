@@ -36,13 +36,13 @@ type PaymentResponse struct {
 	// Example: "credit_card"
 	Method string `json:"method"`
 
+	// Payment description
+	// Example: "Veterinary consultation payment"
+	Description string `json:"description,omitempty"`
+
 	// Transaction ID from payment gateway
 	// Example: "txn_123456789"
 	TransactionID *string `json:"transaction_id,omitempty"`
-
-	// Payment description
-	// Example: "Veterinary consultation payment"
-	Description *string `json:"description,omitempty"`
 
 	// Due date for the payment
 	// Required: true
@@ -60,11 +60,11 @@ type PaymentResponse struct {
 	// Customer ID who made the payment
 	// Required: true
 	// Example: 456
-	CustomerID uint `json:"customer_id"`
+	CustomerID *uint `json:"customer_id,omitempty"`
 
 	// Medical Session ID associated with the payment
 	// Example: 123
-	MedSessionID uint `json:"med_session_id,omitempty"`
+	MedSessionID *uint `json:"med_session_id,omitempty"`
 
 	// Invoice number
 	// Example: "INV-001"Medical Session
@@ -92,10 +92,6 @@ type PaymentResponse struct {
 	// Required: true
 	// Example: "2024-01-15T10:30:00Z"
 	UpdatedAt time.Time `json:"updated_at"`
-
-	// Date when payment was deleted (soft delete)
-	// Example: "2024-01-20T12:00:00Z"
-	DeletedAt *time.Time `json:"deleted_at,omitempty"`
 }
 
 // PaymentReportResponse represents a payment report response

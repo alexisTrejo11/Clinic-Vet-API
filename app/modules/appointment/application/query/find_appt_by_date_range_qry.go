@@ -35,6 +35,6 @@ func NewFindApptsByDateRangeQuery(startDate, endDate time.Time, pagInput page.Pa
 	return *qry, nil
 }
 
-func (q *FindApptsByDateRangeQuery) StartDate() time.Time                 { return q.startDate }
-func (q *FindApptsByDateRangeQuery) EndDate() time.Time                   { return q.endDate }
-func (q *FindApptsByDateRangeQuery) Pagination() specification.Pagination { return q.pagination }
+func (q FindApptsByDateRangeQuery) StartDate() time.Time                 { return q.startDate }
+func (q FindApptsByDateRangeQuery) EndDate() time.Time                   { return q.endDate }
+func (q FindApptsByDateRangeQuery) Pagination() specification.Pagination { return q.pagination }

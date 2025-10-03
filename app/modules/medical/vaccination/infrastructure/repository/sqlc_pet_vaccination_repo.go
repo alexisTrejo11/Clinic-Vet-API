@@ -13,10 +13,10 @@ import (
 
 type SqlcPetVaccinationRepository struct {
 	queries *sqlc.Queries
-	pgMap   mapper.SqlcFieldMapper
+	pgMap   *mapper.SqlcFieldMapper
 }
 
-func NewSqlcPetVaccinationRepository(queries *sqlc.Queries, pgMap mapper.SqlcFieldMapper) repository.VaccinationRepository {
+func NewSqlcPetVaccinationRepository(queries *sqlc.Queries, pgMap *mapper.SqlcFieldMapper) repository.VaccinationRepository {
 	return &SqlcPetVaccinationRepository{queries: queries, pgMap: pgMap}
 }
 
@@ -28,7 +28,6 @@ func (r *SqlcPetVaccinationRepository) FindAllByPetID(ctx context.Context, petID
 	return r.SqlcRowsToEntities(sqlcRows), nil
 }
 
-// FindByDateRange implements repository.VaccinationRepository.
 func (r *SqlcPetVaccinationRepository) FindByDateRange(ctx context.Context, startDate time.Time, endDate time.Time, pagination page.PaginationRequest) (page.Page[medical.PetVaccination], error) {
 	sqlcRows, err := r.queries.FindVaccinationsByDateRange(ctx, sqlc.FindVaccinationsByDateRangeParams{
 		AdministeredDate:   r.pgMap.TimeToPgDate(startDate),

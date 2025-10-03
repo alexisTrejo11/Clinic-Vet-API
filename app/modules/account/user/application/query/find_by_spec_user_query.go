@@ -16,13 +16,13 @@ type FindUserBySpecificationHandler struct {
 	repository repository.UserRepository
 }
 
-func NewFindUserBySpecificationHandler(repository repository.UserRepository) *FindUserBySpecificationHandler {
-	return &FindUserBySpecificationHandler{
+func NewFindUserBySpecificationHandler(repository repository.UserRepository) FindUserBySpecificationHandler {
+	return FindUserBySpecificationHandler{
 		repository: repository,
 	}
 }
 
-func (h *FindUserBySpecificationHandler) Handle(ctx context.Context, query FindUserBySpecificationQuery) (page.Page[UserResult], error) {
+func (h FindUserBySpecificationHandler) Handle(ctx context.Context, query FindUserBySpecificationQuery) (page.Page[UserResult], error) {
 	userPage, err := h.repository.FindSpecification(query.ctx, query.spec)
 	if err != nil {
 		return page.Page[UserResult]{}, err
